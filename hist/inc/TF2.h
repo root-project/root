@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.14 2003/01/15 21:45:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.15 2003/03/31 16:04:35 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    TF2(const char *name, void *fcn, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
    TF2(const TF2 &f2);
+   TF2 &operator=(const TF2& rhs);
    virtual   ~TF2();
    virtual void     Copy(TObject &f2) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);

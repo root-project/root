@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.67 2003/06/02 10:36:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.68 2003/06/24 14:00:59 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -651,6 +651,19 @@ Int_t TChain::GetNbranches()
    return 0;
 }
 
+//______________________________________________________________________________
+const char *TChain::GetAlias(const char *aliasName) const
+{
+   // Returns the expanded value of the alias.  Search in the friend if any
+
+   const char *alias = TTree::GetAlias(aliasName);
+   if (alias) return alias;
+   
+   if (fTree) return fTree->GetAlias(aliasName);
+   const_cast<TChain*>(this)->LoadTree(0);
+   if (fTree) return fTree->GetAlias(aliasName);
+   return 0;
+}
 
 //______________________________________________________________________________
 Double_t TChain::GetWeight() const

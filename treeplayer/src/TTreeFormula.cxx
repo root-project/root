@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.119 2003/06/21 13:27:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.120 2003/06/25 07:16:22 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1361,13 +1361,13 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       fNcodes = kMAXFOUND;
    }
    SetName(name);
-   for (i=0;i<fNcodes;i++) {
-      if (fCodes[i] < 0) continue;
 
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-      if (!leaf) continue;
+   for (i=0;i<fNoper;i++) {
+      if (fOper[i] >= 105000 && fOper[i]<110000) {
+         Int_t string_code = fOper[i]-105000;
+         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
+         if (!leafc) continue;
 
-      if (fOper[i] >= 105000) {
          // We have a string used as a string
 
          // This dormant portion of code would be used if (when?) we allow the histogramming
@@ -1385,11 +1385,16 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
             // just make part of a useless expression (for example: mystring+0)
             SetBit(kIsCharacter);
          }
+         continue;
       }
-
+   }
+   if (fNoper==1 && fOper[0]==kAliasString) {
+      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      Assert(subform);
+      if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    }
 
-   fManager->Sync();
+   fManager->Sync(); 
 
    // Let's verify the indexes and dies if we need to.
    Int_t k0,k1;
@@ -1424,6 +1429,7 @@ TTreeFormula::~TTreeFormula()
    }
    fLeafNames.Delete();
    fDataMembers.Delete();
+   fAliases.Delete();
    if (fLookupType) delete [] fLookupType;
    for (int j=0; j<fNcodes; j++) {
       for (int k = 0; k<fNdimensions[j]; k++) {
@@ -1994,6 +2000,23 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       final = leaf->IsOnTerminalBranch();
    }
 
+   if (!leaf) {
+      // Check for an alias.
+      const char *aliasValue = fTree->GetAlias(work);
+      if (aliasValue) {
+         TTreeFormula *subform = new TTreeFormula(work,aliasValue,fTree); 
+            
+         fManager->Add(subform);
+         fAliases.AddAtAndExpand(subform,fNoper);
+         
+         if (subform->IsString()) {
+            return kAliasString - kVariable; // need to compensate for the TFormula induced offset
+         } else {
+            return kAlias - kVariable; // need to compensate for the TFormula induced offset
+         }
+      }
+   }
+
    if (leaf) { // We found a Leaf.
 
       if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
@@ -2271,7 +2294,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         maininfo = clonesinfo;
 
                         clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
-                        //clones = *(TClonesArray**)((TBranchElement*)branch)->GetAddress();
+                        //clones = *(TClonesArray**)((TBranchElement*)branch)->GetAdress();
                      } else {
                         TClass *mother_cl;
                         if (leaf->IsA()==TLeafObject::Class()) {
@@ -2619,7 +2642,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          }
       }
 
-      if (IsString(code)) {
+      if (IsLeafString(code)) {
          if (fLookupType[code]==kDirect && leaf->InheritsFrom("TLeafElement")) {
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
             if (br->GetType()==31) {
@@ -3154,9 +3177,34 @@ void* TTreeFormula::EvalObject(int instance)
 }
 
 
+//______________________________________________________________________________
+const char* TTreeFormula::EvalStringInstance(Int_t instance)
+{
+   const Int_t kMAXSTRINGFOUND = 10;
+   const char *stringStack[kMAXSTRINGFOUND];
+
+   if (fNoper==1 && fNcodes>0 && IsString()) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
+
+      Int_t real_instance = GetRealInstance(instance,0);
+
+      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
+      else if (real_instance>fNdata[0]) return 0;
+
+      if (fLookupType[0]==kDirect) {
+         return (char*)leaf->GetValuePointer();
+      } else {
+         return  (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
+      }
+   }
+
+   EvalInstance(instance,stringStack);
+
+   return stringStack[0];
+}
 
 //______________________________________________________________________________
-Double_t TTreeFormula::EvalInstance(Int_t instance)
+Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -3167,7 +3215,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
    Float_t aresult;
    Double_t tab[kMAXFOUND];
    Double_t dexp;
-   char *tab2[kMAXSTRINGFOUND];
+   const char *stringStackLocal[kMAXSTRINGFOUND];
+   const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
 
    if (fNoper == 1 && fNcodes > 0) {
       switch (fCodes[0]) {
@@ -3185,6 +3234,17 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
             return fx->EvalInstance(instance);
          }
       }
+//       if (fOper[0]==kAlias) {
+//          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+//          Assert(subform);
+//          return subform->EvalInstance(instance);
+//       }
+//       if (fOper[0]==kAliasString) {
+//          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+//          Assert(subform);
+//          if (fAxis) ... 
+//          return subform->EvalInstance(instance);
+//       }
       switch (fLookupType[0]) {
         case kIndexOfEntry: return fTree->GetReadEntry();
         case kEntries:      return fTree->GetEntries();
@@ -3201,7 +3261,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
       if (fAxis) {
          char * label;
          // This portion is a duplicate (for speed reason) of the code
-         // located  in the main for loop at "a tree string".
+         // located  in the main for loop at "a tree string" (and in EvalStringInstance)
          if (fLookupType[0]==kDirect) {
             label = (char*)leaf->GetValuePointer();
          } else {
@@ -3227,7 +3287,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
       if (action >= kFunctionCall) {
          int fno   = (action-kFunctionCall) / 1000;
          int nargs = (action-kFunctionCall) % 1000;
-         
+
          // Retrieve the function
          TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
          
@@ -3254,6 +3314,27 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          
          continue;
       }
+//*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
+      if (action == kAlias) {
+         int aliasN = i;
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+         Assert(subform);
+
+         Double_t param = subform->EvalInstance(instance);
+
+         tab[pos] = param; pos++;
+         continue;
+      }
+//*-*- a TTree Variable Alias String (i.e. a sub-TTreeFormula)
+      if (action == kAliasString) {
+         int aliasN = i;
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+         Assert(subform);
+
+         pos2++;
+         stringStack[pos2-1] = subform->EvalStringInstance(instance);
+         continue;
+      }
 //*-*- a tree string
       if (action >= 105000) {
          Int_t string_code = action-105000;
@@ -3267,9 +3348,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 
          pos2++;
          if (fLookupType[string_code]==kDirect) {
-            tab2[pos2-1] = (char*)leafc->GetValuePointer();
+            stringStack[pos2-1] = (char*)leafc->GetValuePointer();
          } else {
-            tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
+            stringStack[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,real_instance);
          }
          continue;
       }
@@ -3327,8 +3408,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          continue;
       }
 //*-*- String
-      if (action == 80000) {
-         pos2++; tab2[pos2-1] = (char*)fExpr[i].Data();
+      if (action == kStrings) {
+         pos2++; stringStack[pos2-1] = (char*)fExpr[i].Data();
          continue;
       }
 //*-*- numerical value
@@ -3378,7 +3459,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
             case  20 : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); break;
             case  21 : tab[pos-1] = tab[pos-1]*tab[pos-1]; break;
             case  22 : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); break;
-            case  23 : pos2 -= 2; pos++;if (tab2[pos2] && strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+            case  23 : pos2 -= 2; pos++;if (stringStack[pos2] && 
+                                            strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
             case  24 : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); break;
             case  25 : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); break;
@@ -3414,9 +3496,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
             case  67 : pos--; if (tab[pos-1]>=tab[pos]) tab[pos-1]=1;
                               else tab[pos-1]=0; break;
             case  68 : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; break;
-            case  76 : pos2 -= 2; pos++; if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+            case  76 : pos2 -= 2; pos++; if (!strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
                               else tab[pos-1]=0; break;
-            case  77 : pos2 -= 2; pos++;if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+            case  77 : pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
                               else tab[pos-1]=0; break;
             case  78 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); break;
             case  79 : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); break;
@@ -3561,16 +3643,23 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const
 }
 
 //______________________________________________________________________________
-Bool_t TTreeFormula::IsInteger(Int_t code) const
+Bool_t TTreeFormula::IsInteger() const
 {
    // return TRUE if the formula corresponds to one single Tree leaf
    // and this leaf is short, int or unsigned short, int
    // When a leaf is of type integer, the generated histogram is forced
    // to have an integer bin width
+
    if (fNoper > 1) return kFALSE;
 
+   if (fOper[0]==kAlias) {
+      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      Assert(subform);
+      return subform->IsInteger();
+   }
+   
    if (fLeaves.GetEntries() != 1) {
-      switch (fLookupType[code]) {
+      switch (fLookupType[0]) {
          case kIndexOfEntry:
          case kEntries:
          case kLength:
@@ -3583,8 +3672,29 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    
    if (EvalClass()==TBits::Class()) return kTRUE;
 
+   return IsLeafInteger(0);
+}
+
+//______________________________________________________________________________
+Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
+{
+   // return TRUE if the leaf corresponding to code is short, int or unsigned
+   // short, int When a leaf is of type integer, the generated histogram is
+   // forced to have an integer bin width
+
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
-   if (!leaf) return kFALSE;
+   if (!leaf) {
+      switch (fLookupType[code]) {
+         case kIndexOfEntry:
+         case kEntries:
+         case kLength:
+         case kIteration:
+           return kTRUE;
+         default:
+           return kFALSE;
+      }      
+      return kFALSE;
+   }
    if (fAxis) return kTRUE;
    TFormLeafInfo * info;
    switch (fLookupType[code]) {
@@ -3602,64 +3712,83 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Bool_t TTreeFormula::IsString() const
+{
+   // return TRUE if the formula is a string
+
+   return TestBit(kIsCharacter) || (fNoper==1 && IsString(0));
+}
 
 //______________________________________________________________________________
-Bool_t TTreeFormula::IsString(Int_t code) const
-{
-   // return TRUE if the leaf or data member corresponding to code is a string
+Bool_t TTreeFormula::IsString(Int_t oper) const
+{ 
+   // (fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == kStrings) 
 
+   // return true if the expression at the index 'oper' is to be treated as 
+   // as string
+
+   if (TFormula::IsString(oper)) return kTRUE;
+   if (fOper[oper]>=105000 && fOper[oper]<110000) return kTRUE;
+   if (fOper[oper]==kAliasString) return kTRUE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t  TTreeFormula::IsLeafString(Int_t code) const
+{   
+   // return TRUE if the leaf or data member corresponding to code is a string
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;
-
+   
    TFormLeafInfo * info;
    switch(fLookupType[code]) {
-   case kDirect:
-     if ( !leaf->IsUnsigned() && (leaf->InheritsFrom("TLeafC") || leaf->InheritsFrom("TLeafB") ) ) {
-        // Need to find out if it is an 'array' or a pointer.
-        if (leaf->GetLenStatic() > 1) return kTRUE;
-
-        // Now we need to differantiate between a variable length array and
-        // a TClonesArray.
-        if (leaf->GetLeafCount()) {
-           const char* indexname = leaf->GetLeafCount()->GetName();
-           if (indexname[strlen(indexname)-1] == '_' ) {
-              // This in a clones array
-             return kFALSE;
-           } else {
-              // this is a variable length char array
-              return kTRUE;
-           }
-        }
-     } else if (leaf->InheritsFrom("TLeafElement")) {
-        TBranchElement * br = (TBranchElement*)leaf->GetBranch();
-        Int_t bid = br->GetID();
-        if (bid < 0) return kFALSE;
-        TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
-        if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
-           // Check whether a specific element of the string is specified!
-           if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
-           return kTRUE;
-        }
-        if ( elem->GetType()== TStreamerInfo::kCharStar) {
-           // Check whether a specific element of the string is specified!
-           if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
-           return kTRUE;
-        }
-        return kFALSE;
-     } else {
-        return kFALSE;
-     }
-   case kMethod:
-      //TMethodCall *m = GetMethodCall(code);
-      //TMethodCall::EReturnType r = m->ReturnType();
-      return kFALSE;
-   case kDataMember:
-      info = GetLeafInfo(code);
-      return info->IsString();
-   default:
-      return kFALSE;
+      case kDirect:
+         if ( !leaf->IsUnsigned() && (leaf->InheritsFrom("TLeafC") || leaf->InheritsFrom("TLeafB") ) ) {
+            // Need to find out if it is an 'array' or a pointer.
+            if (leaf->GetLenStatic() > 1) return kTRUE;
+            
+            // Now we need to differantiate between a variable length array and
+            // a TClonesArray.
+            if (leaf->GetLeafCount()) {
+               const char* indexname = leaf->GetLeafCount()->GetName();
+               if (indexname[strlen(indexname)-1] == '_' ) {
+                  // This in a clones array
+                  return kFALSE;
+               } else {
+                  // this is a variable length char array
+                  return kTRUE;
+               }
+               }
+         } else if (leaf->InheritsFrom("TLeafElement")) {
+            TBranchElement * br = (TBranchElement*)leaf->GetBranch();
+            Int_t bid = br->GetID();
+            if (bid < 0) return kFALSE;
+            TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
+            if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
+               // Check whether a specific element of the string is specified!
+               if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
+               return kTRUE;
+            }
+            if ( elem->GetType()== TStreamerInfo::kCharStar) {
+               // Check whether a specific element of the string is specified!
+               if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
+               return kTRUE;
+            }
+            return kFALSE;
+         } else {
+            return kFALSE;
+         }
+      case kMethod:
+         //TMethodCall *m = GetMethodCall(code);
+         //TMethodCall::EReturnType r = m->ReturnType();
+         return kFALSE;
+      case kDataMember:
+         info = GetLeafInfo(code);
+         return info->IsString();
+      default:
+         return kFALSE;
    }
-
 }
 
 //______________________________________________________________________________
@@ -3724,7 +3853,14 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 void TTreeFormula::SetAxis(TAxis *axis)
 {
    if (!axis) {fAxis = 0; return;}
-   if (TestBit(kIsCharacter)) fAxis = axis;
+   if (TestBit(kIsCharacter)) {
+      fAxis = axis;
+      if (fNoper==1 && fOper[0]==kAliasString){
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+         Assert(subform); 
+         subform->SetAxis(axis);
+      }
+   }
    if (IsInteger()) axis->SetBit(TAxis::kIsInteger);
 }
 
@@ -3798,6 +3934,13 @@ void TTreeFormula::UpdateFormulaLeaves()
          }
       }
    }
+   for(Int_t k=0;k<fNoper;k++) {
+      if (fOper[k]==kAlias || (fOper[k]==kAliasString) ) {
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+         Assert(subform);
+         subform->UpdateFormulaLeaves();
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -3821,7 +3964,7 @@ void TTreeFormula::ResetDimensions() {
          last_code = info->fCode;
          fNdimensions[last_code] = 0;
       }
-      if (fOper[last_code]>=105000) {
+      if (fOper[last_code]>=105000 && fOper[last_code]<110000) {
          // We have a string used as a string (and not an array of number)
          // We need to determine which is the last dimension and skip it.
          DimensionInfo *nextinfo = (DimensionInfo*)next();
@@ -3844,6 +3987,36 @@ void TTreeFormula::ResetDimensions() {
    }
 
    fMultiplicity = 0;
+   for(i=0;i<fNoper;i++) {
+      if (fOper[i]==kAlias || fOper[i]==kAliasString) {
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(i));
+         Assert(subform);
+         switch(subform->GetMultiplicity()) {
+            case 0: break;
+            case 1: fMultiplicity = 1; break;
+            case 2: if (fMultiplicity!=1) fMultiplicity = 2; break;
+         }
+         fManager->Add(subform);
+         // since we are addint to this manager 'subform->ResetDimensions();'
+         // will be called a little latter
+         continue;
+      }
+      if (fOper[i] >= 105000 && fOper[i]<110000) {
+         // We have a string used as a string
+
+         // This dormant portion of code would be used if (when?) we allow the histogramming
+         // of the integral content (as opposed to the string content) of strings
+         // held in a variable size container delimited by a null (as opposed to
+         // a fixed size container or variable size container whose size is controlled
+         // by a variable).  In GetNdata, we will then use strlen to grab the current length.
+         //fCumulSizes[i][fNdimensions[i]-1] = 1;
+         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
+         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
+
+         //continue;
+      }
+   }
+
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) {
          TCutG *gcut = (TCutG*)fMethods.At(i);
@@ -3869,22 +4042,6 @@ void TTreeFormula::ResetDimensions() {
 
          continue;
       }
-
-      if (fOper[i] >= 105000) {
-         // We have a string used as a string
-
-         // This dormant portion of code would be used if (when?) we allow the histogramming
-         // of the integral content (as opposed to the string content) of strings
-         // held in a variable size container delimited by a null (as opposed to
-         // a fixed size container or variable size container whose size is controlled
-         // by a variable).  In GetNdata, we will then use strlen to grab the current length.
-         //fCumulSizes[i][fNdimensions[i]-1] = 1;
-         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
-         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
-
-         //continue;
-      }
-
 
       if (fLookupType[i]==kIteration) {
           fMultiplicity = 1;

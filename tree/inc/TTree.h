@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.45 2003/01/17 17:48:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.46 2003/03/19 14:01:50 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -111,6 +111,7 @@ protected:
     TDirectory   *fDirectory;         //! Pointer to directory holding this tree
     TObjArray     fBranches;          //  List of Branches
     TObjArray     fLeaves;            //  Direct pointers to individual branch leaves
+    TList        *fAliases;           //  List of aliases for expressions based on the tree branches.
     TEventList   *fEventList;         //! Pointer to event selection list (if one)
     TArrayD       fIndexValues;       //  Sorted index values
     TArrayI       fIndex;             //  Index of sorted values
@@ -170,6 +171,7 @@ public:
     virtual Int_t     Fit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" ,Option_t *goption=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
+    virtual const char *GetAlias(const char *aliasName) const;
     virtual TBranch  *GetBranch(const char *name);
     virtual Bool_t    GetBranchStatus(const char *branchname) const;
     static  Int_t     GetBranchStyle();
@@ -200,6 +202,7 @@ public:
     virtual TObjArray       *GetListOfBranches() {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
     virtual TList    *GetListOfFriends() const  {return fFriends;}
+    virtual TSeqCollection *GetListOfAliases() const {return fAliases;}
     virtual Int_t     GetMakeClass() const {return fMakeClass;}
     virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
     virtual Double_t  GetMaximum(const char *columname);
@@ -251,6 +254,7 @@ public:
     virtual void      Reset(Option_t *option="");
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Bool_t    SetAlias(const char *aliasName, const char *aliasFormula);
     virtual void      SetAutoSave(Int_t autos=10000000) {fAutoSave=autos;}
     virtual void      SetBasketSize(const char *bname,Int_t buffsize=16000);
     virtual void      SetBranchAddress(const char *bname,void *add);
@@ -278,7 +282,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
-    ClassDef(TTree,9)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,10)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

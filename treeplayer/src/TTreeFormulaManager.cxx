@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.1 2002/03/26 08:24:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormulaManager.cxx,v 1.2 2002/04/04 17:28:52 rdm Exp $
 // Author: Philippe Canal   20/03/02
 
 /*************************************************************************
@@ -79,7 +79,6 @@ void TTreeFormulaManager::Add(TTreeFormula* adding)
   TTreeFormulaManager * old = adding->fManager;
 
   if (old) {
-
      if (old==this) {
         if (fFormulas.FindObject(adding)) return;
      } else {

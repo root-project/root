@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.9 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.10 2003/03/31 16:04:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
 
    TF3(const TF3 &f3);
+   TF3& operator=(const TF3 &rhs);
    virtual   ~TF3();
    virtual void     Copy(TObject &f3) const;
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);

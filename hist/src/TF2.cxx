@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.19 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.20 2003/04/20 20:03:04 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -115,6 +115,15 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fNdim   = 2;
    fContour.Set(0);
 
+}
+
+//______________________________________________________________________________
+TF2& TF2::operator=(const TF2 &rhs)
+{
+   if (this != &rhs) {
+      rhs.Copy(*this);
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

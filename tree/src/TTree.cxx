@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.147 2003/04/17 07:44:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.148 2003/06/10 20:52:50 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -332,6 +332,7 @@ TTree::TTree(): TNamed()
    fDebugMin       = 0;
    fDebugMax       = 9999999;
    fFriends        = 0;
+   fAliases        = 0;
    fMakeClass      = 0;
    fNotify         = 0;
    fFileNumber     = 0;
@@ -374,6 +375,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fDebugMin       = 0;
    fDebugMax       = 9999999;
    fFriends        = 0;
+   fAliases        = 0;
    fMakeClass      = 0;
    fNotify         = 0;
    fFileNumber     = 0;
@@ -416,6 +418,11 @@ TTree::~TTree()
       fFriends->Delete();
       delete fFriends;
       fFriends = 0;
+   }
+   if (fAliases) {
+      fAliases->Delete();
+      delete fAliases;
+      fAliases = 0;
    }
    fDirectory  = 0; //must be done after the destruction of friends
 }
@@ -2198,6 +2205,32 @@ Int_t TTree::Fit(const char *funcname ,const char *varexp, const char *selection
 }
 
 //______________________________________________________________________________
+const char *TTree::GetAlias(const char *aliasName) const
+{
+   // Returns the expanded value of the alias.  Search in the friends if any
+
+   if (fAliases) {
+      TObject *alias = fAliases->FindObject(aliasName);
+      if (alias) return alias->GetTitle();
+   }
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      if (t) {
+         const char *alias = t->GetAlias(aliasName);
+         if (alias) return alias;
+         const char *subAliasName = strstr(aliasName,fe->GetName());
+         if (subAliasName && subAliasName[strlen(fe->GetName())]=='.') {
+            alias = t->GetAlias(aliasName+strlen(fe->GetName())+1);
+            if (alias) return alias;
+         }
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TBranch *TTree::GetBranch(const char *name)
 {
 // Return pointer to the branch with name in this Tree or the list
@@ -2514,6 +2547,17 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 const char *TTree::GetFriendAlias(TTree *tree) const
 {
 // If the the 'tree' is a friend, this method returns its alias name
+// This 'alias' is a an alias for the TTree itself.
+// It can be used in conjunction with a branch or leaf name in a TTreeFormula.
+//  Is can alos be used in conjunction with an alias created using
+//  TTree::SetAlias in a TTreeFormula, eg:
+//     maintree->Draw("treealias.fPx - treealias.myAlias");
+//  where fPx is a branch of the friend tree aliased as 'treealias' and 'myAlias;
+//  was created using TTree::SetAlias on the tree aliases as 'treealias'.
+//
+//  However, note that 'treealias.myAlias' will be expanded literally, without
+//  'remembering' it comes from the aliased friend and thus might the branch
+//  name might not be disambiguated properly.
 
    if (!fFriends) return 0;
    TIter nextf(fFriends);
@@ -3165,6 +3209,50 @@ Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, 
    GetPlayer();
    if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
    else         return -1;
+}
+
+//______________________________________________________________________________
+Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula) 
+{
+//*-*-*-*-*-*-*-*-*-*-*Set a tree variable alias*-*-*-*-*-*
+//*-*                  ====================================
+//
+//  Set an alias for an expression/formula based on the tree 'variables'.  
+//
+//  The content of 'aliasName' can be used in TTreeFormula (i.e. TTree::Draw,
+//  TTree::Scan, TTreeViewer) and will be evaluated as the content of
+//  'aliasFormula'.
+//  If the alias 'aliasName' already existed, it is replaced by the new
+//  value.
+//  When being used, the alias can be preceded by an eventual 'Friend Alias'
+//  (see TTree::GetFriendAlias)
+//
+//  Return true if it was added properly.
+//
+//  For example:
+//     tree->SetAlias("x1","(tdc1[1]-tdc1[0])/49");
+//     tree->SetAlias("y1","(tdc1[3]-tdc1[2])/47");
+//     tree->SetAlias("x2","(tdc2[1]-tdc2[0])/49");
+//     tree->SetAlias("y2","(tdc2[3]-tdc2[2])/47");
+//     tree->Draw("y2-y1:x2-x1");
+//
+
+   if (aliasName==0 || aliasFormula==0) return false;
+   if (strlen(aliasName)==0 || strlen(aliasFormula)==0) return false;
+
+   if (fAliases==0) fAliases = new TList;
+   else {
+      TNamed *oldHolder = (TNamed*)fAliases->FindObject(aliasName);
+      if (oldHolder) {
+         oldHolder->SetTitle(aliasFormula);
+         return kTRUE;
+      }
+   }
+   
+   TNamed *holder = new TNamed(aliasName,aliasFormula);
+   fAliases->Add(holder);
+
+   return kTRUE;
 }
 
 //_______________________________________________________________________

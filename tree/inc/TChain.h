@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.30 2003/03/19 14:01:50 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.31 2003/06/24 14:00:59 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -82,6 +82,7 @@ public:
     TObjArray        *GetListOfBranches();
     TObjArray        *GetListOfFiles() const {return fFiles;}
     TObjArray        *GetListOfLeaves();
+    const char       *GetAlias(const char *aliasName) const;
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();

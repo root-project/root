@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.9 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.10 2003/03/31 16:04:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -96,6 +96,15 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fZmax   = zmax;
    fNpz    = 30;
    fNdim   = 3;
+}
+
+//______________________________________________________________________________
+TF3& TF3::operator=(const TF3 &rhs) 
+{
+   if (this != &rhs) {
+      rhs.Copy(*this);
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.43 2003/06/21 13:27:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.44 2003/06/26 17:44:29 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -165,6 +165,15 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 }
 
 //______________________________________________________________________________
+TFormula& TFormula::operator=(const TFormula &rhs) 
+{
+   if (this != &rhs) {
+      rhs.Copy(*this);
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
 TFormula::~TFormula()
 {
 //*-*-*-*-*-*-*-*-*-*-*Formula default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -174,7 +183,6 @@ TFormula::~TFormula()
 
    ClearFormula();
 }
-
 
 //______________________________________________________________________________
 Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
@@ -404,7 +412,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*
 //*-*   * strings :
 //*-*
-//*-*    s0  80000      s1  80001  etc..
+//*-*    sX  80000      (80001 to 99999) to not used yet
 //*-*
 //*-*   * variables :
 //*-*
@@ -879,8 +887,8 @@ if (err==0) {
           if (find == 0) {
 //*-*- Check if chaine is a defined variable.
 //*-*- Note that DefinedVariable can be overloaded
-  	       ctemp = chaine;
-	       ctemp.ReplaceAll(escapedSlash, slash);
+  	            ctemp = chaine;
+               ctemp.ReplaceAll(escapedSlash, slash);
                k = DefinedVariable(ctemp);
                if (k >= 5000 && k < 10000) {
                   fExpr[fNoper] = ctemp;
@@ -1490,7 +1498,7 @@ if (err==0) {
             if (chaine(0,1)=="\"" && chaine(chaine.Length()-1,1)=="\"") {
                //*-* It is a string !!!
                fExpr[fNoper] = chaine(1,chaine.Length()-2);
-               fOper[fNoper] = 80000;
+               fOper[fNoper] = kStrings;
                fNoper++;
             }
             else {
@@ -1776,42 +1784,43 @@ Int_t TFormula::Compile(const char *expression)
   Int_t is_it_string,last_string=0,before_last_string=0;
   if (!fOper) fNoper = 0;
    enum { kIsCharacter = BIT(12) };
-  for (i=0; i<fNoper; i++) {
-     is_it_string = 0;
-     if ((fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == 80000) is_it_string = 1;
-     else if (last_string) {
-
-       if (fOper[i] == 62) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator == have to be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 76;
-          SetBit(kIsCharacter);
-       } else if (fOper[i] == 63) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator != have to be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 77;
-          SetBit(kIsCharacter);
-       }
-       else if (fOper[i] == 23) {
-          if (! (before_last_string && last_string) ) {
-             Error("Compile", "strstr requires 2 string arguments");
-             return -1;
-          }
-          SetBit(kIsCharacter);
-       } else if (before_last_string) {
-          // the i-2 element is a string not used in a string operation, let's down grade it
-          // to a char array:
-          if (fOper[i-2]>=105000) {
-            fOper[i-2] -= 5000;
-            fNval++;
-            fNstring--;
-          }
-       }
-
+  for (i=0; i<fNoper; i++,
+                      before_last_string = last_string,
+                      last_string = is_it_string) {
+     is_it_string = IsString(i);
+     if (is_it_string) continue;
+     if (last_string) {
+        if (fOper[i] == 62) {
+           if (!before_last_string) {
+              Error("Compile", "Both operands of the operator == have to be either numbers or strings");
+              return -1;
+           }
+           fOper[i] = 76;
+           SetBit(kIsCharacter);
+        } else if (fOper[i] == 63) {
+           if (!before_last_string) {
+              Error("Compile", "Both operands of the operator != have to be either numbers or strings");
+              return -1;
+           }
+           fOper[i] = 77;
+           SetBit(kIsCharacter);
+        }
+        else if (fOper[i] == 23) {
+           if (! (before_last_string && last_string) ) {
+              Error("Compile", "strstr requires 2 string arguments");
+              return -1;
+           }
+           SetBit(kIsCharacter);
+        } else if (before_last_string) {
+           // the i-2 element is a string not used in a string operation, let's down grade it
+           // to a char array:
+           if (fOper[i-2]>=105000) {
+              fOper[i-2] -= 5000;
+              fNval++;
+              fNstring--;
+           }
+        }
+        
      } else if (before_last_string) {
         // the i-2 element is a string not used in a string operation, let's down grade it
         // to a char array:
@@ -1821,8 +1830,6 @@ Int_t TFormula::Compile(const char *expression)
            fNstring--;
         }
      }
-     before_last_string = last_string;
-     last_string = is_it_string;
   }
 
   if (err) { fNdim = 0; return 1; }
@@ -2097,7 +2104,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
        continue;
     }
 //*-*- String
-    if (action == 80000) {
+    if (action == kStrings) {
        pos2++; tab2[pos2-1] = (char*)fExpr[i].Data();
        continue;
     }
@@ -2406,6 +2413,15 @@ Int_t TFormula::GetParNumber(const char *parName) const
       if (fNames[i] == parName) return i;
    }
   return -1;
+}
+
+//______________________________________________________________________________
+Bool_t TFormula::IsString(Int_t oper) const
+{
+   // return true if the expression at the index 'oper' is to be treated as 
+   // as string
+
+   return fOper[oper] == kStrings;
 }
 
 //______________________________________________________________________________

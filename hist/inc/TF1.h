@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.34 2003/05/06 13:14:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.35 2003/05/15 13:56:29 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -83,6 +83,7 @@ public:
    TF1(const char *name, void *fcn, Double_t xmin, Double_t xmax, Int_t npar);
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Int_t npar=0);
    TF1(const TF1 &f1);
+   TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;

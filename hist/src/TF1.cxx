@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.63 2003/05/21 20:13:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.64 2003/06/10 16:45:57 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -452,6 +452,15 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    SetLineStyle(gStyle->GetFuncStyle());
    SetFillStyle(0);
 
+}
+
+//______________________________________________________________________________
+TF1& TF1::operator=(const TF1 &rhs) 
+{
+   if (this != &rhs) {
+      rhs.Copy(*this);
+   }
+   return *this;
 }
 
 //______________________________________________________________________________

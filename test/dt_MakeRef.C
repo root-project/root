@@ -70,6 +70,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refNpoint = RefClone(where,"hNpoint");
    TH1F *refValid  = RefClone(where,"hValid");
    TH1F *refPointValue  = RefClone(where,"hPointValue");
+   TH1F *refAlias  = RefClone(where,"hAlias");
 
    TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
    TH1F *refColMatrix    = RefClone(where,"hColMatrix");
@@ -97,6 +98,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refAndValid = RefClone(where,"hAndValid");
 
    TH1F *refString = RefClone(where,"hString");
+   TH1F *refAliasStr = RefClone(where,"hAliasStr");
 
    TH1F *refPxBx = RefClone(where,"hPxBx");
    TH1F *refPxBxWeight =  RefClone(where,"hPxBxWeight");
@@ -140,8 +142,10 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       
       if (!strcmp("type1",event->GetType())) 
         refString->Fill(event->GetHeader()->GetEvtNum());
-      if (strstr(event->GetType(),"1"))
+      if (strstr(event->GetType(),"1")) {
         refString->Fill(event->GetHeader()->GetEvtNum());
+      }
+      refAliasStr->Fill(strstr(event->GetType(),"1")!=0);
 
       Nvertex = event->GetNvertex();
       for(i0=0;i0<Nvertex;i0++) {
@@ -250,6 +254,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          }
          if (bits.TestBitNumber(5)) refFiltTrackTrigger->Fill(t->GetPx());
          refBreit->Fill(TMath::BreitWigner(t->GetPx(),3,2));
+
+         refAlias->Fill(head->GetEvtNum()*6+t->GetPx()*t->GetPy());
       }
    }
 

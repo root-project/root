@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.27 2003/01/30 06:40:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.28 2003/02/27 21:10:52 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -56,6 +56,9 @@ protected:
    enum { kIsCharacter = BIT(12) };
    enum { kDirect, kDataMember, kMethod, 
           kIndexOfEntry, kEntries, kLength, kIteration };
+   enum { kAlias = TFormula::kVariable+10000+1,
+          kAliasString = kAlias+1
+   };
 
    TTree       *fTree;            //! pointer to Tree
    Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
@@ -68,8 +71,9 @@ protected:
    TObjArray   fLeaves;           //!  List of leaf used in this formula.
    TObjArray   fDataMembers;      //!  List of leaf data members
    TObjArray   fMethods;          //!  List of leaf method calls
+   TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
-   
+
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
    UChar_t       fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
@@ -103,35 +107,45 @@ protected:
 
    void       ResetDimensions();
    Bool_t     LoadCurrentDim();
+   
+   virtual Bool_t     IsLeafInteger(Int_t code) const;
+
+   virtual Bool_t     IsString(Int_t oper) const;
+   virtual Bool_t     IsLeafString(Int_t code) const;
+private:
+   // Not implemented yet
+   TTreeFormula(const TTreeFormula&);
+   TTreeFormula& operator=(const TTreeFormula&);
 
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
-   virtual Int_t      DefinedVariable(TString &variable);
-   virtual TClass*    EvalClass() const;
-   virtual Double_t   EvalInstance(Int_t i=0);
-   virtual void*      EvalObject(Int_t i=0);
+   virtual Int_t       DefinedVariable(TString &variable);
+   virtual TClass*     EvalClass() const;
+   virtual Double_t    EvalInstance(Int_t i=0, const char *stringStack[]=0);
+   virtual const char *EvalStringInstance(Int_t i=0);
+   virtual void*       EvalObject(Int_t i=0);
    // EvalInstance should be const.  See comment on GetNdata()
-   TFormLeafInfo     *GetLeafInfo(Int_t code) const;
-   TMethodCall       *GetMethodCall(Int_t code) const;
-   virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
-   virtual TLeaf     *GetLeaf(Int_t n) const;
-   virtual Int_t      GetNcodes() const {return fNcodes;}
-   virtual Int_t      GetNdata();
+   TFormLeafInfo      *GetLeafInfo(Int_t code) const;
+   TMethodCall        *GetMethodCall(Int_t code) const;
+   virtual Int_t       GetMultiplicity() const {return fMultiplicity;}
+   virtual TLeaf      *GetLeaf(Int_t n) const;
+   virtual Int_t       GetNcodes() const {return fNcodes;}
+   virtual Int_t       GetNdata();
    //GetNdata should probably be const.  However it need to cache some information about the actual dimension
    //of arrays, so if GetNdata is const, the variables fUsedSizes and fCumulUsedSizes need to be declared
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword. 
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
-   virtual Bool_t     IsInteger(Int_t code = 0) const;
-   virtual Bool_t     IsString(Int_t code = 0) const;
-   virtual char      *PrintValue(Int_t mode=0) const;
-   virtual void       SetAxis(TAxis *axis=0);
-   virtual void       SetTree(TTree *tree) {fTree = tree;}
-   virtual void       UpdateFormulaLeaves();
+   virtual Bool_t      IsInteger() const;
+   virtual Bool_t      IsString() const;
+   virtual char       *PrintValue(Int_t mode=0) const;
+   virtual void        SetAxis(TAxis *axis=0);
+   virtual void        SetTree(TTree *tree) {fTree = tree;}
+   virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,7)  //The Tree formula
+   ClassDef(TTreeFormula,8)  //The Tree formula
 };
 
 #endif

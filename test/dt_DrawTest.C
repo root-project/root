@@ -105,6 +105,8 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
    tree->Draw("fValid>>hValid",  "fPx < 0","goff");
    DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle!=0);
+   tree->SetAlias("mult","fPx*fPy");
+   DrawSkippable(tree,"fEvtHdr.fEvtNum*6+mult", "hAlias", 1);
 
    tree->Draw("fMatrix>>hFullMatrix","","goff");
    tree->Draw("fMatrix[][0]>>hColMatrix","","goff");
@@ -137,6 +139,8 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    // Test string operations
    DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",(level>0));
    DrawSkippable(tree,"fEvtHdr.fEvtNum","strstr(fType,\"1\") ","+hString",(level>0));
+   tree->SetAlias("typ","fType");
+   DrawSkippable(tree,"strstr(typ,\"1\") ", "hAliasStr", 1);
 
    // Test binary operators
    DrawSkippable(tree,"fValid<<4","hShiftValid",(level>0));

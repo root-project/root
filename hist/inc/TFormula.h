@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.19 2003/06/17 20:07:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.20 2003/06/18 16:48:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -54,9 +54,10 @@ protected:
    TObjArray  fFunctions;       //Array of function calls to make
    TBits      fAlreadyFound;    //! cache for information
 
-   void       ClearFormula(Option_t *option="");
-   Bool_t     IsInitialized() { return TestBit(kInitialized); }
-   Int_t      GetOperType(Int_t oper) const;
+           void    ClearFormula(Option_t *option="");
+           Bool_t  IsInitialized() { return TestBit(kInitialized); }
+           Int_t   GetOperType(Int_t oper) const;
+   virtual Bool_t  IsString(Int_t oper) const;
 
    enum {
       kConstants    =  50000,
@@ -76,6 +77,7 @@ public:
               TFormula();
               TFormula(const char *name,const char *formula);
               TFormula(const TFormula &formula);
+   TFormula& operator=(const TFormula &rhs);
    virtual   ~TFormula();
 
  public:
