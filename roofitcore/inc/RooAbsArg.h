@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsArg.rdl,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,10 +52,16 @@ public:
   static void verboseDirty(Bool_t flag) { _verboseDirty = flag ; }
 
   virtual Bool_t redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;
+  Bool_t dependsOn(RooArgSet& serverList) ;
+  Bool_t dependsOn(RooAbsArg& server) ;
 
 protected:
 
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
+  // This function allows RooDataSet to directly modify the contents of a RooAbsArg
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  // This function is used by RooDataSet to check that the above didn't result in an
+  // illegal value or undefined state
+  virtual Bool_t isValid() ;
 
   // Classes that don't have dirty state information should override this function 
   Bool_t _dirty ;

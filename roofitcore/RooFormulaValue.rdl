@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFormulaValue.rdl,v 1.1 2001/03/14 02:45:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,11 +13,11 @@
 #ifndef ROO_FORMULA_VALUE
 #define ROO_FORMULA_VALUE
 
-#include "RooFitCore/RooDerivedValue.hh"
+#include "RooFitCore/RooAbsValue.hh"
 #include "RooFitCore/RooFormula.hh"
 class RooArgSet ;
 
-class RooFormulaValue : public RooDerivedValue {
+class RooFormulaValue : public RooAbsValue {
 public:
   inline RooFormulaValue() { }
   virtual ~RooFormulaValue();

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooValue.cc,v 1.1 2001/03/14 02:45:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@ ClassImp(RooValue)
 
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t value, const char *unit, RooBlindBase* blinder) :
-  RooDerivedValue(name, title, 0, 0, unit), _error(0), _blinder(blinder)
+  RooAbsValue(name, title, 0, 0, unit), _error(0), _blinder(blinder)
 {
   _value = value ;
   setConstant(kTRUE) ;
@@ -36,7 +36,7 @@ RooValue::RooValue(const char *name, const char *title,
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooDerivedValue(name, title, minValue, maxValue, unit), _blinder(blinder)
+  RooAbsValue(name, title, minValue, maxValue, unit), _blinder(blinder)
 {
   _value= 0.5*(minValue + maxValue);
   updateLimits();
@@ -46,7 +46,7 @@ RooValue::RooValue(const char *name, const char *title,
 RooValue::RooValue(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit, RooBlindBase* blinder) :
-  RooDerivedValue(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder)
+  RooAbsValue(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder)
 {
 //   if (_blinder) _blinder->redoBlind() ;
   _value = value ;
@@ -55,7 +55,7 @@ RooValue::RooValue(const char *name, const char *title,
 }  
 
 RooValue::RooValue(const RooValue& other) :
-  RooDerivedValue(other), 
+  RooAbsValue(other), 
   _error(other._error),
   _blinder(other._blinder)
 {
@@ -193,7 +193,7 @@ RooAbsArg&
 RooValue::operator=(RooAbsArg& aorig)
 {
   // Assignment operator for RooValue
-  RooDerivedValue::operator=(aorig) ;
+  RooAbsValue::operator=(aorig) ;
 
   RooValue& orig = (RooValue&)aorig ;
   _error = orig._error ;

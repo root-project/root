@@ -1,0 +1,42 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_CAT
+#define ROO_CAT
+
+#include <iostream.h>
+#include "TNamed.h"
+
+class RooCat : public TNamed {
+public:
+  inline RooCat() : TNamed() { _value = 0 ; } 
+  inline RooCat(char* name, Int_t value) : TNamed(name,""), _value(value) {} ;
+  inline RooCat(const RooCat& other) : TNamed(other), _value(other._value) {} ;
+
+  inline RooCat& operator=(const RooCat& other) { SetName(other.GetName()) ; _value = other._value ; return *this ; } 
+  inline Bool_t operator==(const RooCat& comp) { return (_value==comp._value) ; }
+  inline Bool_t operator==(Int_t index) { return (_value==index) ; }
+  inline Bool_t operator==(const char* label) { return !TString(label).CompareTo(GetName()) ; }
+  inline operator Int_t&() { return _value ; }
+  inline operator Int_t() const { return _value ; }
+  inline Int_t GetVar() const { return _value ; }
+  void Print(Option_t* option) { cout << GetName() << ":" << _value << endl ; }
+
+protected:
+  Int_t _value ;
+	
+  ClassDef(RooCat,1) // a real-valued variable and its value
+} ;
+
+
+#endif
+

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooValue.rdl,v 1.1 2001/03/14 02:45:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,11 +17,11 @@
 
 #include "TString.h"
 
-#include "RooFitCore/RooDerivedValue.hh"
+#include "RooFitCore/RooAbsValue.hh"
 class RooArgSet ;
 class RooBlindBase ;
 
-class RooValue : public RooDerivedValue {
+class RooValue : public RooAbsValue {
 public:
   inline RooValue() { }
   RooValue(const char *name, const char *title,
@@ -61,9 +61,11 @@ public:
 
   virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
   TString* format(Int_t sigDigits, const char *options) ;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
 protected:
+
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+
   Double_t _error;
   RooBlindBase* _blinder ; //! unowned ptr
   friend ostream& operator<<(ostream& os, RooValue &var);

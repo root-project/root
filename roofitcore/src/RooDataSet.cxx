@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataSet.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,7 +43,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooValue.hh"
-#include "RooFitCore/RooDerivedValue.hh"
+#include "RooFitCore/RooAbsValue.hh"
 
 ClassImp(RooDataSet)
 
@@ -150,6 +150,10 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
      sourceIter->Reset() ;
      while (destArg = (RooAbsArg*)_iterator->Next()) {       
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
+       if (!sourceArg->isValid()) {
+	 cout << "RooDataSet::loadValues: skipping entry because " << sourceArg->GetName() << " is invalid" << endl ;
+	 continue ;
+       }
        *destArg = *sourceArg ;
     }   
      Fill() ;
@@ -223,29 +227,28 @@ void RooDataSet::add(const RooArgSet& data) {
 }
 
 
-TH1F* RooDataSet::Plot(RooDerivedValue& var, const char* cuts, const char* opts)
+TH1F* RooDataSet::Plot(RooAbsValue& var, const char* cuts, const char* opts)
 {
   // Plot distribution given variable for this data set 
   
   // First see if var is in data set 
-  RooAbsArg* plotVar = _vars.find(var.GetName()) ;
+  RooAbsValue* plotVar = (RooAbsValue*) _vars.find(var.GetName()) ;
   Bool_t ownPlotVar(kFALSE) ;
   if (!plotVar) {
-    if (!var.isDerived()) {
+    if (!var.dependsOn(_vars)) {
       cout << "RooDataSet::Plot: Argument " << var.GetName() << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
     // Clone derived variable 
-    plotVar = (RooAbsArg*) var.Clone()  ;
+    plotVar = (RooAbsValue*) var.Clone()  ;
     ownPlotVar = kTRUE ;    
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
     plotVar->redirectServers(_vars) ;
   }
 
-  RooDerivedValue* pv = (RooDerivedValue*) plotVar ;
-  TH1F *histo= pv->createHistogram("dataset", "Events");
+  TH1F *histo= plotVar->createHistogram("dataset", "Events");
 
   // Dump contents   
   Int_t nevent= (Int_t)GetEntries();
@@ -253,7 +256,7 @@ TH1F* RooDataSet::Plot(RooDerivedValue& var, const char* cuts, const char* opts)
     Int_t entryNumber=GetEntryNumber(i);
     if (entryNumber<0) break;
     get(entryNumber);
-    histo->Fill(pv->GetVar()) ;
+    histo->Fill(plotVar->GetVar()) ;
   }
 
   if (ownPlotVar) delete plotVar ;
@@ -399,10 +402,6 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 	  }
 
 	  if (!isValid) {
-	    // skip over the rest of this line
-// 	    if (verbose) {
-// 	      cout << "RooDataSet::read: ignoring this line" << endl ;
-// 	    }
 	    while(file.good() && !file.eof() && (c= file.get()) != '\n');
 	    outOfRange++;
 	    nRead= -1;

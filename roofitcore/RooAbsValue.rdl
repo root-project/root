@@ -10,21 +10,21 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_DERIVED_VALUE
-#define ROO_DERIVED_VALUE
+#ifndef ROO_ABS_VALUE
+#define ROO_ABS_VALUE
 
 #include "RooFitCore/RooAbsArg.hh"
 class RooArgSet ;
 class TH1F ;
 
-class RooDerivedValue : public RooAbsArg {
+class RooAbsValue : public RooAbsArg {
 public:
 
-  inline RooDerivedValue() { }
-  RooDerivedValue(const char *name, const char *title, const char *unit= "") ;
-  RooDerivedValue(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
-  RooDerivedValue(const RooDerivedValue& other);
-  virtual ~RooDerivedValue();
+  inline RooAbsValue() { }
+  RooAbsValue(const char *name, const char *title, const char *unit= "") ;
+  RooAbsValue(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
+  RooAbsValue(const RooAbsValue& other);
+  virtual ~RooAbsValue();
 
   RooAbsArg& operator=(RooAbsArg& other) ;
 
@@ -56,18 +56,17 @@ public:
     return _defaultHistBins;
   }
 
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) {} ;
-
 protected:
   friend class RooDataSet ;
 
   void updateLimits() ;
+  Bool_t isValid() ;
 
   Double_t _minValue, _maxValue, _value ;
   TString _unit, _label ;
   Int_t _defaultHistBins ;
 
-  ClassDef(RooDerivedValue,1) // a real-valued variable and its value
+  ClassDef(RooAbsValue,1) // a real-valued variable and its value
 };
 
 #endif

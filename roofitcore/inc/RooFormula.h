@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $$
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,12 +14,11 @@
 
 #include "Rtypes.h"
 #include "TFormula.h"
-#include "RooFitCore/RooValue.hh"
+#include "TObjArray.h"
+#include "RooFitCore/RooAbsValue.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 class RooArgSet ;
-typedef RooValue* pRV ;
-const Int_t kMAXRV = 50;
 
 class RooFormula : public TFormula {
 public:
@@ -33,14 +32,14 @@ public:
   Bool_t changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
   void dump() ;
 
-protected:
-
   Int_t DefinedVariable(TString &name) ;
   Double_t DefinedValue(Int_t code) ;
 
+protected:
+
+
   RooArgSet* _origList ;
-  pRV _useList[kMAXRV] ;
-  Int_t _nUse ;
+  TObjArray _useList ;
   ClassDef(RooFormula,1) 
 };
 

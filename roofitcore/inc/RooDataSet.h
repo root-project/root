@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooDataSet.rdl,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooArgSet.hh"
 
 class RooAbsArg;
-class RooDerivedValue;
+class RooAbsValue;
 class TIterator;
 class TBranch;
 class TH1F;
@@ -49,7 +49,7 @@ public:
   void append(RooDataSet& data) ;
   const RooArgSet *get(Int_t index) const;
 
-  TH1F* Plot(RooDerivedValue& var, const char* cuts="", const char* opts="") ;	
+  TH1F* Plot(RooAbsValue& var, const char* cuts="", const char* opts="") ;	
 
   virtual void Print(Option_t* = 0);
 

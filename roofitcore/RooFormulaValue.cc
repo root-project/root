@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFormulaValue.cc,v 1.1 2001/03/14 02:45:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,8 +17,10 @@ ClassImp(RooFormulaValue)
 
 
 RooFormulaValue::RooFormulaValue(const char *name, const char *title, RooArgSet& dependents) : 
-  RooDerivedValue(name,title), _formula(name,title,dependents)
+  RooAbsValue(name,title), _formula(name,title,dependents)
 {  
+  _formula.actualDependents().Print() ;
+
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
@@ -28,7 +30,7 @@ RooFormulaValue::RooFormulaValue(const char *name, const char *title, RooArgSet&
 }
 
 RooFormulaValue::RooFormulaValue(const RooFormulaValue& other) : 
-  RooDerivedValue(other), _formula(other._formula)
+  RooAbsValue(other), _formula(other._formula)
 {
 }
 
@@ -46,7 +48,7 @@ Double_t RooFormulaValue::Evaluate()
 Bool_t RooFormulaValue::redirectServers(RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
   // Change current servers to new servers with the same name in the given list
-  RooDerivedValue::redirectServers(newServerList,mustReplaceAll) ;
+  RooAbsValue::redirectServers(newServerList,mustReplaceAll) ;
   Bool_t ret =  _formula.changeDependents(newServerList,mustReplaceAll) ;
   setDirty(kTRUE) ;
   return ret ;

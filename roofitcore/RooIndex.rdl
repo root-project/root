@@ -1,0 +1,44 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_INDEX
+#define ROO_INDEX
+
+#include <iostream.h>
+#include "RooFitCore/RooAbsIndex.hh"
+
+class RooIndex : public RooAbsIndex {
+public:
+  RooIndex() {} ;
+  virtual ~RooIndex();
+
+  RooIndex(const char *name, const char *title);
+  RooIndex(const RooIndex& other) ;
+
+  virtual RooAbsArg& operator=(RooAbsArg& other) ; 
+  virtual Bool_t isDerived() const { return kFALSE; }
+
+  Bool_t setIndex(Int_t index) ;
+  Bool_t setLabel(char* label) ;
+  
+  // I/O streaming interface
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) ;
+  virtual void PrintToStream(ostream& stream, Option_t* = 0) ;
+
+protected:
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+
+  ClassDef(RooIndex,1) // a real-valued variable and its value
+};
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsArg.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -181,6 +181,23 @@ void RooAbsArg::removeServer(RooAbsArg& server)
 } 
 
 
+Bool_t RooAbsArg::dependsOn(RooArgSet& serverList) 
+{
+  TIterator* sIter = serverList.MakeIterator() ;
+  RooAbsArg* server ;
+  while (server=(RooAbsArg*)sIter->Next()) {
+    if (dependsOn(*server)) return kTRUE  ;
+  }
+  return kFALSE ;
+}
+
+
+Bool_t RooAbsArg::dependsOn(RooAbsArg& server) 
+{
+  return _serverList.FindObject(server.GetName())?kTRUE:kFALSE ;
+}
+
+
 void RooAbsArg::setDirty(Bool_t flag) 
 { 
   // Set 'dirty' state for this object and propagate flag to all its clients
@@ -238,6 +255,19 @@ Bool_t RooAbsArg::redirectServers(RooArgSet& newSet, Bool_t mustReplaceAll)
 
   delete sIter ;
   return ret ;
+}
+
+
+void RooAbsArg::attachToTree(TTree& t, Int_t bufSize=32000)
+{
+  cout << "RooAbsArg::attachToTree(" << GetName() << "): Cannot be attached to a TTree" << endl ;
+}
+
+
+
+Bool_t RooAbsArg::isValid() 
+{
+  return kTRUE ;
 }
 
 
