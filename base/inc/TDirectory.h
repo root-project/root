@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.13 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.14 2003/01/02 22:36:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    TList              *GetListOfKeys() const { return fKeys; }
    TDatime            &GetModificationDate() {return fDatimeM;}
    TObject            *GetMother() const { return fMother; }
+   virtual Int_t       GetNbytesKeys() const {return fNbytesKeys;}
    virtual Int_t       GetNkeys() const {return fKeys->GetSize();}
    virtual Seek_t      GetSeekDir() const { return fSeekDir; }
    virtual Seek_t      GetSeekParent() const { return fSeekParent; }
