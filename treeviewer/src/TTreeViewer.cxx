@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.26 2002/09/13 19:43:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.27 2003/01/20 10:25:58 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -326,9 +326,9 @@ TTreeViewer::TTreeViewer(const TTree *tree)
       
    SetTreeName(tree->GetName());
    if (cdir) {
-      fFilename = cdir->GetFile()->GetName();
-      if (dirsav) dirsav->cd();
+      if (cdir->GetFile()) fFilename = cdir->GetFile()->GetName();
    }
+   if (dirsav) dirsav->cd();
 }
 //______________________________________________________________________________
 void TTreeViewer::SetNexpressions(Int_t expr)
