@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.217 2004/12/06 21:08:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.218 2004/12/22 17:06:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3761,9 +3761,9 @@ Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
          TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
          leaf->ReadValue(in);
          status = in.good();
-         if (status < 0) break;
+         if (status <= 0) break;
       }
-      if (status < 0) break;
+      if (status <= 0) break;
       //we are now ready to fill the tree
       Fill();
       nlines++;
