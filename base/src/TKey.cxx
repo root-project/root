@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.36 2003/12/10 20:40:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.37 2003/12/30 13:16:50 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  The TKey class includes functions to book space on a file,          //
-//   to create I/O buffers, to fill these buffers                       //
+//   to create I/O buffers, to fill these buffers,                      //
 //   to compress/uncompress data buffers.                               //
 //                                                                      //
 //  Before saving (making persistent) an object on a file, a key must   //
@@ -35,10 +35,10 @@
 //    - to write an object in the Current Directory                     //
 //    - to write a new ntuple buffer                                    //
 //                                                                      //
-//  The structure of a file is shown in TFile::TFile                    //
-//  The structure of a directory is shown in TDirectory::TDirectory     //
-//  The TKey class is used by the TBasket class                         //
-//     See also TTree                                                   //
+//  The structure of a file is shown in TFile::TFile.                   //
+//  The structure of a directory is shown in TDirectory::TDirectory.    //
+//  The TKey class is used by the TBasket class.                        //
+//  See also TTree.                                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -155,12 +155,12 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(gFile);
-   fCycle = gDirectory->AppendKey(this);
-   fObjlen    = 0 ; // RDK: Must initialize before calling Streamer()
-   fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
-   fSeekKey   = 0 ; // RDK: Must initialize before calling Streamer()
-   fSeekPdir  = 0 ; // RDK: Must initialize before calling Streamer()
-   
+   fCycle     = gDirectory->AppendKey(this);
+   fObjlen    = 0;
+   fKeylen    = 0;
+   fSeekKey   = 0;
+   fSeekPdir  = 0;
+
    fVersion = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
 
