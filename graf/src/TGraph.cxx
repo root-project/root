@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.20 2000/10/25 15:54:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.21 2000/11/21 20:25:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -516,10 +516,22 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Fit this graph with function fname*-*-*-*-*-*-*-*-*-*
+//*-*-*-*-*-*Fit this graph with function with name fname*-*-*-*-*-*-*-*-*-*
+//*-*        ============================================
+//  interface to TF1::Fit(TF1 *f1...
+   
+   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
+   if (!f1) { Printf("Unknown function: %s",fname); return; }
+   Fit(f1,option);
+}
+
+//______________________________________________________________________________
+void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
+{
+//*-*-*-*-*-*-*-*-*-*-*Fit this graph with function f1*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
 //
-//   fname is the name of an already predefined function created by TF1
+//   f1 is an already predefined function created by TF1.
 //   Predefined functions such as gaus, expo and poln are automatically
 //   created by ROOT.
 //
@@ -624,14 +636,14 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 */
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
-   grF1 = (TF1*)gROOT->GetFunction(fname);
-   if (!grF1) { Printf("Unknown function: %s",fname); return; }
+   grF1 = f1;
+   if (!grF1) { Printf("Function is a null pointer"); return; }
    npar = grF1->GetNpar();
    if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return; }
 
 //*-*- Check that function has same dimension as histogram
    if (grF1->GetNdim() > 1) {
-      Printf("Error function %s is not 1-D",fname); return; }
+      Printf("Error function %s is not 1-D",f1->GetName()); return; }
 
 //*-*- Is a Fit range specified?
    if (fitOption.Range) {
@@ -1262,8 +1274,14 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
         rwymax    = gPad->GetUymax();
         minimum   = fHistogram->GetMinimumStored();
         maximum   = fHistogram->GetMaximumStored();
-        if (minimum == -1111) minimum = fHistogram->GetYaxis()->GetXmin();
-        if (maximum == -1111) maximum = fHistogram->GetYaxis()->GetXmax();
+        if (minimum == -1111) { //this can happen after unzooming
+           minimum = fHistogram->GetYaxis()->GetXmin();
+           fHistogram->SetMinimum(minimum);
+        }
+        if (maximum == -1111) {
+           maximum = fHistogram->GetYaxis()->GetXmax();
+           fHistogram->SetMaximum(maximum);
+        }
         uxmin     = gPad->PadtoX(rwxmin);
         uxmax     = gPad->PadtoX(rwxmax);
      } else {
@@ -1302,8 +1320,8 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
         else                minimum = 0;
      }
      if (maximum > 0 && rwymax <= 0) {
-        if(gPad->GetLogy()) maximum = 1.1*rwymax;
-        else                maximum = 0;
+        //if(gPad->GetLogy()) maximum = 1.1*rwymax;
+        //else                maximum = 0;
      }
      if (minimum <= 0 && gPad->GetLogy()) minimum = 0.001*maximum;
      if (uxmin <= 0 && gPad->GetLogx()) {
@@ -1312,10 +1330,6 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
      }
      rwymin = minimum;
      rwymax = maximum;
-     if (fHistogram) {
-       fHistogram->SetMinimum(rwymin);
-       fHistogram->SetMaximum(rwymax);
-     }
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {
