@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.4 2000/11/22 12:16:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.5 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -133,7 +133,6 @@ void TStreamerInfo::Build()
       if (!dm->IsPersistent()) continue;
       char *streamer = 0;
       offset = GetDataMemberOffset(dm,streamer);
-                  
       if (offset == kMissing) continue;
       
       //look for a data member with a counter in the comment string [n]
@@ -667,9 +666,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, char *&streamer)
    // return pointer to the Streamer function if one exists
    
    TIter nextr(fClass->GetListOfRealData());
-   char dmdot[256];
    char dmbracket[256];
-   sprintf(dmdot,"%s.",dm->GetName());
    sprintf(dmbracket,"%s[",dm->GetName());
    Int_t offset = kMissing;
    TRealData *rdm;
@@ -681,10 +678,11 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, char *&streamer)
          streamer = rdm->GetStreamer();
          break;
       }
-      if (strstr(rdm->GetName(),dmdot)) {
-         if (offset > rdm->GetThisOffset()) {
+      if (strcmp(rdm->GetName(),dm->GetName()) == 0) {
+         if (rdm->IsObject()) {
             offset = rdm->GetThisOffset();
             streamer = rdm->GetStreamer();
+            break;
          }
       }
       if (strstr(rdm->GetName(),dmbracket)) {
@@ -937,10 +935,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                         }   
                           
          // Class    derived from TObject
-         //case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
+         case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
          
          // Special case for TString, TObject, TNamed
-         //case kTString: { ((TString)(pointer+fOffset[i])).Streamer(b); break;}
+         case kTString: { ((TString*)(pointer+fOffset[i]))->Streamer(b); break;}
          case kTObject: { ((TObject*)(pointer+fOffset[i]))->TObject::Streamer(b); break;}
          case kTNamed:  { ((TNamed*) (pointer+fOffset[i]))->TNamed::Streamer(b); break;}
          
@@ -963,8 +961,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                          }
          
          // Any Class not derived from TObject
-         case kTString:
-         case kObject:
+         //case kTString:
+         //case kObject:
          case kAny:     {
                          Streamer_t pstreamer = (Streamer_t)fMethod[i];
                          if (pstreamer == 0) {
@@ -1297,7 +1295,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kTString: { 
             for (Int_t k=0;k<nc;k++) { 
                pointer = (char*)clones->UncheckedAt(k); 
-               ((TString)(pointer+fOffset[i])).Streamer(b); 
+               ((TString*)(pointer+fOffset[i]))->Streamer(b); 
             } 
             break;}
          case kTObject: { 
@@ -1587,10 +1585,10 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
                         }
                           
          // Class  derived from TObject
-         //case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
+         case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
          
          // Special case for TString, TObject, TNamed
-         //case kTString: { ((TString)(pointer+fOffset[i])).Streamer(b); break;}
+         case kTString: { ((TString*)(pointer+fOffset[i]))->Streamer(b); break;}
          case kTObject: { ((TObject*)(pointer+fOffset[i]))->TObject::Streamer(b); break;}
          case kTNamed:  { ((TNamed*) (pointer+fOffset[i]))->TNamed::Streamer(b); break;}
          
@@ -1607,8 +1605,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
                          }
                        
          // Any Class not derived from TObject
-         case kTString:
-         case kObject:
+         //case kTString:
+         //case kObject:
          case kAny:     { 
                          Streamer_t pstreamer = (Streamer_t)fMethod[i];
                          if (pstreamer == 0) {
@@ -1780,7 +1778,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kTString: { 
             for (Int_t k=0;k<nc;k++) { 
                pointer = (char*)clones->UncheckedAt(k); 
-               ((TString)(pointer+fOffset[i])).Streamer(b); 
+               ((TString*)(pointer+fOffset[i]))->Streamer(b); 
             } 
             break;}
          case kTObject: { 

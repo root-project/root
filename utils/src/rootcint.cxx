@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.11 2000/11/21 21:04:20 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.12 2000/11/22 15:47:19 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1129,9 +1129,11 @@ void WriteShowMembers(G__ClassInfo &cl)
                if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",cvar,cl.Name(),m.Name());
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
+                  fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
+                          m.Name(), m.Name());
                   fprintf(fp, "   %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
                           m.Name(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s.\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
                } else {
                   fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
                           m.Name(), m.Name());

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.25 2000/10/05 06:29:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.26 2000/11/21 20:51:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -458,6 +458,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    TRealData *rd;
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
+      if (rd->IsObject()) continue;
       TDataMember *dm = rd->GetDataMember();
       if (!dm->IsPersistent()) continue; //do not process members with a ! as the first
                                          // character in the comment field

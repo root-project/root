@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.2 2000/11/21 16:22:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRealData.h,v 1.3 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -38,7 +38,8 @@ private:
    Int_t        fThisOffset;         //offset with the THIS object pointer
    TString      fName;               //Concatenated names of this realdata
    char        *fStreamer;           //!pointer to STL Streamer function
-   
+   Bool_t       fIsObject;           //!true if member is an object
+      
 public:
    TRealData();
    TRealData(const char *name, Int_t offset, TDataMember *datamember);
@@ -47,6 +48,8 @@ public:
    TDataMember *GetDataMember() {return fDataMember;}
    char        *GetStreamer() {return fStreamer;}
    Int_t        GetThisOffset() {return fThisOffset;}
+   Bool_t       IsObject() {return fIsObject;}
+   void         SetIsObject(Bool_t isObject) {fIsObject=isObject;}
    void         SetStreamer(char *p) {fStreamer = p;}
    void         WriteRealData(void *pointer, char *&buffer);
 

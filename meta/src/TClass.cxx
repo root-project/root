@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.12 2000/11/22 14:31:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.13 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -91,6 +91,7 @@ void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, v
    } else {
      // Data Member is a basic data type
      rd = new TRealData(rname,offset,dm);
+     if (!dm->IsBasic()) rd->SetIsObject(kTRUE);
      fRealDataClass->GetListOfRealData()->Add(rd);
    }
 }
@@ -1260,9 +1261,9 @@ void TClass::SetStreamer(const char *name, char *p)
    TRealData *rd;
    while ((rd = (TRealData*)next())) {
       if (strcmp(rd->GetName(),name) == 0) { rd->SetStreamer(p); break;}
-      if (name[nch-1] == '.') {
-         if (strncmp(rd->GetName(),name,nch) == 0) rd->SetStreamer(p);
-      }
+      //if (name[nch-1] == '.') {
+      //   if (strncmp(rd->GetName(),name,nch) == 0) rd->SetStreamer(p);
+      //}
    }
 }
    
