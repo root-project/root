@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id:$
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.8 2004/05/13 11:42:15 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -70,6 +70,7 @@ static int fcntl_lockf(int fd, int op, off_t off)
 
 const char *usage = "Usage: %s [-f] [<-r|-o> <mapfile>] -l <sofile> -d <depsofiles> -c <linkdeffiles>\n";
 
+namespace std {}
 using namespace std;
 
 
