@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.4 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.5 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -89,6 +89,7 @@ public:
    virtual Long_t ReturnLineLength(Long_t line) { return fText->GetLineLength(line); }
    virtual Long_t ReturnLongestLine() { return fText->GetLongestLine(); }
    virtual Long_t ReturnLineCount() { return fText->RowCount(); }
+   virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
 
    virtual void SetText(TGText *text);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.3 2000/07/07 00:34:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.4 2000/07/07 17:30:59 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -34,11 +34,18 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
+#include "TGMenu.h"
 #include "KeySymbols.h"
 
 
-ClassImp(TGTextEdit)
+enum {
+   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_CLOSE, kM_FILE_SAVE, kM_FILE_SAVEAS,
+   kM_FILE_PRINT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_SELECTALL,
+   kM_SEARCH_FIND, kM_SEARCH_FINDAGAIN, kM_SEARCH_GOTO
+};
 
+
+ClassImp(TGTextEdit)
 
 //______________________________________________________________________________
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
@@ -80,6 +87,7 @@ TGTextEdit::~TGTextEdit()
    gVirtualX->DeleteGC(fCursor1GC);
 
    delete fCurBlink;
+   delete fMenu;
 }
 
 //______________________________________________________________________________
@@ -104,9 +112,30 @@ void TGTextEdit::Init()
 
    fCursorState = 1;
    fCurrent.fY  = fCurrent.fX = 0;
-   fPasteOK     = kFALSE;
    fInsertMode  = kInsert;
    fCurBlink    = 0;
+
+   // create popup menu with default editor actions
+   fMenu = new TGPopupMenu(fClient->GetRoot());
+   fMenu->AddEntry("New", kM_FILE_NEW);
+   fMenu->AddEntry("Open...", kM_FILE_OPEN);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("Close", kM_FILE_CLOSE);
+   fMenu->AddEntry("Save", kM_FILE_SAVE);
+   fMenu->AddEntry("Save As...", kM_FILE_SAVEAS);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("Print...", kM_FILE_PRINT);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("Cut", kM_EDIT_CUT);
+   fMenu->AddEntry("Copy", kM_EDIT_COPY);
+   fMenu->AddEntry("Paste", kM_EDIT_PASTE);
+   fMenu->AddEntry("Select All", kM_EDIT_SELECTALL);
+   fMenu->AddSeparator();
+   fMenu->AddEntry("Find...", kM_SEARCH_FIND);
+   fMenu->AddEntry("Find Again", kM_SEARCH_FINDAGAIN);
+   fMenu->AddEntry("Goto...", kM_SEARCH_GOTO);
+
+   fMenu->Associate(this);
 }
 
 //______________________________________________________________________________
@@ -138,6 +167,22 @@ Bool_t TGTextEdit::SaveFile(const char *filename)
 }
 
 //______________________________________________________________________________
+Bool_t TGTextEdit::Copy()
+{
+   // Copy text.
+
+   TGTextView::Copy();
+   if (fCurrent.fX == 0 && fCurrent.fY == fMarkedEnd.fY) {
+      TGLongPosition pos;
+      pos.fY = fClipText->RowCount();
+      pos.fX = 0;
+      fClipText->InsText(pos, 0);
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGTextEdit::Cut()
 {
    // Cut text.
@@ -163,11 +208,41 @@ void TGTextEdit::Delete(Option_t *)
 {
    // Delete selection.
 
-   TGLongPosition pos;
-   pos.fY = ToObjYCoord(fVisible.fY);
+   TGLongPosition pos, endPos;
+
    if (!fIsMarked)
       return;
-   fText->DelText(fMarkedStart, fMarkedEnd);
+
+   if (fMarkedStart.fX == fMarkedEnd.fX &&
+       fMarkedStart.fY == fMarkedEnd.fY) {
+      Long_t len = fText->GetLineLength(fCurrent.fY);
+      if (fCurrent.fY == fText->RowCount()-1 && fCurrent.fX == len) {
+         gVirtualX->Bell(0);
+         return;
+      }
+      NextChar();
+      DelChar();
+      return;
+   }
+
+   Bool_t dellast = kFALSE;
+
+   endPos.fX = fMarkedEnd.fX-1;
+   endPos.fY = fMarkedEnd.fY;
+   if (endPos.fX == -1) {
+      if (endPos.fY > 0)
+         endPos.fY--;
+      endPos.fX = fText->GetLineLength(endPos.fY);
+      if (endPos.fX < 0)
+         endPos.fX = 0;
+      dellast = kTRUE;
+   }
+
+   fText->DelText(fMarkedStart, endPos);
+   if (dellast)
+      fText->DelLine(endPos.fY);
+
+   pos.fY = ToObjYCoord(fVisible.fY);
    UnMark();
    if (fMarkedStart.fY < pos.fY)
       pos.fY = fMarkedStart.fY;
@@ -347,10 +422,10 @@ void TGTextEdit::DrawCursor(Int_t mode)
             if ((fCurrent.fY > fMarkedStart.fY && fCurrent.fY < fMarkedEnd.fY) ||
                 (fCurrent.fY == fMarkedStart.fY && fCurrent.fX >= fMarkedStart.fX &&
                  fCurrent.fY < fMarkedEnd.fY) ||
-                (fCurrent.fY == fMarkedEnd.fY && fCurrent.fX <= fMarkedEnd.fX &&
+                (fCurrent.fY == fMarkedEnd.fY && fCurrent.fX < fMarkedEnd.fX &&
                  fCurrent.fY > fMarkedStart.fY) ||
                 (fCurrent.fY == fMarkedStart.fY && fCurrent.fY == fMarkedEnd.fY &&
-                 fCurrent.fX >= fMarkedStart.fX && fCurrent.fX <= fMarkedEnd.fX &&
+                 fCurrent.fX >= fMarkedStart.fX && fCurrent.fX < fMarkedEnd.fX &&
                  fMarkedStart.fX != fMarkedEnd.fX)) {
                // back ground fillrectangle
                gVirtualX->FillRectangle(fCanvas->GetId(), fSelbackGC,
@@ -529,6 +604,9 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
          if (gVirtualX->GetPrimarySelectionOwner() != kNone)
             gVirtualX->ConvertPrimarySelection(fId, fClipboard, event->fTime);
       }
+      if (event->fCode == kButton3) {
+         fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
+      }
    }
    return kTRUE;
 }
@@ -542,7 +620,6 @@ Bool_t TGTextEdit::HandleMotion(Event_t *event)
    if (event->fWindow != fCanvas->GetId())
       return kTRUE;
 
-   // TGTextView::HandleMotion(event);
    if (fScrolling == -1) {
       pos.fY = ToObjYCoord(fVisible.fY+event->fY);
       if (pos.fY >= fText->RowCount())
@@ -609,12 +686,6 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                break;
             case kKey_C:
                Copy();
-               if (fCurrent.fX == 0 && fCurrent.fY == fMarkedEnd.fY+1) {
-                  TGLongPosition pos;
-                  pos.fY = fClipText->RowCount();
-                  pos.fX = 0;
-                  fClipText->InsText(pos, 0);
-               }
                return kTRUE;
             case kKey_D:
                if (fIsMarked)
@@ -751,6 +822,7 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
       if ((event->fState & kKeyShiftMask) && mark_ok) {
          fIsMarked = kTRUE;
          Mark(fCurrent.fX, fCurrent.fY);
+         Copy();
          SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_ISMARKED), fWidgetId,
                      kTRUE);
       } else {
@@ -794,6 +866,38 @@ Bool_t TGTextEdit::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+{
+   // Process context menu messages.
+
+   TGTextView::ProcessMessage(msg, parm1, parm2);
+
+   switch(GET_MSG(msg)) {
+      case kC_COMMAND:
+         switch(GET_SUBMSG(msg)) {
+            case kCM_MENU:
+               switch (parm1) {
+                  case kM_FILE_OPEN:
+                     printf("file open\n");
+                     break;
+                  case kM_FILE_SAVE:
+                     printf("file save\n");
+                     break;
+                  default:
+                     break;
+               }
+            default:
+               break;
+         }
+         break;
+
+      default:
+         break;
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TGTextEdit::InsChar(char character)
 {
    // Insert a character in the text edit widget.
@@ -820,13 +924,6 @@ void TGTextEdit::InsChar(char character)
       }
       SetCurrent(pos);
       return;
-#if 0
-      Int_t n = Int_t(pos.fX-fCurrent.fX);
-      charstring = new char[n+1];
-      charstring[n] = '\0';
-      for (int j = 0; j < n; j++)
-         charstring[j] = ' ';
-#endif
    } else {
       fText->InsChar(fCurrent, character);
       pos.fX = fCurrent.fX + 1;

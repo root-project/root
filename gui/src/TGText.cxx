@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.4 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.5 2000/07/07 17:30:59 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -102,10 +102,10 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
 {
    // Delete length chars from line starting at position pos.
 
-   char *newstring;
-
-   if ((fLength == 0) || (pos >= fLength) || (pos+length > fLength))
+   if (fLength == 0 || pos >= fLength)
       return;
+   if (pos+length > fLength)
+      length = fLength - pos;
 
    if (fLength - length <= 0) {
       delete fString;
@@ -113,7 +113,7 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
       fString = 0;
       return;
    }
-   newstring = new char[fLength - length+1];
+   char *newstring = new char[fLength - length+1];
    strncpy(newstring, fString, (UInt_t)pos);
    strncpy(newstring+pos, fString+pos+length, UInt_t(fLength-pos-length));
    delete fString;
@@ -127,10 +127,10 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
 {
    // Insert text in line starting at position pos.
 
-   char *newstring;
    if (pos > fLength || !text)
       return;
-   newstring = new char[strlen(text)+fLength+1];
+
+   char *newstring = new char[strlen(text)+fLength+1];
    if (fString != 0)
       strncpy(newstring, fString, (UInt_t)pos);
    strcpy(newstring+pos, text);
@@ -149,11 +149,12 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
    // in case pos and length are out of range. The returned string
    // must be freed by the user.
 
-   char *retstring;
-
-   if ((pos >= fLength) || (length > fLength) || (pos+length > fLength))
+   if (pos >= fLength)
       return 0;
-   retstring = new char[length+1];
+   if (pos + length > fLength)
+      length = fLength - pos;
+
+   char *retstring = new char[length+1];
    retstring[length] = '\0';
    strncpy(retstring, fString+pos, (UInt_t)length);
 
@@ -588,7 +589,7 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
    if ((start.fY < 0) || (start.fY >= fRowCount) ||
        (end.fY < 0)   || (end.fY >= fRowCount))
       return kFALSE;
-   if ((end.fX < 0) || (end.fX >= GetLineLength(end.fY)))
+   if ((end.fX < 0) || (end.fX > GetLineLength(end.fY)))
       return kFALSE;
 
    char *tempbuffer;
@@ -695,6 +696,7 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    }
    // ok, now we have to add the rest of the first destination line
    if (restString) {
+#if 0
       if (ins_pos.fX == 0) {
          fCurrent->fNext = new TGTextLine(restString);
          fCurrent->fNext->fPrev = fCurrent;
@@ -702,6 +704,7 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
          fRowCount++;
          fCurrentRow++;
       } else
+#endif
          fCurrent->InsText(fCurrent->fLength, restString);
       delete [] restString;
    }
@@ -721,9 +724,7 @@ Bool_t TGText::InsText(TGLongPosition pos, const char *buffer)
    // Insert single line at specified position. Return false in case position
    // is out of bounds.
 
-   if ((pos.fY < 0) || (pos.fY > fRowCount))
-      return kFALSE;
-   if ((pos.fX < 0) || (pos.fX > GetLineLength(pos.fY)))
+   if (pos.fY < 0 || pos.fY > fRowCount)
       return kFALSE;
 
    if (pos.fY == fRowCount) {

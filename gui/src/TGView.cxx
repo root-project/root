@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.3 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.4 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -300,6 +300,11 @@ Bool_t TGView::HandleButton(Event_t *event)
    if (event->fCode == kButton1) {
       if (event->fType == kButtonPress) {
          if (fIsMarked) {
+            if (event->fState & kKeyShiftMask) {
+               fIsMarking = kTRUE;
+               TGView::HandleMotion(event);
+               return kTRUE;
+            }
             fIsMarked = kFALSE;
             UnMark();
          }
@@ -368,7 +373,7 @@ Bool_t TGView::HandleMotion(Event_t *event)
       fMousePos.fX = ReturnLineLength(fMousePos.fY);
    if (event->fWindow != fCanvas->GetId())
       return kTRUE;
-   if ((fIsMarked == kFALSE) || (fIsMarking == kFALSE))
+   if (!fIsMarked || !fIsMarking)
       return kTRUE;
    if (event->fX < 0)
       return kTRUE;

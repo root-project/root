@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.1 2000/07/06 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.2 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -27,6 +27,8 @@
 #include "TGTextView.h"
 #endif
 
+class TGPopupMenu;
+
 
 class TGTextEdit : public TGTextView {
 
@@ -36,12 +38,12 @@ public:
    enum   EInsertMode { kInsert, kReplace };
 
 protected:
-   GContext_t       fCursor0GC;
-   GContext_t       fCursor1GC;     // _gc_crs0, _gc_crs1;
-   Int_t            fCursorState;   // cursorstate;
-   Bool_t           fPasteOK;       // pasteok;
-   TViewTimer      *fCurBlink;      // csr_timer;
-   TGLongPosition   fCurrent;
+   GContext_t       fCursor0GC;     // graphics context for erasing cursor
+   GContext_t       fCursor1GC;     // graphics context for drawing cursor
+   Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
+   TViewTimer      *fCurBlink;      // cursor blink timer
+   TGPopupMenu     *fMenu;          // popup menu with editor actions
+   TGLongPosition   fCurrent;       // current cursor position
    EInsertMode      fInsertMode;    // text insertion mode (kInsert (default) , kReplace)
 
    static Cursor_t  fgDefaultCursor;
@@ -65,6 +67,7 @@ protected:
    virtual void ScreenDown();
    virtual void Home();
    virtual void End();
+   virtual void Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
 
 public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
@@ -78,6 +81,7 @@ public:
 
    virtual Bool_t SaveFile(const char *fname);
    virtual void   Clear(Option_t * = "");
+   virtual Bool_t Copy();
    virtual Bool_t Cut();
    virtual Bool_t Paste();
    virtual void   Delete(Option_t * = "");
@@ -100,6 +104,7 @@ public:
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
+   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    ClassDef(TGTextEdit,0)  // Text edit widget
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.4 2000/07/06 16:47:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.5 2000/07/07 00:29:49 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -362,12 +362,19 @@ Bool_t TGTextView::Copy()
    if (!fIsMarked)
       return kFALSE;
    delete fClipText;
-   fClipText = new TGText();
-   insPos.fY = insPos.fX = 0;
+   fClipText   = new TGText();
+   insPos.fY   = insPos.fX = 0;
    startPos.fX = fMarkedStart.fX;
    startPos.fY = fMarkedStart.fY;
-   endPos.fX   = fMarkedEnd.fX;
+   endPos.fX   = fMarkedEnd.fX-1;
    endPos.fY   = fMarkedEnd.fY;
+   if (endPos.fX == -1) {
+      if (endPos.fY > 0)
+         endPos.fY--;
+      endPos.fX = fText->GetLineLength(endPos.fY);
+      if (endPos.fX < 0)
+         endPos.fX = 0;
+   }
    fClipText->InsText(insPos, fText, startPos, endPos);
    gVirtualX->SetPrimarySelectionOwner(fId);
    return kTRUE;
@@ -450,8 +457,8 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                      else
                         len1 = 0;
                      if (fMarkedEnd.fX >= pos.fX &&
-                         fMarkedEnd.fX <= pos.fX+len)
-                        len2 = fMarkedEnd.fX+1 - pos.fX - len1;
+                         fMarkedEnd.fX <= pos.fX + len)
+                        len2 = fMarkedEnd.fX - pos.fX - len1;  // +1
                      else
                         len2 = len - len1;
                   } else {
@@ -469,7 +476,7 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                            len2 = len;
                         } else {
                            len1 = 0 ;
-                           len2 = fMarkedEnd.fX+1 - pos.fX;
+                           len2 = fMarkedEnd.fX - pos.fX;  // +1
                         }
                      }
                   }
@@ -483,10 +490,6 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                                      Int_t(ToScrYCoord(pos.fY)),
                                      UInt_t(ToScrXCoord(pos.fX+len1+len2, pos.fY) -
                                      ToScrXCoord(pos.fX+len1, pos.fY)),
-//                                     len-(len1+len2) ?
-//                                     ToScrXCoord(pos.fX+len1+len2, pos.fY) -
-//                                     ToScrXCoord(pos.fX+len1, pos.fY) :
-//                                     fCanvas->GetWidth(),
                                      UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
                gVirtualX->DrawString(fCanvas->GetId(), fSelGC,
                                      Int_t(ToScrXCoord(pos.fX+len1, pos.fY)),
@@ -503,6 +506,25 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       pos.fY++;
       yloc += Int_t(ToScrYCoord(pos.fY) - ToScrYCoord(pos.fY-1));
    }
+}
+
+//______________________________________________________________________________
+Bool_t TGTextView::HandleButton(Event_t *event)
+{
+   // Handle mouse button event in text view widget.
+
+   if (event->fWindow != fCanvas->GetId())
+      return kTRUE;
+
+   TGView::HandleButton(event);
+
+   if (event->fType == kButtonRelease) {
+      if (event->fCode == kButton1) {
+         if (fIsMarked)
+            Copy();
+      }
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -539,9 +561,22 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    }
    buffer[len] = '\0';
 
+   // get rid of special tab fillers
+   ULong_t i = 0;
+   while (buffer[i]) {
+      if (buffer[i] == '\t') {
+         ULong_t j = i + 1;
+         while (buffer[j] == 16 && buffer[j])
+            j++;
+         strcpy(buffer+i+1, buffer+j);
+         len -= j - i - 1;
+      }
+      i++;
+   }
+
    gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
                              (Atom_t) event->fUser[2], (UChar_t*) buffer,
-                             (Int_t) len-1);
+                             (Int_t) len);
 
    delete [] buffer;
 
@@ -585,7 +620,7 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
          }
       }
       fMarkedEnd.fY = pos.fY;
-      fMarkedEnd.fX = pos.fX - 1;
+      fMarkedEnd.fX = pos.fX;  // -1
       fMarkedFromY = 1;
       fMarkedFromX = 1;
 
@@ -610,7 +645,7 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
                fMarkedStart.fX = fMarkedEnd.fX;
                fMarkedStart.fY = fMarkedEnd.fY;
             }
-            fMarkedEnd.fX = pos.fX-1;
+            fMarkedEnd.fX = pos.fX;   // -1
             fMarkedFromY = 1;
             fMarkedFromX = 1;
             posEnd.fY = fMarkedEnd.fY;
@@ -624,19 +659,19 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
                if (fMarkedStart.fY == fMarkedEnd.fY &&
                    fMarkedStart.fX > fMarkedEnd.fX) {
                   fMarkedStart.fX = fMarkedEnd.fX;
-                  fMarkedEnd.fX = pos.fX - 1;
+                  fMarkedEnd.fX = pos.fX;  // -1
                   fMarkedFromX  = 1;
                }
             } else if (fMarkedFromX == 1 || fMarkedFromY == 1) {
                posStart.fY = pos.fY;
                posEnd.fY = fMarkedEnd.fY;
                fMarkedEnd.fY = pos.fY;
-               fMarkedEnd.fX = pos.fX - 1;
+               fMarkedEnd.fX = pos.fX;  // -1
                fMarkedFromY = 1;
                fMarkedFromX = 1;
                if (fMarkedEnd.fX == -1) {
                   fMarkedEnd.fY = pos.fY-1;
-                  fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY)-1;
+                  fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY); // -1
                   if (fMarkedEnd.fX < 0)
                      fMarkedEnd.fX = 0;
                }
@@ -651,16 +686,15 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
          }
       }
    }
-   if (fMarkedEnd.fX == fText->GetLineLength(fMarkedEnd.fY))
-      fMarkedEnd.fX--;
 
    if (fMarkedEnd.fX == -1) {
       if (fMarkedEnd.fY > 0)
          fMarkedEnd.fY--;
-      fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY)-1;
+      fMarkedEnd.fX = fText->GetLineLength(fMarkedEnd.fY);  // -1
       if (fMarkedEnd.fX < 0)
          fMarkedEnd.fX = 0;
    }
+
    DrawRegion(0, (Int_t)ToScrYCoord(posStart.fY), fCanvas->GetWidth(),
               UInt_t(ToScrYCoord(posEnd.fY+1)-ToScrYCoord(posStart.fY)));
    return;
