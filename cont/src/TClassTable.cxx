@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.30 2004/10/05 07:02:21 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.31 2004/10/05 07:04:35 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -217,7 +217,7 @@ int   TClassTable::Classes() { return fgTally; }
 //______________________________________________________________________________
 void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
-namespace ROOT { class fornamespace {}; } // Dummy class to give a typeid to namespace 
+namespace ROOT { class fornamespace {}; } // Dummy class to give a typeid to namespace
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
@@ -516,19 +516,19 @@ void ROOT::RemoveClass(const char *cname)
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
    if (cname) {
-     // Let's still remove this information to allow reloading later.
-     // Anyway since the shared library has been unloaded, the dictionary
-     // pointer is now invalid ....
-     // We still keep the TClass object around because TFile needs to
-     // get to the TStreamerInfo.
-     if (gROOT && gROOT->GetListOfClasses()) {
-       TObject *pcname;
-       if((pcname=gROOT->GetListOfClasses()->FindObject(cname))) {
-	  TClass *cl = dynamic_cast<TClass*>(pcname);
-	  if (cl) cl->SetUnloaded();
-       }
-     }
-     TClassTable::Remove(cname);
+      // Let's still remove this information to allow reloading later.
+      // Anyway since the shared library has been unloaded, the dictionary
+      // pointer is now invalid ....
+      // We still keep the TClass object around because TFile needs to
+      // get to the TStreamerInfo.
+      if (gROOT && gROOT->GetListOfClasses()) {
+         TObject *pcname;
+         if ((pcname=gROOT->GetListOfClasses()->FindObject(cname))) {
+	    TClass *cl = dynamic_cast<TClass*>(pcname);
+	    if (cl) cl->SetUnloaded();
+         }
+      }
+      TClassTable::Remove(cname);
    }
 }
 
