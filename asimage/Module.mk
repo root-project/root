@@ -110,6 +110,7 @@ else
 			ACCALT="gcc -mlp64"; \
 		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
+			ACC="gcc -m64"; \
 			MMX="--enable-mmx-optimization=no"; \
 		fi; \
 		if [ "$(ASJPEGINCDIR)" != "" ]; then \
