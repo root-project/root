@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.15 2004/09/09 11:02:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.16 2004/10/21 12:07:54 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -112,14 +112,14 @@ void TGFrameElement::Print(Option_t *option) const
 
 //______________________________________________________________________________
 TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
-{ 
+{
    // ctor
 
    fPadleft = lh.fPadleft; fPadright = lh.fPadright;
    fPadtop  = lh.fPadtop;  fPadbottom = lh.fPadbottom;
    fLayoutHints = lh.fLayoutHints;
    SetRefCount(0);
-   fFE = lh.fFE; fPrev = lh.fPrev; 
+   fFE = lh.fFE; fPrev = lh.fPrev;
 }
 
 //______________________________________________________________________________
@@ -148,42 +148,57 @@ void TGLayoutHints::UpdateFrameElements(TGLayoutHints *l)
 //______________________________________________________________________________
 void TGLayoutHints::Print(Option_t *) const
 {
-   // printing
+   // Printing.
+
+   Bool_t bor = kFALSE;
 
    if (fLayoutHints & kLHintsLeft) {
-      cout << " kLHintsLeft " << "|";
+      cout << "kLHintsLeft";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsCenterX) {
-      cout << " kLHintsCenterX " << "|";
-   }
-   if (fLayoutHints & kLHintsLeft) {
-      cout << " kLHintsLeft " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsCenterX";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsRight) {
-      cout << " kLHintsRight " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsRight";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsTop) {
-      cout << " kLHintsTop " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsTop";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsCenterY) {
-      cout << " kLHintsCenterY " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsCenterY";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsBottom) {
-      cout << " kLHintsBottom " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsBottom";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsExpandX) {
-      cout << " kLHintsExpandX " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsExpandX";
+      bor = kTRUE;
    }
    if (fLayoutHints & kLHintsExpandY) {
-      cout << " kLHintsExpandY " << "|";
+      if (bor) cout << " | ";
+      cout << "kLHintsExpandY";
+      bor = kTRUE;
    }
-   if (fLayoutHints & kLHintsNoHints) {
-      cout << "kLHintsNoHints " << "|";
+   if (fLayoutHints == kLHintsNoHints) {
+      if (bor) cout << " | ";
+      cout << "kLHintsNoHints";
    }
-   cout << " fPadtop=" << fPadtop;
-   cout << " fPadbottom=" << fPadbottom;
-   cout << " fPadleft=" << fPadleft;
-   cout << " fPadright=" << fPadright;
+   cout << ", fPadtop="    << fPadtop;
+   cout << ", fPadbottom=" << fPadbottom;
+   cout << ", fPadleft="   << fPadleft;
+   cout << ", fPadright="  << fPadright;
    cout << endl;
 }
 
