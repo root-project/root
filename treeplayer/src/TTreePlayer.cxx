@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.41 2001/04/04 14:16:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.42 2001/04/09 08:25:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3104,8 +3104,6 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   
   Int_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
 
-  fTree->SetEstimate(oldEstimate);
-
   //if no selected entries return
   Int_t nrows = GetSelectedRows();
   if (nrows <= 0) {
@@ -3206,6 +3204,10 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
       amin = 0;
       tFitter->PrintResults(1, amin);
    }
+
+   //reset estimate
+   fTree->SetEstimate(oldEstimate);
+  
    return nsel;
 }
 
