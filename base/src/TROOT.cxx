@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.103 2003/09/10 15:14:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.104 2003/10/23 15:31:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1231,7 +1231,7 @@ void TROOT::InitSystem()
       if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
          gDebug = atoi(sdeb);
 
-      if (gDebug > 0)
+      if (gDebug > 0 && isatty(2))
          fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
 
       if (gEnv->GetValue("Root.MemStat", 0))
