@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.11 2000/11/21 21:06:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.12 2000/11/22 14:31:13 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1250,7 +1250,7 @@ UInt_t TClass::GetCheckSum() const
 }
 
 //______________________________________________________________________________
-void TClass::SetStreamer(const char *name, void *p)
+void TClass::SetStreamer(const char *name, char *p)
 {
 // store pointer to function to Stream non basic member name
    
@@ -1291,7 +1291,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    }      
    
    //deserialize the object
-   sinfo->ReadBuffer(b,(char*)pointer);   
+   sinfo->ReadBuffer(b, (char*)pointer);   
    
    //check that the buffer position correesponds to the byte count 
    b.CheckByteCount(start,count,this);
@@ -1323,7 +1323,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    }      
    
    //deserialize the object
-   sinfo->ReadBuffer(b,(char*)pointer);  
+   sinfo->ReadBuffer(b, (char*)pointer);  
    
    //check that the buffer position correesponds to the byte count 
    b.CheckByteCount(R__s, R__c,this);
@@ -1359,7 +1359,7 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
    UInt_t R__c = b.WriteVersion(this, kTRUE);
    
    //serialize the object
-   sinfo->WriteBuffer(b,(char*)pointer);
+   sinfo->WriteBuffer(b, (char*)pointer);
    
    //write the byte count at the start of the buffer   
    b.SetByteCount(R__c, kTRUE);

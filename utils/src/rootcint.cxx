@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.9 2000/10/19 17:27:58 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.11 2000/11/21 21:04:20 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -917,7 +917,7 @@ void WriteStreamerBases(G__ClassInfo &cl)
 
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
-   fprintf(fp, "void %s_StreamerBases(TBuffer &R__b, void *pointer)\n{\n",  cl.Fullname());
+   fprintf(fp, "void %s_StreamerBases(TBuffer &R__b, char *pointer)\n{\n",  cl.Fullname());
    fprintf(fp, "   // Stream base classes of class %s.\n\n", cl.Fullname());
    fprintf(fp, "   %s *obj = (%s*)pointer;\n", cl.Fullname(), cl.Fullname());
    fprintf(fp, "   if (R__b.IsReading()) {\n");
@@ -955,7 +955,7 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",cl.Name(),m.Name());
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, char *p)\n",cl.Name(),m.Name());
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISPOINTER) {
             fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
@@ -975,7 +975,7 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (!IsStreamable(m)) continue;
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",cl.Name(),m.Name());
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, char *p)\n",cl.Name(),m.Name());
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISARRAY) {
             fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
@@ -1095,11 +1095,11 @@ void WriteShowMembers(G__ClassInfo &cl)
                if (m.Property() & G__BIT_ISPOINTER) {
                   fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s);\n",
                        m.Name(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
                } else {
                   fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
                           m.Name(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
                }
                continue;
             }
@@ -1113,11 +1113,11 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n", cvar,
                        m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
             } else if (m.Property() & G__BIT_ISPOINTER) {
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s);\n",
                        m.Name(), m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"*%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
             } else if (m.Property() & G__BIT_ISARRAY) {
                sprintf(cvar, "%s", m.Name());
                for (int dim = 0; dim < m.ArrayDim(); dim++) {
@@ -1126,16 +1126,16 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", %s);\n",
                        cvar, m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",cvar,cl.Name(),m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",cvar,cl.Name(),m.Name());
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "   %s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
                           m.Name(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s.\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s.\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
                } else {
                   fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n",
                           m.Name(), m.Name());
-                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(void*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+                  if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
                }
             }
          }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.1 2000/11/21 21:10:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.2 2000/11/22 12:16:13 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -68,7 +68,7 @@ public:
    TClass             *GetClass() {return fClass;}
    UInt_t              GetCheckSum() {return fCheckSum;}
    Int_t               GetClassVersion() {return fClassVersion;}
-   Int_t               GetDataMemberOffset(TDataMember *dm, void *&streamer);
+   Int_t               GetDataMemberOffset(TDataMember *dm, char *&streamer);
    TObjArray          *GetElements() {return fElements;}
    Int_t               GetNumber() {return fNumber;}
    void                ls(Option_t *option="");
