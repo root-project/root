@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.13 2002/11/22 18:57:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.14 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -195,6 +195,9 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
+      fFullTypeName = fInfo->Type()->Name();
+      fTrueTypeName = fInfo->Type()->TrueName();
+      fTypeName     = gInterpreter->TypeName(fFullTypeName.Data());
       SetName(fInfo->Name());
       const char *t = fInfo->Title();
       SetTitle(t);
@@ -453,9 +456,8 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 const char *TDataMember::GetTypeName() const
 {
    // Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
-   // Result needs to be used or copied immediately.
 
-   return gInterpreter->TypeName(fInfo->Type()->Name());
+   return fTypeName.Data();
 }
 
 //______________________________________________________________________________
@@ -463,7 +465,7 @@ const char *TDataMember::GetFullTypeName() const
 {
    // Get full type description of data member, e,g.: "class TDirectory*".
 
-   return fInfo->Type()->Name();
+   return fFullTypeName.Data();
 }
 
 //______________________________________________________________________________
@@ -471,7 +473,7 @@ const char *TDataMember::GetTrueTypeName() const
 {
    // Get full type description of data member, e,g.: "class TDirectory*".
 
-   return fInfo->Type()->TrueName();
+   return fTrueTypeName.Data();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.8 2002/11/22 18:57:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.9 2002/11/26 10:24:09 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -36,16 +36,19 @@ class TDataMember : public TDictionary {
 private:
    enum { kObjIsPersistent = BIT(2) };
 
-   G__DataMemberInfo  *fInfo;        //pointer to CINT data member info
-   TClass             *fClass;       //pointer to the class
-   TDataType          *fDataType;    //pointer to data basic type descriptor
+   G__DataMemberInfo  *fInfo;         //pointer to CINT data member info
+   TClass             *fClass;        //pointer to the class
+   TDataType          *fDataType;     //pointer to data basic type descriptor
 
    // The following fields allows to access all (even private) datamembers and
    // provide a possibility of having options with names and strings.
    // These options are defined in a comment to a field!
-   TMethodCall        *fValueGetter; //method that returns a value;
-   TMethodCall        *fValueSetter; //method which sets value;
-   TList              *fOptions;     //list of possible values 0=no restrictions
+   TMethodCall        *fValueGetter;  //method that returns a value;
+   TMethodCall        *fValueSetter;  //method which sets value;
+   TList              *fOptions;      //list of possible values 0=no restrictions
+   TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
+   TString             fFullTypeName; //full type description of data member, e,g.: "class TDirectory*".
+   TString             fTrueTypeName; //full type description with no typedef
 
 public:
 
