@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.53 2004/11/15 14:51:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.54 2005/01/16 16:08:59 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1220,8 +1220,15 @@ Int_t TH3::Merge(TCollection *list)
 
    const Int_t kNstat = 11;
    Stat_t stats[kNstat], totstats[kNstat];
-   TH3 *h;
+   TH3 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   TList inlist;
+   if (nentries > 0) {
+      nentries = 0;
+      hclone = (TH3*)Clone("FirstClone");
+      Reset();
+      inlist.Add(hclone);
+   }
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Bool_t same = kTRUE;
@@ -1230,6 +1237,7 @@ Int_t TH3::Merge(TCollection *list)
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
+      inlist.Add(h);
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
@@ -1271,7 +1279,7 @@ Int_t TH3::Merge(TCollection *list)
    }
    
    //merge bin contents and errors
-   next.Reset();
+   TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, binz, ix, iy, iz;
    Double_t cu;
    while ((h=(TH3*)next())) {     
@@ -1300,6 +1308,7 @@ Int_t TH3::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
+   if (hclone) delete hclone;
    
    return nentries;
 }   

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.61 2004/12/20 10:01:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.62 2004/12/21 13:52:52 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1299,8 +1299,15 @@ Int_t TH2::Merge(TCollection *list)
 
    const Int_t kNstat = 7;
    Stat_t stats[kNstat], totstats[kNstat];
-   TH2 *h;
+   TH2 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   TList inlist;
+   if (nentries > 0) {
+      nentries = 0;
+      hclone = (TH2*)Clone("FirstClone");
+      Reset();
+      inlist.Add(hclone);
+   }
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Bool_t same = kTRUE;
@@ -1309,6 +1316,7 @@ Int_t TH2::Merge(TCollection *list)
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
+      inlist.Add(h);
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
@@ -1341,10 +1349,10 @@ Int_t TH2::Merge(TCollection *list)
    }
 
    //merge bin contents and errors
-   next.Reset();
+   TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, ix, iy;
    Double_t cu;
-   while ((h=(TH2*)next())) {
+   while ((h=(TH2*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny=0;biny<=ny+1;biny++) {
@@ -1366,6 +1374,7 @@ Int_t TH2::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
+   if (hclone) delete hclone;
 
    return nentries;
 }

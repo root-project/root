@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.215 2005/01/05 09:50:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.216 2005/01/13 20:07:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3531,8 +3531,15 @@ Int_t TH1::Merge(TCollection *list)
    Int_t    nbix  = fXaxis.GetNbins();
 
    Stat_t stats[kNstat], totstats[kNstat];
-   TH1 *h;
+   TH1 *h, *hclone=0;
    Int_t i, nentries=(Int_t)fEntries;
+   TList inlist;
+   if (nentries > 0) {
+      nentries = 0;
+      hclone = (TH1*)Clone("FirstClone");
+      Reset();
+      inlist.Add(hclone);
+   }
    for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
    GetStats(totstats);
    Bool_t same = kTRUE;
@@ -3556,6 +3563,7 @@ Int_t TH1::Merge(TCollection *list)
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
+      inlist.Add(h);
       //import statistics
       h->GetStats(stats);
       for (i=0;i<kNstat;i++) totstats[i] += stats[i];
@@ -3601,10 +3609,10 @@ Int_t TH1::Merge(TCollection *list)
    }
 
    //merge bin contents and errors
-   next.Reset();
+   TIter nextin(&inlist);
    Int_t binx, ix;
    Double_t cu;
-   while ((h=(TH1*)next())) {
+   while ((h=(TH1*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       for (binx=0;binx<=nx+1;binx++) {
          cu  = h->GetBinContent(binx);
@@ -3629,7 +3637,7 @@ Int_t TH1::Merge(TCollection *list)
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
-
+   if (hclone) delete hclone;
    return nentries;
 }
 

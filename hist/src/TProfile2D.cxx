@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.26 2004/11/26 07:34:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.27 2004/12/20 10:01:41 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1279,14 +1279,22 @@ Int_t TProfile2D::Merge(TCollection *list)
    Int_t    nbix  = fXaxis.GetNbins();
    Int_t    nbiy  = fYaxis.GetNbins();
 
-   TProfile2D *h;
-   Int_t nentries=0;
+   TProfile2D *h, *hclone=0;
+   Int_t nentries=(Int_t)fEntries;
+   TList inlist;
+   if (nentries > 0) {
+      nentries = 0;
+      hclone = (TProfile2D*)Clone("FirstClone");
+      Reset();
+      inlist.Add(hclone);
+   }
    Bool_t same = kTRUE;
    while ((h=(TProfile2D*)next())) {
       if (!h->InheritsFrom(TProfile2D::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
+      inlist.Add(h);
       //import statistics
       nentries += (Int_t)h->GetEntries();
 
@@ -1317,9 +1325,9 @@ Int_t TProfile2D::Merge(TCollection *list)
    }
 
    //merge bin contents and errors
-   next.Reset();
+   TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, ix, iy;
-   while ((h=(TProfile2D*)next())) {
+   while ((h=(TProfile2D*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       for (biny=0;biny<=ny+1;biny++) {
@@ -1344,6 +1352,7 @@ Int_t TProfile2D::Merge(TCollection *list)
       fTsumwz  += h->fTsumwz;
       fTsumwz2 += h->fTsumwz2;
   }
+   if (hclone) delete hclone;
 
    return nentries;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.50 2004/10/22 16:19:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.51 2004/12/20 10:01:41 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1180,14 +1180,22 @@ Int_t TProfile::Merge(TCollection *list)
    Double_t bwix  = fXaxis.GetBinWidth(1);
    Int_t    nbix  = fXaxis.GetNbins();
 
-   TProfile *h;
-   Int_t nentries=0;
+   TProfile *h, *hclone=0;
+   Int_t nentries=(Int_t)fEntries;
+   TList inlist;
+   if (nentries > 0) {
+      nentries = 0;
+      hclone = (TProfile*)Clone("FirstClone");
+      Reset();
+      inlist.Add(hclone);
+   }
    Bool_t same = kTRUE;
    while ((h=(TProfile*)next())) {
       if (!h->InheritsFrom(TProfile::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
          return -1;
       }
+      inlist.Add(h);
       //import statistics
       nentries += (Int_t)h->GetEntries();
 
@@ -1210,9 +1218,9 @@ Int_t TProfile::Merge(TCollection *list)
    }
 
    //merge bin contents and errors
-   next.Reset();
+   TIter nextin(&inlist);
    Int_t ibin, bin;
-   while ((h=(TProfile*)next())) {
+   while ((h=(TProfile*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       for (bin=0;bin<=nx+1;bin++) {
          ibin = fXaxis.FindBin(h->GetBinCenter(bin));
@@ -1227,7 +1235,7 @@ Int_t TProfile::Merge(TCollection *list)
       fTsumwx2 += h->fTsumwx2;
       fTsumwy  += h->fTsumwy;
    }
-
+   if (hclone) delete hclone;
    return nentries;
 }
 
