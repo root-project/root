@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.6 2004/05/05 12:19:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.7 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -95,11 +95,13 @@ public:
    virtual void  SetRange(Int_t min, Int_t max) { fVmin = min; fVmax = max; }
    virtual void  SetPosition(Int_t pos) { fPos = pos; fClient->NeedRedraw(this); }
    virtual Int_t GetPosition() const { return fPos; }
+   virtual Int_t GetMinPosition() const { return fVmin; }
+   virtual Int_t GetMaxPosition() const { return fVmax; }   
    virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
 
-   virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } //*SIGNAL*
-   virtual void  Pressed() { Emit("Pressed()"); }    //*SIGNAL*
-   virtual void  Released() { Emit("Released()"); }  //*SIGNAL*
+   virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } // *SIGNAL*
+   virtual void  Pressed() { Emit("Pressed()"); }    // *SIGNAL*
+   virtual void  Released() { Emit("Released()"); }  // *SIGNAL*
 
    ClassDef(TGSlider,0)  // Slider widget abstract base class
 };
