@@ -42,3 +42,8 @@ F77LD         = g77
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lX11 -lXext -lXmu -lXi -lm
+
+# Override default in Makefile.config
+INSTALL        := cp -pR
+INSTALLDATA    := cp -pR
+
