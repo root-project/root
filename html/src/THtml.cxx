@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.56 2004/03/19 06:53:29 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.57 2004/03/19 08:10:46 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1661,7 +1661,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
            nOK++;
         }
       }
-      for (i=nOK+1; i < numberOfClasses; i++) classNames[i] = 0;
+      for (i=nOK; i < numberOfClasses; i++) classNames[i] = 0;
 
       // quick sort
       SortNames(classNames, nOK);
