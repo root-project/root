@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.4 2000/11/21 20:37:38 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.5 2001/07/20 13:49:53 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "Hparam.h"
 #include "TMath.h"
 #include "TStyle.h"
+#include "TObjArray.h"
 
 #ifdef R__SUNCCBUG
 const Double_t kRad = 1.74532925199432955e-02;
@@ -2063,18 +2064,19 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *
 
     vv[1] = Hparam.zmin;
     vv[2] = gCurrentHist->GetCellContent(ixt, iyt);
-    Int_t gNIDS = 0; //not yet implemented
-    if (gNIDS) {
-	for (i = 2; i <= gNIDS + 1; ++i) {
-//          ixt = ia + hihid_1.ixfcha[i - 1] - 1;
-//          iyt = ib + hihid_1.iyfcha[i - 1] - 1;
-            vv[i + 1] = gCurrentHist->GetCellContent(ixt, iyt) + vv[i];
+    TObjArray *stack = gCurrentHist->GetPainter()->GetStack();
+    Int_t nids = 0; //not yet implemented
+    if (stack) nids = stack->GetEntriesFast();
+    if (nids) {
+	for (i = 2; i <= nids + 1; ++i) {
+            TH1 *hid = (TH1*)stack->At(i-2);
+            vv[i + 1] = hid->GetCellContent(ixt, iyt) + vv[i];
 	    vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
-	    vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
+	    //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
 	}
     }
 
-    nv = gNIDS + 2;
+    nv = nids + 2;
     for (i = 2; i <= nv; ++i) {
 	if (Hoption.Logz) {
             if (vv[i] > 0)
