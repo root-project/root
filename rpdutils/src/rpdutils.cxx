@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.48 2004/05/19 15:32:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.49 2004/05/20 15:07:54 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -55,6 +55,10 @@
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
+#endif
+
+#ifdef _AIX
+extern "C" int ruserok(char *, int, char *, char *);
 #endif
 
 #if defined(__alpha) && !defined(linux)
@@ -2908,7 +2912,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
 
    // Ok, now use ruserok to find out if {host,ruser,user}
    // is trusted
-#ifdef __sgi
+#if defined(__sgi) || defined(_AIX)
    if (ruserok((char*)host,rootuser,(char*)ruser,(char*)user) == 0) {
 #else
    if (ruserok(host,rootuser,ruser,user) == 0) {
