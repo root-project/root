@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.2 2000/06/13 10:36:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.3 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -678,6 +678,95 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
 }
 
 //______________________________________________________________________________
+TProfile *TProfile::Rebin(Int_t ngroup, const char*newname)
+{
+//*-*-*-*-*Rebin this profile grouping ngroup bins together*-*-*-*-*-*-*-*-*
+//*-*      ================================================
+//   if newname is not blank a new temporary profile hnew is created.
+//   else the current profile is modified (default)
+//   The parameter ngroup indicates how many bins of this have to me merged
+//   into one bin of hnew
+//   If the original profile has errors stored (via Sumw2), the resulting
+//   profile has new errors correctly calculated.
+//
+//   examples: if hp is an existing TProfile histogram with 100 bins
+//     hp->Rebin();  //merges two bins in one in hp: previous contents of hp are lost
+//     hp->Rebin(5); //merges five bins in one in hp
+//     TProfile *hnew = hp->Rebin(5,"hnew"); // creates a new profile hnew
+//                                       //merging 5 bins of hp in one bin
+//
+//   NOTE1: If ngroup is not an exact divider of the number of bins,
+//          the top limit of the rebinned profile is changed
+//          to the upper edge of the bin=newbins*ngroup and the corresponding
+//          bins are added to the overflow bin.
+//          Statistics will be recomputed from the new bin contents.
+
+   Int_t nbins  = fXaxis.GetNbins();
+   Axis_t xmin  = fXaxis.GetXmin();
+   Axis_t xmax  = fXaxis.GetXmax();
+   if ((ngroup <= 0) || (ngroup > nbins)) {
+      Error("Rebin", "Illegal value of ngroup=%d",ngroup);
+      return 0;
+   }
+   Int_t newbins = nbins/ngroup;
+
+   // Save old bin contents into a new array
+   Double_t *oldBins   = new Double_t[nbins];
+   Double_t *oldCount  = new Double_t[nbins];
+   Double_t *oldErrors = new Double_t[nbins];
+   Int_t bin, i;
+   Double_t *cu1 = GetW();
+   Double_t *er1 = GetW2();
+   Double_t *en1 = GetB();
+   for (bin=0;bin<nbins;bin++) {
+      oldBins[bin]   = cu1[bin+1];
+      oldCount[bin]  = en1[bin+1];
+      oldErrors[bin] = er1[bin+1];
+   }
+
+   // create a clone of the old histogram if newname is specified
+   TProfile *hnew = this;
+   if (strlen(newname) > 0) {
+      hnew = (TProfile*)Clone();
+      hnew->SetName(newname);
+   }
+
+   // change axis specs and rebuild bin contents array
+   if(newbins*ngroup != nbins) {
+      xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
+      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+   }
+   hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+
+   // copy merged bin contents (ignore under/overflows)
+   Double_t *cu2 = hnew->GetW();
+   Double_t *er2 = hnew->GetW2();
+   Double_t *en2 = hnew->GetB();
+   Int_t oldbin = 0;
+   Double_t binContent, binCount, binError;
+   for (bin = 0;bin<=newbins;bin++) {
+      binContent = 0;
+      binCount   = 0;
+      binError   = 0;
+      for (i=0;i<ngroup;i++) {
+         if (oldbin+i >= nbins) break;
+         binContent += oldBins[oldbin+i];
+         binCount   += oldCount[oldbin+i];
+         binError   += oldErrors[oldbin+i];
+      }
+      cu2[bin+1] = binContent;
+      er2[bin+1] = binError;
+      en2[bin+1] = binCount;
+      oldbin += ngroup;
+   }
+
+   delete [] oldBins;
+   delete [] oldCount;
+   delete [] oldErrors;
+   return hnew;
+}
+
+//______________________________________________________________________________
 void TProfile::Reset(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*Reset contents of a Profile histogram*-*-*-*-*-*-*-*-*
@@ -720,6 +809,7 @@ void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 
    fXaxis.Set(nx,xmin,xmax);
    fNcells = nx+2;
+   SetBinsLength(fNcells);
    fBinEntries.Set(fNcells);
    fSumw2.Set(fNcells);
 }
