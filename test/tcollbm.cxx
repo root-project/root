@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.3 2001/04/20 17:56:50 rdm Exp $
 // Author: Nikolay Root   05/07/98
 
 #include <stdlib.h>
@@ -97,8 +97,8 @@ public:
   Double_t TestByIndex();    // benchmark by index
   Double_t DoTest();         // Tests multiplexsor
 
-  void        CleanUp() { fColl->Delete(); }
-  void        Dump()    { fColl->Dump(); }
+  void        CleanUp()    { fColl->Delete(); }
+  void        Dump() const { fColl->Dump(); }
 
   virtual const Text_t* GetName() const
   { return fColl->ClassName(); }
