@@ -592,7 +592,7 @@ void MyEvent::DeleteParticle(Int_t id)
     if(GetTrack(id)->GetN() == 2) {
         Float_t *pts = GetTrack(id)->GetP();
         // check if track's second point is not set
-        if(isnan(pts[4])) {
+        if(TMath::IsNaN(pts[4])) {
             GetTrack(id)->SetPoint(1,pts[0], pts[1], pts[2]);
         }
     }
