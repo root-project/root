@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    void         Print(Option_t *option="") const;
    void         ReadBuffer(char *&buffer);
    void         Set();
+   void         Set(UInt_t tloc);
    void         Set(Int_t date, Int_t time);
    void         Set(Int_t year, Int_t month, Int_t day,
                     Int_t hour, Int_t min, Int_t sec);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -154,7 +154,7 @@ void TDatime::Copy(TDatime &datime)
 {
    // Copy this to datime.
 
-   datime.fDatime  = fDatime;
+   datime.fDatime = fDatime;
 }
 
 //______________________________________________________________________________
@@ -212,9 +212,8 @@ void TDatime::Set()
    // Time has 1 second precision.
 
 #ifndef WIN32
-   struct tm *tp;
    time_t tloc   = time(0);
-   tp            = (tm*)localtime(&tloc);
+   struct tm *tp = localtime(&tloc);
    UInt_t year   = tp->tm_year;
    UInt_t month  = tp->tm_mon + 1;
    UInt_t day    = tp->tm_mday;
@@ -231,6 +230,26 @@ void TDatime::Set()
    UInt_t min    = tp.wMinute;
    UInt_t sec    = tp.wSecond;
 #endif
+
+   fDatime = (year-95)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
+}
+
+//______________________________________________________________________________
+void TDatime::Set(UInt_t tloc)
+{
+   // The input arg is a time_t value returned by time() or a value
+   // returned by Convert(). This value is the number of seconds since
+   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970).
+
+   time_t t = (time_t) tloc;
+   struct tm *tp = localtime(&t);
+
+   UInt_t year   = tp->tm_year;
+   UInt_t month  = tp->tm_mon + 1;
+   UInt_t day    = tp->tm_mday;
+   UInt_t hour   = tp->tm_hour;
+   UInt_t min    = tp->tm_min;
+   UInt_t sec    = tp->tm_sec;
 
    fDatime = (year-95)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
 }
