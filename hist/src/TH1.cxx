@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.30 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.31 2000/12/15 07:30:53 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3356,7 +3356,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
       if (h2->GetSumw2N() == 0) {
          Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
       } else {
-         esum1 = h2->GetSumOfWeights();
+         esum2 = h2->GetSumOfWeights();
       }
    }
 
