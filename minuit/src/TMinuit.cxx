@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.16 2002/02/13 11:34:41 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.17 2002/03/13 07:40:24 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -2309,11 +2309,11 @@ L205:
 //______________________________________________________________________________
 void TMinuit::mnemat(Double_t *emat, Int_t ndim)
 {
-//*-*-*-*-*-*Calculates the external error matrix from the internal matrix*-*
-//*-*        =============================================================
-//*-*        Calculates the external error matrix from the internal
-//*-*        to be called by user.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// Calculates the external error matrix from the internal matrix
+//
+// Note that if the matrix is declared like Double_t matrix[5][5]
+// in the calling program, one has to call mnemat with, eg
+//     gMinuit->mnemat(&matrix[0][0],5);
 
     /* System generated locals */
     Int_t emat_dim1, emat_offset;
