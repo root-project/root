@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -317,7 +317,7 @@ int G__IncludePathInfo::Next() {
 #ifdef G__STD_EXCEPTION
 #include <exception>
 #include <typeinfo>
-#ifndef __hpux
+#if !defined(__hpux) || defined(__HP_aCC)
 using namespace std;
 #endif
 #endif
@@ -392,6 +392,27 @@ extern "C" void G__operator_delete_ary(void *p) {
   delete[] p;
 }
 ////////////////////////////////////////////////////////////////////
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1636
+#ifdef G__CPPCONSTSTRING
+#include <set>
+#include <string>
+#if (!defined(__hpux) && !defined(_MSC_VER)) || defined(__HP_aCC)
+using namespace std;
+#endif
+/******************************************************************
+* char* G__savestring()
+******************************************************************/
+extern "C" const char* G__saveconststring(const char* s)
+{
+  static set<string> conststring;
+  string str(s);
+  conststring.insert(string(str));
+  set<string>::iterator p = conststring.lower_bound(str);
+  return((*p).c_str());
+}
+#endif
 #endif
 
 #endif /* 1423 */

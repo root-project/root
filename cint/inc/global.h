@@ -545,6 +545,8 @@ extern int G__precomp_private;
 *********************************************************************/
 extern struct G__ConstStringList G__conststringlist ;
 extern struct G__ConstStringList *G__plastconststring ;
+#ifndef G__OLDIMPLEMENTATION1636
+#endif
 
 #ifdef G__SECURITY
 /**************************************************************************

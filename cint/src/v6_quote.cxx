@@ -46,6 +46,45 @@ G__value *pval;
   G__inc_cp_asm(2,1);
 }
 
+#ifndef G__OLDIMPLEMENTATION1636
+#ifdef G__CPPCONSTSTRING
+char* G__saveconststring G__P((char *string));
+#else
+/******************************************************************
+* char* G__savestring()
+******************************************************************/
+char* G__saveconststring(string)
+char* string;
+{
+  int itemp,hash;
+  struct G__ConstStringList *pconststring;
+  /* Search existing const string list */
+  G__hash(string,hash,itemp);
+  pconststring = G__plastconststring;
+  while(pconststring) {
+    if(hash==pconststring->hash && strcmp(string,pconststring->string)==0) {
+      return(pconststring->string);
+    }
+    pconststring = pconststring->prev;
+  }
+
+  /* Create new conststring entry */
+  pconststring 
+    = (struct G__ConstStringList*)malloc(sizeof(struct G__ConstStringList));
+  pconststring->prev = G__plastconststring;
+  G__plastconststring = pconststring;
+  pconststring = G__plastconststring;
+
+  pconststring->string=(char*)malloc(strlen(string)+2);
+  pconststring->string[strlen(string)+1]='\0';
+  strcpy(pconststring->string,string);
+  pconststring->hash = hash;
+
+  return(pconststring->string);
+}
+#endif
+#endif
+
 /******************************************************************
 * G__value G__strip_quotation(string)
 *
@@ -59,7 +98,9 @@ char *string;
   int itemp,itemp2=0,hash;
   char temp[G__LONGLINE];
   G__value result;
+#ifndef G__OLDIMPLEMENTATION1636
   struct G__ConstStringList *pconststring;
+#endif
 #ifndef G__OLDIMPLEMENTATION1631
   int lenm1 = strlen(string)-1;
 #endif
@@ -219,6 +260,9 @@ char *string;
   }
 
 
+#ifndef G__OLDIMPLEMENTATION1636
+  G__letint(&result,'C',(long)G__saveconststring(temp));
+#else
   /* Search existing const string list */
   G__hash(temp,hash,itemp);
   pconststring = G__plastconststring;
@@ -243,6 +287,7 @@ char *string;
   pconststring->hash = hash;
 
   G__letint(&result,'C',(long)pconststring->string);
+#endif
 
   return(result);
 }

@@ -21,3 +21,18 @@
 
 extern "C" void G__cpp_setupG__stream() {
 }
+
+#ifndef G__OLDIMPLEMENTATION1635
+extern "C" void G__redirectcout(const char* filename) {
+}
+extern "C" void G__unredirectcout() {
+}
+extern "C" void G__redirectcerr(const char* filename) {
+}
+extern "C" void G__unredirectcerr() {
+}
+extern "C" void G__redirectcin(const char* filename) {
+}
+extern "C" void G__unredirectcin() {
+}
+#endif /* 1635 */

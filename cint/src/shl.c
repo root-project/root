@@ -906,7 +906,7 @@ char *shlfile;
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
-      G__fprinterr(G__serr,"Warning: Dynamic Link Library %s can not load",shlfile);
+      G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
       G__printlinenum();
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;

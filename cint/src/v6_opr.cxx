@@ -7,7 +7,7 @@
  * Description:
  *  Unary and binary operator handling
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -164,7 +164,7 @@ double val;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
+    *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
     defined->obj.i = (int)val?1:0;
     break;
 #endif
@@ -222,7 +222,7 @@ long val;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g': /* bool */
-    *(int*)defined->ref = (int)val?1:0;
+    *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
     defined->obj.i = (int)val?1:0;
     break;
 #endif

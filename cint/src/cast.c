@@ -7,7 +7,7 @@
  * Description:
  *  Type casting
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -571,7 +571,7 @@ G__value result3;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
-    G__letint(&result3,type ,(int)G__int(result3)?1:0);
+    G__letint(&result3,type ,(unsigned char)(G__int(result3)?1:0));
     break;
 #endif
   default:
@@ -632,7 +632,7 @@ G__value *buf;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
-    G__letint(buf,(char)type ,(int)G__int(*buf)?1:0);
+    G__letint(buf,(char)type ,(unsigned char)(G__int(*buf)?1:0));
     break;
 #endif
   default:

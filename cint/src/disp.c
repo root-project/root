@@ -7,7 +7,7 @@
  * Description:
  *  Display information
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1880,7 +1880,7 @@ long offset;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g': 
-	  sprintf(msg,"=%d",(*(int*)addr)?1:0); 
+	  sprintf(msg,"=%d",(*(unsigned char*)addr)?1:0); 
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif

@@ -7,7 +7,7 @@
  * Description:
  *  Function call
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -320,7 +320,8 @@ G__value *presult3;
 #ifndef G__OLDIMPLEMENTATION1604
       presult3->type='g';
       presult3->obj.i = G__int(libp->para[0])?1:0;
-      if(presult3->ref) *(int*)presult3->ref = (int)presult3->obj.i;
+      if(presult3->ref) 
+	*(unsigned char*)presult3->ref = (unsigned char)presult3->obj.i?1:0;
       flag=1;
 #else
       char ttt[G__ONELINE];

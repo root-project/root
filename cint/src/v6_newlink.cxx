@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -4233,7 +4233,7 @@ int k;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
-	  fprintf(fp,"*(%s*)G__Intref(&libp->para[%d])"
+	  fprintf(fp,"*(%s*)G__UCharref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
 #endif
@@ -4284,7 +4284,7 @@ int k;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Muchar(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
 #endif
