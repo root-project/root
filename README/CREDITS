@@ -85,6 +85,10 @@ N: Valerio Filippini
 E: Valerio.Filippini@pv.infn.it
 D: contribution of TGenPhaseSpace class
 
+N: Frank Filthaut
+E: filthaut@hef.kun.nl
+D: contribution of TFractionFitter class
+
 N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
