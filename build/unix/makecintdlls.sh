@@ -141,7 +141,7 @@ STLDIR=$CINTDIRL/dll_stl
 rm -f $CINTDIRS/*.$SOEXT
 
 $CINT -w1 -zstring -n$STLDIR/G__cpp_string.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/str.h
+   -DG__MAKECINT -c-1 -A -Z0 $STLDIR/str.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_string.o \
    -c $STLDIR/G__cpp_string.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" string.$SOEXT \
@@ -149,7 +149,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" string.$SOEXT \
 rename $CINTDIRS/string
 
 $CINT -w1 -zvector -n$STLDIR/G__cpp_vector.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/vec.h
+   -DG__MAKECINT -c-1 -A -Z0 $STLDIR/vec.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_vector.o \
    -c $STLDIR/G__cpp_vector.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" vector.$SOEXT \
@@ -157,7 +157,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" vector.$SOEXT \
 rename $CINTDIRS/vector
 
 $CINT -w1 -zlist -n$STLDIR/G__cpp_list.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/lst.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/lst.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_list.o \
    -c $STLDIR/G__cpp_list.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" list.$SOEXT \
@@ -165,7 +165,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" list.$SOEXT \
 rename $CINTDIRS/list
 
 $CINT -w1 -zdeque -n$STLDIR/G__cpp_deque.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/dqu.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/dqu.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_deque.o \
    -c $STLDIR/G__cpp_deque.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" deque.$SOEXT \
@@ -173,7 +173,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" deque.$SOEXT \
 rename $CINTDIRS/deque
 
 $CINT -w1 -zmap -n$STLDIR/G__cpp_map.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/mp.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/mp.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_map.o \
    -c $STLDIR/G__cpp_map.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map.$SOEXT \
@@ -181,7 +181,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map.$SOEXT \
 rename $CINTDIRS/map
 
 $CINT -w1 -zmap2 -n$STLDIR/G__cpp_map2.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -DG__MAP2 -c-1 -A -M0x10 -Z0 $STLDIR/mp.h
+   -DG__MAKECINT -DG__MAP2 -c-1 -A  -Z0 $STLDIR/mp.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_map2.o \
    -c $STLDIR/G__cpp_map2.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map2.$SOEXT \
@@ -189,7 +189,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" map2.$SOEXT \
 rename $CINTDIRS/map2
 
 $CINT -w1 -zset -n$STLDIR/G__cpp_set.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/st.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/st.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_set.o \
    -c $STLDIR/G__cpp_set.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" set.$SOEXT \
@@ -197,7 +197,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" set.$SOEXT \
 rename $CINTDIRS/set
 
 $CINT -w1 -zmultimap -n$STLDIR/G__cpp_multimap.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/multmp.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/multmp.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_multimap.o \
    -c $STLDIR/G__cpp_multimap.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap.$SOEXT \
@@ -205,7 +205,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap.$SOEXT \
 rename $CINTDIRS/multimap
 
 $CINT -w1 -zmultimap2 -n$STLDIR/G__cpp_multimap2.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -DG__MAP2 -c-1 -A -M0x10 -Z0 $STLDIR/multmp.h
+   -DG__MAKECINT -DG__MAP2 -c-1 -A  -Z0 $STLDIR/multmp.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_multimap2.o \
    -c $STLDIR/G__cpp_multimap2.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap2.$SOEXT \
@@ -213,7 +213,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multimap2.$SOEXT \
 rename $CINTDIRS/multimap2
 
 $CINT -w1 -zmultiset -n$STLDIR/G__cpp_multiset.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/multst.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/multst.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_multiset.o \
    -c $STLDIR/G__cpp_multiset.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multiset.$SOEXT \
@@ -221,7 +221,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" multiset.$SOEXT \
 rename $CINTDIRS/multiset
 
 $CINT -w1 -zstack -n$STLDIR/G__cpp_stack.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/stk.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/stk.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_stack.o \
    -c $STLDIR/G__cpp_stack.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stack.$SOEXT \
@@ -229,7 +229,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" stack.$SOEXT \
 rename $CINTDIRS/stack
 
 $CINT -w1 -zqueue -n$STLDIR/G__cpp_queue.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/que.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/que.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_queue.o \
    -c $STLDIR/G__cpp_queue.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" queue.$SOEXT \
@@ -237,7 +237,7 @@ $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" queue.$SOEXT \
 rename $CINTDIRS/queue
 
 #$CINT -w1 -zvalarray -n$STLDIR/G__cpp_valarray.cxx -D__MAKECINT__ \
-#   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/vary.h
+#   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/vary.h
 #$CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_valarray.o \
 #   -c $STLDIR/G__cpp_valarray.cxx
 #$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" valarray.$SOEXT \
@@ -245,7 +245,7 @@ rename $CINTDIRS/queue
 #rename $CINTDIRS/valarray
 
 $CINT -w1 -zexception -n$STLDIR/G__cpp_exception.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/eh.h
+   -DG__MAKECINT -c-1 -A  -Z0 $STLDIR/eh.h
 $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_exception.o \
    -c $STLDIR/G__cpp_exception.cxx
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" exception.$SOEXT \
