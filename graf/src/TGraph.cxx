@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.107 2003/08/20 15:40:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.108 2003/09/03 12:42:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2432,11 +2432,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   Int_t fwidth = gPad->GetFrameLineWidth();
   TFrame *frame = gPad->GetFrame();
   if (frame) fwidth = frame->GetLineWidth();
-  Double_t dxframe = 0.5*(gPad->AbsPixeltoX(fwidth) - gPad->AbsPixeltoX(0));
+  Double_t dxframe = gPad->AbsPixeltoX(fwidth/2) - gPad->AbsPixeltoX(0);
   Double_t vxmin = gPad->PadtoX(gPad->GetUxmin() + dxframe);
   Double_t vxmax = gPad->PadtoX(gPad->GetUxmax() - dxframe);
-  Double_t dyframe = 0.5*(-gPad->AbsPixeltoY(fwidth) + gPad->AbsPixeltoY(0));
-  Double_t vymin = gPad->PadtoY(gPad->GetUymin() + dyframe);
+  Double_t dyframe = -gPad->AbsPixeltoY(fwidth/2) + gPad->AbsPixeltoY(0);
+  Double_t vymin = gPad->GetUymin() + dyframe; //y already in log scale
 
 //*-*-           Draw the histogram with a fill area
 
@@ -2448,7 +2448,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   if (OptionFill && !OptionCurve) {
      fillarea = kTRUE;
      if (!OptionRot) {
-        gxwork[0] = wmin;
+        gxwork[0] = vxmin;
         if (!OptionOne) gywork[0] = TMath::Max((Double_t)0,gPad->GetUymin());
         else            gywork[0] = gPad->GetUymin();
         npt = 2;
@@ -2470,6 +2470,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
            gywork[npt-1] = y[j-1];
            gywork[npt]   = y[j-1];
+           if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
            if (j == last) {
@@ -2554,11 +2555,12 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
            gywork[npt-1] = y[i-1];
            gywork[npt]   = y[i-1];
+           if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
            if (i == last) {
               gxwork[npt-1] = gxwork[npt-2];
-              gywork[npt-1] = ywmin;
+              gywork[npt-1] = gywork[0];
               //make sure that the fill area does not overwrite the frame
               //take into account the frame linewidth
               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
