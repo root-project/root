@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.8 2000/10/02 15:46:19 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.1.1.1 2002/08/02 22:24:38 pcanal Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -114,6 +114,8 @@ Event::Event()
    fPaxis = 0;
    fQaxis = 0;
    fMapTAxisp = 0;
+   fSetTAxisp = 0;
+   fMultiSetTAxisp = 0;
    fListString = new list<string>;
    fListString->push_back("First string");
    fListString->push_back("Second string");
