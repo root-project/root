@@ -18,8 +18,8 @@ TMAKEIN=test/Makefile.in
 TMAKEOUT=test/Makefile
 
 
-if (echo "testing\c"; echo 1,2,3) | grep c >/dev/null; then
-  if (echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn >/dev/null; then
+if  `(echo "testing\c"; echo 1,2,3) | grep c > /dev/null` ; then
+  if `(echo -n testing; echo 1,2,3) | sed s/-n/xn/ | grep xn > /dev/null`; then
     ac_n= ac_c='
 ' ac_t='	'
   else
@@ -33,43 +33,62 @@ fi
 confhelp() {
     echo "Usage:     $0 <architecture> [flag=value] "
     echo ""
-    echo "    FLAG           DESCRIPTION              DEFAULT"
-    echo "    --prefix       Installation prefix      (/usr/local)"
-    echo "    --bindir       Binary installation dir  (<prefix>/bin)"
-    echo "    --libdir       Library installation dir (<prefix>/lib/root)"
-    echo "    --incdir       Header installation dir  (<prefix>/include/root)"
-    echo "    --etcdir       Config installation dir  (/etc/root)"
-    echo "    --datadir      Data installation dir    (<prefix>/share/root)"
-    echo "    --macrodir     Macro installation dir   (<datadir>/macros)"
-    echo "    --cintincdir   CINT interpeted headers  (<datadir>/cint)"
-    echo "    --iconpath     Icon installation dir    (<datadir>/icons)"
-    echo "    --srcdir       Sources installation dir (<datadir>/src)"
-    echo "    --docdir       Documentation            (<prefix>/doc)"
-    echo "    --testdir      Tests                    (<prefix>/doc/root/test)"
-    echo "    --tutdir       Tutorials                (<prefix>/doc/root/tutorial)"
-    echo ""
-    echo "    --with-xpm           XPM support, path of libXpm.a"
-    echo "    --with-ttf-incdir    TTF support, location of freetype.h"
-    echo "    --with-ttf-libdir    TTF support, location of libttf.so"
-    echo "    --with-ttf-fontdir   TTF support, location of TTF fonts"
-    echo "    --with-opengl-incdir OpenGL support, location of gl.h"
-    echo "    --with-opengl-libdir OpenGL support, location of libMesaGL.so"
-    echo "    --with-cern-libdir   HBOOK converter, location of CERN libs dir"
-    echo "    --with-rfio          RFIO support, path of libshift.a"
-    echo "    --with-thread        Thread support, path of libpthread.so"
-    echo "    --with-mysql-incdir  MySQL support, location of mysql.h"
-    echo "    --with-mysql-libdir  MySQL support, location of libmysqlclient.so"
-    echo "    --with-srp           Secure Remote Passwd support, location of SRP distribution"
-    echo "    --with-afs           AFS support, location of AFS distribution"
-    echo "    --with-pythia        PYHTIA support, path of libPythia.so"
-    echo "    --with-pythia6       PYHTIA6 support, path of libPythia6.so"
-    echo "    --with-venus         VENUS support, path of libVenus.so"
-    echo "    --with-sys-iconpath  Extra icon path"
+    echo "   FLAG            DESCRIPTION               DEFAULT"
+    echo "   --prefix        Installation prefix       (/usr/local)"
+    echo "   --bindir        Binary installation dir   (<prefix>/bin)"
+    echo "   --libdir        Library installation dir  (<prefix>/lib/root)"
+    echo "   --incdir        Header installation dir   (<prefix>/include/root)"
+    echo "   --mandir        Manpages installation dir (<prefix>/share/man/man1)"
+    echo "   --etcdir        Config installation dir   (/etc/root)"
+    echo "   --datadir       Data installation dir     (<prefix>/share/root)"
+    echo "   --proofdir      PROOF utils dir           (<datadir>/proof)"
+    echo "   --macrodir      Macro installation dir    (<datadir>/macros)"
+    echo "   --cintincdir    CINT interpeted headers   (<datadir>/cint)"
+    echo "   --iconpath      Icon installation dir     (<datadir>/icons)"
+    echo "   --srcdir        Sources installation dir  (<datadir>/src)"
+    echo "   --docdir        Documentation             (<prefix>/doc/root)"
+    echo "   --testdir       Tests                     (<docdir>/test)"
+    echo "   --tutdir        Tutorials                 (<docdir>/tutorial)"
+    echo "   --build         Build configuration [debug, exception, ...],"
+    echo "                   overrides the ROOTBUILD shell variable"
+    echo "enable/disable options, prefix with either --enable- or --disable-"
+    echo "   shared          Use shared 3rd party libraries if possible"
+    echo "   rpath           Set library path on executables"
+    echo "   star            Build STAR contrib library"
+    echo "   thread          Thread support"
+    echo "   ttf             True Type Font support, requires libtff"
+    echo "   opengl          OpenGL support, requires libGL and libGLU"
+    echo "   cern            CERNLIB usage, build h2root and g2root"
+    echo "   mysql           MySQL support, requires libmysqlclient"
+    echo "   rfio            SHIFT support, requires libshift.a from CERN"
+    echo "   srp             SRP support, requires SRP source tree"
+    echo "   afs             AFS support, requires AFS libs and objects"
+    echo "   pythia          Pythia5 EG support, requires libPythia"
+    echo "   pythia6         Pythia6 EG support, requires libPythia6"
+    echo "   venus           Venus EG suuport, requires libVenus"
+    echo "with options, prefix with --with-, enables corresponding support"
+    echo "   xpm             XPM support, path to libXpm"
+    echo "   thread          Thread support, path to libpthread"
+    echo "   ttf-incdir      TTF support, location of freetype.h"
+    echo "   ttf-libdir      TTF support, location of libttf"
+    echo "   ttf-fontdir     TTF support, location of TTF fonts"
+    echo "   opengl-incdir   OpenGL support, location of GL/gl.h"
+    echo "   opengl-libdir   OpenGL support, location of libGL"
+    echo "   mysql-incdir    MySQL support, location of mysql.h"
+    echo "   mysql-libdir    MySQL support, location of libmysqlclient"
+    echo "   pythia-libdir   PYHTIA support, location of libPythia"
+    echo "   pythia6-libdir  PYHTIA6 support, location of libPythia6"
+    echo "   venus-libdir    VENUS support, location of libVenus"
+    echo "   cern-libdir     HBOOK converter, location of CERNLIB libraries"
+    echo "   shift-libdir    RFIO support, location of libshift"
+    echo "   srp             Secure Remote Passwd support, location of SRP distribution"
+    echo "   afs             AFS support, location of AFS distribution"
+    echo "   sys-iconpath    Extra icon path"
     echo ""
     cat config/ARCHS
 }
 
-if [ $# -lt 1 ] ; then
+if [ $# -lt 1 ]; then
    echo "You must give architecture as first argument - try $0 --help"
    exit 1
 else
@@ -96,8 +115,8 @@ cp -f $RCONFIN root-config.tmp
 cp -f $TMAKEIN TMakefile.tmp
 cp -f $ROOTRCIN rootrc.tmp
 
-if [ $# -gt 0 ] ; then
-   while [ "$1" != "" ] ; do
+if [ $# -gt 0 ]; then
+   while [ "$1" != "" ]; do
       case "$1" in
       -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
       *) optarg= ;;
@@ -105,28 +124,75 @@ if [ $# -gt 0 ] ; then
 
       case $1 in
       --help|-h) confhelp ;   exit 0 ;;
-      --with-xpm=*)           xpmlib=$optarg        ;;
-      --with-ttf-incdir=*)    ttfincdir=$optarg     ;;
-      --with-ttf-libdir=*)    ttflibdir=$optarg     ;;
-      --with-ttf-fontdir=*)   ttffontdir=$optarg    ;;
-      --with-opengl-incdir=*) openglincdir=$optarg  ;;
-      --with-opengl-libdir=*) opengllibdir=$optarg  ;;
-      --with-cern-libdir=*)   cernlibdir=$optarg    ;;
-      --with-rfio=*)          rfio=$optarg          ;;
-      --with-thread=*)        thread=$optarg        ;;
-      --with-mysql-incdir=*)  mysqlincdir=$optarg   ;;
-      --with-mysql-libdir=*)  mysqllibdir=$optarg   ;;
-      --with-srp=*)           srpdir=$optarg        ;;
-      --with-afs=*)           afsdir=$optarg        ;;
-      --with-pythia=*)        pythialib=$optarg     ;;
-      --with-pythia6=*)       pythia6lib=$optarg    ;;
-      --with-venus=*)         venuslib=$optarg      ;;
-      --with-sys-iconpath=*)  extraiconpath=$optarg ;;
+      ################################################################
+      #
+      # With options to specifiy third part software
+      #
+      --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
+      --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_tread="yes"   ;;
+      --with-ttf-incdir=*)     ttfincdir=$optarg     ; enable_ttf="yes"     ;;
+      --with-ttf-libdir=*)     ttflibdir=$optarg     ; enable_ttf="yes"     ;;
+      --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
+      --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
+      --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
+      --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
+      --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
+      --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
+      --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
+      --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
+      --with-sys-iconpath=*)   extraiconpath=$optarg ;;
+      ################################################################
+      #
+      # Enable/disable to turn on/off third party software linkage and
+      # features
+      #
+      --enable-shared)        enable_shared=yes     ;;
+      --disable-shared)       enable_shared=no      ;;
+      --enable-rpath)         enable_rpath=yes      ;;
+      --disable-rpath)        enable_rpath=no       ;;
+      --enable-star)          enable_star=yes       ;;
+      --disable-star)         enable_star=no        ;;
+      --enable-ttf)           enable_ttf=yes        ;;
+      --disable-ttf)          enable_ttf=no         ;;
+      --enable-opengl)        enable_opengl=yes     ;;
+      --disable-opengl)       enable_opengl=no      ;;
+      --enable-cern)          enable_cern=yes       ;;
+      --disable-cern)         enable_cern=no        ;;
+      --enable-mysql)         enable_mysql=yes      ;;
+      --disable-mysql)        enable_mysql=no       ;;
+      --enable-rfio)          enable_rfio=yes       ;;
+      --disable-rfio)         enable_rfio=no        ;;
+      --enable-thread)        enable_thread=yes     ;;
+      --disable-thread)       enable_thread=no      ;;
+      --enable-srp)           enable_srp=yes        ;;
+      --disable-srp)          enable_srp=no         ;;
+      --enable-afs)           enable_afs=yes        ;;
+      --disable-afs)          enable_afs=no         ;;
+      --enable-pythia)        enable_pythia=yes     ;;
+      --disable-pythia)       enable_pythia=no      ;;
+      --enable-pythia6)       enable_pythia6=yes    ;;
+      --disable-pythia6)      enable_pythia6=no     ;;
+      --enable-venus)         enable_venus=yes      ;;
+      --disable-venus)        enable_venus=no       ;;
+      ################################################################
+      #
+      # Build steering option
+      #
+      --build=*)              rootbuild="ROOTBUILD      := $optarg"  ;;
+      ################################################################
+      #
+      # Install path options
+      #
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
       --bindir=*)     haveconfig=-DHAVE_CONFIG ; bindir=$optarg      ;;
       --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
       --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
       --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
+      --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
       --datadir=*)    haveconfig=-DHAVE_CONFIG ; datadir=$optarg     ;;
       --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
       --cintincdir=*) haveconfig=-DHAVE_CONFIG ; cintincdir=$optarg  ;;
@@ -141,350 +207,796 @@ if [ $# -gt 0 ] ; then
    done
 fi
 
-# Check for MySQL include and library
-echo $ac_n "Checking for mysql.h... $ac_c"
-mysqlincdirs="$MYSQL $MYSQL/include /usr/include /usr/local/include \
-              /usr/include/mysql /usr/local/include/mysql /usr/mysql/include \
-              /usr/local/mysql/include /usr/mysql /usr/local/mysql /opt/mysql \
-              /opt/mysql/include"
-
-if [ -z "$mysqlincdir" ]; then
-   mysqlincdir=NO
-   if [ "$MYSQL" != "NO" ]; then
-      for i in $mysqlincdirs; do
-         for j in mysql.h; do
-            if [ -r "$i/$j" ]; then
-               mysqlincdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $mysqlincdir
-
-echo $ac_n "Checking for libmysqlclient.a... $ac_c"
-mysqllibdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib /usr/lib/mysql \
-              /usr/local/lib/mysql /usr/mysql/lib /usr/local/mysql/lib \
-              /usr/mysql /usr/local/mysql /opt/mysql /opt/mysql/lib"
-
-if [ -z "$mysqllibdir" ]; then
-   mysqllibdir=NO
-   if [ "$MYSQL" != "NO" ]; then
-      for i in $mysqllibdirs; do
-         for j in libmysqlclient.a; do
-            if [ -r "$i/$j" ]; then
-               mysqllibdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $mysqllibdir
-
-# Check for FreeType TTF include, library and fonts
-echo $ac_n "Checking for freetype.h... $ac_c"
-ttfincdirs="$TTF $TTF/include /usr/include /usr/local/include \
-              /usr/include/freetype /usr/local/include/freetype \
-              /usr/freetype/include /usr/local/freetype/include \
-              /usr/freetype /usr/local/freetype /opt/freetype \
-              /opt/freetype/include /usr/local/ttf/include \
-              /opt/ttf/include"
-
-if [ -z "$ttfincdir" ]; then
-   ttfincdir=NO
-   if [ "$TTF" != "NO" ]; then
-      for i in $ttfincdirs; do
-         for j in freetype.h; do
-            if [ -r "$i/$j" ]; then
-               ttfincdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $ttfincdir
-
-echo $ac_n "Checking for libttf.a... $ac_c"
-ttflibdirs="$TTF $TTF/lib /usr/lib /usr/local/lib /usr/lib/freetype \
-              /usr/local/lib/freetype /usr/freetype/lib \
-              /usr/local/freetype/lib /usr/freetype /usr/local/freetype \
-              /opt/freetype /opt/freetype/lib /usr/local/ttf/lib \
-              /opt/ttf/lib"
-
-if [ -z "$ttflibdir" ]; then
-   ttflibdir=NO
-   if [ "$TTF" != "NO" ]; then
-      for i in $ttflibdirs; do
-         for j in libttf.a; do
-            if [ -r "$i/$j" ]; then
-               ttflibdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $ttflibdir
-
-echo $ac_n "Checking for ttf fonts (arial.ttf)... $ac_c"
-ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts /usr/lib/X11/fonts/ttf \
-              /usr/share /usr/share/fonts /usr/share/fonts/ttf \
-              /usr/share/ttf /usr/local/share /usr/local/share/fonts \
-              /usr/local/share/fonts/ttf /usr/local/share/ttf \
-              /opt/fonts /opt/fonts/ttf /opt/ttf /opt/ttf/fonts \
-              /usr/local/ttf/fonts"
-
-if [ -z "$ttffontdir" ]; then
-   ttffontdir=NO
-   if [ "$TTF" != "NO" ]; then
-      for i in $ttffontdirs; do
-         for j in arial.ttf; do
-            if [ -r "$i/$j" ]; then
-               ttffontdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $ttffontdir
-
-# Check for Mesa OpenGL compatible include and library
-echo $ac_n "Checking for GL/gl.h... $ac_c"
-openglincdirs="$OPENGL $OPENGL/include /usr/include /usr/local/include \
-              /usr/include/Mesa /usr/local/include/Mesa /usr/Mesa/include \
-              /usr/local/Mesa/include /usr/Mesa /usr/local/Mesa /opt/Mesa \
-              /opt/Mesa/include"
-
-if [ -z "$openglincdir" ]; then
-   openglincdir=NO
-   if [ "$OPENGL" != "NO" ]; then
-      for i in $openglincdirs; do
-         for j in GL/gl.h; do
-            if [ -r "$i/$j" ]; then
-               openglincdir=$i
-               break 2
-            fi
-         done
-      done
-   fi
-fi
-echo $openglincdir
-
-echo $ac_n "Checking for libGL... $ac_c"
-opengllibdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib /usr/lib/X11 \
-              /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
-              /usr/X11/lib /usr/lib/Mesa /usr/local/lib/Mesa /usr/Mesa/lib \
-              /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa /opt/Mesa \
-              /opt/Mesa/lib"
-opengllibs="libGL.a libGL.so"    # favour .a over .so
-opengllib=NO
-
-if [ -z "$opengllibdir" ]; then
-   if [ "$OPENGL" != "NO" ]; then
-      for i in $opengllibdirs; do
-         for j in $opengllibs; do
-            if [ -r "$i/$j" ]; then
-               opengllib=$i/$j
-               break 2
-            fi
-         done
-      done
-   fi
+######################################################################
+#
+# STAR Library (Contributed library)
+#
+if [ "x$enable_star" = "xyes" ]; then
+    enable_star="1"
 else
-   for j in $opengllibs; do
-      if [ -r "$opengllibdir/$j" ]; then
-         opengllib=$opengllibdir/$j
-         break 1
-      fi
-   done
+    enable_star=""
 fi
-echo $opengllib
 
-echo $ac_n "Checking for libGLU... $ac_c"
-openglulibs="libGLU.a libGLU.so"    # favour .a over .so
-openglulib=NO
-
-if [ -z "$opengllibdir" ]; then
-   if [ "$OPENGL" != "NO" ]; then
-      for i in $opengllibdirs; do
-         for j in $openglulibs; do
-            if [ -r "$i/$j" ]; then
-               openglulib=$i/$j
-               break 2
-            fi
-         done
-      done
-   fi
-else
-   for j in $openglulibs; do
-      if [ -r "$opengllibdir/$j" ]; then
-         openglulib=$opengllibdir/$j
-         break 1
-      fi
-   done
-fi
-echo $openglulib
-
+######################################################################
+#
+# XPM Library (Mandatory lib on Unix)
+#
+# Mandetory test, must succeed
 # Check for Xpm library
-echo $ac_n "Checking for libXpm.a... $ac_c"
-xpmlibdirs="$XPM $XPM/lib /usr/lib /usr/local/lib \
-              /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
-              /use/local/X11R6/lib /usr/X11/lib"
-
-if [ -z "$xpmlib" ]; then
-   xpmlib=NO
-   for i in $xpmlibdirs; do
-      for j in libXpm.a; do
-         if [ -r "$i/$j" ]; then
-            xpmlib=$i/$j
-            break 2
-         fi
-      done
-   done
-fi
-echo $xpmlib
-
-# Check for SRP (libsrp.a)
-echo $ac_n "Checking for SRP (libsrp.a)... $ac_c"
-srpdirs="$SRP /usr/srp /usr/local/srp"
-
-if [ -z "$srpdir" ]; then
-   srpdir=NO
-   if [ "$SRP" != "NO" ]; then
-      for i in $srpdirs; do
-         for j in lib/libsrp.a; do
-            if [ -r "$i/$j" ]; then
-               srpdir=$i
-               break 2
+#
+if [ "$arch" != "win32" ]; then
+    echo $ac_n "Checking for libXpm ... $ac_c"
+    if [ "x$xpmlibdir" != "x" ]; then
+        libdirs=$xpmlibdir
+    else
+        libdirs="$XPM $XPM/lib /usr/lib /usr/local/lib \
+                    /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
+                    /use/local/X11R6/lib /usr/X11/lib"
+    fi
+    xpmlib=no
+    xpmdir=no
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libXpm.so libXpm.sl libXpm.a"
+    else
+        libs="libXpm.a"
+    fi
+    for i in $libdirs; do
+        for j in ${libs} ; do
+            if [  -r $i/$j ]; then
+                xpmlibdir=$i
+                xpmlib=$j
+                break 2
             fi
-         done
-      done
-   fi
+        done
+    done
+    echo $xpmlibdir
+    unset libs
+    unset libdirs
+
+    if [ "x$xpmlib" = "xno" ]  ; then
+        echo "libXpm must be on the system - Aborting"
+        exit 1
+    fi
+
+    if [ "x$enable_shared" = "xno" ]; then
+        xpmlib=${xpmlibdir}/${xpmlib}
+        unset xpmlibdir
+    else
+        xpmlib=`echo $xpmlib | sed 's|lib\(.*\)\..*|-l\1|'`
+        xpmlibdir=-L${xpmlibdir}
+    fi
 fi
-echo $srpdir
 
-# Check for AFS (libdes.a)
-echo $ac_n "Checking for AFS (libdes.a)... $ac_c"
-afsdirs="$AFS /usr/afsws /usr/local/afsws"
-
-if [ -z "$afsdir" ]; then
-   afsdir=NO
-   if [ "$AFS" != "NO" ]; then
-      for i in $afsdirs; do
-         for j in lib/libdes.a; do
-            if [ -r "$i/$j" ]; then
-               afsdir=$i
-               break 2
+######################################################################
+#
+# Posix Thread Library
+#
+# Check for posix thread library
+#
+if [ "x$enable_thread" != "xno"  -a "$arch" != "win32" ]; then
+    echo $ac_n "Checking for libpthread ... $ac_c"
+    if [ "x$threadlibdir" != "x" ]; then
+        libdirs=$threadlibdir
+    else
+        libdirs="$THREAD $THREAD/lib /usr/lib /usr/local/lib \
+                    /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
+                    /use/local/X11R6/lib /usr/X11/lib"
+    fi
+    threadlib=no
+    threaddir=no
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libpthread.so libpthread.sl libpthread.a"
+    else
+        libs="libpthread.a"
+    fi
+    for i in $libdirs; do
+        for j in ${libs} ; do
+            if [  -r $i/$j ]; then
+                threadlibdir=$i
+                threadlib=$j
+                break 2
             fi
-         done
-      done
-   fi
+        done
+    done
+    echo $threadlibdir
+    unset libs
+    unset libdirs
+
+    if [ "x$threadlib" = "xno" ]; then
+        unset threadlib
+        unset threadlibdir
+        enable_thread="no"
+    else
+        if [ "x$enable_shared" = "xno" ]; then
+            threadlib=${threadlibdir}/${threadlib}
+            unset threadlibdir
+        else
+            threadlib=`echo $threadlib | sed 's|lib\(.*\)\..*|-l\1|'`
+            threadlibdir=-L${threadlibdir}
+        fi
+    fi
 fi
-echo $afsdir
 
-# Check for libshift.a
-echo $ac_n "Checking for libshift.a... $ac_c"
-rfios="$RFIO /cern/pro/lib/libshift.a /cern/new/lib/libshift.a \
-       /cern/old/lib/libshift.a"
+######################################################################
+#
+# FreeType Support (Third party libraries)
+#
+# (see freetype.org)
+#
+if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
+    # Check for FreeType TTF include, library and fonts
+    echo $ac_n "Checking for freetype.h ... $ac_c"
+    if [ "x$ttfincdir" != "x" ]; then
+        # If the user gave an explicit path, then we check if it's correct.
+        ttfincdirs=$ttfincdir
+    else
+        # Otherwise, we search some canonical paths
+        ttfincdirs="$TTF $TTF/include /usr/include /usr/local/include \
+                    /usr/include/freetype /usr/local/include/freetype \
+                    /usr/freetype/include /usr/local/freetype/include \
+                    /usr/freetype /usr/local/freetype /opt/freetype \
+                    /opt/freetype/include /usr/local/ttf/include \
+                    /opt/ttf/include"
+    fi
+    ttfincdir=no
+    ttfheaders="freetype.h"
+    for i in ${ttfincdirs}; do
+        for j in ${ttfheaders}; do
+            if [ -r $i/$j ]; then
+                ttfincdir=$i
+                break 2
+            fi
+        done
+    done
+    echo $ttfincdir
+    unset ttfheaders
+    unset ttfincdirs
 
-if [ -z "$rfio" ]; then
-   rfio=NO
-   for i in $rfios; do
-      if [ -r "$i" ]; then
-         rfio=$i
-         break 1
-      fi
-   done
+    echo $ac_n "Checking for ttf library ... $ac_c"
+    if [ "x$ttflibdir" != "x" ]; then
+        # If the user gave an explixit path, then check it
+        libdirs=$ttflibdir
+    else
+        # Otherwise, search canonical paths
+        libdirs="$TTF $TTF/lib /usr/lib /usr/local/lib \
+                 /usr/lib/freetype /usr/local/lib/freetype \
+                 /usr/freetype/lib /usr/local/freetype/lib \
+                 /usr/freetype /usr/local/freetype \
+                 /opt/freetype /opt/freetype/lib \
+                 /usr/local/ttf/lib /opt/ttf/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libttf.so libttf.sl libttf.a"
+    else
+        libs="libttf.a"
+    fi
+    ttflibdir=no
+    for i in $libdirs; do
+        for j in ${libs}; do
+            if [ -r "$i/$j" ]; then
+                ttflibdir=$i
+                ttflib=$j
+                break 2
+            fi
+        done
+    done
+    echo $ttflibdir
+    unset libs
+    unset libdirs
+
+    echo $ac_n "Checking for ttf fonts (arial.ttf) ... $ac_c"
+    if [ "x$ttffontdir" != "x" ]; then
+        ttffontdirs=$ttffontdir
+    else
+        ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts \
+                    /usr/lib/X11/fonts/ttf /usr/share /usr/share/fonts \
+                    /usr/share/fonts/ttf /usr/share/ttf /usr/local/share \
+                    /usr/local/share/fonts /usr/local/share/fonts/ttf \
+                    /usr/local/share/ttf /opt/fonts /opt/fonts/ttf \
+                    /opt/ttf /opt/ttf/fonts /usr/local/ttf/fonts"
+    fi
+    ttffontdir=no
+    ttffonts=arial.ttf
+    for i in $ttffontdirs; do
+        for j in ${ttffonts}; do
+            if [ -r "$i/$j" ]; then
+                ttffontdir=$i
+                break 2
+            fi
+        done
+    done
+    echo $ttffontdir
+    unset ttffontdirs
+    unset ttffonts
+
+    # Give up if none of the above found
+    if [ "x$ttflibdir" = "xno" -o \
+         "x$ttfincdir" = "xno" -o \
+         "x$ttffontdir" = "xno" ]; then
+         enable_ttf="no"
+         unset ttflibdir
+         unset ttflib
+         unset ttfincdir
+         unset ttffontdir
+    else
+        if [ "x$enable_shared" = "xno" ]; then
+            ttflib=${ttflibdir}/${ttflib}
+            unset ttflibdir
+        else
+            ttflib=`echo $ttflib | sed 's|lib\(.*\)\..*|-l\1|'`
+            ttflibdir=-L${ttflibdir}
+        fi
+    fi
 fi
-if [ "$rfio" != "NO" ]; then
-   case $arch in
-      linux*) rfio="$rfio -lnsl" ;;
-   esac
+
+######################################################################
+#
+# OpenGL Support (Third party libraries)
+#
+# (see mesa.org)
+#
+if [ "x$enable_opengl" != "xno" -a "$arch" != "win32" ]; then
+    # Check for Mesa OpenGL compatible include and library
+    echo $ac_n "Checking for GL/gl.h ... $ac_c"
+    if [ "x$openglincdir" != "x" ]; then
+        openglincdirs=$openglincdir
+    else
+        openglincdirs="$OPENGL $OPENGL/include /usr/include \
+                        /usr/local/include /usr/include/Mesa \
+                        /usr/local/include/Mesa /usr/Mesa/include \
+                        /usr/local/Mesa/include /usr/Mesa \
+                        /usr/local/Mesa /opt/Mesa /opt/Mesa/include"
+    fi
+    openglincdir=no
+    openglheaders="GL/gl.h"
+    for i in $openglincdirs; do
+        for j in ${openglheaders}; do
+            if [ -r "$i/$j" ]; then
+                openglincdir=$i
+                break 2
+            fi
+        done
+    done
+    echo $openglincdir
+    unset openglincdirs
+    unset openglheaders
+
+    echo $ac_n "Checking for libGL ... $ac_c"
+    if [ "x$opengllibdir" != "x" ]; then
+        libdirs=$opengllibdir
+    else
+        libdirs="$OPENGL $OPENGL/lib /usr/lib /usr/local/lib \
+                        /usr/lib/X11 /usr/X11R6/lib \
+                        /usr/local/lib/X11 /usr/local/X11R6/lib \
+                        /usr/X11/lib /usr/lib/Mesa \
+                        /usr/local/lib/Mesa /usr/Mesa/lib \
+                        /usr/local/Mesa/lib /usr/Mesa /usr/local/Mesa \
+                        /opt/Mesa /opt/Mesa/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libGL.so libGL.sl libMesaGL.so libMesaGL.sl libGL.a libMesaGL.a"
+    else
+        libs="libGL.a libMesaGL.a"
+    fi
+    opengllib=no
+    opengllibdir=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                opengllibdir=$i
+                opengllib=$j
+                break 2
+            fi
+        done
+    done
+    echo $opengllibdir
+    unset libs
+
+    echo $ac_n "Checking for libGLU ... $ac_c"
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libGLU.so libGLU.sl libMesaGLU.so libMesaGLU.sl libGLU.a \
+              libMesaGLU.a"
+    else
+        libs="libGLU.a libMesaGLU.a"
+    fi
+    openglulib=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                opengllibdir=$i
+                openglulib=$j
+                break 2
+            fi
+        done
+    done
+    echo $opengllibdir
+    unset libs
+    unset libdirs
+
+
+    if [ "x$openglincdir" = "xno" -o \
+         "x$opengllibdir" = "xno" -o \
+         "x$openglulib" = "xno" ]; then
+        enable_opengl="no"
+        unset openglincdir
+        unset opengllibdir
+        unset opengllib
+        unset openglulib
+    else
+        if [ "x$enable_shared" = "xno" ]; then
+            opengllib=${opengllibdir}/${opengllib}
+            openglulib=${opengllibdir}/${openglulib}
+            unset opengllibdir
+        else
+            opengllib=`echo $opengllib | sed 's|lib\(.*\)\..*|-l\1|'`
+            openglulib=`echo $openglulib | sed 's|lib\(.*\)\..*|-l\1|'`
+            opengllibdir=-L${opengllibdir}
+        fi
+    fi
 fi
-echo $rfio
 
-# Check for CERN libs (libpacklib and libkernlib)
-echo $ac_n "Checking for libpacklib... $ac_c"
-cernlibdirs="$CERNLIB $CERNLIB/lib /cern/pro/lib /cern/old/lib /cern/new/lib"
-packlibs="libpacklib.a libpacklib.so libpacklib.sl packlib.lib"
-
-if [ -z "$cernlibdir" ]; then
-   cernlibdir=NO
-   for i in $cernlibdirs; do
-      for j in $packlibs; do
-         if [ -r "$i/$j" ]; then
-            cernlibdir=$i
-            break 2
-         fi
-      done
-   done
-fi
-echo $cernlibdir
-
-# Check for libPythia
-echo $ac_n "Checking for libPythia... $ac_c"
-pythialibdirs="$PYTHIA $PYTHIA/lib /cern/pro/lib"
-pythialibs="libPythia.so libPythia.sl libPythia.a libPythia.lib"
-
-if [ -z "$pythialib" ]; then
-   pythialib=NO
-   for i in $pythialibdirs; do
-      for j in $pythialibs; do
-         if [ -r "$i/$j" ]; then
-            pythialib=$i/$j
-            break 2
-         fi
-      done
-   done
-fi
-echo $pythialib
-
-# Check for libPythia6
-echo $ac_n "Checking for libPythia6... $ac_c"
-pythia6libdirs="$PYTHIA6 $PYTHIA6/lib /cern/pro/lib"
-pythia6libs="libPythia6.so libPythia6.sl libPythia6.a libPythia6.lib"
-
-if [ -z "$pythia6lib" ]; then
-   pythia6lib=NO
-   for i in $pythia6libdirs; do
-      for j in $pythia6libs; do
-         if [ -r "$i/$j" ]; then
-            pythia6lib=$i/$j
-            break 2
-         fi
-      done
-   done
-fi
-echo $pythia6lib
-
-# Check for libVenus
-echo $ac_n "Checking for libVenus... $ac_c"
-venuslibdirs="$VENUS $VENUS/lib /cern/pro/lib"
-venuslibs="libVenus.so libVenus.sl libVenus.a libVenus.lib"
-
-if [ -z "$venuslib" ]; then
-   venuslib=NO
-   for i in $venuslibdirs; do
-      for j in $venuslibs; do
-         if [ -r "$i/$j" ]; then
-            venuslib=$i/$j
-            break 2
-         fi
-      done
-   done
-fi
-echo $venuslib
-
+######################################################################
+#
+# OpenGL support on Windoze
+#
 # On win32 we always have OpenGL available (is this true?)
+#
 if [ "$arch" = "win32" ]; then
+   enable_opngl=yes
    openglincdir=include
 fi
 
+
+######################################################################
+#
+# MySQL Support (Third party libraries)
+#
+# (See mysql.org)
+#
+# If the user has set the flags "--disable-mysql", we don't check for
+# MySQL in at all.
+#
+if [ "x$enable_mysql" != "xno" ]; then
+# Check for MySQL include and library
+    echo $ac_n "Checking for mysql.h ... $ac_c"
+    if [ "x$mysqlincdir" != "x" ]; then
+        # If the user has given an explict path, then we check to see if
+        # the mysql.h header file really is where it's supposed to be.
+        mysqlincdirs=$mysqlincdir
+    else
+        # Othewise, search canonical paths
+        mysqlincdirs="$MYSQL $MYSQL/include /usr/include \
+                    /usr/local/include /usr/include/mysql \
+                    /usr/local/include/mysql /usr/mysql/include \
+                    /usr/local/mysql/include /usr/mysql \
+                    /usr/local/mysql /opt/mysql /opt/mysql/include"
+    fi
+    mysqlheaders="mysql.h"
+    mysqlincdir=no
+    for i in ${mysqlincdirs}; do
+        for j in ${mysqlheaders}; do
+            if [ -r "$i/$j" ]; then
+                 mysqlincdir=$i
+                 break 2
+             fi
+        done
+    done
+    echo $mysqlincdir
+    unset mysqlincdirs
+    unset mysqlheaders
+
+    echo $ac_n "Checking for libmysqlclient ... $ac_c"
+    if [ "x$mysqllibdir" != "x" ]; then
+        # If the user gave an explicit path, check to see if the client
+        # library really is where it's supposed to be
+        libdirs=mysqllibdir
+    else
+        libdirs="$MYSQL $MYSQL/lib /usr/lib /usr/local/lib \
+                    /usr/lib/mysql /usr/local/lib/mysql /usr/mysql/lib \
+                    /usr/local/mysql/lib /usr/mysql /usr/local/mysql \
+                    /opt/mysql /opt/mysql/lib"
+    fi
+    # If the "--enable-shared" flag is ste, we first look for the
+    # shared library then the static one.
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libmysqlclient.so libmysqlclient.sl libmysqlclient.a \
+              libmysqlclient.lib"
+    else
+        libs="libmysqlclient.a libmysqlclient.lib"
+    fi
+    mysqllibdir=no
+    for i in $libdirs; do
+        for j in ${libs} ; do
+            if [ -r "$i/$j" ]; then
+                mysqllibdir=$i
+                mysqllib=$j
+                break 2
+            fi
+        done
+    done
+    echo ${mysqllibdir}
+    unset libdirss
+    unset libs
+
+    if [ "x$mysqlincdir" = "xno" -o "x$mysqllibdir" = "xno" ]; then
+        unset mysqllib
+        unset mysqlincdir
+        unset mysqllibdir
+        enable_mysql="no"
+    else
+        if [ "$arch" = "win32" ];then
+            mysqllib=`cygpath -w -- ${mysqllibdir}/${mysqllib}`
+            unset mysqllibdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            mysqllib=${mysqllibdir}/${mysqllib}
+            unset mysqllibdir
+        else
+            mysqllib=`echo $mysqllib | sed 's|lib\(.*\)\..*|-l\1|'`
+            mysqllibdir=-L${mysqllibdir}
+        fi
+    fi
+fi
+
+######################################################################
+#
+# CERNLIB Usage (Third party libraries)
+#
+# (See http://www.cern.ch)
+#
+# Check for CERN libs (libpacklib and libkernlib)
+#
+if [ "x$enable_cern" != "xno" ]; then
+    echo $ac_n "Checking for libpacklib ... $ac_c"
+    if [ "x${cernlibdir}" != "x" ]; then
+        libdirs="$cernlibdir"
+    else
+        libdirs="$CERNLIB $CERNLIB/lib ${CERN}/${CERN_LEVEL}/lib \
+                    /cern/pro/lib /cern/new/lib /cern/new/lib \
+                    /opt/cern/pro/lib /opt/cern/new/lib /opt/cern/new/lib \
+                    /usr/local/cern/pro/lib /usr/local/cern/new/lib \
+                    /usr/local/cern/old/lib /usr/lib /usr/lib/cern"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libpacklib.so libpacklib.sl libpacklib.a packlib.lib"
+    else
+        libs="libpacklib.a packlib.lib"
+    fi
+    cernlibdir=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                cernlibdir=$i
+                break 2
+            fi
+        done
+    done
+    echo $cernlibdir
+    unset libs
+    unset libdirs
+
+    if [ "x$cernlibdir" = "xno" ]; then
+        enable_cern="no"
+        unset cernlibdir;
+        unset cernlib
+    else
+        if [ "$arch" = "win32" ]; then
+            cernlib="`cygpath -w -- ${cernlibdir}/packlib.lib`"
+            cernlib="$cernlib `cygpath -w -- ${cernlibdir}/kernlib.lib`"
+            unset cernlibdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            cernlib="${cernlibdir}/libpacklib.a ${cernlibdir}/libkernlib.a"
+            unset cernlibdir
+        else
+            cernlib="-lpacklib -lkernlib"
+            cernlibdir=-L${cernlibdir}
+        fi
+    fi
+fi
+
+######################################################################
+#
+# Pythia5 Usage (Third party libraries)
+#
+# (See http://root.cern.ch and Lund)
+#
+# Check for libPythia
+#
+if [ "x$enable_pythia" != "xno" ]; then
+    echo $ac_n "Checking for libPythia ... $ac_c"
+    if [ "x$pythialibdir" != "x" ]; then
+        libdirs=${pythialibdir}
+    else
+        libdirs="$PYTHIA $PYTHIA/lib /cern/pro/lib \
+                /opt/pythia /opt/pythia5 \
+                /usr/lib/pythia /usr/local/lib/pythia \
+                /usr/lib/pythia5 /usr/local/lib/pythia5 \
+                /usr/lib /usr/local/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libPythia.so libPythia.sl libPythia.a libPythia.lib"
+    else
+        libs="libPythia.a libPythia.lib"
+    fi
+    pythialib=no
+    pythialibdir=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                pythialibdir=$i
+                pythialib=$j
+                break 2
+            fi
+        done
+    done
+    echo $pythialibdir
+    unset libs
+    unset libdirs
+
+    if [ "x$pythialibdir" = "xno" ]; then
+        unset pythialib
+        unset pythialibdir
+        enable_pythia=no
+    else
+        if [ "$arch" = "win32" ]; then
+            pythialib=`cygpath -w -- ${pythialibdir}/${pythialib}`
+            unset pythialibdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            pythialib=${pythialibdir}/${pythialib}
+            unset pythialibdir
+        else
+            pythialib=`echo $pythialib | sed 's|lib\(.*\)\..*|-l\1|'`
+            pythialibdir=-L${pythialibdir}
+        fi
+    fi
+fi
+
+######################################################################
+#
+# Pythia6  Usage (Third party libraries)
+#
+# (See http://root.cern.ch and Lund)
+#
+# Check for libPythia6
+#
+if [ "x$enable_pythia6" != "xno" ]; then
+    echo $ac_n "Checking for libPythia6 ... $ac_c"
+    if [ "x$pythia6libdir" != "x" ]; then
+        libdirs=${pythia6libdir}
+    else
+        libdirs="$PYTHIA6 $PYTHIA6/lib /cern/pro/lib \
+                /opt/pythia /opt/pythia6 \
+                /usr/lib/pythia /usr/local/lib/pythia \
+                /usr/lib/pythia6 /usr/local/lib/pythia6 \
+                /usr/lib /usr/local/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libPythia6.so libPythia6.sl libPythia6.a libPythia6.lib"
+    else
+        libs="libPythia6.a libPythia6.lib"
+    fi
+    pythia6lib=no
+    pythia6libdir=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                pythia6libdir=$i
+                pythia6lib=$j
+                break 2
+            fi
+        done
+    done
+    echo $pythia6libdir
+    unset libs
+    unset libdirs
+
+    if [ "x$pythia6libdir" = "xno" ]; then
+        unset pythia6lib
+        unset pythia6libdir
+        enable_pythia6=no
+    else
+        if [ "$arch" = "win32" ]; then
+            pythia6lib=`cygpath -w -- ${pythia6libdir}/${pythia6lib}`
+            unset pythia6libdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            pythia6lib=${pythia6libdir}/${pythia6lib}
+            unset pythia6libdir
+        else
+            pythia6lib=`echo $pythia6lib | sed 's|^lib\(.*\)\..*|-l\1|'`
+            pythia6libdir=-L${pythia6libdir}
+        fi
+    fi
+fi
+
+
+######################################################################
+#
+# Venus  Usage (Third party libraries)
+#
+# (See http://root.cern.ch)
+#
+# Check for libVenus
+#
+if [ "x$enable_venus" != "xno" ]; then
+    echo $ac_n "Checking for libVenus ... $ac_c"
+    if [ "x$venuslib" != "x" ]; then
+        libdirs=$venuslib
+    else
+        libdirs="$VENUS $VENUS/lib /cern/pro/lib \
+                /opt/venus /usr/lib/venus /usr/local/lib/venus \
+                /usr/lib /usr/local/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libVenus.so libVenus.sl libVenus.a libVenus.lib"
+    else
+        libs="libVenus.a libVenus.lib"
+    fi
+    venuslib=no
+    venuslibdir=no
+    for i in $libdirs; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                venuslib=$i/$j
+                break 2
+            fi
+        done
+    done
+    echo $venuslibdir
+
+    if [ "x$venuslibdir" = "xno" ]; then
+        unset venuslib
+        unset venuslibdir
+        enable_venus=no
+    else
+        if [ "$arch" = "win32" ]; then
+            venuslib=`cygpath -w -- ${venuslibdir}/${venuslib}`
+            unset venuslibdir
+        elif [ "x$enable_shared" = "xno" ]; then
+            venuslib=${venuslibdir}/${venuslib}
+            unset venuslibdir
+        else
+            venuslib=`echo $venuslib | sed 's|lib\(.*\)\..*|-l\1|'`
+            venuslibdir=-L${venuslibdir}
+        fi
+    fi
+fi
+
+######################################################################
+#
+# SHIFT Support (Third party libraries)
+#
+# (See http://www.cern.ch)
+#
+# Check for libshift.a
+#
+if [ "x$enable_rfio" != "xno" ]; then
+    echo $ac_n "Checking for libshift ... $ac_c"
+    if [ "x$shiftlibdir" != "x" ]; then
+        libdirs=$shiftlibdir
+    else
+        libdirs="$RFIO $RFIO/lib /cern/pro/lib /cern/new/lib /cern/old/lib \
+                    /opt/shift/lib /usr/local/shift/lib /usr/lib/shift \
+                    /usr/local/lib/shift /usr/lib /usr/local/lib"
+    fi
+    if [ "x$enable_shared" != "xno" ]; then
+        libs="libshift.so libshift.sl libshift.a"
+    else
+        libs="libshift.a"
+    fi
+    shiftlibdir="no"
+    shiftlib="no"
+    for i in $libdirs ; do
+        for j in $libs; do
+            if [ -r "$i/$j" ]; then
+                shiftlibdir=$i
+                shiftlib=$j
+                break 2
+            fi
+        done
+    done
+    echo $shiftlibdir
+    unset libdirs
+    unset libs
+
+    if [ "x$shiftlib" = "xno" ]; then
+        enable_rfio="no"
+        unset shiftlibdir
+        unset shiftlib
+    else
+        if [ "x$enable_shared" = "xno" ]; then
+            shiftlib=${shiftlibdir}/${shiftlib}
+            unset shiftlibdir
+        else
+            shiftlib=`echo $shiftlib | sed 's|lib\(.*\)\..*|-l\1|'`
+            shiftlibdir=-L${shiftlibdir}
+        fi
+    fi
+    if [ "x$enable_rfio" != "xno" ]; then
+        case $arch in
+           linux*) shiftlib="$shiftlib -lnsl" ;;
+        esac
+    fi
+fi
+
+######################################################################
+#
+# SRP Support (Third party libraries)
+#
+# (see  http://srp.stanford.edu/srp)
+# Note: You can not make do with the libsrp package. You need the full
+# source for this add-on.
+#
+# Check for SRP (libsrp.a)
+#
+if [ "x$enable_srp" != "xno" ]; then
+    echo $ac_n "Checking for SRP (libsrp.a)... $ac_c"
+    if [ "x$srpdir" != "x" ]; then
+        srpdirs="$srpdir/lib"
+    else
+        srpdirs="$SRP/lib /usr/srp/lib /usr/local/srp/lib \
+                 /usr/lib/srp /usr/local/lib/srp /usr/lib /usr/local/lib"
+    fi
+    libs="libsrp.a"
+    srpdir=no
+    for i in $srpdirs; do
+        for j in ${libs}; do
+            if [ -r "$i/$j" ]; then
+                srpdir=`echo $i | sed 's|^\(.*\)/lib$|\1|'`
+                break 2
+            fi
+        done
+    done
+    echo $srpdir
+    unset srpdirs
+    unset libs
+
+    if [ "x$srpdir" = "xno" ]; then
+        enable_srp="no"
+        unset srpdir
+    fi
+fi
+
+######################################################################
+#
+# AFS Support (Third party libraries)
+#
+# (See http://oss.software.ibm.com/developerworks/opensource/afs )
+#
+# Check for AFS (libdes.a)
+#
+if [ "x$enable_afs" = "xyes" ]; then
+    echo $ac_n "Checking for AFS (libdes.a)... $ac_c"
+    if [ "x$afsdir" != "x" ]; then
+        afsdirs="$afsdir/lib"
+    else
+        afsdirs="$AFS/lib /usr/afsws/lib /usr/local/afsws/lib \
+                    /usr/athena/lib /usr/local/athena/lib \
+                    /opt/afs/lib /usr/local/afs"
+    fi
+    afsdir=no
+    libs="libdes.a"
+    for i in $afsdirs; do
+        for j in ${libs}; do
+            if [ -r "$i/$j" ]; then
+                afsdir=`echo $i | sed 's|^\(.*\)/lib$|\1|'`
+                break 2
+            fi
+        done
+    done
+    echo $afsdir
+    unset afsdirs
+    unset libs
+
+    if [ "x$afsdir" = "xno" ]; then
+        enable_afs="no"
+        unset afsdir
+    fi
+fi
+
+
+######################################################################
+#
 # Create needed directories
+#
 if [ ! -d include ]; then
    echo $ac_n "Creating include ... $ac_c"
    mkdir include
@@ -501,7 +1013,10 @@ if [ ! -d lib ]; then
     echo "done"
 fi
 
+######################################################################
+#
 # Cleanup obsolete links
+#
 if [ -h opengl ]; then
    rm -f opengl
 fi
@@ -509,48 +1024,48 @@ if [ -h ttf ]; then
    rm -f ttf
 fi
 
-if [ -n "$haveconfig" ] ; then
-    if [ -z "$prefix" ] ;       then prefix=/usr/local ; fi
-    if [ -z "$bindir" ] ;       then bindir=$prefix/bin ; fi
-    if [ -z "$libdir" ] ;       then libdir=$prefix/lib/root ; fi
-    if [ -z "$incdir" ] ;       then incdir=$prefix/include/root ; fi
-    if [ -z "$etcdir" ] ;       then etcdir=/etc/root ; fi
-    if [ -z "$datadir" ] ;      then datadir=$prefix/share/root ; fi
-    if [ -z "$macrodir" ] ;     then macrodir=$datadir/macros ; fi
-    if [ -z "$cintincdir" ] ;   then cintincdir=$datadir/cint; fi
-    if [ -z "$iconpath" ] ;     then iconpath=$datadir/icons ; fi
-    if [ -z "$srcdir" ] ;       then srcdir=$datadir/src ; fi
-    if [ -z "$ttflibdir" ] ;    then ttflibdir=$libdir ; fi
-    if [ -z "$ttffontdir" ] ;   then ttffontdir=$datadir/fonts ; fi
-    if [ -z "$docdir" ] ;       then docdir=$prefix/doc ; fi
-    if [ -z "$testdir" ] ;      then testdir=$docdir/root/test ; fi
-    if [ -z "$tutdir" ] ;       then tutdir=$docdir/root/tutorials ; fi
-
-    if [ "$xpmlib" = "NO" ]; then unset xpmlib ; fi
-    if [ "$ttfincdir" = "NO" ]; then unset ttfincdir ; fi
-    if [ "$ttflibdir" = "NO" ]; then unset ttflibdir ; fi
-    if [ "$ttffontdir" = "NO" ]; then unset ttffontdir ; fi
-    if [ "$openglincdir" = "NO" ]; then unset openglincdir ; fi
-    if [ "$opengllib" = "NO" ]; then unset opengllib ; fi
-    if [ "$openglulib" = "NO" ]; then unset openglulib ; fi
-    if [ "$cernlibdir" = "NO" ]; then unset cernlibdir ; fi
-    if [ "$rfio" = "NO" ]; then unset rfio ; fi
-    if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
-    if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
-    if [ "$srpdir" = "NO" ]; then unset srpdir ; fi
-    if [ "$afsdir" = "NO" ]; then unset afsdir ; fi
-    if [ "$pythialib" = "NO" ]; then unset pythialib ; fi
-    if [ "$pythia6lib" = "NO" ]; then unset pythia6lib ; fi
-    if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
-    if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
+######################################################################
+#
+# Fleshin out paths
+#
+if [ -n "$haveconfig" ]; then
+    ##################################################################
+    #
+    # Static directory build.
+    #
+    if [ -z "$prefix" ];       then prefix=/usr/local; fi
+    if [ -z "$bindir" ];       then bindir=$prefix/bin; fi
+    if [ -z "$libdir" ];       then libdir=$prefix/lib/root; fi
+    if [ -z "$incdir" ];       then incdir=$prefix/include/root; fi
+    if [ -z "$etcdir" ];       then etcdir=/etc/root; fi
+    if [ -z "$etcdir" ];       then mandir=$prefix/share/man/man1; fi
+    if [ -z "$datadir" ];      then datadir=$prefix/share/root; fi
+    if [ -z "$proofdir" ];     then proofdir=$datadir/proof; fi
+    if [ -z "$macrodir" ];     then macrodir=$datadir/macros; fi
+    if [ -z "$cintincdir" ];   then cintincdir=$datadir/cint; fi
+    if [ -z "$iconpath" ];     then iconpath=$datadir/icons; fi
+    if [ -z "$srcdir" ];       then srcdir=$datadir/src; fi
+    if [ -z "$ttflibdir" ];    then ttflibdir=$libdir; fi
+    if [ -z "$ttffontdir" ];   then ttffontdir=$datadir/fonts; fi
+    if [ -z "$docdir" ];       then docdir=$prefix/doc/root; fi
+    if [ -z "$testdir" ];      then testdir=$docdir/test; fi
+    if [ -z "$tutdir" ];       then tutdir=$docdir/tutorials; fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags|-DHAVE_CONFIG|"                  \
-        -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
-        < Makefile.tmp > Makefile.tmpp
+        -e "s|@cflags@|-DHAVE_CONFIG|"                  \
+                < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 
+    if [ "x$enable_rpath" = "yes" ]; then
+        sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+                < Makefile.tmp > Makefile.tmpp
+        mv Makefile.tmpp Makefile.tmp
+    fi
 else
+    ##################################################################
+    #
+    # Environment driven build. Escape sequences very important
+    #
     prefix=\$\(ROOTSYS\)
     bindir=\$\(ROOTSYS\)/bin
     libdir=\$\(ROOTSYS\)/lib
@@ -565,73 +1080,82 @@ else
     testdir=\$\(ROOTSYS\)/test
     tutdir=\$\(ROOTSYS\)/tutorials
 
-    if [ "$xpmlib" = "NO" ]; then unset xpmlib ; fi
-    if [ "$ttfincdir" = "NO" ]; then unset ttfincdir ; fi
-    if [ "$ttflibdir" = "NO" ]; then unset ttflibdir ; fi
-    if [ "$ttffontdir" = "NO" ]; then unset ttffontdir ; fi
-    if [ "$openglincdir" = "NO" ]; then unset openglincdir ; fi
-    if [ "$opengllib" = "NO" ]; then unset opengllib ; fi
-    if [ "$openglulib" = "NO" ]; then unset openglulib ; fi
-    if [ "$cernlibdir" = "NO" ]; then unset cernlibdir ; fi
-    if [ "$rfio" = "NO" ]; then unset rfio ; fi
-    if [ "$mysqlincdir" = "NO" ]; then unset mysqlincdir ; fi
-    if [ "$mysqllibdir" = "NO" ]; then unset mysqllibdir ; fi
-    if [ "$srpdir" = "NO" ]; then unset srpdir ; fi
-    if [ "$afsdir" = "NO" ]; then unset afsdir ; fi
-    if [ "$pythialib" = "NO" ]; then unset pythialib ; fi
-    if [ "$pythia6lib" = "NO" ]; then unset pythia6lib ; fi
-    if [ "$venuslib" = "NO" ]; then unset venuslib ; fi
-    if [ -z "$thread" ] && [ -n "$THREAD" ]; then thread="$THREAD" ; fi
-
     sed -e "s|@useconfig@|FALSE|" \
-        -e "s|@cflags||"          \
+        -e "s|@cflags@||"          \
         -e "s|@ldflags@||"        \
         < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 fi
 
+######################################################################
+#
+# Writing files
+#
+#---------------------------------------------------------------------
+# config/Makefile.config
+#
 echo $ac_n "Writing $MAKEOUT ... $ac_c"
-sed -e "s|@architecture@|$arch|"         \
-    -e "s|@ldflags@|-L$libdir|"          \
-    -e "s|@bindir@|$bindir|"             \
-    -e "s|@libdir@|$libdir|"             \
-    -e "s|@incdir@|$incdir|"             \
-    -e "s|@etcdir@|$etcdir|"             \
-    -e "s|@datadir@|$datadir|"           \
-    -e "s|@macrodir@|$macrodir|"         \
-    -e "s|@cintincdir@|$cintincdir|"     \
-    -e "s|@iconpath@|$iconpath|"         \
-    -e "s|@srcdir@|$srcdir|"             \
-    -e "s|@xpmlib@|$xpmlib|"             \
-    -e "s|@ttflibdir@|$ttflibdir|"       \
-    -e "s|@ttffontdir@|$ttffontdir|"     \
-    -e "s|@ttfincdir@|$ttfincdir|"       \
-    -e "s|@openglulib@|$openglulib|" \
-    -e "s|@opengllib@|$opengllib|" \
-    -e "s|@openglincdir@|$openglincdir|" \
-    -e "s|@cernlibdir@|$cernlibdir|"     \
-    -e "s|@rfio@|$rfio|"                 \
-    -e "s|@thread@|$thread|"             \
-    -e "s|@mysqlincdir@|$mysqlincdir|"   \
-    -e "s|@mysqllibdir@|$mysqllibdir|"   \
-    -e "s|@srpdir@|$srpdir|"             \
-    -e "s|@afsdir@|$afsdir|"             \
-    -e "s|@pythialib@|$pythialib|"       \
-    -e "s|@pythia6lib@|$pythia6lib|"     \
-    -e "s|@venuslib@|$venuslib|"         \
-    -e "s|@docdir@|$docdir|"             \
-    -e "s|@testdir@|$testdir|"           \
-    -e "s|@tutdir@|$tutdir|"             \
+sed -e "s|@architecture@|$arch|"           \
+    -e "s|@rootbuild@|$rootbuild|"         \
+    -e "s|@ldflags@|-L$libdir|"            \
+    -e "s|@bindir@|$bindir|"               \
+    -e "s|@libdir@|$libdir|"               \
+    -e "s|@incdir@|$incdir|"               \
+    -e "s|@etcdir@|$etcdir|"               \
+    -e "s|@mandir@|$mandir|"               \
+    -e "s|@datadir@|$datadir|"             \
+    -e "s|@proofdir@|$proofdir|"           \
+    -e "s|@macrodir@|$macrodir|"           \
+    -e "s|@cintincdir@|$cintincdir|"       \
+    -e "s|@iconpath@|$iconpath|"           \
+    -e "s|@docdir@|$docdir|"               \
+    -e "s|@testdir@|$testdir|"             \
+    -e "s|@tutdir@|$tutdir|"               \
+    -e "s|@srcdir@|$srcdir|"               \
+    -e "s|@xpmlibdir@|$xpmlibdir|"         \
+    -e "s|@xpmlib@|$xpmlib|"               \
+    -e "s|@enable_star@|$enable_star|"     \
+    -e "s|@threadlibdir@|$threadlibdir|"   \
+    -e "s|@threadlib@|$threadlib|"         \
+    -e "s|@ttfincdir@|$ttfincdir|"         \
+    -e "s|@ttflibdir@|$ttflibdir|"         \
+    -e "s|@ttflib@|$ttflib|"               \
+    -e "s|@ttffontdir@|$ttffontdir|"       \
+    -e "s|@openglincdir@|$openglincdir|"   \
+    -e "s|@opengllibdir@|$opengllibdir|"   \
+    -e "s|@openglulib@|$openglulib|"       \
+    -e "s|@opengllib@|$opengllib|"         \
+    -e "s|@mysqlincdir@|$mysqlincdir|"     \
+    -e "s|@mysqllibdir@|$mysqllibdir|"     \
+    -e "s|@mysqllib@|$mysqllib|"           \
+    -e "s|@cernlibdir@|$cernlibdir|"       \
+    -e "s|@cernlibs@|$cernlib|"            \
+    -e "s|@shiftlibdir@|$shiftlibdir|"     \
+    -e "s|@shiftlib@|$shiftlib|"           \
+    -e "s|@srpdir@|$srpdir|"               \
+    -e "s|@afsdir@|$afsdir|"               \
+    -e "s|@pythialibdir@|$pythialibdir|"   \
+    -e "s|@pythialib@|$pythialib|"         \
+    -e "s|@pythia6libdir@|$pythia6libdir|" \
+    -e "s|@pythia6lib@|$pythia6lib|"       \
+    -e "s|@venuslibdir@|$venuslibdir|"     \
+    -e "s|@venuslib@|$venuslib|"           \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 echo "done"
 
+#---------------------------------------------------------------------
+# test/Makefile
+#
 echo $ac_n "Writing $TMAKEOUT ... $ac_c"
 sed -e "s|@architecture@|$arch|"         \
     < TMakefile.tmp > $TMAKEOUT
 rm -f TMakefile.tmp
 echo "done"
 
+#---------------------------------------------------------------------
+# include/config.h
+#
 echo $ac_n "Writing $CONFOUT ... $ac_c"
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@prefix@|$prefix|"               \
@@ -651,18 +1175,30 @@ sed -e "s|@architecture@|$arch|"           \
 rm -f config.tmp
 echo "done"
 
+#---------------------------------------------------------------------
+# bin/root-config
+#
 echo $ac_n "Writing $RCONFOUT ... $ac_c"
 prefix2=$prefix
+incdir2=$incdir
+libdir2=$libdir
 if [ "$prefix2" = "\$(ROOTSYS)" ]; then
-   prefix2=\$ROOTSYS
+    prefix2=\$ROOTSYS
+    libdir2=\$ROOTSYS/lib
+    incdir2=\$ROOTSYS/inc
 fi
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@prefix@|$prefix2|"              \
+    -e "s|@incdir@|$incdir2|"              \
+    -e "s|@libdir@|$libdir2|"              \
    < root-config.tmp > $RCONFOUT
 rm -f root-config.tmp
 chmod 755 $RCONFOUT
 echo "done"
 
+#---------------------------------------------------------------------
+# system.rootrc
+#
 echo $ac_n "Writing $ROOTRCOUT ... $ac_c"
 if [ "$ttffontdir" = "$HOME/ttf" ]; then
    ttffontdir=\$\(HOME\)/ttf
@@ -679,9 +1215,14 @@ sed -e "s|@libdir@|$libdir|"               \
 rm -f rootrc.tmp
 echo "done"
 
+######################################################################
+#
+# FAT conversion in test/tutorials
+#
 # On win32 convert all files in tutorials and test to \r\n convention
-# (only if CVS directory does not exist, otherwise cvs will already have
-# made the conversion).
+# (only if CVS directory does not exist, otherwise cvs will already
+# have made the conversion).
+#
 if [ "$arch" = "win32" ] && [ ! -d CVS ]; then
    echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
    for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
@@ -694,19 +1235,28 @@ if [ "$arch" = "win32" ] && [ ! -d CVS ]; then
    echo "done"
 fi
 
+######################################################################
+#
+# Warning about recommended build options
+#
 echo ""
-if [ -z "$ttfincdir" ] || [ -z "$openglincdir" ]; then
-   if [ -z "$ttfincdir" ] && [ "$arch" != "win32" ]; then
-      echo "To build the ROOT TrueType font add-on library see README/INSTALL."
-   fi
-   if [ -z "$openglincdir" ]; then
-      echo "To build the ROOT OpenGL add-on library see README/INSTALL."
-   fi
-   echo ""
-   echo ""
+if [ "x$enable_$ttf" = "xno" -o "x$enable_opengl" = "xno" ]; then
+    if [ "x$enable_$ttf" = "xno" -a "$arch" != "win32" ]; then
+        echo "To build the ROOT TrueType font add-on library see README/INSTALL."
+    fi
+    if [ "x$enable_opengl" = "xno" ]; then
+        echo "To build the ROOT OpenGL add-on library see README/INSTALL."
+    fi
+    echo ""
+    echo ""
 fi
 
+######################################################################
+#
+# Final instructions
+#
 # List the possible Makefiles
+#
 echo "To build ROOT type:"
 echo ""
 echo "   gmake"

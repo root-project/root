@@ -48,19 +48,19 @@ ifneq ($(MYSQLLIBDIR),)
 MODULES      += mysql
 endif
 endif
-ifneq ($(RFIO),)
+ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
-ifneq ($(THREAD),)
+ifneq ($(OSTHREADLIB),)
 MODULES      += thread
 endif
-ifneq ($(PYTHIA),)
+ifneq ($(FPYTHIALIB),)
 MODULES      += pythia
 endif
-ifneq ($(PYTHIA6),)
+ifneq ($(FPYTHIA6LIB),)
 MODULES      += pythia6
 endif
-ifneq ($(VENUS),)
+ifneq ($(FVENUSLIB),)
 MODULES      += venus
 endif
 ifneq ($(STAR),)
@@ -88,8 +88,6 @@ CINTLIBS     := -lCint
 ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
 RINTLIBS     := -lRint
 PROOFLIBS    := -lGpad -lProof -lTreePlayer
-CERNPATH     := -L$(CERNLIBDIR)
-CERNLIBS     := -lpacklib -lkernlib
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 ROOTLIBS     := $(LPATH)/libNew.lib $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
@@ -99,8 +97,6 @@ ROOTLIBS     := $(LPATH)/libNew.lib $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
-CERNLIBS     := '$(shell cygpath -w -- $(CERNLIBDIR)/packlib.lib)' \
-                '$(shell cygpath -w -- $(CERNLIBDIR)/kernlib.lib)'
 endif
 
 ##### f77 options #####
@@ -303,57 +299,82 @@ html: $(ROOTEXE) changelog
 	@$(MAKEHTML)
 
 install:
-	@(if [ -d $(BINDIR) ]; then \
+	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
 	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`; \
 	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
-		echo "Everything already installed..."; \
+	   echo "Everything already installed..."; \
 	else \
-		echo "Installing binaries in $(BINDIR)"; \
-		$(INSTALLDIR) $(BINDIR); \
-		$(INSTALL) $(CINT) $(MAKECINT) $(ROOTCINT) $(BINDIR); \
-		$(INSTALL) $(RMKDEP) $(BINDEXP) bin/root-config $(BINDIR); \
-		$(INSTALL) $(ALLEXECS) $(BINDIR); \
-		echo "Installing libraries in $(LIBDIR)"; \
-		$(INSTALLDIR) $(LIBDIR); \
-		chmod u+w $(LIBDIR)/*; \
-		echo "[possible error from chmod is ok]"; \
-		$(INSTALL) $(ALLLIBS) $(LIBDIR); \
-		$(INSTALL) $(CINTLIB) $(LIBDIR); \
-		echo "Installing headers in $(INCDIR)"; \
-		$(INSTALLDIR) $(INCDIR); \
-		$(INSTALLDATA) include/*.h $(INCDIR); \
-		echo "Installing main/src/rmain.cxx in $(INCDIR)"; \
-		$(INSTALLDATA) main/src/rmain.cxx $(INCDIR); \
-		echo "Installing $(MAKEINFO) in $(CINTINCDIR)"; \
-		$(INSTALLDIR) $(CINTINCDIR); \
-		$(INSTALLDATA) $(MAKEINFO) $(CINTINCDIR); \
-		echo "Installing cint/include cint/lib and cint/stl in $(CINTINCDIR)"; \
-		$(INSTALLDATA) cint/include cint/lib cint/stl $(CINTINCDIR); \
-		echo "Installing icons in $(ICONPATH)"; \
-		$(INSTALLDIR) $(ICONPATH); \
-		$(INSTALLDATA) icons/*.xpm $(ICONPATH); \
-		echo "Installing tutorials in $(TUTDIR)"; \
-		$(INSTALLDIR) $(TUTDIR); \
-		$(INSTALLDATA) tutorials/* $(TUTDIR); \
-		echo "Installing tests in $(TESTDIR)"; \
-		$(INSTALLDIR) $(TESTDIR); \
-		$(INSTALLDATA) test/* $(TESTDIR); \
-		echo "Installing macros in $(MACRODIR)"; \
-		$(INSTALLDIR) $(MACRODIR); \
-		$(INSTALLDATA) macros/* $(MACRODIR); \
-		echo "Installing system.rootrc in $(ETCDIR)"; \
-		$(INSTALLDIR) $(ETCDIR); \
-		$(INSTALLDATA) system.rootrc $(ETCDIR); \
-		if [ "$(USECONFIG)" = "TRUE" ]; then \
-		   echo "Installing root.mimes in $(ETCDIR)"; \
-		   $(INSTALLDATA) icons/root.mimes $(ETCDIR); \
-		else \
-		   echo "Installing root.mimes in $(ICONPATH)"; \
-		   $(INSTALLDATA) icons/root.mimes $(ICONPATH); \
-		fi \
-	fi)
+	   echo "Installing binaries in $(DESTDIR)$(BINDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(CINT)                   $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(MAKECINT)               $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(ROOTCINT)               $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(RMKDEP)                 $(DESTDIR)$(BINDIR); \
+	   if [ "x$(BINDEXP)" != "x" ] ; then \
+	      $(INSTALL) $(BINDEXP)             $(DESTDIR)$(BINDIR); \
+           fi; \
+	   $(INSTALL) bin/root-config           $(DESTDIR)$(BINDIR); \
+	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
+	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
+	   chmod u+w                            $(DESTDIR)$(LIBDIR)/*; \
+	   echo "[possible error from chmod is ok]"; \
+	   $(INSTALL) $(ALLLIBS)                $(DESTDIR)$(LIBDIR); \
+	   $(INSTALL) $(CINTLIB)                $(DESTDIR)$(LIBDIR); \
+	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
+	   $(INSTALLDATA) include/*.h           $(DESTDIR)$(INCDIR); \
+	   echo "Installing main/src/rmain.cxx in $(DESTDIR)$(INCDIR)"; \
+	   $(INSTALLDATA) main/src/rmain.cxx    $(DESTDIR)$(INCDIR); \
+	   echo "Installing $(MAKEINFO) in $(DESTDIR)$(CINTINCDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) $(MAKEINFO)           $(DESTDIR)$(CINTINCDIR); \
+	   echo "Installing cint/include cint/lib and cint/stl in $(DESTDIR)$(CINTINCDIR)"; \
+	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
+	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
+	   echo "Installing PROOF files in $(DESTDIR)$(PROOFDATADIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(PROOFDATADIR); \
+	   $(INSTALLDATA) proof/utils/*         $(DESTDIR)$(PROOFDATADIR); \
+	   $(INSTALLDATA) proof/etc/*           $(DESTDIR)$(PROOFDATADIR); \
+	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
+	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
+	   echo "Installing misc docs in  $(DESTDIR)$(DOCDIR)" ; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/README         $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/README.PROOF   $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/ChangeLog-2-24 $(DESTDIR)$(DOCDIR); \
+	   $(INSTALLDATA) README/CREDITS        $(DESTDIR)$(DOCDIR); \
+	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
+	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
+	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
+	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
+	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
+	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
+	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
+	   $(INSTALLDATA) man/*                 $(DESTDIR)$(MANDIR); \
+	   echo "Installing system.rootrc in    $(DESTDIR)$(ETCDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
+	   $(INSTALLDATA) system.rootrc         $(DESTDIR)$(ETCDIR); \
+	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
+	   $(INSTALLDATA) utils/misc/*          $(DESTDIR)$(DATADIR); \
+	   if [ "$(USECONFIG)" = "TRUE" ]; then \
+	      echo "Installing root.mimes in $(DESTDIR)$(ETCDIR)"; \
+	      $(INSTALLDATA) icons/root.mimes   $(DESTDIR)$(ETCDIR); \
+	   else \
+	      echo "Installing root.mimes in $(DESTDIR)$(ICONPATH)"; \
+	      $(INSTALLDATA) icons/root.mimes   $(DESTDIR)$(ICONPATH); \
+	   fi \
+	fi
 
 showbuild:
 	@echo "ROOTSYS            = $(ROOTSYS)"
@@ -384,9 +405,9 @@ showbuild:
 	@echo "CILIBS             = $(CILIBS)"
 	@echo "F77LIBS            = $(F77LIBS)"
 	@echo ""
-	@echo "PYTHIA             = $(PYTHIA)"
-	@echo "PYTHIA6            = $(PYTHIA6)"
-	@echo "VENUS              = $(VENUS)"
+	@echo "FPYTHIALIBDIR      = $(FPYTHIALIBDIR)"
+	@echo "FPYTHIA6LIBDIR     = $(FPYTHIA6LIBDIR)"
+	@echo "FVENUSLIBDIR       = $(FVENUSLIBDIR)"
 	@echo "STAR               = $(STAR)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"
@@ -396,8 +417,8 @@ showbuild:
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
-	@echo "THREAD             = $(THREAD)"
-	@echo "RFIO               = $(RFIO)"
+	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
+	@echo "SHIFTLIB           = $(SHIFTLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "SRPDIR             = $(SRPDIR)"
 	@echo "AFSDIR             = $(AFSDIR)"
