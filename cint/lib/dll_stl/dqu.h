@@ -26,7 +26,7 @@ using namespace std;
 #pragma link C++ class deque<double>;
 #pragma link C++ class deque<void*>;
 #pragma link C++ class deque<char*>;
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 //#pragma link C++ class deque<string>; // maybe too complex for compiler
 #endif
 

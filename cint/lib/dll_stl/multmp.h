@@ -51,7 +51,7 @@ using namespace std;
 #pragma link C++ class multimap<char*,void*>;
 #pragma link C++ class multimap<char*,char*>;
 
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class multimap<string,int>;
 #pragma link C++ class multimap<string,long>;
 #pragma link C++ class multimap<string,double>;

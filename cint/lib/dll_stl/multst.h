@@ -25,7 +25,7 @@ using namespace std;
 #pragma link C++ class multiset<double>;
 #pragma link C++ class multiset<void*>;
 #pragma link C++ class multiset<char*>;
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class multiset<string>;
 #endif
 

@@ -34,7 +34,7 @@ using namespace std;
 #pragma link C++ class vector<void*>;
 #endif
 #pragma link C++ class vector<char*>;
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class vector<string>;
 #endif
 

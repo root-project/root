@@ -55,7 +55,7 @@ using namespace std;
 #pragma link C++ class map<char*,void*>;
 #pragma link C++ class map<char*,char*>;
 
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class map<string,int>;
 #pragma link C++ class map<string,long>;
 #pragma link C++ class map<string,float>;

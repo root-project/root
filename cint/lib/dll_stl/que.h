@@ -26,7 +26,7 @@ using namespace std;
 #pragma link C++ class queue<double>;
 #pragma link C++ class queue<void*>;
 #pragma link C++ class queue<char*>;
-#ifdef G__STRING_DLL
+#if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class queue<string>;
 #endif
 
