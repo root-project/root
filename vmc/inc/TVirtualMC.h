@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.5 2004/05/28 13:38:21 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.6 2004/06/08 10:26:42 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -214,6 +214,8 @@ class TVirtualMC : public TNamed {
                         TLorentzVector& position, TLorentzVector& momentum) =0;
     virtual TMCProcess ProdProcess(Int_t isec) const =0; 
     virtual Int_t    StepProcesses(TArrayI &proc) const = 0;
+    // Information about the transport order needed by the stack
+    virtual Bool_t   SecondariesAreOrdered() const = 0;
     
     //
     // Geant3 specific methods
