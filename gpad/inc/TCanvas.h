@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.11 2001/10/20 11:46:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.12 2001/10/30 17:22:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -117,6 +117,7 @@ public:
    virtual void      Browse(TBrowser *b);
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
+   virtual void      Delete(Option_t *option="") {MayNotUse("Delete()");}
    virtual void      Draw(Option_t *option="");
    virtual TObject  *DrawClone(Option_t *option="") const; // *MENU*
    virtual TObject  *DrawClonePad(); // *MENU*
