@@ -27,8 +27,10 @@ PYROOTLIB    := $(LPATH)/libPyROOT.$(SOEXT)
 ROOTPYS      := $(MODDIR)/ROOT.py
 ifeq ($(PLATFORM),win32)
 ROOTPY       := bin/ROOT.py
+ROOTPYC      := bin/ROOT.pyc
 else
 ROOTPY       := $(LPATH)/ROOT.py
+ROOTPYC      := $(LPATH)/ROOT.pyc
 endif
 
 # used in the main Makefile
@@ -72,7 +74,8 @@ clean-pyroot:
 clean::         clean-pyroot
 
 distclean-pyroot: clean-pyroot
-		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB)
+		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
+		   $(ROOTPY) $(ROOTPYC)
 
 distclean::     distclean-pyroot
 
