@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.12 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.13 2001/05/17 10:57:56 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -121,8 +121,8 @@ public:
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
-   Bool_t            FromPopUp() {return fFromPopUp;}
-   TApplication     *GetApplication() {return fApplication;}
+   Bool_t            FromPopUp() const {return fFromPopUp;}
+   TApplication     *GetApplication() const {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetCutClassName() const {return fCutClassName.Data();}
