@@ -65,7 +65,11 @@ $(ASTEPLIBA):
 			fi; \
 			GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 			./configure \
-			--with-ttf=no --with-gif=no --with-afterbase=no; \
+			--with-ttf=no --with-gif=no --with-afterbase=no \
+			--with-jpeg-includes=$(ASJPEGINCDIR) \
+			--with-png-includes=$(ASPNGINCDIR) \
+			--with-tiff-includes=$(ASTIFFINCDIR) \
+			--with-gif-includes=$(ASGIFINCDIR); \
 			$(MAKE); \
 		fi)
 

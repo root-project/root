@@ -86,6 +86,10 @@ ALIENINCDIR    := @alienincdir@
 BUILDASIMAGE   := @buildasimage@
 ASEXTRALIB     := @asextralib@
 ASEXTRALIBDIR  := @asextralibdir@
+ASJPEGINCDIR   := @asjpegincdir@
+ASPNGINCDIR    := @aspngincdir@
+ASTIFFINCDIR   := @astiffincdir@
+ASGIFINCDIR    := @asgifincdir@
 
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@

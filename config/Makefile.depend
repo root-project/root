@@ -128,5 +128,7 @@ GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = -Llib -lGeom -lTree -lGraf3d -lHist
 ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB)
 ASIMAGELIBEXTRA     = -Llib -lGraf -lHist -lGpad -lGui
+THREADLIBDEP        = $(GPADLIB)
+THREADLIBEXTRA      = -Llib -lGpad
 
 endif
