@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.15 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.16 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -121,6 +121,10 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
    TGFrame(p, 10, 10, options, back)
 {
    // Create a list view item.
+   //
+   // name - is name of item
+   // cname - is name of icon. In most cases this is class name of object
+   //         associated with this item
 
    fSelPic = 0;
 
@@ -176,6 +180,62 @@ TGLVEntry::~TGLVEntry()
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
       delete [] fCtw;
+   }
+}
+
+//______________________________________________________________________________
+void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
+                            const char* n4,const char* n5,const char* n6,
+                            const char* n7,const char* n8,const char* n9,
+                            const char* n10,const char* n11,const char* n12)
+{
+   // sets new subnames
+
+   if (fSubnames) {
+      for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
+      delete [] fSubnames;
+      delete [] fCtw;
+   }
+
+   Int_t ncol = 0;
+   fSubnames = 0;
+
+   if (n12 && strlen(n12)) ncol=12;
+   else if (n11 && strlen(n11)) ncol=11;
+   else if (n10 && strlen(n10)) ncol=10;
+   else if (n9 && strlen(n9)) ncol=9;
+   else if (n8 && strlen(n8)) ncol=8;
+   else if (n7 && strlen(n7)) ncol=7;
+   else if (n6 && strlen(n6)) ncol=6;
+   else if (n5 && strlen(n5)) ncol=5;
+   else if (n4 && strlen(n4)) ncol=4;
+   else if (n3 && strlen(n3)) ncol=3;
+   else if (n2 && strlen(n2)) ncol=2;
+   else if (n1 && strlen(n1)) ncol=1;
+
+   if (!ncol) return;
+
+   fSubnames = new TGString* [ncol+1];
+
+   if (ncol>11) fSubnames[11] = new TGString(n12);
+   if (ncol>10) fSubnames[10] = new TGString(n11);
+   if (ncol>9) fSubnames[9] = new TGString(n10);
+   if (ncol>8) fSubnames[8] = new TGString(n9);
+   if (ncol>7) fSubnames[7] = new TGString(n8);
+   if (ncol>6) fSubnames[6] = new TGString(n7);
+   if (ncol>5) fSubnames[5] = new TGString(n6);
+   if (ncol>4) fSubnames[4] = new TGString(n5);
+   if (ncol>3) fSubnames[3] = new TGString(n4);
+   if (ncol>2) fSubnames[2] = new TGString(n3);
+   if (ncol>1) fSubnames[1] = new TGString(n2);
+   if (ncol>0) fSubnames[0] = new TGString(n1);
+   fSubnames[ncol] = 0;
+
+   fCtw = new int[ncol];
+  
+   for (int i = 0; i<ncol; i++) {
+      fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
+                                     fSubnames[i]->GetLength());   
    }
 }
 
@@ -379,6 +439,47 @@ TGLVContainer::~TGLVContainer()
 }
 
 //______________________________________________________________________________
+void  TGLVContainer::SetColHeaders(const char* n1,const char* n2,const char* n3,
+                                   const char* n4,const char* n5,const char* n6,
+                                   const char* n7,const char* n8,const char* n9,
+                                   const char* n10,const char* n11,const char* n12)
+{
+   // set columns headers
+
+   Int_t ncol = -1;
+   if (n12 && strlen(n12)) ncol=12;
+   else if (n11 && strlen(n11)) ncol=11;
+   else if (n10 && strlen(n10)) ncol=10;
+   else if (n9 && strlen(n9)) ncol=9;
+   else if (n8 && strlen(n8)) ncol=8;
+   else if (n7 && strlen(n7)) ncol=7;
+   else if (n6 && strlen(n6)) ncol=6;
+   else if (n5 && strlen(n5)) ncol=5;
+   else if (n4 && strlen(n4)) ncol=4;
+   else if (n3 && strlen(n3)) ncol=3;
+   else if (n2 && strlen(n2)) ncol=2;
+   else if (n1 && strlen(n1)) ncol=1;
+
+   if (ncol<0) return;
+
+   fListView->SetHeaders(ncol);
+   if (ncol>0) fListView->SetHeader(n1, kTextCenterX, kTextLeft , 0);
+   if (ncol>1) fListView->SetHeader(n2, kTextCenterX, kTextLeft , 1);
+   if (ncol>2) fListView->SetHeader(n3, kTextCenterX, kTextLeft , 2);
+   if (ncol>3) fListView->SetHeader(n4, kTextCenterX, kTextLeft , 3);
+   if (ncol>4) fListView->SetHeader(n5, kTextCenterX, kTextLeft , 4);
+   if (ncol>5) fListView->SetHeader(n6, kTextCenterX, kTextLeft , 5);
+   if (ncol>6) fListView->SetHeader(n7, kTextCenterX, kTextLeft , 6);
+   if (ncol>7) fListView->SetHeader(n8, kTextCenterX, kTextLeft , 7);
+   if (ncol>8) fListView->SetHeader(n9, kTextCenterX, kTextLeft , 8);
+   if (ncol>9) fListView->SetHeader(n10, kTextCenterX, kTextLeft , 9);
+   if (ncol>10) fListView->SetHeader(n11, kTextCenterX, kTextLeft , 10);
+   if (ncol>11) fListView->SetHeader(n12, kTextCenterX, kTextLeft , 11);
+
+   fListView->Layout();
+}
+
+//______________________________________________________________________________
 void TGLVContainer::SetViewMode(EListViewMode viewMode)
 {
    // Set list view mode for container.
@@ -387,6 +488,8 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
       TGLayoutHints *oldLayout = fItemLayout;
 
       fViewMode = viewMode;
+      fListView->SetViewMode(viewMode);
+
       if (viewMode == kLVLargeIcons)
          fItemLayout = new TGLayoutHints(kLHintsExpandY | kLHintsCenterX);
       else
@@ -687,7 +790,7 @@ void TGListView::Layout()
       for (i = 0; i < fNColumns-1; ++i) {
          w = fColHeader[i]->GetDefaultWidth()+20;
          if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
-         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 10, (Int_t)w);
+         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
          fColHeader[i]->MoveResize(xl, fBorderWidth, w, h);
          fColHeader[i]->MapWindow();
          xl += w;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.15 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.16 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -104,6 +104,10 @@ public:
    const TGPicture    *GetPicture() const { return fCurrent; }
    void                SetUserData(void *userData) { fUserData = userData; }
    void               *GetUserData() const { return fUserData; }
+   virtual void        SetSubnames(const char* n1="",const char* n2="",const char* n3="",
+                                   const char* n4="",const char* n5="",const char* n6="",
+                                   const char* n7="",const char* n8="",const char* n9="",
+                                   const char* n10="",const char* n11="",const char* n12="");
 
    void SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
 
@@ -114,47 +118,6 @@ public:
 
    ClassDef(TGLVEntry,0)  // Item that goes into a TGListView container
 };
-
-
-
-class TGLVContainer : public TGContainer {
-
-protected:
-   TGLayoutHints     *fItemLayout;    // item layout hints
-   EListViewMode      fViewMode;      // list view viewing mode
-   Int_t             *fCpos;          // position of sub names
-   Int_t             *fJmode;         // alignment of sub names
-   TGListView        *fListView;      // listview which contains this container
-   TGLVEntry         *fLastActive;    // last active item
-
-   virtual void ActivateItem(TGFrameElement* el);
-
-public:
-   TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                 UInt_t options = kSunkenFrame,
-                 Pixel_t back = GetDefaultFrameBackground());
-   TGLVContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
-                 Pixel_t back = GetDefaultFrameBackground());
-
-   virtual ~TGLVContainer();
-
-   TGListView  *GetListView() const { return fListView; }
-
-   virtual void AddItem(TGLVEntry *item)
-              { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
-
-   virtual void SetListView(TGListView *lv) { fListView = lv; }
-   virtual void RemoveItemWithData(void *userData);
-   virtual void SetViewMode(EListViewMode ViewMode);
-   Int_t        GetViewMode() const { return fViewMode; }
-   virtual void SetColumns(Int_t *cpos, Int_t *jmode);
-
-   virtual TGDimension GetMaxItemSize() const;
-   virtual Int_t       GetMaxSubnameWidth(Int_t idx) const;
-
-   ClassDef(TGLVContainer,0)  // Listview container
-};
-
 
 
 class TGListView : public TGCanvas {
@@ -197,6 +160,55 @@ public:
    virtual void DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
 
    ClassDef(TGListView,0)  // List view widget (iconbox, small icons or tabular view)
+};
+
+
+class TGLVContainer : public TGContainer {
+
+protected:
+   TGLayoutHints     *fItemLayout;    // item layout hints
+   EListViewMode      fViewMode;      // list view viewing mode
+   Int_t             *fCpos;          // position of sub names
+   Int_t             *fJmode;         // alignment of sub names
+   TGListView        *fListView;      // listview which contains this container
+   TGLVEntry         *fLastActive;    // last active item
+
+   virtual void ActivateItem(TGFrameElement* el);
+
+public:
+   TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
+                 UInt_t options = kSunkenFrame,
+                 Pixel_t back = GetDefaultFrameBackground());
+   TGLVContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
+                 Pixel_t back = GetDefaultFrameBackground());
+
+   virtual ~TGLVContainer();
+
+   TGListView  *GetListView() const { return fListView; }
+
+   virtual void AddItem(TGLVEntry *item)
+              { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
+
+   virtual void SetListView(TGListView *lv) { fListView = lv; }
+   virtual void RemoveItemWithData(void *userData);
+   virtual void SetViewMode(EListViewMode ViewMode);
+   Int_t        GetViewMode() const { return fViewMode; }
+   virtual void SetColumns(Int_t *cpos, Int_t *jmode);
+
+   virtual TGDimension GetMaxItemSize() const;
+   virtual Int_t GetMaxSubnameWidth(Int_t idx) const;
+   virtual void  SetColHeaders(const char* n1="",const char* n2="",const char* n3="",
+                               const char* n4="",const char* n5="",const char* n6="",
+                               const char* n7="",const char* n8="",const char* n9="",
+                               const char* n10="",const char* n11="",const char* n12="");
+
+   void   SetHeaders(Int_t ncolumns) { fListView->SetHeaders(ncolumns); }
+   void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx) 
+                              { fListView->SetHeader(s,hmode,cmode,idx); }
+   void   SetDefaultHeaders() { fListView->SetDefaultHeaders(); }
+   const char *GetHeader(Int_t idx) const { return fListView->GetHeader(idx); }
+
+   ClassDef(TGLVContainer,0)  // Listview container
 };
 
 #endif

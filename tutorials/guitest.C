@@ -375,7 +375,6 @@ RQ_OBJECT("TestDirList")
 protected:
    TGTransientFrame *fMain;
    TGListTree       *fContents;
-   TList            *fTrash;
    const TGPicture  *fIcon;
    TString DirName(TGListTreeItem* item);
 
@@ -395,7 +394,6 @@ RQ_OBJECT("TestFileList")
 protected:
    TGMainFrame      *fMain;
    TGFileContainer  *fContents;
-   TList            *fTrash;
 
    virtual void DisplayFile(const TString &fname);
    virtual void DisplayDirectory(const TString &fname);
@@ -1793,14 +1791,11 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 
    fMain = new TGTransientFrame(p, main, w, h);
    fIcon = gClient->GetPicture("rootdb_t.xpm");
-   fTrash = new TList();
    TGLayoutHints *lo;
 
    TGCanvas* canvas = new TGCanvas(fMain, 500, 300);
-   fTrash->Add(canvas);
    fContents = new TGListTree(canvas, kHorizontalFrame);
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsBottom);
-   fTrash->Add(lo);
    fMain->AddFrame(canvas,lo);
    fContents->Connect("DoubleClicked(TGListTreeItem*,Int_t)","TestDirList",this,
                       "OnDoubleClick(TGListTreeItem*,Int_t)");
@@ -1832,9 +1827,7 @@ TestDirList::~TestDirList()
    // dtor.
 
    delete fContents;
-
-   fTrash->Delete();
-   delete fTrash;
+   fMain->Cleanup();
    delete fMain;
 }
 
@@ -1890,7 +1883,6 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
 {
    // Create transient frame containing a filelist widget.
    
-   fTrash = new TList();
    TGLayoutHints *lo;
 
    fMain = new TGTransientFrame(p, main, w, h);
@@ -1898,22 +1890,19 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    TGMenuBar* mb = new TGMenuBar(fMain);
    lo = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 0, 0, 1, 1);
    fMain->AddFrame(mb, lo);
-   fTrash->Add(mb);
-   fTrash->Add(lo);
 
    TGPopupMenu *menu = mb->AddPopup("&View");
    menu->AddEntry("Lar&ge Icons",kLVLargeIcons);
    menu->AddEntry("S&mall Icons",kLVSmallIcons);
    menu->AddEntry("&List",       kLVList);
    menu->AddEntry("&Details",    kLVDetails);
+   menu->AddSeparator();
    menu->AddEntry("&Close",      10);
    menu->Connect("Activated(Int_t)","TestFileList",this,"DoMenu(Int_t)");
 
    TGListView* lv = new TGListView(fMain, w, h);
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fMain->AddFrame(lv,lo);
-   fTrash->Add(lv);
-   fTrash->Add(lo);
 
    Pixel_t white;
    gClient->GetColorByName("white",white);
@@ -1934,9 +1923,11 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    fMain->Resize(fMain->GetDefaultSize());
    fMain->MapSubwindows();
    fMain->MapWindow();
+   fContents->SetDefaultHeaders();
    fContents->DisplayDirectory();
    fContents->AddFile("..");  // up level directory
    fContents->Layout();
+   fContents->StopRefreshTimer();   // stop refreshing
 }
 
 TestFileList::~TestFileList()
@@ -1944,8 +1935,7 @@ TestFileList::~TestFileList()
    // dtor.
 
    delete fContents;
-   fTrash->Delete();
-   delete fTrash;
+   fMain->Cleanup();
    delete fMain;
 }
 
@@ -1966,8 +1956,9 @@ void TestFileList::DisplayFile(const TString &fname)
 
    TFile file(fname);
    fContents->RemoveAll();
-   fContents->AddFile(".");
+   fContents->AddFile(gSystem->WorkingDirectory());
    fContents->SetPagePosition(0,0);
+   fContents->SetColHeaders("Name","Title");
 
    TIter next(file.GetListOfKeys());
    TKey *key;
@@ -1976,10 +1967,11 @@ void TestFileList::DisplayFile(const TString &fname)
       TString cname = key->GetClassName();
       TString name = key->GetName();
       TGLVEntry *entry = new TGLVEntry(fContents,name,cname);
+      entry->SetSubnames(key->GetTitle());
       fContents->AddItem(entry);
 
       // user data is a filename
-      entry->SetUserData((void*)strdup(fname.Data()));
+      entry->SetUserData((void*)StrDup(fname.Data()));
    }
    fContents->Layout();
 }
@@ -1988,6 +1980,7 @@ void TestFileList::DisplayDirectory(const TString &fname)
 {
    // display content of directory
 
+   fContents->SetDefaultHeaders();
    gSystem->ChangeDirectory(fname);
    fContents->ChangeDirectory(fname);
    fContents->DisplayDirectory();
@@ -2002,7 +1995,11 @@ void TestFileList::DisplayObject(const TString& fname,const TString& name)
    TDirectory *sav = gDirectory;
    TFile f(fname);
    TObject* obj = f.Get(name);
-   if (obj) obj->Browse(0);
+   if (obj) {
+      if (!obj->IsFolder()) {
+         obj->Browse(0);
+      } else obj->Print();
+   }
    gDirectory = sav;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.14 2003/07/08 19:42:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.15 2003/07/09 00:53:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -161,10 +161,10 @@ TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright
 
    ULong_t hints = kLHintsTop;
 
-   if (padleft)   hints |= kLHintsRight;
-   if (padright)  hints |= kLHintsLeft;
-   if (padtop)    hints |= kLHintsBottom;
-   if (padbottom) hints |= kLHintsTop;
+   if (padleft>1)   hints |= kLHintsRight;
+   if (padright>1)  hints |= kLHintsLeft;
+   if (padtop>1)    hints |= kLHintsBottom;
+   if (padbottom>1) hints |= kLHintsTop;
 
    TGLayoutHints *l = new TGLayoutHints(hints, padleft, padright,
                                                padtop, padbottom);

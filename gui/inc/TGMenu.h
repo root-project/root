@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.16 2003/07/08 19:42:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.17 2003/07/09 00:53:22 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -284,8 +284,8 @@ public:
                          TGPopupMenu *before = 0);
    virtual void AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
                          TGPopupMenu *before = 0);
-   virtual TGPopupMenu *AddPopup(const TString &s, Int_t padleft = 0, Int_t padright = 4,
-                                 Int_t padtop = 0, Int_t padbottom = 0);
+   virtual TGPopupMenu *AddPopup(const TString &s, Int_t padleft = 1, Int_t padright = 4,
+                                 Int_t padtop = 1, Int_t padbottom = 1);
 
    virtual TGPopupMenu *GetPopup(const char *s);
    virtual TGPopupMenu *RemovePopup(const char *s);
