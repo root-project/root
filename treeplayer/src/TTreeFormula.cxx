@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.63 2001/08/14 07:53:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.64 2001/08/16 16:39:42 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1215,7 +1215,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          } else if (gROOT->GetType(cast_name)) {
             current = &(work[0]);
             *current = 0;
-            Warning("DefinedVariable","Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
+            Warning("DefinedVariable",
+                    "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
             paran_level--;
             continue;
          }
@@ -1343,14 +1344,21 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             branch = fTree->FindBranch(first);
             leaf = fTree->FindLeaf(first);
 
-            // Look with the delimiter removed (we look with it first
+            // Now look with the delimiter removed (we looked with it first
             // because a dot is allowed at the end of some branches).
             if (cname[i]) first[strlen(first)-1]='\0';
             if (!branch) branch = fTree->FindBranch(first);
             if (!leaf) leaf = fTree->FindLeaf(first);
 
-            if (leaf || branch) {
-               if (leaf && leaf->IsOnTerminalBranch() ) {
+            if (branch && cname[i] == '.') {
+               // If we have a branch that match a name preceded by a dot
+               // then we assume we are trying to drill down the branch and thus
+               // do not check if the leaf (eventually found) is terminal
+              
+               // we reset work
+               current = &(work[0]);
+            } else if (leaf || branch) {
+               if (leaf && leaf->IsOnTerminalBranch()) {
                   // This is a non-object leaf, it should NOT be specified more except for
                   // dimensions.
                   final = kTRUE;
@@ -1463,8 +1471,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   tmp_leaf = branch->FindLeaf(work);
                   if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
                   if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
-                     // This is a non-object leaf, it should NOT be specified more except for
-                     // dimensions.
+                     // This is a non-object leaf, it should NOT be specified
+                     // more except for dimensions.
                      final = kTRUE;
                      leaf = tmp_leaf;
                   }
