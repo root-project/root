@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.3 2001/05/07 22:16:08 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -28,23 +28,35 @@ class TObjectSet : public TDataSet {
 protected:
   enum EOwnerBits { kIsOwner         = BIT(23) };
   TObject *fObj;                              // TObject to be inserted
-  virtual Bool_t DoOwner(Bool_t done=kTRUE);
 
 public:
   TObjectSet(const Char_t *name, TObject *obj=0,Bool_t makeOwner=kTRUE);
   TObjectSet(TObject *obj=0,Bool_t makeOwner=kTRUE);
   virtual ~TObjectSet();
+  virtual TObject *AddObject(TObject *obj,Bool_t makeOwner=kTRUE);
   virtual void     Browse(TBrowser *b);
   virtual void     Delete(Option_t *opt="");
-  virtual TObject *GetObject() const {return fObj;};
-  virtual void     SetObject(TObject *obj) { SetObject(obj,kTRUE);}
+  virtual Bool_t   DoOwner(Bool_t done=kTRUE);
+  virtual Long_t   HasData() const;
+  virtual TObject *GetObject() const; 
+  virtual TDataSet *Instance() const;
+  virtual Bool_t   IsOwner() const;
+  virtual void     SetObject(TObject *obj);
   virtual TObject *SetObject(TObject *obj,Bool_t makeOwner);
-  virtual TObject *AddObject(TObject *obj,Bool_t makeOwner=kTRUE);
-  virtual Long_t   HasData() const {return fObj ? 1 : 0;}
-  virtual Bool_t   IsOwner() const {return TestBit(kIsOwner);}
+
+  static TObjectSet *instance();
 
   ClassDef(TObjectSet,1)
 };
+
+inline TObjectSet *TObjectSet::instance()
+{ return new TObjectSet();}
+
+inline Long_t   TObjectSet::HasData()   const {return fObj ? 1 : 0;}
+inline TObject *TObjectSet::GetObject() const {return fObj;}
+inline Bool_t   TObjectSet::IsOwner()   const {return TestBit(kIsOwner);}
+
+inline void     TObjectSet::SetObject(TObject *obj) { SetObject(obj,kTRUE);}
 
 #endif
 

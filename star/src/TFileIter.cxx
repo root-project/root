@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.6 2001/04/03 23:20:20 fine Exp $
+// $Id: TFileIter.cxx,v 1.8 2001/05/11 16:13:56 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -138,6 +138,73 @@ TFileIter::~TFileIter()
     fRootFile = 0;
   }
 }
+#if 0
+//__________________________________________________________________________
+Int_t TFileIter::Copy(TFile *destFile)
+{ 
+   Int_t nBytes = 0;
+   class TCopyKey : public TKey {
+     public:
+       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+       TCopyKey(const TKey &src) : TName(src) {
+         Mirror(src);  
+       }
+       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+       void Mirror(const TKey &src) {
+         fVersion = src.fVersion;     //Key version identifier
+         fNbytes  = src.fNbytes;      //Number of bytes for the object on file
+         fObjlen  = src.fObjlen;      //Length of uncompressed object in bytes
+         fDatime  = src.fDatime;      //Date/Time of insertion in file
+         fKeylen  = src.fKeylen;      //Number of bytes for the key itself
+         fCycle   = src.fCycle;       //Cycle number
+         fSeekKey = src.fSeekKey;     //Location of object on file
+         fSeekPdir= src.fSeekPdir;    //Location of parent directory on file
+         fClassName = src.fClassName; //Object Class name
+         fLeft    = src.fLeft;        //Number of bytes left in current segment
+
+         fBuffer = 0;  //Object buffer
+         fBufferRef = 0;;     //Pointer to the TBuffer object
+       }
+       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+       virtual ~TCopyKey();
+       // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+       virtual TObject   ReadObj() {
+         fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
+         if (!fBufferRef) {
+            Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
+           return 0;
+         }
+         if (fObjlen > fNbytes-fKeylen) {
+           fBuffer = new char[fNbytes];
+           ReadFile();                    //Read object structure from file
+           memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+         } else {
+            fBuffer = fBufferRef->Buffer();
+            ReadFile();                    //Read object structure from file
+         }
+      }
+   };
+
+==
+   TKey *cKey = GetCurrentKey();
+   if (cKey) {
+     TFile *save = gFile;
+     TDirectiry *savedir = gDirectrory;
+     destFile->cd();
+     TCopyKey *key = new TCopyKey(*cKey);
+
+     if (!key->GetSeekKey()) {
+       gDirectory->GetListOfKeys()->Remove(key);
+       delete key;
+     } else {
+       gFile->SumBuffer(key->GetObjlen());
+       nBytes = key->WriteFile(0);
+     }
+   }
+==
+   return nBytes;
+}
+#endif
 //__________________________________________________________________________
 void TFileIter::Initialize() 
 { 

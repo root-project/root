@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.7 2001/04/02 14:07:19 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.8 2001/04/06 17:32:25 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -47,11 +47,13 @@ class TTable : public TDataSet {
    friend class TDataSet;
    friend class St_XDFFile;
 private:
-   Long_t         fSize;       // Size of the one element (row) of the table
+   Long_t     fSize;       // Size of the one element (row) of the table
 
 protected:
+
    Int_t      fN;           //Number of array elements
    Char_t    *fTable;       // Array of (fN*fSize) longs
+   Long_t     fMaxIndex;    // The used capacity of this array
 
    Bool_t    BoundsOk(const char *where, Int_t at) const;
    Bool_t    OutOfBoundsError(const char *where, Int_t i) const;
@@ -69,8 +71,6 @@ protected:
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
    virtual void  SetDescriptorPointer(TTableDescriptor *list) const ;
-
-   Long_t     fMaxIndex;   // The used capacity of this array
 
    void       ReAlloc(Int_t newsize);
 

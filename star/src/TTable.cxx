@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2001/04/05 06:40:07 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.16 2001/05/11 16:13:56 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -194,7 +194,7 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          out << setw(width) << setprecision(width-3) << *(float *)buf;
          break;
     case kInt:
-         out << setw(width) << *(int *)buf;
+         out <<  setw(width) << *(int *)buf;
          break;
     case kLong:
          out << setw(width) << *(long *)buf;
@@ -2113,19 +2113,15 @@ void TTable::Streamer(TBuffer &R__b)
               ioDescriptor =  new TTableDescriptor();
               ioDescriptor->Streamer(R__b);
 	    }  
+
+            if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
+               // Protection against of memory leak.
+              delete currentDescriptor->fSecondDescriptor;
+              currentDescriptor->fSecondDescriptor = ioDescriptor;
+            }
+
             // compare two descriptors
-            if (ioDescriptor->UpdateOffsets(currentDescriptor)) {
-              // Remember the real descriptor
-              TString dType = "Broken:";
-              dType += GetType();
-              ioDescriptor->SetName(dType.Data());
-              Add(ioDescriptor);
-              evolutionOn = kTRUE;
-            }
-            else {
-              delete ioDescriptor;
-              ioDescriptor = currentDescriptor;
-            }
+            evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
          }
       }
       TTable::StreamerTable(R__b,R__v);
