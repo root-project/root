@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.35 2003/07/31 20:19:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.36 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -75,6 +75,7 @@ private :
    Bool_t                fIsStepExiting;    //! flaag that next geometric step will exit current volume
    Bool_t                fIsOutside;        //! flag that current point is outside geometry
    Bool_t                fIsOnBoundary;     //! flag that current point is on some boundary
+   Bool_t                fIsSameLocation;   //! flag that a new point is in the same node as previous
    Bool_t                fIsNullStep;       //! flag that last geometric step was null
    Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
    Bool_t                fIsGeomReading;    //! flag set when reading geometry
@@ -304,6 +305,7 @@ public:
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z);
+   Bool_t                 IsSameLocation() const {return fIsSameLocation;}
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetStep(Double_t step) {fStep=step;}

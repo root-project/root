@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.5 2003/08/28 14:10:20 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.6 2003/09/04 12:38:22 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -72,7 +72,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
       mat = (TGeoMatrix*)gGeoManager->GetListOfMatrices()->FindObject(stransf.Data());    
    }
    if (!mat) {
-      Error("MakeBranch", "transformation not found");
+      Error("MakeBranch", "transformation %s not found", stransf.Data());
       return kFALSE;
    }
    switch (boolop) {
@@ -80,7 +80,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
          // elementary shape
          shape = (TGeoShape*)gGeoManager->GetListOfShapes()->FindObject(sleft.Data()); 
          if (!shape) {
-            Error("MakeBranch", "shape not found");
+            Error("MakeBranch", "shape %s not found", sleft.Data());
             return kFALSE;
          }
          break;
@@ -226,7 +226,7 @@ void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    if (fRight->Contains(local)) {
       fRightMat->MasterToLocalVect(dir, ldir);
       fRight->ComputeNormal(local,ldir,lnorm);
-      fLeftMat->LocalToMasterVect(lnorm, norm);
+      fRightMat->LocalToMasterVect(lnorm, norm);
       return;
    }   
    // Propagate forward/backward to see which of the components is intersected first
@@ -751,38 +751,33 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       if (iact==0) return TGeoShape::kBig;
       if (iact==1 && step<*safe) return TGeoShape::kBig;
    }
-   Double_t local[3], master[3], ldir[3], rdir[3];
-   memcpy(&master[0], point, 3*sizeof(Double_t));
+   Double_t lpt[3], rpt[3], master[3], ldir[3], rdir[3];
+   memcpy(master, point, 3*sizeof(Double_t));
    Int_t i;
-   Double_t d1, d2, snxt=0.;
-   fLeftMat->MasterToLocal(point, &local[0]);
-   fLeftMat->MasterToLocalVect(dir, &ldir[0]);
-   fRightMat->MasterToLocalVect(dir, &rdir[0]);
-   Bool_t inside = fLeft->Contains(&local[0]);
-   fRightMat->MasterToLocal(point, &local[0]);
-   if (inside) {
-      d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-      for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
-      if (Contains(&master[0])) return d1;
-      return TGeoShape::kBig;
+   Double_t d1 = 0;
+   Double_t d2 = 0;
+   fLeftMat->MasterToLocal(point, lpt);
+   fRightMat->MasterToLocal(point, rpt);
+   fLeftMat->MasterToLocalVect(dir, ldir);
+   fRightMat->MasterToLocalVect(dir, rdir);
+   Bool_t inleft = fLeft->Contains(lpt);
+   Bool_t inright = fRight->Contains(rpt);
+   if (inleft && inright) return 0.;
+   if (!inleft)  {
+      d1 = fLeft->DistToIn(lpt,ldir,iact,step,safe);
+      if (d1 > 1E20) return TGeoShape::kBig;
+   }   
+   if (!inright) {
+      d2 = fRight->DistToIn(rpt,rdir,iact,step,safe);
+      if (d2>1E20) return TGeoShape::kBig;
    }
-   inside = fRight->Contains(&local[0]);
-   fLeftMat->MasterToLocal(point, &local[0]);
-   d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
-   if (inside) {
-      for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
-      if (Contains(&master[0])) return d1;
-      return TGeoShape::kBig;
-   }
-   // point is neither in left nor right shapes
-   fRightMat->MasterToLocal(point, &local[0]);
-   d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-   snxt += TMath::Max(d1, d2);
-   if (snxt>1E20) return snxt;
-   for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];
-   if (Contains(&master[0])) return snxt;
-   return DistToIn(&master[0], dir, iact, step, safe);
+   Double_t snext = TMath::Max(d1,d2);   
+   for (i=0; i<3; i++) master[i] += (snext+1E-6)*dir[i];
+   if (Contains(master)) return snext;
+   snext += DistToIn(master,dir,iact,step,safe)+1E-6;
+   return snext;
 }      
+
 //-----------------------------------------------------------------------------
 Int_t TGeoIntersection::GetNpoints() const
 {

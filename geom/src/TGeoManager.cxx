@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.59 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.60 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -525,6 +525,7 @@ void TGeoManager::Init()
    fIsStepExiting = kFALSE;
    fIsOutside = kFALSE;
    fIsOnBoundary = kFALSE;
+   fIsSameLocation = kTRUE;
    fIsNullStep = kFALSE;
    fVisLevel = 3;
    fVisOption = 1;
@@ -2182,7 +2183,6 @@ Int_t TGeoManager::Parse(const char *expr, TString &expr1, TString &expr2, TStri
       if (foundmat) break;
       if (((lastop==0) && (lastdp>0)) || ((lastpp>0) && (lastdp>lastpp) && (indop<lastpp))) {
          expr3 = e0(lastdp+1, len-lastdp);
-         printf("transformation : %s\n", expr3.Data());
          e0=e0(0, lastdp);
          foundmat = kTRUE;
          iloop = 1;
@@ -2302,6 +2302,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       fCache->MasterToLocal(fPoint, &point[0]);
       inside_current = vol->Contains(&point[0]);
       if (!inside_current) {
+         fIsSameLocation = kFALSE;
          TGeoNode *skip = fCurrentNode;
          // check if we can go up
          if (!fLevel) {
@@ -2321,7 +2322,10 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          inside_current = kTRUE;
       } else {
          inside_current = vol->Contains(&point[0]);
-         if (!inside_current) return 0;
+         if (!inside_current) {
+            fIsSameLocation = kFALSE;
+            return 0;
+         }   
       }
    }
    // point inside current (safe) node -> search downwards
@@ -2343,6 +2347,7 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       node=finder->FindNode(&point[0]);
       if (node) {
          // go inside the division cell and search downwards
+         fIsSameLocation = kFALSE;
          CdDown(node->GetIndex());
          return SearchNode(kTRUE, node);
       }
@@ -2374,7 +2379,10 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          }
          CdDown(check_list[id]);
          node = SearchNode(kTRUE);
-         if (node) return node;
+         if (node) {
+            fIsSameLocation = kFALSE;
+            return node;
+         }   
          CdUp();
       }
       return fCurrentNode;
@@ -2388,7 +2396,10 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       }
       CdDown(id-1);
       node = SearchNode(kTRUE);
-      if (node) return node;
+      if (node) {
+         fIsSameLocation = kFALSE;
+         return node;
+      }   
       CdUp();
       if (id == nd) return fCurrentNode;
    }
@@ -2626,8 +2637,11 @@ TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
    fIsEntering = fIsExiting = kFALSE;
    fIsOnBoundary = kFALSE;
    fStartSafe = safe_start;
-   return SearchNode();
-//   printf("CURRENT POINT (%g, %g, %g) in %s\n", fPoint[0], fPoint[1], fPoint[2], GetPath());
+   fIsSameLocation = kTRUE;
+   TGeoNode *last = fCurrentNode;
+   TGeoNode *found = SearchNode();
+   if (last->IsOverlapping() && found==last) fIsSameLocation = kTRUE;
+   return found;
 }
    
 //_____________________________________________________________________________
@@ -2642,7 +2656,11 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    fIsEntering = fIsExiting = kFALSE;
    fIsOnBoundary = kFALSE;
    fStartSafe = kTRUE;
-   return SearchNode();
+   fIsSameLocation = kTRUE;
+   TGeoNode *last = fCurrentNode;
+   TGeoNode *found = SearchNode();
+   if (last->IsOverlapping() && found==last) fIsSameLocation = kTRUE;
+   return found;
 }
    
 //_____________________________________________________________________________
@@ -2653,6 +2671,18 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
 // Returns the normal vector cosines in the MASTER coordinate system. The dot 
 // product of the normal and the current direction is positive defined.
 //   printf("Current node: %s forward=%i\n", GetPath(), forward);
+   Double_t lnorm[3];
+   Double_t lpt[3];
+   Double_t ldir[3];
+   if (fIsStepEntering && !forward) {
+      MasterToLocal(fPoint, lpt);
+      MasterToLocalVect(fDirection, ldir);        
+      fCurrentNode->GetVolume()->GetShape()->ComputeNormal(lpt,ldir,lnorm);
+      LocalToMasterVect(lnorm, fNormal);
+      return fNormal;
+   }
+   
+   // we have to compute the normal to the current node
    Double_t saved_point[3];
    Double_t saved_direction[3];
    Double_t saved_step = fStep;
@@ -2663,6 +2693,7 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
    memcpy(saved_point, fPoint, 3*sizeof(Double_t));
    memcpy(saved_direction, fDirection, 3*sizeof(Double_t));
 //   PushPath();
+      
    if (!forward) {
       // change to opposite direction
       for (i=0; i<3; i++) fDirection[i] *= -1.;
@@ -2738,9 +2769,6 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
    }   
    // now the current point is close to the boundary of the current node
    // we compute the normal
-   Double_t lnorm[3];
-   Double_t lpt[3];
-   Double_t ldir[3];
    MasterToLocal(fPoint, lpt);
    MasterToLocalVect(fDirection, ldir);        
    fCurrentNode->GetVolume()->GetShape()->ComputeNormal(lpt,ldir,lnorm);

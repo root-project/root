@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.14 2003/08/28 12:45:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.15 2003/09/04 12:38:22 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -172,7 +172,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
    MakeNode(expression);
    if (!fNode) {
       char message[256];
-      sprintf(message, "could not build expression %s", expression);
+      sprintf(message, "could not parse expression %s", expression);
       Error("ctor", message);
       return;
    }
@@ -189,7 +189,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    MakeNode(expression);
    if (!fNode) {
       char message[256];
-      sprintf(message, "could not build expression %s", expression);
+      sprintf(message, "could not parse expression %s", expression);
       Error("ctor", message);
       return;
    }
@@ -265,7 +265,7 @@ void TGeoCompositeShape::MakeNode(const char *expression)
 {
 // Make a booleann node according to the top level boolean operation of expression.
 // Propagates signal to branches until expression is fully decomposed.
-   printf("Making node for : %s\n", expression);
+//   printf("Making node for : %s\n", expression);
    if (fNode) delete fNode;
    fNode = 0;
    SetTitle(expression);
