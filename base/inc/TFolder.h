@@ -16,7 +16,7 @@
 //                                                                      //
 // TFolder                                                              //
 //                                                                      //
-// Describe a folder: a list of folders                                 //
+// Describe a folder: a list of objects and folders                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +29,7 @@ class TBrowser;
 class TFolder : public TNamed {
 
 protected:
-   TList       *fFolders;        //pointer to the list of folders
+   TCollection       *fFolders;        //pointer to the list of folders
 
 private:
    TFolder(const TFolder &folder);  //folders cannot be copied
@@ -38,22 +38,24 @@ private:
 public:
 
    TFolder();
-   TFolder(const char *name, const char *title);
+   TFolder(const char *name, const char *title, TCollection *collection=0);
    virtual ~TFolder();
-   virtual void        Add(TObject *obj) {Append(obj);}
-   virtual void        Append(TObject *obj);
+   virtual void        Add(TObject *obj);
+   TFolder            *AddFolder(const char *name, const char *title, TCollection *collection=0);
+   virtual void        Append(TObject *obj) {Add(obj);}
    virtual void        Browse(TBrowser *b);
    virtual void        Clear(Option_t *option="");
    virtual void        Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
-   virtual TObject    *Get(const char *namecycle);
-   TList              *GetListOfFolders() const { return fFolders; }
+   virtual TObject    *FindObject(const char *name) const;
+   TCollection        *GetListOfFolders() const { return fFolders; }
    virtual const char *GetPath() const;
-   Bool_t              IsFolder() { return kTRUE; }
+   Bool_t              IsFolder() const { return kTRUE; }
    virtual void        ls(Option_t *option="");
    virtual void        Print(Option_t *option="");
    virtual void        RecursiveRemove(TObject *obj);
+   virtual void        SetCollection(TCollection *collection);
 
-   ClassDef(TFolder,1)  //Describe a folder: a list of folders
+   ClassDef(TFolder,1)  //Describe a folder: a list of objects and folders
 };
 
 #endif
