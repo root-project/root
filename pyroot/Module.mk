@@ -23,6 +23,8 @@ PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
 
 PYROOTLIB    := $(LPATH)/PyROOT.$(SOEXT)
 
+ROOTPY       := $(MODDIR)/ROOT.py
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS     += $(PYROOTLIB)
@@ -39,6 +41,11 @@ $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
 		"$(SOFLAGS)" PyROOT.$(SOEXT) $@ \
 		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
                 "$(PYTHONLIBFLAGS)"
+ifeq ($(PLATFORM),win32)
+		@cp $(ROOTPY) bin
+else
+		@cp $(ROOTPY) lib
+endif
 
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
