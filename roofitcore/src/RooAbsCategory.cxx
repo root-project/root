@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.29 2001/10/08 05:20:10 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.30 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -347,16 +347,21 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
       // Imported TTree: attach only index field as branch
 
       cout << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName() 
-	   << " interpreted as category index" << endl ;
+	   << " will be interpreted as category index" << endl ;
 
       t.SetBranchAddress(GetName(),&((Int_t&)_value._value)) ;
       setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;      
       return ;
-    }
-  } 
-  
-  // Native TTree: attach both index and label of category as branches
-  
+    } else if (!typeName.CompareTo("UChar_t")) {
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree Bool_t branch " << GetName() 
+	   << " will be interpreted as category with index values 0 and 1 " << endl ;
+      t.SetBranchAddress(GetName(),&((Bool_t&)_value._value)) ;
+      setAttribute("BOOL_TREE_BRANCH",kTRUE) ;
+      return ;
+    } 
+  }
+
+  // Native TTree: attach both index and label of category as branches  
   TString idxName(GetName()) ;
   TString lblName(GetName()) ;  
   idxName.Append("_idx") ;
@@ -365,12 +370,12 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
   // First determine if branch is taken
   if (t.GetBranch(idxName)) {
     t.SetBranchAddress(idxName,&((Int_t&)_value._value)) ;
-    } else {    
-      TString format(idxName);
-      format.Append("/I");
-      void* ptr = &(_value._value) ;
-      t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
-    }
+  } else {    
+    TString format(idxName);
+    format.Append("/I");
+    void* ptr = &(_value._value) ;
+    t.Branch(idxName, ptr, (const Text_t*)format, bufSize);
+  }
   
   // First determine if branch is taken
   if (t.GetBranch(lblName)) {
@@ -418,14 +423,25 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
 
   if (source->getAttribute("INTIDXONLY_TREE_BRANCH")) {
     // Lookup cat state from other-index because label is missing
-    cout << "other->_value._value = " << other->_value._value << endl ;
     const RooCatType* type = lookupType(other->_value._value) ;
     if (type) {
       _value = *type ;
     } else {
       cout << "RooAbsCategory::copyCache(" << GetName() 
 	   << ") ERROR: index of source arg " << source->GetName() 
-	   << " is invalid, value not updated" << endl ;
+	   << " is invalid (" << other->_value._value 
+	   << "), value not updated" << endl ;
+    }
+  } if (source->getAttribute("BOOL_TREE_BRANCH")) {
+    // Lookup cat state from other-index because label is missing
+    Bool_t& tmp = (Bool_t&) other->_value._value ;
+    const RooCatType* type = lookupType(tmp?1:0) ;
+    if (type) {
+      _value = *type ;
+    } else {
+      cout << "RooAbsCategory::copyCache(" << GetName() 
+	   << ") ERROR: index of source arg " << source->GetName() 
+	   << " is invalid (" << (tmp?1:0) << "), value not updated" << endl ;
     }
   } else {
     _value = other->_value ;
