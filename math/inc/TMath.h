@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.20 2002/07/23 11:12:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.21 2002/07/29 11:09:54 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -253,6 +253,7 @@ public:
    static Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calcualte a normal vector of a plane
    static Double_t  Prob(Double_t chi2,Int_t ndf);
    static Double_t  KolmogorovProb(Double_t z);
+   static Double_t  Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);
 
    // Bessel functions
    static Double_t BesselI(Int_t n,Double_t x);      // integer order modified Bessel function I_n(x)

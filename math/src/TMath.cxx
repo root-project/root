@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.22 2002/05/30 21:06:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.23 2002/07/02 06:43:32 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -744,6 +744,208 @@ Double_t TMath::KolmogorovProb(Double_t z)
    }
    p = 1 - a*p;
    return p;
+}
+
+//______________________________________________________________________________
+Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
+{
+   // Computation of Voigt function (normalised).
+   // Voigt is a convolution of 
+   // gauss(x) = 1/(sqrt(2*pi)*sigma) * exp(x*x/(2*sigma*sigma)
+   // and
+   // lorentz(x) = (1/pi) * (lg/2) / (x*x + g*g/4)
+   // functions.
+
+   // The Voigt function is known to be the real part of Faddeeva function also 
+   // called complex error function [2].
+
+   // The algoritm was developed by J. Humlicek [1].
+   // This code is based on fortran code presented by R. J. Wells [2]. 
+   // Translated and adapted by Miha D. Puc
+ 
+   // To calculate the Faddeeva function with relative error less than 10^(-R). 
+   // R can be set by the the user subject to the constraints 2 <= R <= 5. 
+
+   // [1] J. Humlicek, JQSRT, 21, 437 (1982).
+   // [2] R. J. Wells, Rapid Approximation to the Voigt/Faddeeva Function and
+   // it's Derivatives.
+
+   Double_t RO, R1;
+
+   if (R < 2) R = 2;
+   if (R > 5) R = 5;
+
+   R0=1.51 * exp(1.144 * (Double_t)R);
+   R1=1.60 * exp(0.554 * (Double_t)R);
+
+   Double_t X, Y, K;
+   X = x / sigma / 1.41421356;
+   Y = lg / 2 / sigma / 1.41421356;
+
+   // Constants
+
+   const Double_t RRTPI = 0.56418958;  // 1/SQRT(pi) 
+ 
+   Double_t Y0, Y0PY0, Y0Q;                      // for CPF12 algorithm 
+   Y0 = 1.5;
+   Y0PY0 = Y0 + Y0;
+   Y0Q = Y0 * Y0;
+
+   Double_t C[6] = { 1.0117281, -0.75197147, 0.012557727, 0.010022008, -0.00024206814, 0.00000050084806};
+   Double_t S[6] = { 1.393237, 0.23115241, -0.15535147, 0.0062183662, 0.000091908299, -0.00000062752596};
+   Double_t T[6] = { 0.31424038, 0.94778839, 1.5976826, 2.2795071, 3.0206370, 3.8897249};
+
+   // Local variables
+
+   int J;					 // Loop variables 
+   int RG1, RG2, RG3; 				 // y polynomial flags 
+   Double_t ABX, XQ, YQ, YRRTPI; 		 // --x--, x^2, y^2, y/SQRT(pi)
+   Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4; 	 // --x-- on region boundaries 
+   Double_t A0, D0, D2, E0, E2, E4, H0, H2, H4, H6;// W4 temporary variables 
+   Double_t P0, P2, P4, P6, P8, Z0, Z2, Z4, Z6, Z8; 
+   Double_t XP[6], XM[6], YP[6], YM[6];          // CPF12 temporary values 
+   Double_t MQ[6], PQ[6], MF[6], PF[6]; 
+   Double_t D, YF, YPY0, YPY0Q;
+
+   //***** Start of executable code *****************************************
+
+   RG1 = 1;  // Set flags 
+   RG2 = 1;  
+   RG3 = 1; 
+   YQ = Y * Y;  // y^2 
+   YRRTPI = Y * RRTPI;  // y/SQRT(pi)
+
+   // Region boundaries when both K and L are required or when R<>4
+
+   XLIM0 = R0 - Y;
+   XLIM1 = R1 - Y; 
+   XLIM3 = 3.097 * Y - 0.45; 
+   XLIM2 = 6.8 - Y;
+   XLIM4 = 18.1 * Y + 1.65; 
+   if ( Y <= 1e-6 ) { 	                   // When y<10^-6 avoid W4 algorithm.
+      XLIM1 = XLIM0; 	
+      XLIM2 = XLIM0;
+   }
+
+   ABX = fabs(X); 				 // |x| 
+   XQ = ABX * ABX;			         // x^2 
+   if ( ABX > XLIM0 ) { 			 // Region 0 algorithm
+      K = YRRTPI / (XQ + YQ); 
+   } else if ( ABX > XLIM1 ) { 			 // Humlicek W4 Region 1
+      if ( RG1 != 0 ) { 			 // First point in Region 1
+	 RG1 = 0; 
+	 A0 = YQ + 0.5; 			 // Region 1 y-dependents 
+	 D0 = A0*A0; 
+	 D2 = YQ + YQ - 1.0;
+      }
+      D = RRTPI / (D0 + XQ*(D2 + XQ)); 
+      K = D * Y * (A0 + XQ); 
+   } else if ( ABX > XLIM2 ) { 			 // Humlicek W4 Region 2
+      if ( RG2 != 0 ) { 			 // First point in Region 2
+	 RG2 = 0; 
+	 H0 = 0.5625 + YQ * (4.5 + YQ * (10.5 + YQ * (6.0 + YQ)));
+	                                         // Region 2 y-dependents 
+	 H2 = -4.5 + YQ * (9.0 + YQ * ( 6.0 + YQ * 4.0));
+	 H4 = 10.5 - YQ * (6.0 - YQ * 6.0);
+	 H6 = -6.0 + YQ * 4.0; 
+	 E0 = 1.875 + YQ * (8.25 + YQ * (5.5 + YQ));
+	 E2 = 5.25 + YQ * (1.0 + YQ * 3.0);
+	 E4 = 0.75 * H6;
+      }
+      D = RRTPI / (H0 + XQ * (H2 + XQ * (H4 + XQ * (H6 + XQ)))); 
+      K = D * Y * (E0 + XQ * (E2 + XQ * (E4 + XQ)));
+   } else if ( ABX < XLIM3 ) { 			 // Humlicek W4 Region 3
+      if ( RG3 != 0 ) { 			 // First point in Region 3
+	 RG3 = 0; 
+	 Z0 = 272.1014 + Y * (1280.829 + Y * 
+			      (2802.870 + Y * 
+			       (3764.966 + Y * 
+				(3447.629 + Y * 
+				 (2256.981 + Y * 
+				  (1074.409 + Y * 
+				   (369.1989  + Y * 
+				    (88.26741 + Y * 
+				     (13.39880 + Y)
+				     ))))))));   // Region 3 y-dependents 
+	 Z2 = 211.678 + Y * (902.3066 + Y * 
+			     (1758.336 + Y * 
+			      (2037.310 + Y * 
+			       (1549.675 + Y * 
+				(793.4273 + Y * 
+				 (266.2987 + Y * 
+				  (53.59518 + Y * 5.0)
+				  ))))));
+	 Z4 = 78.86585 + Y * (308.1852 + Y * 
+			      (497.3014 + Y * 
+			       (479.2576 + Y * 
+				(269.2916 + Y * 
+				 (80.39278 + Y * 10.0)
+				 ))));
+	 Z6 = 22.03523 + Y * (55.02933 + Y * 
+			      (92.75679 + Y * 
+			       (53.59518 + Y * 10.0)
+			       ));
+	 Z8 = 1.496460 + Y * (13.39880 + Y * 5.0);
+	 P0 = 153.5168 + Y * (549.3954 + Y * 
+			      (919.4955 + Y * 
+			       (946.8970 + Y * 
+				(662.8097 + Y * 
+				 (328.2151 + Y * 
+				  (115.3772 + Y * 
+				   (27.93941 + Y * 
+				    (4.264678 + Y * 0.3183291)
+				    )))))));
+	 P2 = -34.16955 + Y * (-1.322256+ Y * 
+			       (124.5975 + Y * 
+				(189.7730 + Y * 
+				 (139.4665 + Y * 
+				  (56.81652 + Y * 
+				   (12.79458 + Y * 1.2733163)
+				   )))));
+	 P4 = 2.584042 + Y * (10.46332 + Y * 
+			      (24.01655 + Y * 
+			       (29.81482 + Y * 
+				(12.79568 + Y * 1.9099744)
+				)));
+	 P6 = -0.07272979 + Y * (0.9377051 + Y * 
+				 (4.266322 + Y * 1.273316));
+	 P8 = 0.0005480304 + Y * 0.3183291; 
+      }
+      D = 1.7724538 / (Z0 + XQ * (Z2 + XQ * (Z4 + XQ * (Z6 + XQ * (Z8 + XQ))))); 
+      K = D * (P0 + XQ * (P2 + XQ * (P4 + XQ * (P6 + XQ * P8))));
+   } else { 					 // Humlicek CPF12 algorithm
+      YPY0 = Y + Y0; 
+      YPY0Q = YPY0 * YPY0;
+      K = 0.0;
+      for (J = 0; J <= 5; J++) {
+	 D = X - T[J];
+	 MQ[J] = D * D; 
+	 MF[J] = 1.0 / (MQ[J] + YPY0Q);
+	 XM[J] = MF[J] * D; 
+	 YM[J] = MF[J] * YPY0; 
+	 D = X + T[J]; 
+	 PQ[J] = D * D;
+	 PF[J] = 1.0 / (PQ[J] + YPY0Q);
+	 XP[J] = PF[J] * D;
+	 YP[J] = PF[J] * YPY0;
+      }
+      if ( ABX <= XLIM4 ) {           		 // Humlicek CPF12 Region I
+	 for (J = 0; J <= 5; J++) {
+	    K = K + C[J]*(YM[J]+YP[J]) - S[J]*(XM[J]-XP[J]) ;
+	 }
+      } else { 					 // Humlicek CPF12 Region II
+	 YF = Y + Y0PY0;
+	 for ( J = 0; J <= 5; J++) {
+	    K = K + (C[J] * 
+		     (MQ[J] * MF[J] - Y0 * YM[J])
+		     + S[J] * YF * XM[J]) / (MQ[J]+Y0Q) 
+	       + (C[J] * (PQ[J] * PF[J] - Y0 * YP[J]) 
+		  - S[J] * YF * XP[J]) / (PQ[J]+Y0Q);
+	 } 
+	 K = Y * K + exp( -XQ ); 
+      }
+   }
+   return K / 2.506628 / sigma; // Normalize by dividing by sqrt(2*pi)*sigma.
 }
 
 //______________________________________________________________________________
