@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.182 2003/12/25 17:51:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.183 2003/12/26 18:38:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1487,7 +1487,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
    } else {
       if (i < 0) {printf("NULL\n"); return;}
       ladd  = pointer + fOffset[i];
-      atype = fType[i];
+      atype = fNewType[i];
       aleng = fLength[i];
    }
    if (aleng > lenmax) aleng = lenmax;
@@ -1687,7 +1687,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
       char *ladd = pointer+offset;
-      switch (fType[i]) {
+      switch (fNewType[i]) {
          // basic types
       case kChar:              {Char_t *val    = (Char_t*)ladd;    {printf("%d",*val);   PrintCCR(20)} break;}
       case kShort:             {Short_t *val   = (Short_t*)ladd;   {printf("%d",*val);   PrintCCR(10)} break;}
@@ -1930,11 +1930,12 @@ SWIT: switch (kase) {
          case kUInt:              ReadBasicType(UInt_t)
          case kULong:             ReadBasicType(ULong_t)
          case kULong64:           ReadBasicType(ULong64_t)
-         case kDouble32: {
-            Double_t *x=(Double_t*)(pointer+fOffset[i]); 
-            Float_t afloat; b >> afloat; *x = (Double_t)afloat; 
-            break; 
+         case kDouble32: {        
+            Double_t *x=(Double_t*)(pointer+fOffset[i]);
+            Float_t afloat; b >> afloat; *x = (Double_t)afloat;
+            break;
          }
+
          // read array of basic types  array[8]
          case kOffsetL + kChar:    ReadBasicArray(Char_t)
          case kOffsetL + kShort:   ReadBasicArray(Short_t)
@@ -1948,14 +1949,7 @@ SWIT: switch (kase) {
          case kOffsetL + kUInt:    ReadBasicArray(UInt_t)
          case kOffsetL + kULong:   ReadBasicArray(ULong_t)
          case kOffsetL + kULong64: ReadBasicArray(ULong64_t)
-         case kOffsetL + kDouble32: {
-            Double_t *x=(Double_t*)(pointer+fOffset[i]);
-            Float_t afloat;
-            for (Int_t ii=0;ii<fLength[i];ii++) {
-                b >> afloat; x[ii] = (Double_t)afloat;
-            } 
-            break;
-         }
+         case kOffsetL + kDouble32: {b.ReadFastArrayDouble32((Double_t*)(pointer+fOffset[i]),fLength[i]); break;}
          
          // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:    ReadBasicPointer(Char_t)
@@ -1977,14 +1971,11 @@ SWIT: switch (kase) {
             Double_t **f = (Double_t**)(pointer+fOffset[i]); 
             int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
             int j; 
-            Float_t afloat;
             for(j=0;j<len;j++) { 
                delete [] f[j]; 
                f[j] = 0; if (*l <=0) continue; 
                f[j] = new Double_t[*l]; 
-               for (Int_t ii=0;ii<*l;ii++) {
-                   b >>afloat; f[j][ii] = Double_t(afloat);
-               } 
+               b.ReadFastArrayDouble32(f[j],*l);
             } 
             break; 
          }
@@ -2488,62 +2479,49 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 
 #define ConvBasicArray(name) \
 { \
+   name dummy; \
    int len = fLength[i]; \
    int newtype = fNewType[i]%20; \
    switch(newtype) { \
-       case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Char_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kShort:  {Short_t  **f=(Short_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Short_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Int_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Long64_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (len <=0) printf("len=%d\n",len); \
-                        if (fNewType[i] > 40 && len > 0) *f = new Float_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new UChar_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new UShort_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new UInt_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
-       case kDouble32:{Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                        delete [] *f; *f = 0; \
-                        if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
-                        b.ReadFastArray(*f,len); break;} \
+       case kChar:   {Char_t   *f=(Char_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Char_t)dummy;} \
+                        break;} \
+       case kShort:  {Short_t  *f=(Short_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Short_t)dummy;} \
+                        break;} \
+       case kInt:    {Int_t    *f=(Int_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Int_t)dummy;} \
+                        break;} \
+       case kLong:   {Long_t   *f=(Long_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Long_t)dummy;} \
+                        break;} \
+       case kLong64: {Long64_t *f=(Long64_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Long64_t)dummy;} \
+                        break;} \
+       case kFloat:  {Float_t  *f=(Float_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Float_t)dummy;} \
+                        break;} \
+       case kDouble: {Double_t *f=(Double_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Double_t)dummy;} \
+                        break;} \
+       case kUChar:  {UChar_t  *f=(UChar_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (UChar_t)dummy;} \
+                        break;} \
+       case kUShort: {UShort_t *f=(UShort_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (UShort_t)dummy;} \
+                        break;} \
+       case kUInt:   {UInt_t   *f=(UInt_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (UInt_t)dummy;} \
+                        break;} \
+       case kULong:  {ULong_t  *f=(ULong_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (ULong_t)dummy;} \
+                        break;} \
+       case kULong64: {ULong64_t *f=(ULong64_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (ULong64_t)dummy;} \
+                        break;} \
+       case kDouble32:{Double_t *f=(Double_t*)(pointer+fOffset[i]); \
+                        for (Int_t j=0;j<len;j++) {b >> dummy; f[j] = (Double_t)dummy;} \
+                        break;} \
    } break; \
 }
 
@@ -2807,10 +2785,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetL + kDouble32: {
             for (Int_t k=0;k<nc;k++) { 
                Double_t *x=(Double_t*)((char*)clones->UncheckedAt(k)+offset); 
-               Float_t afloat;
-               for (Int_t ii=0;ii<leng;ii++) {
-                   b >> afloat; x[ii] = Double_t(afloat);
-               } 
+               b.ReadFastArrayDouble32(x,leng);
             }
             break; 
          }
@@ -2837,14 +2812,11 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k)+eoffset; 
                Int_t *l = (Int_t*)(pointer+fMethod[i]); 
                Double_t **f = (Double_t**)(pointer+fOffset[i]); 
-               Float_t afloat;
                for(j=0;j<len;j++) { 
                   delete [] f[j]; 
                   f[j] = 0; if (*l <=0) continue; 
                   f[j] = new Double_t[*l]; 
-                  for (Int_t ii=0;ii<*l;ii++) {
-                      b >> afloat; f[j][ii] = Double_t(afloat);
-                  } 
+                  b.ReadFastArrayDouble32(f[j],*l);
                } 
             } 
             break; 
@@ -3420,62 +3392,50 @@ char *pointer = 0;
 #define ConvCBasicArray(name) \
 { \
    int len = fLength[i]; \
+   name u; \
    int newtype = fNewType[i] %20; \
    for (Int_t k=0;k<nc;k++) { \
        pointer = (char*)clones->UncheckedAt(k)+eoffset; \
        switch(newtype) { \
-          case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Char_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kShort:  {Short_t  **f=(Short_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Short_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kInt:    {Int_t    **f=(Int_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Int_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kLong:   {Long_t   **f=(Long_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Long_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kLong64: {Long64_t **f=(Long64_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Long64_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kFloat:  {Float_t  **f=(Float_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Float_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kDouble: {Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kUChar:  {UChar_t  **f=(UChar_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new UChar_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kUShort: {UShort_t **f=(UShort_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new UShort_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kUInt:   {UInt_t   **f=(UInt_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new UInt_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kULong:  {ULong_t  **f=(ULong_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new ULong_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kULong64: {ULong64_t **f=(ULong64_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new ULong64_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
-          case kDouble32:{Double_t **f=(Double_t**)(pointer+fOffset[i]); \
-                           delete [] *f;  *f = 0;\
-                           if (fNewType[i] > 40 && len > 0) *f = new Double_t[len]; \
-                           b.ReadFastArray(*f,len); break;} \
+          case kChar:   {Char_t   *f=(Char_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Char_t)u;} \
+                           break;} \
+          case kShort:  {Short_t  *f=(Short_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Short_t)u;} \
+                           break;} \
+          case kInt:    {Int_t    *f=(Int_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Int_t)u;} \
+                           break;} \
+          case kLong:   {Long_t   *f=(Long_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Long_t)u;} \
+                           break;} \
+          case kLong64: {Long64_t *f=(Long64_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Long64_t)u;} \
+                           break;} \
+          case kFloat:  {Float_t  *f=(Float_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Float_t)u;} \
+                           break;} \
+          case kDouble: {Double_t *f=(Double_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Double_t)u;} \
+                           break;} \
+          case kUChar:  {UChar_t  *f=(UChar_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (UChar_t)u;} \
+                           break;} \
+          case kUShort: {UShort_t *f=(UShort_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (UShort_t)u;} \
+                           break;} \
+          case kUInt:   {UInt_t   *f=(UInt_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (UInt_t)u;} \
+                           break;} \
+          case kULong:  {ULong_t  *f=(ULong_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (ULong_t)u;} \
+                           break;} \
+          case kULong64: {ULong64_t *f=(ULong64_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (ULong64_t)u;} \
+                           break;} \
+          case kDouble32:{Double_t *f=(Double_t*)(pointer+fOffset[i]); \
+                           for (Int_t j=0;j<len;j++) {b >> u; f[j] = (Double_t)u;} \
+                           break;} \
        } \
    } break; \
 }
@@ -3785,7 +3745,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kULong64: WriteBasicArray(ULong64_t)
          case kOffsetL + kDouble32: {
             Double_t *x=(Double_t*)(pointer+fOffset[i]); 
-            for (Int_t ii=0;ii<fLength[i];ii++) b << Float_t(x[ii]);
+            b.WriteFastArrayDouble32(x,fLength[i]);
             break; 
          }
 
@@ -3811,7 +3771,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
             int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; 
             int j; 
             for(j=0;j<len;j++) { 
-               for (Int_t ii=0;ii<*l;ii++) b << Float_t(f[j][ii]);
+               b.WriteFastArrayDouble32(f[j],*l);
             }  
             break; 
          }
@@ -4163,9 +4123,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
             for (Int_t k=0;k<nc;k++) { 
                pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                Double_t *x = (Double_t*)(pointer+fOffset[i]); 
-               for (Int_t ii=0;ii<fLength[i];ii++) {
-                  b << Float_t(x[ii]);
-               } 
+               b.WriteFastArrayDouble32(x,fLength[i]);
             } 
             break; 
          }
@@ -4194,7 +4152,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                if (af && *l)  b << Char_t(1); 
                else          {b << Char_t(0); continue;} 
                for(j=0;j<len;j++) { 
-                  for (Int_t ii=0;ii<*l;ii++) b << Float_t(f[j][ii]);
+                  b.WriteFastArrayDouble32(f[j],*l);
                } 
             } 
             break; 
