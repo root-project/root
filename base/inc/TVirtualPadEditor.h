@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPadEditor.h,v 1.0 2003/11/25 
+// @(#)root/base:$Name:  $:$Id: TVirtualPadEditor.h,v 1.0 2003/11/25
 // Author: Rene Brun   25/11/03
 
 /*************************************************************************
@@ -35,12 +35,12 @@ class TNamed;
 class TVirtualPadEditor : public TNamed {
 
 protected:
-   static TVirtualPadEditor *fgPadEditor;    // current pad editor 
-   static TString            fgEditorName;   // name of the default pad editor 
+   static TVirtualPadEditor *fgPadEditor;    // singleton editor dialog
+   static TString            fgEditorName;   // name of the default pad editor
                                              // ("PadEditor","PadEditorOld",etc)
-                                                      
+
 public:
-   TVirtualPadEditor(); 
+   TVirtualPadEditor();
    virtual ~TVirtualPadEditor();
 
    // methods related to the old editor interface
@@ -52,21 +52,20 @@ public:
    virtual void     LineAttributes(Int_t , Int_t , Int_t ) { }
    virtual void     MarkerAttributes(Int_t , Int_t , Float_t ) { }
    virtual void     TextAttributes(Int_t ,Float_t ,Int_t ,Int_t ,Float_t ) { }
-   
-   virtual void     Build() { } 
-   virtual void     Show() { } 
-   virtual void     Hide() { } 
-   
+
+   virtual void     Build() { }
+   virtual void     Show() { }
+   virtual void     Hide() { }
+
    // methods related to the new editor interface
-   
+
    //static methods for both interfaces
    static const char        *GetEditorName();
    static TVirtualPadEditor *GetPadEditor();
    static TVirtualPadEditor *LoadEditor();
-   static void      HideEditor(); 
-   static void      ShowEditor(); 
+   static void      HideEditor();
+   static void      ShowEditor();
    static void      SetPadEditorName(const char *name);
-   static void      SetPadEditor(TVirtualPadEditor *editor);
    static void      UpdateFillAttributes(Int_t col, Int_t sty);
    static void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
    static void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);

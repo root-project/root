@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.29 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.30 2004/02/20 12:32:06 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -249,9 +249,10 @@ void TRootCanvas::CreateCanvas(const char *name)
 {
    // Create the actual canvas.
 
-   fButton  = 0;
-   fAutoFit = kTRUE;   // check also menu entry
+   fButton    = 0;
+   fAutoFit   = kTRUE;   // check also menu entry
    fLockState = 0;
+   fEditor    = 0;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -367,7 +368,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    AddFrame(fMenuBar, fMenuBarLayout);
 
    // Create toolbar
-   
+
    fToolBarSep = new TGHorizontal3DLine(this);
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
    fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2);
@@ -385,7 +386,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    AddFrame(fToolBarSep, fToolBarLayout);
    AddFrame(fToolBar, fToolBarLayout);
 
-   fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4, 
+   fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4,
                                       kHorizontalFrame);
    fMainFrameLayout = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
 
@@ -425,11 +426,10 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
    MapSubwindows();
-   fEditor = 0; //
- 
+
    // by default status bar, tool bar and pad editor are hidden
    HideFrame(fStatusBar);
-   
+
    ShowToolBar(fCanvas->GetShowToolBar());
    ShowEditor(fCanvas->GetShowEditor());
 
@@ -448,7 +448,7 @@ TRootCanvas::~TRootCanvas()
    delete fCanvasContainer;
    delete fCanvasWindow;
 
-   if (fEditor) delete fEditor;
+   delete fEditor;
    delete fEditorFrame;
    delete fEditorLayout;
    delete fMainFrame;
@@ -1013,7 +1013,7 @@ void TRootCanvas::CreateEditor()
    // create editor
 
    fEditorFrame->SetEditable();
-   gPad = Canvas();   
+   gPad = Canvas();
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditorFrame->SetEditable(0);
 }

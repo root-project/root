@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.2 2004/02/19 15:36:45 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -35,7 +35,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    Build();
    if (canvas)
       ConnectToCanvas(canvas);
-      
+
    MapSubwindows();
    MapWindow();
    Resize(GetDefaultSize());
@@ -45,7 +45,7 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
 void TGedEditor::Build()
 {
    fToolBox = new TGedToolBox(this, 110, 20, 0);
-   AddFrame(fToolBox, 
+   AddFrame(fToolBox,
             new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 2));
    fPropertiesFrame = new TGedPropertyFrame(this);
    AddFrame(fPropertiesFrame,
@@ -53,9 +53,34 @@ void TGedEditor::Build()
 }
 
 //______________________________________________________________________________
+void TGedEditor::CloseWindow()
+{
+   // When closed via WM close button, just unmap (i.e. hide) editor
+   // for later use.
+
+   Hide();
+}
+
+//______________________________________________________________________________
 void TGedEditor::ConnectToCanvas(TCanvas *c)
 {
    fPropertiesFrame->ConnectToCanvas(c);
+}
+
+//______________________________________________________________________________
+void TGedEditor::Show()
+{
+   // Show editor.
+
+   MapWindow();
+}
+
+//______________________________________________________________________________
+void TGedEditor::Hide()
+{
+   // Hide editor.
+
+   UnmapWindow();
 }
 
 //______________________________________________________________________________
