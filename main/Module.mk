@@ -61,7 +61,7 @@ ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
-INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(H2ROOTDEP)
+INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP)
 
 ##### local rules #####
 $(ROOTEXE):     $(ROOTEXEO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
@@ -101,12 +101,13 @@ all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 endif
 
 clean-main:
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(H2ROOTO) $(G2ROOTO)
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) $(G2ROOTO)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERV) $(H2ROOTDEP) $(HADD) $(H2ROOT) $(G2ROOT)
+		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
+		   $(G2ROOT)
 
 distclean::     distclean-main
