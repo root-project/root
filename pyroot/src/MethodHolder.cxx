@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.7 2004/05/22 06:02:31 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.8 2004/05/27 06:44:48 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -7,7 +7,6 @@
 #include "ObjectHolder.h"
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
-#include "Utility.h"
 
 // ROOT
 #include "TROOT.h"
@@ -36,19 +35,6 @@
 
 //- local helpers ---------------------------------------------------------------
 namespace {
-
-   inline void* getObjectFromHolderFromArgs( PyObject* argsTuple ) {
-      PyObject* self = PyTuple_GetItem( argsTuple, 0 );
-      Py_INCREF( self );
-
-      PyROOT::ObjectHolder* holder = PyROOT::Utility::getObjectHolder( self );
-      Py_DECREF( self );
-
-      if ( holder != 0 )
-         return holder->getObject();
-      return 0;
-   }
-
 
 // converters for built-ins
    bool long_convert( PyObject* obj, G__CallFunc* func, void*& ) {
@@ -206,22 +192,6 @@ namespace {
       return true;
    }
 
-
-// type scanning functions
-   inline bool isPointer( const std::string& tn ) {
-      bool isp = false;
-      for ( std::string::const_reverse_iterator it = tn.rbegin(); it != tn.rend(); ++it ) {
-         if ( *it == '*' || *it == '&' ) {
-            isp = true;
-            break;
-         }
-         else if ( isalnum( *it ) )
-            break;
-      }
-
-      return isp;
-   }
-
 } // unnamed namespace
 
 
@@ -327,7 +297,7 @@ bool PyROOT::MethodHolder::initDispatch_() {
       std::string fullType = arg->GetFullTypeName();
       std::string realType = argType.TrueName();
 
-      if ( isPointer( fullType ) ) {
+      if ( Utility::isPointer( fullType ) ) {
          Handlers_t::iterator h = theHandlers.find( realType + "*" );
          if ( h == theHandlers.end() ) {
             h = theHandlers.find( "void*" );
@@ -378,7 +348,7 @@ PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
    m_methodCall = 0;
    m_offset = 0;
    m_tagnum = -1;
-   m_returnType = MethodHolder::kOther;
+   m_returnType = Utility::kOther;
    m_isInitialized = false;
 }
 
@@ -414,28 +384,7 @@ bool PyROOT::MethodHolder::initialize() {
 // determine effective return type
    std::string returnType = m_method->GetReturnTypeName();
    m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
-
-   if ( isPointer( returnType ) ) {
-      if ( m_rtShortName == "char" )
-         m_returnType = MethodHolder::kString;
-      else if ( m_rtShortName == "double" )
-         m_returnType = MethodHolder::kDoublePtr;
-      else if ( m_rtShortName == "float" )
-         m_returnType = MethodHolder::kFloatPtr;
-      else if ( m_rtShortName == "long" )
-         m_returnType = MethodHolder::kLongPtr;
-      else if ( m_rtShortName == "int" )
-         m_returnType = MethodHolder::kIntPtr;
-      else
-         m_returnType = MethodHolder::kOther;
-   }
-   else if ( m_rtShortName == "long" || m_rtShortName == "int" ||
-             m_rtShortName == "short" || m_rtShortName == "char" ||
-             m_rtShortName == "bool" )
-      m_returnType = MethodHolder::kLong;
-   else if ( m_rtShortName == "double" || m_rtShortName == "float" )
-      m_returnType = MethodHolder::kDouble;
-   else m_returnType = MethodHolder::kOther;
+   m_returnType = Utility::effectiveType( returnType );
 
 // setup call func
    assert( m_methodCall == 0 );
@@ -527,30 +476,37 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
       return 0;                              // important: 0, not PyNone
 
 // start actual method invocation
-   void* obj = getObjectFromHolderFromArgs( aTuple );
+   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
    assert( obj != 0 );
 
-// get the method call return type
-   MethodHolder::EReturnType rType = m_returnType;
-
 // execute the method and translate return type
-   switch ( rType ) {
-   case MethodHolder::kDouble: {
+   switch ( m_returnType ) {
+   case Utility::kFloat:
+   case Utility::kDouble: {
       double returnValue;
       execute( obj, returnValue );
       return PyFloat_FromDouble( returnValue );
    }
-   case MethodHolder::kString: {
+   case Utility::kString: {
       long returnValue = 0;
       execute( obj, returnValue );
       return PyString_FromString( (char*) returnValue );
    }
-   case MethodHolder::kLong: {
+   case Utility::kBool:
+   case Utility::kChar:
+   case Utility::kShort:
+   case Utility::kInt:
+   case Utility::kLong: {
       long returnValue;
       execute( obj, returnValue );
       return PyLong_FromLong( returnValue );
    }
-   case MethodHolder::kOther: {
+   case Utility::kVoid: {
+      execute( obj );
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+   case Utility::kOther: {
    // get a string representation of the return type
       TClass* cls = gROOT->GetClass( m_rtShortName.c_str() );
       if ( cls != 0 ) {
@@ -574,42 +530,34 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
          return bindRootObject( new ObjectHolder( (void*)address, cls, false ) );
       }
 
-      else if ( m_rtShortName == "void*" ) {
-         long address;
-         execute( obj, address );
-
-         return PyInt_FromLong( address );
-      }
-
-      else if ( m_rtShortName != "void" )
-         std::cout << "unsupported return type (" << m_rtShortName << "), returning void\n";
-
-      execute( obj );
-      Py_INCREF( Py_None );
-      return Py_None;
+   // confused ...
+      std::cout << "unsupported return type (" << m_rtShortName << "), returning void\n";
    }
    default:
       break;
    }
 
 // pointer types
-   if ( MethodHolder::kDoublePtr <= rType ) {
+   if ( Utility::kDoublePtr <= m_returnType ) {
       long address;
       execute( obj, address );
 
       if ( address ) {
-         switch ( rType ) {
-         case MethodHolder::kLongPtr: {
+         switch ( m_returnType ) {
+         case Utility::kLongPtr: {
             return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (long*)address, 1 );
          }
-         case MethodHolder::kIntPtr: {
+         case Utility::kIntPtr: {
             return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (int*)address, 1 );
          }
-         case MethodHolder::kDoublePtr: {
+         case Utility::kDoublePtr: {
             return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (double*)address, 1 );
          }
-         case MethodHolder::kFloatPtr: {
+         case Utility::kFloatPtr: {
             return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (float*)address, 1 );
+         }
+         case Utility::kVoidPtr: {
+            return PyInt_FromLong( address );
          }
          default:
             break;
@@ -630,7 +578,7 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 //- nullness testing -----------------------------------------------------------
 PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) {
 // get a hold of the object and test it
-   void* obj = getObjectFromHolderFromArgs( aTuple );
+   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
    long isZero = obj == 0 ? 1l /* yes, is zero */ : 0l;
    return PyInt_FromLong( isZero );
 }
@@ -638,7 +586,7 @@ PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) {
 
 PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) {
 // test for non-zero is opposite of test for zero
-   void* obj = getObjectFromHolderFromArgs( aTuple );
+   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
    long isNotZero = obj != 0 ? 1l /* yes, is not zero */ : 0l;
    return PyInt_FromLong( isNotZero );
 }

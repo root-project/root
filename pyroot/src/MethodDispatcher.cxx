@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.3 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -37,7 +37,7 @@ unsigned long PyROOT::MethodDispatcher::hashSignature( PyObject* aTuple ){
 
 
 //- public class members --------------------------------------------------------
-bool PyROOT::MethodDispatcher::addToClass( MethodDispatcher* pmd, PyObject* cls, PyObject* dct ) {
+bool PyROOT::MethodDispatcher::addToClass( MethodDispatcher* pmd, PyObject* cls ) {
    PyMethodDef* pdef = new PyMethodDef;
    pdef->ml_name  = const_cast< char* >( pmd->getName().c_str() );
    pdef->ml_meth  = (PyCFunction) PyROOT::MethodDispatcher::invoke;
@@ -46,7 +46,7 @@ bool PyROOT::MethodDispatcher::addToClass( MethodDispatcher* pmd, PyObject* cls,
 
    PyObject* func = PyCFunction_New( pdef, PyCObject_FromVoidPtr( pmd, MethodDispatcher::destroy ) );
    PyObject* method = PyMethod_New( func, NULL, cls );
-   PyDict_SetItemString( dct, pdef->ml_name, method );
+   PyObject_SetAttrString( cls, pdef->ml_name, method );
    Py_DECREF( func );
    Py_DECREF( method );
 

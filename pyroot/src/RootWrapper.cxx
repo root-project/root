@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.4 2004/04/30 06:13:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.5 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -8,7 +8,9 @@
 #include "MethodDispatcher.h"
 #include "ConstructorDispatcher.h"
 #include "MethodHolder.h"
+#include "PropertyHolder.h"
 #include "MemoryRegulator.h"
+#include "TPyClassGenerator.h"
 #include "Utility.h"
 
 // ROOT
@@ -104,7 +106,7 @@ namespace {
       );
    }
 
-   void addToClass( const char* label, PyCFunction cfunc, PyObject* cls, PyObject* dct ) {
+   void addToClass( const char* label, PyCFunction cfunc, PyObject* cls ) {
       PyMethodDef* pdef = new PyMethodDef;
       pdef->ml_name  = const_cast< char* >( label );
       pdef->ml_meth  = cfunc;
@@ -113,7 +115,7 @@ namespace {
 
       PyObject* func = PyCFunction_New( pdef, NULL );
       PyObject* method = PyMethod_New( func, NULL, cls );
-      PyDict_SetItemString( dct, pdef->ml_name, method );
+      PyObject_SetAttrString( cls, pdef->ml_name, method );
       Py_DECREF( func );
       Py_DECREF( method );
    }
@@ -130,17 +132,13 @@ void PyROOT::initRoot() {
 // setup interpreter locks to allow for threading in ROOT
    PyEval_InitThreads();
 
-// The following libs are also useful to have, make sure they are loaded...
 #if defined(linux) || defined(sun)
-   dlopen( "libCint.so",   RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libCore.so",   RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libGpad.so",   RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libGraf.so",   RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libMatrix.so", RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libHist.so",   RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libTree.so",   RTLD_GLOBAL | RTLD_LAZY );
    dlopen( "libGraf3d.so", RTLD_GLOBAL | RTLD_LAZY );
-   dlopen( "libGeom.so",   RTLD_GLOBAL | RTLD_LAZY );
 #endif
 
 // setup root globals (bind later)
@@ -164,10 +162,13 @@ void PyROOT::initRoot() {
 
 // memory management
    gROOT->GetListOfCleanups()->Add( new MemoryRegulator() );
+
+// python side class construction, managed by ROOT
+   gROOT->AddClassGenerator( new TPyClassGenerator() );
 }
 
 
-int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) {
+int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
    assert( cls != 0 );
    std::string className = cls->GetName();
 
@@ -229,13 +230,22 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct ) 
 // add the methods to the class dictionary
    for ( DispatcherCache_t::iterator imd = dispatcherCache.begin();
          imd != dispatcherCache.end(); ++imd ) {
-      MethodDispatcher::addToClass(
-         new MethodDispatcher( imd->second ), pyclass, dct );
+      MethodDispatcher::addToClass( new MethodDispatcher( imd->second ), pyclass );
+   }
+
+// collect data members
+   TIter nextmember( cls->GetListOfDataMembers() );
+   while ( TDataMember* mb = (TDataMember*)nextmember() ) {
+   // allow only public members
+      if ( !( mb->Property() & kIsPublic ) )
+         continue;
+
+      PropertyHolder::addToClass( new PropertyHolder( mb ), pyclass );
    }
 
 // add null/non-null testing
-   addToClass( "__zero__", IsZero, pyclass, dct );
-   addToClass( "__nonzero__", IsNotZero, pyclass, dct );
+   addToClass( "__zero__", IsZero, pyclass );
+   addToClass( "__nonzero__", IsNotZero, pyclass );
 
 // all ok, done
    return 0;
@@ -257,22 +267,30 @@ PyObject* PyROOT::buildRootClassBases( TClass* cls ) {
       }
    }
 
-// allocate a tuple for the base classes (even if there aren't any)
-   PyObject* pybases = PyTuple_New( uqb.size() );
+// allocate a tuple for the base classes, special case for no bases
+   std::vector< std::string >::size_type nbases = uqb.size();
+
+   PyObject* pybases = PyTuple_New( nbases ? nbases : 1 );
    if ( ! pybases )
       return 0;
 
 // build all the bases
-   for ( std::vector< std::string >::size_type ibase = 0; ibase < uqb.size(); ++ibase ) {
-      PyObject* pyclass = makeRootClassFromString( uqb[ ibase ].c_str() );
-      if ( ! pyclass ) {
-         Py_DECREF( pybases );
-         return 0;
-      }
-
-      PyTuple_SET_ITEM( pybases, ibase, pyclass );
+   if ( nbases == 0 ) {
+      Py_INCREF( &PyBaseObject_Type );
+      PyTuple_SET_ITEM( pybases, 0, (PyObject*)&PyBaseObject_Type );
    }
-   
+   else {
+      for ( std::vector< std::string >::size_type ibase = 0; ibase < nbases; ++ibase ) {
+         PyObject* pyclass = makeRootClassFromString( uqb[ ibase ].c_str() );
+         if ( ! pyclass ) {
+            Py_DECREF( pybases );
+            return 0;
+         }
+
+         PyTuple_SET_ITEM( pybases, ibase, pyclass );
+      }
+   }
+
    return pybases;
 }
 
@@ -319,13 +337,16 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
       PyObject* pybases = buildRootClassBases( cls );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name and empty dictionary
-         pyclass = PyClass_New( pybases, dct, PyString_FromString( className ) );
+         pyclass = PyObject_CallFunction( (PyObject*)&PyType_Type, "OOO",
+            PyString_FromString( className ), pybases, dct );
          Py_DECREF( pybases );
       }
 
+      Py_DECREF( dct );
+
    // fill the dictionary, if successful
       if ( pyclass != 0 ) {
-         if ( buildRootClassDict( cls, pyclass, dct ) != 0 ) {
+         if ( buildRootClassDict( cls, pyclass ) != 0 ) {
          // something failed in building the dictionary
             Py_DECREF( pyclass );
             pyclass = 0;
@@ -335,8 +356,6 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
             PyModule_AddObject( g_modroot, const_cast< char* >( className ), pyclass );
          }
       }
-
-      Py_XDECREF( dct );
    }
 
    return pyclass;
@@ -354,20 +373,21 @@ PyObject* PyROOT::bindRootObject( ObjectHolder* obj ) {
       Py_DECREF( args );
 
       if ( pyclass ) {
-      // private to the object is the instance holder
-         PyObject* dct = PyDict_New();
-         PyObject* cobj = PyCObject_FromVoidPtr( obj, destroyObjectHolder );
-         PyDict_SetItem( dct, Utility::theObjectString_, cobj );
-         Py_DECREF( cobj );
-
       // instantiate an object of this class, with the holder added to it
-         PyObject* newObject = PyInstance_NewRaw( pyclass, dct );
+         PyObject* newObject = PyType_GenericNew( (PyTypeObject*)pyclass, NULL, NULL );
          Py_DECREF( pyclass );
-         Py_DECREF( dct );
 
-      // register and return if successful
+      // bind, register and return if successful
          if ( newObject != 0 ) {
+         // private to the object is the instance holder
+            PyObject* cobj = PyCObject_FromVoidPtr( obj, destroyObjectHolder );
+            PyObject_SetAttr( newObject, Utility::theObjectString_, cobj );
+            Py_DECREF( cobj );
+
+         // memory management
             MemoryRegulator::RegisterObject( newObject, obj->getObject() );
+
+         // successful completion
             return newObject;
          }
       }

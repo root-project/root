@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.3 2004/04/28 22:04:06 rdm Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.4 2004/04/30 06:13:21 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/29/04
+# Last: 06/03/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -25,9 +25,11 @@ except:
 ## PyROOT C++ extension module
 from libPyROOT import * 
 
+## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
+sys.setcheckinterval( 100 )
+
 ### load most common ROOT libraries______________________________________________
-libraries = ('libHist', 'libGpad', 'libGraf', 'libMatrix', 'libTree', 
-             'libGraf3d', 'libGeom' )
+libraries = ( 'libGeom', 'libPhysics' )
 for l in libraries : gSystem.Load(l)
 
 ### data ________________________________________________________________________

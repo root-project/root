@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.h,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_ROOTWRAPPER_H
@@ -17,8 +17,8 @@ namespace PyROOT {
 // initialize ROOT
    void initRoot();
 
-// construct a dictionary of method dispatchers in the given ROOT class
-   int buildRootClassDict( TClass* cls, PyObject* pyclass, PyObject* dct );
+// construct the dictionary of the given ROOT class in pyclass
+   int buildRootClassDict( TClass* cls, PyObject* pyclass );
 
 // construct a tuple of base classes for the given ROOT class
    PyObject* buildRootClassBases( TClass* cls );

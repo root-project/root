@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODDISPATCHER_H
@@ -26,8 +26,8 @@ namespace PyROOT {
       typedef std::vector< MethodHolder* > Methods_t;
 
    public:
-   // add the given dispatcher to the dict of the class, takes onwership of dispatcher
-      static bool addToClass( MethodDispatcher*, PyObject* aClass, PyObject* classDict );
+   // add the given dispatcher to the class, takes ownership of dispatcher
+      static bool addToClass( MethodDispatcher*, PyObject* aClass );
 
    public:
       MethodDispatcher( const std::string& name ) : m_name( name ) {}
