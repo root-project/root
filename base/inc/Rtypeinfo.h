@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Rtypeinfo.h,v 1.1.2.1 2002/02/25 18:03:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Rtypeinfo.h,v 1.2 2002/05/03 14:41:25 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 #include "RConfig.h"
 #endif
 
-#if defined(R__SOLARIS) && !defined(R__KCC)
+#if (defined(R__SOLARIS) && !defined(R__KCC)) || defined(R__HPUX)
 
 // <typeinfo> includes <exception> which clashes with <math.h>
 //#include <typeinfo.h>

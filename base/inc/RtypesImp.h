@@ -18,7 +18,7 @@ namespace ROOT {
    template <class T> Int_t               ClassInfo<T>::fgImplFileLine = 0;
    template <class T> const char         *ClassInfo<T>::fgDeclFileName = 0;
    template <class T> Int_t               ClassInfo<T>::fgDeclFileLine = 0;
-   template <class T> ClassInfo<T>::ShowMembersFunc_t  ClassInfo<T>::fgShowMembers  = 0;
+   template <class T> typename ClassInfo<T>::ShowMembersFunc_t  ClassInfo<T>::fgShowMembers  = 0;
 
 }
 
