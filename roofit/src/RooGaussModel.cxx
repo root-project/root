@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.19 2002/03/27 08:07:05 mwilson Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.20 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -282,8 +282,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 3d form tau=" << tau << endl ;
 
     Double_t result(0) ;
-    if (umin<-6 && umax>6) {
-      // If integral is over >6 sigma, approximate with full integral
+    if (umin<-8 && umax>8) {
+      // If integral is over >8 sigma, approximate with full integral
       if (basisSign!=Minus) result += 2 * tau ;
       if (basisSign!=Plus)  result += 2 * tau ;      
     } else {
