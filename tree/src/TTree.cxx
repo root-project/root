@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.85 2001/07/19 08:59:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.86 2001/08/10 10:07:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1499,13 +1499,17 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
+//  One can retrieve a pointer to this histogram with:
+//    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp");
+//
 //  If varexp0 contains >>hnew (following the variable(s) name(s),
 //  the new histogram created is called hnew and it is kept in the current
-//  directory.
+//  directory (and also the current pad).
 //  Example:
 //    tree.Draw("sqrt(x)>>hsqrt","y>0")
 //    will draw sqrt(x) and save the histogram as "hsqrt" in the current
 //    directory.
+//      TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
 //
 //  By default, the specified histogram is reset.
 //  To continue to append data to an existing histogram, use "+" in front
