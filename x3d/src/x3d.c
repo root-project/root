@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.8 2002/12/02 18:50:12 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.9 2003/04/03 13:46:51 brun Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -3117,7 +3117,7 @@ Window   parent;
 
     float xMin, yMin, zMin, xMax, yMax, zMax, correctionFactor;
     float xCenter, yCenter, zCenter;
-    float xRange, yRange, zRange;
+    float xRange, zRange;
 
     quitApplication = 0;
 
@@ -3232,7 +3232,6 @@ Window   parent;
  */
 
     xRange  = fabs(xMax - xMin);
-    yRange  = fabs(yMax - yMin);
     zRange  = fabs(zMax - zMin);
 
     xCenter = (xMax + xMin) / 2.0;
