@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.128 2002/05/03 14:30:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.130 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -816,7 +816,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    char *line = new char[512];
    char name[128];
    char cdim[8];
-   char *inclist = new char[1000];
+   char *inclist = new char[5000];
    inclist[0] = 0;
 
    TIter next(fElements);
@@ -836,13 +836,18 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       //get include file name if any
       const char *include = element->GetInclude();
       if (strlen(include) == 0) continue;
+      const char *slash = strrchr(include,'/');
+      if (slash) include = slash+1;
       // do not generate the include if already done
       if (strstr(inclist,include)) continue;
       ninc++;
       strcat(inclist,include);
       if (strstr(include,"include/") || strstr(include,"include\\"))
            fprintf(fp,"#include \"%s\n",include+9);
-      else fprintf(fp,"#include %s\n",include);
+      else {
+         if (slash) fprintf(fp,"#include \"%s\n",include);
+         else       fprintf(fp,"#include %s\n",include);
+      }
    }
    ltype += 2;
    ldata++; // to take into account the semi colon
