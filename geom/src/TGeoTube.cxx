@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.45 2004/11/18 14:37:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.46 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -586,7 +586,6 @@ void TGeoTube::Paint(Option_t *option)
    if (!buff) return;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
    // What is below is WRONG. Disable it until fixed
-   if (0) {
    if (buff->fOption == TBuffer3D::kOGL && !TestShapeBit(kGeoEltu)) {
       buff->fNbPnts  = 3;
       buff->fNbSegs  = 0;
@@ -605,26 +604,13 @@ void TGeoTube::Paint(Option_t *option)
       buff->fId   = vol;
       buff->fType = TBuffer3D::kTUBE;
 
-      TGeoNodeCache *cn = gGeoManager->GetCache();
-      TGeoHMatrix *m = 0;
-      const Double_t *rotM = 0;
-
-      if (cn && (m = cn->GetCurrentMatrix()) && (rotM = m->GetRotationMatrix())) {
-         for (Int_t i = 15; i < 24; ++i) 
-            buff->fPnts[i] = rotM[i - 15];
-      } else {
-         //identity matrix
-         for (Int_t i = 15; i < 24; ++i) {
-            buff->fPnts[i] = 0.;
-         }
-         buff->fPnts[15] = buff->fPnts[19] = buff->fPnts[23] = 1.;
-      }
+      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetCurrentMatrix():gGeoManager->GetGLMatrix();
+      const Double_t *rotM = m->GetRotationMatrix();
+      for (Int_t i = 15; i < 24; ++i) buff->fPnts[i] = rotM[i - 15];
 
       buff->Paint(option);
       return;
    }
-   }
-
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 8*n;
    Int_t NbPols = 4*n; 

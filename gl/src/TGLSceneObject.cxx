@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.18 2004/11/19 06:36:28 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.19 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -690,7 +690,7 @@ void TGLTube::GLDraw()const
       glTranslated(0., 0., -fDz);
       //outer surface
       if (fInv) {
-         glFrontFace(GL_CW);
+//         glFrontFace(GL_CW);
       }
 
       gluCylinder(quadObj, fRmax1, fRmax2, 2 * fDz, fNdiv, 1);
@@ -714,7 +714,7 @@ void TGLTube::GLDraw()const
       glPopMatrix();
 
       if (fInv) {
-         glFrontFace(GL_CCW);
+//         glFrontFace(GL_CCW);
       }
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.47 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.48 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -846,6 +846,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    if (fOverlap->IsExtrusion()) {
       if (!fVisLock) fVisVolumes->Add(vol);
       *hmat = gGeoIdentity;
+      gGeoManager->SetMatrixReflection(kFALSE);
       gGeoManager->SetPaintVolume(vol);
       color = vol->GetLineColor();
       transparency = vol->GetTransparency();
@@ -857,6 +858,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->SetTransparency(transparency);
       node1 = overlap->GetNode(0);
       *hmat = node1->GetMatrix();
+      gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
       vol = node1->GetVolume();
       if (!fVisLock) fVisVolumes->Add(vol);
       gGeoManager->SetPaintVolume(vol);
@@ -871,6 +873,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       *hmat = node1->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
       gGeoManager->SetPaintVolume(vol);
+      gGeoManager->SetMatrixReflection(node1->GetMatrix()->IsReflection());
       color = vol->GetLineColor();
       transparency = vol->GetTransparency();
       vol->SetLineColor(3);
@@ -882,6 +885,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       node2 = overlap->GetNode(1);
       vol = node2->GetVolume();
       *hmat = node2->GetMatrix();
+      gGeoManager->SetMatrixReflection(node2->GetMatrix()->IsReflection());
       if (!fVisLock) fVisVolumes->Add(vol);
       gGeoManager->SetPaintVolume(vol);
       color = vol->GetLineColor();
