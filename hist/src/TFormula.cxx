@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.74 2004/03/14 18:15:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.75 2004/03/26 17:28:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -351,7 +351,6 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 
       } else {
 
-         fFunctions.Add(method);
 
          // Analyze the arguments
          TIter next(&argArr);
@@ -360,6 +359,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
             Analyze(objstr->String(),err,offset);
          }
 
+         fFunctions.Add(method);
          fExpr[fNoper] = method->GetMethod()->GetPrototype();
          SetAction(fNoper, kFunctionCall, fFunctions.GetLast()*1000 + nargs);
          fNoper++;
@@ -997,7 +997,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                   for (Int_t j=0; j<chaine.Length() && err==0; j++) {
                      t=chaine[j];
                      if (!isHexa) {
-                        if (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-") {
+                        if (j>0 && (chaine(j,1)=="e" || chaine(j,2)=="e+" || chaine(j,2)=="e-")) {
                            if (hasExpo) {
                               err=26;
                               chaine_error=chaine;
