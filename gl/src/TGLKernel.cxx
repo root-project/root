@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.11 2004/08/09 22:11:00 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.12 2004/08/10 07:41:58 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1218,7 +1218,7 @@ GLUtesselator * TGLKernel::GLUNewTess()
 {
    //
 
-   return gluNewTess();
+   return (GLUtriangulatorObj*)gluNewTess();
 }
 
 //______________________________________________________________________________
@@ -1226,7 +1226,7 @@ void TGLKernel::GLUDeleteTess(GLUtesselator * t_obj)
 {
    //
 
-   gluDeleteTess(t_obj);
+   gluDeleteTess((GLUtriangulatorObj*)t_obj);
 }
 
 //______________________________________________________________________________
@@ -1240,9 +1240,9 @@ void TGLKernel::GLUTessCallback(GLUtesselator * t_obj)
  #define funptr void(*)()
 #endif
 
-   gluTessCallback(t_obj, (GLenum)GLU_BEGIN, (funptr)glBegin);
-   gluTessCallback(t_obj, (GLenum)GLU_END, glEnd);
-   gluTessCallback(t_obj, (GLenum)GLU_VERTEX, (funptr)glVertex3dv);
+   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_BEGIN, (funptr)glBegin);
+   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_END, glEnd);
+   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_VERTEX, (funptr)glVertex3dv);
 
 #undef funptr
 }
@@ -1252,7 +1252,7 @@ void TGLKernel::GLUNextContour(GLUtesselator * t_obj)
 {
    //
 
-   gluNextContour(t_obj, (GLenum)GLU_UNKNOWN);
+   gluNextContour((GLUtriangulatorObj*)t_obj, (GLenum)GLU_UNKNOWN);
 }
 
 //______________________________________________________________________________
@@ -1260,7 +1260,7 @@ void TGLKernel::GLUBeginPolygon(GLUtesselator * t_obj)
 {
    //
 
-   gluBeginPolygon(t_obj);
+   gluBeginPolygon((GLUtriangulatorObj*)t_obj);
 }
 
 //______________________________________________________________________________
@@ -1268,7 +1268,7 @@ void TGLKernel::GLUEndPolygon(GLUtesselator * t_obj)
 {
    //
 
-   gluEndPolygon(t_obj);
+   gluEndPolygon((GLUtriangulatorObj*)t_obj);
 }
 
 //______________________________________________________________________________
@@ -1276,7 +1276,7 @@ void TGLKernel::GLUTessVertex(GLUtesselator * t_obj, const Double_t * vert)
 {
    //
 
-   gluTessVertex(t_obj, (Double_t *)vert, (Double_t *)vert);
+   gluTessVertex((GLUtriangulatorObj*)t_obj, (Double_t *)vert, (Double_t *)vert);
 }
 
 //______________________________________________________________________________
