@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.15 2005/02/25 21:49:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.16 2005/03/11 21:25:11 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1044,7 +1044,7 @@ TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr) :
 }
 
 //______________________________________________________________________________
-Int_t TFormLeafInfoCollectionObject::GetCounterValue(TLeaf* leaf) 
+Int_t TFormLeafInfoCollectionObject::GetCounterValue(TLeaf* /* leaf */) 
 {
    // Return the current size of the the TClonesArray
 
@@ -1052,7 +1052,7 @@ Int_t TFormLeafInfoCollectionObject::GetCounterValue(TLeaf* leaf)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollectionObject::ReadValue(char *where, Int_t instance) 
+Double_t TFormLeafInfoCollectionObject::ReadValue(char * /* where */, Int_t /* instance */) 
 {
    // Return the value of the underlying data member inside the
    // clones array.
