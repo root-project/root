@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.5 2000/09/05 08:50:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.6 2000/09/05 11:04:55 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -805,12 +805,6 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    if (!gFile->IsWritable()) {
       Error("Write","File %s is not writable", gFile->GetName());
       return 0;
-   }
-
-   // Special case for directories. Directory key already written
-   if (IsA() == TDirectory::Class()) {
-      TDirectory *dir = (TDirectory*)this;
-      return dir->Write();
    }
 
    TKey *key;
