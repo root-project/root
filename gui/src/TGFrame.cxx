@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.48 2004/03/04 11:29:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.49 2004/03/04 12:00:47 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1867,7 +1867,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    char quote = '"';
    ofstream out;
    Int_t lenfile = strlen(filename);
-   char *fname;
+   const char *fname;
 
    //	 if filename is given, open this file, otherwise create a file Rootappl.C
 
@@ -1881,7 +1881,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    if (!out.good()) {
        Error("SaveSource", "cannot open file: %s", fname);
-       if (!lenfile) delete [] fname;
        return;
    }
 
@@ -1994,7 +1993,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    while((c1=(TClass*)nextc1())) {
       c1->ResetBit(TClass::kClassSaved);
    }
-   if (!lenfile) delete [] fname;
 }
 
 //______________________________________________________________________________
@@ -2298,14 +2296,14 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    char quote = '"';
    ofstream out;
    Int_t lenfile = strlen(filename);
-   char *fname;
+   const char *fname;
 
    // if filename is given, open this file, otherwise create a file Rootappl.C
 
    if (lenfile) {
       fname = (char *)filename;
    } else {
-      fname = "Rootdialog.C";
+      fname = "Rootdlog.C";
       lenfile = 10;
    }
 
@@ -2313,7 +2311,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    if (!out.good()) {
        Error("SaveSource", "cannot open file: %s", fname);
-       if (!lenfile) delete [] fname;
        return;
    }
 
@@ -2425,7 +2422,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    while((c1=(TClass*)nextc1())) {
       c1->ResetBit(TClass::kClassSaved);
    }
-   if (!lenfile) delete [] fname;
 }
 
 //______________________________________________________________________________
