@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.73 2004/07/23 09:36:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.74 2004/08/17 13:34:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -332,6 +332,8 @@ void TGaxis::Paint(Option_t *)
    Double_t y1 = gPad->YtoPad(fY1);
    Double_t x2 = gPad->XtoPad(fX2);
    Double_t y2 = gPad->YtoPad(fY2);
+
+/*
    TString opt = fChopt;
    opt.ToUpper();
    if (gPad->GetLogx()) {
@@ -344,7 +346,8 @@ void TGaxis::Paint(Option_t *)
    } else {
 	   if ((x1 == x2) && opt.Contains("G")) opt.ReplaceAll("G","");
    }
-
+*/
+   
 	PaintAxis(x1,y1,x2,y2,wmin,wmax,ndiv,opt.Data(),fGridLength);
 }
 //______________________________________________________________________________
