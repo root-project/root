@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.10 2000/07/18 16:35:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.11 2000/07/19 06:55:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -139,7 +139,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Delete(Option_t *option=""); // *MENU*
     virtual void      Draw(Option_t *opt);
-    virtual Int_t     Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.15 2000/07/19 06:55:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.16 2000/07/21 07:00:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -104,7 +104,7 @@
 //  ==> tree->Fill()
 //      loops on all defined branches and for each branch invokes the Fill function.
 //
-//         See also the class TNtuple (a simple Tree with only one branch)
+//         See also the class TNtuple (a simple Tree with branches of floats)
 //Begin_Html
 /*
 <img src="gif/tree_layout.gif">
@@ -864,7 +864,7 @@ void TTree::Delete(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TTree::Draw(const char *varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
@@ -875,7 +875,7 @@ Int_t TTree::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries,
 //            ntuple.Draw("x",cut1+cut2+cut3);
 //
 
-   return TTree::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
+   return TTree::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
