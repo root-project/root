@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.28 2002/09/05 04:33:58 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.29 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooCategoryProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooAICRegistry.hh"
+#include "RooFitCore/RooNormListManager.hh"
 class RooAbsCategoryLValue ;
 class RooFitResult ;
 class RooPlot ;
@@ -79,11 +80,12 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   mutable RooSetProxy _plotCoefNormSet ;
 
+  mutable RooNormListManager _normListMgr ; // Component normalization list manager
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
+
   friend class RooSimGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
-
-  mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
  
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)

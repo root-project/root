@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.45 2002/09/05 04:33:58 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.46 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,7 +51,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
-  _codeReg(10),
+  _normListMgr(10),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
@@ -70,7 +70,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
-  _codeReg(10),
+  _normListMgr(10),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
@@ -109,9 +109,9 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
   _plotCoefNormSet("plotCoefNormSet",this,other._plotCoefNormSet),
-  _codeReg(other._codeReg),
   _anyCanExtend(other._anyCanExtend),
-  _anyMustExtend(other._anyMustExtend)
+  _anyMustExtend(other._anyMustExtend),
+  _normListMgr(other._normListMgr)
 {
   // Copy constructor
 
@@ -216,95 +216,75 @@ Double_t RooSimultaneous::expectedEvents() const
 
 Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
 {
-  // Determine which part (if any) of given integral can be performed analytically.
-  // If any analytical integration is possible, return integration scenario code
-  //
-  // RooSimultaneous queries each component PDF for its analytical integration capability of the requested
-  // set ('allVars'). It finds the largest common set of variables that can be integrated
-  // by all components. If such a set exists, it reconfirms that each component is capable of
-  // analytically integrating the common set, and combines the components individual integration
-  // codes into a single integration code valid for RooSimultaneous.
+  // Distributed integration implementation
   
-  TIterator* pdfIter = _pdfProxyList.MakeIterator() ;
+  // Declare that we can analytically integrate all requested observables
+  analVars.add(allVars) ;
 
-//RooAbsPdf* pdf ;
+  // Retrieve (or create) the required partial integral list
+  Int_t code ;
+
+  // Check if this configuration was created before
+  RooArgList* normList = _normListMgr.getNormList(this,normSet,&analVars) ;
+  if (normList) {
+    code = _normListMgr.lastIndex() ;
+    return code+1 ;
+  }
+
+  // Create the partial integral set for this request
+  TIterator* iter = _pdfProxyList.MakeIterator() ;
+  normList = new RooArgList("normList") ;
   RooRealProxy* proxy ;
-  RooArgSet allAnalVars(allVars) ;
-  TIterator* avIter = allVars.createIterator() ;
-
-  Int_t n(0) ;
-  // First iteration, determine what each component can integrate analytically
-  while(proxy=(RooRealProxy*)pdfIter->Next()) {
-    RooArgSet subAnalVars ;
-    Int_t subCode = proxy->arg().getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
-    
-    // If a dependent is not supported by any of the components, 
-    // it is dropped from the combined analytic list
-    avIter->Reset() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)avIter->Next()) {
-      if (!subAnalVars.find(arg->GetName())) {
-	allAnalVars.remove(*arg,kTRUE) ;
-      }
-    }
-    n++ ;
+  while(proxy=(RooRealProxy*)iter->Next()) {
+    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet) ;
+    normList->addOwned(*pdfInt) ;
   }
+  delete iter ;
 
-  if (allAnalVars.getSize()==0) {
-    delete avIter ;
-    return 0 ;
-  }
-
-  // Now retrieve the component codes for the common set of analytic dependents 
-  pdfIter->Reset() ;
-  n=0 ;
-  Int_t* subCode = new Int_t[_pdfProxyList.GetSize()] ;
-  Bool_t allOK(kTRUE) ;
-  while(proxy=(RooRealProxy*)pdfIter->Next()) {
-    RooArgSet subAnalVars ;
-    subCode[n] = proxy->arg().getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
-    if (subCode[n]==0) {
-      cout << "RooSimultaneous::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << proxy->arg().GetName() 
-	   << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually.)"
-	   << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
-      allOK = kFALSE ;
-    }
-    n++ ;
-  }  
-  if (!allOK) return 0 ;
-
-  analVars.add(allAnalVars) ;
-  Int_t masterCode = _codeReg.store(subCode,_pdfProxyList.GetSize())+1 ;
-
-  delete[] subCode ;
-  delete avIter ;
-  delete pdfIter ;
-  return masterCode ;
+  // Store the partial integral list and return the assigned code ;
+  code = _normListMgr.setNormList(this,normSet,&analVars,normList) ;
+  
+  return code+1 ;
 }
 
 
 Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
   // Return analytical integral defined by given scenario code
- 
-  if (code==0) return getVal(normSet) ;
 
-  const Int_t* subCode = _codeReg.retrieve(code-1) ;
-  if (!subCode) {
-    cout << "RooSimultaneous::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code << endl ;
-    assert(0) ;    
+  // No integration scenario
+  if (code==0) {
+    return getVal(normSet) ;
   }
 
-  // Calculate the current value of this object
+  // Partial integration scenarios
+  RooArgList* normIntList = _normListMgr.getNormListByIndex(code-1) ;
+
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;
   Int_t idx = _pdfProxyList.IndexOf(proxy) ;
-
-  return proxy->arg().analyticalIntegralWN(subCode[idx],normSet) ;
+  return ((RooAbsReal*)normIntList->at(idx))->getVal(normSet) ;
 }
 
 
 
 
+
+Bool_t RooSimultaneous::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+{
+  Bool_t ret(kFALSE) ;  
+
+  Int_t i ;
+  for (i=0 ; i<_normListMgr.cacheSize() ; i++) {
+    RooArgList* nlist = _normListMgr.getNormListByIndex(i) ;
+    TIterator* iter = nlist->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+    }
+    delete iter ;
+  }
+  return ret ;
+}
 
 
 
