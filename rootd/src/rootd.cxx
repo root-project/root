@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.70 2003/11/10 14:05:01 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.71 2003/11/20 23:00:46 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -962,34 +962,37 @@ void RootdLogin()
    // Authentication was successful, set user environment.
 
    struct passwd *pw = getpwnam(gUser);
-   if (gDebug > 2) ErrorInfo("RootdLogin: login dir: %s (uid: %d)",pw->pw_dir, getuid());
+   if (gDebug > 2)
+      ErrorInfo("RootdLogin: login dir: %s (uid: %d)", pw->pw_dir, getuid());
 
    if (chdir(pw->pw_dir) == -1) {
       ErrorInfo("RootdLogin: can't change directory to %s",pw->pw_dir);
       return;
    }
 
-   if (gDebug > 2) ErrorInfo("RootdLogin: gid: %d, uid: %d",pw->pw_gid,pw->pw_uid);
+   if (gDebug > 2)
+      ErrorInfo("RootdLogin: gid: %d, uid: %d", pw->pw_gid, pw->pw_uid);
+
    if (getuid() == 0) {
 
-     if (gAnon && chroot(pw->pw_dir) == -1) {
+      if (gAnon && chroot(pw->pw_dir) == -1) {
          ErrorInfo("RootdLogin: can't chroot to %s", pw->pw_dir);
          return;
-     }
+      }
 
-     // set access control list from /etc/initgroup
-     initgroups(gUser, pw->pw_gid);
+      // set access control list from /etc/initgroup
+      initgroups(gUser, pw->pw_gid);
 
-     // set gid
-     if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
-        ErrorInfo("RootdLogin: can't setgid for user %s", gUser);
-        return;
-     }
-     // set uid
-     if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
-        ErrorInfo("RootdLogin: can't setuid for user %s", gUser);
-        return;
-     }
+      // set gid
+      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1) {
+         ErrorInfo("RootdLogin: can't setgid for user %s", gUser);
+         return;
+      }
+      // set uid
+      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1) {
+         ErrorInfo("RootdLogin: can't setuid for user %s", gUser);
+         return;
+      }
    }
 
    umask(022);
@@ -1342,10 +1345,6 @@ void RootdGet(const char *msg)
    NetSend(0, kROOTD_GET);
 
    NetSendRaw(buf, len);
-
-   if (gDebug > 0)
-      ErrorInfo("RootdGet deb: read %d bytes from file \n ----> buf: %s",
-                len, buf);
 
    delete [] buf;
 
@@ -2380,7 +2379,8 @@ int main(int argc, char **argv)
             strcpy(gConfDir, getenv("ROOTSYS"));
             sprintf(gExecDir, "%s/bin", gConfDir);
             sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
-            if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+            if (gDebug > 0)
+               ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
          } else {
             if (!gInetdFlag)
                fprintf(stderr, "rootd: no config directory specified\n");
