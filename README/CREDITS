@@ -21,7 +21,7 @@ D: interface to X3D
 
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
-D: LinuxPPC support
+D: LinuxPPC support, large part of the User's Guide
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov
@@ -30,6 +30,11 @@ D: interface from ROOT/CINT to native compiler, FNAL support coordinator
 N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
+
+N: Christian Holm Cristensen
+E: cholm@nbi.dk
+D: contributions to the build system (configure, Makefile.in, config.in) 
+D: implementation of the principal component analysis class TPrincipal
 
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
@@ -56,11 +61,6 @@ E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
 D: generator
 
-N: Christian Holm
-E: cholm@nbi.dk
-D: important contributions to the build system (configure, Makefile.in,
-D: config.in)
-
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
@@ -80,6 +80,10 @@ D: Lorentz vector classes, PDG interface
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
+
+N: Suzanne Panacek
+E: spanacek@fnal.gov
+D: editor of the User's Guide
 
 N: Victor Perevoztchikov
 E: perev@bnl.gov
