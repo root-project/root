@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.75 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.76 2002/12/10 12:11:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -513,7 +513,7 @@ void TFile::Close(Option_t *)
    TDirectory *cursav = gDirectory;
    cd();
 
-   if (cursav == this) {
+   if (cursav == this || cursav->GetFile() == this) {
       cursav = 0;
    }
 
