@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.105 2001/11/28 14:57:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.106 2001/11/30 16:58:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,7 +31,6 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
-#include "TRef.h"
 #include "TProcessID.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
@@ -2648,11 +2647,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                        if ((*x & kIsReferenced) != 0) {
-                          UShort_t pidf = 0;
-                          if (gFile) {
-                             pidf = gFile->GetProcessCount();
-                             gFile->SetBit(TFile::kHasReferences);
-                          }
+                          UShort_t pidf = TProcessID::WriteProcessID(0,gFile);
                           b << pidf;
                        }
                        break;
@@ -2890,11 +2885,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                   pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                   UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                   if ((*x & kIsReferenced) != 0) {
-                      UShort_t pidf = 0;
-                      if (gFile) {
-                         pidf = gFile->GetProcessCount();
-                         gFile->SetBit(TFile::kHasReferences);
-                      }
+                      UShort_t pidf = TProcessID::WriteProcessID(0,gFile);
                       b << pidf;
                    }
                }
