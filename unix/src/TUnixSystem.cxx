@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.47 2002/12/09 12:24:03 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.48 2002/12/09 17:39:21 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1291,16 +1291,14 @@ void TUnixSystem::StackTrace()
 
    // take care of demangling
    Bool_t demangle = kTRUE;
+
    // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
    // could also use c++filt --format=gnu-new-abi for g++ v3 and icc
-#ifdef R__INTEL_COMPILER
-#  ifdef __ia64__
-   const char *cppfilt = "eccfilt";
-#  else
-   const char *cppfilt = "iccfilt";
-#  endif
-#else
    const char *cppfilt = "c++filt";
+#if defined(R__INTEL_COMPILER) || (__GNUC__ >= 3)
+   const char *cppfiltarg = "--format=gnu-new-abi";
+#else
+   const char *cppfiltarg = "";
 #endif
 #ifdef R__B64
    const char *format1 = " 0x%016lx in %.100s %s 0x%lx from %.100s\n";
@@ -1397,11 +1395,7 @@ void TUnixSystem::StackTrace()
       char tmpf2[L_tmpnam];
       tmpnam(tmpf2);
       file1.close();
-#if __GNUC__ >= 3
-      sprintf(buffer, "%s < %s -s gnu-new-abi > %s", filter, tmpf1, tmpf2);
-#else
-      sprintf(buffer, "%s < %s > %s", filter, tmpf1, tmpf2);
-#endif
+      sprintf(buffer, "%s %s < %s > %s", filter, cppfiltarg, tmpf1, tmpf2);
       system(buffer);
       ifstream file2(tmpf2);
       TString line;
