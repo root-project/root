@@ -26,6 +26,19 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) -restrict \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 
+# Compiler version:
+ICC_MAJOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell $(CXX) -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+                cut -d'.' -f2)
+
+ifeq ($(ICC_MAJOR),8)
+CXXFLAGS     += -fPIC
+CFLAGS       += -fPIC
+CINTCXXFLAGS += -fPIC
+CINTCFLAGS   += -fPIC
+endif
+
 # Linker:
 LD            = ecc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
@@ -41,7 +54,16 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = efc
 F77FLAGS      =
-F77LIBS       =
+# check path for g2c
+ifeq ($(ICC_MAJOR),8)
+F77LIBS       = `gcc -print-file-name=libg2c.a` \
+                -L$(shell which efc | sed -e 's|bin/efc|lib|') \
+                -lF90 -lifcore
+else
+F77LIBS       = `gcc -print-file-name=libg2c.a` \
+                -L$(shell which efc | sed -e 's|bin/efc|lib|') \
+                -lF90 -lCEPCF90 -lintrins
+endif
 
 # Extras
 
