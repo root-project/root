@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.12 2001/09/20 17:07:23 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.13 2001/09/24 00:40:29 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -281,7 +281,13 @@ void TRint::PrintLogo()
    else
 #endif
       printf("\n");
-   Printf("Compiled with thread support.");
+   Printf("Compiled for %s with thread support.", gSystem->GetBuildArch());
+#else
+#ifdef R__UNIX
+   else
+#endif
+      printf("\n");
+   Printf("Compiled for %s.", gSystem->GetBuildArch());
 #endif
 
    gInterpreter->PrintIntro();
