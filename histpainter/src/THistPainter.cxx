@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.139 2003/05/17 08:44:46 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.140 2003/05/30 20:37:46 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -962,6 +962,10 @@ void THistPainter::Paint(Option_t *option)
 // For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and 
 // gStyle->SetOptStat("RMEN") are equivalent to the examples above.
 //
+// When the histogram is drawn, a TPaveStats object is created and added
+// to the list of functions of the histogram. If a TPaveStats object already
+// exists in the histogram list of functions, the existing object is just
+// updated with the current histogram parameters.
 // With the option "same", the statistic box is not redrawn.
 // With the option "sames", the statistic box is drawn. If it hiddes
 // the previous statistics box, you can change its position
@@ -970,6 +974,13 @@ void THistPainter::Paint(Option_t *option)
 //  Root > TPaveStats *st = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
+//
+// To change the type of information for an histogram with an existing TPaveStats
+// you should do: st->SetOptStat(mode) where mode has the same meaning than
+// when calling gStyle->SetOptStat(mode) (see above).
+//
+// You can delete the stats box for a histogram TH1* h with h->SetStats(0)
+// and activate it again with h->SetStats(1).
 //
 // Fit Statistics
 // ==============
