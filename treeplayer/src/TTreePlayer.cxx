@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.35 2001/02/09 16:54:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.36 2001/02/22 14:45:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2528,7 +2528,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out.form("%s*\n",onerow.Data());
+      i=0;//out.form("%s*\n",onerow.Data());
    else
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
@@ -2536,7 +2536,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
    }
    if (fScanRedirect)
-      out.form("%s*\n",onerow.Data());
+      i=0;//out.form("%s*\n",onerow.Data());
    else
       printf("%s*\n",onerow.Data());
    onerow = "***********";
@@ -2544,7 +2544,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out.form("%s*\n",onerow.Data());
+      i=0;//out.form("%s*\n",onerow.Data());
    else
       printf("%s*\n",onerow.Data());
 //*-*- loop on all selected entries
@@ -2563,7 +2563,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       }
       fSelectedRows++;
    if (fScanRedirect)
-      out.form("%s*\n",onerow.Data());
+      i=0;//out.form("%s*\n",onerow.Data());
    else
       printf("%s*\n",onerow.Data());
       if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
@@ -2582,7 +2582,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
    if (fScanRedirect)
-      out.form("%s*\n",onerow.Data());
+      i=0;//out.form("%s*\n",onerow.Data());
    else
       printf("%s*\n",onerow.Data());
    if (select) Printf("==> %d selected %s", fSelectedRows,

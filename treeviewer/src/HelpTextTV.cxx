@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.6 2000/11/22 16:27:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: HelpTextTV.cxx,v 1.7 2001/02/22 14:45:17 brun Exp $
 // Author: Andrei Gheata   02/10/00
 
 /*************************************************************************
@@ -120,7 +120,7 @@ The editor usage is the following :\n\
   - you may redefine an old alias - the other expressions depending on it will\n\
   be modified accordingly. An alias must not be the leading string of other aliases.\n\
   When Draw commands are issued, the name of the corresponding histogram axes\n\
-  will become the aliases of the expressions.
+  will become the aliases of the expressions.\n\n\
  ";
 
 
@@ -155,7 +155,7 @@ Context menu for the right panel :\n\n\
   is redirected when the <Scan> button is checked;\n\
   - SetTreeName     : open a new tree whith this name in the viewer;\n\n\
   A specific context menu is activated if expressions/leaves are right-clicked.\n\
-  Commands are :
+  Commands are :\n\
   - Draw            : draw a histogram for this item;\n\
   - EditExpression  : pops-up the expression editor;\n\
   - Empty           : empty the name and alias of this item;\n\

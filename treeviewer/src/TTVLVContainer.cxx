@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.9 2000/12/14 15:23:47 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.1 2001/02/22 14:45:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -30,7 +30,7 @@ TGItemContext::TGItemContext()
    fItem = 0;
 }
 //______________________________________________________________________________
-void TGItemContext::Draw()
+void TGItemContext::Draw(Option_t *)
 {
    fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
 }

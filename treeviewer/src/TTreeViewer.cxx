@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.12 2000/12/14 15:23:47 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.13 2001/02/22 14:45:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1111,6 +1111,7 @@ void TTreeViewer::ExecuteDraw()
    Int_t dimension = 0;
    TString alias[3];
    TTVLVEntry *item;
+   Int_t i;
    // fill in expressions
    if (fVarDraw) {
       void *p = 0;
@@ -1230,7 +1231,7 @@ void TTreeViewer::ExecuteDraw()
    if (hist) {
    // put expressions aliases on axes
       Int_t current = 0;
-      for (Int_t i=0; i<3; i++) {
+      for (i=0; i<3; i++) {
          if (alias[i].Length()) {
             if (i != current) {
                alias[current] = alias[i];
@@ -1244,7 +1245,7 @@ void TTreeViewer::ExecuteDraw()
       axis[0] = hist->GetXaxis();
       axis[1] = hist->GetYaxis();
       axis[2] = hist->GetZaxis();
-      for (Int_t i=0; i<3; i++) axis[i]->SetTitle(alias[i].Data());
+      for (i=0; i<3; i++) axis[i]->SetTitle(alias[i].Data());
    }
    gPad->Update();
 }
