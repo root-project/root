@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.4 2001/11/08 07:19:49 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.5 2001/11/08 12:20:50 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -649,13 +649,20 @@ COLORREF TGWin32::ColorIndex(Color_t ic) {
 }
 
 //______________________________________________________________________________
-void TGWin32::GetPlanes(Int_t &nplanes){
-//*-*-*-*-*-*-*-*-*-*-*-*Get maximum number of planes*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ============================
-//*-*  nplanes     : number of bit planes
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   HDC  hDCGlobal= CreateDC("DISPLAY",NULL,NULL,NULL);
-   nplanes  = GetDeviceCaps(hDCGlobal,COLORRES);
+void TGWin32::GetPlanes(Int_t &nplanes)
+{
+   // Get maximum number of planes.
+   // nplanes returns the number of bit planes.
+
+   HDC hDCGlobal= CreateCompatibleDC(NULL);
+
+   if (GetDeviceCaps(hDCGlobal,RASTERCAPS) & RC_PALETTE != 0)
+      nplanes = GetDeviceCaps(hDCGlobal,COLORRES);
+   else {
+      int nPlanes=GetDeviceCaps(hDCGlobal,PLANES);
+      int nBitsPixel=GetDeviceCaps(hDCGlobal,BITSPIXEL);
+      nplanes = nPlanes*nBitsPixel;
+   }
    ReleaseDC(NULL,hDCGlobal);
 }
 
