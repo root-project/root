@@ -336,7 +336,7 @@ endif
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
 
-.NOTPARALLEL:   map
+.NOTPARALLEL:   map Makefile
 
 all:            rootexecs
 
