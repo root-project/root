@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.21 2003/09/16 13:40:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.22 2003/09/27 10:49:55 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -447,7 +447,7 @@ Int_t TBasket::WriteBuffer()
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
    if (cxlevel > 0) {
-      if (cxlevel == 2) cxlevel--;
+      //if (cxlevel == 2) cxlevel--; RB: I cannot remember why we had this!
       Int_t nbuffers = fObjlen/kMAXBUF;
       Int_t buflen = fKeylen + fObjlen + 28; //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
