@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.173 2003/12/27 16:14:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.174 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1774,7 +1774,7 @@ void TTree::Delete(Option_t *option)
          TBranch *branch = leaf->GetBranch();
          Int_t nbaskets = branch->GetMaxBaskets();
          for (Int_t i=0;i<nbaskets;i++) {
-            Int_t pos = branch->GetBasketSeek(i);
+            Long64_t pos = branch->GetBasketSeek(i);
             if (!pos) continue;
             gFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
             if (nbytes <= 0) continue;
@@ -3191,12 +3191,12 @@ void TTree::Print(Option_t *option) const
   TTree::Class()->WriteBuffer(b,(TTree*)this);
   total += b.Length();
 
-  Int_t file     = Int_t(fZipBytes) + s;
+  Long64_t file     = Long64_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
   Printf("******************************************************************************");
   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %10d *",Int_t(fEntries),total,file);
+  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %lld *",Int_t(fEntries),total,file);
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.64 2003/12/19 13:40:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.65 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1420,7 +1420,7 @@ void TBranch::Streamer(TBuffer &b)
       b << (Char_t)1;
       b.WriteFastArray(fBasketEntry,fMaxBaskets);
       Char_t isBigFile = 1;
-      if (fDirectory && fDirectory->GetFile()->GetEND() > TFile::kStartBigFile) isBigFile = 2;
+      if (fTree->GetCurrentFile() && fTree->GetCurrentFile()->GetEND() > TFile::kStartBigFile) isBigFile = 2;
       b << isBigFile;
       for (Int_t i=0;i<fMaxBaskets;i++) {
          if (isBigFile == 2 ) b << fBasketSeek[i];
