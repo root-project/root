@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.110 2003/02/28 20:26:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.111 2003/03/01 22:35:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -654,10 +654,13 @@ void TClass::BuildRealDataFake(const char *name, Int_t offset, TClass *cl)
          if (cle) cle->BuildRealDataFake(name,offset+eoffset,cl);
       } else if (etype == TStreamerInfo::kObject || etype == TStreamerInfo::kAny) {
          //member class
-         if (cle) cle->BuildRealDataFake(Form("%s%s.",name,element->GetName()),offset+eoffset,cl);
+         TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
+         if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
+         cl->GetListOfRealData()->Add(rd);
+         if (cle) cle->BuildRealDataFake(Form("%s%s.",name,element->GetFullName()),offset+eoffset,cl);
       } else {
          //others
-         TRealData *rd = new TRealData(Form("%s%s",name,element->GetName()),offset+eoffset,0);
+         TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%d\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
       }
