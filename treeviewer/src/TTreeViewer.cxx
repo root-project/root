@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.35 2003/11/10 10:48:43 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.36 2003/11/12 07:23:08 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1281,7 +1281,7 @@ void TTreeViewer::ExecuteDraw()
    Int_t nentries = (Int_t)(fSlider->GetMaxPosition() -
                             fSlider->GetMinPosition() + 1);
    Int_t firstentry =(Int_t) fSlider->GetMinPosition();
-
+printf("firstentry=%d, nentries=%d\n",firstentry,nentries);
    // check if Scan is checked and if there is something in the box
    if (fScanMode) {
 //      fBarScan->SetState(kButtonUp);
@@ -2562,6 +2562,10 @@ void TTreeViewer::DoRefresh()
 {
    // This slot is called when button REFR is clicked
 
-   Printf("Updating Tree from the file");
    fTree->Refresh();
+   Float_t min = fSlider->GetMinPosition();
+   Float_t max = (Float_t)fTree->GetEntries()-1;
+   fSlider->SetRange(min,max);
+   fSlider->SetPosition(min,max);
+   ExecuteDraw();
 }
