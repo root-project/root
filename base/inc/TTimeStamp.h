@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.9 2003/11/13 15:36:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.10 2004/05/27 08:32:43 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -134,6 +134,10 @@ public:
    TTimeStamp(UInt_t date, UInt_t time, UInt_t nsec,
               Bool_t isUTC = kTRUE, Int_t secOffset = 0);
 
+   // compatability with time() and DOS date
+   TTimeStamp(UInt_t tloc, Bool_t isUTC = kTRUE, Int_t secOffset = 0,
+              Bool_t dosDate = kFALSE);
+
    virtual ~TTimeStamp() { }
 
    // initialize to current time with nsec field incremented from static
@@ -147,6 +151,9 @@ public:
    // compatibility with TDatime
    void Set(Int_t date,   Int_t time, Int_t nsec,
             Bool_t isUTC, Int_t secOffset);
+
+   // compatability with time() and DOS date
+   void Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate);
 
    timespec_t   GetTimeSpec() const
       { timespec_t value = {fSec,fNanoSec}; return value; }

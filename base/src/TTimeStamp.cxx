@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.11 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.12 2003/04/03 13:46:49 brun Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -124,6 +124,17 @@ TTimeStamp::TTimeStamp(UInt_t date, UInt_t time,
    // If !isUTC then it is assumed to be the standard local time zone.
 
    Set(date, time, nsec, isUTC, secOffset);
+}
+
+//______________________________________________________________________________
+TTimeStamp::TTimeStamp(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
+{
+   // Create a TTimeStamp and set it to the the time_t value returned by time().
+   // This value is the number of seconds since the EPOCH
+   // (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then the input
+   // is a dosDate value.
+
+   Set(tloc, isUTC, secOffset, dosDate);
 }
 
 //______________________________________________________________________________
@@ -277,7 +288,7 @@ Int_t TTimeStamp::GetZoneOffset()
    return _timezone;
 #else
 #if !defined(R__MACOSX) && !defined(R__FBSD)
-   return  timezone;   /* unix has extern long int */
+   return  timezone;   // unix has extern long int
 #else
    time_t *tp = 0;
    time(tp);
@@ -286,7 +297,7 @@ Int_t TTimeStamp::GetZoneOffset()
 #endif
 #else
    _tzset();
-   return _timezone;   /* Win32 prepends "_" */
+   return _timezone;   // Win32 prepends "_"
 #endif
 }
 
@@ -321,8 +332,8 @@ void TTimeStamp::Set()
    ULARGE_INTEGER time;
    GetSystemTimeAsFileTime((FILETIME *)&time);
    // NT keeps time in FILETIME format which is 100ns ticks since
-   // Jan 1, 1601. TTimeStamps use time in 100ns ticks since Jan 1, 1970.
-   // The difference is 134774 days.
+   // Jan 1, 1601. TTimeStamp uses time in 100ns ticks since Jan 1, 1970,
+   // the difference is 134774 days.
    fNanoSec = Int_t((time.QuadPart * (unsigned __int64) 100) %
                     (unsigned __int64) 1000000000);
    time.QuadPart -=
@@ -435,6 +446,53 @@ void TTimeStamp::Set(Int_t date, Int_t time, Int_t nsec,
    Int_t sec   = time%100;
 
    Set(year, month, day, hour, min, sec, nsec, isUTC, secOffset);
+}
+
+//______________________________________________________________________________
+void TTimeStamp::Set(UInt_t tloc, Bool_t isUTC, Int_t secOffset, Bool_t dosDate)
+{
+   // The input arg is a time_t value returned by time() or a value
+   // returned by Convert(). This value is the number of seconds since
+   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then
+   // the input is a dosDate value.
+
+   struct tm localtm;
+   memset (&localtm, 0, sizeof (localtm));
+
+   if (dosDate) {
+      localtm.tm_year  = ((tloc >> 25) & 0x7f) + 80;
+      localtm.tm_mon   = ((tloc >> 21) & 0xf);
+      localtm.tm_mday  = (tloc >> 16) & 0x1f;
+      localtm.tm_hour  = (tloc >> 11) & 0x1f;
+      localtm.tm_min   = (tloc >> 5) & 0x3f;
+      localtm.tm_sec   = (tloc & 0x1f) * 2 + secOffset;
+      localtm.tm_isdst = -1;
+   } else {
+      time_t t = (time_t) tloc;
+      struct tm *tp = localtime(&t);
+      localtm.tm_year  = tp->tm_year;
+      localtm.tm_mon   = tp->tm_mon;
+      localtm.tm_mday  = tp->tm_mday;
+      localtm.tm_hour  = tp->tm_hour;
+      localtm.tm_min   = tp->tm_min;
+      localtm.tm_sec   = tp->tm_sec + secOffset;
+      localtm.tm_isdst = -1;
+   }
+
+   const time_t bad_time_t = (time_t) -1;
+   // convert tm struct to time_t, if values are given in UTC then
+   // no standard routine exists and we'll have to use our homegrown routine,
+   // if values are given in local time then use "mktime"
+   // which also normalizes the tm struct as a byproduct
+   time_t utc_sec = (isUTC) ? MktimeFromUTC(&localtm) : mktime(&localtm);
+
+   if (utc_sec == bad_time_t)
+      Error("TTimeStamp::Set","mktime returned -1");
+
+   fSec     = utc_sec;
+   fNanoSec = 0;  //nsec;
+
+   NormalizeNanoSec();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.7 2002/10/31 07:27:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.8 2003/07/02 11:53:15 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -242,21 +242,32 @@ void TDatime::Set()
 }
 
 //______________________________________________________________________________
-void TDatime::Set(UInt_t tloc)
+void TDatime::Set(UInt_t tloc, Bool_t dosDate)
 {
    // The input arg is a time_t value returned by time() or a value
    // returned by Convert(). This value is the number of seconds since
-   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970).
+   // the EPOCH (i.e. 00:00:00 on Jan 1m 1970). If dosDate is true then
+   // the input is a dosDate value.
 
-   time_t t = (time_t) tloc;
-   struct tm *tp = localtime(&t);
+   UInt_t year, month, day, hour, min, sec;
 
-   UInt_t year   = tp->tm_year;
-   UInt_t month  = tp->tm_mon + 1;
-   UInt_t day    = tp->tm_mday;
-   UInt_t hour   = tp->tm_hour;
-   UInt_t min    = tp->tm_min;
-   UInt_t sec    = tp->tm_sec;
+   if (dosDate) {
+      year  = ((tloc >> 25) & 0x7f) + 80;
+      month = ((tloc >> 21) & 0xf);
+      day   = (tloc >> 16) & 0x1f;
+      hour  = (tloc >> 11) & 0x1f;
+      min   = (tloc >> 5) & 0x3f;
+      sec   = (tloc & 0x1f) * 2;
+   } else {
+      time_t t = (time_t) tloc;
+      struct tm *tp = localtime(&t);
+      year   = tp->tm_year;
+      month  = tp->tm_mon + 1;
+      day    = tp->tm_mday;
+      hour   = tp->tm_hour;
+      min    = tp->tm_min;
+      sec    = tp->tm_sec;
+   }
 
    fDatime = (year-95)<<26 | month<<22 | day<<17 | hour<<12 | min<<6 | sec;
 }
