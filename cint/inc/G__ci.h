@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015018
-#define G__CINTVERSIONSTR  "5.15.18, Nov 3 2001"
+#define G__CINTVERSION      5015019
+#define G__CINTVERSIONSTR  "5.15.19, Nov 10 2001"
 
 
 /**********************************************************************
@@ -607,7 +607,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__LONGLINE    1024  /* Length of expression */
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      128  /* Variable name */
+#define G__MAXNAME      256  /* Variable name */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */

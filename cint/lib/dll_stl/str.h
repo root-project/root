@@ -18,6 +18,15 @@ using namespace std;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
 #pragma link C++ class string;
+#ifndef G__OLDIMPLEMENTATION1598
+#pragma link C++ function operator==(const string&,const string&);
+#pragma link C++ function operator!=(const string&,const string&);
+#pragma link C++ function operator<(const string&,const string&);
+#pragma link C++ function operator>(const string&,const string&);
+#pragma link C++ function operator<=(const string&,const string&);
+#pragma link C++ function operator>=(const string&,const string&);
+#pragma link C++ function operator+(const string&,const string&);
+#endif
 #endif
 
 
