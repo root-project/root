@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.16 2004/04/20 06:31:52 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.17 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -424,7 +424,7 @@ TVectorF &TVectorF::Invert()
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     Assert(*ep != 0.0);
-    *ep = 1./ *ep;                                                       
+    *ep = 1./ *ep;
     ep++;
   }
    
@@ -1271,11 +1271,11 @@ TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
     return target;
   }
 
-  const Float_t *       sp1 = source1.GetMatrixArray();                
-  const Float_t *       sp2 = source2.GetMatrixArray();                
-  const Float_t *       mp  = select.GetMatrixArray();                
+  const Float_t *       sp1 = source1.GetMatrixArray();
+  const Float_t *       sp2 = source2.GetMatrixArray();
+  const Float_t *       mp  = select.GetMatrixArray();
         Float_t *       tp  = target.GetMatrixArray();
-  const Float_t * const ftp = tp+target.GetNrows();                    
+  const Float_t * const ftp = tp+target.GetNrows();
 
   if (scalar == 1.0 ) {
     while ( tp < ftp ) {

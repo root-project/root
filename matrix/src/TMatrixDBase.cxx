@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.8 2004/03/29 22:35:36 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.9 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -393,6 +393,36 @@ void TMatrixDBase::IndexedLexSort(Int_t n,Int_t *first,Int_t swapFirst,
 }
 
 //______________________________________________________________________________
+void TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option) 
+{
+  // Copy array data to matrix . It is assumed that array is of size >= fNelems
+  // (=)))) fNrows*fNcols
+  // option indicates how the data is stored in the array:
+  // option =
+  //          'F'   : column major (Fortran) m[i][j] = array[i+j*fNrows]
+  //          else  : row major    (C)       m[i][j] = array[i*fNcols+j] (default)
+
+  Assert(IsValid());
+
+  TString opt = option;
+  opt.ToUpper();
+
+  Double_t *elem = GetMatrixArray();
+  if (opt.Contains("F")) {
+    for (Int_t irow = 0; irow < fNrows; irow++) {
+      const Int_t off1 = irow*fNcols;
+      Int_t off2 = 0;
+      for (Int_t icol = 0; icol < fNcols; icol++) {
+        elem[off1+icol] = data[off2+irow];
+        off2 += fNrows;
+      }
+    }
+  }
+  else
+    memcpy(elem,data,fNelems*sizeof(Double_t));
+}
+
+//______________________________________________________________________________
 Bool_t TMatrixDBase::IsSymmetric() const
 {
   Assert(IsValid());
@@ -439,37 +469,63 @@ void TMatrixDBase::GetMatrix2Array(Double_t *data,Option_t *option) const
     }
   }
   else
-    memcpy(data,elem,fNelems*sizeof(Double_t));      
+    memcpy(data,elem,fNelems*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
-void TMatrixDBase::SetMatrixArray(const Double_t *data,Option_t *option) 
+void TMatrixDBase::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
 {
-  // Copy array data to matrix . It is assumed that array is of size >= fNelems
-  // (=)))) fNrows*fNcols
-  // option indicates how the data is stored in the array:
-  // option =
-  //          'F'   : column major (Fortran) m[i][j] = array[i+j*fNrows]
-  //          else  : row major    (C)       m[i][j] = array[i*fNcols+j] (default)
+  const Int_t arown = rown-fRowLwb;
+  const Int_t acoln = coln-fColLwb;
+  const Int_t nr = (n > 0) ? n : fNcols;
 
-  Assert(IsValid());
+  if (arown >= fNrows || arown < 0) {
+    Error("InsertRow","row %d out of matrix range",rown); 
+    return;
+  }                                                                     
 
-  TString opt = option;
-  opt.ToUpper();
-
-  Double_t *elem = GetMatrixArray();
-  if (opt.Contains("F")) {
-    for (Int_t irow = 0; irow < fNrows; irow++) {
-      const Int_t off1 = irow*fNcols;
-      Int_t off2 = 0;
-      for (Int_t icol = 0; icol < fNcols; icol++) {
-        elem[off1+icol] = data[off2+irow];
-        off2 += fNrows;
-      }
-    }
+  if (acoln >= fNcols || acoln < 0) {                                     
+    Error("InsertRow","column %d out of matrix range",coln);
+    return;
   }
-  else
-    memcpy(elem,data,fNelems*sizeof(Double_t));
+
+  if (acoln+nr >= fNcols || nr < 0) {
+    Error("InsertRow","row length %d out of range",nr);
+    return;
+  }
+
+  const Int_t off = arown*fNcols+acoln;
+  Double_t * const elem = GetMatrixArray()+off;
+  memcpy(elem,v,nr*sizeof(Double_t));
+}
+
+//______________________________________________________________________________
+void TMatrixDBase::ExtractRow(Int_t rown,Int_t coln,Double_t *v,Int_t n) const
+{
+  // Store in array v, n matrix elements of row rown starting at column coln
+
+  const Int_t arown = rown-fRowLwb;
+  const Int_t acoln = coln-fColLwb;
+  const Int_t nr = (n > 0) ? n : fNcols;
+
+  if (arown >= fNrows || arown < 0) {
+    Error("ExtractRow","row %d out of matrix range",rown);
+    return;
+  }
+
+  if (acoln >= fNcols || acoln < 0) {
+    Error("ExtractRow","column %d out of matrix range",coln);
+    return;
+  }
+
+  if (acoln+n >= fNcols || nr < 0) {
+    Error("ExtractRow","row length %d out of range",nr);
+    return;
+  }
+
+  const Int_t off = arown*fNcols+acoln;
+  const Double_t * const elem = GetMatrixArray()+off;
+  memcpy(v,elem,nr*sizeof(Double_t));
 }
 
 //______________________________________________________________________________
@@ -819,13 +875,13 @@ Int_t TMatrixDBase::NonZeros() const
 {
   // Compute the number of elements != 0.0
 
-  Assert(IsValid());                                                    
+  Assert(IsValid());
 
   Int_t nr_nonzeros = 0;
   const Double_t *ep = this->GetMatrixArray();
   const Double_t * const fp = ep+fNelems;
   while (ep < fp) 
-    if (*ep++) nr_nonzeros++;                                           
+    if (*ep++ != 0.0) nr_nonzeros++;
 
   return nr_nonzeros;
 }

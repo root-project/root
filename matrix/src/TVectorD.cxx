@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.43 2004/04/15 09:21:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.44 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -418,13 +418,13 @@ TVectorD &TVectorD::Invert()
 {
    // v[i] = 1/v[i]
 
-  Assert(IsValid());                                                    
+  Assert(IsValid());
 
         Double_t *ep = this->GetMatrixArray();
   const Double_t * const fp = ep+fNrows; 
   while (ep < fp) {
     Assert(*ep != 0.0);
-    *ep = 1./ *ep;                                             
+    *ep = 1./ *ep;
     ep++;
   }
 
@@ -507,7 +507,7 @@ Int_t TVectorD::NonZeros() const
 {
   // Compute the number of elements != 0.0
 
-  Assert(IsValid());                                                    
+  Assert(IsValid());
 
   Int_t nr_nonzeros = 0;
   const Double_t *ep = this->GetMatrixArray();
@@ -523,7 +523,7 @@ Double_t TVectorD::Sum() const
 {
   // Compute sum of elements
 
-  Assert(IsValid());                                                    
+  Assert(IsValid());
 
   Double_t sum = 0.0;
   const Double_t *ep = this->GetMatrixArray();
@@ -539,7 +539,7 @@ Double_t TVectorD::Min() const
 {
   // return minimum vector element value
 
-  Assert(IsValid());                                                    
+  Assert(IsValid());
 
   const Int_t index = TMath::LocMin(fNrows,fElements);
   return fElements[index];
@@ -708,6 +708,28 @@ TVectorD &TVectorD::operator=(const TMatrixDSparseRow_const &mr)
     const Int_t icol = prCol[index];
     pvData[icol] = prData[index];
   }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TMatrixDSparseDiag_const &md)
+{
+  // Assign a sparse matrix diagonal to a vector.
+
+  Assert(IsValid());
+  const TMatrixDBase *mt = md.GetMatrix();
+  Assert(mt->IsValid());
+
+  if (md.GetNdiags() != fNrows) {
+    Error("operator=(const TMatrixDSparseDiag_const &)","vector and matrix-diagonal not compatible");
+    Invalidate();
+    return *this;
+  } 
+
+  Double_t * const pvData = this->GetMatrixArray();
+  for (Int_t idiag = 0; idiag < fNrows; idiag++)
+    pvData[idiag] = md(idiag);
 
   return *this;
 }
@@ -906,7 +928,7 @@ TVectorD &TVectorD::operator*=(const TMatrixDSparse &a)
 
   Allocate(fNrows,fRowLwb);
 
-  const Int_t    * const pRowIndex = a.GetRowIndexArray();                               
+  const Int_t    * const pRowIndex = a.GetRowIndexArray();
   const Int_t    * const pColIndex = a.GetColIndexArray();
   const Double_t * const mp        = a.GetMatrixArray();     // Matrix row ptr
 
@@ -915,7 +937,7 @@ TVectorD &TVectorD::operator*=(const TMatrixDSparse &a)
 
   for (Int_t irow = 0; irow < fNrows; irow++) {
     const Int_t sIndex = pRowIndex[irow]; 
-    const Int_t eIndex = pRowIndex[irow+1];   
+    const Int_t eIndex = pRowIndex[irow+1];
     Double_t sum = 0.0;
     for (Int_t index = sIndex; index < eIndex; index++) {
       const Int_t icol = pColIndex[index];
@@ -1376,11 +1398,11 @@ TVectorD &AddElemMult(TVectorD &target,Double_t scalar,
     return target;
   }
 
-  const Double_t *       sp1 = source1.GetMatrixArray();                
-  const Double_t *       sp2 = source2.GetMatrixArray();                
-  const Double_t *       mp  = select.GetMatrixArray();                
+  const Double_t *       sp1 = source1.GetMatrixArray();
+  const Double_t *       sp2 = source2.GetMatrixArray();
+  const Double_t *       mp  = select.GetMatrixArray();
         Double_t *       tp  = target.GetMatrixArray();
-  const Double_t * const ftp = tp+target.GetNrows();                    
+  const Double_t * const ftp = tp+target.GetNrows();
 
   if (scalar == 1.0 ) {
     while ( tp < ftp ) {

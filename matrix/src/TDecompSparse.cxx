@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.8 2004/03/22 08:34:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.1 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -378,9 +378,9 @@ void TDecompSparse::InitParam()
   fCntl[4] = 0.0;
   fCntl[5] = 0.0;
 
-  fNsteps    = 0;           
-  fMaxfrt    = 0;           
-  fNrows     = 0;      
+  fNsteps    = 0;
+  fMaxfrt    = 0;
+  fNrows     = 0;
   fNnonZeros = 0;
 }
 

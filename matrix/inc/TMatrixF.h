@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.8 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.9 2004/05/12 11:35:26 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -76,13 +76,15 @@ public:
   virtual       Int_t   *GetRowIndexArray()       { return 0; }
   virtual const Int_t   *GetColIndexArray() const { return 0; }
   virtual       Int_t   *GetColIndexArray()       { return 0; }
+  virtual       void     SetRowIndexArray(Int_t */*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void     SetColIndexArray(Int_t */*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
   virtual void     Clear      (Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                             else fElements = 0;  fNelems = 0; }
 
-          void     Use        (Int_t nrows,Int_t ncols,Float_t *data);
           void     Use        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Float_t *data);
-          void     Use        (TMatrixF &a);
+          void     Use        (Int_t nrows,Int_t ncols,Float_t *data);
+          void     Use        (TMatrixFBase &a);
           TMatrixF GetSub     (Int_t row_lwb,Int_t row_upb,
                                Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
           void     SetSub     (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
@@ -166,8 +168,10 @@ public :
 
 inline const Float_t  *TMatrixF::GetMatrixArray() const { return fElements; }
 inline       Float_t  *TMatrixF::GetMatrixArray()       { return fElements; }
-inline       void      TMatrixF::Use           (TMatrixF &a) { Use(a.GetRowLwb(),a.GetRowUpb(),
-                                                                   a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
+inline       void      TMatrixF::Use           (Int_t nrows,Int_t ncols,Float_t *data) { Use(0,nrows,0,ncols,data); }
+inline       void      TMatrixF::Use           (TMatrixFBase &a) { Assert(a.IsValid());
+                                                                   Use(a.GetRowLwb(),a.GetRowUpb(),
+                                                                       a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 
 inline Float_t TMatrixF::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());

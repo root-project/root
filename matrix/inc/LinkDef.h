@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.15 2004/04/15 09:21:50 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.16 2004/05/12 10:39:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -127,6 +127,8 @@
 
 #pragma link C++ class TMatrixDSparseRow_const;
 #pragma link C++ class TMatrixDSparseRow;
+#pragma link C++ class TMatrixDSparseDiag_const;
+#pragma link C++ class TMatrixDSparseDiag;
 
 #pragma link C++ class TMatrixDEigen+;
 #pragma link C++ class TMatrixDSymEigen+;

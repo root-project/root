@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.59 2004/04/15 09:21:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.60 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,6 +43,8 @@ TMatrixD::TMatrixD(Int_t no_rows,Int_t no_cols,const Double_t *elements,Option_t
   //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
   // else        it is supposed that array elements are stored row-wise
   //             a[i,j] = elements[i*no_cols+j]
+  //
+  // array elements are copied
 
   Allocate(no_rows,no_cols);
   SetMatrixArray(elements,option);
@@ -52,6 +54,8 @@ TMatrixD::TMatrixD(Int_t no_rows,Int_t no_cols,const Double_t *elements,Option_t
 TMatrixD::TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                    const Double_t *elements,Option_t *option)
 {
+  // array elements are copied
+
   Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb);
   SetMatrixArray(elements,option);
 }
@@ -59,29 +63,29 @@ TMatrixD::TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixD &another) : TMatrixDBase(another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixF &another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixDSym &another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
 TMatrixD::TMatrixD(const TMatrixDSparse &another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
@@ -404,7 +408,7 @@ void TMatrixD::AMultB(const TMatrixDSym &a,const TMatrixD &b,Int_t constr)
   }
 
   if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);      
+    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
   const Double_t *ap1 = a.GetMatrixArray();
   const Double_t *bp1 = b.GetMatrixArray();
@@ -421,7 +425,7 @@ void TMatrixD::AMultB(const TMatrixDSym &a,const TMatrixD &b,Int_t constr)
   for (Int_t i = 0; i < fNrows; i++) {
     for (Int_t j = 0; j < fNcols; j++) {
       const Double_t b_ij = *bp1++;
-      *cp1 += b_ij*(*ap1);       
+      *cp1 += b_ij*(*ap1);
       Double_t tmp = 0.0;
       ap2 = ap1+1;
       for (Int_t k = i+1; k < fNrows; k++) {
@@ -690,25 +694,6 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
     }
   }
 #endif
-}
-
-//______________________________________________________________________________
-void TMatrixD::Use(Int_t nrows,Int_t ncols,Double_t *data)
-{       
-  if (nrows <= 0 || nrows <= 0)
-  {
-    Error("Use","nrows=%d ncols=%d",nrows,ncols);
-    return;
-  } 
-    
-  Clear();
-  fNrows    = nrows;
-  fNcols    = ncols; 
-  fRowLwb   = 0;
-  fColLwb   = 0;
-  fNelems   = fNrows*fNcols;
-  fElements = data;
-  fIsOwner  = kFALSE;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.18 2004/03/19 14:20:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.20 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -17,11 +17,12 @@
 // The following classes are defined here:                              //
 //                                                                      //
 // Different matrix views without copying data elements :               //
-//   TMatrixDRow_const       TMatrixDRow                                //
-//   TMatrixDColumn_const    TMatrixDColumn                             //
-//   TMatrixDDiag_const      TMatrixDDiag                               //
-//   TMatrixDFlat_const      TMatrixDFlat                               //
-//   TMatrixDSparseRow_const TMatrixDSparseRow                          //
+//   TMatrixDRow_const        TMatrixDRow                               //
+//   TMatrixDColumn_const     TMatrixDColumn                            //
+//   TMatrixDDiag_const       TMatrixDDiag                              //
+//   TMatrixDFlat_const       TMatrixDFlat                              //
+//   TMatrixDSparseRow_const  TMatrixDSparseRow                         //
+//   TMatrixDSparseDiag_const TMatrixDSparseDiag                        //
 //                                                                      //
 //   TElementActionD                                                    //
 //   TElementPosActionD                                                 //
@@ -688,14 +689,14 @@ TMatrixDSparseRow_const::TMatrixDSparseRow_const(const TMatrixDSparse &matrix,In
 {
   Assert(matrix.IsValid());
 
-  const Int_t irow = row-matrix.GetRowLwb();
-  if (irow >= matrix.GetNrows() || irow < 0) {
+  fRowInd = row-matrix.GetRowLwb();
+  if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
     Error("TMatrixDSparseRow_const(const TMatrixDSparse &,Int_t)","row index out of bounds");
     return;
   }
 
-  const Int_t sIndex = matrix.GetRowIndexArray()[irow];
-  const Int_t eIndex = matrix.GetRowIndexArray()[irow+1];
+  const Int_t sIndex = matrix.GetRowIndexArray()[fRowInd];
+  const Int_t eIndex = matrix.GetRowIndexArray()[fRowInd+1];
   fMatrix  = &matrix;
   fNindex  = eIndex-sIndex;
   fColPtr  = matrix.GetColIndexArray()+sIndex;
@@ -704,8 +705,340 @@ TMatrixDSparseRow_const::TMatrixDSparseRow_const(const TMatrixDSparse &matrix,In
 
 //______________________________________________________________________________
 TMatrixDSparseRow::TMatrixDSparseRow(TMatrixDSparse &matrix,Int_t row)
-                                    :TMatrixDSparseRow_const(matrix,row)
+                                    : TMatrixDSparseRow_const(matrix,row)
 {
+}
+
+//______________________________________________________________________________
+TMatrixDSparseRow::TMatrixDSparseRow(const TMatrixDSparseRow &mr)
+                                    : TMatrixDSparseRow_const(mr)
+{
+  *this = mr;
+} 
+
+//______________________________________________________________________________
+Double_t &TMatrixDSparseRow::operator()(Int_t i)
+{ 
+  const Int_t acoln = i-fMatrix->GetColLwb(); 
+  Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+  Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+  if (index >= 0 && fColPtr[index] == acoln)
+    return (const_cast<Double_t*>(fDataPtr))[index];
+  else {
+    TMatrixDBase *mt = const_cast<TMatrixDBase *>(fMatrix);
+    const Int_t row = fRowInd+mt->GetRowLwb();
+    Double_t val = 0.;
+    mt->InsertRow(row,i,&val,1);
+    const Int_t sIndex = mt->GetRowIndexArray()[fRowInd];
+    const Int_t eIndex = mt->GetRowIndexArray()[fRowInd+1];
+    fNindex  = eIndex-sIndex;
+    fColPtr  = mt->GetColIndexArray()+sIndex;
+    fDataPtr = mt->GetMatrixArray()+sIndex;
+    index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+    if (index >= 0 && fColPtr[index] == acoln)
+      return (const_cast<Double_t*>(fDataPtr))[index];
+    else {
+      Error("operator()(Int_t","Insert row failed");
+      Assert(0);
+      return (const_cast<Double_t*>(fDataPtr))[0];
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator=(Double_t val)
+{   
+  // Assign val to every non-zero (!) element of the matrix row.
+  
+  Double_t *rp = const_cast<Double_t *>(fDataPtr);
+  for ( ; rp < fDataPtr+fNindex; rp++)
+    *rp = val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator+=(Double_t val)
+{   
+  // Add val to every non-zero (!) element of the matrix row.
+  
+  Double_t *rp = const_cast<Double_t *>(fDataPtr);
+  for ( ; rp < fDataPtr+fNindex; rp++)
+    *rp += val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator*=(Double_t val)
+{   
+  // Multiply every non-zero (!) element of the matrix row by val.
+  
+  Double_t *rp = const_cast<Double_t *>(fDataPtr);
+  for ( ; rp < fDataPtr+fNindex; rp++)
+    *rp *= val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator=(const TMatrixDSparseRow_const &mr)
+{
+  const TMatrixDBase *mt = mr.GetMatrix();
+  if (fMatrix == mt) return;
+
+  if (!AreCompatible(*fMatrix,*mt)) {
+    Error("operator=(const TMatrixDSparseRow_const &)","matrices not compatible");
+    return;
+  }
+
+  Double_t *rp1 = const_cast<Double_t *>(fDataPtr);
+  const Double_t *rp2 = mr.GetDataPtr();
+  for ( ; rp1 < fDataPtr+fNindex; rp1++,rp2++)
+    *rp1 = *rp2;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator=(const TMatrixDSparseRow &mr)
+{
+  const TMatrixDBase *mt = mr.GetMatrix();
+  if (fMatrix == mt) return;
+
+  if (!AreCompatible(*fMatrix,*mt)) {
+    Error("operator=(const TMatrixDSparseRow &)","matrices not compatible");
+    return;
+  }
+
+  Double_t *rp1 = const_cast<Double_t *>(fDataPtr);
+  const Double_t *rp2 = mr.GetDataPtr();
+  for ( ; rp1 < fDataPtr+fNindex; rp1++,rp2++)
+    *rp1 = *rp2;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator=(const TVectorD &vec)
+{
+   // Assign a vector to a matrix row. The vector is considered row-vector
+   // to allow the assignment in the strict sense.
+
+  Assert(vec.IsValid());
+
+  if (fMatrix->GetColLwb() != vec.GetLwb() || fMatrix->GetNcols() != vec.GetNrows()) {
+    Error("operator=(const TVectorD &)","vector length != matrix-row length");
+    return;
+  }
+
+  const Double_t *vp = vec.GetMatrixArray();
+  const Int_t row = fRowInd+fMatrix->GetRowLwb();
+  const Int_t col = fMatrix->GetColLwb();
+  const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row,col,vp,vec.GetNrows());
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator+=(const TMatrixDSparseRow_const &r)
+{
+  // Add to every element of the matrix row the corresponding element of row r.
+
+  const TMatrixDBase *mt = r.GetMatrix();
+
+  if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
+    Error("operator+=(const TMatrixDRow_const &)","different row lengths");
+    return;
+  }
+
+  const Int_t ncols = fMatrix->GetNcols();
+  const Int_t row1  = fRowInd+fMatrix->GetRowLwb();
+  const Int_t row2  = r.GetRowIndex()+mt->GetRowLwb();
+  const Int_t col   = fMatrix->GetColLwb();
+
+  TVectorD v1(ncols);
+  TVectorD v2(ncols);
+  fMatrix->ExtractRow(row1,col,v1.GetMatrixArray());
+  mt     ->ExtractRow(row2,col,v2.GetMatrixArray());
+  v1 += v2;
+  const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseRow::operator*=(const TMatrixDSparseRow_const &r)
+{
+  // Multiply every element of the matrix row with the
+  // corresponding element of row r.
+
+  const TMatrixDBase *mt = r.GetMatrix();
+
+  if (fMatrix->GetColLwb() != mt->GetColLwb() || fMatrix->GetNcols() != mt->GetNcols()) {
+    Error("operator+=(const TMatrixDRow_const &)","different row lengths");
+    return;
+  }
+
+  const Int_t ncols = fMatrix->GetNcols();
+  const Int_t row1  = fRowInd+fMatrix->GetRowLwb();
+  const Int_t row2  = r.GetRowIndex()+mt->GetRowLwb();
+  const Int_t col   = fMatrix->GetColLwb();
+
+  TVectorD v1(ncols);
+  TVectorD v2(ncols);
+  fMatrix->ExtractRow(row1,col,v1.GetMatrixArray());
+  mt     ->ExtractRow(row2,col,v2.GetMatrixArray());
+
+  ElementMult(v1,v2);
+  const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+}
+
+//______________________________________________________________________________
+TMatrixDSparseDiag_const::TMatrixDSparseDiag_const(const TMatrixDSparse &matrix)
+{
+  Assert(matrix.IsValid());
+
+  fMatrix  = &matrix;
+  fNdiag   = TMath::Min(matrix.GetNrows(),matrix.GetNcols());
+  fDataPtr = matrix.GetMatrixArray();
+}
+
+//______________________________________________________________________________
+TMatrixDSparseDiag::TMatrixDSparseDiag(TMatrixDSparse &matrix)
+                   :TMatrixDSparseDiag_const(matrix)
+{
+}
+
+//______________________________________________________________________________
+TMatrixDSparseDiag::TMatrixDSparseDiag(const TMatrixDSparseDiag &md)
+                  : TMatrixDSparseDiag_const(md)
+{
+  *this = md;
+}
+
+//______________________________________________________________________________
+Double_t &TMatrixDSparseDiag::operator()(Int_t i)
+{
+  Assert(i < fNdiag && i >= 0);
+  TMatrixDBase *mt = const_cast<TMatrixDBase *>(fMatrix);
+  const Int_t    *pR = mt->GetRowIndexArray();
+  const Int_t    *pC = mt->GetColIndexArray();
+  const Double_t *pD = mt->GetMatrixArray();
+  Int_t sIndex = pR[i];
+  Int_t eIndex = pR[i+1];
+  Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+  if (index >= sIndex && pC[index] == i)
+    return (const_cast<Double_t*>(fDataPtr))[index];
+  else {
+    const Int_t row = i+mt->GetRowLwb();
+    const Int_t col = i+mt->GetColLwb();
+    Double_t val = 0.;
+    mt->InsertRow(row,col,&val,1);
+    pR = mt->GetRowIndexArray();
+    pC = mt->GetColIndexArray();
+    pD = mt->GetMatrixArray();
+    sIndex = mt->GetRowIndexArray()[i];
+    eIndex = mt->GetRowIndexArray()[i+1];
+    index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+    if (index >= sIndex && pC[index] == i)
+      return (const_cast<Double_t*>(fDataPtr))[index];
+    else {
+      Error("operator()(Int_t","Insert row failed");
+      Assert(0);
+      return (const_cast<Double_t*>(fDataPtr))[index];
+    }
+  }
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator=(Double_t val)
+{
+  // Assign val to every element of the matrix diagonal.
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) = val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator+=(Double_t val)
+{
+  // Assign val to every element of the matrix diagonal.
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) += val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator*=(Double_t val)
+{
+  // Assign val to every element of the matrix diagonal.
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) *= val;
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator=(const TMatrixDSparseDiag_const &md)
+{
+  const TMatrixDBase *mt = md.GetMatrix();
+  if (fMatrix == mt) return;
+
+  if (!AreCompatible(*fMatrix,*mt)) {
+    Error("operator=(const TMatrixDSparseDiag_const &)","matrices not compatible");
+    return;
+  }
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) = md(i);
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator=(const TMatrixDSparseDiag &md)
+{
+  const TMatrixDBase *mt = md.GetMatrix();
+  if (fMatrix == mt) return;
+
+  if (!AreCompatible(*fMatrix,*mt)) {
+    Error("operator=(const TMatrixDSparseDiag &)","matrices not compatible");
+    return;
+  }
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) = md(i);
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator=(const TVectorD &vec)
+{
+  // Assign a vector to the matrix diagonal.
+
+  Assert(vec.IsValid());
+
+  if (fNdiag != vec.GetNrows()) {
+    Error("operator=(const TVectorD &)","vector length != matrix-diagonal length");
+    return;
+  }
+
+  const Double_t *vp = vec.GetMatrixArray();
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) = vp[i];
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator+=(const TMatrixDSparseDiag_const &md)
+{
+  // Add to every element of the matrix diagonal the
+  // corresponding element of diagonal md.
+
+  if (fNdiag != md.GetNdiags()) {
+    Error("operator=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    return;
+  }
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) += md(i);
+}
+
+//______________________________________________________________________________
+void TMatrixDSparseDiag::operator*=(const TMatrixDSparseDiag_const &md)
+{
+  // Add to every element of the matrix diagonal the
+  // corresponding element of diagonal md.
+
+  if (fNdiag != md.GetNdiags()) {
+    Error("operator*=(const TMatrixDSparseDiag_const &)","matrix-diagonal's different length");
+    return;
+  }
+
+  for (Int_t i = 0; i < fNdiag; i++)
+    (*this)(i) *= md(i);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.30 2004/04/15 09:21:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.31 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -107,12 +107,13 @@ public:
   inline const Double_t &operator[](Int_t index) const { return (Double_t&)((*(const TVectorD *)this)(index)); }
   inline       Double_t &operator[](Int_t index)       { return (Double_t&)((*(const TVectorD *)this)(index)); }
 
-  TVectorD &operator= (const TVectorD                &source);
-  TVectorD &operator= (const TVectorF                &source);
-  TVectorD &operator= (const TMatrixDRow_const       &mr);
-  TVectorD &operator= (const TMatrixDColumn_const    &mc);
-  TVectorD &operator= (const TMatrixDDiag_const      &md);
-  TVectorD &operator= (const TMatrixDSparseRow_const &md);
+  TVectorD &operator= (const TVectorD                 &source);
+  TVectorD &operator= (const TVectorF                 &source);
+  TVectorD &operator= (const TMatrixDRow_const        &mr);
+  TVectorD &operator= (const TMatrixDColumn_const     &mc);
+  TVectorD &operator= (const TMatrixDDiag_const       &md);
+  TVectorD &operator= (const TMatrixDSparseRow_const  &md);
+  TVectorD &operator= (const TMatrixDSparseDiag_const &md);
   TVectorD &operator= (Double_t val);
   TVectorD &operator+=(Double_t val);
   TVectorD &operator-=(Double_t val);

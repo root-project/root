@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.8 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.9 2004/05/12 11:35:26 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -100,16 +100,22 @@ public:
   virtual        const Int_t    *GetColIndexArray() const = 0;
   virtual              Int_t    *GetColIndexArray()       = 0;
 
+  virtual              void      SetRowIndexArray(Int_t *data) = 0;
+  virtual              void      SetColIndexArray(Int_t *data) = 0;
+  virtual              void      SetMatrixArray  (const Float_t *data,Option_t *option="");
           inline       Float_t   SetTol       (Float_t tol);
+
+  virtual void   Clear      (Option_t *option="") = 0;
 
   virtual void   Invalidate ()       { fNrows = -1; }
   inline  Bool_t IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
           Bool_t IsSymmetric() const;
 
-  // Probably move this functionality to TMatrixFFlat
-  virtual void GetMatrix2Array(Float_t *data,Option_t *option="") const;
-  virtual void SetMatrixArray(const Float_t *data,Option_t *option="");
+  virtual void SetSub          (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source) = 0;
+  virtual void GetMatrix2Array (Float_t *data,Option_t *option="") const;
+  virtual void InsertRow       (Int_t row,Int_t col,const Float_t *v,Int_t n = -1);
+  virtual void ExtractRow      (Int_t row,Int_t col,      Float_t *v,Int_t n = -1) const;
 
   virtual void Shift   (Int_t row_shift,Int_t col_shift);
   virtual void ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
@@ -135,11 +141,10 @@ public:
   inline  Float_t  NormInf    () const { return RowNorm(); }
   inline  Float_t  Norm1      () const { return ColNorm(); }
   virtual Int_t    NonZeros   () const;
-  virtual Double_t Sum        () const;
-  virtual Double_t Min        () const;
-  virtual Double_t Max        () const;
+  virtual Float_t  Sum        () const;
+  virtual Float_t  Min        () const;
+  virtual Float_t  Max        () const;
 
-  virtual void Clear(Option_t *option="") = 0;
   void Draw (Option_t *option="");       // *MENU*
   void Print(Option_t *option="") const; // *MENU*
 

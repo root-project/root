@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.8 2004/05/12 13:30:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.9 2004/05/12 18:24:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -47,6 +47,8 @@ TMatrixFSym::TMatrixFSym(Int_t no_rows,const Float_t *elements,Option_t *option)
   //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
   // else        it is supposed that array elements are stored row-wise
   //             a[i,j] = elements[i*no_cols+j]
+  //
+  // array elements are copied
 
   Allocate(no_rows,no_rows);
   SetMatrixArray(elements,option);
@@ -59,6 +61,8 @@ TMatrixFSym::TMatrixFSym(Int_t no_rows,const Float_t *elements,Option_t *option)
 //______________________________________________________________________________
 TMatrixFSym::TMatrixFSym(Int_t row_lwb,Int_t row_upb,const Float_t *elements,Option_t *option)
 {
+  // array elements are copied
+
   const Int_t no_rows = row_upb-row_lwb+1;
   Allocate(no_rows,no_rows,row_lwb,row_lwb);
   SetMatrixArray(elements,option);
@@ -263,25 +267,6 @@ void TMatrixFSym::AtMultA(const TMatrixFSym &a,Int_t constr)
 #endif
 }
 
-//______________________________________________________________________________
-void TMatrixFSym::Use(Int_t nrows,Float_t *data)
-{
-  if (nrows <= 0)
-  {
-    Error("Use","nrows=%d",nrows);
-    return;
-  }
-  
-  Clear();
-  fNrows    = nrows;
-  fNcols    = nrows;
-  fRowLwb   = 0;
-  fColLwb   = 0;
-  fNelems   = fNrows*fNcols;
-  fElements = data;
-  fIsOwner  = kFALSE;
-}
-
 //______________________________________________________________________________ 
 void TMatrixFSym::Use(Int_t row_lwb,Int_t row_upb,Float_t *data)
 {
@@ -357,7 +342,7 @@ TMatrixFSym TMatrixFSym::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) co
 }
 
 //______________________________________________________________________________
-void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFSym &source)
+void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFBase &source)
 {
   // Insert matrix source starting at [row_lwb][row_lwb], thereby overwriting the part
   // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
@@ -365,6 +350,10 @@ void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFSym &source)
   Assert(IsValid());
   Assert(source.IsValid());
 
+  if (!source.IsSymmetric()) {
+    Error("SetSub","source matrix is not symmetric");
+    return;
+  }
   if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
     Error("SetSub","row_lwb outof bounds");
     return;

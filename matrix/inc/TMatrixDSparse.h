@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.3 2004/05/12 13:50:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.4 2004/05/12 18:24:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -34,18 +34,16 @@ class TMatrixDSparse : public TMatrixDBase {
 
 protected:
 
-  Double_t *fElements;  //[fNelems]
   Int_t    *fRowIndex;  //[fNrowIndex] row index
   Int_t    *fColIndex;  //[fNelems]    column index
-  Double_t  fJunk;      //!
+  Double_t *fElements;  //[fNelems]
 
   virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
-                        Int_t init = 0,Int_t nr_nonzero = -1);
+                        Int_t init = 0,Int_t nr_nonzeros = 0);
 
           void SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSparse &b);
-          void Trim            (Int_t nelem_new);
 
-    // Elementary constructors
+  // Elementary constructors
   void AMultB (const TMatrixDSparse &a,const TMatrixDSparse &b,Int_t constr=1) {
                const TMatrixDSparse bt(TMatrixDSparse::kTransposed,b); AMultBt(a,bt,constr); }
   void AMultB (const TMatrixDSparse &a,const TMatrixD       &b,Int_t constr=1) {
@@ -68,9 +66,9 @@ protected:
 
 public:
 
-  TMatrixDSparse() { fElements = 0; fRowIndex = 0; fColIndex = 0; fJunk = 0.;}
-  TMatrixDSparse(Int_t nrows,Int_t ncols,Int_t nr_nonzeros);
-  TMatrixDSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros);
+  TMatrixDSparse() { fElements = 0; fRowIndex = 0; fColIndex = 0; }
+  TMatrixDSparse(Int_t nrows,Int_t ncols);
+  TMatrixDSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixDSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
                  Int_t *row, Int_t *col,Double_t *data);
   TMatrixDSparse(const TMatrixDSparse &another);
@@ -87,34 +85,42 @@ public:
   virtual       Int_t    *GetRowIndexArray();
   virtual const Int_t    *GetColIndexArray() const;
   virtual       Int_t    *GetColIndexArray();
-
-  virtual       Double_t &GetJunk() { return fJunk; }
+  virtual       void      SetRowIndexArray(Int_t *data) { memmove(fRowIndex,data,(fNrows+1)*sizeof(Int_t)); }
+  virtual       void      SetColIndexArray(Int_t *data) { memmove(fColIndex,data,fNelems*sizeof(Int_t)); }
 
   virtual void GetMatrix2Array(Double_t *data,Option_t *option="") const;
-  virtual void SetMatrixArray(const Double_t * /*data*/,Option_t * /*option*/="")
-                               { MayNotUse("SetMatrixArray(const Double_t *,Option_t *)"); }
-  virtual void SetMatrixArray(Int_t *irow,Int_t *icol,Double_t *data);
+  virtual void SetMatrixArray(const Double_t *data,Option_t * /*option*/="")
+                               { memcpy(fElements,data,fNelems*sizeof(Double_t)); }
+  virtual void SetMatrixArray(Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Double_t *data);
           void SetSparseIndex(const TMatrixDBase   &another);
           void SetSparseIndex(const TMatrixDSparse &another);
+          void SetSparseIndex(Int_t nelem_new);
+  virtual void InsertRow     (Int_t row,Int_t col,const Double_t *v,Int_t n=-1);
+  virtual void ExtractRow    (Int_t row,Int_t col,      Double_t *v,Int_t n=-1) const;
 
   virtual void ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
   virtual void ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
   inline  void ResizeTo      (const TMatrixDSparse &m) {
-                                  ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); }
+                                  ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb(),
+                                           m.GetNoElements()); }
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner && fElements) {
-                                                    delete [] fElements; fElements = 0;
-                                                    delete [] fRowIndex; fRowIndex = 0;
-                                                    delete [] fColIndex; fColIndex = 0;
+  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) {
+                                                    if (fElements) delete [] fElements; fElements = 0;
+                                                    if (fRowIndex) delete [] fRowIndex; fRowIndex = 0;
+                                                    if (fColIndex) delete [] fColIndex; fColIndex = 0;
                                                   }
                                                   fNelems    = 0;
                                                   fNrowIndex = 0;
                                                 }
 
+  void            Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
+                         Int_t *pRowIndex,Int_t *pColIndex,Double_t *pData);
+  void            Use   (Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
+                         Int_t *pRowIndex,Int_t *pColIndex,Double_t *pData);
   void            Use   (TMatrixDSparse &a);
   TMatrixDSparse  GetSub(Int_t row_lwb,Int_t row_upb,
                          Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-  void            SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &source);
+  virtual void    SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
   virtual Bool_t IsSymmetric() const { MayNotUse("IsSymmetric()"); return kFALSE; }
   TMatrixDSparse &Transpose  (const TMatrixDSparse &source);
@@ -132,7 +138,7 @@ public:
 
   // Either access a_ij as a(i,j)
   inline       Double_t                 operator()(Int_t rown,Int_t coln) const;
-  inline       Double_t                &operator()(Int_t rown,Int_t coln);
+               Double_t                &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDSparseRow_const  operator[](Int_t rown) const { return TMatrixDSparseRow_const(*this,rown); }
@@ -159,7 +165,10 @@ public:
                                                              else                 AMultB (tmp,source); return *this; }
   TMatrixDSparse &operator*=(const TMatrixD       &source) { TMatrixDSparse tmp(*this); AMultB(tmp,source); return *this; }
 
-  ClassDef(TMatrixDSparse,1) // Sparse Matrix class (double precision)
+  virtual void Randomize  (Double_t alpha,Double_t beta,Double_t &seed);
+  virtual void RandomizePD(Double_t alpha,Double_t beta,Double_t &seed);
+
+  ClassDef(TMatrixDSparse,2) // Sparse Matrix class (double precision)
 };
 
 inline const Double_t *TMatrixDSparse::GetMatrixArray  () const { return fElements; }
@@ -168,6 +177,15 @@ inline const Int_t    *TMatrixDSparse::GetRowIndexArray() const { return fRowInd
 inline       Int_t    *TMatrixDSparse::GetRowIndexArray()       { return fRowIndex; }
 inline const Int_t    *TMatrixDSparse::GetColIndexArray() const { return fColIndex; }
 inline       Int_t    *TMatrixDSparse::GetColIndexArray()       { return fColIndex; }
+
+inline       void      TMatrixDSparse::Use(Int_t nrows,Int_t ncols,Int_t nr_nonzeros,
+                                           Int_t *pRowIndex,Int_t *pColIndex,Double_t *pData)
+                                                          { Use(0,nrows-1,0,ncols-1,nr_nonzeros,pRowIndex,pColIndex,pData); }
+inline       void      TMatrixDSparse::Use(TMatrixDSparse &a)
+                                                          { Assert(a.IsValid());
+                                                            Use(a.GetRowLwb(),a.GetRowUpb(),a.GetColLwb(),a.GetColUpb(),
+                                                                a.GetNoElements(),
+                                                                a.GetRowIndexArray(),a.GetColIndexArray(),a.GetMatrixArray()); }
 
 inline Double_t TMatrixDSparse::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
@@ -185,28 +203,6 @@ inline Double_t TMatrixDSparse::operator()(Int_t rown,Int_t coln) const {
   const Int_t index = TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;
   if (index < sIndex || fColIndex[index] != acoln) return 0.0;
   else                                             return fElements[index];
-}
-
-inline Double_t &TMatrixDSparse::operator()(Int_t rown,Int_t coln) {
-  Assert(IsValid());
-  if (fNrowIndex > 0 && fRowIndex[fNrowIndex-1] == 0) {
-    Error("operator=()(Int_t,Int_t)","row/col indices are not set");
-    return fJunk;
-  }
-  const Int_t arown = rown-fRowLwb;
-  const Int_t acoln = coln-fColLwb;
-  Assert(arown < fNrows && arown >= 0);
-  Assert(acoln < fNcols && acoln >= 0);
-  const Int_t sIndex = fRowIndex[arown];
-  const Int_t eIndex = fRowIndex[arown+1];
-  const Int_t index = TMath::BinarySearch(eIndex-sIndex,fColIndex+sIndex,acoln)+sIndex;
-  if (index >= sIndex && fColIndex[index] == acoln)
-    return fElements[index];
-  else {
-    Error("TMatrixDSparse::operator()(Int_t,Int_t","(%d,%d) row/col combination not available",
-           rown,coln);
-    return fJunk;
-  }
 }
 
 TMatrixDSparse  operator+(const TMatrixDSparse &source1,const TMatrixDSparse &source2);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.10 2004/05/12 13:27:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.11 2004/05/12 18:24:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -38,8 +38,8 @@ protected:
 
   Double_t *fElements;  //![fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                        Int_t nr_nonzeros = -1);
+  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                          Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AtMultA(const TMatrixD    &a,Int_t constr=1);
@@ -69,6 +69,8 @@ public:
   virtual       Int_t    *GetRowIndexArray()       { return 0; }
   virtual const Int_t    *GetColIndexArray() const { return 0; }
   virtual       Int_t    *GetColIndexArray()       { return 0; }
+  virtual       void      SetRowIndexArray(Int_t */*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void      SetColIndexArray(Int_t */*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                   else fElements = 0;  fNelems = 0; }
@@ -77,10 +79,12 @@ public:
   void         Use           (Int_t row_lwb,Int_t row_upb,Double_t *data);
   void         Use           (TMatrixDSym &a);
   TMatrixDSym  GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
-  void         SetSub        (Int_t row_lwb,const TMatrixDSym &source);
-  void         SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+  void         SetSub        (Int_t row_lwb,const TMatrixDBase &source);
+  virtual void SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
   virtual void SetMatrixArray(const Double_t *data, Option_t *option="");
+
+  virtual Bool_t IsSymmetric() const { return kTRUE; }
 
   virtual void Shift         (Int_t row_shift,Int_t col_shift);
   virtual void ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
@@ -127,6 +131,7 @@ public:
 
 inline const Double_t *TMatrixDSym::GetMatrixArray() const { return fElements; }
 inline       Double_t *TMatrixDSym::GetMatrixArray()       { return fElements; }
+inline       void      TMatrixDSym::Use           (Int_t nrows,Double_t *data) { Use(0,nrows-1,data); }
 inline       void      TMatrixDSym::Use           (TMatrixDSym &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
 
 inline Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const {

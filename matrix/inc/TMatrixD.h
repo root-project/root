@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.34 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.35 2004/05/12 18:24:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -36,8 +36,8 @@ protected:
 
   Double_t *fElements;  //[fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                        Int_t nr_nonzeros = -1);
+  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                          Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixD    &a,const TMatrixD    &b,Int_t constr=1);
@@ -77,16 +77,18 @@ public:
   virtual       Int_t    *GetRowIndexArray()       { return 0; }
   virtual const Int_t    *GetColIndexArray() const { return 0; }
   virtual       Int_t    *GetColIndexArray()       { return 0; }
+  virtual       void      SetRowIndexArray(Int_t */*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); }
+  virtual       void      SetColIndexArray(Int_t */*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); }
 
   virtual void     Clear      (Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                             else fElements = 0;  fNelems = 0; }
 
-          void     Use        (Int_t nrows,Int_t ncols,Double_t *data);
           void     Use        (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Double_t *data);
+          void     Use        (Int_t nrows,Int_t ncols,Double_t *data);
           void     Use        (TMatrixDBase &a);
           TMatrixD GetSub     (Int_t row_lwb,Int_t row_upb,
                                Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-          void     SetSub     (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+  virtual void     SetSub     (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
   virtual Double_t Determinant() const;
   virtual void     Determinant(Double_t &d1,Double_t &d2) const;
@@ -143,7 +145,9 @@ public:
 
 inline const Double_t *TMatrixD::GetMatrixArray() const { return fElements; }
 inline       Double_t *TMatrixD::GetMatrixArray()       { return fElements; }
-inline       void      TMatrixD::Use           (TMatrixDBase &a) { Use(a.GetRowLwb(),a.GetRowUpb(),
+inline       void      TMatrixD::Use           (Int_t nrows,Int_t ncols,Double_t *data) { Use(0,nrows-1,0,ncols-1,data); }
+inline       void      TMatrixD::Use           (TMatrixDBase &a) { Assert(a.IsValid());
+                                                                   Use(a.GetRowLwb(),a.GetRowUpb(),
                                                                        a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 
 inline Double_t TMatrixD::operator()(Int_t rown,Int_t coln) const {

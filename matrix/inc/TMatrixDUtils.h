@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.24 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.25 2004/05/12 18:24:58 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,11 +20,12 @@
 // The following classes are defined here:                              //
 //                                                                      //
 // Different matrix views without copying data elements :               //
-//   TMatrixDRow_const       TMatrixDRow                                //
-//   TMatrixDColumn_const    TMatrixDColumn                             //
-//   TMatrixDDiag_const      TMatrixDDiag                               //
-//   TMatrixDFlat_const      TMatrixDFlat                               //
-//   TMatrixDSparseRow_const TMatrixDSparseRow                          //
+//   TMatrixDRow_const        TMatrixDRow                               //
+//   TMatrixDColumn_const     TMatrixDColumn                            //
+//   TMatrixDDiag_const       TMatrixDDiag                              //
+//   TMatrixDFlat_const       TMatrixDFlat                              //
+//   TMatrixDSparseRow_const  TMatrixDSparseRow                         //
+//   TMatrixDSparseDiag_const TMatrixDSparseDiag                        //
 //                                                                      //
 //   TElementActionD                                                    //
 //   TElementPosActionD                                                 //
@@ -124,7 +125,7 @@ public:
                                                           return fPtr[acoln]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDRow_const *)this)(i); }
 
-  ClassDef(TMatrixDRow_const,0)  // One row of a matrix (double precision)
+  ClassDef(TMatrixDRow_const,0)  // One row of a dense matrix (double precision)
 };
 
 class TMatrixDRow : public TMatrixDRow_const {
@@ -137,10 +138,14 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline Double_t &operator()(Int_t i) { const Int_t acoln = i-fMatrix->GetColLwb();
-                                         Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                         return (const_cast<Double_t *>(fPtr))[acoln]; }
-  inline Double_t &operator[](Int_t i) { return (Double_t&)((*(TMatrixDRow *)this)(i)); }
+  inline const Double_t &operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                                     Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                     return fPtr[acoln]; }
+  inline       Double_t &operator()(Int_t i)       { const Int_t acoln = i-fMatrix->GetColLwb();
+                                                     Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                                     return (const_cast<Double_t *>(fPtr))[acoln]; }
+  inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDRow *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDRow *)this)(i); }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
@@ -153,7 +158,7 @@ public:
   void operator+=(const TMatrixDRow_const &r);
   void operator*=(const TMatrixDRow_const &r);
 
-  ClassDef(TMatrixDRow,0)  // One row of a matrix (double precision)
+  ClassDef(TMatrixDRow,0)  // One row of a dense matrix (double precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -183,9 +188,9 @@ public:
   inline const Double_t     &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
                                                           Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                           return fPtr[arown*fInc]; }
-  inline const Double_t &operator [](Int_t i) const { return ((*(const TMatrixDColumn_const *)this)(i)); }
+  inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDColumn_const *)this)(i); }
 
-  ClassDef(TMatrixDColumn_const,0)  // One column of a matrix (double precision)
+  ClassDef(TMatrixDColumn_const,0)  // One column of a dense matrix (double precision)
 };
 
 class TMatrixDColumn : public TMatrixDColumn_const {
@@ -198,10 +203,14 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline Double_t &operator()(Int_t i) { const Int_t arown = i-fMatrix->GetRowLwb();
-                                         Assert(arown < fMatrix->GetNrows() && arown >= 0);
-                                         return (const_cast<Double_t *>(fPtr))[arown*fInc]; }
-  inline Double_t &operator[](Int_t i) { return (Double_t&)((*(TMatrixDColumn *)this)(i)); }
+  inline const Double_t &operator()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
+                                                     Assert(arown < fMatrix->GetNrows() && arown >= 0);
+                                                     return fPtr[arown]; }
+  inline       Double_t &operator()(Int_t i)       { const Int_t arown = i-fMatrix->GetRowLwb();
+                                                     Assert(arown < fMatrix->GetNrows() && arown >= 0);
+                                                     return (const_cast<Double_t *>(fPtr))[arown*fInc]; }
+  inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDColumn *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDColumn *)this)(i); }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
@@ -214,7 +223,7 @@ public:
   void operator+=(const TMatrixDColumn_const &c);
   void operator*=(const TMatrixDColumn_const &c);
 
-  ClassDef(TMatrixDColumn,0)  // One column of a matrix (double precision)
+  ClassDef(TMatrixDColumn,0)  // One column of a dense matrix (double precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -241,13 +250,12 @@ public:
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
   inline       Int_t         GetInc   () const { return fInc; }
-  inline const Double_t     &operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0);
-                                                          return fPtr[i*fInc]; }
-  inline const Double_t     &operator [](Int_t i) const { return ((*(const TMatrixDDiag_const *)this)(i)); }
+  inline const Double_t     &operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDDiag_const *)this)(i); }
 
   Int_t GetNdiags() const { return fNdiag; }
 
-  ClassDef(TMatrixDDiag_const,0)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixDDiag_const,0)  // Diagonal of a dense matrix (double  precision)
 };
 
 class TMatrixDDiag : public TMatrixDDiag_const {
@@ -260,9 +268,11 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline Double_t &operator()(Int_t i) { Assert(i < fNdiag && i >= 0);
-                                         return (const_cast<Double_t *>(fPtr))[i*fInc]; }
-  inline Double_t &operator[](Int_t i) { return (Double_t&)((*(TMatrixDDiag *)this)(i)); }
+  inline const Double_t &operator()(Int_t i) const { Assert(i < fNdiag && i >= 0); return fPtr[i*fInc]; }
+  inline       Double_t &operator()(Int_t i)       { Assert(i < fNdiag && i >= 0);
+                                                     return (const_cast<Double_t *>(fPtr))[i*fInc]; }
+  inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDDiag *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDDiag *)this)(i); }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
@@ -275,7 +285,7 @@ public:
   void operator+=(const TMatrixDDiag_const &d);
   void operator*=(const TMatrixDDiag_const &d);
 
-  ClassDef(TMatrixDDiag,0)  // Diagonal of a matrix (double  precision)
+  ClassDef(TMatrixDDiag,0)  // Diagonal of a dense matrix (double  precision)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -300,10 +310,10 @@ public:
 
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
-  inline const Double_t     &operator ()(Int_t i) { Assert(i >=0 && i < fNelems); return GetPtr()[i]; }
-  inline const Double_t     &operator [](Int_t i) { Assert(i >=0 && i < fNelems); return GetPtr()[i]; }
+  inline const Double_t     &operator ()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDFlat_const *)this)(i); }
 
-  ClassDef(TMatrixDFlat_const,0)  // Flat representation of a matrix
+  ClassDef(TMatrixDFlat_const,0)  // Flat representation of a dense matrix
 };
 
 class TMatrixDFlat : public TMatrixDFlat_const {
@@ -316,10 +326,11 @@ public:
 
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
-  inline Double_t &operator()(Int_t i) { Assert(i >=0 && i < fNelems);
-                                         return (const_cast<Double_t *>(fPtr))[i]; }
-  inline Double_t &operator[](Int_t i) { Assert(i >=0 && i < fNelems);
-                                         return (const_cast<Double_t *>(fPtr))[i]; }
+  inline const Double_t &operator()(Int_t i) const { Assert(i >=0 && i < fNelems); return fPtr[i]; }
+  inline       Double_t &operator()(Int_t i)       { Assert(i >=0 && i < fNelems);
+                                                     return (const_cast<Double_t *>(fPtr))[i]; }
+  inline const Double_t &operator[](Int_t i) const { return (*(const TMatrixDFlat *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (*(      TMatrixDFlat *)this)[i]; }
 
   void operator= (Double_t val);
   void operator+=(Double_t val);
@@ -332,7 +343,7 @@ public:
   void operator+=(const TMatrixDFlat_const &f);
   void operator*=(const TMatrixDFlat_const &f);
 
-  ClassDef(TMatrixDFlat,0)  // Flat representation of a matrix
+  ClassDef(TMatrixDFlat,0)  // Flat representation of a dense matrix
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -349,25 +360,27 @@ class TMatrixDSparseRow_const {
 
 protected:
   const TMatrixDBase *fMatrix;  // the matrix I am a row of
+        Int_t         fRowInd;  // effective row index
         Int_t         fNindex;  // index range
   const Int_t        *fColPtr;  // column index pointer
   const Double_t     *fDataPtr; // data pointer
 
 public:
-  TMatrixDSparseRow_const() { fMatrix = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
+  TMatrixDSparseRow_const() { fMatrix = 0; fRowInd = 0; fNindex = 0; fColPtr = 0; fDataPtr = 0; }
   TMatrixDSparseRow_const(const TMatrixDSparse &matrix,Int_t row);
 
-  inline const TMatrixDBase *GetMatrix () const { return fMatrix; }
-  inline const Double_t     *GetDataPtr() const { return fDataPtr; }
-  inline const Int_t        *GetColPtr () const { return fColPtr; }
-  inline       Int_t         GetNindex () const { return fNindex; }
+  inline const TMatrixDBase *GetMatrix  () const { return fMatrix; }
+  inline const Double_t     *GetDataPtr () const { return fDataPtr; }
+  inline const Int_t        *GetColPtr  () const { return fColPtr; }
+  inline       Int_t         GetRowIndex() const { return fRowInd; }
+  inline       Int_t         GetNindex  () const { return fNindex; }
 
-  inline Double_t operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
-                                               Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                               const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
-                                               if (index < 0) return 0.0;
-                                               else           return fDataPtr[index]; }
-  inline Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
+  inline Double_t operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                              Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                              const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+                                              if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
+                                              else                                       return 0.0; }
+  inline Double_t operator[](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
 
   ClassDef(TMatrixDSparseRow_const,0)  // One row of a sparse matrix (double precision)
 };
@@ -377,22 +390,105 @@ class TMatrixDSparseRow : public TMatrixDSparseRow_const {
 public:
   TMatrixDSparseRow() {}
   TMatrixDSparseRow(TMatrixDSparse &matrix,Int_t row);
+  TMatrixDSparseRow(const TMatrixDSparseRow &mr);
 
   inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
 
-  inline Double_t &operator()(Int_t i) { const Int_t acoln = i-fMatrix->GetColLwb();
-                                         Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                         const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
-                                         if (index >= 0)
-                                           return (const_cast<Double_t*>(fDataPtr))[index];
-                                         else {
-                                           Error("TMatrixDSparseRow::operator()(Int_t","(%d) col not available",i);
-                                           return (const_cast<TMatrixDBase*>(fMatrix))->GetJunk();
-                                         }
-                                       }
-  inline Double_t &operator[](Int_t i) { return (Double_t&)((*(TMatrixDSparseRow *)this)(i)); }
+  inline Double_t  operator()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+                                               Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                               const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+                                               if (index >= 0 && fColPtr[index] == acoln) return fDataPtr[index];
+                                               else                                       return 0.0; }
+         Double_t &operator()(Int_t i);
+  inline Double_t  operator[](Int_t i) const { return (*(const TMatrixDSparseRow *)this)(i); }
+  inline Double_t &operator[](Int_t i)       { return (*(TMatrixDSparseRow *)this)(i); }
 
-  ClassDef(TMatrixDSparseRow,0)  // One row of a matrix (double precision)
+  void operator= (Double_t val);
+  void operator+=(Double_t val);
+  void operator*=(Double_t val);
+
+  void operator=(const TMatrixDSparseRow_const &r);
+  void operator=(const TMatrixDSparseRow       &r);
+  void operator=(const TVectorD                &vec);
+
+  void operator+=(const TMatrixDSparseRow_const &r);
+  void operator*=(const TMatrixDSparseRow_const &r);
+
+  ClassDef(TMatrixDSparseRow,0)  // One row of a sparse matrix (double precision)
+};
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TMatrixDSparseDiag_const                                             //
+//                                                                      //
+// Class represents the diagonal of a matrix (for easy manipulation).   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TMatrixDSparseDiag_const {
+
+protected:
+  const TMatrixDBase *fMatrix;  //  the matrix I am the diagonal of
+        Int_t         fNdiag;   //  number of diag elems, min(nrows,ncols)
+  const Double_t     *fDataPtr; //  data pointer
+
+public:
+  TMatrixDSparseDiag_const() { fMatrix = 0; fNdiag = 0; fDataPtr = 0; }
+  TMatrixDSparseDiag_const(const TMatrixDSparse &matrix);
+
+  inline const TMatrixDBase *GetMatrix () const { return fMatrix; }
+  inline const Double_t     *GetDataPtr() const { return fDataPtr; }
+  inline       Int_t         GetNdiags () const { return fNdiag; }
+
+  inline Double_t operator ()(Int_t i) const { Assert(i < fNdiag && i >= 0);
+                                               const Int_t    * const pR = fMatrix->GetRowIndexArray();
+                                               const Int_t    * const pC = fMatrix->GetColIndexArray();
+                                               const Double_t * const pD = fMatrix->GetMatrixArray();
+                                               const Int_t sIndex = pR[i];
+                                               const Int_t eIndex = pR[i+1];
+                                               const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+                                               if (index >= sIndex && pC[index] == i) return pD[index];
+                                               else                                   return 0.0; }
+
+  inline Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
+
+  ClassDef(TMatrixDSparseDiag_const,0)  // Diagonal of a sparse matrix (double  precision)
+};
+
+class TMatrixDSparseDiag : public TMatrixDSparseDiag_const {
+
+public:
+  TMatrixDSparseDiag() {}
+  TMatrixDSparseDiag(TMatrixDSparse &matrix);
+  TMatrixDSparseDiag(const TMatrixDSparseDiag &md);
+
+  inline Double_t *GetDataPtr() const { return const_cast<Double_t *>(fDataPtr); }
+  
+  inline       Double_t  operator()(Int_t i) const { Assert(i < fNdiag && i >= 0);
+                                                     const Int_t    * const pR = fMatrix->GetRowIndexArray();
+                                                     const Int_t    * const pC = fMatrix->GetColIndexArray();
+                                                     const Double_t * const pD = fMatrix->GetMatrixArray();
+                                                     const Int_t sIndex = pR[i];
+                                                     const Int_t eIndex = pR[i+1];
+                                                     const Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
+                                                     if (index >= sIndex && pC[index] == i) return pD[index];
+                                                     else                                   return 0.0; }
+               Double_t &operator()(Int_t i);
+  inline       Double_t  operator[](Int_t i) const { return (*(const TMatrixDSparseDiag *)this)(i); }
+  inline       Double_t &operator[](Int_t i)       { return (Double_t&)((*(TMatrixDSparseDiag *)this)(i)); }
+
+  void operator= (Double_t val);
+  void operator+=(Double_t val);
+  void operator*=(Double_t val);
+
+  void operator=(const TMatrixDSparseDiag_const &d);
+  void operator=(const TMatrixDSparseDiag       &d);
+  void operator=(const TVectorD                 &vec);
+
+  void operator+=(const TMatrixDSparseDiag_const &d);
+  void operator*=(const TMatrixDSparseDiag_const &d);
+
+  ClassDef(TMatrixDSparseDiag,0)  // Diagonal of a dense matrix (double  precision)
 };
 
 Double_t Drand(Double_t &ix);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.12 2004/04/15 09:21:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.13 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,6 +43,8 @@ TMatrixF::TMatrixF(Int_t no_rows,Int_t no_cols,const Float_t *elements,Option_t 
   //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
   // else        it is supposed that array elements are stored row-wise
   //             a[i,j] = elements[i*no_cols+j]
+  //
+  // array elements are copied
 
   Allocate(no_rows,no_cols);
   SetMatrixArray(elements,option);
@@ -52,6 +54,8 @@ TMatrixF::TMatrixF(Int_t no_rows,Int_t no_cols,const Float_t *elements,Option_t 
 TMatrixF::TMatrixF(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                    const Float_t *elements,Option_t *option)
 {
+  // array elements are copied
+
   Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb);
   SetMatrixArray(elements,option);
 }
@@ -59,22 +63,22 @@ TMatrixF::TMatrixF(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixF &another) : TMatrixFBase(another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixD &another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
 TMatrixF::TMatrixF(const TMatrixFSym &another)
 {
-  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());  
-  *this = another;  
+  Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
+  *this = another;
 }
 
 //______________________________________________________________________________
@@ -397,7 +401,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixF &b,Int_t constr)
   }     
 
   if (constr)
-    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);      
+    Allocate(a.GetNrows(),b.GetNcols(),a.GetRowLwb(),b.GetColLwb(),1);
 
   const Float_t *ap1 = a.GetMatrixArray();
   const Float_t *bp1 = b.GetMatrixArray();
@@ -414,7 +418,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixF &b,Int_t constr)
   for (Int_t i = 0; i < fNrows; i++) {
     for (Int_t j = 0; j < fNcols; j++) {
       const Float_t b_ij = *bp1++;
-      *cp1 += b_ij*(*ap1);       
+      *cp1 += b_ij*(*ap1);
       Float_t tmp = 0.0;
       ap2 = ap1+1;
       for (Int_t k = i+1; k < fNrows; k++) {
@@ -683,25 +687,6 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
     }
   }
 #endif
-}
-
-//______________________________________________________________________________
-void TMatrixF::Use(Int_t nrows,Int_t ncols,Float_t *data)
-{
-  if (nrows <= 0 || nrows <= 0)
-  {
-    Error("Use","nrows=%d ncols=%d",nrows,ncols);
-    return;
-  }
-
-  Clear();
-  fNrows    = nrows;
-  fNcols    = ncols;
-  fRowLwb   = 0;
-  fColLwb   = 0;
-  fNelems   = fNrows*fNcols;
-  fElements = data;
-  fIsOwner  = kFALSE;
 }
 
 //______________________________________________________________________________
