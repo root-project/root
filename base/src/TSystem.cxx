@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.20 2001/06/25 12:54:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.21 2001/07/09 13:47:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TRegexp.h"
 #include "TTimer.h"
 #include "TObjString.h"
+#include "TError.h"
 
 #include "compiledata.h"
 
@@ -1342,8 +1343,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      // the script has already been loaded in interpreted mode
      // Let's warn the user and unload it.
 
-     cerr << "script has already been loaded in interpreted mode" << endl;
-     cerr << "Unloading " << filename << " and compiling it" << endl;
+     ::Warning("ACLiC","script has already been loaded in interpreted mode");
+     ::Warning("ACLiC","Unloading %s  and compiling it",filename);
 
      if ( G__unloadfile( (char*) filename ) != 0 ) {
        // We can not unload it.
@@ -1370,24 +1371,25 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
        || strlen(GetLibraries(library,"D")) != 0 ) {
      // The library has already been built and loaded.
 
-     if (modified)
-        cerr << "Modified ";
-     else
-        cerr << "Unmodified ";
-     cerr << "script has already been compiled and loaded. " << endl;
+     char * status = 0;
+     if (modified) {
+        status = "Modified ";
+     } else {
+        status = "Unmodified ";
+     }
+     ::Warning("ACLiC","%s script has already been compiled and loaded. ",status);
      if ( !recompile ) {
         return G__LOADFILE_SUCCESS;
      } else {
 #ifdef R__KCC
-        cerr << "Shared library can not be updated (when using the KCC compiler)!"
-             << endl;
+        ::Error("ACLiC","Shared library can not be updated (when using the KCC compiler)!");
         return G__LOADFILE_DUPLICATE;
 #else
         // the following is not working in KCC because it seems that dlclose
         // does not properly get rid of the object.  It WILL provoke a
         // core dump at termination.
 
-        cerr << "It will be regenerated and reloaded!" << endl;
+        ::Warning("ACLiC","It will be regenerated and reloaded!");
         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
           // The library is being used. We can not unload it.
           return(G__LOADFILE_FAILURE);
@@ -1402,7 +1404,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     return !gSystem->Load(library);
   }
 
-  cerr << "Creating shared library " << library << endl;
+  Info("ACLiC","Creating shared library %s",library.Data());
 
   // ======= Select the dictionary name
   TString dict =BaseName( tmpnam(0) );
@@ -1445,7 +1447,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     incPath.ReplaceAll(" :",":");
   }
   incPath.Prepend(file_location+":.:");
-  if (gDebug>5) cout << "Looking for header in:" << endl << incPath << endl;
+  if (gDebug>5) Info("ACLiC","Looking for header in: %s",incPath.Data());
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
   for ( int i = 0; i < 6; i++ ) {
     char * name;
@@ -1525,14 +1527,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // ======= Run the build
 
   if (gDebug>3) {
-     cout << "Creating the dictionary files." << endl;
-     if (gDebug>4) cout << rcint << endl;
+     ::Info("ACLiC","Creating the dictionary files.");
+     if (gDebug>4)  ::Info("ACLiC",rcint.Data());
   }
   int result = !gSystem->Exec(rcint);
 
   if (gDebug>3) {
-     cout << "Compiling the dictionary and script files." << endl;
-     if (gDebug>4) cout << cmd << endl;
+     ::Info("ACLiC","Compiling the dictionary and script files.");
+     if (gDebug>4)  ::Info("ACLiC",cmd.Data());
   }
   if (result) result = !gSystem->Exec( cmd );
 
@@ -1545,7 +1547,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     // by the library are present.
     G__Set_RTLD_NOW();
 #endif
-    if (gDebug>3) cout << "Loading the shared library." << endl;
+    if (gDebug>3)  ::Info("ACLiC","Loading the shared library.");
     result = !gSystem->Load(library);
 #ifndef NOCINT
     G__Set_RTLD_LAZY();
@@ -1553,8 +1555,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
     if ( !result ) {
       if (gDebug>3) {
-         cout << "Testing for missing symbols:" << endl;
-         if (gDebug>4) cout << testcmd << endl;
+         ::Info("ACLiC","Testing for missing symbols:");
+         if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
       }
       gSystem->Exec(testcmd);
       gSystem->Unlink( exec );
