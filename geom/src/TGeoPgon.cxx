@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.26 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.27 2003/10/20 08:46:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -262,13 +262,23 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
       if (r<fRmin[iz]) return kFALSE;
       if (r>fRmax[iz]) return kFALSE;
       return kTRUE;
+   }  
+   Double_t dz = fZ[iz+1]-fZ[iz];
+   Double_t rmin, rmax;
+   if (dz<1E-8) {
+      // we are at a radius-changing plane 
+      rmin = TMath::Min(fRmin[iz], fRmin[iz+1]);
+      rmax = TMath::Max(fRmax[iz], fRmax[iz+1]);
+      if (r<rmin) return kFALSE;
+      if (r>rmax) return kFALSE;
+      return kTRUE;
    }   
    // now compute rmin and rmax and test the value of r
-   Double_t dzrat = (point[2]-fZ[iz])/(fZ[iz+1]-fZ[iz]);
-   Double_t rmin = fRmin[iz]+dzrat*(fRmin[iz+1]-fRmin[iz]);
+   Double_t dzrat = (point[2]-fZ[iz])/dz;
+   rmin = fRmin[iz]+dzrat*(fRmin[iz+1]-fRmin[iz]);
    // is the point inside the 'hole' at the center of the volume ?
    if (r < rmin) return kFALSE;
-   Double_t rmax = fRmax[iz]+dzrat*(fRmax[iz+1]-fRmax[iz]);
+   rmax = fRmax[iz]+dzrat*(fRmax[iz+1]-fRmax[iz]);
    if (r > rmax) return kFALSE;
    
    return kTRUE;
