@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.23 2004/10/11 21:49:36 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.24 2004/11/05 13:55:13 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -159,6 +159,7 @@ int  RpdCheckHost(const char *Host, const char *host);
 int  RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
                     int *OffSet, char **tkn, int *shmid, char **glbsuser);
 int  RpdCheckSpecialPass(const char *passwd);
+ int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pwd, int lmx);
 int  RpdCheckSshd(int opt);
 bool RpdCheckToken(char *tknin, char *tknref);
 int  RpdCleanupAuthTab(const char *crypttoken);

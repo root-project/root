@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.67 2005/01/28 16:32:56 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.68 2005/02/07 18:02:37 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -301,7 +301,7 @@ static int gNumLeft = -1;
 static int gOffSet = -1;
 static std::string gOpenHost = "????";
 static int gParentId = -1;
-static char gPasswd[64] = { 0 };
+static char gPasswd[kMAXUSERLEN] = { 0 };
 static char gPubKey[kMAXPATHLEN] = { 0 };
 static int gPubKeyLen = 0;
 static int gRandInit = 0;
@@ -3502,8 +3502,8 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
       rc = 1;
    } else {
       if (gDebug > 0)
-         ErrorInfo("RpdCheckHostsEquiv: access denied on the base of"
-                   " %s or %s content",hostsequiv,rhosts);
+         ErrorInfo("RpdCheckHostsEquiv: no special permission from"
+                   " %s or %s",hostsequiv,rhosts);
       errout = 3;
    }
 
@@ -3513,59 +3513,30 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
 //______________________________________________________________________________
 int RpdCheckSpecialPass(const char *passwd)
 {
-   // Check user's password against password in $HOME/.rootdpass.
-   // File must have permissions 0600, i.e. readable and writable
-   // by the owner only.
-   // If matches skip other authentication mechanism.
+   // Check recieved user's password against password in $HOME/.rootdpass.
+   // The password is retrieved in RpdUser and temporarly saved in gPasswd. 
    // Returns 1 in case of success authentication, 0 otherwise.
 
-   char rootdpass[kMAXPATHLEN];
-
+   // Check inputs
    if (!passwd)
       return 0;
 
-   struct passwd *pw = getpwnam(gUser);
-
-   SPrintf(rootdpass, kMAXPATHLEN, "%s/%s", pw->pw_dir, kRootdPass.c_str());
-
-   // Check first the permissions: should be 0600
-   struct stat st;
-   if (stat(rootdpass, &st) == -1) {
-      ErrorInfo("RpdCheckSpecialPass: cannot stat pass file"
-                " %s (errno: %d)", rootdpass, GetErrno());
-      return 0;
-   }
-   if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
-       (st.st_mode & (S_IWGRP | S_IWOTH)) != 0) {
-      ErrorInfo("RpdCheckSpecialPass: pass file %s: wrong permissions"
-                " 0%o (should be 0600)", rootdpass, (st.st_mode & 0777));
-      ErrorInfo("RpdCheckSpecialPass: %d %d",
-                S_ISREG(st.st_mode),S_ISDIR(st.st_mode));
-      return 0;
-   }
-
-   int fid = open(rootdpass, O_RDONLY);
-   if (fid == -1)
+   // and the saved the password
+   if (strlen(gPasswd) <= 0)
       return 0;
 
-   int n;
-   if ((n = read(fid, rootdpass, sizeof(rootdpass) - 1)) <= 0) {
-      close(fid);
-      return 0;
-   }
-   close(fid);
-
-   int ll = 0;
-   while (ll < n) {
-      if (rootdpass[ll] == '\n' || rootdpass[ll] == 32)
-         rootdpass[ll] = 0;
-      ll++;
-   }
+   // Ok, point to the saved passwd (retrieved in RpdUser)
+   char *rootdpass = gPasswd;
+   int n = 0;
 
    if (gClientProtocol > 8) {
       n = strlen(rootdpass);
-      if (strncmp(passwd, rootdpass, n + 1) != 0)
+      if (strncmp(passwd, rootdpass, n + 1) != 0) {
+         if (gDebug > 0)
+            ErrorInfo("RpdCheckSpecialPass: wrong password");
+         rpdmemset((volatile void *)rootdpass,0,n);
          return 0;
+      }
    } else {
 #ifndef R__NOCRYPT
       char *pass_crypt = crypt(passwd, rootdpass);
@@ -3573,8 +3544,12 @@ int RpdCheckSpecialPass(const char *passwd)
       char *pass_crypt = (char *)passwd;
 #endif
       n = strlen(rootdpass);
-      if (strncmp(pass_crypt, rootdpass, n+1) != 0)
+      if (strncmp(pass_crypt, rootdpass, n+1) != 0) {
+         if (gDebug > 0)
+            ErrorInfo("RpdCheckSpecialPass: wrong password");
+         rpdmemset((volatile void *)rootdpass,0,n);
          return 0;
+      }
    }
 
    if (gDebug > 0)
@@ -3582,6 +3557,7 @@ int RpdCheckSpecialPass(const char *passwd)
           ("RpdCheckSpecialPass: user %s authenticated via ~/.rootdpass",
            gUser);
 
+   rpdmemset((volatile void *)rootdpass,0,n);
    return 1;
 }
 
@@ -4441,8 +4417,6 @@ int RpdUser(const char *sstr)
    // will not be allowed access, unless effective uid = 0 (i.e. root).
    const int kMaxBuf = 256;
    char recvbuf[kMaxBuf];
-   char rootdpass[kMAXPATHLEN];
-   char specpass[kMAXUSERLEN] = {0};
    EMessageTypes kind;
    struct passwd *pw;
    if (gDebug > 2)
@@ -4553,36 +4527,16 @@ int RpdUser(const char *sstr)
    // (if our system uses shadow passwds and we are not superuser
    // we cannot authenticate users ...)
    //   char *passw = 0;
-   char *passw = specpass;
+   gPasswd[0] = 0;
+   char *passw = gPasswd;
    int errrdp = 0;
    if (gAnon == 0) {
 
-      // Try if special password is given via .rootdpass
-      SPrintf(rootdpass, kMAXPATHLEN, "%s/%s", pw->pw_dir, kRootdPass.c_str());
-
-      // Check first the permissions: should be 0600
-      struct stat st;
-      if (stat(rootdpass, &st) != -1) {
-
-         if (S_ISREG(st.st_mode) && !S_ISDIR(st.st_mode) &&
-             (st.st_mode & (S_IWGRP | S_IWOTH)) == 0) {
-             int fid = open(rootdpass, O_RDONLY);
-             if (fid != -1) {
-                if (read(fid, specpass, sizeof(specpass) - 1) > 0)
-                    passw = specpass;
-                close(fid);
-             }
-         } else {
-            if (gDebug > 0)
-               ErrorInfo("RpdUser: pass file %s:"
-                         " wrong permissions 0%o (should be 0600)",
-                          rootdpass, (st.st_mode & 0777));
-            errrdp = 3;
-         }
-      } else
-         if (gDebug > 0)
-            ErrorInfo("RpdUser: cannot stat pass file"
-                      " %s (errno: %d)", rootdpass, GetErrno());
+      // Check ROOT specific passwd first
+      int rcsp = RpdRetrieveSpecialPass(user,kRootdPass.c_str(),
+                                        gPasswd,sizeof(gPasswd));
+      if (rcsp < 0)
+         errrdp = (rcsp == -2) ? 3 : 0;
 
       if (strlen(passw) == 0 || !strcmp(passw, "x")) {
 #ifdef R__AFS
@@ -4595,9 +4549,8 @@ int RpdUser(const char *sstr)
          if ((spw = getspnam(user)) == 0) {
             if (gDebug > 0) {
                ErrorInfo("RpdUser: Shadow passwd not accessible for user %s",user);
-               ErrorInfo("RpdUser: trying normal or special root passwd");
+               ErrorInfo("RpdUser: trying normal system passwd");
             }
-            passw = pw->pw_passwd;
          } else
             passw = spw->sp_pwdp;
 #else
@@ -6418,6 +6371,128 @@ int RpdGetShmIdCred()
    return gShmIdCred;
 }
 #endif
+
+
+//______________________________________________________________________________
+int RpdRetrieveSpecialPass(const char *usr, const char *fpw, char *pass, int lpwmax)
+{
+   // Retrieve specific ROOT password from $HOME/fpw, if any.
+   // To avoid problems with NFS-root-squashing, if 'root' changes temporarly the
+   // uid/gid to those of the target user (usr).   
+   // If OK, returns pass length and fill 'pass' with the password, null-terminated.
+   // ('pass' is allocated externally to contain max lpwmax bytes).
+   // If the file does not exists, return 0 and an empty pass.
+   // If any problems with the file occurs, return a negative
+   // code, -2 indicating wrong file permissions.
+   // If any problem with changing ugid's occurs, prints a warning trying anyhow
+   // to read the password hash.
+
+   // Check inputs
+   if (!usr || !pass) {
+      if (gDebug > 0)
+         ErrorInfo("RpdRetrieveSpecialPass: invalid arguments:"
+                   " us:%p, sp:%p", usr, pass);
+      return -1;
+   }
+
+   struct passwd *pw = getpwnam(usr);
+   if (!pw) {
+      if (gDebug > 0)
+         ErrorInfo("RpdRetrieveSpecialPass: user '%s' does not exist", usr);
+      return -1;
+   }
+
+   // target and actual uid
+   int uid = pw->pw_uid;
+   int ouid = getuid();
+
+   // Temporary change to target user ID to avoid NFS squashing problems
+   if (ouid == 0) {
+
+      // set access control list from /etc/initgroup
+      if (initgroups(pw->pw_name, pw->pw_gid) == -1)
+         ErrorInfo("RpdRetrieveSpecialPass: can't initgroups for uid %d"
+                   " (errno: %d)", uid, GetErrno());
+      // set uid and gid
+      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
+         ErrorInfo("RpdRetrieveSpecialPass: can't setgid for gid %d"
+                   " (errno: %d)", pw->pw_gid, GetErrno());
+      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
+         ErrorInfo("RpdRetrieveSpecialPass: can't setuid for uid %d"
+                   " (errno: %d)", uid, GetErrno());
+   }
+   
+   // The file now
+   char rootdpass[kMAXPATHLEN];
+   SPrintf(rootdpass, kMAXPATHLEN, "%s/%s", pw->pw_dir, fpw);
+
+   if (gDebug > 0)
+      ErrorInfo
+         ("RpdRetrieveSpecialPass: checking file %s for user %s",rootdpass,
+           pw->pw_name);
+
+   // Check first the permissions: should be 0600
+   struct stat st;
+   if (stat(rootdpass, &st) == -1) {
+      if (GetErrno() != ENOENT) {
+         ErrorInfo("RpdRetrieveSpecialPass: cannot stat password file"
+                   " %s (errno: %d)", rootdpass, GetErrno());
+         return -1;
+      } else {
+         if (gDebug > 0)
+            ErrorInfo("RpdRetrieveSpecialPass: file %s does not exists",
+                      rootdpass);
+         pass[0] = 0;
+         return 0;
+      }
+   }
+   if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
+       (st.st_mode & (S_IWGRP | S_IWOTH | S_IRGRP | S_IROTH)) != 0) {
+      ErrorInfo("RpdRetrieveSpecialPass: pass file %s: wrong permissions"
+                " 0%o (should be 0600)", rootdpass, (st.st_mode & 0777));
+      ErrorInfo("RpdRetrieveSpecialPass: %d %d",
+                S_ISREG(st.st_mode),S_ISDIR(st.st_mode));
+      return -2;
+   }
+
+   int fid = open(rootdpass, O_RDONLY);
+   if (fid == -1) {
+      ErrorInfo("RpdRetrieveSpecialPass: cannot open password file"
+                " %s (errno: %d)", rootdpass, GetErrno());
+      return -1;
+   }
+
+   int n = 0;
+   if ((n = read(fid, pass, lpwmax - 1)) <= 0) {
+      close(fid);
+      ErrorInfo("RpdRetrieveSpecialPass: cannot read password file"
+                " %s (errno: %d)", rootdpass, GetErrno());
+      return -1;
+   }
+   close(fid);
+
+   // Get rid of special trailing chars 
+   int len = n;
+   while (len-- && (pass[len] == '\n' || pass[len] == 32))
+      pass[len] = 0;
+
+   // Null-terminate
+   pass[++len] = 0;
+
+   // Change back uid's
+   if (ouid == 0) {
+      // set uid and gid
+      if (setresgid(0, 0, 0) == -1)
+         ErrorInfo("RpdRetrieveSpecialPass: can't re-setgid for gid 0"
+                   " (errno: %d)", GetErrno());
+      if (setresuid(0, 0, 0) == -1)
+         ErrorInfo("RpdRetrieveSpecialPass: can't re-setuid for uid 0"
+                   " (errno: %d)", GetErrno());
+   }
+
+   // We are done
+   return len;
+}
 
 } // namespace ROOT
 
