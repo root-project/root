@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.13 2004/02/13 16:34:41 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.14 2004/03/26 17:35:38 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -195,7 +195,7 @@ static void SetLibraryPath()
 #ifndef ROOTLIBDIR
    // Set library path for the different platforms.
 
-   static char msg[512];
+   static char msg[4096];
 
 #  if defined(__linux) || defined(__alpha) || defined(__sgi) || \
       defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__)
