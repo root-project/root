@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.10 2003/11/18 16:59:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.11 2004/01/21 22:22:36 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -29,6 +29,10 @@
 #include "TObject.h"
 #endif
 
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
 #ifndef ROOT_TApplicationImp
 #include "TApplicationImp.h"
 #endif
@@ -38,7 +42,7 @@ class TTimer;
 class TSignalHandler;
 
 
-class TApplication : public TObject {
+class TApplication : public TObject, public TQObject {
 
 private:
    Int_t              fArgc;           //Number of com   mand line arguments
@@ -79,7 +83,6 @@ public:
    const char     *GetIdleCommand() const { return fIdleCommand; }
    virtual void    StartIdleing();
    virtual void    StopIdleing();
-   virtual void    Terminate(int status = 0);
 
    virtual const char *ApplicationName() const { return fAppImp->ApplicationName(); }
    virtual void    Show()    { fAppImp->Show(); }
@@ -104,6 +107,10 @@ public:
    void            SetReturnFromRun(Bool_t ret) { fReturnFromRun = ret; }
 
    static void     CreateApplication();
+
+   virtual void    Terminate(int status = 0);   //*SIGNAL* 
+   virtual void    KeyPressed(int key);         //*SIGNAL* 
+   virtual void    ReturnPressed(char *text );  //*SIGNAL* 
 
    ClassDef(TApplication,0)  //GUI application singleton
 };

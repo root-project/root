@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.24 2004/01/21 22:22:36 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.25 2004/01/28 19:06:05 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -50,6 +50,7 @@ extern "C" {
 }
 #endif
 
+static int key_pressed(int key) { gApplication->KeyPressed(key); return 0; }
 
 
 //----- Interrupt signal handler -----------------------------------------------
@@ -183,6 +184,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    // Setup for tab completion
    gTabCom = new TTabCom;
+   Gl_in_key = &key_pressed;
 }
 
 //______________________________________________________________________________
@@ -368,6 +370,7 @@ Bool_t TRint::HandleTermInput()
       // strip off '\n' and leading and trailing blanks
       sline = sline.Chop();
       sline = sline.Strip(TString::kBoth);
+      ReturnPressed((char*)sline.Data());
 
       fInterrupt = kFALSE;
 

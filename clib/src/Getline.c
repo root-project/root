@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.19 2004/01/31 16:06:35 brun Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.20 2004/02/02 15:32:57 brun Exp $ */
 /* Author: */
 
 /*
@@ -241,6 +241,7 @@ void    Gl_histadd(char *buf);       /* adds entries to hist */
 int             (*Gl_in_hook)(char *buf) = 0;
 int             (*Gl_out_hook)(char *buf) = 0;
 int             (*Gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
+int             (*Gl_in_key)(int ch) = 0;
 
 /******************** imported interface *********************************/
 
@@ -795,6 +796,9 @@ Getlinem(int mode, const char *prompt)
     }
     while ((c = gl_getc()) >= 0) {
         gl_extent = 0;          /* reset to full extent */
+
+        if (Gl_in_key)
+            Gl_in_key(c); 
 #ifndef WIN32
         if (isprint(c)) {
 #else

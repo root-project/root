@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.50 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.51 2004/01/21 22:22:36 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -834,10 +834,28 @@ void TApplication::Terminate(int status)
    // Terminate the application by call TSystem::Exit() unless application has
    // been told to return from Run(), by a call to SetReturnFromRun().
 
+   Emit("Terminate(int)", status);
+
    if (fReturnFromRun)
       gSystem->ExitLoop();
    else
       gSystem->Exit(status);
+}
+
+//______________________________________________________________________________
+void TApplication::KeyPressed(int key)
+{
+   // emit signal when console keyboard key was pressed
+
+   Emit("KeyPressed(int)", key);
+}
+
+//______________________________________________________________________________
+void TApplication::ReturnPressed(char *text )
+{
+   // emit signal when return key was pressed
+
+   Emit("ReturnPressed(char*)", text);
 }
 
 //______________________________________________________________________________
