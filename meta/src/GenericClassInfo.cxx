@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: GenericClassInfo.cxx,v 1.1 2002/05/09 20:53:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: GenericClassInfo.cxx,v 1.2 2002/05/09 22:57:37 rdm Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -9,8 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Rtypes.h"
-#include "TNamed.h"
+#include "TROOT.h"
 #include "TClass.h"
 
 
@@ -91,6 +90,7 @@ namespace ROOT {
 
    GenericClassInfo::~GenericClassInfo()
    {
+      if (!gROOT) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
