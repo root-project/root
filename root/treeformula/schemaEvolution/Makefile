@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES)
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log Event.$(ExeSuf) *.root EventDict*
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest
+TEST_TARGETS += schemaTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -17,37 +17,6 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
-schemaRun.ref:
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C \
-	| grep -v Processing | grep -v TRefArray | grep -v fType | grep -v TH1F \
-	> schemaRun.ref
-
-schemaRun1.log:
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C \
-	| grep -v Processing | grep -v TRefArray | grep -v fType | grep -v TH1F \
-	> schemaRun1.log
-
-schemaRun2.log:
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C \
-	| grep -v Processing | grep -v TRefArray | grep -v fType | grep -v TH1F \
-	> schemaRun2.log
-
-schemaRun3.log:
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C \
-	| grep -v Processing | grep -v TRefArray | grep -v fType | grep -v TH1F \
-	> schemaRun3.log
-
-schemaRun4.log:
-	$(CMDECHO) root.exe -q -b -l schemaRun1.C \
-	| grep -v Processing | grep -v TRefArray | grep -v fType | grep -v TH1F \
-	> schemaRun4.log
-
-schemaTest: schemaRun1.log schemaRun2.log schemaRun3.log schemaRun4.log
-	$(CMDECHO) diff -b schemaRun.ref schemaRun1.log && \
-	difff -b schemaRun.ref schemaRun2.log && \
-	&& diff -b schemaRun.ref schemaRun3.log && \
-	&& diff -b schemaRun.ref schemaRun4.log
-
 include $(ROOTSYS)/test/Makefile.arch
 
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
@@ -56,7 +25,7 @@ EVENTSO       = libEvent.$(DllSuf)
 
 EVENTS2       = Event_2.$(SrcSuf) EventDict_2.$(SrcSuf) Event.$(ObjSuf)
 EVENT2O       = Event_2.$(ObjSuf) EventDict_2.$(ObjSuf)
-EVENTS2O      = libEvent_2.$(DllSuf)
+EVENT2S0      = libEvent_2.$(DllSuf)
 
 EVENT         = Event$(ExeSuf)
 ifeq ($(ARCH),win32)
@@ -64,6 +33,38 @@ EVENTLIB      = libEvent.lib
 else
 EVENTLIB      = $(EVENTSO)
 endif
+
+schemaRun.ref: schemaRun1.C Event.root 
+	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
+	| grep -v fType | grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun.ref
+
+schemaRun1.log: schemaRun1.C Event.root 
+	$(CMDECHO) root.exe -q -b -l schemaRun1.C 2>&1 \
+	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun1.log
+
+schemaRun2.log: schemaRun2.C Event.root 
+	$(CMDECHO) root.exe -q -b -l schemaRun2.C 2>&1 \
+	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun2.log
+
+schemaRun3.log: schemaRun3.C Event.root $(EVENT2S0)
+	$(CMDECHO) root.exe -q -b -l schemaRun3.C 2>&1 \
+	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun3.log
+
+schemaRun4.log: schemaRun4.C Event.root $(EVENT2S0)
+	$(CMDECHO) root.exe -q -b -l schemaRun4.C 2>&1 \
+	 | grep -v fType| grep -v Processing | grep -v TRefArray | grep -v TH1F \
+	> schemaRun4.log
+
+schemaTest: schemaRun1.log schemaRun2.log schemaRun3.log schemaRun4.log
+	$(CMDECHO) diff -b schemaRun.ref schemaRun1.log && \
+	diff -b schemaRun.ref schemaRun2.log && \
+	diff -b schemaRun.ref schemaRun3.log && \
+	diff -b schemaRun.ref schemaRun4.log
+
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
@@ -88,18 +89,18 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+		$(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
-		bindexplib $* $^ > $*.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		$(CMDECHO) bindexplib $* $^ > $*.def
+		$(CMDECHO) lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
 endif
 endif
@@ -107,11 +108,11 @@ endif
 		@echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
-		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
+		$(CMDECHO) $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
 		   $(OutPutOpt)$(EVENT)
 		@echo "$@ done"
 
-$(EVENTS2O):     $(EVENT2O)
+$(EVENT2S0):     $(EVENT2O)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
@@ -120,18 +121,18 @@ ifeq ($(ARCH),aix5)
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+		$(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
 		   $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(ARCH),win32)
 		bindexplib $* $^ > $*.def
 		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
 		   $(OutPutOpt)$(EVENTLIB)
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
+		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
 endif
 endif
@@ -141,4 +142,5 @@ endif
 
 Event.root: $(EVENT)
 	$(CMDECHO) ./Event 10 0 7 1 > Event_root.log
+	@echo "$@ done"
 
