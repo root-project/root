@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.98 2002/08/02 21:09:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.99 2002/08/05 17:20:11 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1225,11 +1225,10 @@ TTreeFormula::TTreeFormula(): TFormula()
    fAxis       = 0;
    fHasCast    = 0;
    fManager    = 0;
-   
+
    Int_t j,k;
    for (j=0; j<kMAXCODES; j++) {
       fNdimensions[j] = 0;
-      fLookupType[j] = kDirect;
       fNdata[j] = 1;
       fHasMultipleVarDim[j] = kFALSE;
       for (k = 0; k<kMAXFORMDIM; k++) {
@@ -1334,10 +1333,12 @@ TTreeFormula::~TTreeFormula()
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   fManager->Remove(this);
-   if (fManager->fFormulas.GetLast()<0) {
-      delete fManager;
-      fManager = 0;
+   if (fManager) {
+      fManager->Remove(this);
+      if (fManager->fFormulas.GetLast()<0) {
+         delete fManager;
+         fManager = 0;
+      }
    }
    fLeafNames.Delete();
    fDataMembers.Delete();
