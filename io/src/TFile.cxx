@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.109 2004/01/05 08:20:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.110 2004/01/05 17:50:40 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -179,6 +179,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
+   if (!strncmp(fname1, "file:", 5))
+      fname1 += 5;
+
    gDirectory = 0;
    SetName(fname1);
    SetTitle(ftitle);
@@ -224,6 +227,11 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!create && !recreate && !update && !read) {
       read    = kTRUE;
       fOption = "READ";
+   }
+
+   if (!fname1 || !strlen(fname1)) {
+      Error("TFile", "file name is not specified");
+      goto zombie;
    }
 
    // support dumping to /dev/null on UNIX
@@ -1967,7 +1975,7 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
           h->LoadPlugin() == 0)
          f = (TFile*) h->ExecPlugin(4, name+5, option, ftitle, compress);
       else
-         f = new TFile(name+5, option, ftitle, compress);
+         f = new TFile(name, option, ftitle, compress);
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
       if (h->LoadPlugin() == -1)
          return 0;
@@ -1992,16 +2000,14 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in POSIX open().
 
-#ifdef R__WINGCC
+#if defined(R__WINGCC)
    // ALWAYS use binary mode - even cygwin text should be in unix format
    // although this is posix default it has to be set explicitly
    return ::open(pathname, flags | O_BINARY, mode);
-#else
-#if defined (R__SEEK64) && !defined(R__WINGCC)
+#elif defined(R__SEEK64)
    return ::open64(pathname, flags, mode);
 #else
    return ::open(pathname, flags, mode);
-#endif
 #endif
 }
 
@@ -2036,14 +2042,12 @@ Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    // except that the offset and return value are of a type which will
    // be able to handle 64 bit file systems in the future.
 
-#if defined (R__SEEK64) && !defined(R__WINGCC)
+#if defined (R__SEEK64)
    return ::lseek64(fd, offset, whence);
-#else
-#ifdef WIN32
+#elif defined(WIN32)
    return ::_lseeki64(fd, offset, whence);
 #else
    return ::lseek(fd, offset, whence);
-#endif
 #endif
 }
 
