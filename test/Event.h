@@ -40,11 +40,13 @@ private:
    Float_t      fVertex[3];    //Track vertex position
    Int_t        fNpoint;       //Number of points for this track
    Short_t      fValid;        //Validity criterion
+   Int_t        fNsp;          //Number of points for this track with a special value
+   Float_t*     fPointValue;   //[fNsp] a special quantity for some point.
 
 public:
-   Track() { }
+   Track() { fPointValue = 0; }
    Track(Float_t random);
-   virtual ~Track() { }
+   virtual ~Track() { delete fPointValue; fPointValue=0; }
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
@@ -61,12 +63,14 @@ public:
    Float_t       GetZfirst() const { return fZfirst; }
    Float_t       GetZlast()  const { return fZlast; }
    Float_t       GetCharge() const { return fCharge; }
-   Float_t       GetVertex(Int_t i=0) {return fVertex[i];}
+   Float_t       GetVertex(Int_t i=0) {return (i<3)?fVertex[i]:0;}
    Int_t         GetNpoint() const { return fNpoint; }
    Short_t       GetValid()  const { return fValid; }
    virtual void  SetValid(Int_t valid=1) { fValid = valid; }
+   Int_t         GetN() const { return fNsp; }
+   Float_t       GetPointValue(Int_t i=0) const { return (i<fNsp)?fPointValue[i]:0; }
 
-   ClassDef(Track,1)  //A track segment
+   ClassDef(Track,2)  //A track segment
 };
 
 class EventHeader {

@@ -68,6 +68,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refCharge = RefClone(where,"hCharge");
    TH1F *refNpoint = RefClone(where,"hNpoint");
    TH1F *refValid  = RefClone(where,"hValid");
+   TH1F *refPointValue  = RefClone(where,"hPointValue");
 
    TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
    TH1F *refColMatrix    = RefClone(where,"hColMatrix");
@@ -209,6 +210,9 @@ void MakeHisto(TTree *tree, TDirectory* To) {
                refRowMatOper->Fill( event->GetMatrix(i,2) - t->GetVertex(i1) );
             }
             refMatchColOper->Fill( event->GetMatrix(i,2) - t->GetVertex(1) );
+         }
+         for(i1=0; i1<t->GetN(); i1++) {
+            refPointValue->Fill( t->GetPointValue(i1) );
          }
       }
    }

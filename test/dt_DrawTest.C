@@ -4,6 +4,7 @@
 #include <TBenchmark.h>
 
 int gHasLibrary = kFALSE;
+int gBranchStyle = 1;
 TList gSkipped;
 
 void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t skip) {
@@ -99,6 +100,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1)
    tree->Draw("fCharge>>hCharge","fPx < 0","goff");
    tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
    tree->Draw("fValid>>hValid",  "fPx < 0","goff");
+   DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle==0);
 
    tree->Draw("fMatrix>>hFullMatrix","","goff");
    tree->Draw("fMatrix[][0]>>hColMatrix","","goff");

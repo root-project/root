@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.23 2002/03/26 07:05:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.24 2002/03/26 09:06:34 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -73,18 +73,19 @@ protected:
    
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
+   UChar_t       fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
 
    //the next line should have a mutable in front. See GetNdata()
    Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
 
-   void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
 
-   void        DefineDimensions(Int_t code, TBranchElement *branch);
-   void        DefineDimensions(Int_t code, TFormLeafInfo *info);
-   void        DefineDimensions(const char *size, Int_t code);
+   Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
+   Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
+   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info);
+   Int_t       RegisterDimensions(const char *size, Int_t code);
 
    virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
    Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
@@ -128,7 +129,7 @@ public:
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,5)  //The Tree formula
+   ClassDef(TTreeFormula,6)  //The Tree formula
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.15 2001/11/28 15:00:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.16 2001/12/02 15:21:12 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -268,6 +268,15 @@ Track::Track(Float_t random) : TObject()
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);
    fNpoint = Int_t(60+10*gRandom->Rndm(1));
+   fNsp = Int_t(3*gRandom->Rndm(1));
+   if (fNsp) {
+      fPointValue = new Float_t[fNsp];
+      for(int i=0; i<fNsp; i++) {
+         fPointValue[i] = i+1;
+      }
+   } else {
+      fPointValue = 0;
+   }
    fValid  = Int_t(0.6+gRandom->Rndm(1));
 }
 

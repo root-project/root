@@ -6,12 +6,14 @@
 #include "TChain.h"
 #include "TSystem.h"
 
+#include "TBranchElement.h"
+
 #include "iostream.h"
 
 #include "dt_DrawTest.C"
 
 Bool_t gInteractiveTest = kTRUE;
-Bool_t gQuietLevel = 0;
+Int_t gQuietLevel = 0;
 
 //_______________________________________________________________
 Int_t HistCompare(TH1 *ref, TH1 *comp)
@@ -85,6 +87,7 @@ Int_t Compare(TDirectory* from) {
          if (gQuietLevel<1) cerr << "Succ: " << name << ":" << comp << endl;
       }
    }
+   delete reffile;
    return fail;
 }
 
@@ -119,6 +122,7 @@ void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
   //    2: Output 1 + more details on the different phase being done
   //    3: Output 2 + stop at the first and draw a canvas showing the differences
 
+//gDebug = 5;
    SetVerboseLevel(verboseLevel);
 
    if (mode == 1) {
@@ -158,6 +162,10 @@ void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
       tree = new TTree("T","Base of friendship");
       tree->AddFriend("T",from);
    }
+
+   TBranch *eb = tree->GetBranch("event");
+   gBranchStyle = (int) eb->InheritsFrom(TBranchElement::Class());
+   // cerr << "Branch style is " << gBranchStyle << endl;
 
    if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
    TDirectory* where = GenerateDrawHist(tree);
