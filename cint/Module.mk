@@ -66,9 +66,11 @@ endif
 endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+CINTS2       += $(MODDIRS)/longif3.cxx
 ifeq ($(findstring $(CXXFLAGS),-library=iostream,no%Cstd),)
-#CINTS2       += $(MODDIRS)/sunstrm.cxx
-CINTS2       += $(MODDIRS)/sun5strm.cxx
+CINTS2       += $(MODDIRS)/sunstrm.cxx
+#CINTS2       += $(MODDIRS)/sun5strm.cxx
 else
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
