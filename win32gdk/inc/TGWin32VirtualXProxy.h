@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.4 2004/04/06 16:40:32 rdm Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.5 2004/05/10 12:10:09 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -142,6 +142,7 @@ public:
    void      MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void      ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    void      IconifyWindow(Window_t id);
+   void      ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    void      SetWindowBackground(Window_t id, ULong_t color);
    void      SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,

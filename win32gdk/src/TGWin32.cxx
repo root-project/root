@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.71 2004/06/10 18:58:32 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.72 2004/06/11 13:38:24 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4454,6 +4454,15 @@ void TGWin32::IconifyWindow(Window_t id)
 
    gdk_window_lower((GdkWindow *) id);
    ::CloseWindow((HWND)GDK_DRAWABLE_XID((GdkWindow *)id));
+}
+
+//______________________________________________________________________________
+void TGWin32::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
+{
+   // Reparent window, make pid the new parent and position the window at
+   // position (x,y) in new parent.
+
+   gdk_window_reparent((GdkWindow *)id, (GdkWindow *)pid, x, y);
 }
 
 //______________________________________________________________________________

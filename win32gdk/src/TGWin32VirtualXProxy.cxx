@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.3 2004/03/09 14:01:51 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualXProxy.cxx,v 1.4 2004/04/06 16:40:32 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -179,6 +179,7 @@ VOID_METHOD_ARG4(VirtualX,FillPolygon,Window_t,id,GContext_t,gc,Point_t*,points,
 VOID_METHOD_ARG4(VirtualX,glViewport,Int_t,x0,Int_t,y0,Int_t,x1,Int_t,y1,1)
 VOID_METHOD_ARG4(VirtualX,glClearColor,Float_t,red,Float_t,green,Float_t,blue,Float_t,alpha,1)
 VOID_METHOD_ARG4(VirtualX,glRotated,Double_t,angle,Double_t,x,Double_t,y,Double_t,z,1)
+VOID_METHOD_ARG4(VirtualX,ReparentWindow,Window_t,id,Window_t,pid,Int_t,x,Int_t,y,1)
 VOID_METHOD_ARG5(VirtualX,MoveResizeWindow,Window_t,id,Int_t,x,Int_t,y,UInt_t,w,UInt_t,h,1)
 VOID_METHOD_ARG5(VirtualX,ChangeProperty,Window_t,id,Atom_t,property,Atom_t,type,UChar_t*,data,Int_t,len,1)
 VOID_METHOD_ARG5(VirtualX,SetClipRegion,Int_t,wid,Int_t,x,Int_t,y,UInt_t,w,UInt_t,h,1)

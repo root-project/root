@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.19 2004/04/06 16:40:32 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.20 2004/05/10 12:10:09 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -239,6 +239,7 @@ public:
    void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    void         IconifyWindow(Window_t id);
+   void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    void         SetWindowBackground(Window_t id, ULong_t color);
    void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
    Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
