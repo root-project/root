@@ -116,7 +116,7 @@ class string {
 	public:
 		typedef random_access_iterator_tag iterator_category;
 		typedef string::value_type value_type;
-		typedef string::differenc_type difference_type;
+		typedef string::difference_type difference_type;
 		typedef string::pointer pointer;
 		typedef string::reference reference;
 

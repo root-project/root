@@ -117,8 +117,6 @@ class vector {
 		bool operator>(const const_iterator& _Right) const;
 		bool operator<=(const const_iterator& _Right) const;
 		bool operator>=(const const_iterator& _Right) const;
-		friend const_iterator operator+(difference_type _Off,
-			const const_iterator& _Right);
 		pointer _Myptr;	// offset of element in vector
         };
 
@@ -150,14 +148,12 @@ class vector {
 		iterator operator-(difference_type _Off) const;
 		difference_type operator-(const const_iterator& _Right) const;
 		reference operator[](difference_type _Off) const;
-		friend iterator operator+(difference_type _Off,
-			const iterator& _Right);
 		};
 
 	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#elif (!defined(G__INTEL_COMPILER) && (G__GNUC>=3 && G__GNUC_MINOR>=1)) || defined(G__VISUAL)
+#elif (!defined(G__INTEL_COMPILER) && (G__GNUC>=3 && G__GNUC_MINOR>=1))
 
 #ifndef G__OLDIMPLEMENTATION1703
   class iterator {
