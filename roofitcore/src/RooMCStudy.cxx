@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.11 2002/05/30 18:41:26 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.12 2002/06/13 18:16:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -54,6 +54,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _fitModel((RooAbsPdf*)&fitModel), 
   _projDeps(projDeps),
   _dependents(dependents), 
+  _allDependents(dependents), 
   _fitOptions(fitOptions),
   _genProtoData(genProtoData),
   _canAddFitResults(kTRUE)
@@ -106,6 +107,11 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _fitParData = new RooDataSet("fitParData","Fit Parameters DataSet",tmp2) ;
   tmp2.setAttribAll("StoreError",kFALSE) ;
   tmp2.setAttribAll("StoreAsymError",kFALSE) ;
+
+  // Append proto variables to allDependents
+  if (genProtoData) {
+    _allDependents.add(*genProtoData->get(),kTRUE) ;
+  }
 }
 
 
@@ -159,7 +165,7 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
       // Load sample from ASCII file
       char asciiFile[1024] ;
       sprintf(asciiFile,asciiFilePat,nSamples) ;
-      RooArgList depList(_dependents) ;
+      RooArgList depList(_allDependents) ;
       genSample = RooDataSet::read(asciiFile,depList,"q") ;      
 
     } else {

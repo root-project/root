@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.16 2002/03/29 03:19:00 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.17 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -641,6 +641,14 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     while(arg=(RooAbsArg*)iter->Next()) {
       // Find counterpart in cloned set
       RooAbsArg* aux = auxSplitCats->find(arg->GetName()) ;
+
+      // Check that there is no fundamental splitCat in the dataset with the bane of the auxiliary split
+      if (splitCatSet.find(aux->GetName())) {
+	cout << "RooSimPdfBuilder::buildPdf: WARNING: dataset contains a fundamental splitting category " << endl 
+	     << " with the same name as an auxiliary split function (" << aux->GetName() << "). " << endl 
+	     << " Auxiliary split function will be ignored" << endl ;
+	continue ;
+      }
 
       // Check that all servers of this aux cat are contained in splitCatSet
       RooArgSet* parSet = aux->getParameters(splitCatSet) ;

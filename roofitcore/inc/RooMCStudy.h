@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.7 2002/05/14 18:30:29 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.8 2002/06/13 18:16:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -65,6 +65,7 @@ protected:
   RooArgSet         _projDeps ;    // List of projected dependents in fit
 
   RooArgSet    _dependents ;    // List of dependents 
+  RooArgSet    _allDependents ; // List of generate + prototype dependents
   RooAbsPdf*   _fitModel ;      // Fit model 
   RooArgSet*   _fitInitParams ; // List of initial values of fit parameters
   RooArgSet*   _fitParams ;     // List of fit parameters

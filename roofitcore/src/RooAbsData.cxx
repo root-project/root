@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.13 2001/10/27 22:28:18 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.14 2001/12/01 08:12:46 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -114,11 +114,24 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
   // other variables, such as intermediate formula objects, use the equivalent 
   // reduce method specifying the as a RooFormulVar reference.
 
+  // Make sure varSubset doesn't contain any variable not in this dataset
+  RooArgSet varSubset2(varSubset) ;
+  TIterator* iter = varSubset.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!_vars.find(arg->GetName())) {
+      cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+	   << arg->GetName() << " not in dataset, ignored" << endl ;
+      varSubset2.remove(*arg) ;
+    }
+  }
+  delete iter ;
+
   if (cut) {
     RooFormulaVar cutVar(cut,cut,*get()) ;
-    return reduceEng(varSubset,&cutVar,kFALSE) ;      
+    return reduceEng(varSubset2,&cutVar,kFALSE) ;      
   } 
-  return reduceEng(varSubset,0,kFALSE) ;
+  return reduceEng(varSubset2,0,kFALSE) ;
 }
 
 
@@ -131,6 +144,20 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   // 
   // The 'cutVar' formula variable is used to select the subset of data points to be 
   // retained in the reduced data collection.
-  return reduceEng(varSubset,&cutVar,kFALSE) ;
+
+  // Make sure varSubset doesn't contain any variable not in this dataset
+  RooArgSet varSubset2(varSubset) ;
+  TIterator* iter = varSubset.createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!_vars.find(arg->GetName())) {
+      cout << "RooAbsData::reduce(" << GetName() << ") WARNING: variable " 
+	   << arg->GetName() << " not in dataset, ignored" << endl ;
+      varSubset2.remove(*arg) ;
+    }
+  }
+  delete iter ;
+
+  return reduceEng(varSubset2,&cutVar,kFALSE) ;
 }
 
