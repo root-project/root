@@ -533,7 +533,11 @@ int *done;
 
   
   /* store calling file pointer and position */
+#ifndef G__OLDIMPLEMENTATION1917
+  if(G__ifile.fp) fgetpos(G__ifile.fp,&call_pos);
+#else
   fgetpos(G__ifile.fp,&call_pos);
+#endif
   store_ifile = G__ifile;
   
   
@@ -596,7 +600,11 @@ int *done;
 #else
   G__security = G__srcfile[G__ifile.filenum].security;
 #endif
+#ifndef G__OLDIMPLEMENTATION1917
+  if(G__ifile.fp) fsetpos(G__ifile.fp,&call_pos);
+#else
   fsetpos(G__ifile.fp,&call_pos);
+#endif
   
   *done = 1;
 #ifndef G__OLDIMPLEMENTATION1823
@@ -935,7 +943,11 @@ int G__execfuncmacro_noexec (char* macroname)
 #endif
   
   /* store calling file pointer and position */
+#ifndef G__OLDIMPLEMENTATION1917
+  if(G__ifile.fp) fgetpos(G__ifile.fp,&call_pos);
+#else
   fgetpos(G__ifile.fp,&call_pos);
+#endif
   store_ifile = G__ifile;
 
   
@@ -1095,7 +1107,11 @@ int G__maybe_finish_macro ()
     /* Pop the macro stack. */
     struct G__funcmacro_stackelt* stackelt = G__funcmacro_stack;
     G__ifile = stackelt->file;
+#ifndef G__OLDIMPLEMENTATION1917
+    if(G__ifile.fp) fsetpos (G__ifile.fp, &stackelt->pos);
+#else
     fsetpos (G__ifile.fp, &stackelt->pos);
+#endif
     G__funcmacro_stack = stackelt->next;
     free (stackelt);
     

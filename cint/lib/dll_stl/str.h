@@ -6,8 +6,8 @@
 using namespace std;
 #endif
 
-#if (__SUNPRO_CC>=1280)
-#include "suncc5_string.h"
+#if 0 && (__SUNPRO_CC>=1280)
+#include "suncc5_string.h"  // obsolete
 #endif
 
 #ifdef __MAKECINT__

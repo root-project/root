@@ -48,6 +48,9 @@ extern void G__set_cpp_environmentlongif();
 #define G__LONGLONG_H
 
 #define IOS
+#ifndef G__NEWSTDHEADER
+#define G__NEWSTDHEADER
+#endif
 
 #ifdef IOS
 #ifdef G__NEWSTDHEADER
@@ -755,7 +758,7 @@ int G__ateval(unsigned long x) {return(0);}
 #ifdef G__NEWSTDHEADER
 #include <iostream>
 #else
-#include <iostream>
+#include <iostream.h>
 #endif
 #if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 using namespace std;

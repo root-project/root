@@ -23,6 +23,12 @@
 
 #define IOS
 
+#if (defined(__GNUC__)&&(__GNUC__>=3)) || (defined(_MSC_VER)&&(_MSC_VER>=1300))
+#ifndef G__NEWSTDHEADER
+#define G__NEWSTDHEADER
+#endif
+#endif
+
 #ifdef IOS
 #ifdef G__NEWSTDHEADER
 #include <iostream>

@@ -2288,6 +2288,9 @@ void G__set_stdio()
 #if defined(G__P2FCAST) || defined(G__P2FDECL)
   sprintf(temp,"G__P2F=1"); G__getexpr(temp);
 #endif
+#ifdef G__NEWSTDHEADER
+  sprintf(temp,"G__NEWSTDHEADER=1"); G__getexpr(temp);
+#endif
 #ifndef G__OLDIMPLEMENTATION893
   G__platformMacro();
 #endif

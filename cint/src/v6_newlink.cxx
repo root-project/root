@@ -55,6 +55,7 @@ static int G__privateaccess = 0;
 *     src/gcc3strm.cxx in lib/gcc3strm  'make'
 *     src/iccstrm.cxx  in lib/iccstrm   'make'
 *     src/vcstrm.cxx   in lib/vcstream  'make' , 'make -f Makefileold'
+*     src/vc7strm.cxx  in lib/vc7stream 'make' 
 *     src/bcstrm.cxx   in lib/bcstream  'make'
 *     src/cbstrm.cpp   in lib/cbstream  'make'
 *     src/sunstrm.cxx  in lib/snstream  'make'

@@ -22,12 +22,17 @@
 #include <_functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+#if defined(G__ANSIISOLIB) || (G__GNUC>=3) || defined(G__INTEL_COMPILER)
 // This does not work yet. Don't know why.
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
-#elif defined(G__GNUC) && !defined(G__KCC)
 
+#elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<pair<const Key,T> > >
+
+
+#elif defined(G__GNUC) && !defined(G__KCC)
 #if (G__GNUC_MINOR>=95)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=allocator<T> >
@@ -35,12 +40,11 @@ template<class Key,class T,class Compare=std::less<Key>
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=alloc>
 #endif
+
 #elif defined(G__HPUX)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=allocator>
-#elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
-template<class Key,class T,class Compare=std::less<Key>
-        ,class Allocator=std::allocator<pair<const Key,T> > >
+
 #else
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<T> >

@@ -792,7 +792,7 @@ char *unnamedmacro;
 #ifndef G__OLDIMPLEMENTATION1794
   fp = tmpfile();
 #else
-  G__tmpnam(tname);
+  G__tmpnam(tname);  /* not used anymore */
   fp = fopen(tname,"w");
 #endif
   if(!fp) return G__null;
