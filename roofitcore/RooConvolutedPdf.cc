@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.30 2001/11/28 22:32:08 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.31 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -376,6 +376,8 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   analVars.add(*allDeps) ;
   delete allDeps ;
   if (normSet) delete normSet ;
+  if (normSetAll) delete normSetAll ;
+  delete intSetAll ;
 
 //   cout << this << "---> masterCode = " << masterCode << endl ;
   

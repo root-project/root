@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.21 2001/11/15 01:30:24 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.22 2002/04/03 23:37:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -99,7 +99,10 @@ RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const ch
 RooResolutionModel::~RooResolutionModel()
 {
   // Destructor
-  if (_ownBasis && _basis) delete _basis ;
+
+  if (_ownBasis && _basis) {
+    delete _basis ;
+  }
 
   if (_normSpecial) delete _normSpecial ;
 }
@@ -233,6 +236,11 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
 
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
   if (newBasis) {
+
+    if (_ownBasis) {
+      delete _basis ;
+    }
+
     _basis = newBasis ;
     _ownBasis = kFALSE ;
   }

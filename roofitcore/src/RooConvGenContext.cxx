@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvGenContext.cc,v 1.3 2001/11/05 18:50:48 verkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.4 2002/03/22 22:43:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -85,6 +85,8 @@ RooConvGenContext::~RooConvGenContext()
   delete _modelGen ;
   delete _pdfCloneSet ;
   delete _modelCloneSet ;
+  delete _modelVars ;
+  delete _pdfVars ;
 }
 
 

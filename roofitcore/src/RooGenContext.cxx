@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.27 2002/03/22 22:43:55 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.28 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.27 2002/03/22 22:43:55 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.28 2002/04/03 23:37:25 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -145,7 +145,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
     // First find maximum in other+proto space
     RooArgSet otherAndProto(_otherVars) ;
-    otherAndProto.add(_protoVars) ;
+
+    RooArgSet* protoDeps = model.getDependents(_protoVars) ;
+    otherAndProto.add(*protoDeps) ;
+    delete protoDeps ;
 
     RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,0,_verbose) ;
     Double_t max = maxFinder.getFuncMax() ;
@@ -164,6 +167,7 @@ RooGenContext::~RooGenContext()
 
   // Clean up the cloned objects used in this context.
   delete _cloneSet;
+
   // Clean up our accept/reject generator
   delete _generator;
   delete _acceptRejectFunc;
