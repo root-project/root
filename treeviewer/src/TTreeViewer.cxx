@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.32 2003/09/12 09:31:53 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.33 2003/10/31 15:27:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2316,7 +2316,7 @@ void TTreeViewer::PrintEntries()
 }
 
 //______________________________________________________________________________
-void TTreeViewer::SaveSource(const char* filename)
+void TTreeViewer::SaveSource(const char* filename, Option_t *)
 {
    // Save current session as a C++ macro file.
 

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.11 2002/09/13 19:43:12 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.12 2002/12/03 11:20:10 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -201,7 +201,7 @@ public:
    Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
-   void          SaveSource(const char* filename="");            // *MENU*
+   void          SaveSource(const char* filename="", Option_t *option="");            // *MENU*
    void          SetHistogramTitle(const char *title);
    void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
    void          SetCurrentRecord(Int_t entry);
