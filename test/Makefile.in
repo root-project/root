@@ -106,9 +106,9 @@ endif
 
 ifeq ($(ARCH),sgicc)
 # SGI
-CXX           = CC -n32
+CXX           = CC -n32  -I/usr/include/CC.sgi
 CXXFLAGS      = -O
-LD            = CC -n32
+LD            = CC -n32  -I/usr/include/CC.sgi
 LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
