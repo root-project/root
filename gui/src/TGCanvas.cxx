@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.21 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.22 2003/11/07 22:47:53 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -2052,7 +2052,7 @@ void TGContainer::SavePrimitive(ofstream &out, Option_t *option)
    }
 
    if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() & kSunkenFrame | kDoubleBorder) {
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
          out <<");" << endl;
       } else {
          out << "," << GetOptionString() <<");" << endl;
