@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.44 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.45 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -81,14 +81,22 @@ const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // packag
 
 class TSlaveInfo : public TObject {
 public:
-   Int_t    fOrdinal;      //slave ordinal
-   TString  fHostName;     //hostname this slave is running on
-   Int_t    fPerfIndex;    //relative performance of this slave
+   enum ESlaveStatus { kActive, kNotActive, kBad };
+
+   Int_t        fOrdinal;      //slave ordinal
+   TString      fHostName;     //hostname this slave is running on
+   Int_t        fPerfIndex;    //relative performance of this slave
+   ESlaveStatus fStatus;       //slave status
 
    TSlaveInfo(Int_t ordinal = 0, const char *host = "", Int_t perfidx = 0)
-      : fOrdinal(ordinal), fHostName(host), fPerfIndex(perfidx) {}
+      : fOrdinal(ordinal), fHostName(host), fPerfIndex(perfidx),
+        fStatus(kNotActive) { }
+
+   const char *GetName() const { return fHostName; }
+   void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
 
    void Print(Option_t *option="") const;
+
    ClassDef(TSlaveInfo,1) //basic info on slave
 };
 

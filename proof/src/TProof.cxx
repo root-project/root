@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.69 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.70 2004/07/20 20:53:45 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -93,12 +93,30 @@ Bool_t TProofInputHandler::Notify()
 
 ClassImp(TSlaveInfo)
 
-void TSlaveInfo::Print(Option_t * /*option*/ ) const
+//______________________________________________________________________________
+void TSlaveInfo::Print(Option_t *opt) const
 {
-   cout <<"OBJ: " << IsA()->GetName()
-        << "  Ordinal: "   << fOrdinal
-        << "  Hostname: "  << fHostName
-        << "  PerfIdx: "   << fPerfIndex
+   // Print slave info. If opt = "active" print only the active
+   // slaves, if opt="notactive" print only the not active slaves,
+   // if opt = "bad" print only the bad slaves, else
+   // print all slaves.
+
+   TString stat = fStatus == kActive ? "active" :
+                  fStatus == kBad ? "bad" :
+                  "not active";
+
+   if (!opt) opt = "";
+   if (!strcmp(opt, "active") && fStatus != kActive)
+      return;
+   if (!strcmp(opt, "notactive") && fStatus != kNotActive)
+      return;
+   if (!strcmp(opt, "bad") && fStatus != kBad)
+      return;
+
+   cout << "Slave: "          << fOrdinal
+        << "  hostname: "     << fHostName
+        << "  perf index: "   << fPerfIndex
+        << "  "               << stat
         << endl;
 }
 
@@ -429,13 +447,13 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // we are now properly initialized
    fValid = kTRUE;
 
-   // De-activate monitor (will be activated in Collect)
+   // de-activate monitor (will be activated in Collect)
    fAllMonitor->DeActivateAll();
 
-   // By default go into parallel mode
+   // by default go into parallel mode
    GoParallel(9999);
 
-   // Send relevant initial state to slaves
+   // send relevant initial state to slaves
    SendInitialState();
 
    SetActive(kFALSE);
@@ -734,10 +752,23 @@ TList *TProof::GetSlaveInfo()
       TIter next(GetListOfSlaves());
       TSlave *slave;
 
-      while((slave = (TSlave *) next()) != 0) {
-         TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(), slave->GetName(),
+      while (((slave = (TSlave *) next()))) {
+         TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(),
+                                                slave->GetName(),
                                                 slave->GetPerfIdx());
          fSlaveInfo->Add(slaveinfo);
+      }
+
+      TIter next1(GetListOfActiveSlaves());
+      while ((slave = (TSlave *) next1())) {
+         TSlaveInfo *info = (TSlaveInfo *)fSlaveInfo->FindObject(slave->GetName());
+         info->SetStatus(TSlaveInfo::kActive);
+      }
+
+      TIter next2(GetListOfBadSlaves());
+      while ((slave = (TSlave *) next2())) {
+         TSlaveInfo *info = (TSlaveInfo *)fSlaveInfo->FindObject(slave->GetName());
+         info->SetStatus(TSlaveInfo::kBad);
       }
 
    } else {
