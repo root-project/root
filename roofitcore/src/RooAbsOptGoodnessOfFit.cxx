@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.4 2002/09/05 04:33:07 verkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.5 2002/09/06 22:41:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -142,6 +142,12 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
 RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const RooAbsOptGoodnessOfFit& other, const char* name) : 
   RooAbsGoodnessOfFit(other,name)
 {
+  // Don't do a thing in master mode
+  if (operMode()!=Slave) {
+    _normSet = (RooArgSet*) other._normSet->snapshot() ;   
+    return ;
+  }
+
   _pdfCloneSet = (RooArgSet*) other._pdfCloneSet->snapshot(kFALSE) ;
   _pdfClone = (RooAbsPdf*) _pdfCloneSet->find(other._pdfClone->GetName()) ;
 
