@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.11 2003/12/15 16:37:49 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.12 2003/12/19 10:26:48 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -233,7 +233,7 @@ Double_t TGWin32ProxyBase::GetMilliSeconds()
 void TGWin32ProxyBase::ExecuteCallBack(Bool_t sync)
 {
    // Executes all batched callbacks and the latest callback
-   // This method is executed by GUI thread
+   // This method is executed by server thread
 
    // process batched callbacks
    if (fListOfCallBacks && fListOfCallBacks->GetSize()) {
@@ -269,6 +269,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    while (IsGloballyLocked()) {
       Ping();
       ::SleepEx(10, 1); // take a rest
+      if (!fgMainThreadId) return kFALSE; // server thread terminated 
    }
 
    Bool_t batch = !sync &&  (fListOfCallBacks->GetSize()<fBatchLimit);
@@ -284,10 +285,10 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
       if (wait++>5) return kFALSE; // failed to post
    }
 
-   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, fMaxResponseTime); // we can limit waiting time
+   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, fMaxResponseTime); // limiting wait time
    ::ResetEvent(fPimpl->fEvent);
 
-   if (res==WAIT_TIMEOUT) { // server thread is blocked
+   if (res == WAIT_TIMEOUT) { // server thread is blocked
       GlobalLock();
       return kTRUE;    
    }
@@ -299,12 +300,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 //______________________________________________________________________________
 void TGWin32ProxyBase::SendExitMessage()
 {
-   // send exit message to GUI thread
+   // send exit message to server thread
 
-   Int_t wait = 0;
-   while (::PostThreadMessage(fgMainThreadId, fgPostMessageId, 0, 0L)==0) {
-      // wait because there is chance that message queue does not exist yet
-      ::SleepEx(50,1);
-      if (wait++>5) return;
-   }
+   ::PostThreadMessage(fgMainThreadId, WM_QUIT, 0, 0L);
 }

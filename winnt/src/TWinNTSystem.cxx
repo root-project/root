@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.71 2004/01/31 13:36:31 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.72 2004/02/02 15:32:57 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
       }
    }
    Int_t IsSet(Int_t fd) { return __WSAFDIsSet((SOCKET)fd, fds_bits); }
-   Int_t *GetBits() { return fds_bits->fd_count ? (Int_t*)fds_bits : 0; }
+   Int_t *GetBits() { return fds_bits && fds_bits->fd_count ? (Int_t*)fds_bits : 0; }
    UInt_t GetCount() { return (UInt_t)fds_bits->fd_count; }
    Int_t GetFd(Int_t i) { return i<fds_bits->fd_count ? fds_bits->fd_array[i] : 0; } 
 };
@@ -295,17 +295,17 @@ static int WinNTSelect(TFdSet *readready, TFdSet *writeready, Long_t timeout)
    // writeready masks or for timeout (in milliseconds) to occur.
 
    int retcode;
+   fd_set* rbits = readready ? (fd_set*)readready->GetBits() : 0;
+   fd_set* wbits = writeready ? (fd_set*)writeready->GetBits() : 0;
 
    if (timeout >= 0) {
       timeval tv;
       tv.tv_sec  = timeout / 1000;
       tv.tv_usec = (timeout % 1000) * 1000;
 
-      retcode = ::select(0, (fd_set*)readready->GetBits(),
-                         (fd_set*)writeready->GetBits(), 0, &tv);
+      retcode = ::select(0, rbits, wbits, 0, &tv);
    } else {
-      retcode = ::select(0, (fd_set*)readready->GetBits(), 
-                         (fd_set*)writeready->GetBits(), 0, 0);
+      retcode = ::select(0, rbits, wbits, 0, 0);
    }
 
    if (retcode == SOCKET_ERROR) {
@@ -1011,16 +1011,30 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       // first handle any GUI events
       if (gXDisplay && !gROOT->IsBatch()) {
          if (gXDisplay->Notify()) {
-            if (!pendingOnly) return;
-         } else {
-            if (!pendingOnly) SleepEx(1, 1);
+            if (!pendingOnly) {
+               return;
+            }
          }
+      }
+
+     // check for file descriptors ready for reading/writing
+      if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
+         if (CheckDescriptors()) {
+            if (!pendingOnly) {
+               return;
+            }
+         }
+         fNfd = 0;
+         fReadready->Zero();
+         fWriteready->Zero();
       }
 
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0) {
          if (CheckSignals(kTRUE)) {
-            if (!pendingOnly) return;
+            if (!pendingOnly) {
+               return;
+            }
          }
       }
       fSigcnt = 0;
@@ -1037,20 +1051,13 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
          }
       }
 
-      // check for file descriptors ready for reading/writing
-      if ((fNfd > 0) && fFileHandler && (fFileHandler->GetSize() > 0)) {
-         if (CheckDescriptors()) {
-            if (!pendingOnly) return;
-         }
-         fNfd = 0;
-         fReadready->Zero();
-         fWriteready->Zero();
-      }
-
       if (pendingOnly) return;
 
-      // nothing ready, so setup select call
-      if (!fReadmask->GetBits() && !fWritemask->GetBits()) return; // no fds
+      if (fReadmask && !fReadmask->GetBits() && 
+          fWritemask && !fWritemask->GetBits()) {
+         ::SleepEx(1, 1);
+         return;
+      }
 
       *fReadready = *fReadmask;
       *fWriteready = *fWritemask;

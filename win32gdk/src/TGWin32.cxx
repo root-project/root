@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.45 2004/01/31 16:06:35 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.46 2004/02/02 15:32:57 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -906,8 +906,12 @@ Bool_t TGWin32::NeedSplash()
 //______________________________________________________________________________
 void TGWin32::CloseDisplay()
 {
-   // close display (terminate server/gMainThread )
+   // close display (terminate server/gMainThread thread)
 
+   // disable any processing while exiting
+   TGWin32ProxyBase::GlobalLock();
+
+   // terminate server thread
    gPtr2VirtualX = 0;
    gPtr2Interpreter = 0;
    gVirtualX = TGWin32VirtualXProxy::RealObject();
@@ -920,6 +924,7 @@ void TGWin32::CloseDisplay()
 
    TGWin32ProxyBase::fgMainThreadId = 0;
 
+   // terminate ROOT logo splash thread
    if (gSplash) {
       delete gSplash;
       gSplash = 0;
@@ -930,7 +935,7 @@ void TGWin32::CloseDisplay()
 
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
 
-   gROOT->SetBatch(kTRUE);
+   gROOT->SetBatch(kTRUE); // no GUI is possible
 }
 
 //______________________________________________________________________________
