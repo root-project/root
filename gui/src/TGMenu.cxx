@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.13 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.14 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -157,7 +157,7 @@ void TGMenuBar::AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
 TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright,
                                  Int_t padtop, Int_t padbottom)
 {
-   // Add popup menu to menu bar. Do not delete returned popup-menu 
+   // Add popup menu to menu bar. Do not delete returned popup-menu
 
    ULong_t hints = kLHintsTop;
 
@@ -166,7 +166,8 @@ TGPopupMenu *TGMenuBar::AddPopup(const TString &s, Int_t padleft, Int_t padright
    if (padtop)    hints |= kLHintsBottom;
    if (padbottom) hints |= kLHintsTop;
 
-   TGLayoutHints *l = new TGLayoutHints(hints,padleft,padright,0,0);
+   TGLayoutHints *l = new TGLayoutHints(hints, padleft, padright,
+                                               padtop, padbottom);
    fTrash->Add(l);
 
    TGPopupMenu *menu = new TGPopupMenu(fClient->GetRoot());

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.15 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.16 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -270,7 +270,7 @@ protected:
    TList        *fTitles;        // list of menu titles
    Cursor_t      fDefaultCursor; // right pointing cursor
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
-   TList        *fTrash;         // garabge 
+   TList        *fTrash;         // garbage
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
