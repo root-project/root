@@ -413,7 +413,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(TETRISSO) $(STRESS)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS)
 ifneq ($(ARCH),win32)
 OBJS         += $(GUITESTO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(TETRISSO)
