@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.29 2002/04/11 11:41:29 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.30 2002/09/03 18:37:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1055,6 +1055,9 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
       if (fais == 3 || fais == 2) {
          if (fasi > 0 && fasi < 26) {
             PrintFast(3," FA");
+            fRed   = -1;
+            fGreen = -1;
+            fBlue  = -1;
          }
          return;
       }
@@ -1155,6 +1158,9 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       if (fais == 3 || fais == 2) {
          if (fasi > 0 && fasi < 26) {
             PrintFast(3," FA");
+            fRed   = -1;
+            fGreen = -1;
+            fBlue  = -1;
          }
          return;
       }
