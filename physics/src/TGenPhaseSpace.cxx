@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.2 2000/09/08 08:32:07 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.1 2000/09/08 16:42:12 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -33,6 +33,21 @@ Int_t DoubleMax(const void *a, const void *b)
   if (A < B) return -1;
   return 0;
 
+}
+
+//__________________________________________________________________________________________________
+TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen)
+{
+   fNt      = gen.fNt;
+   fWtMax   = gen.fWtMax;
+   fTeCmTm  = gen.fTeCmTm;
+   fBeta[0] = gen.fBeta[0];
+   fBeta[1] = gen.fBeta[1];
+   fBeta[2] = gen.fBeta[2];
+   for (Int_t i=0;i<fNt;i++) {
+      fMass[i]   = gen.fMass[i];
+      fDecPro[i] = gen.fDecPro[i];
+   }
 }
 
 //__________________________________________________________________________________________________
