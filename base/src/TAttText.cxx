@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.7 2001/03/01 13:34:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.8 2001/10/02 08:03:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,9 +18,6 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TError.h"
-
-static Float_t x11factor[13] ={1.000,1.000,1.010,0.910,0.920,0.920,0.925,1.204,
-                               1.204,1.168,1.166,1.007,1.026};
 
 ClassImp(TAttText)
 
@@ -266,7 +263,7 @@ again:
          }
 
 //*-*-           ready to draw text
-         Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
+         Float_t mgn = rsize/Float_t(ihh);
          if (mgn > 100) mgn = 100;
          if (mgn <0)    mgn = 1;
          if (fTextFont%10 == 0 || fTextFont%10 > 2) mgn = 1;
