@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.54 2005/02/25 14:23:00 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.55 2005/03/29 14:00:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -95,14 +95,14 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
   // be put first in the product. The default cutOff value is zero.
 
   _pdfList.add(pdf1) ;
-  RooArgSet* nset1 = new RooArgSet ;
+  RooArgSet* nset1 = new RooArgSet("nset1") ;
   _pdfNSetList.Add(nset1) ;
   if (pdf1.canBeExtended()) {
     _extendedIndex = _pdfList.index(&pdf1) ;
   }
 
   _pdfList.add(pdf2) ;
-  RooArgSet* nset2 = new RooArgSet ;
+  RooArgSet* nset2 = new RooArgSet("nset2") ;
   _pdfNSetList.Add(nset2) ;
 
   if (pdf2.canBeExtended()) {
@@ -159,7 +159,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
     }
     _pdfList.add(*pdf) ;
 
-    RooArgSet* nset = new RooArgSet ;
+    RooArgSet* nset = new RooArgSet("nset") ;
     _pdfNSetList.Add(nset) ;
 
     if (pdf->canBeExtended()) {
@@ -282,7 +282,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   RooAbsPdf* pdf ;
   while(pdf=(RooAbsPdf*)siter->Next()) {
     _pdfList.add(*pdf) ;
-    RooArgSet* nset1 = new RooArgSet ;
+    RooArgSet* nset1 = new RooArgSet("nset1") ;
     _pdfNSetList.Add(nset1) ;       
   }
   delete siter ;
@@ -393,7 +393,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
   // List of all term dependents: normalization and imported
   RooLinkedList depAllList ;
-
   RooLinkedList depIntNoNormList ;
 
   // Setup lists for factorization terms and their dependents
@@ -477,11 +476,11 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // If not, create a new term
     if (!done) {
 //       cout << "creating new term" << endl ;
-      term = new RooArgSet ;
-      termNormDeps = new RooArgSet ;
-      termAllDeps = new RooArgSet ;
-      termIntDeps = new RooArgSet ;
-      termIntNoNormDeps = new RooArgSet ;
+      term = new RooArgSet("term") ;
+      termNormDeps = new RooArgSet("termNormDeps") ;
+      termAllDeps = new RooArgSet("termAllDeps") ;
+      termIntDeps = new RooArgSet("termIntDeps") ;
+      termIntNoNormDeps = new RooArgSet("termIntNoNormDeps") ;
 
       term->add(*pdf) ;
       termNormDeps->add(pdfNormDeps,kFALSE) ;
@@ -530,6 +529,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 //    while(term=(RooArgSet*)lIter->Next()) {
 //      term->Print("1") ;
 //    }
+
+  depAllList.Delete() ;
+  depIntNoNormList.Delete() ;
 
   delete nIter ;
   delete lIter ;
@@ -691,6 +693,8 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 
 
   // We own contents of all lists filled by factorizeProduct() 
+  terms.Delete() ;
+  ints.Delete() ;
   imp.Delete() ;
   norms.Delete() ;
   cross.Delete() ;

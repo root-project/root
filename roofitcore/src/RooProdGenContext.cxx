@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.17 2005/02/23 15:09:52 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.18 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -92,6 +92,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       if (termDeps->getSize()==0) {
 // 	cout << "no dependents to be generated for this term, removing it from list" << endl ;
 	termList.Remove(term) ;
+	delete term ;
 	continue ;
       }
 
@@ -104,8 +105,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	RooArgSet* pdfDep = pdf->getObservables(termDeps) ;
 	if (pdfDep->getSize()>0) {
 // 	  cout << "RooProdGenContext(" << model.GetName() << "): creating subcontext for " << pdf->GetName() << " with depSet " ; pdfDep->Print("1") ;
-	  RooArgSet* auxProto = 0 ;
-	  if (impDeps) auxProto = (RooArgSet*) impDeps->snapshot() ;
+	  RooArgSet* auxProto = impDeps ;
 	  RooAbsGenContext* cx = pdf->genContext(*pdfDep,prototype,auxProto,verbose) ;
 	  _gcList.Add(cx) ;
 	} 
@@ -164,8 +164,8 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
 //       cout << "added generator for this term, removing from list" << endl ;
       termList.Remove(term) ;
-
-
+      delete term ;
+      
     }
   }
 
@@ -230,6 +230,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   delete normIter ;
 
   _gcIter = _gcList.MakeIterator() ;
+
 
   // We own contents of lists filled by factorizeProduct() 
   termList.Delete() ;
