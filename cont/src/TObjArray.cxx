@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.19 2002/11/15 13:26:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.20 2002/11/28 18:39:36 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -401,7 +401,10 @@ Int_t TObjArray::GetLast() const
 //______________________________________________________________________________
 TObject **TObjArray::GetObjectRef(const TObject *obj) const
 {
-   // Return address of pointer obj.
+   // Return address of pointer obj. If obj is 0 returns address of container.
+
+   if (!obj)
+      return fCont;
 
    Int_t index = IndexOf(obj);
    return &fCont[index];
