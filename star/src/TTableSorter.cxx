@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.2 2000/12/11 09:35:06 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// $Id: TTableSorter.cxx,v 1.2 2000/12/11 09:35:06 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -493,7 +493,7 @@ Int_t TTableSorter::BSearch(const void *value) const {
   Int_t index = -1;
   if (fSearchMethod) {
     void **p = (void **)bsearch( value,  // Object to search for
-                   fSortIndex,          // Pointer to base of search data
+                   (void*)fSortIndex,    // Pointer to base of search data
                    fNumberOfRows,       // Number of elements
                    sizeof(void *),       // Width of elements
                    CALLQSORT(fSearchMethod));
@@ -746,7 +746,7 @@ void  TTableSorter::SortArray(){
     };
 
    if (compare)
-           qsort(fSortIndex,  //Start of target array
+           qsort((void*)fSortIndex,  //Start of target array
                 fNumberOfRows,       //Array size in elements
                 sizeof(void *),       //Element size in bytes
                 CALLQSORT(compare));
