@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.84 2004/07/23 14:04:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.85 2004/08/02 11:22:52 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -640,6 +640,7 @@ Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t eps) const
   // first, derivatives with steps h and h/2 are computed by central difference formulas
   // D(h) = (f(x+h) - f(x-h))/2h
   // the final estimate D = (4*D(h/2) - D(h))/3
+  //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
   //
   // if the argument params is null, the current function parameters are used,
   // otherwise the parameters in params are used.
@@ -699,7 +700,8 @@ Double_t TF1::Derivative2(Double_t x, Double_t *params, Double_t eps) const
   // to compute a third, more accurate estimation)
   // first, derivatives with steps h and h/2 are computed by central difference formulas
   //    D(h) = (f(x+h) - 2*f(x) + f(x-h))/(h*h)
-  //    the final estimate D = (4*D(h/2) - D(h))/3
+  // the final estimate D = (4*D(h/2) - D(h))/3
+  //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
   //
   // if the argument params is null, the current function parameters are used,
   // otherwise the parameters in params are used.
@@ -759,7 +761,8 @@ Double_t TF1::Derivative3(Double_t x, Double_t *params, Double_t eps) const
   // to compute a third, more accurate estimation)
   // first, derivatives with steps h and h/2 are computed by central difference formulas
   //    D(h) = (f(x+2h) - 2*f(x+h) + 2*f(x-h) - f(x-2h))/(2*h*h*h)
-  //    the final estimate D = (4*D(h/2) - D(h))/3
+  // the final estimate D = (4*D(h/2) - D(h))/3
+  //  "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
   //
   // if the argument params is null, the current function parameters are used,
   // otherwise the parameters in params are used.
