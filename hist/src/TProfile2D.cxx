@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.21 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.22 2004/02/10 13:39:19 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -437,6 +437,7 @@ void TProfile2D::Copy(TObject &obj) const
    fBinEntries.Copy(((TProfile2D&)obj).fBinEntries);
    ((TProfile2D&)obj).fZmin = fZmin;
    ((TProfile2D&)obj).fZmax = fZmax;
+   ((TProfile2D&)obj).fScaling = fScaling;
    ((TProfile2D&)obj).fErrorMode = fErrorMode;
    ((TProfile2D&)obj).fTsumwz  = fTsumwz;
    ((TProfile2D&)obj).fTsumwz2 = fTsumwz2;
