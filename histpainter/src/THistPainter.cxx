@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.141 2003/06/05 17:11:29 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.142 2003/06/06 16:41:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2290,7 +2290,6 @@ void THistPainter::PaintContour(Option_t *option)
          if (istart == 0) break;
       }
    }
-   if (Hoption.Zscale) PaintPalette();
 
    for (i=0;i<ncontour;i++) delete polys[i];
    delete [] polys;
@@ -2299,6 +2298,7 @@ void THistPainter::PaintContour(Option_t *option)
    delete [] polysort;
 
 theEND:
+   if (Hoption.Zscale) PaintPalette();
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
    fH->SetFillColor(fillsav);
