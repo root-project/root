@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.130 2004/02/11 08:20:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.131 2004/02/18 07:28:02 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -940,12 +940,14 @@ void TBranchElement::FillLeaves(TBuffer &b)
   if (fType <= 2 && TestBit(kBranchObject)) b.MapObject((TObject*)fObject);
 
   if (fType == 4) {           // STL vector/list of objects
-     if (!fObject) 	return;
-     fCollProxy->SetProxy(fObject); 
-     Int_t n = fCollProxy->Size();
-     if (n > fMaximum) fMaximum = n;
-     b << n;
-     
+     if (!fObject) {
+        b << 0;
+     } else {
+        fCollProxy->SetProxy(fObject); 
+        Int_t n = fCollProxy->Size();
+        if (n > fMaximum) fMaximum = n;
+        b << n;
+     }
   } else if (fType == 41) {   // sub branch of an STL class
      
      //char **ppointer = (char**)fAddress;
@@ -963,10 +965,13 @@ void TBranchElement::FillLeaves(TBuffer &b)
         return;
      }
      TClonesArray *clones = (TClonesArray*)fObject;
-     if (!clones) return;
-     Int_t n = clones->GetEntriesFast();
-     if (n > fMaximum) fMaximum = n;
-     b << n;
+     if (!clones) {
+        b << 0;
+     } else {
+        Int_t n = clones->GetEntriesFast();
+        if (n > fMaximum) fMaximum = n;
+        b << n;
+     }
   } else if (fType == 31) {   // sub branch of a TClonesArray
      if (fTree->GetMakeClass()) {
         Int_t atype = fStreamerType;
@@ -1329,6 +1334,49 @@ Bool_t TBranchElement::IsFolder() const
 }
 
 //______________________________________________________________________________
+Bool_t TBranchElement::IsMissingCollection() const 
+{
+   // In version of ROOT older than 4.00/03, if a collection (TClonesArray
+   // or stl container) was split but the pointer to the collection for zeroed
+   // out, nothing was saved.  Hence there is no __easy__ way to detect the 
+   // case.  In newer version, a zero is inserted so that a 'missing' collection
+   // appears as an empty collection.
+   // This function helps in detecting this case so that we can recover nicely.
+   
+   Bool_t ismissing = kFALSE; 
+
+   TBasket *basket = (TBasket*)fBaskets.UncheckedAt(fReadBasket);
+   if (basket && fTree) {
+      Int_t entry = fTree->GetReadEntry();
+      Int_t first  = fBasketEntry[fReadBasket];
+      Int_t last;
+      if (fReadBasket == fWriteBasket) last = fEntryNumber - 1;
+      else                             last = fBasketEntry[fReadBasket+1] - 1;
+      Int_t *entryOffset = basket->GetEntryOffset();
+      Int_t bufbegin ;
+      Int_t bufnext;
+      if (entryOffset) {
+         bufbegin = entryOffset[entry-first];
+         
+         if (entry<last) {
+            bufnext = entryOffset[entry+1-first];
+         } else {
+            bufnext = basket->GetLast();
+         }
+         if (bufnext==bufbegin) {
+            ismissing = kTRUE;
+         } else {
+            // fixed length buffer so this is not the case here.
+            if (basket->GetNevBufSize()==0) {
+               ismissing = kTRUE;
+            }
+         }
+      }
+   }
+   return ismissing;
+}
+
+//______________________________________________________________________________
 void TBranchElement::Print(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Print TBranch parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1547,6 +1595,17 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      //Error("ReadLeaves","STL split mode not yet implemented (error 1)\n");
      Int_t n;
      b >> n;
+     if (n > fMaximum) {
+        if (IsMissingCollection()) {
+           n = 0;
+           b.SetBufferOffset( b.Length() - sizeof(n) );
+        } else {
+           Error("ReadLeaves",
+                 "Incorrect size read for the container in %s\nThe size read is %d when the maximum is %d\nThe size is reset to 0 for this entry (%d)",
+                 GetName(),n,fMaximum,GetReadEntry());
+           n = 0;
+        }
+     }
      fNdata = n;
      if (!fObject) return;
      GetCollectionProxy()->SetProxy((void*)fAddress);
@@ -1561,6 +1620,19 @@ void TBranchElement::ReadLeaves(TBuffer &b)
   } else if (fType == 3) {    //top level branch of a TClonesArray
      Int_t n;
      b >> n;
+     if (n > fMaximum) {
+
+        if (IsMissingCollection()) {
+           n = 0;
+           b.SetBufferOffset( b.Length() - sizeof(n) );
+
+        } else {
+           Error("ReadLeaves",
+                 "Incorrect size read for the container in %s\n\tThe size read is %d when the maximum is %d\n\tThe size is reset to 0 for this entry (%d)",
+                 GetName(),n,fMaximum,GetReadEntry());
+           n = 0;
+        }
+     }
      fNdata = n;
      TClonesArray *clones = (TClonesArray*)fObject;
      if (!clones) return;

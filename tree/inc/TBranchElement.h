@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.31 2003/12/25 17:55:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.32 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
 private:
+    Bool_t              IsMissingCollection() const; 
     TVirtualCollectionProxy *GetCollectionProxy();
 
             Int_t    GetDataMemberOffset(const TClass *cl, const char *name);
