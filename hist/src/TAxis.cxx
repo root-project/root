@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.2 2000/05/18 17:01:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -317,7 +317,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             bin1 = FindFixBin(xmin);
             bin2 = FindFixBin(xmax);
             if (axisNumber == 1) SetRange(bin1,bin2);
-            if (axisNumber == 2) {
+            if (axisNumber == 2 && hobj) {
                if (hobj->GetDimension() == 1) {
                   hobj->SetMinimum(xmin);
                   hobj->SetMaximum(xmax);

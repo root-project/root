@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -154,6 +154,12 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fFunctions = new TList(this);
    fIntegral  = 0;
    fPainter   = 0;
+   fXaxis.SetName("xaxis");
+   fYaxis.SetName("yaxis");
+   fZaxis.SetName("zaxis");
+   fXaxis.SetParent(this);
+   fYaxis.SetParent(this);
+   fZaxis.SetParent(this);
 }
 
 //______________________________________________________________________________
