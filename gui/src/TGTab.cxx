@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.12 2003/11/17 09:49:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.13 2003/12/15 18:04:27 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -69,6 +69,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
+   fEnabled = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -95,7 +96,12 @@ void TGTabElement::DrawBorder()
    if (fText) {
       int max_ascent, max_descent;
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fText->Draw(fId, fNormGC, 6, max_ascent+3);
+      if (fEnabled) {
+         fText->Draw(fId, fNormGC, 6, max_ascent+3);
+      } else {
+         fText->Draw(fId, GetHilightGC()(), 7, max_ascent + 1);
+         fText->Draw(fId, GetShadowGC()(), 6, max_ascent);
+      }
    }
 }
 
@@ -311,10 +317,32 @@ void TGTab::RemoveTab(Int_t tabIndex)
 }
 
 //______________________________________________________________________________
+void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
+{
+   // set tab enabled or disabled
+
+   TGTabElement *te = GetTabTab(tabIndex);
+   if (te) te->SetEnabled(on); 
+}
+ 
+//______________________________________________________________________________
+Bool_t TGTab::IsEnabled(Int_t tabIndex) const
+{
+   // returns if tab is enabled
+
+   TGTabElement *te = GetTabTab(tabIndex);
+
+   return te ? te->IsEnabled() : kFALSE; 
+}
+
+//______________________________________________________________________________
 void TGTab::ChangeTab(Int_t tabIndex)
 {
    // Make tabIdx the current tab. Utility method called by SetTab and
    // HandleButton().
+
+   TGTabElement *te = GetTabTab(tabIndex);
+   if (!te || !te->IsEnabled()) return;
 
    if (tabIndex != fCurrent) {
       TGFrameElement *el, *elnxt;

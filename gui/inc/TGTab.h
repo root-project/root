@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -48,6 +48,7 @@ protected:
    FontStruct_t     fFontStruct;      // font used for tab
    UInt_t           fTWidth;          // width of tab text
    UInt_t           fTHeight;         // height of tab text
+   Bool_t           fEnabled;         // enabled or disabled
 
 public:
    TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
@@ -61,6 +62,8 @@ public:
    const TGString     *GetText() const { return fText; }
    const char         *GetString() const { return fText->GetString(); }
    void                SetText(TGString *text);
+   virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
+   Bool_t              IsEnabled() const { return fEnabled; }
 
    ClassDef(TGTabElement,0)  // Little tab on tab widget
 };
@@ -125,6 +128,9 @@ public:
    TGTabElement     *GetCurrentTab() const { return GetTabTab(fCurrent); }
    UInt_t            GetTabHeight() const { return fTabh; }
    Int_t             GetNumberOfTabs() const;
+   virtual void      SetEnabled(Int_t tabIndex, Bool_t on = kTRUE);
+   Bool_t            IsEnabled(Int_t tabIndex) const;
+
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
 
    virtual void Selected(Int_t id) { Emit("Selected(Int_t)", id); }  //*SIGNAL*
