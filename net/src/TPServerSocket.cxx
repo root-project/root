@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.cxx,v 1.1 2001/01/26 16:55:08 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -31,7 +31,8 @@ ClassImp(TPServerSocket)
 
 //______________________________________________________________________________
 TPServerSocket::TPServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
-                               Int_t tcpwindowsize) : TNamed("PServerSocket", "")
+                               Int_t tcpwindowsize) :
+   TServerSocket(port, reuse, backlog, tcpwindowsize)
 {
    // Create a parallel server socket object on a specified port. Set reuse
    // to true to force reuse of the server socket (i.e. do not wait for the
@@ -51,17 +52,14 @@ TPServerSocket::TPServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    // will make sure that any open sockets are properly closed on
    // program termination.
 
-   fSetupServer   = new TServerSocket(port, reuse, backlog, tcpwindowsize);
    fTcpWindowSize = tcpwindowsize;
-   if (fSetupServer->IsValid()) {
-      gROOT->GetListOfSockets()->Remove(fSetupServer);
-      gROOT->GetListOfSockets()->Add(this);
-   }
+   SetName("PServerSocket");
 }
 
 //______________________________________________________________________________
 TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
-                               Int_t tcpwindowsize) : TNamed("PServerSocket", "")
+                               Int_t tcpwindowsize) :
+   TServerSocket(service, reuse, backlog, tcpwindowsize)
 {
    // Create a parallel server socket object for a named service. Set reuse
    // to true to force reuse of the server socket (i.e. do not wait for the
@@ -81,25 +79,12 @@ TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
    // will make sure that any open sockets are properly closed on
    // program termination.
 
-   fSetupServer   = new TServerSocket(service, reuse, backlog, tcpwindowsize);
    fTcpWindowSize = tcpwindowsize;
-   if (fSetupServer->IsValid()) {
-      gROOT->GetListOfSockets()->Remove(fSetupServer);
-      gROOT->GetListOfSockets()->Add(this);
-   }
+   SetName("PServerSocket");
 }
 
 //______________________________________________________________________________
-TPServerSocket::~TPServerSocket()
-{
-   // Delete parallel server socket.
-
-   Close();
-   delete fSetupServer;
-}
-
-//______________________________________________________________________________
-TPSocket *TPServerSocket::Accept()
+TSocket *TPServerSocket::Accept()
 {
    // Accept a connection on a parallel server socket. Returns a full-duplex
    // parallel communication TPSocket object. If no pending connections are
@@ -118,7 +103,7 @@ TPSocket *TPServerSocket::Accept()
    Int_t size, port;
 
    // wait for the incoming connections to the server and accept them
-   setupSocket = fSetupServer->Accept();
+   setupSocket = TServerSocket::Accept();
 
    // receive the port number and number of parallel sockets from the
    // client and establish 'n' connections
@@ -141,60 +126,3 @@ TPSocket *TPServerSocket::Accept()
    return newPSocket;
 }
 
-//______________________________________________________________________________
-void TPServerSocket::Close(Option_t *option)
-{
-   // Close the socket. If option is "force", calls shutdown(id,2) to
-   // shut down the connection. This will close the connection also
-   // for the parent of this process. Also called via the dtor (without
-   // option "force", call explicitely Close("force") if this is desired).
-
-   if (fSetupServer->IsValid())
-      gROOT->GetListOfSockets()->Remove(this);
-
-   fSetupServer->Close(option);
-}
-
-//______________________________________________________________________________
-TInetAddress TPServerSocket::GetLocalInetAddress()
-{
-   // Return internet address of host to which the server socket is bound,
-   // i.e. the local host. In case of error TInetAddress::IsValid() returns
-   // kFALSE.
-
-   return fSetupServer->GetLocalInetAddress();
-}
-
-//______________________________________________________________________________
-Int_t TPServerSocket::GetLocalPort()
-{
-   // Get port # to which server socket is bound. In case of error returns -1.
-
-   return fSetupServer->GetLocalPort();
-}
-
-//______________________________________________________________________________
-Int_t TPServerSocket::SetOption(ESockOptions opt, Int_t val)
-{
-   // Set socket options.
-
-   return fSetupServer->SetOption(opt, val);
-}
-
-//______________________________________________________________________________
-Int_t TPServerSocket::GetOption(ESockOptions opt, Int_t &val)
-{
-   // Get socket options. Returns -1 in case of error.
-
-   return fSetupServer->GetOption(opt, val);
-}
-
-//______________________________________________________________________________
-Int_t TPServerSocket::GetErrorCode() const
-{
-   // Returns error code. Meaning depends on context where it is called.
-   // If no error condition returns 0 else a value < 0.
-   // For example see TPServerSocket ctor.
-
-   return fSetupServer->GetErrorCode();
-}

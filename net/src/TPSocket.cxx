@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.1 2001/01/26 16:55:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.2 2001/01/26 17:11:25 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -35,7 +35,7 @@ ClassImp(TPSocket)
 
 //______________________________________________________________________________
 TPSocket::TPSocket(TInetAddress addr, const char *service, Int_t size,
-                   Int_t tcpwindowsize) : TNamed(addr.GetHostName(), service)
+                   Int_t tcpwindowsize) : TSocket(addr, service)
 {
    // Create a parallel socket. Connect to the named service at address addr.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
@@ -46,14 +46,13 @@ TPSocket::TPSocket(TInetAddress addr, const char *service, Int_t size,
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   fSetupSocket = new TSocket(addr, service);
    fSize = size;
    Init(tcpwindowsize);
 }
 
 //______________________________________________________________________________
 TPSocket::TPSocket(TInetAddress addr, Int_t port, Int_t size,
-                   Int_t tcpwindowsize) : TNamed(addr.GetHostName(), "")
+                   Int_t tcpwindowsize) : TSocket(addr, port)
 {
    // Create a parallel socket. Connect to the specified port # at address addr.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
@@ -64,14 +63,13 @@ TPSocket::TPSocket(TInetAddress addr, Int_t port, Int_t size,
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   fSetupSocket = new TSocket(addr, port);
    fSize = size;
    Init(tcpwindowsize);
 }
 
 //______________________________________________________________________________
 TPSocket::TPSocket(const char *host, const char *service, Int_t size,
-                   Int_t tcpwindowsize) : TNamed(host, service)
+                   Int_t tcpwindowsize) : TSocket(host, service)
 {
    // Create a parallel socket. Connect to named service on the remote host.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
@@ -82,14 +80,13 @@ TPSocket::TPSocket(const char *host, const char *service, Int_t size,
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   fSetupSocket = new TSocket(host, service);
    fSize = size;
    Init(tcpwindowsize);
 }
 
 //______________________________________________________________________________
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
-                   Int_t tcpwindowsize) : TNamed(host, "")
+                   Int_t tcpwindowsize) : TSocket(host, port)
 {
    // Create a parallel socket. Connect to specified port # on the remote host.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
@@ -100,7 +97,6 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    // sockets list which will make sure that any open sockets are properly
    // closed on program termination.
 
-   fSetupSocket = new TSocket(host, port);
    fSize = size;
    Init(tcpwindowsize);
 }
@@ -117,7 +113,6 @@ TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
    SetOption(kNoDelay, 1);
    SetOption(kNoBlock, 1);
 
-   fSetupSocket    = 0;
    fWriteMonitor   = new TMonitor;
    fReadMonitor    = new TMonitor;
    fWriteBytesLeft = new Int_t[fSize];
@@ -143,7 +138,6 @@ TPSocket::~TPSocket()
 
    Close();
 
-   delete fSetupSocket;
    delete fWriteMonitor;
    delete fReadMonitor;
    delete [] fWriteBytesLeft;
@@ -166,6 +160,8 @@ void TPSocket::Close(Option_t *option)
    }
    delete [] fSockets;
    fSockets = 0;
+
+   gROOT->GetListOfSockets()->Remove(this);
 }
 
 //______________________________________________________________________________
@@ -181,7 +177,7 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fWritePtr       = 0;
    fReadPtr        = 0;
 
-   if (!fSetupSocket->IsValid())
+   if (!TSocket::IsValid())
       return;
 
    // create server that will be used to accept the parallel sockets from
@@ -190,7 +186,7 @@ void TPSocket::Init(Int_t tcpwindowsize)
 
    // send the local port number of the just created server socket and the
    // number of desired parallel sockets
-   fSetupSocket->Send(ss.GetLocalPort(), fSize);
+   TSocket::Send(ss.GetLocalPort(), fSize);
 
    fSockets = new TSocket*[fSize];
 
@@ -219,24 +215,68 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fWriteMonitor->DeActivateAll();
    fReadMonitor->DeActivateAll();
 
-   delete fSetupSocket;
-   fSetupSocket = 0;
+   TSocket::Close();
 
    gROOT->GetListOfSockets()->Add(this);
+}
+
+//______________________________________________________________________________
+TInetAddress TPSocket::GetLocalInetAddress()
+{
+   // Return internet address of local host to which the socket is bound.
+   // In case of error TInetAddress::IsValid() returns kFALSE.
+
+   if (IsValid()) {
+      if (fLocalAddress.GetPort() == -1)
+         fLocalAddress = gSystem->GetSockName(fSockets[0]->GetDescriptor());
+      return fLocalAddress;
+   }
+   return TInetAddress();
 }
 
 //______________________________________________________________________________
 Int_t TPSocket::Send(const TMessage &mess)
 {
    // Send a TMessage object. Returns the number of bytes in the TMessage
-   // that were sent and -1 in case of error. A kMESS_ACK which has been
-   // or'ed with a TMessage::What will be ignored.
+   // that were sent and -1 in case of error. In case the TMessage::What
+   // has been or'ed with kMESS_ACK, the call will only return after having
+   // received an acknowledgement, making the sending process synchronous.
 
-   return 0;
+   if (!fSockets)
+      return TSocket::Send(mess);  // only the case when called via Init()
+
+   if (mess.IsReading()) {
+      Error("Send", "cannot send a message used for reading");
+      return -1;
+   }
+
+   mess.SetLength();   //write length in first word of buffer
+
+   Int_t nsent, ulen = (Int_t) sizeof(UInt_t);
+   // send length
+   if ((nsent = SendRaw(mess.Buffer(), ulen, kDefault)) < 0)
+      return -1;
+
+   // send buffer (this might go in parallel)
+   if ((nsent = SendRaw(mess.Buffer()+ulen, mess.Length()-ulen, kDefault)) < 0)
+      return -1;
+
+   // If acknowledgement is desired, wait for it
+   if (mess.What() & kMESS_ACK) {
+      char buf[2];
+      if (RecvRaw(buf, sizeof(buf), kDefault) < 0)
+         return -1;
+      if (strncmp(buf, "ok", 2)) {
+         Error("Send", "bad acknowledgement");
+         return -1;
+      }
+   }
+
+   return nsent;  //length - length header
 }
 
 //______________________________________________________________________________
-Int_t TPSocket::SendRaw(const void *buffer, Int_t length)
+Int_t TPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Returns the number of bytes
    // send and -1 in case of error.
@@ -251,6 +291,11 @@ Int_t TPSocket::SendRaw(const void *buffer, Int_t length)
    ESendRecvOptions sendopt = kDontBlock;
    if (nsocks == 1)
       sendopt = kDefault;
+
+   if (opt != kDefault) {
+      nsocks  = 1;
+      sendopt = opt;
+   }
 
    // setup pointer appropriately for transferring data equally on the
    // parallel sockets
@@ -273,6 +318,10 @@ Int_t TPSocket::SendRaw(const void *buffer, Int_t length)
                                                   sendopt)) < 0) {
                   fWriteMonitor->DeActivateAll();
                   return -1;
+               }
+               if (opt == kDontBlock) {
+                  fWriteMonitor->DeActivateAll();
+                  return nsent;
                }
                fWriteBytesLeft[is] -= nsent;
                fWritePtr[is] += nsent;
@@ -299,12 +348,38 @@ Int_t TPSocket::Recv(TMessage *&mess)
       return -1;
    }
 
+   Int_t  n;
+   UInt_t len;
+   if ((n = RecvRaw(&len, sizeof(UInt_t), kDefault)) <= 0) {
+      mess = 0;
+      return n;
+   }
+   len = net2host(len);  //from network to host byte order
 
-   return 0;
+   char *buf = new char[len+sizeof(UInt_t)];
+   if ((n = RecvRaw(buf+sizeof(UInt_t), len, kDefault)) <= 0) {
+      delete [] buf;
+      mess = 0;
+      return n;
+   }
+
+   mess = new TMessage(buf, len+sizeof(UInt_t));
+
+   if (mess->What() & kMESS_ACK) {
+      char ok[2] = { 'o', 'k' };
+      if (SendRaw(ok, sizeof(ok), kDefault) < 0) {
+         delete mess;
+         mess = 0;
+         return -1;
+      }
+      mess->SetWhat(mess->What() & ~kMESS_ACK);
+   }
+
+   return n;
 }
 
 //______________________________________________________________________________
-Int_t TPSocket::RecvRaw(void *buffer, Int_t length)
+Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Returns the number of bytes
    // sent or -1 in case of error.
@@ -319,6 +394,11 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length)
    ESendRecvOptions recvopt = kDontBlock;
    if (nsocks == 1)
       recvopt = kDefault;
+
+   if (opt != kDefault) {
+      nsocks  = 1;
+      recvopt = opt;
+   }
 
    // setup pointer appropriately for transferring data equally on the
    // parallel sockets
@@ -343,6 +423,10 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length)
                                                   recvopt)) <= 0) {
                   fReadMonitor->DeActivateAll();
                   return -1;
+               }
+               if (opt == kDontBlock) {
+                  fReadMonitor->DeActivateAll();
+                  return nrecv;
                }
                fReadBytesLeft[is] -= nrecv;
                fReadPtr[is] += nrecv;

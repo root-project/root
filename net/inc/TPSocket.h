@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.1 2001/01/26 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.2 2001/01/26 17:11:25 rdm Exp $
 // Author: Fons Rademakers   20/1/2001
 
 /*************************************************************************
@@ -30,15 +30,13 @@
 #endif
 
 class TMonitor;
-class TMessage;
 
 
-class TPSocket : public TNamed {
+class TPSocket : public TSocket {
 
 friend class TPServerSocket;
 
 private:
-   TSocket    *fSetupSocket;     // initial setup socket
    TSocket   **fSockets;         // array of parallel sockets
    TMonitor   *fWriteMonitor;    // monitor write on parallel sockets
    TMonitor   *fReadMonitor;     // monitor read from parallel sockets
@@ -52,7 +50,6 @@ private:
    TPSocket(const TPSocket &);        // not implemented
    void operator=(const TPSocket &);  // idem
    void Init(Int_t tcpwindowsize);
-   Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
    TPSocket(TInetAddress address, const char *service, Int_t size, Int_t tcpwindowsize = -1);
@@ -61,18 +58,19 @@ public:
    TPSocket(const char *host, Int_t port, Int_t size, Int_t tcpwindowsize = -1);
    virtual ~TPSocket();
 
-   virtual void Close(Option_t *opt="");
+   void          Close(Option_t *opt="");
+   TInetAddress  GetLocalInetAddress();
 
-   virtual Int_t Send(const TMessage &mess);
-   virtual Int_t SendRaw(const void *buffer, Int_t length);
-   virtual Int_t Recv(TMessage *&mess);
-   virtual Int_t RecvRaw(void *buffer, Int_t length);
+   Int_t   Send(const TMessage &mess);
+   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt);
+   Int_t   Recv(TMessage *&mess);
+   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt);
 
-   Bool_t                IsValid() const { return fSockets == 0 ? kFALSE : kTRUE; }
-   Int_t                 GetErrorCode() const;
-   virtual Int_t         SetOption(ESockOptions opt, Int_t val);
-   virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
-   Int_t                 GetSize() const { return fSize; }
+   Bool_t  IsValid() const { return fSockets == 0 ? kFALSE : kTRUE; }
+   Int_t   GetErrorCode() const;
+   Int_t   SetOption(ESockOptions opt, Int_t val);
+   Int_t   GetOption(ESockOptions opt, Int_t &val);
+   Int_t   GetSize() const { return fSize; }
 
    ClassDef(TPSocket,0)  // Parallel client socket
 };

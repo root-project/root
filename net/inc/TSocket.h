@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.3 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -66,11 +66,11 @@ protected:
    Int_t         fSocket;         // socket descriptor
    TString       fService;        // name of service (matches remote port #)
    TInetAddress  fAddress;        // remote internet address and port #
+   TInetAddress  fLocalAddress;   // local internet address and port #
 
    TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; }
 
 private:
-   TInetAddress  fLocalAddress;   // local internet address and port #
    UInt_t        fBytesSent;      // total bytes sent using this socket
    UInt_t        fBytesRecv;      // total bytes received over this socket
 
@@ -109,7 +109,7 @@ public:
    virtual Int_t         Recv(char *mess, Int_t max);
    virtual Int_t         Recv(char *mess, Int_t max, Int_t &kind);
    virtual Int_t         RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault);
-   Bool_t                IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
+   virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
    Int_t                 GetErrorCode() const;
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);

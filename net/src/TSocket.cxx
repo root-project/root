@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.6 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.7 2001/01/23 19:01:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -211,7 +211,7 @@ TInetAddress TSocket::GetLocalInetAddress()
    // Return internet address of local host to which the socket is bound.
    // In case of error TInetAddress::IsValid() returns kFALSE.
 
-   if (fSocket != -1) {
+   if (IsValid()) {
       if (fLocalAddress.GetPort() == -1)
          fLocalAddress = gSystem->GetSockName(fSocket);
       return fLocalAddress;
@@ -225,9 +225,9 @@ Int_t TSocket::GetLocalPort()
    // Return the local port # to which the socket is bound.
    // In case of error return -1.
 
-   if (fSocket != -1) {
+   if (IsValid()) {
       if (fLocalAddress.GetPort() == -1)
-         fLocalAddress = GetLocalInetAddress();
+         GetLocalInetAddress();
       return fLocalAddress.GetPort();
    }
    return -1;
@@ -303,6 +303,7 @@ Int_t TSocket::Send(const TMessage &mess)
 
    // If acknowledgement is desired, wait for it
    if (mess.What() & kMESS_ACK) {
+      TSystem::ResetErrno();
       char buf[2];
       if (gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0) < 0)
          return -1;
@@ -421,14 +422,13 @@ Int_t TSocket::Recv(Int_t &status, Int_t &kind)
    return n;   // number of bytes read (2 * sizeof(Int_t)
 }
 
-
 //______________________________________________________________________________
 Int_t TSocket::Recv(TMessage *&mess)
 {
    // Receive a TMessage object. The user must delete the TMessage object.
    // Returns length of message in bytes (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -4 in case a non-blocking socket would
-   // block (i.e. there is nothing to be read). In those case mess == 0.
+   // is closed) or -1 in case of error or -4 in case a non-blocking socket
+   // would block (i.e. there is nothing to be read). In those case mess == 0.
 
    TSystem::ResetErrno();
 

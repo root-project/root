@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.1 2001/01/26 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.2 2001/01/26 17:11:25 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -33,34 +33,25 @@
 class TPSocket;
 
 
-class TPServerSocket : public TNamed {
+class TPServerSocket : public TServerSocket {
 
 private:
-   TServerSocket   *fSetupServer;   // initial server socket
-   Int_t            fTcpWindowSize; // size of tcp window (for window scaling)
+   Int_t  fTcpWindowSize; // size of tcp window (for window scaling)
 
    TPServerSocket(const TPServerSocket &);  // not implemented
    void operator=(const TPServerSocket &);  // idem
-   Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
    TPServerSocket(Int_t port, Bool_t reuse = kFALSE,
-                  Int_t backlog = TServerSocket::kDefaultBacklog,
+                  Int_t backlog = kDefaultBacklog,
                   Int_t tcpwindowsize = -1);
    TPServerSocket(const char *service, Bool_t reuse = kFALSE,
-                  Int_t backlog = TServerSocket::kDefaultBacklog,
+                  Int_t backlog = kDefaultBacklog,
                   Int_t tcpwindowsize = -1);
 
-   virtual ~TPServerSocket();
+   virtual ~TPServerSocket() { }
 
-   virtual TPSocket     *Accept();
-   virtual void          Close(Option_t *opt="");
-   virtual TInetAddress  GetLocalInetAddress();
-   virtual Int_t         GetLocalPort();
-   Bool_t                IsValid() const { return fSetupServer->IsValid(); }
-   Int_t                 GetErrorCode() const;
-   virtual Int_t         SetOption(ESockOptions opt, Int_t val);
-   virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
+   virtual TSocket *Accept();
 
    ClassDef(TPServerSocket,0)  // Parallel server socket
 };
