@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.66 2003/07/15 21:50:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.67 2003/07/25 05:15:16 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -473,7 +473,7 @@ Int_t TSystem::GetFPEMask()
 }
 
 //______________________________________________________________________________
-Int_t TSystem::SetFPEMask(Int_t mask)
+Int_t TSystem::SetFPEMask(Int_t)
 {
    // Set which conditions trigger a floating point exception.
    // Return the previous set of conditions.
