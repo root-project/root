@@ -1271,7 +1271,7 @@ void stress_sym_mm_multiplications(Int_t msize)
     for (i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 1+i;
     TMatrixDSym diag(msize);
-    (TMatrixDDiag)diag = v;
+    TMatrixDDiag(diag,0) = v;
     TMatrixDSym eth = m;
     for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
       for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
