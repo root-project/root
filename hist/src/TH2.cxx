@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.40 2003/02/25 14:17:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.41 2003/04/17 07:55:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1566,6 +1566,16 @@ void TH2C::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH2C::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Char_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
 void TH2C::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
@@ -1786,6 +1796,16 @@ void TH2S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH2S::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Short_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
 void TH2S::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
@@ -1999,6 +2019,16 @@ void TH2F::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayF::Reset();
+}
+
+//______________________________________________________________________________
+void TH2F::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Float_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________
@@ -2223,6 +2253,16 @@ void TH2D::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayD::Reset();
+}
+
+//______________________________________________________________________________
+void TH2D::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Double_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________

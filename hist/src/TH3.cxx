@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.30 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.31 2003/02/25 14:17:03 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1601,6 +1601,16 @@ void TH3C::SetBinsLength(Int_t n)
 }
 
 //______________________________________________________________________________
+void TH3C::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Char_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
 void TH3C::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3C.
@@ -1804,6 +1814,16 @@ void TH3S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH3S::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Short_t (content);
+   fEntries++;
+}
+
+//______________________________________________________________________________
 void TH3S::SetBinsLength(Int_t n)
 {
 // Set total number of bins including under/overflow
@@ -1994,6 +2014,16 @@ void TH3F::Reset(Option_t *option)
    TH3::Reset(option);
    TArrayF::Reset();
    // should also reset statistics once statistics are implemented for TH3
+}
+
+//______________________________________________________________________________
+void TH3F::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Float_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________
@@ -2188,6 +2218,17 @@ void TH3D::Reset(Option_t *option)
    TArrayD::Reset();
    // should also reset statistics once statistics are implemented for TH3
 }
+
+//______________________________________________________________________________
+void TH3D::SetBinContent(Int_t bin, Stat_t content)
+{
+// Set bin content
+   if (bin < 0) return;
+   if (bin >= fNcells) return;
+   fArray[bin] = Double_t (content);
+   fEntries++;
+}
+
 
 //______________________________________________________________________________
 void TH3D::SetBinsLength(Int_t n)

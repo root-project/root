@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.138 2003/04/16 14:20:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.139 2003/04/17 07:55:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5612,6 +5612,7 @@ void TH1C::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Char_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________
@@ -5816,6 +5817,7 @@ void TH1S::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Short_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________
@@ -6014,6 +6016,7 @@ void TH1F::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Float_t (content);
+   fEntries++;
 }
 
 //______________________________________________________________________________
@@ -6213,6 +6216,7 @@ void TH1D::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = content;
+   fEntries++;
 }
 
 //______________________________________________________________________________

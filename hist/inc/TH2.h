@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.22 2002/12/03 10:25:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.23 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -115,8 +115,7 @@ public:
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
-   virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Char_t (content);}
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t n=-1);
@@ -158,8 +157,7 @@ public:
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
-   virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Short_t (content);}
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t n=-1);
@@ -203,8 +201,7 @@ public:
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
-   virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Float_t (content);}
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t n=-1);
@@ -248,8 +245,7 @@ public:
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny) const {return GetBinContent(GetBin(binx,biny));}
    virtual Stat_t  GetBinContent(Int_t binx, Int_t biny, Int_t) const {return GetBinContent(GetBin(binx,biny));}
    virtual void    Reset(Option_t *option="");
-   virtual void    SetBinContent(Int_t bin, Stat_t content)
-                                 {fArray[bin] = Double_t (content);}
+   virtual void    SetBinContent(Int_t bin, Stat_t content);
    virtual void    SetBinContent(Int_t binx, Int_t biny, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t, Stat_t content) {SetBinContent(GetBin(binx,biny),content);}
    virtual void    SetBinsLength(Int_t n=-1);
