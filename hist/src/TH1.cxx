@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.11 2000/07/04 09:13:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.12 2000/07/06 07:38:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1385,11 +1385,13 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
 //*-*- Store fitted function in histogram functions list and draw
    if (!Foption.Nostore) {
       if (!Foption.Plus) {
-         TList *ldel = new TList();
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
          while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) ldel->Remove(obj);
+            if (obj->InheritsFrom(TF1::Class())) {
+               fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
       if (GetDimension() < 2) {
