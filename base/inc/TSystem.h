@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.43 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.44 2004/07/26 22:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -99,6 +99,53 @@ enum EFpeMask {
    kAllMask          = 0x1F
 };
 
+enum EFileModeMask {
+   kS_IFMT   = 0170000,   // bitmask for the file type bitfields
+   kS_IFSOCK = 0140000,   // socket
+   kS_IFLNK  = 0120000,   // symbolic link
+   kS_IFREG  = 0100000,   // regular file
+   kS_IFBLK  = 0060000,   // block device
+   kS_IFDIR  = 0040000,   // directory
+   kS_IFCHR  = 0020000,   // character device
+   kS_IFIFO  = 0010000,   // fifo
+   kS_ISUID  = 0004000,   // set UID bit
+   kS_ISGID  = 0002000,   // set GID bit
+   kS_ISVTX  = 0001000,   // sticky bit
+   kS_IRWXU  = 00700,     // mask for file owner permissions
+   kS_IRUSR  = 00400,     // owner has read permission
+   kS_IWUSR  = 00200,     // owner has write permission
+   kS_IXUSR  = 00100,     // owner has execute permission
+   kS_IRWXG  = 00070,     // mask for group permissions
+   kS_IRGRP  = 00040,     // group has read permission
+   kS_IWGRP  = 00020,     // group has write permission
+   kS_IXGRP  = 00010,     // group has execute permission
+   kS_IRWXO  = 00007,     // mask for permissions for others (not in group)
+   kS_IROTH  = 00004,     // others have read permission
+   kS_IWOTH  = 00002,     // others have write permisson
+   kS_IXOTH  = 00001      // others have execute permission
+};
+
+inline Bool_t R_ISDIR(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFDIR); }
+inline Bool_t R_ISCHR(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFCHR); }
+inline Bool_t R_ISBLK(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFBLK); }
+inline Bool_t R_ISREG(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFREG); }
+inline Bool_t R_ISLNK(Int_t mode)  { return ((mode & kS_IFMT) == kS_IFLNK); }
+inline Bool_t R_ISFIFO(Int_t mode) { return ((mode & kS_IFMT) == kS_IFIFO); }
+inline Bool_t R_ISSOCK(Int_t mode) { return ((mode & kS_IFMT) == kS_IFSOCK); }
+
+struct FileStat_t {
+   Long_t   fDev;          // device id
+   Long_t   fIno;          // inode
+   Int_t    fMode;         // protection (combination of EFileModeMask bits)
+   Int_t    fUid;          // user id of owner
+   Int_t    fGid;          // group id of owner
+   Long64_t fSize;         // total size in bytes
+   Long_t   fMtime;        // modification date
+   Bool_t   fIsLink;       // symbolic link
+   FileStat_t() : fDev(0), fIno(0), fMode(0), fUid(0), fGid(0), fSize(0),
+                  fMtime(0), fIsLink(kFALSE) { }
+};
+
 struct UserGroup_t {
    Int_t    fUid;          // user id
    Int_t    fGid;          // group id
@@ -107,6 +154,7 @@ struct UserGroup_t {
    TString  fPasswd;       // password
    TString  fRealName;     // user full name
    TString  fShell;        // user preferred shell
+   UserGroup_t() : fUid(0), fGid(0) { }
 };
 
 typedef void* Func_t;
@@ -275,7 +323,8 @@ public:
    virtual int             Symlink(const char *from, const char *to);
    virtual int             Unlink(const char *name);
    int                     GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
-   virtual int             GetPathInfo(const char *path, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   int                     GetPathInfo(const char *path, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   virtual int             GetPathInfo(const char *path, FileStat_t &buf);
    virtual int             GetFsInfo(const char *path, Long_t *id, Long_t *bsize, Long_t *blocks, Long_t *bfree);
    virtual int             Chmod(const char *file, UInt_t mode);
    virtual int             Umask(Int_t mask);

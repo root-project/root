@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.6 2004/07/13 11:33:55 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.7 2004/08/09 17:43:07 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004
@@ -104,8 +104,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp);
    const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                           Long_t *flags, Long_t *modtime);
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
    ClassDef(TDCacheSystem,0)  // Directory handler for DCache

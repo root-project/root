@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.104 2004/09/13 22:43:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.105 2004/09/16 18:59:58 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1006,12 +1006,20 @@ int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
                          Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
+   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
    Long64_t lsize;
 
    int res = GetPathInfo(path, id, &lsize, flags, modtime);
 
-   if (size) {
+   if (res == 0 && size) {
       if (sizeof(Long_t) == 4 && lsize > kMaxInt) {
          Error("GetPathInfo", "file %s > 2 GB, use GetPathInfo() with Long64_t size", path);
          *size = kMaxInt;
@@ -1024,11 +1032,53 @@ int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
 }
 
 //______________________________________________________________________________
-int TSystem::GetPathInfo(const char *, Long_t *, Long64_t *, Long_t *, Long_t *)
+int TSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
+                         Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
+   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
-   AbstractMethod("GetPathInfo");
+   FileStat_t buf;
+
+   int res = GetPathInfo(path, buf);
+
+   if (res == 0) {
+      if (id)
+         *id = (buf.fDev << 24) + buf.fIno;
+      if (size)
+         *size = buf.fSize;
+      if (modtime)
+         *modtime = buf.fMtime;
+      if (flags) {
+         *flags = 0;
+         if (buf.fMode & (kS_IXUSR|kS_IXGRP|kS_IXOTH))
+            *flags |= 1;
+         if (R_ISDIR(buf.fMode))
+            *flags |= 2;
+         if (!R_ISREG(buf.fMode) && !R_ISDIR(buf.fMode))
+            *flags |= 4;
+      }
+   }
+
+   return res;
+}
+
+//______________________________________________________________________________
+int TSystem::GetPathInfo(const char *, FileStat_t &)
+{
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   AbstractMethod("GetPathInfo(const char*, FileStat_t&)");
    return 1;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.92 2004/09/13 22:49:10 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.93 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -193,7 +193,8 @@
 // 9 -> 10: Receives client protocol with kROOTD_PROTOCOL + change cleaning protocol
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
 // 11 -> 12: added support for stat functionality (access,opendir,...) (cfr.TNetSystem)
-//           and support for openSSL keys for encryption
+//           and support for OpenSSL keys for encryption
+// 12 -> 13: changed return message of RootdFstat()
 
 #include "config.h"
 #include "RConfig.h"
@@ -326,7 +327,7 @@ extern "C" {
 }
 
 // Debug flag
-int     gDebug  = 0;
+int gDebug  = 0;
 
 //--- Local Globals -----------------------------------------------------------
 
@@ -336,14 +337,11 @@ static std::string gDaemonrc;
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 12;      // increase when protocol changes
-static int gClientProtocol       = -1;  // Determined by RpdInitSession
-static int gAnon                 = 0;      // anonymous user flag
-static std::string gUser;
-static std::string gPasswd;
-
-static double  gBytesRead        = 0;
-static double  gBytesWritten     = 0;
+static int gProtocol             = 13;      // increase when protocol changes
+static int gClientProtocol       = -1;      // Determined by RpdInitSession
+static int gAnon                 = 0;       // anonymous user flag
+static double gBytesRead         = 0;
+static double gBytesWritten      = 0;
 static DIR *gDirectory           = 0;
 static int gDownloaded           = 0;
 static int gFd                   = -1;
@@ -354,6 +352,8 @@ static char gFile[kMAXPATHLEN]   = { 0 };
 static int gUploaded             = 0;
 static int gWritable             = 0;
 static int gReadOnly             = 0;
+static std::string gUser;
+static std::string gPasswd;
 
 using namespace ROOT;
 
@@ -875,8 +875,9 @@ void RootdFstat(const char *buf)
 {
    // Return file stat information in same format as TSystem::GetPathInfo().
 
-   char     msg[128];
-   long     id, flags, modtime;
+   char     msg[256];
+   int      mode, uid, gid, islink = 0;
+   long     dev, ino, mtime;
    Long64_t size;
 
 #if defined(R__SEEK64)
@@ -905,33 +906,33 @@ void RootdFstat(const char *buf)
       if (buf[0] == '/')
          epath++;
 #if defined(R__SEEK64)
-      rc = stat64(epath, &statbuf);
+      rc = lstat64(epath, &statbuf);
 #elif defined(WIN32)
       rc = _stati64(epath, &statbuf);
 #else
-      rc = stat(epath, &statbuf);
+      rc = lstat(epath, &statbuf);
 #endif
+      if (rc >= 0) {
+         islink = S_ISLNK(statbuf.st_mode);
+         if (islink) {
+#if defined(R__SEEK64)
+            rc = stat64(epath, &statbuf);
+#elif defined(WIN32)
+            rc = _stati64(epath, &statbuf);
+#else
+            rc = stat(epath, &statbuf);
+#endif
+         }
+      }
    }
 
-   if (rc >= 0) {
-#if 0 && defined(__KCC) && defined(linux)
-      id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
-#else
-      id = (statbuf.st_dev << 24) + statbuf.st_ino;
-#endif
-      size = statbuf.st_size;
-      modtime = statbuf.st_mtime;
-      flags = 0;
-      if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
-         flags |= 1;
-      if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
-         flags |= 2;
-      if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
-          (statbuf.st_mode & S_IFMT) != S_IFDIR)
-         flags |= 4;
-      sprintf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
-   } else
-      sprintf(msg, "-1 -1 -1 -1");
+   if (rc >= 0)
+      sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)statbuf.st_dev,
+              (long)statbuf.st_ino, statbuf.st_mode, statbuf.st_uid,
+              statbuf.st_gid, statbuf.st_size, statbuf.st_mtime,
+              islink);
+   else
+      sprintf(msg, "-1 -1 -1 -1 -1 -1 -1 -1");
 
    NetSend(msg, kROOTD_FSTAT);
 }
@@ -2404,7 +2405,7 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         int rci = RpdInitSession(gService, gUser, 
+         int rci = RpdInitSession(gService, gUser,
                                   gClientProtocol, gAnon, gPasswd);
          if (rci == -1)
             Error(ErrFatal, -1, "rootd: failure initializing session");

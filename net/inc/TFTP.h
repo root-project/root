@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.8 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.9 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -95,8 +95,7 @@ public:
    Bool_t   AccessPathName(const char *path, EAccessMode mode = kFileExists,
                            Bool_t print = kFALSE);
    const char *GetDirEntry(Bool_t print = kFALSE);
-   Int_t    GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                        Long_t *flags, Long_t *modtime, Bool_t print = kFALSE);
+   Int_t    GetPathInfo(const char *path, FileStat_t &buf, Bool_t print = kFALSE);
    Int_t    ChangeDirectory(const char *dir) const;
    Int_t    MakeDirectory(const char *dir, Bool_t print = kFALSE) const;
    Int_t    DeleteDirectory(const char *dir) const;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.52 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.53 2004/08/09 17:43:07 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -778,23 +778,17 @@ const char *TNetSystem::GetDirEntry(void *dirp)
 }
 
 //______________________________________________________________________________
-Int_t TNetSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                               Long_t *flags, Long_t *modtime)
+Int_t TNetSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is 0 for RFIO file
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    if (fFTP && fFTP->IsOpen()) {
       // Extract the directory name
       TString epath = TUrl(path).GetFile();
-      fFTP->GetPathInfo(epath, id, size, flags, modtime, kFALSE);
+      fFTP->GetPathInfo(epath, buf, kFALSE);
       return 0;
    }
    return 1;

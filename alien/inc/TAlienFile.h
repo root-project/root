@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.3 2004/01/05 13:46:07 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.4 2004/08/09 17:43:07 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -85,8 +85,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp);
    const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                           Long_t *flags, Long_t *modtime);
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
    ClassDef(TAlienSystem,0)  // Directory handler for AliEn

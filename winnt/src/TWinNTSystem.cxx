@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.103 2004/10/08 07:27:24 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.104 2004/10/11 14:35:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1795,28 +1795,18 @@ int TWinNTSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
-int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                              Long_t *flags, Long_t *modtime)
+int TWinNTSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    TSystem *helper = FindHelper(path);
-   if (helper) {
-      return helper->GetPathInfo(path, id, size, flags, modtime);
-   }
-   struct _stati64 statbuf;
-   if (id)      *id = 0;
-   if (size)    *size = 0;
-   if (flags)   *flags = 0;
-   if (modtime) *modtime = 0;
+   if (helper)
+      return helper->GetPathInfo(path, buf);
+
+   struct _stati64 sbuf;
 
    // Remove trailing backslashes
    char *newpath = StrDup(path);
@@ -1827,28 +1817,17 @@ int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
       }
       newpath[l] = '\0';
    }
-   if (newpath != 0 && ::_stati64(newpath, &statbuf) >= 0) {
-      if (id) {
-         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
-      }
-      if (size) {
-         *size = statbuf.st_size;
-      }
-      if (modtime) {
-         *modtime = statbuf.st_mtime;
-      }
-      if (flags) {
-         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6))) {
-            *flags |= 1;
-         }
-         if ((statbuf.st_mode & S_IFMT) == S_IFDIR) {
-            *flags |= 2;
-         }
-         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
-             (statbuf.st_mode & S_IFMT) != S_IFDIR) {
-            *flags |= 4;
-         }
-      }
+   if (newpath && ::_stati64(newpath, &sbuf) >= 0) {
+
+      buf.fDev    = sbuf.st_dev;
+      buf.fIno    = sbuf.st_ino;
+      buf.fMode   = sbuf.st_mode;
+      buf.fUid    = sbuf.st_uid;
+      buf.fGid    = sbuf.st_gid;
+      buf.fSize   = sbuf.st_size;
+      buf.fMtime  = sbuf.st_mtime;
+      buf.fIsLink = kFALSE;
+
       delete [] newpath;
       return 0;
    }

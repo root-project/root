@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.24 2004/05/06 16:57:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.25 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -900,6 +900,11 @@ Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
 
    if (!IsOpen()) return fDir;
 
+   if (fProtocol < 12) {
+      Error("OpenDirectory", "call not supported by remote rootd");
+      return fDir;
+   }
+
    if (!dir || !*dir) {
       Error("OpenDirectory", "illegal directory name specified");
       return fDir;
@@ -935,6 +940,11 @@ void TFTP::FreeDirectory(Bool_t print)
 
    if (!IsOpen() || !fDir) return;
 
+   if (fProtocol < 12) {
+      Error("FreeDirectory", "call not supported by remote rootd");
+      return;
+   }
+
    if (fSocket->Send(kROOTD_FREEDIR) < 0) {
       Error("FreeDirectory", "error sending kROOTD_FREEDIR command");
       return;
@@ -964,6 +974,11 @@ const char *TFTP::GetDirEntry(Bool_t print)
 
    if (!IsOpen() || !fDir) return 0;
 
+   if (fProtocol < 12) {
+      Error("GetDirEntry", "call not supported by remote rootd");
+      return 0;
+   }
+
    if (fSocket->Send(kROOTD_DIRENTRY) < 0) {
       Error("FreeDirectory", "error sending kROOTD_DIRENTRY command");
       return 0;
@@ -989,22 +1004,21 @@ const char *TFTP::GetDirEntry(Bool_t print)
 }
 
 //______________________________________________________________________________
-Int_t TFTP::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                               Long_t *flags, Long_t *modtime, Bool_t print)
+Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is 0 for RFIO file
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    TUrl url(path);
 
    if (!IsOpen()) return 1;
+
+   if (fProtocol < 12) {
+      Error("GetPathInfo", "call not supported by remote rootd");
+      return 1;
+   }
 
    if (!path || !*path) {
       Error("GetPathInfo", "illegal path name specified");
@@ -1026,22 +1040,56 @@ Int_t TFTP::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
    if (print)
       Printf("<TFTP::GetPathInfo>: %s", mess);
 
-   sscanf(mess, "%ld %lld %ld %ld", id, size, flags, modtime);
+   Int_t    mode, uid, gid, islink;
+   Long_t   id, flags, dev, ino, mtime;
+   Long64_t size;
+   if (fProtocol > 12) {
+      sscanf(mess, "%ld %ld %d %d %d %lld %ld %d", &dev, &ino, &mode,
+             &uid, &gid, &size, &mtime, &islink);
+      if (dev == -1)
+         return 1;
+      buf.fDev    = dev;
+      buf.fIno    = ino;
+      buf.fMode   = mode;
+      buf.fUid    = uid;
+      buf.fGid    = gid;
+      buf.fSize   = size;
+      buf.fMtime  = mtime;
+      buf.fIsLink = (islink == 1);
+   } else {
+      sscanf(mess, "%ld %lld %ld %ld", &id, &size, &flags, &mtime);
+      if (id == -1)
+         return 1;
+      buf.fDev    = (id >> 24);
+      buf.fIno    = (id && 0x00FFFFFF);
+      if (flags == 0)
+         buf.fMode = kS_IFREG;
+      if (flags & 1)
+         buf.fMode = (kS_IFREG|kS_IXUSR|kS_IXGRP|kS_IXOTH);
+      if (flags & 2)
+         buf.fMode = kS_IFDIR;
+      if (flags & 4)
+         buf.fMode = kS_IFSOCK;
+      buf.fSize   = size;
+      buf.fMtime  = mtime;
+   }
 
-   if (*id == -1)
-      return 1;
    return 0;
 }
 
 //______________________________________________________________________________
 Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
+   // Returns kFALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
 
-
    if (!IsOpen()) return kTRUE;
+
+   if (fProtocol < 12) {
+      Error("AccessPathName", "call not supported by remote rootd");
+      return kTRUE;
+   }
 
    if (!path || !*path) {
       Error("AccessPathName", "illegal path name specified");

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.15 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -103,8 +103,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp = 0);
    const char *GetDirEntry(void *dirp = 0);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                           Long_t *flags, Long_t *modtime);
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
    ClassDef(TNetSystem,0)  // Directory handler for NetFile

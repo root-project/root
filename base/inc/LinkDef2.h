@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.26 2004/04/22 06:56:09 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.27 2004/04/26 16:45:38 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -28,6 +28,7 @@
 #pragma link C++ enum ESignals;
 #pragma link C++ enum ESysConstants;
 #pragma link C++ enum EFpeMask;
+#pragma link C++ enum EFileModeMask;
 
 #pragma link C++ function operator+(const TTime&,const TTime&);
 #pragma link C++ function operator-(const TTime&,const TTime&);
@@ -63,6 +64,15 @@
 
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
+#pragma link C++ function R_ISDIR(Int_t);
+#pragma link C++ function R_ISCHR(Int_t);
+#pragma link C++ function R_ISBLK(Int_t);
+#pragma link C++ function R_ISREG(Int_t);
+#pragma link C++ function R_ISLNK(Int_t);
+#pragma link C++ function R_ISFIFO(Int_t);
+#pragma link C++ function R_ISSOCK(Int_t);
+
+#pragma link C++ struct FileStat_t;
 #pragma link C++ struct UserGroup_t;
 
 #pragma link C++ class TMath;

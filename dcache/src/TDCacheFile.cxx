@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.20 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.21 2004/09/10 21:34:20 brun Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -447,11 +447,7 @@ Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
 
    if (fStatCached) {
       if (id)
-#if defined(R__KCC) && defined(R__LINUX)
-         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
-#else
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;
-#endif
       if (size)
          *size = statbuf.st_size;
       if (modtime)
@@ -599,45 +595,29 @@ Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
 }
 
 //______________________________________________________________________________
-int TDCacheSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                               Long_t *flags, Long_t *modtime)
+int TDCacheSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    TString pathString = TDCacheFile::GetDcapPath(path);
    path = pathString.Data();
 
-   struct stat statbuf;
+   struct stat sbuf;
 
-   if (path != 0 && dc_stat(path, &statbuf) >= 0) {
-      if (id)
-#if defined(R__KCC) && defined(R__LINUX)
-         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
-#else
-         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
-#endif
-      if (size)
-         *size = statbuf.st_size;
-      if (modtime)
-         *modtime = statbuf.st_mtime;
-      if (flags) {
-         *flags = 0;
-         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
-            *flags |= 1;
-         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
-            *flags |= 2;
-         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
-             (statbuf.st_mode & S_IFMT) != S_IFDIR)
-            *flags |= 4;
-      }
+   if (path != 0 && dc_stat(path, &sbuf) >= 0) {
+
+      buf.fDev    = sbuf.st_dev;
+      buf.fIno    = sbuf.st_ino;
+      buf.fMode   = sbuf.st_mode;
+      buf.fUid    = sbuf.st_uid;
+      buf.fGid    = sbuf.st_gid;
+      buf.fSize   = sbuf.st_size;
+      buf.fMtime  = sbuf.st_mtime;
+      buf.fIsLink = kFALSE;
+
       return 0;
    }
    return 1;

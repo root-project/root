@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.29 2004/03/08 15:03:56 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.30 2004/08/09 17:43:07 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -306,11 +306,7 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
 
    if (::rfio_fstat(fd, &statbuf) >= 0) {
       if (id)
-#if defined(R__KCC) && defined(R__LINUX)
-         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
-#else
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;
-#endif
       if (size)
          *size = statbuf.st_size;
       if (modtime)
@@ -495,40 +491,28 @@ const char *TRFIOSystem::GetDirEntry(void *dirp)
 }
 
 //______________________________________________________________________________
-Int_t TRFIOSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                               Long_t *flags, Long_t *modtime)
+Int_t TRFIOSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is 0 for RFIO file
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    TUrl url(path);
 
-   struct stat statbuf;
+   struct stat sbuf;
 
-   if (path && ::rfio_stat(url.GetFile(), &statbuf) >= 0) {
-      if (id)
-         *id = 0;
-      if (size)
-         *size = statbuf.st_size;
-      if (modtime)
-         *modtime = statbuf.st_mtime;
-      if (flags) {
-         *flags = 0;
-         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
-            *flags |= 1;
-         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
-            *flags |= 2;
-         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
-             (statbuf.st_mode & S_IFMT) != S_IFDIR)
-            *flags |= 4;
-      }
+   if (path && ::rfio_stat(url.GetFile(), &sbuf) >= 0) {
+
+      buf.fDev    = sbuf.st_dev;
+      buf.fIno    = sbuf.st_ino;
+      buf.fMode   = sbuf.st_mode;
+      buf.fUid    = sbuf.st_uid;
+      buf.fGid    = sbuf.st_gid;
+      buf.fSize   = sbuf.st_size;
+      buf.fMtime  = sbuf.st_mtime;
+      buf.fIsLink = kFALSE;
+
       return 0;
    }
    return 1;

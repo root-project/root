@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.111 2004/10/08 07:27:23 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.112 2004/10/11 14:35:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1118,24 +1118,18 @@ int TUnixSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
-                             Long_t *flags, Long_t *modtime)
+int TUnixSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
    TSystem *helper = FindHelper(path);
    if (helper)
-      return helper->GetPathInfo(path, id, size, flags, modtime);
+      return helper->GetPathInfo(path, buf);
 
-   return UnixFilestat(path, id,  size, flags, modtime);
+   return UnixFilestat(path, buf);
 }
 
 //______________________________________________________________________________
@@ -3175,46 +3169,38 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 //---- files -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
-                              Long_t *flags, Long_t *modtime)
+int TUnixSystem::UnixFilestat(const char *path, FileStat_t &buf)
 {
-   // Get info about a file: id, size, flags, modification time.
-   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
-   // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
-   // Modtime is modification time.
+   // Get info about a file. Info is returned in the form of a FileStat_t
+   // structure (see TSystem.h).
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
 #if defined(R__SEEK64)
-   struct stat64 statbuf;
-   if (path != 0 && stat64(path, &statbuf) >= 0) {
+   struct stat64 sbuf;
+   if (path && lstat64(path, &sbuf) == 0) {
 #else
-   struct stat statbuf;
-   if (path != 0 && stat(path, &statbuf) >= 0) {
+   struct stat sbuf;
+   if (path && lstat(path, &sbuf) == 0) {
 #endif
-      if (id)
-#if 0 && defined(R__KCC) && defined(R__LINUX)
-         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
+      buf.fIsLink = S_ISLNK(sbuf.st_mode);
+      if (buf.fIsLink) {
+#if defined(R__SEEK64)
+         if (stat64(path, &sbuf) == -1) {
 #else
-         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
+         if (stat(path, &sbuf) == -1) {
 #endif
-      if (size)
-         *size = statbuf.st_size;
-      if (modtime)
-         *modtime = statbuf.st_mtime;
-      if (flags) {
-         *flags = 0;
-         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
-            *flags |= 1;
-         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
-            *flags |= 2;
-         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
-             (statbuf.st_mode & S_IFMT) != S_IFDIR)
-            *flags |= 4;
+            return 1;
+         }
       }
+      buf.fDev   = sbuf.st_dev;
+      buf.fIno   = sbuf.st_ino;
+      buf.fMode  = sbuf.st_mode;
+      buf.fUid   = sbuf.st_uid;
+      buf.fGid   = sbuf.st_gid;
+      buf.fSize  = sbuf.st_size;
+      buf.fMtime = sbuf.st_mtime;
+
       return 0;
    }
    return 1;
