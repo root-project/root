@@ -1090,6 +1090,11 @@ C
       do i=1,4
           nind = nind+1
           pname(nind:nind)=cname(i:i)
+          if(ichar(cname(i:i)).eq.0) then 
+             pname(nind:nind)=' '
+             nind = nind+1
+             pname(nind:nind)=' '
+          endif
           if(ichar(cname(i:i)).eq.92) then 
              pname(nind:nind)=char(92)
              nind = nind+1
@@ -1114,6 +1119,10 @@ C
       pname = ' '
       write(pname,'(a4)')cname 
       do i=1,4
+          if(ichar(cname(i:i)).eq.0) then 
+             pname(i:i)='_'
+             pname(5:5)='_'
+          endif
           if(ichar(cname(i:i)).eq.92) then 
              pname(i:i)='a'
              pname(5:5)='a'
