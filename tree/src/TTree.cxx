@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.47 2001/01/20 21:18:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.48 2001/01/25 15:02:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -374,6 +374,44 @@ void TTree::AutoSave()
 }
 
 //______________________________________________________________________________
+Int_t TTree::Branch(TList *list, Int_t bufsize)
+{
+//   This new function creates one branch for each element in the list.
+//   Two cases are supported:
+//      list[i] is a TObject*: a TBranchObject is created with a branch name
+//                             being the name of the object.
+//      list[i] is a TClonesArray*: A TBranchClones is created.
+//      if list[i]->TestBit(TClonesArray::kNoSplit) is 1, the TClonesArray
+//      is not split.
+//      if list[i]->TestBit(TClonesArray::kForgetBits) is 1 and the TClonesArray
+//      is split, then no branches are created for the fBits and fUniqueID
+//      of the TObject part of the class referenced by the TClonesArray.
+//   The function returns the total number of branches created.
+
+   if (list == 0) return 0;
+   TObject *obj;
+   Int_t nbranches = GetListOfBranches()->GetEntries();
+   TObjLink *lnk = list->FirstLink();
+
+   Int_t splitlevel = 1;
+   while (lnk) {
+      obj = lnk->GetObject();
+      if (obj->InheritsFrom(TClonesArray::Class())) {
+         TClonesArray *clones = (TClonesArray*)obj;
+         splitlevel = 1;
+         if (clones->TestBit(TClonesArray::kForgetBits)) splitlevel = 2;
+         if (clones->TestBit(TClonesArray::kNoSplit))    splitlevel = 0;
+         Branch(clones->GetName(),lnk->GetObjectRef(),bufsize,splitlevel);
+      } else {
+         splitlevel = 0;
+         Branch(obj->GetName(),obj->ClassName(),lnk->GetObjectRef(),bufsize,splitlevel);
+      }
+      lnk = lnk->Next();
+   }
+   return GetListOfBranches()->GetEntries() - nbranches;
+}
+
+//______________________________________________________________________________
 TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int_t bufsize)
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a new TTree Branch*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -391,6 +429,55 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
    TBranch *branch = new TBranch(name,address,leaflist,bufsize);
    fBranches.Add(branch);
    return branch;
+}
+
+//______________________________________________________________________________
+TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int_t splitlevel)
+{
+//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchClones*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ===============================
+//
+//    name:    global name of this BranchClones
+//    bufsize: buffersize in bytes of each individual data member buffer
+//    clonesaddress is the address of a pointer to a TClonesArray.
+//
+//    This Tree option is provided in case each entry consists of one
+//    or more arrays of same class objects (tracks, hits,etc).
+//    This function creates as many branches as there are public data members
+//    in the objects pointed by the TClonesArray. Note that these data members
+//    can be only basic data types, not pointers or objects.
+//
+//    BranchClones have the following advantages compared to the two other
+//    solutions (Branch and BranchObject).
+//      - When reading the Tree data, it is possible to read selectively
+//        a subset of one object (may be just one single data member).
+//      - This solution minimizes the number of objects created/destructed.
+//      - Data members of the same type are consecutive in the basket buffers,
+//        therefore optimizing the compression algorithm.
+//      - Array processing notation becomes possible in the query language.
+//
+//    By default the branch buffers are stored in the same file as the Tree.
+//    use TBranch::SetFile to specify a different file
+//
+//    By default the two members of TObject (fBits and fUniqueID) are stored
+//    on individual branches. If the splitlevel > 1, these two branches
+//    will not be created.
+
+   if (clonesaddress == 0) return 0;
+   char *cpointer =(char*)clonesaddress;
+   char **ppointer =(char**)cpointer;
+   TClonesArray *list = (TClonesArray*)(*ppointer);
+   if (list == 0) return 0;
+   gTree = this;
+   if (splitlevel) {
+      TBranchClones *branch = new TBranchClones(name,clonesaddress,bufsize,-1,splitlevel);
+      fBranches.Add(branch);
+      return branch;
+   } else {
+      TBranchObject *branch = new TBranchObject(name,list->ClassName(),clonesaddress,bufsize,0);
+      fBranches.Add(branch);
+      return branch;
+   }
 }
 
 //______________________________________________________________________________
@@ -613,91 +700,89 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
 }
 
 //______________________________________________________________________________
-TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int_t splitlevel)
+TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t bufsize, Int_t splitlevel)
 {
-//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchClones*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
+//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchElement*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ================================
 //
-//    name:    global name of this BranchClones
-//    bufsize: buffersize in bytes of each individual data member buffer
-//    clonesaddress is the address of a pointer to a TClonesArray.
+//    Build a TBranchElement for an object of class classname.
+//    addobj is the address of a pointer to an object of class classname.
+//    IMPORTANT: classname must derive from TObject.
+//    The class dictionary must be available (ClassDef in class header).
 //
-//    This Tree option is provided in case each entry consists of one
-//    or more arrays of same class objects (tracks, hits,etc).
-//    This function creates as many branches as there are public data members
-//    in the objects pointed by the TClonesArray. Note that these data members
-//    can be only basic data types, not pointers or objects.
-//
-//    BranchClones have the following advantages compared to the two other
-//    solutions (Branch and BranchObject).
-//      - When reading the Tree data, it is possible to read selectively
-//        a subset of one object (may be just one single data member).
-//      - This solution minimizes the number of objects created/destructed.
-//      - Data members of the same type are consecutive in the basket buffers,
-//        therefore optimizing the compression algorithm.
-//      - Array processing notation becomes possible in the query language.
+//    This option requires access to the library where the corresponding class
+//    is defined. Accessing one single data member in the object implies
+//    reading the full object.
+//    See the next Branch constructor for a more efficient storage
+//    in case the entry consists of arrays of identical objects.
 //
 //    By default the branch buffers are stored in the same file as the Tree.
 //    use TBranch::SetFile to specify a different file
 //
-//    By default the two members of TObject (fBits and fUniqueID) are stored
-//    on individual branches. If the splitlevel > 1, these two branches
-//    will not be created.
+//      IMPORTANT NOTE about branch names
+//    In case two or more master branches contain subbranches with
+//    identical names, one must add a "." (dot) character at the end
+//    of the master branch name. This will force the name of the subbranch
+//    to be master.subbranch instead of simply subbranch.
+//    This situation happens when the top level object (say event)
+//    has two or more members referencing the same class.
+//    For example, if a Tree has two branches B1 and B2 corresponding
+//    to objects of the same class MyClass, one can do:
+//       tree.Branch("B1.","MyClass",&b1,8000,1);
+//       tree.Branch("B2.","MyClass",&b2,8000,1);
+//    if MyClass has 3 members a,b,c, the two instructions above will generate
+//    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
 
-   if (clonesaddress == 0) return 0;
-   char *cpointer =(char*)clonesaddress;
-   char **ppointer =(char**)cpointer;
-   TClonesArray *list = (TClonesArray*)(*ppointer);
-   if (list == 0) return 0;
    gTree = this;
-   if (splitlevel) {
-      TBranchClones *branch = new TBranchClones(name,clonesaddress,bufsize,-1,splitlevel);
-      fBranches.Add(branch);
-      return branch;
-   } else {
-      TBranchObject *branch = new TBranchObject(name,list->ClassName(),clonesaddress,bufsize,0);
+   TClass *cl = gROOT->GetClass(classname);
+   if (!cl) {
+      Error("Bronch","Cannot find class:%s",classname);
+      return 0;
+   }
+   TBranch *branch;
+   if (splitlevel == 0) {
+      branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
    }
-}
 
-//______________________________________________________________________________
-Int_t TTree::Branch(TList *list, Int_t bufsize)
-{
-//   This new function creates one branch for each element in the list.
-//   Two cases are supported:
-//      list[i] is a TObject*: a TBranchObject is created with a branch name
-//                             being the name of the object.
-//      list[i] is a TClonesArray*: A TBranchClones is created.
-//      if list[i]->TestBit(TClonesArray::kNoSplit) is 1, the TClonesArray
-//      is not split.
-//      if list[i]->TestBit(TClonesArray::kForgetBits) is 1 and the TClonesArray
-//      is split, then no branches are created for the fBits and fUniqueID
-//      of the TObject part of the class referenced by the TClonesArray.
-//   The function returns the total number of branches created.
-
-   if (list == 0) return 0;
-   TObject *obj;
-   Int_t nbranches = GetListOfBranches()->GetEntries();
-   TObjLink *lnk = list->FirstLink();
-
-   Int_t splitlevel = 1;
-   while (lnk) {
-      obj = lnk->GetObject();
-      if (obj->InheritsFrom(TClonesArray::Class())) {
-         TClonesArray *clones = (TClonesArray*)obj;
-         splitlevel = 1;
-         if (clones->TestBit(TClonesArray::kForgetBits)) splitlevel = 2;
-         if (clones->TestBit(TClonesArray::kNoSplit))    splitlevel = 0;
-         Branch(clones->GetName(),lnk->GetObjectRef(),bufsize,splitlevel);
-      } else {
-         splitlevel = 0;
-         Branch(obj->GetName(),obj->ClassName(),lnk->GetObjectRef(),bufsize,splitlevel);
-      }
-      lnk = lnk->Next();
+   Bool_t delobj = kFALSE;
+   TObject **ppointer = (TObject**)add;
+   TObject *objadd = *ppointer;
+   if (!objadd && cl) {
+      objadd = (TObject*)cl->New();
+      *ppointer = objadd;
+      delobj = kTRUE;
    }
-   return GetListOfBranches()->GetEntries() - nbranches;
+   
+   //build the StreamerInfo if first time for the class
+   TStreamerInfo::Optimize(kFALSE);
+   BuildStreamerInfo(cl,objadd);
+
+   // create a dummy top level  branch object
+   TStreamerInfo *sinfo = cl->GetStreamerInfo();
+   branch = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
+   fBranches.Add(branch);
+   TObjArray *blist = branch->GetListOfBranches();   
+   
+//*-*- Loop on all public data members of the class and its base classes
+   TIter next(sinfo->GetElements());
+   TStreamerElement *element;
+   Int_t id = 0;
+   while ((element = (TStreamerElement*)next())) {
+      char *pointer = (char*)objadd + element->GetOffset();
+      blist->Add(new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1));
+      id++;
+   }
+         
+   branch->SetAddress(add);
+   
+   TStreamerInfo::Optimize(kTRUE);
+   
+   if (delobj) delete objadd;
+   return branch;
 }
+
 
 //______________________________________________________________________________
 void TTree::Browse(TBrowser *b)
@@ -2134,91 +2219,6 @@ void TTree::Streamer(TBuffer &b)
       TTree::Class()->WriteBuffer(b,this);
    }
 }
-
-//______________________________________________________________________________
-TBranch *TTree::Trunk(const char *name, const char *classname, void *add, Int_t bufsize, Int_t splitlevel)
-{
-//*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchElement*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-//
-//    Build a TBranchElement for an object of class classname.
-//    addobj is the address of a pointer to an object of class classname.
-//    IMPORTANT: classname must derive from TObject.
-//    The class dictionary must be available (ClassDef in class header).
-//
-//    This option requires access to the library where the corresponding class
-//    is defined. Accessing one single data member in the object implies
-//    reading the full object.
-//    See the next Branch constructor for a more efficient storage
-//    in case the entry consists of arrays of identical objects.
-//
-//    By default the branch buffers are stored in the same file as the Tree.
-//    use TBranch::SetFile to specify a different file
-//
-//      IMPORTANT NOTE about branch names
-//    In case two or more master branches contain subbranches with
-//    identical names, one must add a "." (dot) character at the end
-//    of the master branch name. This will force the name of the subbranch
-//    to be master.subbranch instead of simply subbranch.
-//    This situation happens when the top level object (say event)
-//    has two or more members referencing the same class.
-//    For example, if a Tree has two branches B1 and B2 corresponding
-//    to objects of the same class MyClass, one can do:
-//       tree.Branch("B1.","MyClass",&b1,8000,1);
-//       tree.Branch("B2.","MyClass",&b2,8000,1);
-//    if MyClass has 3 members a,b,c, the two instructions above will generate
-//    subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
-
-   gTree = this;
-   TClass *cl = gROOT->GetClass(classname);
-   if (!cl) {
-      Error("Trunk","Cannot find class:%s",classname);
-      return 0;
-   }
-   TBranch *branch;
-   if (splitlevel == 0) {
-      branch = new TBranchObject(name,classname,add,bufsize,0);
-      fBranches.Add(branch);
-      return branch;
-   }
-
-   Bool_t delobj = kFALSE;
-   TObject **ppointer = (TObject**)add;
-   TObject *objadd = *ppointer;
-   if (!objadd && cl) {
-      objadd = (TObject*)cl->New();
-      *ppointer = objadd;
-      delobj = kTRUE;
-   }
-   
-   //build the StreamerInfo if first time for the class
-   TStreamerInfo::Optimize(kFALSE);
-   BuildStreamerInfo(cl,objadd);
-
-   // create a dummy top level trunk branch
-   TStreamerInfo *sinfo = cl->GetStreamerInfo();
-   branch = new TBranchElement(name,sinfo,-1,(char*)objadd,bufsize,0);
-   fBranches.Add(branch);
-   TObjArray *blist = branch->GetListOfBranches();   
-   
-//*-*- Loop on all public data members of the class and its base classes
-   TIter next(sinfo->GetElements());
-   TStreamerElement *element;
-   Int_t id = 0;
-   while ((element = (TStreamerElement*)next())) {
-      char *pointer = (char*)objadd + element->GetOffset();
-      blist->Add(new TBranchElement(element->GetName(),sinfo,id,pointer,bufsize,splitlevel-1));
-      id++;
-   }
-         
-   branch->SetAddress(add);
-   
-   TStreamerInfo::Optimize(kTRUE);
-   
-   if (delobj) delete objadd;
-   return branch;
-}
-
 
 //______________________________________________________________________________
 Int_t TTree::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Int_t nentries, Int_t firstentry)
