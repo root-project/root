@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
         virtual void     SetPoint(Int_t point, Float_t x, Float_t y); // *MENU*
         virtual void     SetPolyMarker(Int_t n, Float_t *x=0, Float_t *y=0, Option_t *option="");
 
-        ClassDef(TPolyMarker,1)  //An array of points with the same marker
+        ClassDef(TPolyMarker,2)  //An array of points with the same marker
 };
 
 #endif
