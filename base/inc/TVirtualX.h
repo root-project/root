@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.6 2000/10/19 10:42:31 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -162,7 +162,8 @@ public:
    virtual Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
                                      UInt_t w, UInt_t h, UInt_t border,
                                      Int_t depth, UInt_t clss,
-                                     void *visual, SetWindowAttributes_t *attr);
+                                     void *visual, SetWindowAttributes_t *attr,
+                                     UInt_t wtype);
    virtual Int_t        OpenDisplay(const char *dpyName);
    virtual void         CloseDisplay() { }
    virtual Display_t    GetDisplay() { return 0; }
@@ -352,9 +353,10 @@ inline void         TVirtualX::ResizeWindow(Window_t, UInt_t, UInt_t) { }
 inline void         TVirtualX::IconifyWindow(Window_t) { }
 inline void         TVirtualX::SetWindowBackground(Window_t, ULong_t) { }
 inline void         TVirtualX::SetWindowBackgroundPixmap(Window_t, Pixmap_t) { }
-inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t, UInt_t, UInt_t,
-                                       Int_t, UInt_t, void *,
-                                       SetWindowAttributes_t *) { return 0; }
+inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t,
+                                            UInt_t, UInt_t, Int_t, UInt_t,
+                                            void *, SetWindowAttributes_t *,
+                                            UInt_t) { return 0; }
 inline Int_t        TVirtualX::OpenDisplay(const char *) { return 0; }
 inline Atom_t       TVirtualX::InternAtom(const char *, Bool_t) { return 0; }
 inline Window_t     TVirtualX::GetParent(Window_t) { return 0; }

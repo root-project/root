@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.12 2000/11/10 02:33:09 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.13 2001/02/15 16:34:17 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -277,7 +277,7 @@ void TGX11::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
                              UInt_t w, UInt_t h, UInt_t border,
                              Int_t depth, UInt_t clss,
-                             void *visual, SetWindowAttributes_t *attr)
+                             void *visual, SetWindowAttributes_t *attr, UInt_t)
 {
    // Return handle to newly created X window.
 

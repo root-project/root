@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.5 2000/10/13 09:54:28 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.6 2000/10/19 10:42:31 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -221,7 +221,8 @@ public:
    Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
                              UInt_t w, UInt_t h, UInt_t border,
                              Int_t depth, UInt_t clss,
-                             void *visual, SetWindowAttributes_t *attr);
+                             void *visual, SetWindowAttributes_t *attr,
+                             UInt_t wtype);
    Int_t        OpenDisplay(const char *dpyName);
    void         CloseDisplay();
    Display_t    GetDisplay();
