@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public:
    virtual ~TGComboBox();
 
    virtual void DrawBorder();
-   virtual TGDimension GetDefaultSize() const { return TGDimension (fWidth, fHeight); }
+   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
 
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual Bool_t HandleButton(Event_t *event);

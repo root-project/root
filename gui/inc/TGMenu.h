@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.3 2000/09/30 11:24:12 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -206,7 +206,7 @@ public:
                GContext_t norm = fgDefaultGC(),
                FontStruct_t font = fgDefaultFontStruct,
                UInt_t options = 0);
-   ~TGMenuTitle() { if (fLabel) delete fLabel; }
+   virtual ~TGMenuTitle() { if (fLabel) delete fLabel; }
 
    virtual void   SetState(Bool_t state);
    virtual void   DoSendMessage();
