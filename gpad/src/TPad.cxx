@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.105 2003/07/08 15:42:25 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.106 2003/07/12 12:53:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -175,7 +175,11 @@ TPad::TPad(): TVirtualPad()
    fYlowNDC = 0;
    fWNDC    = 1;
    fHNDC    = 1;
-   gROOT->SetSelectedPad(this);
+
+   //the following line is temporarily disabled. It has side effects
+   //when the pad is a TDrawPanelHist or a TFitPanel.
+   //the line was supposed to fix a problem with DrawClonePad
+   //   gROOT->SetSelectedPad(this);
 }
 
 //______________________________________________________________________________
