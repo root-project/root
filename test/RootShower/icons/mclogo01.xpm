@@ -10,7 +10,7 @@ static char *emshower[] = {
 "`b c #000080",
 "`c c #800080",
 "`d c #008080",
-"`e c #c0c0c0",
+"`e c None s None",
 "`f c #c0dcc0",
 "`g c #a6caf0",
 "`h c #08314a",
