@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.22 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.23 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -236,6 +236,7 @@ public:
    void SetWidth(UInt_t w) { fWidth = w; }
    void SetHeight(UInt_t h) { fHeight = h; }
    void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
+   virtual void Print(Option_t *option="") const;
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
@@ -280,7 +281,6 @@ public:
    virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y);
    virtual Bool_t TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
                                        Int_t &fx, Int_t &fy);
-
    virtual void   MapSubwindows();
    virtual void   Layout();
    virtual Bool_t HandleButton(Event_t *) { return kFALSE; }
@@ -297,9 +297,9 @@ public:
    void             SetLayoutManager(TGLayoutManager *l);
 
    virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
-   void   RemoveFrame(TGFrame *f);
-   void   ShowFrame(TGFrame *f);
-   void   HideFrame(TGFrame *f);
+   virtual void RemoveFrame(TGFrame *f);
+   virtual void ShowFrame(TGFrame *f);
+   virtual void HideFrame(TGFrame *f);
    Int_t  GetState(TGFrame *f) const;
    Bool_t IsVisible(TGFrame *f) const;
    Bool_t IsVisible(TGFrameElement *ptr) const { return (ptr->fState & kIsVisible); }
@@ -307,6 +307,7 @@ public:
    Bool_t IsArranged(TGFrameElement *ptr) const { return (ptr->fState & kIsArranged); }
    Bool_t IsComposite() const { return kTRUE; }
    TList *GetList() { return fList; }
+   virtual void Print(Option_t *option="") const;
 
    ClassDef(TGCompositeFrame,0)  // Base class for composite widgets (menubars, etc.)
 };

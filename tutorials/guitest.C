@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.30 2003/07/21 10:47:15 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.31 2003/07/24 16:00:00 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -715,7 +715,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // we need to use GetDefault...() to initialize the layout algorithm...
    fMain->Resize();
    fMain->MapWindow();
-
+   fMain->Print();
    Connect("Created()", "TestMainFrame", this, "Welcome()");
    Created();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.5 2001/06/05 16:42:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -83,6 +83,7 @@ public:
    virtual void   Resize(UInt_t w, UInt_t h);
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
+   virtual void   Print(Option_t *option="") const;
 
    ClassDef(TGWindow,0)  // GUI Window base class
 };

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.35 2003/07/21 10:40:23 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.36 2003/07/24 16:00:00 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -636,6 +636,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // we need to use GetDefault...() to initialize the layout algorithm...
    Resize();   // resize to default size
    MapWindow();
+   Print();
 }
 
 TestMainFrame::~TestMainFrame()

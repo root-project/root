@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.3 2001/04/28 16:30:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.4 2003/01/20 10:25:57 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 #include "TGWindow.h"
 #include "TMath.h"
-
+#include "Riostream.h"
 
 ClassImp(TGWindow)
 ClassImp(TGUnknownWindowHandler)
@@ -112,3 +112,12 @@ Bool_t TGWindow::IsMapped()
    gVirtualX->GetWindowAttributes(fId, attr);
    return (attr.fMapState != kIsUnmapped);
 }
+
+//______________________________________________________________________________
+void TGWindow::Print(Option_t *) const
+{
+   // print window id
+
+   cout << ClassName() << ":t" << fId << endl;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.26 2003/06/24 13:41:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.27 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -68,6 +68,7 @@
 #include "TList.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "Riostream.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -517,6 +518,8 @@ Bool_t TGFrame::HandleClientMessage(Event_t *event)
 //______________________________________________________________________________
 ULong_t TGFrame::GetDefaultFrameBackground()
 {
+   //
+
    static Bool_t init = kFALSE;
    if (!init) {
       fgDefaultFrameBackground = gClient->GetResourcePool()->GetFrameBgndColor();
@@ -528,6 +531,8 @@ ULong_t TGFrame::GetDefaultFrameBackground()
 //______________________________________________________________________________
 ULong_t TGFrame::GetDefaultSelectedBackground()
 {
+   //
+
    static Bool_t init = kFALSE;
    if (!init) {
       fgDefaultSelectedBackground = gClient->GetResourcePool()->GetSelectedBgndColor();
@@ -539,6 +544,8 @@ ULong_t TGFrame::GetDefaultSelectedBackground()
 //______________________________________________________________________________
 ULong_t TGFrame::GetWhitePixel()
 {
+   //
+
    static Bool_t init = kFALSE;
    if (!init) {
       fgWhitePixel = gClient->GetResourcePool()->GetWhiteColor();
@@ -550,6 +557,8 @@ ULong_t TGFrame::GetWhitePixel()
 //______________________________________________________________________________
 ULong_t TGFrame::GetBlackPixel()
 {
+   //
+
    static Bool_t init = kFALSE;
    if (!init) {
       fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
@@ -561,6 +570,8 @@ ULong_t TGFrame::GetBlackPixel()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetBlackGC()
 {
+   //
+
    if (!fgBlackGC)
       fgBlackGC = gClient->GetResourcePool()->GetBlackGC();
    return *fgBlackGC;
@@ -569,6 +580,8 @@ const TGGC &TGFrame::GetBlackGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetWhiteGC()
 {
+   //
+
    if (!fgWhiteGC)
       fgWhiteGC = gClient->GetResourcePool()->GetWhiteGC();
    return *fgWhiteGC;
@@ -577,6 +590,8 @@ const TGGC &TGFrame::GetWhiteGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetHilightGC()
 {
+   //
+
    if (!fgHilightGC)
       fgHilightGC = gClient->GetResourcePool()->GetFrameHiliteGC();
    return *fgHilightGC;
@@ -593,6 +608,8 @@ const TGGC &TGFrame::GetShadowGC()
 //______________________________________________________________________________
 const TGGC &TGFrame::GetBckgndGC()
 {
+   //
+
    if (!fgBckgndGC)
       fgBckgndGC = gClient->GetResourcePool()->GetFrameBckgndGC();
    return *fgBckgndGC;
@@ -600,8 +617,21 @@ const TGGC &TGFrame::GetBckgndGC()
 
 //______________________________________________________________________________
 Time_t TGFrame::GetLastClick()
-{ return fgLastClick; }
+{ 
+   //
 
+   return fgLastClick; 
+}
+
+//______________________________________________________________________________
+void TGFrame::Print(Option_t *option) const
+{
+   // print window id
+
+   cout <<  option << ClassName() << ":\tid=" << fId << " parent=" << fParent->GetId();
+   cout <<" x=" << fX << " y=" << fY;
+   cout << " w=" << fWidth << " h=" << fHeight << endl;
+}
 
 //______________________________________________________________________________
 TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -840,6 +870,22 @@ void TGCompositeFrame::Layout()
    // Layout the elements of the composite frame.
 
    fLayoutManager->Layout();
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::Print(Option_t *option) const
+{
+   // Print all frames in this composite frame.
+
+   TGFrameElement *el;
+   TIter next(fList);
+   TString tab = option;
+
+   TGFrame::Print(tab.Data());
+   tab += "   ";
+   while ((el = (TGFrameElement*)next())) {
+      el->fFrame->Print(tab.Data());
+   }
 }
 
 //______________________________________________________________________________

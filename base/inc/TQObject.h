@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.21 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.22 2003/05/15 18:01:56 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -56,10 +56,6 @@ protected:
    TList   *fListOfSignals;        //! list of signals from this object
    TList   *fListOfConnections;    //! list of connections to this object
 
-   TList   *GetListOfClassSignals() const;
-   TList   *GetListOfSignals() const { return fListOfSignals; }
-   TList   *GetListOfConnections() const { return fListOfConnections; }
-
    virtual void       *GetSender() { return this; }
    virtual const char *GetSenderClassName() const { return ""; }
 
@@ -82,6 +78,10 @@ protected:
 public:
    TQObject();
    virtual ~TQObject();
+
+   TList   *GetListOfClassSignals() const;
+   TList   *GetListOfSignals() const { return fListOfSignals; }
+   TList   *GetListOfConnections() const { return fListOfConnections; }
 
    void  Emit(const char *signal);
    void  Emit(const char *signal, const char *params);
