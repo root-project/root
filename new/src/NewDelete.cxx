@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.2 2000/06/09 14:56:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -169,7 +169,7 @@ static ReAllocInit realloc_init;
 
 //------------------------------------------------------------------------------
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #define G__PVOID (-1)
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -191,18 +191,18 @@ void *operator new(size_t size)
       newInit++;
    }
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
    if (G__globalvarpointer != G__PVOID) {
       long temp = G__globalvarpointer;
       G__globalvarpointer = G__PVOID;
-      return((void*)temp);
+      return (void*)temp;
    }
 #else
    long gvp = G__getgvp();
    if (gvp != G__PVOID) {
       G__setgvp(G__PVOID);
-      return((void*)gvp);
+      return (void*)gvp;
    }
 #endif
 #endif
@@ -230,12 +230,14 @@ void *operator new(size_t size, void *vp)
       newInit++;
    }
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
-   if ((long)vp==G__globalvarpointer && G__globalvarpointer!=G__PVOID) return(vp);
+   if ((long)vp == G__globalvarpointer && G__globalvarpointer != G__PVOID)
+      return(vp);
 #else
    long gvp = G__getgvp();
-   if ((long)vp == gvp && gvp != G__PVOID) return(vp);
+   if ((long)vp == gvp && gvp != G__PVOID)
+      return(vp);
 #endif
 #endif
    if (vp == 0) {
@@ -263,12 +265,14 @@ void operator delete(void *ptr)
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
 
-#ifndef G__GOTOM1
+#ifndef NOCINT
 #ifndef WIN32
-   if ((long)ptr==G__globalvarpointer && G__globalvarpointer!=G__PVOID) return;
+   if ((long)ptr == G__globalvarpointer && G__globalvarpointer!=G__PVOID)
+      return;
 #else
    long gvp = G__getgvp();
-   if ((long)ptr == gvp && gvp != G__PVOID) return;
+   if ((long)ptr == gvp && gvp != G__PVOID)
+      return;
 #endif
 #endif
    if (ptr) {
