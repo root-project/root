@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.2 2000/06/05 07:31:21 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -195,7 +195,7 @@ again:
          Int_t   fpx11 = fTextFont; if (fpx11 < 0) fpx11 = -fpx11;
          Int_t  ifpx11 = fpx11/10;
          Int_t      ih = Int_t(tsize); // to be set to IH = INT(WKSC(IWKNB)*YRATIO*RCHH*1.5)
-   Float_t rsize = Float_t(ih);
+         Float_t rsize = Float_t(ih);
          if (ih > 37) ih = 37;
          if (ih <= 0) ih = 1;
          if (ifpx11 <= 0 || ifpx11 > 13) ifpx11 = 6;
