@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.16 2001/08/23 13:41:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.17 2001/08/27 06:43:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -414,7 +414,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t textsize;
    Double_t xpl1, xpl2, ypl1, ypl2;
    Double_t Xtick = 0;
-   Double_t Xtick0, Xtick1, DXtick;
+   Double_t Xtick0, Xtick1, DXtick=0;
    Double_t Ytick, Ytick0, Ytick1;
    Double_t Wlabel, DWlabel;
    Double_t Xfactor, Yfactor;
@@ -488,7 +488,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t RWxmax = gPad->GetX2();
    Double_t RWymin = gPad->GetY1();
    Double_t RWymax = gPad->GetY2();
-   //if (GetLabelFont()%10 > 2) {padh = 1; padw = 1;}
    
    if(strchr(chopt,'G')) OptionLog  = 1;  else OptionLog  = 0;
    if(strchr(chopt,'B')) OptionBlank= 1;  else OptionBlank= 0;
@@ -601,6 +600,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       if (fFunction) {
          Yymin = ymin;
          Yymax = ymax;
+         Xxmin = xmin;
+         Xxmax = xmax;
       } else {
          wmin = BinLow;
          wmax = BinHigh;
@@ -893,7 +894,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             if (k%NN3 == 0) ltick = 1;
             if (k%NN2 == 0) ltick = 0;
             if (fFunction) {
-               Xtick = (fFunction->Eval(BinLow+Double_t(k)*DXtick)-rwmi)* axis_length / TMath::Abs(rwma-rwmi);
+               Double_t xx = BinLow+Double_t(k)*DXtick;
+               Double_t zz = fFunction->Eval(xx)-rwmi;
+               Xtick = zz* axis_length / TMath::Abs(rwma-rwmi);
             } else {
                Xtick = Double_t(k)*DXtick;
             }
@@ -1140,8 +1143,10 @@ L110:
             wTimeIni = Wlabel;
             for ( k=0; k<=Nlabels; k++) {
                if (fFunction) {
-                  Xlabel = (fFunction->Eval(Wlabel)-rwmi)
-                           * axis_length / TMath::Abs(rwma-rwmi);
+                  Double_t xx = BinLow+Double_t(k*NN2)*DXtick;
+                  Double_t zz = fFunction->Eval(xx)-rwmi;
+                  Wlabel = xx;
+                  Xlabel = zz* axis_length / TMath::Abs(rwma-rwmi);
                } else {
                   Xlabel = DXlabel*k;
                }
