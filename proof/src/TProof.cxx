@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.30 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.31 2002/10/25 01:23:38 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -225,7 +225,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
          // read the config file
          char line[256];
-         const char *host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
          int  ord = 0;
 
          while (fgets(line, sizeof(line), pconf)) {
@@ -237,7 +237,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             // find node on which master runs
             if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
                TInetAddress a = gSystem->GetHostByName(word[1]);
-               if (!strcmp(a.GetHostName(), host) ||
+               if (!host.CompareTo(a.GetHostName()) ||
                    !strcmp(word[1], "localhost")) {
                   char *image = word[1];
                   if (nword > 2 && !strncmp(word[2], "image=", 6))
