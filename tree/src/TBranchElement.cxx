@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.48 2001/07/02 08:16:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.49 2001/07/03 11:07:12 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1069,6 +1069,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
    Int_t ndata = info->GetNdata();
    ULong_t *elems = info->GetElems();
    TStreamerElement *elem;
+   TBranchElement *branch;
    char branchname[kMaxLen];
    Int_t jd = 0;
    Int_t unroll = 0;
@@ -1082,7 +1083,11 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
          }
 //printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
-         if (unroll < 0) break;
+         if (unroll < 0) {
+            branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+            branch->SetParentName(cltop->GetName());
+            fBranches.Add(branch);
+         }
       } else {
         if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
         else              sprintf(branchname,"%s",elem->GetFullName());
@@ -1095,10 +1100,14 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                }
 //printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
             unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
-            if (unroll < 0) break;
+            if (unroll < 0) {
+               branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+               branch->SetParentName(cltop->GetName());
+               fBranches.Add(branch);
+            }
          } else {
 //printf("Making branch: %s, jd=%d, info=%s\n",branchname,jd,info->GetName());
-            TBranchElement *branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+            branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
             branch->SetParentName(cltop->GetName());
             branch->SetType(btype);
             fBranches.Add(branch);
@@ -1106,9 +1115,5 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
       }
       jd++;
    }
-   if (unroll >= 0) return 1;
-   TBranchElement *branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
-   branch->SetParentName(cltop->GetName());
-   fBranches.Add(branch);
    return 1;
 }
