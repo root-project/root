@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.45 2001/05/04 13:32:20 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.46 2001/05/08 20:30:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -288,6 +288,7 @@ TClass::TClass(const char *name, Version_t cversion,
       if (!fClassInfo) {
          gInterpreter->InitializeDictionaries();
          gInterpreter->SetClassInfo(this);
+         if (IsZombie()) return;
       }
       if (!fClassInfo)
          ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
