@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.5 2002/04/05 11:39:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.6 2002/04/08 15:06:08 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -120,7 +120,7 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
    // directly executed.
 
    TObject* object;
-   TMethod* method;
+   TMethod* method = 0;
 
    SetSelectedMenuItem( menuitem );
 
