@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.96 2001/10/24 13:32:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.97 2001/10/24 15:56:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2465,9 +2465,9 @@ TPrincipal *TTree::Principal(const char *varexp, const char *selection, Option_t
 //______________________________________________________________________________
 void TTree::Print(Option_t *option) const
 {
-   // Print a summary of the Tree contents. In case options are "p" or "pa"
-   // print information about the TPacketGenerator ("pa" is equivalent to
-   // TPacketGenerator::Print("all")).
+   // Print a summary of the Tree contents.
+   // if option contains "all" friend trees are also printed.
+   // if option contains "toponly" only the top level branches are printed.
    //
    // Wildcarding can be used to print only a subset of the branches
    // eg, T.Print("Elec*") will print all branches with name starting with "Elec"
@@ -2502,16 +2502,38 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  TString reg = "*";
-  if (strlen(option) && strchr(option,'*')) reg = option;
-  TRegexp re(reg,kTRUE);
-  TIter next(((TTree*)this)->GetListOfBranches());
   TBranch *br;
-  TBranch::ResetCount();
-  while ((br= (TBranch*)next())) {
-     TString s = br->GetName();
-     if (s.Index(re) == kNPOS) continue;
-     br->Print(option);
+  if (strstr(option,"toponly")) {
+     Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+     TLeaf *leaf;
+     Int_t *count = new Int_t[nl];
+     Int_t l;
+     Int_t keep =0;
+     for (l=0;l<nl;l++) {
+        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        br   = leaf->GetBranch();
+        char *dot = strchr(br->GetName(),'.');
+        if (dot) {count[l] = -1; count[keep] += (Int_t)br->GetZipBytes();}
+        else     {keep = l;      count[keep]  = (Int_t)br->GetZipBytes();} 
+     }
+     for (l=0;l<nl;l++) {
+        if (count[l] < 0) continue;
+        leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+        br   = leaf->GetBranch();
+        printf("branch: %-20s %9d\n",br->GetName(),count[l]);
+     }
+     delete [] count;
+  } else {
+     TString reg = "*";
+     if (strlen(option) && strchr(option,'*')) reg = option;
+     TRegexp re(reg,kTRUE);
+     TIter next(((TTree*)this)->GetListOfBranches());
+     TBranch::ResetCount();
+     while ((br= (TBranch*)next())) {
+        TString s = br->GetName();
+        if (s.Index(re) == kNPOS) continue;
+        br->Print(option);
+     }
   }
 
   //print friends if option "all"
