@@ -788,11 +788,6 @@ void gdk_window_resize(GdkWindow * window, gint width, gint height)
 
    g_return_if_fail(window != NULL);
 
-   if ((gint16) width < 1)
-      width = 1;
-   if ((gint16) height < 1)
-      height = 1;
-
    private = (GdkWindowPrivate *) window;
 
    if (!private->drawable.destroyed &&
@@ -851,11 +846,6 @@ gdk_window_move_resize(GdkWindow * window,
    GdkWindowPrivate *private;
 
    g_return_if_fail(window != NULL);
-
-   if ((gint16) width < 1)
-      width = 1;
-   if ((gint16) height < 1)
-      height = 1;
 
    if (!GDK_DRAWABLE_DESTROYED(window)) {
       RECT rect;

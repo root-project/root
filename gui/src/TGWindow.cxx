@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.21 2005/01/05 09:27:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.22 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -62,7 +62,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       if (fClient->IsEditable()) type = wtype & ~1;
 
       fParent = p;
-      if (fParent && fParent->IsMapSubwindows() ) {
+      if (fParent && fParent->IsMapSubwindows()) {
          fId = gVirtualX->CreateWindow(fParent->fId, x, y,
                                      TMath::Max(w, (UInt_t) 1),
                                      TMath::Max(h, (UInt_t) 1), border,

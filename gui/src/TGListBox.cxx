@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.37 2005/01/05 09:27:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.38 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -337,6 +337,8 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
