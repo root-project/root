@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.17 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.18 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -334,7 +334,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-   if (strchr(option,'X')) {TGraph::Paint(option); return;}
+   if (strchr(option,'X') || strchr(option,'x')) {TGraph::Paint(option); return;}
    Bool_t brackets = kFALSE;
    if (strstr(option,"[]")) brackets = kTRUE;
    Bool_t endLines = kTRUE;
