@@ -92,7 +92,7 @@
 #include "TMatrixDSymEigen.h"
 
 void stressLinear                  (Int_t maxSizeReq=100,Int_t verbose=0);
-void StatusPrint                   (Int_t id,const TString &title,Int_t status);
+void StatusPrint                   (Int_t id,const TString &title,Bool_t status);
 
 void mstress_allocation            (Int_t msize);
 void mstress_matrix_fill           (Int_t rsize,Int_t csize);
@@ -261,7 +261,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
 }
 
 //------------------------------------------------------------------------
-void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
+void StatusPrint(Int_t id,const TString &title,Bool_t status)
 {
   // Print test program number and its title
   const Int_t kMAX = 65;
@@ -835,7 +835,8 @@ public:
   MakeHilbert() { }
 };
 
-#ifndef __CINT__
+#if !defined (__CINT__) || defined (__MAKECINT__)
+//#ifndef __CINT__
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const
