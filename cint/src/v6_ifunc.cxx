@@ -5286,7 +5286,7 @@ asm_ifunc_start:   /* loop compilation execution label */
      G__store_struct_offset!=store_inherit_offset) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
-      fprintf(G__serr,"%3x: ADDSTROS %d\n"
+      fprintf(G__serr,"%3x: ADDSTROS %ld\n"
 	      ,G__asm_cp,G__store_struct_offset-store_inherit_offset);
     }
 #endif
@@ -5313,7 +5313,7 @@ asm_ifunc_start:   /* loop compilation execution label */
        G__store_struct_offset!=store_inherit_offset) {
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	fprintf(G__serr,"%3x: ADDSTROS %d\n"
+	fprintf(G__serr,"%3x: ADDSTROS %ld\n"
 		,G__asm_cp, -G__store_struct_offset+store_inherit_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -5347,7 +5347,7 @@ asm_ifunc_start:   /* loop compilation execution label */
     if(G__store_struct_offset && G__store_struct_offset!=store_inherit_offset){
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	fprintf(G__serr,"%3x: ADDSTROS %d\n"
+	fprintf(G__serr,"%3x: ADDSTROS %ld\n"
 		,G__asm_cp, -G__store_struct_offset+store_inherit_offset);
 #endif
       G__asm_inst[G__asm_cp]=G__ADDSTROS;
@@ -5983,7 +5983,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
 	  fprintf(G__serr,"%3x: ISDEFAULTPARA %x\n",G__asm_cp,G__asm_cp+4);
-	  fprintf(G__serr,"%3x: LD %d %g\n",G__asm_cp+2
+	  fprintf(G__serr,"%3x: LD %ld %g\n",G__asm_cp+2
 		  ,p_ifunc->para_default[ifn][ipara]->obj.i
 		  ,p_ifunc->para_default[ifn][ipara]->obj.d
 		  );
@@ -6823,7 +6823,7 @@ int funcmatch;
 	    case 2: /* default parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," default%d %c tagnum%d %d : %c tagnum%d %d\n"
+		fprintf(G__serr," default%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -6838,7 +6838,7 @@ int funcmatch;
 	    case 1: /* match this one, next parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," match%d %c tagnum%d %d : %c tagnum%d %d\n"
+		fprintf(G__serr," match%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -6857,7 +6857,7 @@ int funcmatch;
 	    case 0: /* unmatch, next function */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		fprintf(G__serr," unmatch%d %c tagnum%d %d : %c tagnum%d %d\n"
+		fprintf(G__serr," unmatch%d %c tagnum%d %ld : %c tagnum%d %ld\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]

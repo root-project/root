@@ -173,7 +173,7 @@ struct G__breakcontinue_list *pbreakcontinue;
       G__asm_inst[G__pbreakcontinue->destination] = continue_dest;
     }
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"  assigned %x %d JMP %x  break,continue\n"
+    if(G__asm_dbg) fprintf(G__serr,"  assigned %lx %ld JMP %lx  break,continue\n"
 			   ,G__pbreakcontinue->destination
 			   ,G__pbreakcontinue->breakcontinue
 			   ,G__asm_inst[G__pbreakcontinue->destination]);

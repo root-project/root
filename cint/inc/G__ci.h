@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014051
-#define G__CINTVERSIONSTR  "5.14.51, Sep 10 2000"
+#define G__CINTVERSION 5014053
+#define G__CINTVERSIONSTR  "5.14.53, Sep 27 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH

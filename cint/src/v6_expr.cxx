@@ -1722,8 +1722,8 @@ char *item;
        * put result3
        **************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x: LD '%c' from %x\n"
-			     ,G__asm_cp,G__int(result3)
+      if(G__asm_dbg) fprintf(G__serr,"%3x: LD '%c' from %lx\n"
+			     ,G__asm_cp,(char)G__int(result3)
 			     ,G__asm_dt);
 #endif
       G__asm_inst[G__asm_cp]=G__LD;

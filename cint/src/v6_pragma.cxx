@@ -162,6 +162,15 @@ int G__pragma()
     c='\n';
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1385
+  else if(strcmp(command,"permanent_link")==0) {
+    c=G__fgetstream(command,";\n\r");
+    G__ispragmainclude = 1;
+    G__loadsystemfile(command);
+    G__ispragmainclude = 0;
+    c='\n';
+  }
+#endif
   else if(strcmp(command,"includepath")==0) {
     c=G__fgetstream(command,";\n\r");
     G__add_ipath(command);

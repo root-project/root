@@ -612,7 +612,12 @@ int type;
 #endif
     }
     else {
+#ifndef G__OLDIMPLEMENTATION1388
+      if(G__iscpp) G__struct.parent_tagnum[i]=G__get_envtagnum();
+      else         G__struct.parent_tagnum[i]= -1;
+#else
       G__struct.parent_tagnum[i]=G__get_envtagnum();
+#endif
       strcpy(atom_tagname,temp);
     }
 
@@ -1454,6 +1459,9 @@ char type;
 
       if(type=='e') { /* enum */
 
+#ifdef G__OLDIMPLEMENTATION1386_YET
+	G__struct.size[G__def_tagnum] = G__INTALLOC;
+#endif
 	G__fgetc(); /* skip '{' */
 #ifndef G__OLDIMPLEMENTATION1179
 	/* Change by Philippe Canal, 1999/8/26 */
@@ -1469,7 +1477,7 @@ char type;
 	G__enumdef=1;
 	do {
 #ifndef G__OLDIMPLEMENTATION1382
-	  int store_decl;
+	  int store_decl = 0 ;
 #endif
 	  c=G__fgetstream(memname,"=,}");
 	  if(c=='=') {

@@ -2176,7 +2176,18 @@ char *G__gets(char *buffer)
 **************************************************************************/
 int G__system(char *com)
 {
-#if 0
+#if 1
+
+#undef system
+  /* Simply call system() system call */
+  return(system(com));
+
+#else
+  /* This code does not work because of following reasons
+   *  1. CreateProcess() WIN32 API does not work with GNU library
+   *  2. So far, I can not redirect child process I/O 
+   *  3. Absolute path name is needed to start child process
+   */
   int result;
   BOOL fSuccess;
   int i=0,j;
@@ -2193,7 +2204,7 @@ int G__system(char *com)
   j=0;
   while(com[i] && !isspace(com[i])) comName[j++] = com[i++]; 
   comName[j] = 0;
-  if(strstr(".exe",comName)==0 && strstr(".EXE",comName)==0) { 
+  if(strstr(comName,".exe")==0 && strstr(comName,".EXE")==0) { 
     strcat(comName,".exe");
   }
 
@@ -2249,9 +2260,6 @@ int G__system(char *com)
 
   return(fExist?-1:0);
 
-#else
-#undef system
-  return(system(com));
 #endif
 }
 

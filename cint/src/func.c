@@ -1718,10 +1718,19 @@ int memfunc_flag;
     while(i<G__struct.alltag) {
       if((G__struct.hash[i]==classhash)&&
 	 (strcmp(G__struct.name[i],funcname)==0)
+#ifdef G__OLDIMPLEMENTATION1386
 #ifndef G__OLDIMPLEMENTATION1332
 	  &&'e'!=G__struct.type[i]
 #endif
+#endif
 	 ) {
+#ifndef G__OLDIMPLEMENTATION1386
+	if('e'==G__struct.type[i] && 
+	   -1!=fpara.para[0].tagnum &&
+	   'e'==G__struct.type[fpara.para[0].tagnum]) {
+	  return(fpara.para[0]);
+	}
+#endif
 	store_struct_offset=G__store_struct_offset;
 	
 	/* questionable part */

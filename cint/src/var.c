@@ -4293,7 +4293,11 @@ int objptr;  /* 1 : object , 2 : pointer */
     return(G__null);
   }
 #endif
-  else if(0==G__store_struct_offset) {
+  else if(0==G__store_struct_offset
+#ifndef G__OLDIMPLEMENTATION1151
+	  && G__ASM_FUNC_NOP==G__asm_wholefunction
+#endif
+	  ) {
     *known2=1;
 #ifndef G__OLDIMPLEMENTATION1151
     if(0==G__const_noerror) {

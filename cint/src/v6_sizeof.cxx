@@ -170,7 +170,14 @@ char *typename;
   }
 
   tagnum = G__defined_tagname(typename,1); /* case 8) */
-  if(-1 != tagnum) return(G__struct.size[tagnum]);
+  if(-1 != tagnum) {
+#ifndef G__OLDIMPLEMENTATION1389
+    if('e'!=G__struct.type[tagnum]) return(G__struct.size[tagnum]);
+    else                            return(G__INTALLOC);
+#else
+    return(G__struct.size[tagnum]);
+#endif
+  }
 
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {

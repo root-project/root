@@ -1805,7 +1805,7 @@ G__value *defined;
 	G__inc_cp_asm(2,1);
 	postfixflag=1;
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %x\n"
+	if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
 			       ,G__asm_cp ,1 ,G__asm_dt);
 #endif
       }
@@ -1871,7 +1871,7 @@ G__value *defined;
 	  G__asm_stack[G__asm_dt]=G__one;
 	  G__inc_cp_asm(2,1);
 #ifdef G__ASM_DBG
-	  if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %x\n"
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx from %lx\n"
 				 ,G__asm_cp ,1 ,G__asm_dt);
 #endif
 	}
