@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.47 2005/03/10 17:57:05 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.48 2005/03/21 07:56:37 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -646,11 +646,16 @@ void TSelectorDraw::Begin(TTree *tree)
                fVmax[1] = ymax;
                if (xmin < xmax && ymin < ymax) CanRebin = kFALSE;
             }
-            if (opt.Contains("profs"))
+            if (opt.Contains("profs")) {
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"s");
-            else
+            } else if (opt.Contains("profi")) {
+               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"i");
+            } else if (opt.Contains("profg")) {
+               hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"g");
+            } else {
                hp = new TProfile2D(hname,htitle,fNbins[2],fVmin[2], fVmax[2],fNbins[1],fVmin[1], fVmax[1],"");
-            if (!hkeep) {
+            }
+	    if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(0);
             }
