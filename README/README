@@ -9,7 +9,9 @@ configure   - build configuration script
 bin         - directory containing executables
 include     - directory containing the ROOT header files
 lib         - directory containing the ROOT libraries (in shared library format)
-macros      - directory containing system macros
+etc         - directory containing default resource and mime type files
+proof       - directory containing setting for the PROOF system
+macros      - directory containing system macros (might be missing)
 icons       - directory containing xpm icons
 test        - some ROOT test programs
 tutorials   - example macros that can be executed by the bin/root module
@@ -22,7 +24,6 @@ Define the variable ROOTSYS pointing to the directory where you unpacked
 the ROOT distribution:
    export ROOTSYS=<pathname>/root   (in bash or ksh)
    setenv ROOTSYS <pathname>/root   (in csh or tcsh)
-
 
 Add ROOTSYS/bin to your PATH:
    export PATH=$PATH:$ROOTSYS/bin        (in bash or ksh)
@@ -46,6 +47,10 @@ On MacOS X do:
 On AIX do:
    [ -z "$LIBPATH" ] && export LIBPATH=/lib:/usr/lib
    export LIBPATH=$LIBPATH:$ROOTSYS/lib
+
+To have access to the man pages add ROOTSYS/man to you MANPATH:
+   export MANPATH=$MANPATH:$ROOTSYS/man      (in bash or ksh)
+   setenv MANPATH $MANPATH:$ROOTSYS/man      (in csh or tcsh)
 
 
 Using TrueType fonts
