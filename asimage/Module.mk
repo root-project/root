@@ -117,6 +117,7 @@ else
 		./configure \
 		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) \
 		--with-afterbase=no \
+		--disable-glx \
 		$$MMX \
 		--with-builtin-ungif \
 		$$JPEGINCDIR \
