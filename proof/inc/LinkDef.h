@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.8 2002/07/17 15:14:37 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.9 2002/08/09 13:12:23 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ global gProof;
 #pragma link C++ global gProofServ;
 
 #pragma link C++ global gProofDebugMask;

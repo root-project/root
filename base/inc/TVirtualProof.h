@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.3 2002/11/28 18:38:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.4 2003/03/04 17:07:03 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -79,7 +79,8 @@ public:
    virtual const char *GetWorkDir() const = 0;
    virtual const char *GetImage() const = 0;
    virtual Int_t       GetPort() const = 0;
-   virtual Int_t       GetProtocol() const = 0;
+   virtual Int_t       GetRemoteProtocol() const = 0;
+   virtual Int_t       GetClientProtocol() const = 0;
    virtual Int_t       GetStatus() const = 0;
    virtual Int_t       GetLogLevel() const = 0;
    virtual Int_t       GetParallel() const = 0;

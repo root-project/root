@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.9 2002/12/04 14:35:12 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.10 2002/12/05 10:25:37 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -99,6 +99,8 @@
 #pragma link C++ global kPrimarySelection;
 #pragma link C++ global kCutBuffer;
 #pragma link C++ global kMaxPixel;
+
+#pragma link C++ global gProof;
 
 #pragma link C++ enum EGuiConstants;
 #pragma link C++ enum EGEventType;
