@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.48 2003/08/23 00:08:13 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.49 2003/09/05 09:21:54 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2256,6 +2256,17 @@ TMatrix &TMatrix::operator*=(const TMatrix &source)
       Error("operator*=(const TMatrix&)",
             "matrices above are unsuitable for the inplace multiplication");
 
+   Real_t *scp0;
+   TMatrix tmp;
+   if (this == &source)
+   {
+     tmp.ResizeTo(source);
+     tmp = source;
+     scp0 = tmp.fElements;
+   }
+   else
+     scp0 = source.fElements;
+
    // One row of the old_target matrix
    Real_t *const one_row = new Real_t[fNcols];
    const Real_t *one_row_end = &one_row[fNcols];
@@ -2266,7 +2277,7 @@ TMatrix &TMatrix::operator*=(const TMatrix &source)
       for (wrp = trp, orp = one_row; orp < one_row_end; )
          *orp++ = *wrp, wrp += fNrows;          // Copy a row of old_target
 
-      Real_t *scp = source.fElements;           // Source column pointer
+      Real_t *scp = scp0;                       // Source column pointer
       for (wrp = trp; wrp < fElements+fNelems; wrp += fNrows) {
          Double_t sum = 0;                      // Multiply a row of old_target
          for (orp = one_row; orp < one_row_end; ) // by each col of source
