@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.140 2004/02/11 22:06:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.141 2004/02/18 07:28:02 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3612,10 +3612,10 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                // Case of an object data member.  Here we allow for the
                // variable name to be ommitted.  Eg, for Event.root with split
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-               cl =  BranchEl->GetInfo()->GetClass();
                TStreamerElement* element = (TStreamerElement*)
-                 cl->GetStreamerInfo()->GetElems()[BranchEl->GetID()];
-               cl = element->GetClassPointer();
+                  BranchEl->GetInfo()->GetElems()[BranchEl->GetID()];
+               if (element) cl = element->GetClassPointer();
+               else cl = 0;
             }
          }
 
@@ -3778,10 +3778,10 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         cl =  branchEl->GetInfo()->GetClass();
          TStreamerElement* element = (TStreamerElement*)
-            cl->GetStreamerInfo()->GetElems()[branchEl->GetID()];
-         cl = element->GetClassPointer();
+            branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+         if (element) cl = element->GetClassPointer();
+         else cl = 0;
          
          if (cl==TClonesArray::Class() && branchEl->GetType() == 31 ) {
             // we have a TClonesArray inside a split TClonesArray,
