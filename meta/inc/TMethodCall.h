@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.2 2000/10/31 11:18:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.3 2000/11/02 14:01:23 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -55,8 +55,8 @@ private:
    Bool_t         fDtorOnly;  //call only dtor and not delete when calling ~xxx
    EReturnType    fRetType;   //method return type
 
-   void Execute(const char *,  const char *) { }    // versions of TObject
-   void Execute(TMethod *, TObjArray *) { }
+   void Execute(const char *,  const char *, int* error=0) { }    // versions of TObject
+   void Execute(TMethod *, TObjArray *, int* error=0) { }
 
 public:
    TMethodCall();
