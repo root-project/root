@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.2 2000/09/08 16:11:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.3 2000/09/08 16:41:25 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -41,10 +41,10 @@ class TList : public TSeqCollection {
 friend  class TListIter;
 
 protected:
-   TObjLink  *fFirst;     //pointer to first entry in linked list
-   TObjLink  *fLast;      //pointer to last entry in linked list
-   TObjLink  *fCache;     //cache to speedup sequential calling of Before() and After() functions
-   Bool_t     fAscending; //sorting order (when calling Sort() or for TSortedList)
+   TObjLink  *fFirst;     //! pointer to first entry in linked list
+   TObjLink  *fLast;      //! pointer to last entry in linked list
+   TObjLink  *fCache;     //! cache to speedup sequential calling of Before() and After() functions
+   Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
 
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(TObject *obj, Int_t &idx) const;
@@ -89,7 +89,7 @@ public:
    virtual void      Sort(Bool_t order = kSortAscending);
    Bool_t            IsAscending() { return fAscending; }
 
-   ClassDef(TList,0)  //Doubly linked list
+   ClassDef(TList,4)  //Doubly linked list
 };
 
 
@@ -120,6 +120,7 @@ public:
    TObject                *GetObject() const { return fObject; }
    TObject               **GetObjectRef() { return &fObject; }
    void                    SetObject(TObject *obj) { fObject = obj; }
+   virtual Option_t       *GetAddOption() const { return ""; }
    virtual Option_t       *GetOption() const { return fObject->GetOption(); }
    virtual void            SetOption(Option_t *) { }
    TObjLink               *Next() { return fNext; }
@@ -143,6 +144,7 @@ public:
    TObjOptLink(TObject *obj, Option_t *opt) : TObjLink(obj), fOption(opt) { }
    TObjOptLink(TObject *obj, TObjLink *lnk, Option_t *opt) : TObjLink(obj, lnk), fOption(opt) { }
    ~TObjOptLink() { }
+   Option_t        *GetAddOption() const { return fOption.Data(); }
    Option_t        *GetOption() const { return fOption.Data(); }
    void             SetOption(Option_t *option) { fOption = option; }
 };
