@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.2 2000/12/26 14:23:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.1 2001/04/09 07:52:33 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -49,11 +49,22 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *fi
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a friend element*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ======================
 //
-
+// if treename is of the form "a=b", an alias called "a" is created for treename = "b"
+// by default the alias name is the name of the tree.   
 
    fFile       = 0;
    fTree       = 0;
    fParentTree = tree;
+   fTreeName   = treename;
+   if (strchr(treename,'=')) {
+      char *temp = Compress(treename);
+      char *equal = strchr(temp,'=');
+      *equal=0;
+      fTreeName = equal+1;
+      SetName(temp);
+      delete [] temp;
+   }
+   
    Connect();
 }
 
@@ -111,7 +122,7 @@ TTree *TFriendElement::GetTree()
 
    if (fTree) return fTree;
    if (!GetFile()) return 0;
-   fTree = (TTree*)fFile->Get(GetName());
+   fTree = (TTree*)fFile->Get(GetTreeName());
    TDirectory *dir = fParentTree->GetDirectory();
    if (dir && dir != gDirectory) dir->cd();
    return fTree;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.5 2001/01/23 21:09:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.1 2001/04/09 07:52:33 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -37,7 +37,8 @@ protected:
     TTree        *fParentTree;      //!pointer  to the parent TTree
     TTree        *fTree;            //!pointer  to the TTree described by this element
     TFile        *fFile;            //!pointer to the file containing the friend Tree
-
+    TString       fTreeName;        // name of the friend Tree
+    
 public:
         TFriendElement();
         TFriendElement(TTree *tree, const char *treename, const char *filename);
@@ -47,6 +48,7 @@ public:
         virtual TFile   *GetFile();
         virtual TTree   *GetParentTree() const {return fParentTree;}
         virtual TTree   *GetTree();
+   virtual const char   *GetTreeName() const {return fTreeName.Data();}
         virtual void     ls(Option_t *option="") const;
 
         ClassDef(TFriendElement,1)  //A friend element of another TTree
