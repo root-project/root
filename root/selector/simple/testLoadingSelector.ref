@@ -1,0 +1,6 @@
+
+Processing runtestLoadingSelector.C...
+testSelector result is 1 0 1
+Warning in <ACLiC>: script has already been loaded in interpreted mode
+Warning in <ACLiC>: unloading /home/SCR/pcanal/root_working/roottest/root/selector/simple/./testSelector.C and compiling it
+testSelector result is 1 524288 1
