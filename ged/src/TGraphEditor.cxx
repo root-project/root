@@ -142,6 +142,7 @@ void TGraphEditor::ConnectSignals2Slots()
    fShape3->Connect("Pressed()","TGraphEditor",this,"DoShape3()");   
    fAxisOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoAxisOnOff()");
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff()");
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -214,7 +215,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
 void TGraphEditor::DoTitle(const char *text)
 {
-   // Slot connected to the title of the graph .
+   // Slot connected to the title of the graph.
   
    fGraph->SetTitle(text);
    Update();
@@ -224,7 +225,7 @@ void TGraphEditor::DoTitle(const char *text)
 
 void TGraphEditor::DoShape()
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area)
+   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
    TString opt = fGraph->GetDrawOption();
    opt.ToUpper();
@@ -240,7 +241,7 @@ void TGraphEditor::DoShape()
 
 void TGraphEditor::DoShape0()
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area)
+   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
    TString opt = fGraph->GetDrawOption();
    opt.ToUpper();
@@ -263,7 +264,7 @@ void TGraphEditor::DoShape0()
 
 void TGraphEditor::DoShape1()
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area)
+   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
    TString opt = fGraph->GetDrawOption();
    opt.ToUpper();
@@ -286,7 +287,7 @@ void TGraphEditor::DoShape1()
 
 void TGraphEditor::DoShape2()
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area)
+   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
    TString opt = fGraph->GetDrawOption();
    opt.ToUpper();
@@ -309,7 +310,7 @@ void TGraphEditor::DoShape2()
 
 void TGraphEditor::DoShape3()
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area)
+   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
    
    TString opt = fGraph->GetDrawOption();
    opt.ToUpper();
@@ -332,7 +333,7 @@ void TGraphEditor::DoShape3()
 
 void TGraphEditor::DoAxisOnOff()
 {
-   // Slot connected to axis: Set axis visible/invisible
+   // Slot connected to axis: Set axis visible/invisible.
    
    TString t = fGraph->GetDrawOption();
    t.ToUpper();
@@ -345,7 +346,7 @@ void TGraphEditor::DoAxisOnOff()
 
 void TGraphEditor::DoMarkerOnOff()
 {
-   // Slot connected to Marker: Set marker visible/invisible
+   // Slot connected to Marker: Set marker visible/invisible.
    
    TString t = fGraph->GetDrawOption();
    t.ToUpper();
