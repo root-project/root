@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.2 2000/07/03 18:45:00 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1909,7 +1909,7 @@ Window_t TGX11::GetPrimarySelectionOwner()
 void TGX11::SetPrimarySelectionOwner(Window_t id)
 {
    // Makes the window id the current owner of the primary selection.
-   // That is the windown in which, for example some text is selected.
+   // That is the window in which, for example some text is selected.
 
    XSetSelectionOwner(fDisplay, XA_PRIMARY, id, CurrentTime);
 }
