@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.12 2004/11/29 12:43:35 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.13 2004/11/29 21:59:07 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
       fNeedFrustum = kTRUE;
    }
 private:
-   void DrawScene(Bool_t clip = kTRUE);
+   void DrawScene();
    void DrawAxes();
 
    void Init();

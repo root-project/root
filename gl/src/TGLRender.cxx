@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.20 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.21 2004/12/01 16:57:19 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -147,7 +147,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    glLoadIdentity();
    actCam->TurnOn(x, y);
 
-   DrawScene(kFALSE);
+   DrawScene();
    
    Int_t hits = glRenderMode(GL_RENDER);
 
@@ -312,10 +312,10 @@ void TGLRender::Init()
 }
 
 //______________________________________________________________________________
-void TGLRender::DrawScene(Bool_t clip)
+void TGLRender::DrawScene()
 {
 
-   TGLFrustum *frObj = clip ? &fFrustum : 0;
+   TGLFrustum *frObj = fNeedFrustum ? &fFrustum : 0;
 
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
