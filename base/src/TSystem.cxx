@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.95 2004/07/09 07:23:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.96 2004/07/16 23:23:27 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2235,7 +2235,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       TString line(fMakeSharedLib);
       TString comp;
       Ssiz_t posEOL=kNPOS;
-      Ssiz_t posObjFiles=kNPOS;
       // split cmd into command lines
       while ((kNPOS!=(posEOL=line.Index(";")) // ";" is end of line
               || kNPOS!=(posEOL=line.Index("&&"))) // and so is "&&"
