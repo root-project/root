@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.4 2000/07/24 18:21:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.5 2000/07/29 11:04:36 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -45,13 +45,15 @@
 // method will be used. The secure method uses the SRP, Secure Remote   //
 // Passwords, package. SRP uses a so called "asymmetric key exchange    //
 // protocol" in which no passwords are ever send over the wire. This    //
-// protocol is safe against all known security attacks. For more see    //
-// http://root.cern.ch/root/NetFile.html.                               //
+// protocol is safe against all known security attacks. For more see:   //
+// Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
+// End_Html                                                             //
 //                                                                      //
 // The rootd daemon lives in the directory $ROOTSYS/bin. It can be      //
 // started either via inetd or by hand from the command line (no need   //
 // to be super user). For more info about rootd see the web page:       //
-// http://root.cern.ch/root/NetFile.html.                               //
+// Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
+// End_Html                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
