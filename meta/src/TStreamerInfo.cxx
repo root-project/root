@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.135 2002/06/04 17:50:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.136 2002/07/04 16:15:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1640,7 +1640,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 { \
    Char_t isArray; \
    b >> isArray; \
-   if (isArray == 0) break; \
    Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
    delete [] *f; \
@@ -2286,7 +2285,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    Char_t isArray; \
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
-      if (isArray == 0) continue; \
       pointer = (char*)clones->UncheckedAt(k)+eoffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
@@ -2918,8 +2916,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
    Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
    name *af = *f; \
-   if (af)  b << Char_t(1); \
-   else    {b << Char_t(0); break;}\
+   if (af && *l)  b << Char_t(1); \
+   else          {b << Char_t(0); break;}\
    b.WriteFastArray(af,*l); \
    break; \
 }
@@ -3252,8 +3250,8 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       name *af = *f; \
-      if (af)  b << Char_t(1); \
-      else    {b << Char_t(0); continue;} \
+      if (af && *l)  b << Char_t(1); \
+      else          {b << Char_t(0); continue;} \
       b.WriteFastArray(af,*l); \
    } \
    break; \
