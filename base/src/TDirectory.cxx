@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.35 2003/02/26 10:11:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.36 2003/03/01 22:29:48 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -815,8 +815,6 @@ TObject *TDirectory::Get(const char *namecycle)
 //             if object is not in memory, try with highest cycle from file
 //     foo;1 : get cycle 1 of foo on file
 //
-// WARNING: Never use TDirectory::Get when namecycle is a directory itself.
-//
 //  VERY IMPORTANT NOTE:
 //  In case the class of this object derives from TObject but not
 //  as a first inheritance, one must use dynamic_cast<>().
@@ -883,17 +881,6 @@ TObject *TDirectory::Get(const char *namecycle)
      }
    }
    cursav->cd();
-
-#if 0
-   // Feature not used for the time being. If used code will be modified
-   // to not use ProcessLine().
-
-   // If we are on a PROOF server try to get object from client
-   if (!idcur && TClassTable::GetDict("TProofServ")) {
-      if (gROOT->ProcessLineFast("TProofServ::IsActive()"))
-         idcur = (TObject *) gROOT->ProcessLineFast(Form("TProofServ::This()->Get(\"%s\")", namecycle));
-   }
-#endif
 
    return idcur;
 }
