@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.10 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.11 2003/08/29 17:23:31 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -52,7 +52,7 @@ extern "C" char *crypt(const char *, const char *);
 Int_t TAuthenticate::fgRSAInit = 0;
 rsa_KEY TAuthenticate::fgRSAPriKey;
 rsa_KEY TAuthenticate::fgRSAPubKey;
-rsa_KEY_export TAuthenticate::fgRSAPubExport = { 0, (char *) 0 };
+rsa_KEY_export TAuthenticate::fgRSAPubExport = { 0, 0 };
 
 TString TAuthenticate::fgUser;
 TString TAuthenticate::fgPasswd;

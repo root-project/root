@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.49 2003/07/01 14:18:27 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.50 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2266,12 +2266,12 @@ Int_t TProof::CheckAuth(Int_t cSec, char **Det)
 #ifdef R__GLBS
       TApplication *lApp = gROOT->GetApplication();
       if (lApp != 0) {
-         if (strstr(lApp->Argv()[1],"proof") !=0) {
+         if (strstr(lApp->Argv()[1],"proof") != 0) {
             // Delegated Credentials
             int ShmId = (lApp->Argc() == 11) ? atoi(lApp->Argv()[7]) : -1 ;
             if (ShmId != -1) {
                struct shmid_ds shm_ds;
-               int rc= shmctl(ShmId,IPC_STAT,&shm_ds);
+               int rc = shmctl(ShmId, IPC_STAT, &shm_ds);
                if (rc == 0) ok = 1;
             }
             if (ok == 1) {
@@ -2282,15 +2282,15 @@ Int_t TProof::CheckAuth(Int_t cSec, char **Det)
                Adir = StrDup(lApp->Argv()[8]);
                // Usr Cert
                Ucer = StrDup(lApp->Argv()[9]);
-               if (strstr(Ucer,"/") !=0 ) {
+               if (strstr(Ucer,"/") != 0) {
                   Pcer = strlen(Ucer);
-                  while (Ucer[Pcer-1]!='/') { Pcer--; }
+                  while (Ucer[Pcer-1] != '/') { Pcer--; }
                }
                // Usr Key
                Ukey = StrDup(lApp->Argv()[10]);
-               if (strstr(Ukey,"/")!=0) {
+               if (strstr(Ukey,"/") != 0) {
                   Pkey = strlen(Ukey);
-                  while (Ukey[Pkey-1]!='/') { Pkey--; }
+                  while (Ukey[Pkey-1] != '/') { Pkey--; }
                }
                // Usr Dir
                Cdir = new char[strlen(Ucer)+5];
@@ -2298,7 +2298,7 @@ Int_t TProof::CheckAuth(Int_t cSec, char **Det)
                // Create Output
                details = new char[strlen(Adir)+strlen(Cdir)+strlen(Ucer)+strlen(Ukey)+40];
                sprintf(details,"pt=0 ru:1 cd:%s cf:%s kf:%s ad:%s",Cdir,Ucer,Ukey,Adir);
-               delete[] Adir; delete[] Ucer; delete[] Ukey; delete[] Cdir;
+               delete [] Adir; delete [] Ucer; delete [] Ukey; delete [] Cdir;
             }
          }
       }
@@ -2314,7 +2314,7 @@ Int_t TProof::CheckAuth(Int_t cSec, char **Det)
          sprintf(infofile,"%s/%s",home,sshid[i]);
          if (!gSystem->AccessPathName(infofile,kReadPermission)) ok = 1;
       }
-      if (ok==1) {
+      if (ok == 1) {
          details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
          sprintf(details,"pt:0 ru:1 us:%s",user);
       }
@@ -2331,14 +2331,14 @@ Int_t TProof::CheckAuth(Int_t cSec, char **Det)
    if (details) { *Det= StrDup(details); delete [] details; }
 
    // CleanUp remaining stuff ...
-   if (home)     delete[] home;
-   if (infofile) delete[] infofile;
+   if (home)     delete [] home;
+   if (infofile) delete [] infofile;
 
    if (gDebug > 3) {
-      if (ok==1) {
-         Info("CheckAuth","meth: %d ... is available: details: %s",cSec,*Det);
+      if (ok == 1) {
+         Info("CheckAuth","meth: %d ... is available: details: %s", cSec, *Det);
       } else {
-         Info("CheckAuth","meth: %d ... is NOT available",cSec);
+         Info("CheckAuth","meth: %d ... is NOT available", cSec);
       }
    }
 
