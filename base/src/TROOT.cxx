@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.88 2003/01/13 16:46:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.89 2003/04/04 00:10:16 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -979,8 +979,8 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
-      Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethod(0, (char *)function,
-                                                              (char *)params);
+      Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethod(0, function,
+                                                              params);
       if (!faddr) return 0;
 
       TFunction *f;
@@ -1010,7 +1010,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
       Long_t faddr = (Long_t)fInterpreter->GetInterfaceMethodWithPrototype(0,
-                                         (char *)function, (char *)proto);
+                                                            function, proto);
       if (!faddr) return 0;
 
       TFunction *f;

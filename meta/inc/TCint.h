@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.9 2002/03/05 10:47:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.10 2002/10/29 13:30:00 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -100,8 +100,8 @@ public:
    void    CreateListOfDataMembers(TClass *cl);
    void    CreateListOfMethods(TClass *cl);
    void    CreateListOfMethodArgs(TFunction *m);
-   void   *GetInterfaceMethod(TClass *cl, char *method, char *params);
-   void   *GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *proto);
+   void   *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
+   void   *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
    void    Execute(const char *function, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);

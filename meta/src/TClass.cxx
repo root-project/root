@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.113 2003/03/05 23:36:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.114 2003/03/18 13:26:18 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1257,8 +1257,8 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    if (!gInterpreter)
       Fatal("GetMethod", "gInterpreter not initialized");
 
-   Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethod(this, (char *)method,
-                                                           (char *)params);
+   Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethod(this, method,
+                                                           params);
    if (!faddr) return 0;
 
    // loop over all methods in this class (and its baseclasses) till
@@ -1305,7 +1305,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto)
       Fatal("GetMethod", "gInterpreter not initialized");
 
    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(this,
-                                                 (char *)method, (char *)proto);
+                                                              method, proto);
    if (!faddr) return 0;
 
    // loop over all methods in this class (and its baseclasses) till

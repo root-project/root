@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.32 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.33 2003/04/03 17:46:08 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -200,15 +200,15 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
       G__MethodInfo meth;
       long offset;
       if (cl->GetClassInfo())
-         meth = cl->GetClassInfo()->GetMethod((char *)method, (char *)proto, &offset);
+         meth = cl->GetClassInfo()->GetMethod(method, proto, &offset);
       if (meth.IsValid()) {
          nargs = meth.NArg();
          return (TMethod *) -1;
       }
       return 0;
    } else {
-      faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl,
-                                       (char *)method, (char *)proto);
+      faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl, method,
+                                                                    proto);
       if (!faddr) return 0;
    }
 
@@ -249,13 +249,12 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
       // interpreted class
       G__CallFunc  func;
       long         offset;
-      func.SetFunc(cl->GetClassInfo(), (char *)method, (char *)params, &offset);
+      func.SetFunc(cl->GetClassInfo(), method, params, &offset);
       if (func.IsValid())
          return (TMethod *) -1;
       return 0;
    } else {
-      faddr = (Long_t)gInterpreter->GetInterfaceMethod(cl,
-                                    (char *)method, (char *)params);
+      faddr = (Long_t)gInterpreter->GetInterfaceMethod(cl, method, params);
       if (!faddr) return 0;
    }
 

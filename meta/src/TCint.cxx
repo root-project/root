@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.60 2002/10/29 13:30:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.61 2002/11/04 17:22:26 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -221,7 +221,7 @@ Bool_t TCint::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-Int_t TCint::Load(const char *filename, Bool_t system) 
+Int_t TCint::Load(const char *filename, Bool_t system)
 {
    // Load a library file in CINT's memory.
    // if 'system' is true, the library is never unloaded.
@@ -659,7 +659,8 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 }
 
 //______________________________________________________________________________
-void *TCint::GetInterfaceMethod(TClass *cl, char *method, char *params)
+void *TCint::GetInterfaceMethod(TClass *cl, const char *method,
+                                const char *params)
 {
    // Return pointer to CINT interface function for a method of a class with
    // parameters params (params is a string of actual arguments, not formal
@@ -679,7 +680,8 @@ void *TCint::GetInterfaceMethod(TClass *cl, char *method, char *params)
 }
 
 //______________________________________________________________________________
-void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *proto)
+void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
+                                             const char *proto)
 {
    // Return pointer to CINT interface function for a method of a class with
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
