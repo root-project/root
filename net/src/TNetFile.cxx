@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.39 2003/11/07 03:29:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.40 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -578,7 +578,7 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    }
 
    if (!fUrl.IsValid()) {
-      Error("TNetFile", "invalid URL specified: %s", url);
+      Error("Create", "invalid URL specified: %s", url);
       goto zombie;
    }
 
@@ -589,10 +589,10 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    EMessageTypes kind;
    Int_t stat;
    ConnectServer(&stat, &kind, netopt, tcpwindowsize, forceOpen, forceRead);
-   if (gDebug > 2) Info("TNetFile", "TNetFile: got from host %d %d", stat, kind);
+   if (gDebug > 2) Info("Create", "got from host %d %d", stat, kind);
 
    if (kind == kROOTD_ERR) {
-      PrintError("TNetFile", stat);
+      PrintError("Create", stat);
       goto zombie;
    }
 
