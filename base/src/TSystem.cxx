@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.49 2003/01/27 18:24:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.50 2003/01/31 17:19:01 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1486,18 +1486,190 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       }
    }
 
+   // Calculate the -I lines
+   TString includes = GetIncludePath();
+   {
+      // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
+     TRegexp rel_inc("-I[^/\\$%-][^:-]+");
+     Int_t len,pos;
+     pos = rel_inc.Index(includes,&len);
+     while( len != 0 ) {
+        TString sub = includes(pos,len);
+        sub.Remove(0,2);
+        sub = ConcatFileName( WorkingDirectory(), sub );
+        sub.Prepend("-I");
+        sub.Append(" ");
+        includes.Replace(pos,len,sub);
+        pos = rel_inc.Index(includes,&len);
+     }
+   }
+   includes += " -I" + build_loc;
+   includes += " -I";
+   includes += WorkingDirectory();
+
+   // Extra the -D for the dependency generation.
+   TString defines = " ";
+   {
+     TString cmd = GetMakeSharedLib();
+     TRegexp rel_def("-D[^\\s\\t\\n\\r]*"); 
+     Int_t len,pos;
+     pos = rel_def.Index(cmd,&len);
+     while( len != 0 ) {
+        defines += cmd(pos,len);
+        defines += " ";
+        pos = rel_def.Index(cmd,&len,pos+1);
+     }
+
+   }
+
+   // ======= Figure out a temporary directory.
+   const char *tempDirs =  gSystem->Getenv("TEMP");
+   if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMPDIR");
+   if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMP_DIR");
+   if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP");
+   if (!tempDirs)  tempDirs =  gSystem->Getenv("TMPDIR");
+   if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP_DIR");
+#ifdef R__WIN32
+   if (!tempDirs) tempDirs = "c:\\";
+#else
+   if (!tempDirs) tempDirs = "/tmp";
+#endif
+   TString emergency_loc = tempDirs;
+
+   Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
+
    Bool_t modified = kFALSE;
    if ( !recompile ) {
-      Long_t lib_time, script_time;
-      if ( GetPathInfo( library, 0, 0, 0, &lib_time ) == 0 ) {
+      // Generate the dependency filename
+      TString depdir = build_loc;
+      if (!canWrite) depdir = emergency_loc;
+      TString depfilename = ConcatFileName(depdir, BaseName(filename_noext));
+      depfilename += "_" + extension + ".d";
+      TString bakdepfilename = depfilename + ".bak";
+      
+      Long_t lib_time, file_time;
 
-         // If the time library is older than the script we
-         // are going to recompile !
-         GetPathInfo( filename, 0, 0, 0, &script_time );
-         modified = ( lib_time <= script_time );
-         recompile = modified;
-      } else {
+#ifndef WIN32
+      const char * stderrfile = "/dev/null";
+#else
+      TString stderrfile = ConcatFileName(build_loc,"stderr.tmp");
+#endif
+      
+      if ( gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0 ) {
+         // the library does not exist
          recompile = kTRUE;
+
+      } else {
+
+         // If the library exist and the dependency file is either older or
+         // does  not exist we regenerate it
+
+         Bool_t needDependencies;
+         if ( gSystem->GetPathInfo( depfilename, 0, 0, 0, &file_time ) == 0 ) {
+            needDependencies = ( file_time < lib_time );
+         } else {
+            needDependencies = true;
+         }
+         
+         if (needDependencies) {
+            gSystem->Unlink(depfilename);
+  
+            // Generate the dependency via standard output, not searching the
+            // standard include directories,
+            TString touch = "echo > ";
+            touch += depfilename;
+            TString builddep = "rmkdepend -f";
+            builddep += depfilename;
+            builddep += " -Y -- ";
+            builddep += " -I$ROOTSYS/include "; // cflags
+            builddep += includes;
+            builddep += defines;
+            builddep += " -- ";
+            builddep += filename;
+            builddep += " > ";
+            builddep += stderrfile;
+            builddep += " 2>&1 ";
+
+            if (1||gDebug>4)  ::Info("ACLiC",builddep.Data());
+            
+            Int_t depbuilt = !gSystem->Exec(touch);
+            if (depbuilt) depbuilt = !gSystem->Exec(builddep);
+
+
+            if (!depbuilt) {
+              ::Warning("ACLiC","Failed to generate the dependency file for %s",
+                        library.Data());
+            } else {
+#ifdef WIN32
+               gSystem->Unlink(stderrfile);
+#endif
+               gSystem->Unlink(bakdepfilename);
+            }
+         }
+
+         // Parse the depdency file
+         FILE * depfile = fopen(depfilename.Data(),"r");
+         if (depfile==0) {
+            // there is no acessible dependency file, let's assume the library has been
+            // modified
+            modified = kTRUE;
+            recompile = kTRUE;
+
+         } else {
+
+            Int_t sz = 256;
+            char *line = new char[sz];
+            line[0] = 0;
+  
+            char c;
+            Int_t current = 0;
+            Int_t nested = 0;
+
+            while ((c = fgetc(depfile)) != EOF) {
+              if (c=='#') {
+                // skip comment
+                while ((c = fgetc(depfile)) != EOF) {
+                  if (c=='\n') {
+                    break;
+                  }
+                }
+                continue;
+              }
+              if (isspace(c) && !nested) {
+                if (current) {
+                  if (line[current-1]!=':') {
+                    // ignore target
+                    line[current] = 0;
+
+                    Long_t filetime;
+                    if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
+                      modified |= ( lib_time <= filetime );
+                    }
+                  }          
+                }
+                current = 0;
+                line[0] = 0;
+              } else {
+                if (current==sz-1) {
+                  sz = 2*sz;
+                  char *newline = new char[sz];
+                  strcpy(newline,line);
+                  delete [] line;
+                  line = newline;
+                }
+                if (c=='"') nested = !nested;
+                else {
+                  line[current] = c;
+                  current++;
+                }
+              }
+            }
+            delete [] line;
+            fclose(depfile);
+            recompile = modified;
+
+         }
+
       }
    }
 
@@ -1533,23 +1705,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      return !gSystem->Load(library);
    }
 
-   Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
    if (!canWrite && recompile) {
-
-      // ======= Figure out a temporary directory.
-      const char *tempDirs =  gSystem->Getenv("TEMP");
-      if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMPDIR");
-      if (!tempDirs)  tempDirs =  gSystem->Getenv("TEMP_DIR");
-      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP");
-      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMPDIR");
-      if (!tempDirs)  tempDirs =  gSystem->Getenv("TMP_DIR");
-#ifdef R__WIN32
-      if (!tempDirs) tempDirs = "c:\\";
-#else
-      if (!tempDirs) tempDirs = "/tmp";
-#endif
-      TString emergency_loc = tempDirs;
-
 
       ::Warning("ACLiC","%s is not writeable!",
                 build_loc.Data());
@@ -1638,26 +1794,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    linkdefFile.close();
 
    // ======= Generate the three command lines
-
-   TString includes = GetIncludePath();
-   {
-      // I need to replace the -Isomerelativepath by -I../ (or -I..\ on NT)
-     TRegexp rel_inc("-I[^/\\$%-][^:-]+");
-     Int_t len,pos;
-     pos = rel_inc.Index(includes,&len);
-     while( len != 0 ) {
-        TString sub = includes(pos,len);
-        sub.Remove(0,2);
-        sub = ConcatFileName( WorkingDirectory(), sub );
-        sub.Prepend("-I");
-        sub.Append(" ");
-        includes.Replace(pos,len,sub);
-        pos = rel_inc.Index(includes,&len);
-     }
-   }
-   includes += " -I" + build_loc;
-   includes += " -I";
-   includes += WorkingDirectory();
 
    TString rcint = "rootcint -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
