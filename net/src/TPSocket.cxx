@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.12 2004/05/05 14:43:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.13 2004/05/06 13:04:10 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -141,7 +141,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
       }
    }
 
-   // try authentication , if required
+   // try authentication, if required
    if (authreq) {
       if (valid) {
          if (!Authenticate(TUrl(host).GetUser())) {
@@ -262,11 +262,10 @@ void TPSocket::Init(Int_t tcpwindowsize)
    Int_t i = 0;
 
    if (fSize <= 1) {
-      // check if single mode:
-
+      // check if single mode
       fSize = 1;
 
-      // set socket options (no blocking and no delay)
+      // set socket options (no delay)
       TSocket::SetOption(kNoDelay, 1);
 
       // if yes, communicate this to server

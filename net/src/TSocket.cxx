@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.15 2004/05/05 14:43:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.16 2004/05/08 16:37:49 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -31,11 +31,9 @@
 #include "TROOT.h"
 #include "TError.h"
 
-extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-
 UInt_t TSocket::fgBytesSent = 0;
 UInt_t TSocket::fgBytesRecv = 0;
+
 
 ClassImp(TSocket)
 
@@ -703,8 +701,7 @@ Bool_t TSocket::Authenticate(const char *user)
 
    Bool_t rc = kFALSE;
 
-   // Parse protocol name
-   // For PROOF, send message with server role
+   // Parse protocol name, for PROOF, send message with server role
    Bool_t Master = kFALSE;
    TString SProtocol = TUrl(fUrl).GetProtocol();
    if (SProtocol == "") {
@@ -716,10 +713,10 @@ Bool_t TSocket::Authenticate(const char *user)
       SProtocol.ReplaceAll("d",1,"",0);
       TString Opt(TUrl(fUrl).GetOptions());
 
-      if (!strncasecmp(Opt.Data(),"M",1)) {
+      if (!strncasecmp(Opt, "M", 1)) {
          Send("slave");
          Master = kTRUE;
-      } else if (!strncasecmp(Opt.Data(),"C",1)) {
+      } else if (!strncasecmp(Opt, "C", 1)) {
          Send("master");
       } else {
          Warning("Authenticate",
@@ -752,11 +749,11 @@ Bool_t TSocket::Authenticate(const char *user)
    TAuthenticate *auth = new TAuthenticate(this,Host,
                   Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
 
-   // If PROOF client and trasmission of the SRP password is
+   // If PROOF client and transmission of the SRP password is
    // requested make sure that ReUse is switched on to get and
-   // send also the Public Key
+   // send also the Public Key.
    // Masters do this automatically upon reception of valid info
-   // (see TSlave.cxx)
+   // (see TSlave.cxx).
    if (!Master && fServType == kPROOFD) {
       if (gEnv->GetValue("Proofd.SendSRPPwd",0)) {
          Int_t kSRP = TAuthenticate::kSRP;
@@ -799,7 +796,7 @@ Bool_t TSocket::Authenticate(const char *user)
 TSocket *TSocket::CreateAuthSocket(const char *url,
                                    Int_t size, Int_t tcpwindowsize)
 {
-   // Creates a socket or a parallel sockets and authenticates to the
+   // Creates a socket or a parallel socket and authenticates to the
    // remote server.
    //
    // url: [proto[p][auth]://][user@]host[:port][/service][?options]
@@ -830,7 +827,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    //   in this case because the size is 0 (the default).
    //
    // Returns pointer to an authenticated socket or 0 if creation or
-   // authentication is unsuccessful
+   // authentication is unsuccessful.
 
    // Url to be passed to choosen constructor
    TString eurl(url);
@@ -855,7 +852,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    Int_t RemoteProtocol = -1;
    if (RootdSrv) {
       // Open simple parallel socket
-      TSocket *sock = new TPSocket(eurl.Data(),TUrl(url).GetPort(),1);
+      TSocket *sock = new TPSocket(eurl,TUrl(url).GetPort(),1);
       // Inquire remote protocol (sending our)
       sock->Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
       // Receive remote protocol
@@ -871,7 +868,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    if (!Parallel) {
 
       // Simple socket
-      sock = new TSocket(eurl.Data(), TUrl(url).GetPort(), tcpwindowsize);
+      sock = new TSocket(eurl, TUrl(url).GetPort(), tcpwindowsize);
 
       // Authenticate now
       if (sock && sock->IsValid()) {
@@ -893,7 +890,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
       eurl += RemoteProtocol;
 
       // Parallel socket
-      sock = new TPSocket(eurl.Data(), TUrl(url).GetPort(), size, tcpwindowsize);
+      sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);
 
       // Cleanup if failure ...
       if (sock && !sock->IsAuthenticated()) {
@@ -914,8 +911,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
 TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
                                    Int_t port, Int_t size, Int_t tcpwindowsize)
 {
-   // Creates a socket or a parallel sockets and authenticates to the
-   // remote server specified in 'url' on remote 'port' as 'user'
+   // Creates a socket or a parallel socket and authenticates to the
+   // remote server specified in 'url' on remote 'port' as 'user'.
    //
    // url: [proto[p][auth]://]host[/?options]
    //
@@ -940,8 +937,7 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //   be created in this case because the size is 0 (the default).
    //
    // Returns pointer to an authenticated socket or 0 if creation or
-   // authentication is unsuccessful
-   //
+   // authentication is unsuccessful.
 
    // Extended url to be passed to base call
    TString eurl;
