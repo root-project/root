@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.21 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.22 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -31,8 +31,8 @@
 #include "TROOT.h"
 #include "TError.h"
 
-UInt_t TSocket::fgBytesSent = 0;
-UInt_t TSocket::fgBytesRecv = 0;
+ULong64_t TSocket::fgBytesSent = 0;
+ULong64_t TSocket::fgBytesRecv = 0;
 
 
 ClassImp(TSocket)

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.13 2004/05/27 09:03:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.14 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -85,8 +85,8 @@ protected:
    Int_t         fCompress;       // compression level from 0 (not compressed) to 9 (max compression)
    TString       fUrl;            // needs this for special authentication options
 
-   static UInt_t fgBytesRecv;     // total bytes received by all socket objects
-   static UInt_t fgBytesSent;     // total bytes sent by all socket objects
+   static ULong64_t fgBytesRecv;  // total bytes received by all socket objects
+   static ULong64_t fgBytesSent;  // total bytes sent by all socket objects
 
    TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fCompress = 0; fSecContext = 0; }
    Bool_t       Authenticate(const char *user);
@@ -145,8 +145,8 @@ public:
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
    void                  SetUrl(const char *url) { fUrl = url; }
 
-   static UInt_t         GetSocketBytesSent() { return fgBytesSent; }
-   static UInt_t         GetSocketBytesRecv() { return fgBytesRecv; }
+   static ULong64_t      GetSocketBytesSent() { return fgBytesSent; }
+   static ULong64_t      GetSocketBytesRecv() { return fgBytesRecv; }
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host, Int_t port,
                                           Int_t size = 0, Int_t tcpwindowsize = -1);
