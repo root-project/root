@@ -614,6 +614,9 @@ G__value *p,result;
   }
 #endif
   switch(p->type) {
+#ifndef G__OLDIMPLEMENTATION1796
+  case 'G':
+#endif
   case 'B':
     *(unsigned char *)(p->obj.i)=(unsigned char)G__int(result);
     break;

@@ -21,13 +21,19 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015072
-#define G__CINTVERSIONSTR  "5.15.72, Jan 19 2003"
+#define G__CINTVERSION      5015074
+#define G__CINTVERSIONSTR  "5.15.74, Feb 2 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* 1770 changes implementation of skipping function implementation during
+ * prerun. In order to activate new implementation, comment out following
+ * line */
+#define G__OLDIMPLEMENTATION1770
+
 
 /* Change 1706, regarding function overriding, is very risky. So, this is
  * deactivated for now. With this change turned on, loading and unloading 
@@ -1642,7 +1648,11 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 typedef struct {
   union {
     char d[G__VAARG_SIZE];
+#ifndef G__OLDIMPLEMENTATION1798
+    long i[G__VAARG_SIZE/sizeof(long)];
+#else
     int i[G__VAARG_SIZE/4];
+#endif
   } x;
 } G__va_arg_buf;
 
@@ -1653,6 +1663,14 @@ typedef struct {
  *    |1111|22  |3   |44444444|55555555555555  |
  **********************************************/
 #define G__VAARG_INC_COPY_N 4
+
+#elif (defined(__linux)&&defined(__ia64__))
+/**********************************************
+ * Itanium/linux, aligns in multiple of 8 
+ **********************************************/
+
+#define G__VAARG_INC_COPY_N 8
+#define G__VAARG_PASS_BY_REFERENCE 8
 
 #elif defined(__hpux) || defined(__hppa__)
 /**********************************************
@@ -1967,6 +1985,7 @@ extern G__EXPORT float* G__Floatref G__P((G__value *buf));
 extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
 extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
 extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
+extern G__EXPORT G__value G__exec_tempfile_fp G__P((FILE *fp));
 extern G__EXPORT G__value G__exec_tempfile G__P((G__CONST char *file));
 extern G__EXPORT G__value G__exec_text G__P((G__CONST char *unnamedmacro));
 extern G__EXPORT char* G__lasterror_filename G__P((void));

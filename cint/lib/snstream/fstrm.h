@@ -108,31 +108,17 @@ class basic_ofstream : public basic_ostream<charT, traits> {
     void close();
  };
 
-#ifndef __CINT__
 template<class charT, class traits>
 class basic_fstream : public basic_iostream<charT, traits> {
-  public:
-    typedef basic_ios<charT, traits>          ios_type;
-    typedef traits                            traits_type; 
-    typedef charT		       	      char_type;
-    typedef traits::int_type                  int_type;
-    typedef traits::pos_type                  pos_type;
-    typedef traits::off_type                  off_type;
+ public:
     basic_fstream();
-    basic_fstream(const char *s
-		  ,ios_base::openmode mode = ios_base::in | ios_base::out 
-		  ,long protection= 0666 );
-    basic_fstream(int fd);
-    basic_fstream(int fd, char_type *buf, int len);
-    virtual ~basic_fstream();
+    basic_fstream(const char *s,ios_base::openmode mode);
     basic_filebuf<charT, traits> *rdbuf() const;
     bool is_open();
-    void open(const char *s
-	      ,ios_base::openmode mode = ios_base::in | ios_base::out
-	      ,long protection = 0666 );
+    void open(const char *s,ios_base::openmode mode);
     void close();
 };
-#endif // __CINT__
+
 
 typedef basic_filebuf<char, char_traits<char> >         filebuf;
 //typedef basic_filebuf<wchar_t, char_traits<wchar_t> >   wfilebuf;
@@ -140,7 +126,7 @@ typedef basic_ifstream<char, char_traits<char> >        ifstream;
 //typedef basic_ifstream<wchar_t, char_traits<wchar_t> >  wifstream;
 typedef basic_ofstream<char, char_traits<char> >        ofstream;
 //typedef basic_ofstream<wchar_t, char_traits<wchar_t> >  wofstream;
-//typedef basic_fstream<char, char_traits<char> >        fstream;
+typedef basic_fstream<char, char_traits<char> >        fstream;
 //typedef basic_fstream<wchar_t, char_traits<wchar_t> >  wfstream;
 
 #endif // __CINT__

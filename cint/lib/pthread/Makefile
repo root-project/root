@@ -52,6 +52,13 @@ DLLPOST     = .dl
 
 
 
+##########################################################
+# Control default behavior of cint command line input
+##########################################################
+INPUTMODE = command
+#INPUTMODE = C++
+INPUTMODELOCK = off
+#INPUTMODELOCK = on
 
 # End of $CINTSYSDIR/MAKEINFO ##############################
 

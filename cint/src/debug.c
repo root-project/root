@@ -238,6 +238,252 @@ int G__gettempfilenum()
 }
 #endif
 
+
+#ifndef G__OLDIMPLEMENTATION1794
+/****************************************************************
+* G__exec_tempfile_core()
+****************************************************************/
+G__value G__exec_tempfile_core(file,fp)
+char *file;
+FILE *fp;
+{
+#ifdef G__EH_SIGNAL
+  void (*fpe)();
+  void (*segv)();
+#ifdef SIGILL
+  void (*ill)();
+#endif
+#ifdef SIGEMT
+  void (*emt)();
+#endif
+#ifdef SIGBUS
+  void (*bus)();
+#endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1247
+  long asm_inst_g[G__MAXINST]; /* p-code instruction buffer */
+  G__value asm_stack_g[G__MAXSTACK]; /* data stack */
+  char asm_name[G__ASM_FUNCNAMEBUF];
+
+  long *store_asm_inst;
+  G__value *store_asm_stack;
+  char *store_asm_name;
+  int store_asm_name_p;
+  struct G__param *store_asm_param;
+  /* int store_asm_exec; */
+  int store_asm_noverflow;
+  int store_asm_cp;
+  int store_asm_dt;
+  int store_asm_index; /* maybe unneccessary */
+#endif
+
+  int len;
+
+#ifdef G__OLDIMPLEMENTATION1601
+  static int filenum = G__MAXFILE-1;
+#endif
+  fpos_t pos;
+  char store_var_type;
+  struct G__input_file ftemp,store_ifile;
+  G__value buf;
+#ifdef G__ASM
+  G__ALLOC_ASMENV;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1035
+  G__LockCriticalSection();
+#endif
+
+  /*************************************************
+  * delete space chars at the end of filename
+  *************************************************/
+  if(file) {
+    len = strlen(file);
+    while(len>1&&isspace(file[len-1])) {
+      file[--len]='\0';
+    }
+  
+#ifndef G__WIN32
+    ftemp.fp = fopen(file,"r");
+#else
+    ftemp.fp = fopen(file,"rb");
+#endif
+  }
+  else {
+    fseek(fp,0L,SEEK_SET);
+    ftemp.fp = fp;
+  }
+
+  if(ftemp.fp) {
+    ftemp.line_number = 1;
+    if(file) sprintf(ftemp.name,file);
+    else     strcpy(ftemp.name,"(tmpfile)");
+#ifndef G__OLDIMPLEMENTATION1601
+    ftemp.filenum = G__tempfilenum;
+    G__srcfile[G__tempfilenum].fp = ftemp.fp;
+    G__srcfile[G__tempfilenum].filename=ftemp.name;
+    G__srcfile[G__tempfilenum].hash=0;
+    G__srcfile[G__tempfilenum].maxline=0;
+    G__srcfile[G__tempfilenum].breakpoint = (char*)NULL;
+    --G__tempfilenum;
+#else
+    ftemp.filenum = filenum;
+    G__srcfile[filenum].fp = ftemp.fp;
+    G__srcfile[filenum].filename=ftemp.name;
+    G__srcfile[filenum].hash=0;
+    G__srcfile[filenum].maxline=0;
+    G__srcfile[filenum].breakpoint = (char*)NULL;
+    --filenum;
+#endif
+    if(G__ifile.fp && G__ifile.filenum>=0) {
+      fgetpos(G__ifile.fp,&pos);
+    }
+    store_ifile = G__ifile;
+    G__ifile = ftemp;
+    
+    /**********************************************
+     * interrpret signal handling during inner loop asm exec
+     **********************************************/
+#ifdef G__ASM
+    G__STORE_ASMENV;
+#endif
+    store_var_type = G__var_type;
+    
+    G__var_type='p';
+
+#ifdef G__EH_SIGNAL
+    fpe = signal(SIGFPE,G__error_handle);
+    segv = signal(SIGSEGV,G__error_handle);
+#ifdef SIGILL
+    ill = signal(SIGILL,G__error_handle);
+#endif
+#ifdef SIGEMT
+    emt = signal(SIGEMT,G__error_handle);
+#endif
+#ifdef SIGBUS
+    bus = signal(SIGBUS,G__error_handle);
+#endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1247
+  store_asm_inst = G__asm_inst;
+  store_asm_stack = G__asm_stack;
+  store_asm_name = G__asm_name;
+  store_asm_name_p = G__asm_name_p;
+  store_asm_param  = G__asm_param ;
+  /* store_asm_exec  = G__asm_exec ; */
+  store_asm_noverflow  = G__asm_noverflow ;
+  store_asm_cp  = G__asm_cp ;
+  store_asm_dt  = G__asm_dt ;
+  store_asm_index  = G__asm_index ;
+
+  G__asm_inst = asm_inst_g;
+  G__asm_stack = asm_stack_g;
+  G__asm_name = asm_name;
+  G__asm_name_p = 0;
+  /* G__asm_param ; */
+  G__asm_exec = 0 ;
+#endif
+
+    /* execution */
+    buf = G__exec_statement();
+
+#ifndef G__OLDIMPLEMENTATION1247
+  G__asm_inst = store_asm_inst;
+  G__asm_stack = store_asm_stack;
+  G__asm_name = store_asm_name;
+  G__asm_name_p = store_asm_name_p;
+  G__asm_param  = store_asm_param ;
+  /* G__asm_exec  = store_asm_exec ; */
+  G__asm_noverflow  = store_asm_noverflow ;
+  G__asm_cp  = store_asm_cp ;
+  G__asm_dt  = store_asm_dt ;
+  G__asm_index  = store_asm_index ;
+#endif
+
+    /**********************************************
+     * restore interrpret signal handling
+     **********************************************/
+#ifdef G__EH_SIGNAL
+    signal(SIGFPE,fpe);
+    signal(SIGSEGV,segv);
+#ifdef SIGILL
+    signal(SIGSEGV,ill);
+#endif
+#ifdef SIGEMT
+    signal(SIGEMT,emt);
+#endif
+#ifdef SIGBUS
+    signal(SIGBUS,bus);
+#endif
+#endif
+    
+#ifdef G__ASM
+    G__RECOVER_ASMENV;
+#endif
+    G__var_type = store_var_type;
+    
+    /* print out result */
+    G__ifile = store_ifile;
+    if(G__ifile.fp && G__ifile.filenum>=0) {
+      fsetpos(G__ifile.fp,&pos);
+    }
+    /* Following is intentionally commented out. This has to be selectively
+     * done for 'x' and 'E' command  but not for { } command */
+    /* G__security = G__srcfile[G__ifile.filenum].security; */
+    if(file) fclose(ftemp.fp);
+#ifndef G__OLDIMPLEMENTATION1601
+    ++G__tempfilenum;
+    G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
+    G__srcfile[G__tempfilenum].filename=(char*)NULL;
+#else
+    ++filenum;
+    G__srcfile[filenum].fp = (FILE*)NULL;
+    G__srcfile[filenum].filename=(char*)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION630
+    if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
+#else
+    if(G__RETURN_NORMAL==G__return) G__return=G__RETURN_NON;
+#endif
+    G__no_exec=0;
+#ifndef G__OLDIMPLEMENTATION1035
+    G__UnlockCriticalSection();
+#endif
+
+    return(buf);
+  }
+  else {
+    G__fprinterr(G__serr,"Error: can not open file '%s'\n",file);
+#ifndef G__OLDIMPLEMENTATION1035
+    G__UnlockCriticalSection();
+#endif
+    return(G__null);
+  }
+}
+
+/****************************************************************
+* G__exec_tempfile()
+****************************************************************/
+G__value G__exec_tempfile_fp(fp)
+FILE *fp;
+{
+  return(G__exec_tempfile_core((char*)NULL,fp));
+}
+
+/****************************************************************
+* G__exec_tempfile()
+****************************************************************/
+G__value G__exec_tempfile(file)
+char *file;
+{
+  return(G__exec_tempfile_core(file,(FILE*)NULL));
+}
+
+
+#else /* 1794 */
+
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
@@ -452,6 +698,8 @@ char *file;
   }
 }
 
+#endif /* 1794 */
+
 #ifndef G__OLDIMPLEMENTATION1348
 /**************************************************************************
 * G__exec_text()
@@ -459,11 +707,13 @@ char *file;
 G__value G__exec_text(unnamedmacro)
 char *unnamedmacro;
 {
+#ifdef G__OLDIMPLEMENTATION1794
 #ifndef G__TMPFILE
   char tname[L_tmpnam+10], sname[L_tmpnam+10];
 #else
   char tname[G__MAXFILENAME], sname[G__MAXFILENAME];
 #endif
+#endif /* 1794 */
   int nest=0,single_quote=0,double_quote=0;
 #ifndef G__OLDIMPLEMENTATION1783
   int ccomment=0,cppcomment=0;
@@ -535,21 +785,36 @@ char *unnamedmacro;
     return(G__null);
   }
   
+#ifndef G__OLDIMPLEMENTATION1794
+  fp = tmpfile();
+#else
   G__tmpnam(tname);
   fp = fopen(tname,"w");
+#endif
   if(!fp) return G__null;
   if(addmparen) fprintf(fp,"{\n");
   fprintf(fp,"%s",unnamedmacro);
   if(addsemicolumn) fprintf(fp,";");
   fprintf(fp,"\n");
   if(addmparen) fprintf(fp,"}\n");
+#ifndef G__OLDIMPLEMENTATION1794
+  fseek(fp,0L,SEEK_SET);
+#else
   fclose(fp);
+#endif
 
+#ifndef G__OLDIMPLEMENTATION1794
+  G__storerewindposition();
+  buf=G__exec_tempfile_fp(fp);
+  G__security_recover(G__serr);
+  fclose(fp);
+#else
   strcpy(sname,tname);
   G__storerewindposition();
   buf=G__exec_tempfile(sname);
   G__security_recover(G__serr);
   remove(sname);
+#endif
 
   return(buf);
 }

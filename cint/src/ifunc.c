@@ -1700,7 +1700,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1753
-  if(strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0 &&
+  if((strcmp(G__p_ifunc->funcname[func_now],"operator delete")==0
+#ifndef G__OLDIMPLEMENTATION1796
+      || strcmp(G__p_ifunc->funcname[func_now],"operator delete[]")==0
+#endif
+      ) &&
      -1!=G__p_ifunc->tagnum) {
     G__p_ifunc->staticalloc[func_now] = 1;
   }
@@ -1751,7 +1755,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
    * if same function already exists       copy entry
    * else if body exists or ansi header    increment ifunc
    ****************************************************************/
-  ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist);
+  ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist,0xffff);
 
   if(G__ifile.filenum<G__nfile) {
 
@@ -2041,7 +2045,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
   }
   
   if(dobody) {
-#define G__OLDIMPLEMENTATION1770 /* comment this out to activate the change*/
+/* #define G__OLDIMPLEMENTATION1770, this line is moved into G__ci.h  */
 #ifndef G__OLDIMPLEMENTATION1770
     if(G__NOLINK>G__globalcomp) {
       G__fignorestream("{");
@@ -2140,7 +2144,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
     for(basen=0;basen<baseclass->basen;basen++) {
       G__incsetup_memfunc(baseclass->basetagnum[basen]);
       ifunc=G__struct.memfunc[baseclass->basetagnum[basen]];
-      ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist);
+#ifndef G__OLDIMPLEMENTATION1798
+      ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist,G__CONSTFUNC);
+#else
+      ifunc=G__ifunc_exist(G__p_ifunc,func_now ,ifunc,&iexist,0xffff);
+#endif
       if(ifunc) {
 #ifndef G__OLDIMPLEMENTATION820
 	if(ifunc->ispurevirtual[iexist] &&
@@ -3837,12 +3845,20 @@ int ifn;
 struct G__funclist *funclist;
 int recursive;
 {
+#ifdef G__DEBUG
+  int i=0xa3a3a3a3;
+#else
   int i;
+#endif
   char param_type,formal_type;
   int param_tagnum,formal_tagnum;
   int param_reftype,formal_reftype;
 #ifndef G__OLDIMPLEMENTATION1628
+#ifdef G__DEBUG
+  int param_isconst=0xa3a3a3a3,formal_isconst=0xa3a3a3a3;
+#else
   int param_isconst,formal_isconst;
+#endif
 #endif
   funclist->rate = 0;
   for(i=0;i<libp->paran;i++) {
@@ -5362,6 +5378,16 @@ int isrecursive;
   int i;
   struct G__param fpara;
   struct G__ifunc_table *p_ifunc = &G__ifunc;
+#ifdef G__DEBUG
+  {
+    int jdbg;
+    int sizedbg=sizeof(struct G__param);
+    char *pcdbg = (char*)(&fpara);
+    for(jdbg=0;jdbg<(int)sizedbg;jdbg++) {
+      *(pcdbg+jdbg) = (char)0xa3;
+    }
+  }
+#endif
 
   /* set 1st argument as the object */
   fpara.para[0].type='u';
@@ -6415,7 +6441,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
       int basen;
       G__incsetup_memfunc(virtualtag);
-      ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist);
+      ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+			   ,0xffff);
 #ifndef G__OLDIMPLEMENTATION916
       for(basen=0;!ifunc&&basen<baseclass->basen;basen++) {
 	virtualtag = baseclass->basetagnum[basen];
@@ -6423,7 +6450,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	xbase[nxbase++] = virtualtag;
 	G__incsetup_memfunc(virtualtag);
 	ifunc
-	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist);
+	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+			  ,0xffff);
       } 
       while(!ifunc && nxbase) {
 	int xxx;
@@ -6437,7 +6465,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 	    G__incsetup_memfunc(virtualtag);
 	    ifunc
 	      =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag]
-			      ,&iexist);
+			      ,&iexist,0xffff);
 	  } 
 	} 
 	nxbase=nybase;
@@ -6448,7 +6476,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	virtualtag = baseclass->basetagnum[basen];
 	G__incsetup_memfunc(virtualtag);
 	ifunc
-	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist);
+	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+			  ,0xffff);
       } 
 #endif
       if(ifunc) {
@@ -6637,12 +6666,14 @@ asm_ifunc_start:   /* loop compilation execution label */
       struct G__inheritance *baseclass = G__struct.baseclass[virtualtag];
       int basen;
       G__incsetup_memfunc(virtualtag);
-      ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist);
+      ifunc=G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+			   ,0xffff);
       for(basen=0;!ifunc&&basen<baseclass->basen;basen++) {
 	virtualtag = baseclass->basetagnum[basen];
 	G__incsetup_memfunc(virtualtag);
 	ifunc
-	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist);
+	  =G__ifunc_exist(p_ifunc,ifn,G__struct.memfunc[virtualtag],&iexist
+			  ,0xffff);
       } 
       if(ifunc) {
 	if((FILE*)NULL==(FILE*)ifunc->pentry[iexist]->p) {
@@ -7820,11 +7851,12 @@ asm_ifunc_start:   /* loop compilation execution label */
 *           para_default[]
 *
 **************************************************************************/
-struct G__ifunc_table *G__ifunc_exist(ifunc_now,allifunc,ifunc,piexist)
+struct G__ifunc_table *G__ifunc_exist(ifunc_now,allifunc,ifunc,piexist,mask)
 struct G__ifunc_table *ifunc_now;
 int allifunc;
 struct G__ifunc_table *ifunc;
 int *piexist;
+ int mask;
 {
   int i,j,paran;
   while(ifunc) {
@@ -7853,7 +7885,8 @@ int *piexist;
 	 (ifunc_now->para_nu[allifunc]!=ifunc->para_nu[i] && 
 	  ifunc_now->para_nu[allifunc]>=0 && ifunc->para_nu[i]>=0)
 #ifndef G__OLDIMPLEMENTATION1258
-	 || (ifunc_now->isconst[allifunc]!=ifunc->isconst[i]) 
+	 || ((ifunc_now->isconst[allifunc]&mask) /* 1798 */
+	     !=(ifunc->isconst[i]&mask)) 
 #endif
 	 ) continue; /* unmatch */
 

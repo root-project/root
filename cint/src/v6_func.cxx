@@ -962,6 +962,18 @@ int memfunc_flag;
   int store_cp_asm=0;
 #endif
 
+
+#ifdef G__DEBUG
+  {
+    int jdbg;
+    int sizedbg=sizeof(struct G__param);
+    char *pcdbg = (char*)(&fpara);
+    for(jdbg=0;jdbg<(int)sizedbg;jdbg++) {
+      *(pcdbg+jdbg) = (char)0xa3;
+    }
+  }
+#endif
+
   /*DEBUG*/ /* fprintf(stderr,"%s %d %d\n",item,*known3,memfunc_flag); */
 
   store_exec_memberfunc = G__exec_memberfunc;

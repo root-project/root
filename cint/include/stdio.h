@@ -3,7 +3,9 @@
 #ifndef NULL
 #pragma setstdio
 #endif
-typedef struct fpos_t {char dmy[12];} fpos_t;
+typedef struct fpos_t {
+  char dmy[12];
+} fpos_t;
 #pragma link off class fpos_t;
 #pragma link off typedef fpos_t;
 typedef unsigned int size_t;

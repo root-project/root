@@ -25,13 +25,16 @@
 *********************************************************************/
 #pragma setstream
 #pragma ifdef G__IOSTREAM_H
+
 #pragma ifdef G__TMPLTIOS
 typedef ios_base ios;
 #pragma else // G__TMPLTIOS
 typedef ios ios_base;
 #pragma endif // G__TMPLTIOS
+
 #pragma ifndef G__KCC
 #pragma include <iosenum.h>
+
 #pragma ifndef G__SSTREAM_H
 typedef ostrstream ostringstream;
 typedef istrstream istringstream;
@@ -40,8 +43,10 @@ typedef istrstream istringstream;
 typedef ostringstream ostrstream;
 typedef istringstream istrstream;
 typedef stringstream strstream;
-#pragma endifelse // G__SSTREAM_H
+#pragma endif // G__SSTREAM_H
+
 #pragma endif // G__KCC
+
 #pragma endif // G__IOSTREAM_H
 
 #include <bool.h>

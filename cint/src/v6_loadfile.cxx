@@ -2491,12 +2491,17 @@ void G__openmfp()
 int G__closemfp()
 {
 #ifndef G__TMPFILE
-  if(G__mfp) return(fclose(G__mfp));
-  else return(0);
+  int result=0;
+  if(G__mfp) result=fclose(G__mfp);
+  G__mfp = (FILE*)NULL;
+  return(result);
 #else
+  int result=0;
   if(G__mfp) fclose(G__mfp);
-  if(G__mfpname[0]) return(remove(G__mfpname));
-  else return(0);
+  G__mfp = (FILE*)NULL;
+  if(G__mfpname[0]) result=remove(G__mfpname);
+  G__mfpname[0]=0;
+  return(result);
 #endif
 }
 

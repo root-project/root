@@ -1633,7 +1633,7 @@ char type;
 
               found_tab = G__ifunc_exist (itab, ifunc,
                                           G__struct.memfunc[basetag],
-                                          &found_ndx);
+                                          &found_ndx,0xffff);
               if (found_tab) {
                 found_flag = 1;
                 break;

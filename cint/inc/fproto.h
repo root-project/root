@@ -212,7 +212,7 @@ char* G__savestring G__P((char** pbuf,char* name));
 void G__make_ifunctable G__P((char *funcheader));
 int G__readansiproto G__P((struct G__ifunc_table *ifunc,int func_now));
 int G__interpret_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int funcmatch,int memfunc_flag));
-struct G__ifunc_table *G__ifunc_exist G__P((struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist));
+struct G__ifunc_table *G__ifunc_exist G__P((struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist,int mask));
 struct G__ifunc_table *G__ifunc_ambiguous G__P((struct G__ifunc_table *ifunc_now,int allifunc,struct G__ifunc_table *ifunc,int *piexist,int derivedtagnum));
 void G__inheritclass G__P((int to_tagnum,int from_tagnum,char baseaccess));
 int G__baseconstructorwp G__P((void));

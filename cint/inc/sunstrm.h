@@ -54,6 +54,8 @@ extern G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargR
 extern G__linked_taginfo G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR;
+extern G__linked_taginfo G__G__streamLN_basic_fstreamlEcharcOchar_traitslEchargRsPgR;
+extern G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_string;
 extern G__linked_taginfo G__G__streamLN_allocatorlEchargR;
 extern G__linked_taginfo G__G__streamLN_allocatorlEwchar_tgR;
@@ -61,7 +63,6 @@ extern G__linked_taginfo G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchar
 extern G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
-extern G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR;
 
 /* STUB derived class for protected member access */
 typedef char_traits<char> G__char_traitslEchargR;
@@ -80,10 +81,11 @@ typedef basic_istream<char,char_traits<char> >::sentry G__basic_istreamlEcharcOc
 typedef basic_filebuf<char,char_traits<char> > G__basic_filebuflEcharcOchar_traitslEchargRsPgR;
 typedef basic_ifstream<char,char_traits<char> > G__basic_ifstreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_ofstream<char,char_traits<char> > G__basic_ofstreamlEcharcOchar_traitslEchargRsPgR;
+typedef basic_fstream<char,char_traits<char> > G__basic_fstreamlEcharcOchar_traitslEchargRsPgR;
+typedef basic_iostream<char,char_traits<char> > G__basic_iostreamlEcharcOchar_traitslEchargRsPgR;
 typedef allocator<char> G__allocatorlEchargR;
 typedef allocator<wchar_t> G__allocatorlEwchar_tgR;
 typedef basic_stringbuf<char,char_traits<char>,allocator<char> > G__basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 typedef basic_istringstream<char,char_traits<char>,allocator<char> > G__basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 typedef basic_ostringstream<char,char_traits<char>,allocator<char> > G__basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 typedef basic_stringstream<char,char_traits<char>,allocator<char> > G__basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
-typedef basic_iostream<char,char_traits<char> > G__basic_iostreamlEcharcOchar_traitslEchargRsPgR;

@@ -153,10 +153,19 @@ static int G__pause_return=0;
 static FILE *fout=(FILE*)NULL;
 #endif
 
+
+#define G__INPUTCXXMODE  3
+#define G__INPUTROOTMODE 1
+#define G__INPUTCINTMODE 0
+
 #ifdef G__ROOT
-static int G__rootmode=1;
+static int G__rootmode=G__INPUTROOTMODE;
 #else
-static int G__rootmode=0;
+static int G__rootmode=G__INPUTCINTMODE;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1795
+static int G__lockinputmode=0;
 #endif
 
 
@@ -1623,7 +1632,11 @@ char *com;
   int nest=0;
   int single_quote=0;
   int double_quote=0;
+#ifndef G__OLDIMPLEMENTATION1774
+  int semicolumnattheend=0;
+#endif
   while(com[i]!='\0') {
+  readagain:
     switch(com[i]) {
     case '"':
       if(single_quote==0) double_quote ^= 1;
@@ -1661,12 +1674,29 @@ char *com;
       break;
 #endif
     }
+#ifndef G__OLDIMPLEMENTATION1774
+    if(';'==com[i]) {
+      if((single_quote==0)&&(double_quote==0)&&(nest==0)) semicolumnattheend=1;
+    }
+    else {
+      if(!isspace(com[i])) semicolumnattheend=0;
+    }
+#endif
     ++i;
   }
-#define G__OLDIMPLEMENTATION1774
+  /* #define G__OLDIMPLEMENTATION1774 */
 #ifndef G__OLDIMPLEMENTATION1774
-  if(0!=nest) return(1);
-  if(single_quote || double_quote) return(-1);
+  if(0<nest) return(1);
+  if(G__INPUTCXXMODE==G__rootmode && 0==nest && 0==semicolumnattheend
+     && '#'!=com[0]) {
+    strcpy(com+i,G__input("end with ';', '@':abort > "));
+    if('@'==com[i]) {
+      com[0]=0;
+      return(0);
+    }
+    goto readagain;
+  }
+  if(single_quote || double_quote || nest<0) return(-1);
   return(0);
 #else
   if(0!=nest || single_quote || double_quote) return(1);
@@ -1701,10 +1731,14 @@ G__value *rslt;
 /* pass to parent otherwise not re-entrant */
 #ifdef G__TMPFILE
   static char tname[G__MAXFILENAME];
+#ifdef G__OLDIMPLEMENTATION1794
   char sname[G__MAXFILENAME];
+#endif
 #else
   static char tname[L_tmpnam+10];
+#ifdef G__OLDIMPLEMENTATION1794
   char sname[L_tmpnam+10];
+#endif
 #endif
   static struct G__input_file ftemp;
 
@@ -1736,6 +1770,32 @@ G__value *rslt;
 #endif
 
   if(!err) err = &dmy;
+
+#ifndef G__OLDIMPLEMENTATION1795
+ {
+   static int inputmodeflag=0;
+   if(inputmodeflag==0) {
+     char *inputmodebuf;
+     inputmodeflag=1;
+     inputmodebuf=G__getmakeinfo1("INPUTMODE");
+     if(inputmodebuf && inputmodebuf[0]) {
+       if(strstr(inputmodebuf,"c++")||strstr(inputmodebuf,"C++")) 
+	 G__rootmode=G__INPUTCXXMODE;
+       else if(strstr(inputmodebuf,"root")||strstr(inputmodebuf,"ROOT")) 
+	 G__rootmode=G__INPUTROOTMODE;
+       else if(strstr(inputmodebuf,"cint")||strstr(inputmodebuf,"CINT"))
+	 G__rootmode=G__INPUTCINTMODE;
+     }
+     inputmodebuf=G__getmakeinfo1("INPUTMODELOCK");
+     if(inputmodebuf && inputmodebuf[0]) {
+       if(strstr(inputmodebuf,"on")||strstr(inputmodebuf,"ON")) 
+	 G__lockinputmode=1;
+       else if(strstr(inputmodebuf,"off")||strstr(inputmodebuf,"OFF")) 
+	 G__lockinputmode=0;
+     }
+   }
+ }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
@@ -1789,7 +1849,7 @@ G__value *rslt;
     }
     
     /* #ifdef G__ROOT */
-    if(G__rootmode) {
+    if(G__INPUTROOTMODE&G__rootmode) {
       if (command[0] == '.') {
 	strcpy(syscom, command+1);
 	strcpy(command, syscom);
@@ -1832,7 +1892,11 @@ G__value *rslt;
 	if (command[temp] == ';') {
 	  sprintf(syscom, "{%s}", command);
 #ifndef G__OLDIMPLEMENTATION1474
+#ifndef G__OLDIMPLEMENTATION1774
+	  if(G__INPUTCXXMODE!=G__rootmode) noprintflag=1;
+#else
 	  noprintflag=1;
+#endif
 #endif
 	}
 	else
@@ -2134,6 +2198,23 @@ G__value *rslt;
 
 #ifndef G__ROOT
     else if(strncmp(".",com,1)==0) {
+#ifndef G__OLDIMPLEMENTATION1795
+      if(0==G__lockinputmode) {
+	G__rootmode ^= 1;
+	fprintf(G__sout,"!!!Debugger Command mode switched as follows!!!\n");
+	if(G__INPUTROOTMODE&G__rootmode) {
+	  fprintf(G__sout,"    > .[command]\n");
+	  fprintf(G__sout,"    > [statement]\n");
+	}
+	else {
+	  fprintf(G__sout,"    > [command]\n");
+	  fprintf(G__sout,"    > { [statement] }\n");
+	}
+      }
+      else {
+	fprintf(G__sout,"!!!Debugger Command mode locked!!!\n");
+      }
+#else
       G__rootmode ^= 1;
       fprintf(G__sout,"!!!Debugger Command mode switched as follows!!!\n");
       if(G__rootmode) {
@@ -2144,6 +2225,7 @@ G__value *rslt;
 	fprintf(G__sout,"    > [command]\n");
 	fprintf(G__sout,"    > { [statement] }\n");
       }
+#endif
     }
 #endif
 
@@ -2803,7 +2885,7 @@ G__value *rslt;
 #else
       G__more(G__sout,"cint (C/C++ interpreter) debugger usage:\n");
 #endif
-      if(G__rootmode) {
+      if(G__INPUTROOTMODE&G__rootmode) {
 	G__more(G__sout,"All commands must be preceded by a . (dot), except\n");
 	G__more(G__sout,"for the evaluation statement { } and the ?.\n");
 	G__more(G__sout,"===========================================================================\n");
@@ -3612,13 +3694,27 @@ G__value *rslt;
     multi_line_command:
 #endif
       if (*more == 0) {
+#ifndef G__OLDIMPLEMENTATION1794
+	ftemp.fp = tmpfile();
+#else /* 1794 */
 	do {
 	  G__tmpnam(tname);
 	  ftemp.fp = fopen(tname,"w");
 	} while((FILE*)NULL==ftemp.fp && G__setTMPDIR(tname));
+#endif /* 1794 */
       } 
       else {
 	com = command+1;
+#ifndef G__OLDIMPLEMENTATION1774
+	if('@'==com[0]) {
+	  if(ftemp.fp) fclose(ftemp.fp);
+	  ftemp.fp = (FILE*)NULL;
+	  *more=0;
+	  G__fprinterr(G__serr,"!!!command line input aborted!!!\n");
+	  G__UnlockCriticalSection();
+	  return(0);
+	}
+#endif
       }
 
       if(!ftemp.fp) {
@@ -3660,7 +3756,11 @@ G__value *rslt;
 	}
 	if (temp>0) {
 	  fprintf(ftemp.fp,"%s\n",com);
+#ifndef G__OLDIMPLEMENTATION1774
+	  strcpy(prompt,"end with '}', '@':abort > ");
+#else
 	  strcpy(prompt,"end with '}'> ");
+#endif
           *more = temp;
 #ifndef G__FONS23
 	  G__pause_return=0;
@@ -3689,7 +3789,9 @@ G__value *rslt;
           *more = 0;
           prompt[0] = '\0';
         }
+#ifdef G__OLDIMPLEMENTATION1794
 	fclose(ftemp.fp);
+#endif
 
 	/*******************************************************
 	 * Execute temp file
@@ -3701,6 +3803,13 @@ G__value *rslt;
         { 
           struct G__store_env store;
           G__SET_TEMPENV;
+#ifndef G__OLDIMPLEMENTATION1794
+          G__command_eval=1 ;
+          buf=G__exec_tempfile_fp(ftemp.fp);
+          if(rslt) *rslt = buf;
+	  if(ftemp.fp) fclose(ftemp.fp);
+	  ftemp.fp = (FILE*)NULL;
+#else /* 1794 */
           strcpy(sname,tname);
 #ifndef G__OLDIMPLEMENTATION1476
           G__command_eval=1 ;
@@ -3708,6 +3817,7 @@ G__value *rslt;
           buf=G__exec_tempfile(sname);
           if(rslt) *rslt = buf;
           remove(sname);
+#endif /* 1794 */
           G__in_pause=1;
           G__valuemonitor(buf,syscom);
           G__in_pause=0;

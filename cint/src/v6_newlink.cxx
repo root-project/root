@@ -7319,10 +7319,11 @@ int isvirtual;
    int iexist;
    if(-1==G__p_ifunc->tagnum) 
      ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
-			    ,&G__ifunc,&iexist);
+			    ,&G__ifunc,&iexist,0xffff);
    else
      ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
-			    ,G__struct.memfunc[G__p_ifunc->tagnum],&iexist);
+			    ,G__struct.memfunc[G__p_ifunc->tagnum],&iexist
+			    ,0xffff);
    
    if(ifunc) {
 #ifndef G__OLDIMPLEMENTATION1706

@@ -453,6 +453,20 @@ class basic_ostream : virtual public basic_ios<charT, traits> {
     basic_ostream();
 };
 
+
+template<class charT, class traits>
+class basic_iostream 
+ : public basic_istream<charT,traits>,public basic_ostream<charT,traits> 
+{
+public:
+  explicit basic_iostream(basic_streambuf<charT, traits> *sb);
+  virtual ~basic_iostream();
+      
+protected:
+  explicit basic_iostream();
+};
+
+
 typedef int INT_T;
 
 template<class charT>

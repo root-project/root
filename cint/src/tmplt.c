@@ -7,7 +7,7 @@
  * Description:
  *  Class and member function template
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -1206,7 +1206,88 @@ char *name;
 ***********************************************************************/
 int G__explicit_template_specialization()
 {
-#ifndef G__OLDIMPLEMENTATION1415
+#if !defined(G__OLDIMPLEMENTATION1792)
+  char buf[G__ONELINE];
+  int cin;
+
+  /* store file position */
+  fpos_t store_pos;
+  int store_line=G__ifile.line_number;
+  fgetpos(G__ifile.fp,&store_pos);
+  G__disp_mask = 1000;
+
+  /* forward proving */
+  cin = G__fgetname_template(buf,":{;");
+  if(strcmp(buf,"class")==0 || strcmp(buf,"struct")==0) {
+    /* template<>  class A<int> { A(A& x); A& operator=(A& x); };
+     *                  ^                      */
+    char *pp;
+    char templatename[G__ONELINE];
+    int npara=0;
+    int envtagnum = G__get_envtagnum();
+    struct G__Charlist call_para;
+    /* struct G__Templatearg def_para; */
+#ifndef G__OLDIMPLEMENTATION1793
+    fpos_t posend;
+    int lineend;
+#endif
+
+    call_para.string=(char*)NULL;
+    call_para.next = (struct G__Charlist*)NULL;
+
+    /* def_para.next = (struct G__Templatearg *)NULL; */
+
+    cin = G__fgetname_template(buf,":{;");
+    strcpy(templatename,buf);
+    pp=strchr(templatename,'<');
+    if(pp) *pp=0;
+
+#ifndef G__OLDIMPLEMENTATION1793
+    if(':'==cin) {
+      cin = G__fignorestream("{;");
+    }
+    if('{'==cin) {
+      G__disp_mask = 1;
+      fseek(G__ifile.fp,-1,SEEK_CUR);
+      cin = G__fignorestream("};");
+    }
+    fgetpos(G__ifile.fp,&posend);
+    lineend=G__ifile.line_number;
+#endif
+
+    /* rewind file position 
+     * template<> class A<int> { ... } 
+     *           ^--------------       */
+    G__disp_mask = 0;
+    fsetpos(G__ifile.fp,&store_pos);
+    G__ifile.line_number = store_line;
+
+    G__replacetemplate(templatename,buf,&call_para
+		       ,G__ifile.fp
+		       ,G__ifile.line_number
+		       ,G__ifile.filenum
+		       ,&store_pos
+		       ,(struct G__Templatearg*)NULL
+		       ,1
+		       ,npara
+		       ,envtagnum
+		       );
+
+#ifndef G__OLDIMPLEMENTATION1793
+    fsetpos(G__ifile.fp,&posend);
+    G__ifile.line_number=lineend;
+#endif
+    return(0);
+  }
+  else {
+    G__disp_mask = 0;
+    fsetpos(G__ifile.fp,&store_pos);
+    G__ifile.line_number = store_line;
+    G__exec_statement();
+    return(0);
+  }
+
+#elif !defined(G__OLDIMPLEMENTATION1415)
   G__exec_statement();
   return(0);
 #else

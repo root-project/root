@@ -429,7 +429,7 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
       sprintf(buf,"new %s(*(%s*)%ld)",buf2,buf2,(long)(&x));
     }
     else {
-      sprintf(buf,"new G__exception(\"%s\")",x.what());
+      sprintf(buf,"new G__exception(\"%s\",\"%s\")",x.what(),buf2);
     }
 #else /* 1773 */
     char buf2[G__ONELINE];
@@ -444,6 +444,33 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     G__return = G__RETURN_TRY;
   }
 #endif 
+#ifndef G__OLDIMPLEMENTATION1791
+  catch(int x) {
+    G__letint(&G__exceptionbuffer,'i',(long)x);
+    G__exceptionbuffer.ref = (long)(&x);
+    G__return = G__RETURN_TRY;
+  }
+  catch(long x) {
+    G__letint(&G__exceptionbuffer,'l',(long)x);
+    G__exceptionbuffer.ref = (long)(&x);
+    G__return = G__RETURN_TRY;
+  }
+  catch(void *x) {
+    G__letint(&G__exceptionbuffer,'Y',(long)x);
+    G__exceptionbuffer.ref = (long)(&x);
+    G__return = G__RETURN_TRY;
+  }
+  catch(float x) {
+    G__letdouble(&G__exceptionbuffer,'f',(double)x);
+    G__exceptionbuffer.ref = (long)(&x);
+    G__return = G__RETURN_TRY;
+  }
+  catch(double x) {
+    G__letdouble(&G__exceptionbuffer,'d',x);
+    G__exceptionbuffer.ref = (long)(&x);
+    G__return = G__RETURN_TRY;
+  }
+#endif /* 1791 */
   catch(...) {
     G__genericerror("Error: C++ exception caught");
   }

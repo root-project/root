@@ -20,7 +20,7 @@ class G__exception : public exception {
   G__exception& operator=(const G__exception& x) 
     {msg=x.msg;cname=x.cname;return(*this);}
   virtual const char* what() const throw() { return(msg.c_str()); }
-  virtual const char* classname() const throw() { return(cname.c_str()); }
+  virtual const char* name() const throw() { return(cname.c_str()); }
   virtual ~G__exception() throw() { }
 };
 
