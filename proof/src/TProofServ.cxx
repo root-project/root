@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.52 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.53 2003/10/22 18:48:36 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -233,8 +233,8 @@ TProofServ::TProofServ(int *argc, char **argv)
    gInterpreter->InitializeDictionaries();
    gInterpreter->UpdateListOfTypes();
 
-   // abort on kSysError's or higher and set error handler
-   gErrorAbortLevel = kSysError;
+   // abort on higher than kSysError's and set error handler
+   gErrorAbortLevel = kSysError + 1;
    SetErrorHandler(ProofServErrorHandler);
 
    fNcmd            = 0;
@@ -1468,7 +1468,7 @@ void TProofServ::Setup()
             KeyFile.Resize(lTmp);
             KeyFile += "/rpk_";
             KeyFile += retval;
-         
+
             FILE *fKey = 0;
             char PubKey[kMAXPATHLEN] = { 0 };
             if (!gSystem->AccessPathName(KeyFile.Data(), kReadPermission)) {
@@ -1481,7 +1481,7 @@ void TProofServ::Setup()
                }
             }
          }
-         
+
          // Receive passwd
          char *Passwd = 0;
          TAuthenticate::SecureRecv(fSocket, 2, &Passwd);
