@@ -93,6 +93,9 @@ ROOTGLIBS    := $(shell root-config --nonew --glibs)
 ObjSuf   = o
 
 ifeq ($(PLATFORM),win32)
+
+ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
+
 # Windows with the VC++ compiler
 ObjSuf        = obj
 SrcSuf        = cxx
