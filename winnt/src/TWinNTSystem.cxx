@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.2 2000/06/28 15:30:44 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.3 2000/08/14 11:29:29 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1456,6 +1456,61 @@ void TWinNTSystem::ListLibraries(const char *regexp)
    //WinNTDynListLibs(regexp);
    TSystem::ListLibraries(regexp);
 }
+
+//______________________________________________________________________________
+const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
+{
+   // Return a space separated list of loaded shared libraries.
+   // This list is of a format suitable for a linker, i.e it may contain
+   // -Lpathname and/or -lNameOfLib.
+   // Option can be any of:
+   //   S: shared libraries loaded at the start of the executable, because
+   //      they were specified on the link line.
+   //   D: shared libraries dynamically loaded after the start of the program.
+   //   L: list the .LIB rather than the .DLL (this is intended for linking)
+   //      [This options is not the default] 
+   
+   TString libs( TSystem::GetLibraries( regexp, options ) );
+   TString ntlibs;
+   TString opt = options;
+
+   if ( (opt.First('L')!=kNPOS) ) {
+      TRegexp separator("[^ \\t\\s]+");
+      TRegexp user_dll("*.dll", kTRUE);
+      TRegexp user_lib("*.lib", kTRUE);
+      TString s;
+      Ssiz_t start, index, end;
+      start = index = end = 0;
+ 
+      while ((start < libs.Length()) && (index != kNPOS)) {
+	index = libs.Index(separator,&end,start);
+	if (index >= 0) {
+	  s = libs(index,end);
+	  if (s.Index(user_dll) != kNPOS) {
+	    s.ReplaceAll(".dll",".lib");
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  } else if (s.Index(user_lib) != kNPOS) {
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }	    
+	  }
+	  if (!fListLibs.IsNull())
+	    ntlibs.Append(" ");
+	  ntlibs.Append(s);
+	}
+	start += end+1;
+      }
+   } else 
+     ntlibs = libs;
+   
+   fListLibs = ntlibs;
+   return fListLibs;
+}
+
 
 //---- Time & Date -------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.2 2000/06/28 15:30:43 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1277,6 +1277,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   libname.Remove(where);
   TString filename_noext = libname;
   libname.Replace( 0, libname.Last('/')+1, 0, 0);
+  libname.Replace( 0, libname.Last('\\')+1, 0, 0);
 
   if ( gInterpreter->IsLoaded(filename) ) {
     // the script has already been loaded in interpreted mode
@@ -1306,7 +1307,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
     }
   }
 
-  if ( strlen(GetLibraries(library,"D")) != 0 ) {
+  if ( gInterpreter->IsLoaded(library)
+       || strlen(GetLibraries(library,"D")) != 0 ) {
     // The library has already been built and loaded.
 
     if (modified)
@@ -1349,9 +1351,12 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   // because because some compiler do not add a -I. when compiling
   // file given by full pathname!
   dict.Replace( 0, dict.Last('/')+1, 0, 0);
+  // for windows style
+  dict.Replace( 0, dict.Last('\\')+1, 0, 0);
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
-  dict.ReplaceAll( "-","_" ).Append(".");
+  dict.ReplaceAll( "-","_" );
+  if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
   TString dicth = dict;
   TString dictObj = dict;
   dict += extension;
@@ -1416,7 +1421,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   cmd.ReplaceAll("$ObjectFiles",dictObj);
   cmd.ReplaceAll("$IncludePath",GetIncludePath());
   cmd.ReplaceAll("$SharedLib",library);
-  cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SD"));
+  cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
   cmd.ReplaceAll("$LibName",libname);
 
   TString testcmd = fMakeExe;
@@ -1439,7 +1444,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   testcmd.ReplaceAll("$ObjectFiles",dictObj);
   testcmd.ReplaceAll("$IncludePath",GetIncludePath());
   testcmd.ReplaceAll("$ExeName",exec);
-  testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SD"));
+  testcmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
 
   // Run the build
 

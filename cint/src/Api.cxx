@@ -213,7 +213,11 @@ extern "C" void G__delete_interpreted_object(void* p) {
 ////////////////////////////////////////////////////////////////////
 void G__SourceFileInfo::Init(const char* fname) {
   for(filen=0;filen<G__nfile;filen++) {
+#ifndef G__PHILIPPE29
+    if(G__matchfilename(filen,(char*)fname)) return;
+#else
     if(0==strcmp(fname,G__srcfile[filen].filename)) return;
+#endif
   }
 } 
 ////////////////////////////////////////////////////////////////////
