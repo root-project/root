@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.6 2002/02/02 11:57:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.7 2002/02/03 16:14:31 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -239,7 +239,7 @@ void TRefArray::Clear(Option_t *)
    fLast = - 1;
 
    for (Int_t j=0 ; j < fSize; j++) fUIDs[j] = 0;
-   
+
    Changed();
 }
 
@@ -265,13 +265,13 @@ void TRefArray::Compress()
 //______________________________________________________________________________
 void TRefArray::Delete(Option_t *)
 {
-   // Remove all objects from the array AND delete all heap based objects.
+   // Remove all objects from the array.
 
-   fLast = - 1;
+   fLast = -1;
 
    fSize = 0;
    if (fUIDs) {delete [] fUIDs; fUIDs = 0;}
-      
+
    Changed();
 }
 
