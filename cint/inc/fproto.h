@@ -194,6 +194,7 @@ int G__fdumpstream G__P((char *string,char *endmark));
 int G__fgetstream G__P((char *string,char *endmark));
 int G__fignorestream G__P((char *endmark));
 int G__fgetstream_new G__P((char *string,char *endmark));
+int G__fgetstream_spaces G__P((char *string,char *endmark));
 void G__fignoreline G__P((void));
 void G__fsetcomment G__P((struct G__comment_info *pcomment));
 int G__fgetc G__P((void));
