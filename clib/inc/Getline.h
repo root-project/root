@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.h,v 1.2 2000/05/31 18:41:37 rdm Exp $ */
 /* Author: */
 
 /*************************************************************************
@@ -12,8 +12,10 @@
 #ifndef _GETLINE_
 #define _GETLINE_
 
+#ifndef __CINT__
 #ifdef __cplusplus
 extern "C" {
+#endif
 #endif
 
 typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp } EGetLineMode;
@@ -33,8 +35,10 @@ R__EXTERN int (*gl_in_hook)(char *buf);
 R__EXTERN int (*gl_out_hook)(char *buf);
 R__EXTERN int (*gl_tab_hook)(char *buf, int prompt_width, int *cursor_loc);
 
+#ifndef __CINT__
 #ifdef __cplusplus
 }
+#endif
 #endif
 
 #endif   /* _GETLINE_ */
