@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.5 2003/01/27 20:41:37 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.6 2003/01/31 08:24:18 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.5 2003/01/27 20:41:37 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.6 2003/01/31 08:24:18 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -323,7 +323,7 @@ Int_t TTableDescriptor::UpdateOffsets(const TTableDescriptor *newDescriptor)
 }
 
 //____________________________________________________________________________
-const Int_t TTableDescriptor::ColumnByName(const Char_t *columnName) const
+Int_t TTableDescriptor::ColumnByName(const Char_t *columnName) const
 {
  // Find the column index but the column name
    const tableDescriptor_st *elementDescriptor = ((TTableDescriptor *)this)->GetTable();

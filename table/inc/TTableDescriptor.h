@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.4 2003/01/03 20:17:12 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -41,7 +41,7 @@ class TTableDescriptor : public TTable {
              void        LearnTable(const TTable *parentTable);
              void        LearnTable(TClass *classPtr);
              const Char_t *ColumnName(Int_t columnIndex)        const;
-             const Int_t ColumnByName(const Char_t *columnName=0) const;
+             Int_t     ColumnByName(const Char_t *columnName=0) const;
              UInt_t      NumberOfColumns()                      const;
              const UInt_t *IndexArray(Int_t columnIndex)        const;
              UInt_t      Offset(Int_t columnIndex)              const;
