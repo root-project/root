@@ -82,6 +82,9 @@ html:                            generate the complete html documentation of
                                  the full ROOT system. Also hyperizes the
                                  README/ChangeLog file.
 
+changelog:                       generate the README/ChangeLog file from
+                                 information obtained by the "cvs log" command.
+
 install:                         install the root binary distribution to the
                                  locations specified via configure. Does
                                  nothing if $ROOTSYS is set to the build
