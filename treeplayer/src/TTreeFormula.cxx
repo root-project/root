@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.17 2000/10/31 11:21:18 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.18 2000/11/02 14:01:23 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -267,6 +267,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //          Look for a data member
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
+         if (!leaf->GetBranch()) continue;
          strcpy(branchname,leaf->GetBranch()->GetName());
          // do not look at the indexes if any
          char *branch_dim = (char*)strstr(branchname,"[");
@@ -307,6 +308,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //          Look for branchname.leafname
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
+         if (!leaf->GetBranch()) continue;
          sprintf(branchname,"%s.%s",leaf->GetBranch()->GetName(),leaf->GetName());
          // do not look at the indexes if any
          char *branch_dim = (char*)strstr(branchname,"[");
@@ -348,6 +350,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       for (i=0;i<nleaves;i++) {
          lname[dot] = 0;
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
+         if (!leaf->GetBranch()) continue;
          strcpy(branchname,leaf->GetBranch()->GetName());
          // do not look at the indexes if any
          char *branch_dim = (char*)strstr(branchname,"[");
@@ -391,6 +394,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    } else {
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
+         if (!leaf->GetBranch()) continue;
          strcpy(branchname,leaf->GetBranch()->GetName());
          strcpy(leafname,leaf->GetName());
          // do not look at the indexes if any
