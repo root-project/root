@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.23 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.24 2003/02/05 23:48:48 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -93,7 +93,8 @@ public:
    //----- Write() options
    enum {
       kSingleKey     = BIT(0),        // write collection with single key
-      kOverwrite     = BIT(1)         // overwrite existing object with same name
+      kOverwrite     = BIT(1),        // overwrite existing object with same name
+      kWriteDelete   = BIT(2)         // write object, then delete previous key with same name
    };
 
    TObject();

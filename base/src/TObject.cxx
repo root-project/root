@@ -1,4 +1,4 @@
-;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.49 2002/11/24 22:46:20 rdm Exp $
+;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.50 2003/02/05 23:48:48 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -812,9 +812,12 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    //  by GetName().
    //
    //  The option can be a combination of:
-   //    kSingleKey and kOverwrite
+   //    kSingleKey, kOverwrite or kWriteDelete
    //  Using the kOverwrite option a previous key with the same name is
-   //  overwritten.
+   //  overwritten. The previous key is deleted before writing the new object.
+   //  Using the kWriteDelete option a previous key with the same name is
+   //  deleted only after the new object has been written. This option
+   //  is safer than kOverwrite but it is slower.
    //  The kSingleKey option is only used by TCollection::Write() to write
    //  a container with a single key instead of each object in the container
    //  with its own key.
@@ -837,7 +840,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
       return 0;
    }
 
-   TKey *key;
+   TKey *key, *oldkey=0;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
 
@@ -867,6 +870,9 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
          delete key;
       }
    }
+   if ((option & kWriteDelete)) {
+      oldkey = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
+   }
    key = new TKey(this, oname, bsize);
    if (newName) delete [] newName;
 
@@ -876,7 +882,14 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
       return 0;
    }
    gFile->SumBuffer(key->GetObjlen());
-   return key->WriteFile(0);
+   Int_t nbytes = key->WriteFile(0);
+   
+   if (oldkey) {
+      oldkey->Delete();
+      delete oldkey;
+   }
+     
+   return nbytes;
 }
 
 //______________________________________________________________________________
