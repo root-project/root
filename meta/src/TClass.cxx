@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.54 2001/07/09 00:57:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.55 2001/09/18 11:00:31 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1041,8 +1041,8 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
    // If the object doest not exist, it is created
 
    if (version == 0) version = fClassVersion;
+   if (!fStreamerInfo) fStreamerInfo = new TObjArray(version+10);
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
-   //if (sinfo) return sinfo;
    if (!sinfo) {
       sinfo = new TStreamerInfo(this,"");
       fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
