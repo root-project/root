@@ -123,6 +123,10 @@ int k;
   char paraname[G__MAXNAME];
   char temp[G__ONELINE];
 
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && tagnum) return;
+#endif
+
   if(ifunc->para_name[ifn][k]) strcpy(paraname,ifunc->para_name[ifn][k]);
   else sprintf(paraname,"a%d",k);
 
@@ -213,6 +217,9 @@ FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
 {
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && fp && ifn && ifunc) return;
+#endif
   G__fprinterr(G__serr,"Limitation: Can not make STUB constructor, class %s\n"
 	  ,G__fulltagname(tagnum,1));
 }
@@ -226,6 +233,9 @@ FILE *fp;
 int tagnum,ifn;
 struct G__ifunc_table *ifunc;
 {
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && fp && ifn && ifunc) return;
+#endif
   G__fprinterr(G__serr,"Limitation: Can not make STUB destructor, class %s\n"
 	  ,G__fulltagname(tagnum,1));
 }

@@ -250,6 +250,9 @@ char *text;
 int start,end;
 {
   char **matchs;
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && start && end) return((char**)NULL);
+#endif
   matchs = (char **)NULL;
   /* If this word is at the start of the line, then it is a function name */
   matchs = completion_matches(text,G__search_next_member);

@@ -6573,6 +6573,10 @@ void **ppdict;
   G__value buf;
   int i;
 
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && ptr && ppdict) return(G__null);
+#endif
+
   G__abortbytecode();
 
   if(strcmp(item,"LINE")==0 || strcmp(item,"_LINE__")==0) {

@@ -250,7 +250,7 @@ static int G__longif_29_0_0(G__value *result7,G__CONST char *funcname,struct G__
    G__ulonglong *p=NULL;
    switch(libp->paran) {
    case 1:
-      p = ::new((G__longifdOcxx_tag*)G__getgvp()) G__ulonglong((long)G__int(libp->para[0]));
+      p = ::new((G__longifdOcxx_tag*)G__getgvp()) G__ulonglong((unsigned long)G__int(libp->para[0]));
       break;
    case 0:
    if(G__getaryconstruct()) p=new G__ulonglong[G__getaryconstruct()];
@@ -1032,6 +1032,13 @@ static int G__longif__0_21(G__value *result7,G__CONST char *funcname,struct G__p
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+static int G__longif__1_21(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__setnull(result7);
+      G__printformatld((char*)G__int(libp->para[0]),(const char*)G__int(libp->para[1])
+,(void*)G__int(libp->para[2]));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /*********************************************************
 * Member function Stub
@@ -1501,6 +1508,10 @@ static void G__cpp_setup_func2() {
 #else
 ,(void*)NULL,0);
 #endif
+   G__memfunc_setup("G__printformatld",1675,G__longif__1_21,121,-1,-1,0,3,1,1,0,
+"C - - 0 - out C - - 10 - fmt "
+"Y - - 0 - p",(char*)NULL
+,(void*)NULL,0);
 
    G__resetifuncposition();
 }

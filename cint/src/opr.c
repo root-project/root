@@ -1012,14 +1012,14 @@ G__value *defined;
 #endif
 #ifndef G__OLDIMPLEMENTATION966
 	fdefined=1.0;
-	for(ig2=1;ig2<=uexpression;ig2++) fdefined *= udefined;
+	for(ig2=1;ig2<=(int)uexpression;ig2++) fdefined *= udefined;
 	if(fdefined>(double)LONG_MAX||fdefined<(double)LONG_MIN) {
 	  G__genericerror("Error: integer overflow. Use 'double' for power operator");
 	}
 	lresult = (long)fdefined;
 #else
 	lresult=1;
-	for(ig2=1;ig2<=uexpression;ig2++) lresult *= udefined;
+	for(ig2=1;ig2<=(int)uexpression;ig2++) lresult *= udefined;
 #endif
 	G__letint(defined,'h',lresult);
 	defined->ref=0;
@@ -2479,6 +2479,10 @@ int flag;
   int store_exec_memberfunc;
   int store_memberfunc_tagnum;
   int store_memberfunc_struct_offset;
+
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && flag) return(0);
+#endif
 
   store_exec_memberfunc=G__exec_memberfunc;
   store_memberfunc_tagnum=G__memberfunc_tagnum;

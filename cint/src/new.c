@@ -489,7 +489,11 @@ char *expression;
     }
     else {
       /* This is an interpreted class */
-      if(arrayindex && !G__no_exec_compile) G__alloc_newarraylist(pointer,pinc);
+      if(arrayindex && !G__no_exec_compile
+#ifndef G__OLDIMPLEMENTATION1916
+	 && 'e'!=G__struct.type[G__tagnum]
+#endif
+	 ) G__alloc_newarraylist(pointer,pinc);
       G__var_type='p';
       for(i=0;i<pinc;i++) {
 #ifndef G__OLDIMPLEMENTATION980

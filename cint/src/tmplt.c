@@ -1975,7 +1975,11 @@ struct G__Templatearg *def_para;
     int rlen = strlen(reslt);
     if(isconst && strncmp(reslt,"const ",6)==0 &&
        rlen>0 && '*'==reslt[rlen-1]) {
-      strcpy (str_out + iout, reslt+6);
+#ifndef G__OLDIMPLEMENTATION1914
+      strcpy(str_out+iout,reslt+6);
+#else
+      strcat (str_out, reslt+6);
+#endif
       strcat (str_out, " const");
       iout += lreslt;
       isconst=0;
@@ -2151,7 +2155,7 @@ int *pnpara;
 #endif
 	  charlist->string=realloc(charlist->string,len+1);
 	  G__templatemaptypename(charlist->string);
-	  G__ASSERT(strlen(charlist->string)<=len);
+	  G__ASSERT((int)strlen(charlist->string)<=(int)len);
         }
 #endif /* ON773 */
 #else /* ON664 */

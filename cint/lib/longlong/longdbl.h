@@ -7,7 +7,7 @@
  * Description:
  *  Support 'long double' 
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -33,7 +33,7 @@
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !defined(_MSC_VER)
+#if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 using namespace std;
 #endif
 #endif
@@ -108,9 +108,9 @@ class G__longdouble {
 
   // unary operators
   G__longdouble& operator++() { ++dat; return(*this); }
-  G__longdouble operator++(int dmy) { G__longdouble c(dat++); return(c); }
+  G__longdouble operator++(int) { G__longdouble c(dat++); return(c); }
   G__longdouble& operator--() { --dat; return(*this); }
-  G__longdouble operator--(int dmy) { G__longdouble c(dat--); return(c); }
+  G__longdouble operator--(int) { G__longdouble c(dat--); return(c); }
 
   // assignment operators
   G__longdouble& operator=(double x) {dat=(G__double92)x;return(*this);}
@@ -192,6 +192,14 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1913
+void G__printformatld(char* out,const char* fmt,void *p) {
+  //long double*pll = (long double*)p;
+  G__double92 *pld = (G__double92*)p;
+  sprintf(out,fmt,*pld);
+}
+#endif
+
 inline int G__ateval(const G__longdouble& a) {
 #ifdef IOS
   cout << "(long double)" << a.dat << endl;
@@ -206,7 +214,9 @@ inline int G__ateval(const G__longdouble& a) {
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
 #endif
+#ifdef G__OLDIMPLEMENTATION1912
 #pragma link C++ function G__ateval;
+#endif
 #endif
 
 //#endif

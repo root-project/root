@@ -84,6 +84,42 @@ char *temp;
 #endif
     default:
       if(islower(buf.type)) {
+#ifndef G__OLDIMPLEMENTATION1912
+	if('u'==buf.type && -1!=buf.tagnum &&
+	   (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
+	    strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
+	    strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
+	  if(G__in_pause) {
+	    char llbuf[100];
+	    sprintf(temp,"(%s)" 
+		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+				    ,buf.obj.reftype.reftype,0));
+	    if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
+	      sprintf(llbuf
+	  ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+		      ,(long)llbuf,buf.obj.i);
+	      G__getitem(llbuf);
+	      strcat(temp,llbuf);
+	    }
+	    else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
+	      sprintf(llbuf
+	  ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+		      ,(long)llbuf,buf.obj.i);
+	      G__getitem(llbuf);
+	      strcat(temp,llbuf);
+	    }
+	    else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+	      sprintf(llbuf
+	  ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+		      ,(long)llbuf,buf.obj.i);
+	      G__getitem(llbuf);
+	      strcat(temp,llbuf);
+	    }
+	  }
+	  else
+	    G__setiparseobject(&buf,temp);
+	} else
+#endif
 #ifndef G__OLDIMPLEMENTATION719
 	if(buf.obj.i<0)
 	  sprintf(temp,"(%s)(%ld)" 
@@ -336,6 +372,42 @@ char *temp;
 	sprintf(temp,"(struct %s)%ld" ,G__fulltagname(buf.tagnum,1),buf.obj.i);
       break;
     case 'c':
+#ifndef G__OLDIMPLEMENTATION1912
+      if(-1!=buf.tagnum &&
+	 (strcmp(G__struct.name[buf.tagnum],"G__longlong")==0 ||
+	  strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0 ||
+	  strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0)) {
+	if(G__in_pause) {
+	  char llbuf[100];
+	  sprintf(temp,"(%s)" 
+		  ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+				  ,buf.obj.reftype.reftype,0));
+	  if(strcmp(G__struct.name[buf.tagnum],"G__longlong")==0) {
+	    sprintf(llbuf
+		    ,"G__printformatll((char*)(%ld),\"%%lld\",(void*)(%ld))"
+		    ,(long)llbuf,buf.obj.i);
+	    G__getitem(llbuf);
+	    strcat(temp,llbuf);
+	  }
+	  else if(strcmp(G__struct.name[buf.tagnum],"G__ulonglong")==0) {
+	    sprintf(llbuf
+		    ,"G__printformatull((char*)(%ld),\"%%llu\",(void*)(%ld))"
+		    ,(long)llbuf,buf.obj.i);
+	    G__getitem(llbuf);
+	    strcat(temp,llbuf);
+	  }
+	  else if(strcmp(G__struct.name[buf.tagnum],"G__longdouble")==0) {
+	    sprintf(llbuf
+		    ,"G__printformatld((char*)(%ld),\"%%LG\",(void*)(%ld))"
+		    ,(long)llbuf,buf.obj.i);
+	    G__getitem(llbuf);
+	    strcat(temp,llbuf);
+	  }
+	}
+	else
+	  G__setiparseobject(&buf,temp);
+      } else
+#endif
       if(buf.obj.i<0) 
 	sprintf(temp,"(class %s)(%ld)" 
 		,G__fulltagname(buf.tagnum,1) ,buf.obj.i);

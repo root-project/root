@@ -603,7 +603,7 @@ G__value *p,result;
     char store_var_type = G__var_type;
     int size = G__Lsizeof(G__newtype.name[p->typenum]);
     G__var_type = store_var_type;
-    if('C'==result.type && strlen((char*)result.obj.i)<size)
+    if('C'==result.type && (int)strlen((char*)result.obj.i)<(int)size)
       size = strlen((char*)result.obj.i)+1;
     memcpy((void*)p->obj.i,(void*)result.obj.i,size);
     return(result);

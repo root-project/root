@@ -256,7 +256,7 @@ void *p;
 #else
     G__fprinterr(G__serr,"free(0x%x) not allocated",p);
 #endif
-    G__genericerror((char*)NULL);
+    G__printlinenum();
   }
 #ifdef G__DUMPMEMHISTORY
   fflush(G__memhist);
@@ -335,7 +335,7 @@ size_t size;
 #else
     G__fprinterr(G__serr,"realloc(0x%x,%d) not allocated",p,size);
 #endif
-    G__genericerror((char*)NULL);
+    G__printlinenum();
   }
 #ifdef G__DUMPMEMHISTORY
   fflush(G__memhist);
@@ -522,7 +522,7 @@ FILE *p;
 #endif
 #endif
     G__fprinterr(G__serr,"fclose(0x%lx) not opened",(long)p);
-    G__genericerror((char*)NULL);
+    G__printlinenum();
   }
 #ifdef G__DUMPMEMHISTORY
   fflush(G__memhist);

@@ -388,6 +388,11 @@ short type;
   struct dsc$descriptor_s phandle_d;
 #endif
   char sym_underscore[G__ONELINE];
+
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && type) return((void*)NULL);
+#endif
+
   if(G__sym_underscore) {
     sym_underscore[0]='_';
     strcpy(sym_underscore+1,sym);
@@ -1183,6 +1188,9 @@ char *shlfile;
 void G__listshlfunc(fout)
 FILE *fout;
 {
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && fout) return;
+#endif
 }
 /*******************************************************************
 * G__listshl()
@@ -1191,6 +1199,9 @@ FILE *fout;
 void G__listshl(G__temp)
 FILE *G__temp;
 {
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && G__temp) return;
+#endif
 }
 
 #ifdef G__TRUEP2F

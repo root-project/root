@@ -7,7 +7,7 @@
  * Description:
  *  Support 'long long' 64bit integer in 32bit architecture
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -29,7 +29,7 @@
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !(_MSC_VER<1200)
+#if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 namespace std {} using namespace std;
 #endif
 #endif
@@ -50,6 +50,15 @@ namespace std {} using namespace std;
 #define G__NOMOD
 typedef long G__int64;
 typedef unsigned long G__uint64;
+
+
+/**************************************************************************
+* 64bit platforms
+**************************************************************************/
+#elif defined(__GNUC__) && (__GNUC__>=3)
+
+typedef long long G__int64;
+typedef unsigned long long G__uint64;
 
 
 /**************************************************************************
@@ -293,9 +302,9 @@ class G__longlong {
 
   // unary operators
   G__longlong& operator++() { ++dat; return(*this); }
-  G__longlong operator++(int dmy) { G__longlong c(dat++); return(c); }
+  G__longlong operator++(int) { G__longlong c(dat++); return(c); }
   G__longlong& operator--() { --dat; return(*this); }
-  G__longlong operator--(int dmy) { G__longlong c(dat--); return(c); }
+  G__longlong operator--(int) { G__longlong c(dat--); return(c); }
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
@@ -362,6 +371,7 @@ inline G__longlong operator/(const G__longlong& a,const G__longlong& b){
   G__longlong c(a.dat/b.dat);
 #else
   G__longlong c;
+  fprintf(stderr,"Limitation: operator/ is deactivated for 'long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -370,6 +380,7 @@ inline G__longlong operator%(const G__longlong& a,const G__longlong& b){
   G__longlong c(a.dat%b.dat);
 #else
   G__longlong c;
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'long long'. Delete G__NOMOD in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -444,10 +455,6 @@ inline istream& operator>>(istream& ist,G__longlong& a) {
 }
 #endif
 
-inline int G__ateval(const G__longlong& a) {
-  fprintf(stdout,"(long long)%lld\n",a.dat);
-  return(1);
-}
 
 
 /************************************************************************
@@ -461,7 +468,7 @@ class G__ulonglong {
 #ifndef __CINT__
   G__ulonglong(G__uint64 x=0) { dat=x; }
 #else
-  G__ulonglong(long l=0) { dat = (G__uint64)l; }
+  G__ulonglong(unsigned long l=0) { dat = (G__uint64)l; }
 #endif
 #if 0
   G__ulonglong(long l) { dat = (G__uint64)l; }
@@ -487,9 +494,9 @@ class G__ulonglong {
 
   // unary operators
   G__ulonglong& operator++() { ++dat; return(*this); }
-  G__ulonglong operator++(int dmy) { G__ulonglong c(dat++); return(c); }
+  G__ulonglong operator++(int) { G__ulonglong c(dat++); return(c); }
   G__ulonglong& operator--() { --dat; return(*this); }
-  G__ulonglong operator--(int dmy) { G__ulonglong c(dat--); return(c); }
+  G__ulonglong operator--(int) { G__ulonglong c(dat--); return(c); }
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
@@ -556,6 +563,7 @@ inline G__ulonglong operator/(const G__ulonglong& a,const G__ulonglong& b){
   G__ulonglong c(a.dat/b.dat);
 #else
   G__ulonglong c;
+  fprintf(stderr,"Limitation: operator/ is deactivated for 'unsigned long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -564,6 +572,7 @@ inline G__ulonglong operator%(const G__ulonglong& a,const G__ulonglong& b){
   G__ulonglong c(a.dat%b.dat);
 #else
   G__ulonglong c;
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'unsigned long long'. Delete G__NOMOD in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -651,6 +660,10 @@ void G__printformatull(char* out,const char* fmt,void *p) {
 }
 
 
+inline int G__ateval(const G__longlong& a) {
+  fprintf(stdout,"(long long)%lld\n",a.dat);
+  return(1);
+}
 inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
@@ -674,7 +687,9 @@ int G__ateval(unsigned long x) {return(0);}
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
 #endif
+#ifdef G__OLDIMPLEMENTATION1912
 #pragma link C++ function G__ateval;
+#endif
 #endif
 
 

@@ -39,6 +39,9 @@ template<class Key,class T,class Compare=std::less<Key>
 #elif defined(G__HPUX)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=allocator>
+#elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<pair<const Key, T> > >
 #elif defined(G__BORLANDCC5)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<T> >

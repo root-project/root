@@ -125,7 +125,7 @@ void G__printtitle()
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
   printf("#\n");
-  printf("# Copyright(c) 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
+  printf("# Copyright(c) 1995~2003 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   printf("#                        (cint mailing list 'cint@root.cern.ch')\n");
   printf("################################################################\n");
 }

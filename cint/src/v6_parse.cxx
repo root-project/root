@@ -1991,7 +1991,7 @@ char* action;
 		   ,(void*)ptempbuf->obj.obj.i);
     }
     else {
-      G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level,"NULL",0);
+      G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level,"NULL",(void*)0);
     }
     ptempbuf = ptempbuf->prev;
   }

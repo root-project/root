@@ -5859,7 +5859,7 @@ char *result;
 #ifndef G__OLDIMPLEMENTATION1739
 	if('u'==libp->para[ipara].type) {
 	  char llbuf[100];
-	  G__value *pval = &libp->para[ipara];
+	  G__value *pval = &libp->para[ipara++];
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longlong")==0) {
 	    sprintf(llbuf
 	    ,"G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
@@ -5900,8 +5900,30 @@ char *result;
       if(fmtflag==1) {
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION1913
+	if('u'==libp->para[ipara].type) {
+	  char llbuf[100];
+	  G__value *pval = &libp->para[ipara++];
+	  if(strcmp(G__struct.name[pval->tagnum],"G__longdouble")==0) {
+	    sprintf(llbuf
+	    ,"G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
+		    ,(long)fmt,(long)onefmt,pval->obj.i);
+	    G__getitem(llbuf);
+	    strcat(result,fmt);
+	  }
+	  else {
+	    sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+	    strcpy(result,onefmt);
+	  }
+	}
+	else {
+	  sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+	  strcpy(result,onefmt);
+	}
+#else
 	sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
 	strcpy(result,onefmt);
+#endif
 	ionefmt=0;
 	fmtflag=0;
       }

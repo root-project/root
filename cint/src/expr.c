@@ -527,6 +527,106 @@ int lenbuf;
 #define G__ASSIGN_CNDJMP
 #endif
 
+
+#ifndef G__OLDIMPLEMENTATION1910
+/******************************************************************
+* G__exec_evalall
+*
+* Evaluate all operators in stack and get result as vstack[0]
+* This macro contributes to execution speed. Don't implemented by
+* a function.
+******************************************************************/
+#define G__exec_evalall                                                \
+  /* Evaluate item */                                                  \
+  if(lenbuf) {                                                         \
+    ebuf[lenbuf] = '\0';                                               \
+    if(up && '&'==unaopr[up] && ')'!=ebuf[lenbuf-1]) {                 \
+      int store_var_type=G__var_type;                                  \
+      G__var_type = 'P';                                               \
+      vstack[sp++] = G__getitem(ebuf);                                 \
+      G__var_type=store_var_type;                                      \
+      --up;                                                            \
+    }                                                                  \
+    else                                                               \
+      vstack[sp++] = G__getitem(ebuf);                                 \
+    lenbuf=0;                                                          \
+    iscastexpr = 0; /* ON1342 */                                       \
+  }                                                                    \
+  /* process unary operator */                                         \
+  while(up && sp>=1) {                                                 \
+    --up;                                                              \
+    if('*'==unaopr[up]) {                                              \
+      vstack[sp-1] = G__tovalue(vstack[sp-1]);                         \
+    }                                                                  \
+    else if('&'==unaopr[up]) {    /* ON717 */                          \
+      vstack[sp-1] = G__toXvalue(vstack[sp-1],'P');                    \
+    }                                                                  \
+    else {                                                             \
+      vstack[sp] = vstack[sp-1];                                       \
+      vstack[sp-1] = G__null;                                          \
+      G__bstore(unaopr[up],vstack[sp],&vstack[sp-1]);                  \
+    }                                                                  \
+  }                                                                    \
+  /* process binary operator */                                        \
+  while(op /* && opr[op-1]<=G__PROC_NOOPR */ && sp>=2) {               \
+    --op;                                                              \
+    --sp;                                                              \
+    G__ASSIGN_CNDJMP /* 1575 */                                        \
+    G__bstore(opr[op],vstack[sp],&vstack[sp-1]);                       \
+  }                                                                    \
+  if(1!=sp || op!=0 || up!=0) { G__expr_error; }
+
+
+/******************************************************************
+* G__exec_binopr()
+*
+* Evaluate all operators in stack and get result as vstack[0]
+* then push binary operator to operator stack.
+* This macro contributes to execution speed. Don't implemented by
+* a function.
+******************************************************************/
+#define G__exec_binopr(oprin,precin)                                   \
+  /* evaluate left value */                                            \
+  ebuf[lenbuf] = '\0';                                                 \
+  if(up && '&'==unaopr[up] && ')'!=ebuf[lenbuf-1]) {                   \
+    int store_var_type=G__var_type;                                    \
+    G__var_type = 'P';                                                 \
+    vstack[sp++] = G__getitem(ebuf);                                   \
+    G__var_type=store_var_type;                                        \
+    --up;                                                              \
+  }                                                                    \
+  else                                                                 \
+    vstack[sp++] = G__getitem(ebuf);                                   \
+  lenbuf=0;                                                            \
+  iscastexpr = 0; /* ON1342 */                                         \
+  /* process unary operator */                                         \
+  while(up && sp>=1) {                                                 \
+    --up;                                                              \
+    if('*'==unaopr[up]) {                                              \
+      vstack[sp-1] = G__tovalue(vstack[sp-1]);                         \
+    }                                                                  \
+    else if('&'==unaopr[up]) {    /* ON717 */                          \
+      vstack[sp-1] = G__toXvalue(vstack[sp-1],'P');                    \
+    }                                                                  \
+    else {                                                             \
+      vstack[sp] = vstack[sp-1];                                       \
+      vstack[sp-1] = G__null;                                          \
+      G__bstore(unaopr[up],vstack[sp],&vstack[sp-1]);                  \
+    }                                                                  \
+  }                                                                    \
+  /* process higher precedence operator at left */                     \
+  while(op && prec[op-1]<=precin && sp>=2) {                           \
+    --op;                                                              \
+    --sp;                                                              \
+    G__ASSIGN_CNDJMP /* 1575 */                                        \
+    G__bstore(opr[op],vstack[sp],&vstack[sp-1]);                       \
+  }                                                                    \
+  /* set operator */                                                   \
+  opr[op] = oprin;                                                     \
+  if(G__PREC_NOOPR!=precin) prec[op++] = precin
+
+
+#else /* 1910 */
 /******************************************************************
 * G__exec_evalall
 *
@@ -606,6 +706,8 @@ int lenbuf;
   /* set operator */                                                   \
   opr[op] = oprin;                                                     \
   if(G__PREC_NOOPR!=precin) prec[op++] = precin
+
+#endif /* 1910 */
 
 
 /******************************************************************

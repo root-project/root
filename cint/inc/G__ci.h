@@ -21,13 +21,24 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150102
-#define G__CINTVERSIONSTR  "5.15.102, Sep 6 2003"
+#define G__CINTVERSION      50150103
+#define G__CINTVERSIONSTR  "5.15.103, Sep 16 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* suppress unused parameter warnings. optional */
+#ifndef G__SUPPRESS_UNUSEDPARA
+#define G__OLDIMPLEMENTATION1911
+#endif
+
+/* &a, avoid uninitialized memory access */
+#define G__AVOID_PTR_UNINITACCESS
+#ifndef G__AVOID_PTR_UNINITACCESS
+#define G__OLDIMPLEMENTATION1910
+#endif
 
 /* Define G__FIX1 if you have problem defining variable argument functions
  * such as printf, fprintf, etc... in Windows */

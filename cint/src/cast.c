@@ -78,6 +78,29 @@ int reftype;
       offset=0;
 #endif
   }
+#ifndef G__OLDIMPLEMENTATION1912
+  else if(-1==result3->tagnum && -1!=result3->typenum &&
+	  (strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
+	   strcmp(G__newtype.name[result3->typenum],"unsigned long long")==0 ||
+	   strcmp(G__newtype.name[result3->typenum],"long double")==0 ||
+	   (-1!=G__newtype.tagnum[result3->typenum] &&
+	    (strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+		    ,"G__longlong")==0 ||
+	     strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+		    ,"G__ulonglong")==0 ||
+	     strcmp(G__struct.name[G__newtype.tagnum[result3->typenum]]
+		    ,"G__longdouble")==0)))) {
+    char com[G__ONELINE],buf2[G__ONELINE];
+    int known = 0;
+    int store_typenum = result3->typenum;
+    result3->typenum = -1;
+    G__valuemonitor(*result3,buf2);
+    sprintf(com,"%s(%s)",G__fulltagname(tagnum,1),buf2);
+    *result3 = G__getfunction(com,&known,G__TRYNORMAL);
+    result3->typenum=store_typenum;
+    return;
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1050
   else if(0==castflag && 0==G__oprovld &&
 	  (G__SECURE_MARGINAL_CAST&G__security) &&

@@ -111,7 +111,7 @@ int signame;
    * immediate pause in prerun
    *********************************************************/
   if(G__prerun) {
-    G__fprinterr(G__serr,"\n!!! Pause at prerun\n");
+    G__fprinterr(G__serr,"\n!!! Pause at prerun. signal(%d)\n",signame);
     G__step--;
     G__setdebugcond();
     G__pause();
@@ -120,7 +120,7 @@ int signame;
    * immediate pause if called twice
    *********************************************************/
   else if(G__step>1) {
-    G__fprinterr(G__serr,"\n!!! Break in the middle of compiled statement\n");
+    G__fprinterr(G__serr,"\n!!! Break in the middle of compiled statement. signal(%d)\n",signame);
     G__pause();
     if(G__return>G__RETURN_NORMAL) {
       G__fprinterr(G__serr, "!!! Sorry, continue until compiled code finishes\n");
@@ -128,7 +128,7 @@ int signame;
     }
   }
   else if(G__asm_exec) {
-    G__fprinterr(G__serr, "\n!!! Middle of loop compilation run\n");
+    G__fprinterr(G__serr, "\n!!! Middle of loop compilation run. signal(%d)\n",signame);
   }
   signal(SIGINT,G__breakkey);
 }
@@ -140,7 +140,7 @@ int signame;
 void G__killproc(signame)
 int signame;
 {
-  fprintf(G__sout,"\n!!! Process killed by interrupt\n");
+  fprintf(G__sout,"\n!!! Process killed by interrupt. signal(%d)\n",signame);
   G__exit(EXIT_FAILURE);
 }
 
@@ -203,7 +203,7 @@ char *nameoferror;
 void G__timeout(signame)
 int signame;
 {
-  G__fprinterr(G__serr,"\nError time out. Exit program.\n");
+  G__fprinterr(G__serr,"\nsignal(%d) Error time out. Exit program.\n",signame);
 
   G__close_inputfiles();
   exit(EXIT_FAILURE);
@@ -213,12 +213,13 @@ int signame;
 * G__floatexception()
 ******************************************************************/
 #ifdef _AIX
-void G__floatexception(int idum)
+void G__floatexception(int signame)
 #else
 void G__floatexception(signame)
 int signame;
 #endif
 {
+  G__fprinterr(G__serr,"signal(%d) ",signame); 
   signal(SIGFPE,G__floatexception);
   G__errorprompt("Error: Floating point exception");
 }
@@ -227,12 +228,13 @@ int signame;
 * G__segmentviolation()
 ******************************************************************/
 #ifdef _AIX
-void G__segmentviolation(int idum)
+void G__segmentviolation(int signame)
 #else
 void G__segmentviolation(signame)
 int signame;
 #endif
 {
+  G__fprinterr(G__serr,"signal(%d) ",signame); 
   signal(SIGSEGV,G__segmentviolation);
   G__errorprompt("Error: Segmentation violation");
 }
@@ -241,28 +243,30 @@ int signame;
 * G__outofmemory()
 ******************************************************************/
 #ifdef _AIX
-void G__outofmemory(int idum)
+void G__outofmemory(int signame)
 #else
 void G__outofmemory(signame)
 int signame;
 #endif
 {
+  G__fprinterr(G__serr,"signal(%d) ",signame); 
 #ifdef SIGEMT
-	signal(SIGEMT,G__outofmemory);
+  signal(SIGEMT,G__outofmemory);
 #endif
-	G__errorprompt("Error: Out of memory");
+  G__errorprompt("Error: Out of memory");
 }
 
 /******************************************************************
 * G__buserror()
 ******************************************************************/
 #ifdef _AIX
-void G__buserror(int idum)
+void G__buserror(int signame)
 #else
 void G__buserror(signame)
 int signame;
 #endif
 {
+  G__fprinterr(G__serr,"signal(%d) ",signame); 
 #ifdef SIGBUS
   signal(SIGBUS,G__buserror);
 #endif

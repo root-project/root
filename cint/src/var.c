@@ -1104,6 +1104,9 @@ char *item;
 long store_struct_offset;
 int var_type;
 {
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && item) return 0;
+#endif
   /************************************
    * ST_GVAR or ST_VAR instruction
    ************************************/
@@ -2172,7 +2175,7 @@ struct G__var_array *varglobal,*varlocal;
   char varname[G__MAXNAME*2];
 #endif
   char parameter[G__MAXVARDIM][G__ONELINE];
-  G__value para[G__MAXVARDIM],result;
+  G__value para[G__MAXVARDIM],result = G__null;
   char result7[G__ONELINE];
   int ig15,paran,ig35,ig25,ary;
   int lenitem,nest=0;
@@ -6370,7 +6373,7 @@ int parameter00;
     else {
       bitlocation=var->varlabel[ig15-1][G__MAXVARDIM-1]
 	+var->bitfield[ig15-1];
-      if(G__INTALLOC*8<bitlocation+G__bitfield) {
+      if((int)(G__INTALLOC*8)<bitlocation+G__bitfield) {
 	bitlocation = 0;
       }
     }
@@ -7148,7 +7151,7 @@ int parameter00;
       if(result.type=='C'&& G__var_type=='c') {
 #ifndef G__OLDIMPLEMENTATION1886
 	if(G__asm_wholefunction != G__ASM_FUNC_COMPILE) {
-	  if(strlen((char *)result.obj.i)>var->varlabel[ig15][1]) {
+	  if((int)strlen((char *)result.obj.i)>(int)var->varlabel[ig15][1]) {
 	    strncpy((char *)var->p[ig15] ,(char *)result.obj.i
 		    ,(size_t)var->varlabel[ig15][1]+1);
 	  }

@@ -160,6 +160,12 @@ extern "C" void G__redirectcin(const char* filename) {
 *********************************************************************/
 #define G__MANIP_SUPPORT
 
+extern "C" {
+  typedef struct {
+    private:
+     int __fill[6];
+  } mbstate_t;
+}
 typedef long streampos ;
 typedef long streamoff ;
 
@@ -498,7 +504,7 @@ struct char_traits<char> {
     typedef char                      char_type;
     typedef int                       int_type;
     
-#ifndef __CINT__
+#ifdef __CINT__
     typedef streamoff                 off_type; 
     typedef streampos                 pos_type;
     typedef mbstate_t                 state_type;

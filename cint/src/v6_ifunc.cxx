@@ -53,7 +53,11 @@ int ifn;
 struct G__param *libp;
 {
   int itemp;
-  for(itemp=0;itemp<p_ifunc->para_nu[ifn];itemp++) {
+  for(itemp=0;itemp<p_ifunc->para_nu[ifn]
+#ifndef G__OLDIMPLEMENTATION1909
+	&& itemp<libp->paran
+#endif
+	;itemp++) {
     if(G__PARAREFERENCE==p_ifunc->para_reftype[ifn][itemp] &&
        p_ifunc->para_type[ifn][itemp]!=libp->para[itemp].type) {
       switch(p_ifunc->para_type[ifn][itemp]) {
@@ -241,6 +245,10 @@ int hash; /* not used */
   char localbuf[G__LOCALBUFSIZE];
 #ifndef G__OLDIMPLEMENTATION1016
   struct G__var_array *var;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && hash) return(0); /* dummy */
 #endif
 
   /* use funcname as bytecode struct */
@@ -517,6 +525,10 @@ int iexist;
       )
       ) {
 
+#ifndef G__OLDIMPLEMENTATION1909
+    para.paran=0;
+    para.para[0]=G__null;
+#endif
     G__tagdefining = G__MAXSTRUCT-1;
     G__struct.type[G__tagdefining] = 's';
     G__struct.size[G__tagdefining] = 0;
@@ -3940,9 +3952,9 @@ int recursive;
   int param_reftype,formal_reftype;
 #ifndef G__OLDIMPLEMENTATION1628
 #ifdef G__DEBUG
-  int param_isconst=0xa3a3a3a3,formal_isconst=0xa3a3a3a3;
+  int param_isconst=0xa3a3a3a3,formal_isconst=0xa5a5a5a5;
 #else
-  int param_isconst,formal_isconst;
+  int param_isconst=0,formal_isconst=0;
 #endif
 #endif
   funclist->rate = 0;
@@ -5756,7 +5768,9 @@ int isrecursive;
   }
 #endif
 
+#ifdef G__ASM_DBG
 #define G__ASM_DBG2
+#endif
 #ifdef G__ASM_DBG2
   if(G__dispsource) 
     G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);

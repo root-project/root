@@ -601,7 +601,7 @@ char *result;
 	flag=0;
 	ii=0;
 	for(i=0;i<32;i++) {
-		if((32-i)<=dig) flag=1;
+		if((int)(32-i)<=dig) flag=1;
 		switch(result[i]){
 		case '0':
 			if(tristate[i]=='0') {

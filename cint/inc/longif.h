@@ -78,6 +78,15 @@ typedef unsigned long G__uint64;
 
 
 /**************************************************************************
+* 64bit platforms
+**************************************************************************/
+#elif defined(__GNUC__) && (__GNUC__>=3)
+
+typedef long long G__int64;
+typedef unsigned long long G__uint64;
+
+
+/**************************************************************************
 * WIN32
 **************************************************************************/
 #elif defined(_WIN32)||defined(_WINDOWS)||defined(_Windows)||defined(_WINDOWS_)
@@ -386,6 +395,7 @@ inline G__longlong operator/(const G__longlong& a,const G__longlong& b){
   G__longlong c(a.dat/b.dat);
 #else
   G__longlong c;
+  fprintf(stderr,"Limitation: operator/ is deactivated for 'long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -394,6 +404,7 @@ inline G__longlong operator%(const G__longlong& a,const G__longlong& b){
   G__longlong c(a.dat%b.dat);
 #else
   G__longlong c;
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -485,7 +496,7 @@ class G__ulonglong {
 #ifndef __CINT__
   G__ulonglong(G__uint64 x=0) { dat=x; }
 #else
-  G__ulonglong(long l=0) { dat = (G__uint64)l; }
+  G__ulonglong(unsigned long l=0) { dat = (G__uint64)l; }
 #endif
 #if 0
   G__ulonglong(long l) { dat = (G__uint64)l; }
@@ -580,6 +591,7 @@ inline G__ulonglong operator/(const G__ulonglong& a,const G__ulonglong& b){
   G__ulonglong c(a.dat/b.dat);
 #else
   G__ulonglong c;
+  fprintf(stderr,"Limitation: operator/ is deactivated for 'unsigned long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -588,6 +600,7 @@ inline G__ulonglong operator%(const G__ulonglong& a,const G__ulonglong& b){
   G__ulonglong c(a.dat%b.dat);
 #else
   G__ulonglong c;
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'unsigned long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -896,6 +909,14 @@ inline ostream& operator<<(ostream& ost,const G__longdouble& a) {
 inline istream& operator>>(istream& ist,G__longdouble& a) {
   ist >> a.dat;
   return(ist);
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1913
+void G__printformatld(char* out,const char* fmt,void *p) {
+  //long double*pll = (long double*)p;
+  G__double92 *pld = (G__double92*)p;
+  sprintf(out,fmt,*pld);
 }
 #endif
 

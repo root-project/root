@@ -1419,6 +1419,10 @@ int ifn,page;
   static char mapped_name[G__MAXNAME];
   char *dllid;
 
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && funcname) return((char*)NULL);
+#endif
+
   if(G__DLLID[0]) dllid=G__DLLID;
   else if(G__PROJNAME[0]) dllid=G__PROJNAME;
   else dllid="";
@@ -1889,6 +1893,10 @@ int flag;
 {
 #ifdef G__GENWINDEF
   G__isDLL = flag;
+#else
+#ifndef G__OLDIMPLEMENTATION1911
+  if(flag) return;
+#endif
 #endif
 }
 
@@ -1917,6 +1925,10 @@ char *cintlib;
 {
 #ifdef G__GENWINDEF
   strcpy(G__CINTLIBNAME,cintlib);
+#else
+#ifndef G__OLDIMPLEMENTATION1911
+  if(cintlib) return;
+#endif
 #endif
 }
 
@@ -3070,6 +3082,9 @@ struct G__ifunc_table *ifunc;
   char buf[G__LONGLINE]; /* 1481 */
 
   G__ASSERT( tagnum != -1 );
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && hfp) return;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1481
   if(G__PROTECTED==ifunc->access[ifn]
@@ -3827,6 +3842,10 @@ int isnonpublicnew;
 
   G__ASSERT( tagnum != -1 );
 
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && hfp && isassignmentoperator) return;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1054
   if('n'==G__struct.type[tagnum]) return;
 #endif
@@ -4237,6 +4256,10 @@ struct G__ifunc_table *ifunc;
 #else
   char castname[G__ONELINE];
 #endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1911
+  if(0 && hfp) return;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1823
@@ -6706,7 +6729,7 @@ FILE *fp;
 #endif
 }
 
-#ifdef G__TRUEP2F
+#ifdef G__P2FDECL  /* used to be G__TRUEP2F */
 /**************************************************************************
 * G__declaretruep2f()
 *
@@ -6758,9 +6781,13 @@ int j;
       break;
     }
   }
+#else
+  if(fp && ifunc && j) return;
 #endif
 }
+#endif
 
+#ifdef G__TRUEP2F 
 /**************************************************************************
 * G__printtruep2f()
 *
@@ -6916,7 +6943,7 @@ FILE *fp;
 	  G__is_operator_newdelete |= G__IS_OPERATOR_DELETE;
 	}
 
-#ifdef G__TRUEP2F
+#ifdef G__P2FDECL  /* used to be G__TRUEP2F */
 	G__declaretruep2f(fp,ifunc,j);
 #endif
 
@@ -8639,6 +8666,9 @@ int link_stub;
       funclist=G__add_templatefunc(buf,&fpara,hash,funclist,x_ifunc,0);
       if(funclist) {
 	funclist->ifunc->globalcomp[funclist->ifn] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1915
+	G__funclist_delete(funclist);
+#endif
 	++done;
       }
     }
