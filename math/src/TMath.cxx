@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.39 2003/07/04 13:05:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.40 2003/07/27 15:36:28 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -546,7 +546,7 @@ Float_t TMath::Normalize(Float_t v[3])
    // Normalize a vector v in place.
    // Returns the norm of the original vector.
 
-   Float_t d = Sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+   Float_t d = Sqrt((Double_t)(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]));
    if (d != 0) {
       v[0] /= d;
       v[1] /= d;
