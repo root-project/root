@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.7 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.8 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -82,10 +82,10 @@ public:
    TObjArray          *GetElements() const {return fElements;}
    Int_t               GetNumber() const {return fNumber;}
    void                ls(Option_t *option="") const;
-   Int_t               ReadBuffer(TBuffer &b, char *pointer);
-   Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc);
-   Int_t               WriteBuffer(TBuffer &b, char *pointer);
-   Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc);
+   Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
+   Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
+   Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
+   Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    
