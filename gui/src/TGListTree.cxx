@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.22 2003/07/01 11:40:15 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.23 2003/08/03 06:41:15 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -449,7 +449,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
                End();
                break;
             case kKey_F:
-//               Search();
+               Search();
                break;
             case kKey_G:
 //               RepeatSearch();
@@ -495,7 +495,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
                Layout();
                break;
             case kKey_F7:
-//               Search();
+               Search();
                break;
             case kKey_Left:
 //               LineLeft(event->fState & kKeyShiftMask);
@@ -1569,6 +1569,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    const char *p = path, *s;
    char dirname[256];
    TGListTreeItem *item = 0;
+   TGListTreeItem *found = 0;
 
    while (1) {
       while (*p && *p == '/') p++;
@@ -1581,8 +1582,10 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
          strncpy(dirname, p, s-p);
          dirname[s-p] = 0;
       }
+      found = item;
       item = FindChildByName(item, dirname);
-      if (item || !s) return item;
+
+      if (!s) return item;
       p = ++s;
    }
    return 0;
