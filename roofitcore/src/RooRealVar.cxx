@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.2 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.3 2001/03/19 15:57:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -206,8 +206,13 @@ Bool_t RooRealVar::isValid()
 }
 
 
-Bool_t RooRealVar::isValid(Double_t value) {
-  return inIntegRange(value) ;
+Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) {
+  if (!inIntegRange(value)) {
+    if (verbose)
+      cout << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range" << endl ;
+    return kFALSE ;
+  }
+  return kTRUE ;
 }
 
 
@@ -240,16 +245,11 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   if (compact) {
     // Compact mode: Read single token
     if (parser.readDouble(value,verbose)) return kTRUE ;
-
-    if (inIntegRange(value)) {
+    if (isValid(value,kTRUE)) {
       setVal(value) ;
-      return kFALSE ;  
+      return kFALSE ;
     } else {
-      if (verbose) {
-	cout << "RooRealVar::readFromStream(" << GetName() 
-	     << "): value out of range: " << value << endl ;
-      }
-      return kTRUE;
+      return kTRUE ;
     }
 
   } else {
@@ -302,7 +302,6 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	// Defer value assignment to end
       }
     }    
-
     if (haveValue) setVal(value) ;
     return kFALSE ;
   }

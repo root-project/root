@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooStreamParser.cc,v 1.1 2001/03/19 15:57:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -142,6 +142,7 @@ Bool_t RooStreamParser::expectToken(TString expected, Bool_t zapOnError)
 Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t zapOnError) 
 {
   TString token=readToken() ;
+  if (token.IsNull()) return kTRUE ;
   return convertToDouble(token,value) ;
   
 }
@@ -165,6 +166,7 @@ Bool_t RooStreamParser::convertToDouble(TString token, Double_t& value)
 Bool_t RooStreamParser::readInteger(Int_t value, Bool_t zapOnError) 
 {
   TString token=readToken() ;
+  if (token.IsNull()) return kTRUE ;
   return convertToInteger(token,value) ;
 }
 
@@ -187,6 +189,7 @@ Bool_t RooStreamParser::convertToInteger(TString token, Int_t& value)
 Bool_t RooStreamParser::readString(TString& value, Bool_t zapOnError) 
 {
   TString token=readToken() ;
+  if (token.IsNull()) return kTRUE ;
   return convertToString(token,value) ;
 }
 

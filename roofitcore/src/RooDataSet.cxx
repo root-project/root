@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.4 2001/03/17 00:32:54 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.5 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,6 +46,7 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/Roo1DTable.hh"
+#include "RooFitCore/RooFormula.hh"
 
 ClassImp(RooDataSet)
 
@@ -124,14 +125,14 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
   }
 
   // Create an event selector using the cuts provided, if any.
-  TTreeFormula *select(0);
-  if(0 != cuts && strlen(cuts)) {
-    select=new TTreeFormula("Selection",cuts,t);
-    if (!select || !select->GetNdim()) {
-      delete select;
-      select=0;
-    }
-  }
+  RooFormula* select(0) ;
+   if(0 != cuts && strlen(cuts)) {
+     select=new RooFormula(cuts,cuts,_vars);
+     if (!select || !select->ok()) {
+       delete select;
+       return ;
+     }
+   }
 
   // Loop over events in source tree   
   RooAbsArg* destArg(0) ;
@@ -142,10 +143,7 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
     tClone->GetEntry(entryNumber,1);
     
     // Does this event pass the cuts?
-    if(0 != select) {
-      select->GetNdata();
-      if (select->EvalInstance(0)==0) continue;
-    }
+    if (select && select->eval()==0) continue ; 
         
     // Copy from source to destination
      _iterator->Reset() ;
@@ -161,7 +159,7 @@ void RooDataSet::loadValues(TTree *t, const char *cuts)
    }
 
    SetTitle(t->GetTitle());
-   delete select;
+   if (select) delete select;
    delete tClone ;
 }
 
@@ -229,7 +227,17 @@ void RooDataSet::add(const RooArgSet& data) {
 TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
 {
   // Plot distribution given variable for this data set 
-  
+
+  // Create selection formula if selection cuts are specified
+  RooFormula* select(0) ;
+   if(0 != cuts && strlen(cuts)) {
+     select=new RooFormula(cuts,cuts,_vars);
+     if (!select || !select->ok()) {
+       delete select;
+       return 0 ;
+     }
+   }
+    
   // First see if var is in data set 
   RooAbsReal* plotVar = (RooAbsReal*) _vars.find(var.GetName()) ;
   Bool_t ownPlotVar(kFALSE) ;
@@ -256,10 +264,13 @@ TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
     Int_t entryNumber=GetEntryNumber(i);
     if (entryNumber<0) break;
     get(entryNumber);
+
+    if (select && select->eval()==0) continue ;
     histo->Fill(plotVar->getVal()) ;
   }
 
   if (ownPlotVar) delete plotVar ;
+  if (select) delete select ;
   return histo ;
 }
 
@@ -404,64 +415,25 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgSet &variables,
 	  }     
 	}
       else {	
-	// read a value for each variable on one line
-	Int_t c, nRead(0), size= data->_vars.GetSize();
-	for(Int_t index= 0; index < size; index++) {
-	  RooAbsArg *var= (RooAbsArg*)data->_vars.At(index);
-	  // skip leading white space
-	  while((c= file.peek()) == ' ' || c == '\t') file.get();
-	  // is this the end of the current line or the file?
-	  if(file.peek() == '\n') {
-	    file.get();
-	    if(index == 0) {
-	      if(debug) cout << "skipping blank line " << line << endl;
-	      nRead= -1;
-	    }
-	    else {
-	      cout << "RooDataSet::read: found unexpected end of line "
-		   << line << endl;
-	    }
-	    break;
-	  }
-	  
-	  // Read from stream in compact mode
-	  Bool_t isValid = !var->readFromStream(file,kTRUE,verbose) ;
 
-	  if(file.eof()) {
-	    if(index == 0) {
-	      if(debug) cout << "reached normal end-of-file" << endl;
-	      nRead= -1;
-	    }
-	    else {
-	      cout << "RooDataSet::read: found unexpected end of file" << endl;
-	    }
-	    break;
-	  }
+	// Skip empty lines 
+	if(file.peek() == '\n') { file.get(); }
 
-	  if (!isValid) {
-	    while(file.good() && !file.eof() && (c= file.get()) != '\n');
-	    outOfRange++;
-	    nRead= -1;
-	    break;
-	  }
+	// Read single line
+	Bool_t readError = data->_vars.readFromStream(file,kTRUE,verbose) ;
 
-	  if(!file.good() || file.eof()) {
-	    cout << "RooDataSet::read: error reading line "
-		 << line << endl;
-	    break;
-	  }
-	  nRead++;
+	// Stop at end of file or on read error
+	if(file.eof()) break ;	
+	if(!file.good()) {
+	  cout << "RooDataSet::read(static): read error at line " << line << endl ;
+	  break;
+	}	
+
+	if (readError) {
+	  outOfRange++ ;
+	  continue ;
 	}
-	if(nRead < 0) continue;
-	if(nRead < size) break;
 	data->Fill(); // store this event
-	// skip over the rest of the line
-	Bool_t extra(kFALSE);
-	while(file.good() && !file.eof() && (c= file.get()) != '\n') {
-	  if(c != ' ' && c != '\t') extra= kTRUE;
-	}
-	if(extra) cout << "RooDataSet::read: ignoring extra input "
-		       << "on the end of line " << line << endl;
       }
     }
 

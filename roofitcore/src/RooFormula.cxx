@@ -11,9 +11,12 @@
  *****************************************************************************/
 #include "BaBar/BaBar.hh"
 
-#include "RooFitCore/RooFormula.hh"
-#include "TROOT.h"
 #include <iostream.h>
+#include "TROOT.h"
+#include "TClass.h"
+#include "RooFitCore/RooFormula.hh"
+#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsCategory.hh"
 
 ClassImp(RooFormula)
 
@@ -21,13 +24,15 @@ RooFormula::RooFormula() : TFormula()
 {
 }
 
-RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) : TFormula(), _origList(&list)
+RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) : 
+  TFormula(), _origList(&list), _isOK(kTRUE) 
 {
   SetName(name) ;
   SetTitle(formula) ;
 
   if (Compile()) {
-    cout << "RooFormula: compile error" << endl ;
+    cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;
+    _isOK = kFALSE ;
     return ;
   }
 }
@@ -41,7 +46,7 @@ Bool_t RooFormula::reCompile(const char* newFormula)
   TString oldFormula=GetTitle() ;
   if (Compile(newFormula)) {
     cout << "RooFormula::reCompile: new equation doesn't compile, formula unchanged" << endl ;
-    reCompile(oldFormula) ;
+    reCompile(oldFormula) ;    
     return kTRUE ;
   }
 
@@ -51,7 +56,7 @@ Bool_t RooFormula::reCompile(const char* newFormula)
 
 
 RooFormula::RooFormula(const RooFormula& other) : 
-  TFormula(other), _origList(other._origList)
+  TFormula(other), _origList(other._origList), _isOK(other._isOK) 
 {
   int i ;
   for (i=0 ; i<other._useList.GetEntries() ; i++) {
@@ -113,6 +118,10 @@ Bool_t RooFormula::changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll)
 Double_t RooFormula::eval() 
 { 
   // WVE sanity check should go here
+  if (!_isOK) {
+    cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile" << endl ;
+    return 0. ;
+  }
   return EvalPar(0,0) ; 
 }
 
@@ -121,7 +130,12 @@ Double_t
 RooFormula::DefinedValue(Int_t code) {
   // Return current value for parameter indicated by internal reference code
   if (code>=_useList.GetEntries()) return 0 ;
-  return ((RooAbsReal*)_useList.At(code))->getVal() ;
+  RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
+  if (arg->IsA()->InheritsFrom("RooAbsReal")) {
+    return ((RooAbsReal*)arg)->getVal() ;
+  } else if (arg->IsA()->InheritsFrom("RooAbsCategory")) {
+    return ((RooAbsCategory*)_useList.At(code))->getIndex() ;
+  }
 }
 
 

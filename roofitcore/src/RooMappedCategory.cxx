@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.2 2001/03/17 00:32:55 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.3 2001/03/19 15:57:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -195,7 +195,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t ver
       readToken=kTRUE ;
 
       destKey = token ;
-      if (parser.expectToken(":",kTRUE)) break ;
+      if (parser.expectToken(":",kTRUE)) return kTRUE ;
 
       // Loop over list of sources for this destination
       while(1) { 
@@ -204,15 +204,15 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t ver
 	if (!token.CompareTo("-")) {	  
 	  // Map a range
 	  srcKey2 = parser.readToken() ;
-	  mapRange(srcKey1,srcKey2,destKey) ;
+	  if (mapRange(srcKey1,srcKey2,destKey)) return kTRUE ;
 	  token = parser.readToken() ;
 	} else {
 	  if (!srcKey1.CompareTo("*")) {
 	    // Set the default destination
-	    setDefault(destKey) ;
+	    if (setDefault(destKey)) return kTRUE ;
 	  } else {
 	    // Map a value
-	    mapValue(srcKey1,destKey) ;
+	    if (mapValue(srcKey1,destKey)) return kTRUE ;
 	  }
 	}
 
@@ -224,6 +224,7 @@ Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t ver
 	} 	
       }      
     } 
+    return kFALSE ;
   }
 }
 
@@ -234,6 +235,26 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact)
   if (compact) {
     cout << "RooMappedCategory::writeToStream(" << GetName() << "): can't write in compact mode" << endl ;    
   } else {
-    os << getIndex() ;
+    int i ;
+    RooCatType lastOut("",999999) ;
+    Bool_t first(kTRUE) ;
+    for (i=0 ; i<_inlo.GetEntries() ; i++) {
+      RooCatType* inlo = (RooCatType*) _inlo.At(i) ;
+      RooCatType* inhi = (RooCatType*) _inhi.At(i) ;
+      RooCatType* out = (RooCatType*) _out.At(i) ;
+
+      if (*out != lastOut) {
+	cout << (first?"":" ") << out->GetName() << ":" ;
+	first=kFALSE ;
+      } else {
+	cout << "," ;
+      }
+      cout << inlo->GetName() ;
+      if (*inhi != *inlo) cout << "-" << inhi->GetName() ;
+      lastOut = *out ;
+    }
+    if (!TString(_defout.GetName()).IsNull()) {
+      cout << " " << _defout.GetName() << ":*" ;
+    }
   }
 }

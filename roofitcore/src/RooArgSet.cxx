@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.3 2001/03/19 15:57:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -239,16 +239,27 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   if (compact) {
 
     TIterator *iterator= MakeIterator();
+    RooStreamParser parser(is) ;
     RooAbsArg *next(0);
     while(0 != (next= (RooAbsArg*)iterator->Next())) {
-      next->readFromStream(is,kTRUE,verbose) ;
+      if (next->readFromStream(is,kTRUE,verbose)) {
+	parser.zapToEnd() ;
+	return kTRUE ;
+      }
     }
     delete iterator;    
+    TString rest = parser.readLine() ;
+    if (!rest.IsNull()) {
+      cout << "RooArgSet::readFromStream(" << GetName() 
+	   << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+    }
+    return kFALSE ;
 
   } else {
 
     RooStreamParser parser(is) ;
     TString token ;
+    Bool_t retVal(kFALSE) ;
     while (1) {
       token = parser.readToken() ;
       if (token.IsNull()) break ;
@@ -256,15 +267,17 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       if (arg = find(token)) {
 	if (parser.expectToken("=",kTRUE)) {
 	  parser.zapToEnd() ;
+	  retVal=kTRUE ;
 	  continue ;
 	}
-	arg->readFromStream(is,kFALSE,verbose) ;	
+	retVal |= arg->readFromStream(is,kFALSE,verbose) ;	
       } else {
 	cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
 	     << token << " not in list, ignored" << endl ;
 	parser.zapToEnd() ;
       }
     }
+    return retVal ;
   }
 }
 
