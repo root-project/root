@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.14 2001/05/09 17:53:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.15 2001/05/23 09:52:11 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -433,7 +433,7 @@ void TClonesArray::Streamer(TBuffer &b)
             fCont[i] = fKeep->fCont[i];
             fLast = i;
          }
-         sinfo->ReadBufferClones(b,this,nobjects,-1);
+         sinfo->ReadBufferClones(b,this,nobjects,-1,0);
 
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
@@ -464,7 +464,7 @@ void TClonesArray::Streamer(TBuffer &b)
       TStreamerInfo *sinfo = fClass->GetStreamerInfo();
       sinfo->ForceWriteInfo();
       if (CanBypassStreamer()) {
-         sinfo->WriteBufferClones(b,this,nobjects,-1);
+         sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fCont[i]) {
