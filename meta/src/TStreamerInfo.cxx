@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.51 2001/04/12 19:17:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.52 2001/04/13 12:35:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -367,12 +367,15 @@ void TStreamerInfo::BuildOld()
    Streamer_t streamer = 0;
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
+//element->ls();
       if (element->IsA() == TStreamerBase::Class()) {
          TStreamerBase *base = (TStreamerBase*)element;
          TClass *baseclass = base->GetClassPointer();
+         baseclass->BuildRealData();
          Int_t version = base->GetBaseVersion();
          TStreamerInfo *infobase = baseclass->GetStreamerInfo(version);
-         if (infobase->GetNdata() == 0) infobase->BuildOld();
+         //if (infobase->GetNdata() == 0) infobase->BuildOld();
+         if (infobase->GetTypes() == 0) infobase->BuildOld();
          element->Init();
          Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
          if (baseOffset < 0) baseOffset = 0;
@@ -404,6 +407,7 @@ void TStreamerInfo::BuildOld()
          fClass->BuildRealData();
          streamer = 0;
          offset = GetDataMemberOffset(dm,streamer);
+//printf("offsetA=%d\n",offset);
          element->SetOffset(offset);
          element->Init(fClass);
          element->SetStreamer(streamer);
@@ -587,8 +591,8 @@ void TStreamerInfo::Compile()
    fOptimized = kFALSE;
    fNdata = 0;
    Int_t ndata = fElements->GetEntries();
+   fType   = new Int_t[ndata+1];
    if (ndata == 0) return;
-   fType   = new Int_t[ndata];
    fNewType= new Int_t[ndata];
    fOffset = new Int_t[ndata];
    fLength = new Int_t[ndata];
@@ -816,6 +820,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    // Compute data member offset
    // return pointer to the Streamer function if one exists
 
+//printf("GetDataMemberOffset, class:%s, dm=%s\n",fClass->GetName(),dm->GetName());
    TIter nextr(fClass->GetListOfRealData());
    char dmbracket[256];
    sprintf(dmbracket,"%s[",dm->GetName());
@@ -824,6 +829,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
+//printf("rdmc=%s\n",rdmc);
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
@@ -999,14 +1005,17 @@ Int_t TStreamerInfo::New(const char *p)
    TIter next(fElements);
    TStreamerElement *element;
    //fSize = 0;
+//printf("Creating New:%s of length:%d at:%x\n",GetName(),fSize,p);
    while ((element = (TStreamerElement*)next())) {
       Int_t etype = element->GetType();
       if (element->GetOffset() == kMissing) continue;
+// element->ls();
       if (etype == kObjectp) {
          // if the option "->" is given in the data member comment field 
          // it is assumed that the object exist before reading data in.
          // In this case an object must be created
          if (strstr(element->GetTitle(),"->") == element->GetTitle()) {
+// printf("We are here at A\n");
             char line[200];
             char pname[100];
             char clonesClass[40];
@@ -1014,8 +1023,8 @@ Int_t TStreamerInfo::New(const char *p)
             // must be specified
             sprintf(clonesClass,"%s"," ");
             if (element->GetClassPointer() == TClonesArray::Class()) {
-               char *bracket1 = strchr(element->GetTitle(),'(');
-               char *bracket2 = strchr(element->GetTitle(),')');
+               char *bracket1 = (char*)strchr(element->GetTitle(),'(');
+               char *bracket2 = (char*)strchr(element->GetTitle(),')');
                if (bracket1 && bracket2) {
                   clonesClass[0] = '"';
                   strncat(clonesClass,bracket1+1,bracket2-bracket1-1);
@@ -1036,6 +1045,7 @@ Int_t TStreamerInfo::New(const char *p)
          TClass *cle = element->GetClassPointer();
          if (!cle) continue;
 //         printf("New object class: %s fSize=%d, at %x\n",GetName(),fSize,(Seek_t)((char*)p + element->GetOffset()));
+//printf("We are here at B, offset=%d\n",element->GetOffset());
          cle->New((char*)p + element->GetOffset());
       }
    }
@@ -1876,12 +1886,12 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
-      if (gDebug > 1) {
-         TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
-      }
       leng   = fLength[i];
       offset = baseOffset + fOffset[i];
+      if (gDebug > 1) {
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, nc=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),nc);
+      }
       switch (fType[i]) {
          // write basic types
          case kChar:              ReadCBasicType(Char_t)
@@ -1947,7 +1957,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k);
                Int_t *x=(Int_t*)(pointer+offset);
                b >> *x;
-               //Int_t *counter = (Int_t*)fMethod[i];
+               //Int_t *counter = (Int_t*)fMethod[i]; 
                //*counter = *x;
             }
             break;}
