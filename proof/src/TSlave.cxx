@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.9 2002/03/20 18:54:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.10 2002/04/19 18:24:01 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -147,19 +147,19 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          TMessage mess;
 
-         if (!fProof->IsMaster()) {
-            // Send user name and passwd to remote host (use trivial
-            // inverted byte encoding)
-            TString passwd = fProof->fPasswd;
-            for (int i = 0; i < passwd.Length(); i++) {
-               char inv = ~passwd(i);
-               passwd.Replace(i, 1, inv);
-            }
+         // Send user name and passwd to remote host (use trivial
+         // inverted byte encoding)
+         TString passwd = fProof->fPasswd;
+         for (int i = 0; i < passwd.Length(); i++) {
+            char inv = ~passwd(i);
+            passwd.Replace(i, 1, inv);
+         }
 
+         if (!fProof->IsMaster())
             mess << fProof->fUser << passwd << fProof->fConfFile <<
                     fProof->fProtocol;
-         } else
-            mess << fProof->fUser << fProof->fProtocol << fOrdinal;
+         else
+            mess << fProof->fUser << passwd << fProof->fProtocol << fOrdinal;
 
          fSocket->Send(mess);
 
