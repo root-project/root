@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.146 2004/10/07 08:19:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.147 2004/10/08 15:19:37 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -29,7 +29,6 @@
 #include "TVirtualPad.h"
 #include "TClass.h"
 #include "TClassEdit.h"
-#include "TBaseClass.h"
 #include "TDataType.h"
 #include "TDataMember.h"
 #include "TStreamerInfo.h"
@@ -40,6 +39,7 @@
 #include "Api.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
+#include "TMethodBrowsable.h"
 
 const Int_t kMaxLen = 1024;
 R__EXTERN  TTree *gTree;
@@ -62,6 +62,7 @@ TBranchElement::TBranchElement(): TBranch()
    fNdata = 1;
    fCollProxy = 0;
    fCheckSum = 0;
+   fBrowsableMethods = 0;
 }
 
 
@@ -96,6 +97,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchCount2 = 0;
    fObject       = 0;
    fBranchPointer= 0;
+   fBrowsableMethods = 0;
    fNdata        = 1;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
@@ -352,6 +354,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fObject       = 0;
    fBranchPointer= 0;
    fMaximum      = 0;
+   fBrowsableMethods = 0;
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -446,6 +449,7 @@ TBranchElement::TBranchElement(const char *bname, TVirtualCollectionProxy *cont,
    fObject       = 0;
    fBranchPointer= 0;
    fMaximum      = 0;
+   fBrowsableMethods = 0;
 
    fTree       = gTree;
    fDirectory  = fTree->GetDirectory();
@@ -527,6 +531,7 @@ TBranchElement::~TBranchElement()
    if (fType==4) delete fCollProxy;
    fCollProxy=0;
    fBranches.Delete();
+   delete fBrowsableMethods;
 
    //SetAddress may have allocated an object. Must delete it
    if (TestBit(kDeleteObject)) {
@@ -779,6 +784,9 @@ void TBranchElement::Browse(TBrowser *b)
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 0) {
       fBranches.Browse(b);
+      // add all public const methods without params
+      if (GetBrowsableMethods())
+         GetBrowsableMethods()->Browse(b);
    } else {
       // Get the name and strip any extra brackets
       // in order to get the full arrays.
@@ -1027,6 +1035,27 @@ void TBranchElement::FillLeaves(TBuffer &b)
      }
   }
 }
+
+//______________________________________________________________________________
+TList *TBranchElement::GetBrowsableMethods() {
+// This function (sets up and) returns a list of methods
+// for the object contained in this TBranchElement, which can
+// be used by a TBrowser to draw.
+// These methods have to be const, may not have any parameter 
+// without default value, must be public, and must have a 
+// (non-void) return value.
+
+   if (fBrowsableMethods) return fBrowsableMethods;
+   TClass* cl=gROOT->GetClass(GetClassName());
+   if (!cl) return 0;
+
+   if (cl==TClonesArray::Class())
+      cl=gROOT->GetClass(GetClonesName());
+   if (!cl) return 0;
+   fBrowsableMethods=TMethodBrowsable::GetMethodBrowsables(this, cl);
+   return fBrowsableMethods;
+}
+
 
 //______________________________________________________________________________
 Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.33 2004/03/09 08:16:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.34 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -50,6 +50,7 @@ TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
+    TList              *fBrowsableMethods; //!Pointer to list of browsable methods for the object
 private:
     Bool_t              IsMissingCollection() const; 
     TVirtualCollectionProxy *GetCollectionProxy();
@@ -72,6 +73,7 @@ public:
             void     FillLeaves(TBuffer &b);
     TBranchElement  *GetBranchCount() const {return fBranchCount;}
     TBranchElement  *GetBranchCount2() const {return fBranchCount2;}
+    TList           *GetBrowsableMethods();
     UInt_t           GetCheckSum() {return fCheckSum;}
 	virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}

@@ -180,6 +180,16 @@ pattern = TLeaf*
 icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
 
+[root/tmethodbrowsable-leaf]
+pattern = TMethodBrowsable-leaf
+icon = leaf_method_s.xpm leaf_method_t.xpm
+action = ->Browse()
+
+[root/tmethodbrowsable-branch]
+pattern = TMethodBrowsable-branch
+icon = return_object_s.xpm return_object_t.xpm
+action = ->Browse()
+
 # actions used by GuiBuilder
 [root/textbutton]
 pattern = TGTextButton
