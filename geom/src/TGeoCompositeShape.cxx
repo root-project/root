@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.19 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.20 2004/06/01 11:46:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -317,17 +317,14 @@ void TGeoCompositeShape::MakeNode(const char *expression)
 void TGeoCompositeShape::Paint(Option_t *option)
 {
 // paint this shape according to option
-   TGeoHMatrix *glmat = gGeoManager->GetCurrentMatrix();
+   TGeoHMatrix *current = gGeoManager->GetCurrentMatrix();
+   TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
+   *glmat = current;
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   PaintNext(glmat, option);
-}
-
-//_____________________________________________________________________________
-void TGeoCompositeShape::PaintNext(TGeoHMatrix *glmat, Option_t *option)
-{
-// paint this shape according to option
-   if (fNode) fNode->PaintNext(glmat, option);
+   gGeoManager->SetMatrixTransform(kTRUE);
+   if (fNode) fNode->Paint(option);
+   gGeoManager->SetMatrixTransform(kFALSE);
 }
 
 //_____________________________________________________________________________

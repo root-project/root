@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.25 2004/02/10 06:58:19 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.26 2004/04/13 07:04:42 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -439,18 +439,7 @@ void TGeoBBox::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
-   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintBox(this, option);
-}
-
-//_____________________________________________________________________________
-void TGeoBBox::PaintNext(TGeoHMatrix *glmat, Option_t *option)
-{
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintBox(this, option, glmat);
 }
 
 //_____________________________________________________________________________

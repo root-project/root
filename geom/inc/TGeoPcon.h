@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.13 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.14 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -79,7 +79,6 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
-   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    Double_t             &Phi1()          {return fPhi1;}
    Double_t             &Dphi()          {return fDphi;}
    Double_t             &Rmin(Int_t ipl) {return fRmin[ipl];}

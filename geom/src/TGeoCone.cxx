@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.27 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.28 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -615,18 +615,7 @@ void TGeoCone::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
-   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTube(this, option);
-}
-
-//_____________________________________________________________________________
-void TGeoCone::PaintNext(TGeoHMatrix *glmat, Option_t *option)
-{
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintTube(this, option, glmat);
 }
 
 //_____________________________________________________________________________
@@ -1530,19 +1519,9 @@ void TGeoConeSeg::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
-   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintTubs(this, option);
 }
 
-//_____________________________________________________________________________
-void TGeoConeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
-{
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintTubs(this, option, glmat);
-}
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const

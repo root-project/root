@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.16 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.17 2004/04/22 14:07:14 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -420,7 +420,7 @@ void TGeoEltu::SetPoints(Double_t *buff) const
         for (j = 0; j < n; j++) {
             phi = j*dphi*TMath::DegToRad();
             sph=TMath::Sin(phi);
-            cph=TMath::Sin(phi);
+            cph=TMath::Cos(phi);
             r2=(a2*b2)/(b2+(a2-b2)*sph*sph);
             r=TMath::Sqrt(r2);
             buff[indx+6*n] = buff[indx] = r*cph;

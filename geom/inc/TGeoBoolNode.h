@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.5 2003/09/04 12:38:22 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.6 2004/06/01 11:46:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -68,8 +68,7 @@ public:
    TGeoMatrix       *GetRightMatrix() const {return fRightMat;}
    TGeoShape        *GetLeftShape() const {return fLeft;}
    TGeoShape        *GetRightShape() const {return fRight;}
-   virtual void      Paint(Option_t * /*option*/) {;}
-   virtual void      PaintNext(TGeoHMatrix *glmat, Option_t *option);
+   virtual void      Paint(Option_t *option);
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SetPoints(Double_t *buff) const = 0;
    virtual void      SetPoints(Float_t *buff)  const = 0;

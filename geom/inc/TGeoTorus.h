@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.4 2003/12/11 10:34:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.5 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -80,7 +80,6 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
-   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);
    virtual void          SetDimensions(Double_t *param);

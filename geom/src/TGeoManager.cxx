@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.82 2004/05/12 07:02:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.83 2004/05/26 15:11:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -413,6 +413,7 @@
 #include "TFile.h"
 #include "TKey.h"
 
+#include "TGeoElement.h"
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
 #include "TGeoMatrix.h"
@@ -420,6 +421,7 @@
 #include "TGeoPhysicalNode.h"
 #include "TGeoManager.h"
 #include "TGeoPara.h"
+#include "TGeoParaboloid.h"
 #include "TGeoTube.h"
 #include "TGeoEltu.h"
 #include "TGeoCone.h"
@@ -453,6 +455,7 @@ TGeoManager::TGeoManager()
       Init();
       gGeoIdentity = 0;
    }
+   BuildDefaultMaterials(); // not creating any data member
 }
 
 //_____________________________________________________________________________
@@ -547,6 +550,8 @@ void TGeoManager::Init()
    fOverlapMark = 0;
    fOverlapSize = 1000;
    fOverlapClusters = new Int_t[fOverlapSize];
+   fMatrixTransform = kFALSE;
+   fGLMatrix = new TGeoHMatrix();
    printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
@@ -594,6 +599,7 @@ TGeoManager::~TGeoManager()
    delete [] fDblBuffer;
    delete [] fIntBuffer;
    delete [] fOverlapClusters;
+   delete fGLMatrix;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -3389,6 +3395,21 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
    return vol;
 }
 //_____________________________________________________________________________
+TGeoVolume *TGeoManager::MakeParaboloid(const char *name, const TGeoMedium *medium,
+                                        Double_t rlo, Double_t rhi, Double_t dz)
+{
+// Make in one step a volume pointing to a tube shape with given medium
+   TGeoParaboloid *parab = new TGeoParaboloid(rlo, rhi, dz);
+   TGeoVolume *vol = 0;
+   if (parab->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(parab);
+   } else {   
+      vol = new TGeoVolume(name, parab, medium);
+   }   
+   return vol;
+}
+//_____________________________________________________________________________
 TGeoVolume *TGeoManager::MakeCtub(const char *name, const TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
@@ -3596,7 +3617,8 @@ Int_t TGeoManager::GetNsegments() const
 void TGeoManager::BuildDefaultMaterials()
 {
 // Build the default materials. A list of those can be found in ...
-   new TGeoMaterial("Air", 14.61, 7.3, 0.001205);
+//   new TGeoMaterial("Air", 14.61, 7.3, 0.001205);
+   new TGeoElementTable(200);
 }
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.8 2003/07/31 20:19:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.9 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -27,9 +27,13 @@
 #include "TAttFill.h"
 #endif
 
+#ifndef ROOT_TGeoElement
+#include "TGeoElement.h"
+#endif
+
+
 // forward declarations
 
-//class TGeoShader;
 
 /*************************************************************************
  * TGeoMaterial - base class describing materials 
@@ -61,6 +65,8 @@ public:
    TGeoMaterial(const char *name);
    TGeoMaterial(const char *name, Double_t a, Double_t z, 
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
+   TGeoMaterial(const char *name, TGeoElement *elem, 
+                Double_t rho, Double_t radlen=0, Double_t intlen=0);
    // destructor
    virtual ~TGeoMaterial();
    // methods
@@ -70,15 +76,18 @@ public:
    virtual Double_t         GetZ()  const      {return fZ;}
    virtual Int_t            GetDefaultColor() const;
    virtual Double_t         GetDensity() const {return fDensity;}
+   virtual TGeoElement     *GetElement(Int_t i=0) const;
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();
    virtual TObject         *GetCerenkovProperties() const {return fCerenkov;}
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
+   Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
    void                     SetIndex(Int_t index) {fIndex=index;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
+   void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
    static  Double_t         ScreenFactor(Double_t z);
 
    
@@ -111,7 +120,9 @@ public:
    virtual ~TGeoMixture();
    // methods
    void                     DefineElement(Int_t i, Double_t a, Double_t z, Double_t weight);
+   void                     DefineElement(Int_t i, TGeoElement *elem, Double_t weight);
    virtual Int_t            GetByteCount() const {return 48+12*fNelements;}
+   virtual TGeoElement     *GetElement(Int_t i=0) const;
    Int_t                    GetNelements() const {return fNelements;}
    Double_t                *GetZmixt() const     {return fZmixture;}
    Double_t                *GetAmixt() const     {return fAmixture;}

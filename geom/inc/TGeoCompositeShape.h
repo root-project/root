@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.13 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.14 2004/06/01 11:46:25 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -60,7 +60,6 @@ public:
    virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    void                  MakeNode(const char *expression);
    virtual void          Paint(Option_t *option);
-   virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SetDimensions(Double_t * /*param*/) {;}
    virtual void          SetPoints(Double_t *buff) const;

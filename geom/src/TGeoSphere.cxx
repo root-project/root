@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.23 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.24 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -786,18 +786,7 @@ void TGeoSphere::Paint(Option_t *option)
 // paint this shape according to option
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
-   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
-   if (vol->GetShape() != (TGeoShape*)this) return;
    painter->PaintSphere(this, option);
-}
-
-//_____________________________________________________________________________
-void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
-{
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintSphere(this, option, glmat);
 }
 
 //_____________________________________________________________________________
