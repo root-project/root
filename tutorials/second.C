@@ -7,7 +7,6 @@
 
    TPaveLabel *pl = new TPaveLabel(3,22,17,23.7,"My second ROOT interactive session","br");
    pl->SetFillColor(18);
-   pl->SetTextSize(0.7);
    pl->Draw();
 
    TText t(0,0,"a");
