@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -960,13 +960,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1493,8 +1493,8 @@ void TPostScript::NewPage()
      PrintStr("@%%BoundingBox: ");
      WriteInteger(CMtoPS(0));
      WriteInteger(CMtoPS(0));
-     WriteInteger(CMtoPS(fXsize));
-     WriteInteger(CMtoPS(fYsize));
+     WriteInteger(CMtoPS(fXsize*gPad->GetAbsWNDC()));
+     WriteInteger(CMtoPS(fYsize*gPad->GetAbsHNDC()));
      PrintStr("@");
      Initialize();
      fBoundingBox  = kTRUE;
@@ -1663,7 +1663,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.3 2000/06/13 09:48:05 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
