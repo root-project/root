@@ -1,14 +1,14 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBCPGenDecay.cc,v 1.8 2002/09/11 10:44:17 jgsmith Exp $
+ *    File: $Id: RooBCPGenDecay.cc,v 1.9 2003/05/14 05:30:31 wverkerke Exp $
  * Authors:                                                                  *
  *   JGS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu *
  * History:
  *   15-Aug-2002 JGS Created initial version
  *   11-Sep-2002 JGS Mods to introduce mu (Mirna van Hoek, JGS, Nick Danielson)
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California,         *
+ * Copyright (c) 2000-2004, Regents of the University of California,         *
  *                          University of Colorado                           *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *

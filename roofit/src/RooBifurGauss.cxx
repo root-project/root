@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBifurGauss.cc,v 1.11 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBifurGauss.cc,v 1.12 2003/10/16 23:27:14 wverkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California,         *
+ * Copyright (c) 2000-2004, Regents of the University of California,         *
  *                          Colorado State University                        *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
@@ -22,7 +22,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.11 2002/09/10 02:01:31 verkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.12 2003/10/16 23:27:14 wverkerke Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,

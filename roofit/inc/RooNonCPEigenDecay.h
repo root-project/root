@@ -1,14 +1,14 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.7 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
  *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
  *   JS, Jan Stark,        Paris,            stark@slac.stanford.edu         *
  *   WV, Wouter Verkerke,  UC Santa Barbara, verkerke@slac.stanford.edu      *
  *                                                                           *                  
- * Copyright (c) 2000-2002, Regents of the University of California,         *
+ * Copyright (c) 2000-2004, Regents of the University of California,         *
  *                          IN2P3. All rights reserved.                      *
  *                                                                           *
  * History                                                                   *

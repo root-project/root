@@ -1,11 +1,11 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBifurGauss.rdl,v 1.7 2002/09/10 02:01:31 verkerke Exp $
  * Authors:                                                                  *
  *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California,         *
+ * Copyright (c) 2000-2004, Regents of the University of California,         *
  *                          Colorado State University                        *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
