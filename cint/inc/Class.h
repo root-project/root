@@ -113,6 +113,8 @@ G__ClassInfo {
   void *New();
   void *New(int n);
   void *New(void *arena);
+  void  Delete(void *p) const;
+  void  Destruct(void *p) const;
   int InstanceCount(); 
   void ResetInstanceCount();
   void IncInstanceCount();

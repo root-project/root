@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.14 2003/09/23 17:20:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.15 2003/11/26 21:48:27 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -67,8 +67,8 @@ TSelectorCint::~TSelectorCint()
    delete fFuncObj;
    delete fFuncInp;
    delete fFuncOut;
-   // We might have to call cl.Delete(fIntSelector): (which does not exist)
-   delete fIntSelector;
+
+   if (fIntSelector) fClass->Delete(fIntSelector);
    delete fClass;
 }
 
