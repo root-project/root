@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -729,6 +729,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kOneLevelUp:
                      if (fListLevel)
                         fListLevel = fListLevel->GetParent();
+                     fLt->ClearHighlighted();
+                     fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                      break;
@@ -780,6 +783,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   TGTreeLBEntry *e = (TGTreeLBEntry *) fFSComboBox->GetSelectedEntry();
                   if (e) {
                      fListLevel = fLt->FindItemByPathname(e->GetPath()->GetString());
+                     fLt->ClearHighlighted();
+                     fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                   }
@@ -964,6 +970,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
    // Default action when double clicking on icon.
 
    if (obj) {
+      Bool_t useLock = kTRUE;
+
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
@@ -971,9 +979,10 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          fIconBox->RemoveAll();
          TGListTreeItem *itm = 0;
 
-         if (fListLevel)
+         if (fListLevel) {
+            fLt->OpenItem(fListLevel);
             itm = fListLevel->GetFirstChild();
-         else
+         } else
             itm = fLt->GetFirstItem();
 
          while (itm && (itm->GetUserData() != obj))
@@ -998,6 +1007,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
                   fLt->DeleteItem(fListLevel);
                   TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName());
                   if (kitem) {
+                     obj = kobj;
+                     useLock = kFALSE;
                      kitem->SetUserData(kobj);
                      fListLevel = kitem;
                   } else
@@ -1010,9 +1021,9 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          }
       }
 
-      fTreeLock = kTRUE;
+      if (useLock) fTreeLock = kTRUE;
       obj->Browse(fBrowser);
-      fTreeLock = kFALSE;
+      if (useLock) fTreeLock = kFALSE;
 
       Chdir(fListLevel);
 
