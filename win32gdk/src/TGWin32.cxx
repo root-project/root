@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.15 2003/01/22 11:23:04 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.16 2003/01/28 20:07:36 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -1015,7 +1015,7 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
             fThreadP.dashes[i] = (gint8) 0;
          fThreadP.GC = gGCdash;
          fThreadP.iParam = gDashOffset;
-         fThreadP.iParam2 = sizeof(gDashList);
+         fThreadP.iParam2 = gDashSize;
          PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_DASHES, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
