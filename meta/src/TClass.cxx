@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.124 2003/07/24 09:17:20 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.125 2003/07/26 05:51:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1814,6 +1814,11 @@ void TClass::SetUnloaded()
    // class's code has been removed (unloaded) from the process's memory
 
    gInterpreter->SetClassInfo(this,kTRUE);
+   fDeclFileName = 0;
+   fDeclFileLine = 0;
+   fImplFileName = 0;
+   fImplFileLine = 0;
+   fTypeInfo     = 0;
    SetBit(kUnloaded);
 }
 
