@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.42 2002/05/29 21:06:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.43 2002/06/02 14:05:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -818,6 +818,7 @@ Stat_t TBranch::GetTotalSize() const
    totbytes += 3*4*fMaxBaskets; //fBasketBytes,fBasketEntry, fBasketSeek
    for (Int_t i=0;i<fNleaves;i++) {
       TLeaf *leaf = (TLeaf*)fLeaves.At(i);
+      leaf->IsA()->BuildRealData(leaf); //to make sure the dictionary is built
       totbytes += leaf->IsA()->GetStreamerInfo()->GetSize();
    }
    TBasket *basket = (TBasket*)fBaskets.Last();
