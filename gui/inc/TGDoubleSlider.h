@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.6 2003/07/04 08:48:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -66,7 +66,7 @@ enum EDoubleSliderSize {
 
 
 enum EDoubleSliderScale {
-   //--- scaling of slider
+   //--- type of slider scale
    kDoubleScaleNo        = BIT(0),
    kDoubleScaleDownRight = BIT(1),
    kDoubleScaleBoth      = BIT(2)
@@ -76,32 +76,30 @@ enum EDoubleSliderScale {
 class TGDoubleSlider : public TGFrame, public TGWidget {
 
 protected:
-   Float_t          fPos;           // logical position between fVmin and fVmax
-   Float_t          fSmin;          // logical position of min value of Slider
-   Float_t          fSmax;          // logical position of max value of Slider
-   Int_t            fRelPos;        // slider position in pixel coordinates
-   Float_t          fVmin;          // logical lower limit of slider
-   Float_t          fVmax;          // logical upper limit of slider
-   Int_t            fScale;         // tick mark scale
-   Int_t            fScaleType;     // tick mark scale type (no, downright, both)
-   Bool_t           fDragging;      // true if in dragging mode
+   Float_t       fPos;           // logical position between fVmin and fVmax
+   Float_t       fSmin;          // logical position of min value of Slider
+   Float_t       fSmax;          // logical position of max value of Slider
+   Int_t         fRelPos;        // slider position in pixel coordinates
+   Float_t       fVmin;          // logical lower limit of slider
+   Float_t       fVmax;          // logical upper limit of slider
+   Int_t         fScale;         // tick mark scale
+   Int_t         fScaleType;     // tick mark scale type (no, downright, both)
+   Int_t         fPressPoint;    // mouse position at button press event
+   Float_t       fPressSmin;     // logical min position at button press event
+   Float_t       fPressSmax;     // logical max position at button press event
+   Int_t         fMove;          // 1: move min value
+                                 // 2: move max value
+                                 // 3: move min and max value
+                                 // 0: don't move any value
+   Bool_t        fReversedScale; // reverse which end is min and max
+   Bool_t        fMarkEnds;      // lines marking where stretch zones begin
 
-   Int_t            fPressPoint;    // mouse position at button press event
-   Float_t          fPressSmin;     // logical min position at button press event
-   Float_t          fPressSmax;     // logical max position at button press event
-   Int_t            fMove;          // 1: move min value
-                                    // 2: move max value
-                                    // 3: move min and max value
-                                    // 0: don't move any value
-   Bool_t           fReversedScale; // reverse which end is min and max
-   Bool_t           fMarkEnds;      // lines marking where stretch zones begin
+   TString       GetSString() const; // returns scaling type as string
 
-   TString          GetSString() const; // returns scaling type as string
-
-   static void      FixBounds(Float_t &min, Float_t &max);
+   static void   FixBounds(Float_t &min, Float_t &max);
 
 public:
-   TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t scale, Int_t id = -1,
+   TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id = -1,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground(),
                   Bool_t reversed = kFALSE,
@@ -157,7 +155,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t scale, Int_t id = -1,
+   TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id = -1,
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetDefaultFrameBackground(),
                    Bool_t reversed = kFALSE,
@@ -183,7 +181,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t scale, Int_t id = -1,
+   TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id = -1,
                    UInt_t options = kHorizontalFrame,
                    Pixel_t back = GetDefaultFrameBackground(),
                    Bool_t reversed = kFALSE,
