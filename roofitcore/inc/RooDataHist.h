@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.3 2001/09/17 18:48:13 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.4 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -63,11 +63,11 @@ protected:
 
   Int_t calcTreeIndex() const ;
 
-  Int_t     _arrSize ;
-  Int_t*    _idxMult ; //! do not persist
+  Int_t     _arrSize ; //  Size of the weight array
+  Int_t*    _idxMult ; //! Multiplier jump table for index calculation
   Double_t*     _wgt ; //[_arrSize]  Weight array
 
-  mutable Double_t _curWeight ;
+  mutable Double_t _curWeight ; // Weight associated with the current coordinate
 
 private:
 

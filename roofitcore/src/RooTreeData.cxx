@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.8 2001/10/01 23:55:01 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.9 2001/10/03 16:16:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,14 +22,8 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION --
-// RooTreeData is an extension of the ROOT TTree object and designated
-// RFC object to hold unbinned fit data. Data sets can be created empty, 
-// from a TTree or from an ASCII file. In all cases a RooArgSet serves 
-// as column definition.
-//
-// A data set can hold RooRealVar, RooCategory and RooStringVar data types.
-// Derived types can be added as a fundamental type, with the conversion
-// done at the time of addition.
+// RooTreeData is the abstract base class for data collection that
+// use a TTree as internal storage mechanism
 
 #include <iostream.h>
 #include <iomanip.h>
@@ -71,6 +65,7 @@ ClassImp(RooTreeData)
 
 RooTreeData::RooTreeData() 
 {
+  // Default constructor
   RooTrace::create(this) ; 
 }
 
@@ -78,6 +73,7 @@ RooTreeData::RooTreeData()
 RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& vars) :
   RooAbsData(name,title,vars), _truth("Truth")
 {
+  // Constructor of empty collection with specified dimensions
   RooTrace::create(this) ;
   
   createTree(name,title) ;
@@ -92,6 +88,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
  RooAbsData(name,title,vars), _truth("Truth"), 
   _blindString(t->_blindString)
 {
+  // Constructor from existing data collection with specified dimensions and
+  // optional string expression cut
+
   RooTrace::create(this) ;
   createTree(name,title) ;
 
@@ -113,6 +112,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   RooAbsData(name,title,vars),_truth("Truth"), 
   _blindString(t->_blindString)
 {
+  // Constructor from existing data collection with specified dimensions and
+  // RooFormulaVar cut
+
   RooTrace::create(this) ;
   createTree(name,title) ;
 
@@ -134,6 +136,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
   RooAbsData(name,title,vars), _truth("Truth")
 {
+  // Constructor from external TTree with specified dimensions and
+  // RooFormulaVar cut
+
   RooTrace::create(this) ;
   createTree(name,title) ;
 
@@ -156,6 +161,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
   RooAbsData(name,title,vars), _truth("Truth"), 
   _blindString(t->_blindString)
 {
+  // Protected constructor for internal use only
+
   RooTrace::create(this) ;
   createTree(name,title) ;
 
@@ -182,6 +189,9 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
                        const RooArgSet& vars, const char *cuts) :
   RooAbsData(name,title,vars), _truth("Truth")
 {
+  // Constructor from external TTree with specified dimensions and
+  // optional string expression cut
+
   RooTrace::create(this) ;
   createTree(name,title) ;
 
@@ -204,6 +214,9 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
                        const RooArgSet& vars, const char *cuts) :
   RooAbsData(name,name,vars), _truth("Truth")
 {
+  // Constructor from external TTree with given name in given file
+  // with specified dimensions and optional string expression cut
+
   RooTrace::create(this) ;
   createTree(name,name) ;
 
@@ -234,7 +247,8 @@ RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) :
 
 void RooTreeData::createTree(const char* name, const char* title)
 {
-  // Create TTree object in memory
+  // Create TTree object that lives in memory, independent of current
+  // location of gDirectory
 
   TString pwd(gDirectory->GetPath()) ;
   TString memDir(gROOT->GetName()) ;
@@ -255,7 +269,7 @@ RooTreeData::~RooTreeData()
 
 
 void RooTreeData::initialize(const RooArgSet& vars) {
-  // Initialize dataset: attach variables of internal ArgSet 
+  // Attach variables of internal ArgSet 
   // to the corresponding TTree branches
 
   // Attach each variable to the dataset
@@ -269,7 +283,7 @@ void RooTreeData::initialize(const RooArgSet& vars) {
 
 void RooTreeData::initCache(const RooArgSet& cachedVars) 
 {
-  // Initialize cache of dataset: attach variables of ArgSet cache
+  // Initialize cache of dataset: attach variables of cache ArgSet
   // to the corresponding TTree branches
 
   // iterate over the cache variables for this dataset
@@ -285,7 +299,9 @@ void RooTreeData::initCache(const RooArgSet& cachedVars)
 
 void RooTreeData::loadValues(const char *filename, const char *treename,
 			    RooFormulaVar* cutVar) {
-  // Load the value of a TTree stored in given file
+  // Load TTree name 'treename' from file 'filename' and pass call
+  // to loadValue(TTree*,...)
+
   TFile *file= (TFile*)gROOT->GetListOfFiles()->FindObject(filename);
   if(!file) file= new TFile(filename);
   if(!file) {
@@ -300,7 +316,11 @@ void RooTreeData::loadValues(const char *filename, const char *treename,
 
 void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select) 
 {
-  // Load values of given ttree
+  // Load values from tree 't' into this data collection, optionally
+  // selecting events using 'select' RooFormulaVar
+  //
+  // The source tree 't' is first clone as not disturb its branch
+  // structure when retrieving information from it.
 
   // Clone source tree
   TTree* tClone = ((TTree*)t)->CloneTree() ;
@@ -399,8 +419,12 @@ void RooTreeData::dump() {
 
 void RooTreeData::cacheArg(RooAbsArg& newVar) 
 {
-  // Precalculate the values of given variable for this data set and allow
-  // the data set to directly write the internal cache of given variable
+  // Cache given RooAbsArg with this tree: The tree is
+  // given direct write access of the args internal cache
+  // the args values is pre-calculated for all data points
+  // in this data collection. Upon a get() call, the
+  // internal cache of 'newVar' will be loaded with the
+  // precalculated value and it's dirty flag will be cleared.
 
   newVar.attachToTree(*_tree) ;
   _cachedVars.add(newVar) ;
@@ -419,15 +443,6 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet)
   while (arg=(RooAbsArg*)iter->Next()) {
     // Attach newVar to this tree
     arg->attachToTree(*_tree) ;
-
-    // Remove all server links 
-//     TIterator* sIter = arg->serverIterator() ;
-//     RooAbsArg* server ;
-//     while(server=(RooAbsArg*)sIter->Next()) {
-//       arg->removeServer(*server) ;
-//     }
-//     delete sIter ;
-
     _cachedVars.add(*arg) ;
   }
   delete iter ;
@@ -439,7 +454,7 @@ void RooTreeData::cacheArgs(RooArgSet& newVarSet)
 
 void RooTreeData::fillCacheArgs()
 {
-  // Recalculate contents of cached variables
+  // Recalculate contents of cached variables for each data point in the collection
 
   // Clone current tree
   RooTreeData* cloneData = (RooTreeData*) Clone() ; //new RooTreeData(*this) ;
@@ -466,9 +481,11 @@ void RooTreeData::fillCacheArgs()
 }
 
 
-const RooArgSet* RooTreeData::get(Int_t index) const {
-
-  // Return ArgSet containing given row of data
+const RooArgSet* RooTreeData::get(Int_t index) const 
+{
+  // Load the n-th data point (n='index') in memory
+  // and return a pointer to the internal RooArgSet
+  // holding its coordinates.
 
   Int_t ret = ((RooTreeData*)this)->GetEntry(index, 1) ;
   if(!ret) return 0;
@@ -494,7 +511,26 @@ const RooArgSet* RooTreeData::get(Int_t index) const {
 
 RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 {
-  // Add and precalculate new column, using given valHolder to store precalculate value
+  // Add a new column to the data set which holds the pre-calculated values
+  // of 'newVar'. This operation is only meaningful if 'newVar' is a derived
+  // value.
+  //
+  // The return value points to the added element holding 'newVar's value
+  // in the data collection. The element is always the corresponding fundamental
+  // type of 'newVar' (e.g. a RooRealVar if 'newVar' is a RooFormulaVar)
+  //
+  // Note: This function is explicitly NOT intended as a speed optimization
+  //       opportunity for the user. Components of complex PDFs that can be
+  //       precalculated with the dataset are automatically identified as such
+  //       and will be precalculated when fitting to a dataset
+  // 
+  //       By forcibly precalculating functions with non-trivial Jacobians,
+  //       or functions of multiple variables occurring in the data set,
+  //       using addColumn(), you may alter the outcome of the fit. 
+  //
+  //       Only in cases where such a modification of fit behaviour is intentional, 
+  //       this function should be used. (E.g. to collapse multiple category
+  //       dependents determining a 'fit category' into a single category)
 
   // Create a fundamental object of the right type to hold newVar values
   RooAbsArg* valHolder= newVar.createFundamental();
@@ -543,6 +579,7 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
 
 RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions) const 
 {
+  // Implementation pending...
   return 0 ;
 }
 
@@ -550,7 +587,16 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option
 
 RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
 {
-  // Fill a histogram of values calculated from events in our dataset.
+  // Create and fill a histogram of the frame's variable and append it to the frame.
+  // The frame variable must be one of the data sets dimensions.
+  //
+  // The plot range and the number of plot bins is determined by the parameters
+  // of the plot variable of the frame (RooAbsReal::setPlotRange(), RooAbsReal::setPlotBins())
+  // 
+  // The optional cut string expression can be used to select the events to be plotted.
+  // The cut specification may refer to any variable contained in the data set
+  //
+  // The drawOptions are passed to the TH1::Draw() method
 
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
@@ -598,6 +644,19 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
 				 const char* cut, Option_t* drawOptions) const 
 {
+  // Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
+  // where N(+/-) is the number of data points with asymCat=+1 and asymCat=-1 
+  // as function of the frames variable. The asymmetry category 'asymCat' must
+  // have exactly 2 (or 3) states defined with index values +1,-1 (and 0)
+  // 
+  // The plot range and the number of plot bins is determined by the parameters
+  // of the plot variable of the frame (RooAbsReal::setPlotRange(), RooAbsReal::setPlotBins())
+  // 
+  // The optional cut string expression can be used to select the events to be plotted.
+  // The cut specification may refer to any variable contained in the data set
+  //
+  // The drawOptions are passed to the TH1::Draw() method
+
   cout << "RooTreeData::plotAsymOn(" << GetName() << ") not implemented." << endl ;
   return frame ;
 }
@@ -673,6 +732,13 @@ TH1F* RooTreeData::createHistogram(const RooAbsReal& var, const char* cuts, cons
 Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, const char* opts) const
 {
   // Create and fill a 1-dimensional table for given category column
+  // This functions is the equivalent of plotOn() for category dimensions. 
+  //
+  // The optional cut string expression can be used to select the events to be tabulated
+  // The cut specification may refer to any variable contained in the data set
+  //
+  // The option string is currently not used
+
 
   // First see if var is in data set 
   RooAbsCategory* tableVar = (RooAbsCategory*) _vars.find(cat.GetName()) ;

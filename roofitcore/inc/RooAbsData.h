@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.7 2001/09/24 23:05:57 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.8 2001/09/28 21:59:27 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -35,23 +35,10 @@ public:
   virtual ~RooAbsData() ;
 
   // Reduction methods
-  inline RooAbsData* reduce(const char* cut) { 
-    RooFormulaVar cutVar(cut,cut,*get()) ;
-    return reduceEng(*get(),&cutVar,kFALSE) ;
-  }
-  inline RooAbsData* reduce(const RooFormulaVar& cutVar) {
-    return reduceEng(*get(),&cutVar,kFALSE) ;
-  }
-  inline RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) {
-    if (cut) {
-      RooFormulaVar cutVar(cut,cut,*get()) ;
-      return reduceEng(varSubset,&cutVar,kFALSE) ;      
-    } 
-    return reduceEng(varSubset,0,kFALSE) ;
-  }
-  inline RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) {
-    return reduceEng(varSubset,&cutVar,kFALSE) ;
-  }
+  RooAbsData* reduce(const char* cut) ;
+  RooAbsData* reduce(const RooFormulaVar& cutVar) ;
+  RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) ;
+  RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1) = 0 ;
@@ -89,16 +76,16 @@ protected:
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) = 0 ;
 
   // Column structure definition
-  RooArgSet _vars;         
-  RooArgSet _cachedVars ;  
+  RooArgSet _vars;         // Dimensions of this data set
+  RooArgSet _cachedVars ;  // External variables cached with this data set
 
-  TIterator *_iterator;    //! don't make this data member persistent
-  TIterator *_cacheIter ;  //! don't make this data member persistent
-  Bool_t _doDirtyProp ;
+  TIterator *_iterator;    //! Iterator over dimension variables
+  TIterator *_cacheIter ;  //! Iterator over cached variables
+  Bool_t _doDirtyProp ;    // Switch do (de)activate dirty state propagation when loading a data point
 
 private:
 
-  ClassDef(RooAbsData,1) // Abstract data set
+  ClassDef(RooAbsData,1) // Abstract data collection
 };
 
 #endif
