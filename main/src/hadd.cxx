@@ -21,14 +21,14 @@
 
  */
 
-
-#include <string.h>
+#include <string>
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TKey.h"
 #include "Riostream.h"
 
+using std::string;
 
 TList *FileList;
 TFile *Target;
@@ -37,14 +37,13 @@ void MergeRootfile( TDirectory *target, TList *sourcelist );
 
 int main( int argc, char **argv ) {
 
-  if (argc < 4) {
-     printf("******Error in invoking hadd\n");
-     printf("===>  hadd targetfile source1 source2 ...\n");
-     printf("      This program will add histograms from a list of root files and write them\n");
-     printf("      to a target root file. The target file is newly created and must not be\n");
-     printf("      identical to one of the source files.\n");
-     printf("      supply at least two source files for this to make sense... ;-)\n");
-     return 1;
+  if ( argc < 4 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
+    cout << "Usage: " << argv[0] << " targetfile source1 source2 [source3 ...]" << endl;
+    cout << "This program will add histograms from a list of root files and write them" << endl;
+    cout << "to a target root file. The target file is newly created and must not be" << endl;
+    cout << "identical to one of the source files." << endl;
+    cout << "Supply at least two source files for this to make sense... ;-)" << endl;
+    return 1;
   }
    FileList = new TList();
 
@@ -107,18 +106,23 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
     else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
       
       // loop over all source files create a chain of Trees "globChain"
-      const char* obj_name= obj->GetName();
+      TString obj_name;
+      if (path.Length()) {
+         obj_name = path + "/" + obj->GetName();
+      } else {
+         obj_name = obj->GetName();
+      }
 
       globChain = new TChain(obj_name);
       globChain->Add(first_source->GetName());
       TFile *nextsource = (TFile*)sourcelist->After( first_source );
       //      const char* file_name = nextsource->GetName();
       // cout << "file name  " << file_name << endl;
-     while ( nextsource ) {
+      while ( nextsource ) {
      	  
-       globChain->Add(nextsource->GetName());
-       nextsource = (TFile*)sourcelist->After( nextsource );
-     }
+         globChain->Add(nextsource->GetName());
+         nextsource = (TFile*)sourcelist->After( nextsource );
+      }
 
     } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
       // it's a subdirectory
@@ -146,13 +150,13 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
     // which is not persistent until the complete directory itself is stored
     // by "target->Write()" below
     if ( obj ) {
-      target->cd();
-
-      //!!if the object is a tree, it is stored in globChain...
-	if(obj->IsA()->InheritsFrom( "TTree" ))
+       target->cd();
+       
+       //!!if the object is a tree, it is stored in globChain...
+       if(obj->IsA()->InheritsFrom( "TTree" ))
           globChain->Merge(target->GetFile(),0,"keep");
-	else
-	obj->Write( key->GetName() );
+       else
+          obj->Write( key->GetName() );
     }
 
   } // while ( ( TKey *key = (TKey*)nextkey() ) )
