@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.6 2005/01/26 06:42:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.7 2005/01/26 09:57:24 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TMath.h"
 #include "TError.h"
 
+
 ClassImp(TExMap)
 
 //______________________________________________________________________________
@@ -31,13 +32,13 @@ TExMap::TExMap(Int_t mapSize)
 {
    // Create a TExMap.
 
-   if (mapSize < 4) mapSize = 4; // needed for automatic resizing to
-                                 // guarantee that one slot is always empty
+   // needed for automatic resizing to guarantee that one slot is always empty
+   if (mapSize < 4) mapSize = 4;
 
    fSize  = (Int_t)TMath::NextPrime(mapSize);
    fTable = new Assoc_t [fSize];
 
-   for (int i=fSize; --i >= 0;) {
+   for (int i = fSize; --i >= 0;) {
       fTable[i].Clear();
    }
    fTally = 0;
@@ -115,7 +116,7 @@ void TExMap::Delete(Option_t *)
 {
    // Delete all entries stored in the TExMap.
 
-   for (int i=fSize; --i >= 0;) {
+   for (int i = fSize; --i >= 0;) {
       fTable[i].Clear();
    }
 
@@ -137,9 +138,9 @@ Long_t TExMap::GetValue(ULong_t hash, Long_t key)
       if (!fTable[slot].InUse()) return 0;
       if (key == fTable[slot].fKey) return fTable[slot].fValue;
       if (++slot == fSize) slot = 0;
-   } while(firstSlot != slot);
+   } while (firstSlot != slot);
 
-   Error("GetValue", "Table full");
+   Error("GetValue", "table full");
    return 0;
 }
 
@@ -177,9 +178,9 @@ Int_t TExMap::FindElement(ULong_t hash, Long_t key)
       if (!fTable[slot].InUse()) return slot;
       if (key == fTable[slot].fKey) return slot;
       if (++slot == fSize) slot = 0;
-   } while(firstSlot != slot);
+   } while (firstSlot != slot);
 
-   Error("FindElement", "Table full");
+   Error("FindElement", "table full");
    return 0;
 }
 
@@ -216,11 +217,11 @@ void TExMap::Expand(Int_t newSize)
    newSize = (Int_t)TMath::NextPrime(newSize);
    fTable  = new Assoc_t [newSize];
 
-   for (i=newSize; --i >= 0;) {
+   for (i = newSize; --i >= 0;) {
       fTable[i].Clear();
    }
 
-   fSize   = newSize;
+   fSize = newSize;
    for (i = 0; i < oldsize; i++)
       if (oldTable[i].InUse()) {
          Int_t slot = FindElement(oldTable[i].GetHash(), oldTable[i].fKey);
@@ -305,4 +306,3 @@ Bool_t TExMapIter::Next(Long_t &key, Long_t &value)
    ULong_t hash;
    return Next(hash, key, value);
 }
-

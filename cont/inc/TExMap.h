@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.3 2003/06/23 07:13:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.4 2005/01/26 06:42:23 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -43,18 +43,17 @@ private:
    public:
       Long_t   fKey;
       Long_t   fValue;
-      inline void SetHash(ULong_t h) { fHash = (h | 1); } // bit(0) is "1" when in use
-      inline ULong_t GetHash() const { return fHash; }
-      inline Bool_t InUse() const { return fHash & 1; }
-      inline void Clear() { fHash = 0x0; }
+      void     SetHash(ULong_t h) { fHash = (h | 1); } // bit(0) is "1" when in use
+      ULong_t  GetHash() const { return fHash; }
+      Bool_t   InUse() const { return fHash & 1; }
+      void     Clear() { fHash = 0x0; }
    };
 
    Assoc_t    *fTable;
    Int_t       fSize;
    Int_t       fTally;
 
-   Bool_t      HighWaterMark()
-                  { return (Bool_t) (fTally >= ((3*fSize)/4)); }
+   Bool_t      HighWaterMark() { return (Bool_t) (fTally >= ((3*fSize)/4)); }
    void        Expand(Int_t newsize);
    Int_t       FindElement(ULong_t hash, Long_t key);
    void        FixCollisions(Int_t index);
