@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.4 2004/05/11 18:52:17 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -25,6 +25,12 @@
 #include "libxml/tree.h"
 
 ClassImp(TXMLEngine);
+
+
+#if (_MSC_VER == 1200) && (WINVER < 0x0500) 
+extern "C" long _ftol( double ); //defined by VC6 C libs 
+extern "C" long _ftol2( double dblSource ) { return _ftol( dblSource ); } 
+#endif
 
 //______________________________________________________________________________
 TXMLEngine::TXMLEngine() 
