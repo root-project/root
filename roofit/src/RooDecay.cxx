@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooDecay.cc,v 1.7 2002/09/10 02:01:31 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,7 +40,7 @@ RooDecay::RooDecay(const char *name, const char *title,
     _basisExp = declareBasis("exp(-@0/@1)",tau) ;
     break ;
   case Flipped:
-    _basisExp = declareBasis("exp(@0)/@1)",tau) ;
+    _basisExp = declareBasis("exp(@0/@1)",tau) ;
     break ;
   case DoubleSided:
     _basisExp = declareBasis("exp(-abs(@0)/@1)",tau) ;
