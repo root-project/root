@@ -1,10 +1,10 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += $(ALL_LIBRARIES)
+CLEAN_TARGETS += $(ALL_LIBRARIES) scopeDict.cxx
 
 #Set the list of target to make while testing
-TEST_TARGETS += operatorLessThanTemplate testTable
+TEST_TARGETS += operatorLessThanTemplate testTable scopeTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -39,3 +39,8 @@ operatorLessThanTemplate.log: runoperatorLessThanTemplate.C operatorLessThanTemp
 
 operatorLessThanTemplate:  operatorLessThanTemplate.log
 	$(TestDiff)
+
+scopeDict.cxx: scopeProblem.C
+	$(CMDECHO) rootcint -f scopeDict.cxx -c scopeProblem.C linkdef.h
+
+scopeTest: scopeDict.cxx
