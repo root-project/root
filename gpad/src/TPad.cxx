@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.109 2003/08/26 12:39:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.110 2003/08/26 16:25:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3927,6 +3927,7 @@ void TPad::RecursiveRemove(TObject *obj)
    if (obj == fView) fView = 0;
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
+   while (fPrimitives->IndexOf(obj) >= 0) fPrimitives->Remove(obj);
    if (nold != fPrimitives->GetSize()) fModified = kTRUE;
 }
 
@@ -3953,8 +3954,8 @@ void TPad::RedrawAxis(Option_t *option)
    while ((obj = next())) {
       if (obj->InheritsFrom("TH1")) {
          TH1 *hobj = (TH1*)obj;
-         if (opt.Contains("g")) hobj->Draw("sameaxig");
-         else                   hobj->Draw("sameaxis");
+         if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
+         else                   hobj->DrawCopy("sameaxis");
          return;
       }
    }
