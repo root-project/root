@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.70 2003/08/21 14:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.71 2003/09/23 08:54:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -968,7 +968,11 @@ FILE *TSystem::TempFilename(TString &base, const char *dir)
    base += "XXXXXX";
 
    char *arg = StrDup(base);
+#ifdef R__WIN32
+   int fd = -1;
+#else
    int fd = mkstemp(arg);
+#endif
    base = arg;
    delete [] arg;
 
@@ -1042,7 +1046,7 @@ UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
 }
 
 //______________________________________________________________________________
-UserGroup_t *TSystem::GetUserInfo(const char */*user*/)
+UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 {
    // Returns all user info in the UserGroup_t structure. If user = 0, returns
    // current user's id info. The returned structure must be deleted by the
@@ -1066,7 +1070,7 @@ UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 }
 
 //______________________________________________________________________________
-UserGroup_t *TSystem::GetGroupInfo(const char */*group*/)
+UserGroup_t *TSystem::GetGroupInfo(const char * /*group*/)
 {
    // Returns all group info in the UserGroup_t structure. The only active
    // fields in the UserGroup_t structure for this call are:
