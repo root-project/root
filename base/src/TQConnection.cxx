@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.10 2003/01/20 08:44:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.11 2003/03/07 07:20:16 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -63,7 +63,7 @@ public:
    void ExecuteMethod(void *object, Long_t param);
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
-   void ExecuteMethod(void *object, Long_t *paramArr);
+   void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
    void Print(Option_t *opt= "") const;
    void ls(Option_t *opt= "") const { Print(opt); }
 };
@@ -264,18 +264,19 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 }
 
 //______________________________________________________________________________
-inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr)
+inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 {
-   //  ExecuteMethod the method for the specified object and with
-   //  several argument values.
-   //  paramArr is an array containing the addresses
-   //  where to take the function parameters.
-   //  At least as many pointers should be present in the array as
-   //  there are required arguments  (all arguments - default args).
+   // ExecuteMethod the method for the specified object and with
+   // several argument values.
+   // ParamArr is an array containing the function argument values.
+   // If nparam = -1 then paramArr must contain values for all function
+   // arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
+   // Nargs is the number of all arguments and NargsOpt is the number
+   // of default arguments.
 
    void *address = 0;
    R__LOCKGUARD(gCINTMutex);
-   fFunc->SetArgArray(paramArr);
+   fFunc->SetArgArray(paramArr, nparam);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
    fFunc->Exec(address);
@@ -426,12 +427,12 @@ void TQConnection::ExecuteMethod(Double_t param)
 }
 
 //______________________________________________________________________________
-void TQConnection::ExecuteMethod(Long_t *params)
+void TQConnection::ExecuteMethod(Long_t *params, Int_t nparam)
 {
    // Apply slot-method to the fReceiver object with variable
    // number of argument values.
 
-   fSlot->ExecuteMethod(fReceiver, params);
+   fSlot->ExecuteMethod(fReceiver, params, nparam);
 }
 
 //______________________________________________________________________________

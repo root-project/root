@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.19 2002/07/19 11:41:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.20 2002/12/02 18:50:00 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -75,9 +75,9 @@ protected:
                                 void *receiver,
                                 const char *slot);
 
-   static Bool_t CheckConnectArgs(TQObject *sender,
-                                  TClass *sender_class, const char *signal,
-                                  TClass *receiver_class, const char *slot);
+   static Int_t CheckConnectArgs(TQObject *sender,
+                                 TClass *sender_class, const char *signal,
+                                 TClass *receiver_class, const char *slot);
 
 public:
    TQObject();

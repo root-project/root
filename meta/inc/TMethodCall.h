@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.5 2001/12/21 09:37:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.6 2002/01/10 07:19:30 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    const char    *GetProto() const { return fProto.Data(); }
    EReturnType    ReturnType();
 
-   void     SetParamPtrs(void *paramArr);
+   void     SetParamPtrs(void *paramArr, Int_t nparam = -1);
 
    void     Execute(void *object);
    void     Execute(void *object, const char *params);

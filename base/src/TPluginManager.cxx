@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.12 2002/09/10 12:14:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.13 2002/09/17 14:38:05 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -250,7 +250,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
 
       va_end(ap);
 
-      fCallEnv->SetParamPtrs(args);
+      fCallEnv->SetParamPtrs(args, nargs);
    }
 
    Long_t ret;

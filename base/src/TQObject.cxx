@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.30 2003/01/12 11:06:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.31 2003/03/08 20:00:08 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -185,9 +185,11 @@ static char *CompressName(const char *method_name)
 
 //______________________________________________________________________________
 static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
-                                       const char *proto)
+                                       const char *proto, Int_t &nargs)
 {
    // Almost the same as TClass::GetMethodWithPrototype().
+
+   nargs = 0;
 
    if (!gInterpreter) return 0;
    R__LOCKGUARD(gCINTMutex);
@@ -199,8 +201,10 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
       long offset;
       if (cl->GetClassInfo())
          meth = cl->GetClassInfo()->GetMethod((char *)method, (char *)proto, &offset);
-      if (meth.IsValid())
+      if (meth.IsValid()) {
+         nargs = meth.NArg();
          return (TMethod *) -1;
+      }
       return 0;
    } else {
       faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl,
@@ -213,7 +217,10 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
 
    // Look for a method in this class
    while ((m = (TMethod *) next_method())) {
-      if (faddr == (Long_t)m->InterfaceMethod()) return m;
+      if (faddr == (Long_t)m->InterfaceMethod()) {
+         nargs = m->GetNargs();
+         return m;
+      }
    }
 
    TIter next_base(cl->GetListOfBases());
@@ -223,7 +230,7 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    while ((base = (TBaseClass *)next_base())) {
       TClass *c;
       if ((c = base->GetClassPointer())) {
-         if ((m = GetMethodWithPrototype(c, method, proto))) return m;
+         if ((m = GetMethodWithPrototype(c, method, proto, nargs))) return m;
       }
    }
    return 0;
@@ -236,7 +243,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 
    if (!gInterpreter) return 0;
    R__LOCKGUARD(gCINTMutex);
-     
+
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
@@ -274,11 +281,12 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 }
 
 //______________________________________________________________________________
-Bool_t TQObject::CheckConnectArgs(TQObject *sender,
-                                  TClass *sender_class, const char *signal,
-                                  TClass *receiver_class, const char *slot)
+Int_t TQObject::CheckConnectArgs(TQObject *sender,
+                                 TClass *sender_class, const char *signal,
+                                 TClass *receiver_class, const char *slot)
 {
    // Checking of consitency of sender/receiver methods/arguments.
+   // Returns -1 on error, otherwise number or arguments of signal function.
    // Static method.
 
    char *signal_method = new char[strlen(signal)+1];
@@ -300,23 +308,26 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
    if (sender && sender_class == TQObjSender::Class()) {
       sender_class = gROOT->GetClass(sender->GetSenderClassName());
       if (!sender_class) {
-         Warning("TQObject::CheckConnectArgs", "for extra signal/slot "
-                 "consistency\nchecking specify class name as argument to "
+         ::Error("TQObject::CheckConnectArgs", "for signal/slot consistency\n"
+                 "checking need to specify class name as argument to "
                  "RQ_OBJECT macro");
          delete [] signal_method;
-         return kTRUE;   // benefit of the doubt
+         return -1;
       }
    }
 
+   Int_t nargs;
    TMethod *signalMethod = GetMethodWithPrototype(sender_class,
                                                   signal_method,
-                                                  signal_proto);
+                                                  signal_proto,
+                                                  nargs);
    if (!signalMethod) {
       ::Error("TQObject::CheckConnectArgs",  "signal %s::%s(%s) does not exist",
               sender_class->GetName(), signal_method, signal_proto);
       delete [] signal_method;
-      return kFALSE;
+      return -1;
    }
+   Int_t nsigargs = nargs;
 
 #if defined(CHECK_COMMENT_STRING)
    const char *comment = 0;
@@ -328,7 +339,7 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
               "signal %s::%s(%s), to declare signal use comment //*SIGNAL*",
               sender_class->GetName(), signal_method, signal_proto);
       delete [] signal_method;
-      return kFALSE;
+      return -1;
    }
 #endif
 
@@ -341,7 +352,7 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
    char *slot_proto;
    char *slot_params = 0;
 
-   if ((slot_proto =  strchr(slot_method,'('))) {
+   if ((slot_proto = strchr(slot_method,'('))) {
 
       // substitute first '(' symbol with '\0'
       *slot_proto++ = '\0';
@@ -351,8 +362,7 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
    }
 
    if (!slot_proto) slot_proto = (char*)"";     // avoid zero strings
-   if (slot_proto &&
-       (slot_params = strchr(slot_proto,'='))) *slot_params = ' ';
+   if (slot_params = strchr(slot_proto,'=')) *slot_params = ' ';
 
    TFunction *slotMethod = 0;
    if (!receiver_class) {
@@ -363,7 +373,8 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
       slotMethod  = !slot_params ?
                           GetMethodWithPrototype(receiver_class,
                                                  slot_method,
-                                                 slot_proto) :
+                                                 slot_proto,
+                                                 nargs) :
                           GetMethod(receiver_class,
                                     slot_method, slot_params);
    }
@@ -379,24 +390,23 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
                  slot_method) : slot_method, slot_params);
       }
       delete [] slot_method;
-      return kFALSE;
+      return -1;
    }
 
 #if defined(CHECK_ARGS_NUMBER)
    if (slotMethod != (TMethod *) -1 && slotMethod->GetNargsOpt() >= 0 &&
-       signalMethod->GetNargs() <
-        (slotMethod->GetNargs() - slotMethod->GetNargsOpt())) {
+       nsigargs < (slotMethod->GetNargs() - slotMethod->GetNargsOpt())) {
       ::Error("TQObject::CheckConnectArgs",
               "inconsistency in numbers of arguments");
       delete [] slot_method;
-      return kFALSE;
+      return -1;
    }
 #endif
 
    // cleaning
    delete [] slot_method;
 
-   return kTRUE;
+   return nsigargs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,13 +417,18 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
 ////////////////////////////////////////////////////////////////////////////////
 class TQConnectionList : public TList {
 
+private:
+   Int_t   fSignalArgs;    // number of arguments in signal function
+
 public:
-   TQConnectionList(const char *name) : TList() { fName = name; }
+   TQConnectionList(const char *name, Int_t nsigargs) : TList()
+      { fName = name; fSignalArgs = nsigargs; }
    virtual ~TQConnectionList();
 
    Bool_t Disconnect(void *receiver=0, const char *slot_name=0);
-   void  ls(Option_t *option = "") const;
-   void  Print(Option_t *option = "") const;
+   Int_t  GetNargs() const { return fSignalArgs; }
+   void   ls(Option_t *option = "") const;
+   void   Print(Option_t *option = "") const;
 };
 
 //______________________________________________________________________________
@@ -886,7 +901,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    //    TH1F     *hist;      // filled with processor results
    //
    //    processor->Connect("Evaluated(Float_t,Float_t)",
-   //                       "TH1F",hist,"Fill12(Axis_t x, Axis_t)");
+   //                       "TH1F",hist,"Fill12(Axis_t,Axis_t)");
    //
    //    Long_t args[2];
    //    args[0] = (Long_t)processor->GetValue(1);
@@ -915,7 +930,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
-            connection->ExecuteMethod(paramArr);
+            connection->ExecuteMethod(paramArr, clist->GetNargs());
          }
       }
    }
@@ -936,7 +951,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
-      connection->ExecuteMethod(paramArr);
+      connection->ExecuteMethod(paramArr, clist->GetNargs());
    }
    delete [] signal;
 }
@@ -960,7 +975,8 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    char *slot_name   = CompressName(slot);
 
    // check consitency of signal/slot methods/args
-   if (!CheckConnectArgs(sender, sender->IsA(), signal_name, cl, slot_name))
+   Int_t nsigargs;
+   if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, cl, slot_name)) == -1)
       return kFALSE;
 
    if (!sender->fListOfSignals)
@@ -974,7 +990,7 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    }
 
    if (!clist) {
-      clist = new TQConnectionList(signal_name);
+      clist = new TQConnectionList(signal_name, nsigargs);
       sender->fListOfSignals->Add(clist);
    }
 
@@ -1025,7 +1041,8 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    char *slot_name   = CompressName(slot);
 
    // check consitency of signal/slot methods/args
-   if (!CheckConnectArgs(0, sender, signal_name, cl, slot_name))
+   Int_t nsigargs;
+   if ((nsigargs = CheckConnectArgs(0, sender, signal_name, cl, slot_name)) == -1)
       return kFALSE;
 
    TQConnectionList *clist = 0;
@@ -1039,7 +1056,7 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
    }
 
    if (!clist) {
-      clist = new TQConnectionList(signal_name);
+      clist = new TQConnectionList(signal_name, nsigargs);
       slist->Add(clist);
    }
 
@@ -1121,7 +1138,8 @@ Bool_t TQObject::Connect(TQObject *sender,
    char *slot_name   = CompressName(slot);
 
    // check consitency of signal/slot methods/args
-   if (!CheckConnectArgs(sender, sender->IsA(), signal_name, 0, slot_name))
+   Int_t nsigargs;
+   if ((nsigargs = CheckConnectArgs(sender, sender->IsA(), signal_name, 0, slot_name)) == -1)
       return kFALSE;
 
    if (!sender->fListOfSignals) sender->fListOfSignals = new TList();
@@ -1134,7 +1152,7 @@ Bool_t TQObject::Connect(TQObject *sender,
    }
 
    if (!clist) {
-      clist = new TQConnectionList(signal_name);
+      clist = new TQConnectionList(signal_name, nsigargs);
       sender->fListOfSignals->Add(clist);
    }
 
@@ -1221,7 +1239,8 @@ Bool_t TQObject::Connect(const char *class_name,
    char *slot_name   = CompressName(slot);
 
    // check consitency of signal/slot methods/args
-   if (!CheckConnectArgs(0, sender, signal_name, 0, slot_name))
+   Int_t nsigargs;
+   if ((nsigargs = CheckConnectArgs(0, sender, signal_name, 0, slot_name)) == -1)
       return kFALSE;
 
    TQConnectionList *clist = 0;
@@ -1237,7 +1256,7 @@ Bool_t TQObject::Connect(const char *class_name,
    }
 
    if (!clist) {
-      clist = new TQConnectionList(signal_name);
+      clist = new TQConnectionList(signal_name, nsigargs);
       slist->Add(clist);
    }
 
@@ -1289,7 +1308,8 @@ Bool_t TQObject::Connect(const char *signal,
    TClass *cl = 0;
    if (receiver_class)
       cl = gROOT->GetClass(receiver_class);
-   if (!CheckConnectArgs(this, IsA(), signal_name, cl, slot_name))
+   Int_t nsigargs;
+   if ((nsigargs = CheckConnectArgs(this, IsA(), signal_name, cl, slot_name)) == -1)
       return kFALSE;
 
    if (!fListOfSignals) fListOfSignals = new TList();
@@ -1302,7 +1322,7 @@ Bool_t TQObject::Connect(const char *signal,
    }
 
    if (!clist) {
-      clist = new TQConnectionList(signal_name);
+      clist = new TQConnectionList(signal_name, nsigargs);
       fListOfSignals->Add(clist);
    }
 

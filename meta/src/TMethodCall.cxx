@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.9 2002/02/22 09:37:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.10 2002/02/23 16:05:46 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -326,7 +326,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    G__settemplevel(1);
-   *retText =(char*)( fFunc->ExecInt(address));
+   *retText =(char*)(fFunc->ExecInt(address));
    G__settemplevel(-1);
 }
 
@@ -391,12 +391,14 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 }
 
 //______________________________________________________________________________
-void TMethodCall::SetParamPtrs(void *paramArr)
+void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 {
-   // ParamArr is an array containing the addresses where to take the
-   // function parameters. At least as many pointers should be present in
-   // the array as there are required arguments (all arguments - default args).
+   // ParamArr is an array containing the function argument values.
+   // If nparam = -1 then paramArr must contain values for all function
+   // arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
+   // Nargs is the number of all arguments and NargsOpt is the number
+   // of default arguments.
 
    R__LOCKGUARD(gCINTMutex);
-   fFunc->SetArgArray((long *)paramArr);
+   fFunc->SetArgArray((long *)paramArr, nparam);
 }

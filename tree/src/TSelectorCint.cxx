@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.8 2002/07/17 12:29:38 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.9 2003/04/02 06:24:32 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -74,10 +74,10 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* 
    cf->SetFuncProto(cl,fname,argtype,&offset);
 
    if ( gDebug > 2 )
-      Info("SetFuncProto","Set %s(%s)  offset = %ld",fname,argtype,offset);
+      Info("SetFuncProto","set %s(%s) offset = %ld",fname,argtype,offset);
 
-   if ( ! cf->IsValid() )
-      Error("SetFuncProto","Cannot Set %s(%s)",fname,argtype);
+   if ( !cf->IsValid() )
+      Error("SetFuncProto","cannot set %s(%s)",fname,argtype);
 }
 
 
