@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.35 2003/05/11 14:09:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.36 2003/05/15 18:01:56 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -682,7 +682,6 @@ void TQObject::Emit(const char *signal_name)
    if (!slist && !fListOfSignals)
       return;
 
-   gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
 
@@ -698,6 +697,7 @@ void TQObject::Emit(const char *signal_name)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
             connection->ExecuteMethod();
          }
       }
@@ -719,6 +719,7 @@ void TQObject::Emit(const char *signal_name)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
       connection->ExecuteMethod();
    }
    delete [] signal;
@@ -736,7 +737,6 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    if (!slist && !fListOfSignals)
       return;
 
-   gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
 
@@ -752,6 +752,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
             connection->ExecuteMethod(param);
          }
       }
@@ -773,6 +774,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
       connection->ExecuteMethod(param);
    }
    delete [] signal;
@@ -788,7 +790,6 @@ void TQObject::Emit(const char *signal_name, Double_t param)
    if (!slist && !fListOfSignals)
       return;
 
-   gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
 
@@ -804,6 +805,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
             connection->ExecuteMethod(param);
          }
       }
@@ -826,6 +828,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
       connection->ExecuteMethod(param);
    }
    delete [] signal;
@@ -843,7 +846,6 @@ void TQObject::Emit(const char *signal_name, const char *params)
    if (!slist && !fListOfSignals)
       return;
 
-   gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
 
@@ -859,6 +861,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
             connection->ExecuteMethod(params);
          }
       }
@@ -880,6 +883,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
       connection->ExecuteMethod(params);
    }
    delete [] signal;
@@ -909,7 +913,6 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    if (!slist && !fListOfSignals)
       return;
 
-   gTQSender = GetSender();
    register TQConnectionList *clist  = 0;
    register TQConnection *connection = 0;
 
@@ -925,6 +928,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
       if (clist) {
          TIter nextcl(clist);
          while ((connection = (TQConnection*)nextcl())) {
+            gTQSender = GetSender();
             connection->ExecuteMethod(paramArr, clist->GetNargs());
          }
       }
@@ -946,6 +950,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 
    TIter next(clist);
    while ((connection = (TQConnection*)next())) {
+      gTQSender = GetSender();
       connection->ExecuteMethod(paramArr, clist->GetNargs());
    }
    delete [] signal;
