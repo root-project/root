@@ -134,6 +134,11 @@ ifneq ($(PYTHONLIB),)
 MODULES      += pyroot
 endif
 endif
+ifneq ($(RUBYINCDIR),)
+ifneq ($(RUBYLIB),)
+MODULES      += ruby
+endif
+endif
 ifneq ($(XMLINCDIR),)
 ifneq ($(XMLCLILIB),)
 MODULES      += xml
@@ -764,6 +769,9 @@ showbuild:
 	@echo "PYTHONLIBDIR       = $(PYTHONLIBDIR)"
 	@echo "PYTHONLIB          = $(PYTHONLIB)"
 	@echo "PYTHONINCDIR       = $(PYTHONINCDIR)"
+	@echo "RUBYLIBDIR	  = $(RUBYLIBDIR)"
+	@echo "RUBYLIB		  = $(RUBYLIB)"
+	@echo "RUBYINCDIR	  = $(RUBYINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"

@@ -113,6 +113,11 @@ PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := @pythonincdir@
 PYTHONLIBFLAGS := @pythonlibflags@
 
+RUBYLIBDIR     := @rubylibdir@
+RUBYLIB        := @rubylib@
+RUBYINCDIR     := @rubyincdir@
+RUBYLIBFLAGS   := @rubylibflags@
+
 XMLLIBDIR      := @xmllibdir@
 XMLCLILIB      := @xmllib@
 XMLINCDIR      := @xmlincdir@

@@ -40,6 +40,7 @@ options="                 \
    enable_pythia          \
    enable_pythia6         \
    enable_python          \
+   enable_ruby            \
    enable_qt              \
    enable_rfio            \
    enable_rpath           \
@@ -68,6 +69,7 @@ enable_shadowpw=
 enable_soversion=no
 enable_table=no
 enable_python=no
+enable_ruby=no
 enable_thread=           # must be set explicitely via --enable-thread
 
 #
@@ -563,6 +565,7 @@ enable/disable options, prefix with either --enable- or --disable-
    opengl          OpenGL support, requires libGL and libGLU
    openiv          OpenInventor support, requires libInventor and libInventorXt
    python          PyROOT python bindings, requires python >= 2.1
+   ruby            Ruby ROOT bindings, requires ruby >= 1.8
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
    pythia6         Pythia6 EG support, requires libPythia6
@@ -727,6 +730,8 @@ if test $# -gt 0 ; then
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
       --with-python-incdir=*)  pythonincdir=$optarg  ; enable_python="yes"  ;;
       --with-python-libdir=*)  pythonlibdir=$optarg  ; enable_python="yes"  ;;
+      --with-ruby-incdir=*)    rubyincdir=$optarg    ; enable_ruby="yes"    ;;
+      --with-ruby-libdir=*)    rubylibdir=$optarg    ; enable_ruby="yes"    ;;
       --with-qt-incdir=*)      qtincdir=$optarg      ; enable_qt="yes"      ;;
       --with-qt-libdir=*)      qtlibdir=$optarg      ; enable_qt="yes"      ;;
       --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
@@ -1534,6 +1539,38 @@ if test ! "x$enable_python" = "xno" ; then
         case $platform in
             win32) pythonlibflags="-nodefaultlib:python23" ;;
         esac
+    fi
+fi
+
+######################################################################
+#
+### echo %%% Ruby - Optional alternative interpreter
+#
+# (See http://www.ruby-lang.org)
+#
+if test ! "x$enable_ruby" = "xno" ; then
+    # Check for Ruby include and library
+    if test "x$platform" = "xwin32"; then
+
+#       Microsoft Windows Part
+
+        rubylibdir=$found_dir
+        rubylibflags=""
+
+    else
+        check_header "ruby.h" "$rubyincdir" \
+        `ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
+        rubyinc=$found_hdr
+        rubyincdir=$found_dir
+
+        check_library "libruby-static" "$enable_shared" "$rubylibdir" \
+        `ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
+        rubylib=$found_lib
+        rubylibdir=$found_dir
+    fi
+
+    if test "x$rubyincdir" = "x" || test "x$rubylib" = "x"; then
+        enable_ruby="no"
     fi
 fi
 
@@ -2548,6 +2585,10 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@pythonlibdir@|$pythonlibdir|"        \
     -e "s|@pythonincdir@|$pythonincdir|"        \
     -e "s|@pythonlibflags@|$pythonlibflags|"    \
+    -e "s|@rubylib@|$rubylib|"                  \
+    -e "s|@rubylibdir@|$rubylibdir|"            \
+    -e "s|@rubyincdir@|$rubyincdir|"            \
+    -e "s|@rubylibflags@|$rubylibflags|"        \
     -e "s|@qtincdir@|$qtincdir|"                \
     -e "s|@qtlib@|$qtlib|"                      \
     -e "s|@qtlibdir@|$qtlibdir|"                \
