@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldQuickHandler.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -41,9 +41,9 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    delete gTextDialog;
    gTextDialog = this;
 
-   SetCleanup(kTRUE);
-
    fEditDisabled = kTRUE;
+
+   SetCleanup(kTRUE);
 
    TGWindow *win = fClient->GetWindowByName(name);
 
@@ -80,6 +80,8 @@ TGuiBldTextDialog::TGuiBldTextDialog(const char *name, const char *setter, const
    fEntry->SelectAll();
 
    TGHorizontalFrame *hf = new TGHorizontalFrame(this);
+   hf->SetCleanup(kTRUE);
+
    AddFrame(hf, new TGLayoutHints(kLHintsRight | kLHintsBottom,5,5,5,5));
 
    fOK = new TGTextButton(hf, "OK");
