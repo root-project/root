@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.41 2001/08/24 17:28:40 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.42 2001/08/24 22:11:56 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -587,6 +587,11 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
 
 TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts, const char *name) const
 {
+  return createHistogram(var1, var2, var1.getPlotBins(), var2.getPlotBins(), cuts, name);
+}
+
+TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, Int_t nx, Int_t ny, const char* cuts, const char *name) const
+{
   // Create a TH2F histogram of the distribution of the specified variable
   // using this dataset. Apply any cuts to select which events are used.
   // The variable being plotted can either be contained directly in this
@@ -601,7 +606,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
     // Is this variable a client of our dataset?
     if (!var1.dependsOn(_vars)) {
       cout << GetName() << "::createHistogram: Argument " << var1.GetName() 
-	   << " is not in dataset and is also not dependent on data set" << endl ;
+           << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
@@ -620,7 +625,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
     // Is this variable a client of our dataset?
     if (!var2.dependsOn(_vars)) {
       cout << GetName() << "::createHistogram: Argument " << var2.GetName() 
-	   << " is not in dataset and is also not dependent on data set" << endl ;
+           << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
@@ -647,14 +652,14 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
   histName.Prepend(fName);
 
   // create the histogram
-  TH2F* histogram= var1.createHistogram(histName.Data(), var2);
-
+  TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getPlotMin(), var1.getPlotMax(), 
+                                                      ny, var2.getPlotMin(), var2.getPlotMax());
   if(!histogram) {
     cout << fName << "::createHistogram: unable to create a new histogram" << endl;
     return 0;
   }
 
-  // Dump contents   
+  // Dump contents  
   Int_t nevent= (Int_t)_tree->GetEntries();
   for(Int_t i=0; i < nevent; ++i) 
   {
@@ -672,6 +677,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
 
   return histogram ;
 }
+
 
 Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts) const
 {

@@ -1,12 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.22 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.23 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   26-Aug-2001 AB Added TH2F * plot methods
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -53,6 +55,15 @@ public:
   TPaveText *Parameters(const char *label= "", Int_t sigDigits = 2,
 			Option_t *options = "NELU", Double_t xmin=0.65,
                         Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
+
+  //plot the pdf for variables varX and varY
+  //match the binning of another histogram if one is given
+  TH2F * plot(TH2F & hist, RooAbsReal & varX, RooAbsReal & varY, const char * name="");
+  TH2F * plot(TH2F * hist, RooAbsReal * varX, RooAbsReal * varY, const char * name="");
+  TH2F * plot(RooAbsReal & var1, RooAbsReal & var2, const char * name="", const Double_t newIntegral=1);
+  TH2F * plot(RooAbsReal * var1, RooAbsReal * var2, const char * name="", const Double_t newIntegral=1);
+  TH2F * plot(const char * name1, const char * name2, const RooArgSet& nset, const char * name="", const Double_t newIntegral=1);
+  TH2F * plot(const char * name1, const char * name2, const RooArgSet* nset, const char * name="", const Double_t newIntegral=1);
 
   // Interactions with a dataset  
   virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
