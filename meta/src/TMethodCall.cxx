@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.2 2000/08/01 23:46:46 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -314,9 +314,9 @@ EReturnType TMethodCall::ReturnType()
    if ((int)fRetType == -1) {
       TFunction *func = GetMethod();
       if (func == 0) {
-         fRetType = kOther;
+         fRetType = kOtherRet;
          Error("ReturnType","Unknown method");
-         return kOther;
+         return kOtherRet;
       }
       G__TypedefInfo type(func->GetReturnTypeName());
       const char *name = type.TrueName();
@@ -335,12 +335,12 @@ EReturnType TMethodCall::ReturnType()
           !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
           !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
           strstr(name, "enum"))
-         fRetType = kLong;
+         fRetType = kLongRet;
       else if (!strcmp("float", name)   || !strcmp("double", name)    ||
                !strcmp("Float_t", name) || !strcmp("Double_t", name))
-         fRetType = kDouble;
+         fRetType = kDoubleRet;
       else
-         fRetType = kOther;
+         fRetType = kOtherRet;
    }
    return fRetType;
 }
