@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.41 2003/03/06 23:48:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.42 2003/04/04 16:57:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -95,6 +95,7 @@ private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
     Int_t   FitOptionsMake(Option_t *option);
+    TH1(const TH1&); // Intentionally not implemented
 
 protected:
     virtual void     Copy(TObject &hnew) const;
