@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.9 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.10 2004/05/12 13:30:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -428,7 +428,8 @@ void TMatrixDSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
   const Int_t collwb_s = source.GetColLwb();
   if (row_lwb >= col_lwb) {
     // lower triangle
-    for (Int_t irow = 0; irow < nRows_source; irow++) {
+    Int_t irow;
+    for (irow = 0; irow < nRows_source; irow++) {
       for (Int_t icol = 0; col_lwb+icol <= row_lwb+irow &&
                              icol < nCols_source; icol++) {
         (*this)(row_lwb+irow-fRowLwb,col_lwb+icol-fRowLwb) = source(irow+rowlwb_s,icol+collwb_s);
@@ -436,7 +437,7 @@ void TMatrixDSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source)
     }
 
     // upper triangle
-    for (Int_t irow = 0; irow < nCols_source; irow++) {
+    for (irow = 0; irow < nCols_source; irow++) {
       for (Int_t icol = nRows_source-1; row_lwb+icol > irow+col_lwb &&
                               icol >= 0; icol--) {
         (*this)(col_lwb+irow-fRowLwb,row_lwb+icol-fRowLwb) = source(icol+rowlwb_s,irow+collwb_s);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.56 2004/02/12 13:03:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.1 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1438,7 +1438,8 @@ TMatrixDSparse TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,
   const Int_t shift = (opt.Contains("S")) ? 1 : 0;
 
   Int_t nr_nonzeros = 0;
-  for (Int_t irow = 0; irow < fNrows; irow++) {
+  Int_t irow;
+  for (irow = 0; irow < fNrows; irow++) {
     if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
     const Int_t sIndex = fRowIndex[irow];
     const Int_t eIndex = fRowIndex[irow+1];
@@ -1466,7 +1467,7 @@ TMatrixDSparse TMatrixDSparse::GetSub(Int_t row_lwb,Int_t row_upb,
   rowIndex_sub[0] = 0;
   const Int_t row_off = fRowLwb-row_lwb;
   const Int_t col_off = fColLwb-col_lwb;
-  for (Int_t irow = 0; irow < fNrows; irow++) {
+  for (irow = 0; irow < fNrows; irow++) {
     if (irow+fRowLwb > row_upb || irow+fRowLwb < row_lwb) continue;
     const Int_t sIndex = fRowIndex[irow];
     const Int_t eIndex = fRowIndex[irow+1];
@@ -1539,7 +1540,8 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
 
   Int_t nr = 0;
   rowIndex_new[0] = 0;
-  for (Int_t irow = 0; irow < fNrows; irow++) {
+  Int_t irow;
+  for (irow = 0; irow < fNrows; irow++) {
     rowIndex_new[irow+1] = rowIndex_new[irow];
     Bool_t flagRow = kFALSE;
     if (irow+fRowLwb < row_lwb+nRows_source && irow+fRowLwb >= row_lwb)
@@ -1560,7 +1562,8 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
 
       const Int_t sIndex_s = rowIndex_s[irow-row_off];
       const Int_t eIndex_s = rowIndex_s[irow-row_off+1];
-      for (Int_t index = sIndex_s; index < eIndex_s; index++) {
+      Int_t index;
+      for (index = sIndex_s; index < eIndex_s; index++) {
         rowIndex_new[irow+1]++;
         colIndex_new[nr] = colIndex_s[index]+col_off;
         elements_new[nr] = elements_s[index];
@@ -1572,7 +1575,7 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
                                                    icol_right)+sIndex_o,sIndex_o);
       while (right < eIndex_o && colIndex_old[right+1] < icol_right)
         right++;
-      for (Int_t index = right; index < eIndex_o; index++) {
+      for (index = right; index < eIndex_o; index++) {
         rowIndex_new[irow+1]++;
         colIndex_new[nr] = colIndex_old[index];
         elements_new[nr] = elements_old[index];
