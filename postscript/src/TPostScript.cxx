@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.49 2004/04/19 13:33:29 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.50 2004/04/19 13:37:01 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1003,7 +1003,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
+   Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = 0;
    Int_t jxd0 = XtoPS(xw[0]);
    Int_t jyd0 = YtoPS(yw[0]);
@@ -1045,7 +1045,7 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 
    PrintFast(2," m");
    idx = idy = 0;
-   for (Int_t i=1;i<n;i++) {
+   for (i=1;i<n;i++) {
       ixdi = XtoPS(xw[i]);
       iydi = YtoPS(yw[i]);
       ix   = ixdi - ixd0;
@@ -1113,7 +1113,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60,
                                     180, 90,135, 45,150, 30,120, 60};
-   Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
+   Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = 0;
    Int_t jxd0 = XtoPS(xw[0]);
    Int_t jyd0 = YtoPS(yw[0]);
@@ -1155,7 +1155,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    PrintFast(2," m");
    idx = idy = 0;
-   for (Int_t i=1;i<n;i++) {
+   for (i=1;i<n;i++) {
       ixdi = XtoPS(xw[i]);
       iydi = YtoPS(yw[i]);
       ix   = ixdi - ixd0;
