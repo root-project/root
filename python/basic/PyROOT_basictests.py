@@ -1,11 +1,11 @@
-# File: PyROOT/PyROOT_basictests.py
+# File: roottest/python/basic/PyROOT_basictests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 11/23/04
-# Last: 03/02/05
+# Last: 03/18/05
 
 """Basic unit tests for PyROOT package."""
 
-import os, unittest
+import os, sys, unittest
 from ROOT import *
 
 __all__ = [
@@ -192,3 +192,14 @@ class Basic4PythonizationTestCase( unittest.TestCase ):
       self.assertEqual( i.next(), 'i' )
       self.assertEqual( i.next(), 'b' )
       self.assertRaises( StopIteration, i.next )
+
+
+## actual test run
+if __name__ == '__main__':
+   loader = unittest.TestLoader()
+   testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
+
+   runner = unittest.TextTestRunner( verbosity = 2 )
+   result = not runner.run( testSuite ).wasSuccessful()
+
+   sys.exit( result )
