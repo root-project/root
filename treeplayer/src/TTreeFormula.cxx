@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.128 2003/12/11 23:30:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.129 2003/12/13 09:25:56 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -4065,8 +4065,11 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance) const
       if (mode == 0) {
          //NOTE: This is terrible form ... but is forced upon us by the fact that we can not
          //use the mutable keyword AND we should keep PrintValue const.
-         Int_t ndata = ((TTreeFormula*)this)->GetNdata();
-         if (ndata) {
+//          Int_t ndata = ((TTreeFormula*)this)->GetNdata();
+         Int_t real_instance = ((TTreeFormula*)this)->GetRealInstance(instance,0);
+//          fprintf(stderr,"for %s: ndata %d fNdata %d real_insta %d\n",
+//                  GetTitle(),ndata,fNdata[0], real_instance);
+         if (real_instance<fNdata[0]) {
             sprintf(value,"%9.9g",((TTreeFormula*)this)->EvalInstance(instance));
             char *expo = strchr(value,'e');
             if (expo) {
@@ -4437,6 +4440,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          } else if (fIndexes[i][0] >= size) {
             // unreacheable element requested:
             fManager->fUsedSizes[0] = 0;
+            fNdata[i] = 0;
             outofbounds = kTRUE;
          } else if (hasBranchCount2) {
             TFormLeafInfo * info;
@@ -4444,6 +4448,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (fIndexes[i][info->GetVarDim()] >= info->GetSize(fIndexes[i][0])) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
+               fNdata[i] = 0;
                outofbounds = kTRUE;
             }
          }
@@ -4458,11 +4463,16 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (fIndexes[i][0]==-1) {
                // Case where the index is not specified AND the 1st dimension has a variable
                // size.
-               if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
+               if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) {
+                  fManager->fUsedSizes[0] = size;
+               }
             } else if (fIndexes[i][0] >= size) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
+               fNdata[i] = 0;
                outofbounds = kTRUE;
+            } else {
+               fNdata[i] = size*fCumulSizes[i][1];
             }
             if (leafinfo->GetVarDim()>=0) {
                // Here we need to add the code to take in consideration the
@@ -4500,7 +4510,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       Int_t index;
       TFormLeafInfo * info = 0;
       if (fLookupType[i]!=kDirect) {
-        info = (TFormLeafInfo *)fDataMembers.At(i);
+         info = (TFormLeafInfo *)fDataMembers.At(i);
       }
       for(Int_t k=0, virt_dim=0; k < fNdimensions[i]; k++) {
          if (fIndexes[i][k]<0) {

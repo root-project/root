@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.146 2003/12/14 16:28:12 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.147 2003/12/16 09:00:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2164,12 +2164,54 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
+Int_t TTreePlayer::Scan(const char *varexp, const char *selection, 
+                        Option_t * option,
                        Int_t nentries, Int_t firstentry)
 {
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
+   //
+   // Arrays (within an entry) are printed in their linear forms.
+   // If several arrays with multiple dimensions are printed together,
+   // they will NOT be synchronized.  For example print 
+   //   arr1[4][2] and arr2[2][3] will results in a printing similar to:
+   // ***********************************************
+   // *    Row   * Instance *      arr1 *      arr2 *
+   // ***********************************************
+   // *        x *        0 * arr1[0][0]* arr2[0][0]*
+   // *        x *        1 * arr1[0][1]* arr2[0][1]*
+   // *        x *        2 * arr1[1][0]* arr2[0][2]*
+   // *        x *        3 * arr1[1][1]* arr2[1][0]*
+   // *        x *        4 * arr1[2][0]* arr2[1][1]*
+   // *        x *        5 * arr1[2][1]* arr2[1][2]*
+   // *        x *        6 * arr1[3][0]*           *
+   // *        x *        7 * arr1[3][1]*           *
+   //
+   // This would also affect using a selection and the result of
+   //   tree->Scan("arr1:arr2","arr1>arr2");
+   // will given strange results (because the 3 formulas are not correlated).   
+   //
+   //
+   // If option contains 
+   //    lenmax=dd
+   // Where 'dd' is the maximum number of elements per array that should
+   // be printed.  If 'dd' is 0, all elements are printed (this is the default)
+   
+   TString opt = option;
+   opt.ToLower();
+   UInt_t lenmax = 0;
+   if (opt.Contains("lenmax=")) {
+      int start = opt.Index("lenmax=");
+      int numpos = start + strlen("lenmax=");
+      int numlen = 0;
+      int len = opt.Length();
+      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+      TString num = opt(numpos,numlen);
+      opt.Remove(start,strlen("lenmax")+numlen);
+      
+      lenmax = atoi(num.Data());
+   }
 
    TTreeFormula **var;
    TString *cnames;
@@ -2251,17 +2293,36 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
 
 //*-*- Create a TreeFormulaManager to coordinate the formulas
    TTreeFormulaManager *manager=0;
+   Bool_t hasArray = kFALSE;
+   Bool_t forceDim = kFALSE;
    if (fFormulaList->LastIndex()>=0) {
-      manager = new TTreeFormulaManager;
-      for(i=0;i<=fFormulaList->LastIndex();i++) {
-         manager->Add((TTreeFormula*)fFormulaList->At(i));
+      if (select) {
+         manager = new TTreeFormulaManager;
+//          manager->Add((TTreeFormula*)fFormulaList->At(i));
+//       }
+         manager->Add(select);
+         manager->Sync();
+         if (manager->GetMultiplicity() > 0) hasArray = kTRUE;
       }
-      manager->Sync();
+      for(i=0;i<=fFormulaList->LastIndex();i++) {
+         TTreeFormula *form = ((TTreeFormula*)fFormulaList->At(i));
+         switch( form->GetManager()->GetMultiplicity() ) {
+            case  1:
+            case  2:
+               hasArray = kTRUE;
+            case -1:
+               forceDim = kTRUE;
+               break;
+            case  0:
+               break;
+         }
+         
+      }
    }
 
 //*-*- Print header
    onerow = "***********";
-   if (manager->GetMultiplicity()) onerow += "***********";
+   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2270,7 +2331,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    else
       printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
-   if (manager->GetMultiplicity()) onerow += "* Instance ";
+   if (hasArray) onerow += "* Instance ";
    for (i=0;i<ncols;i++) {
       onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
    }
@@ -2279,7 +2340,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    else
       printf("%s*\n",onerow.Data());
    onerow = "***********";
-   if (manager->GetMultiplicity()) onerow += "***********";
+   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
@@ -2304,10 +2365,25 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       }
 
       int ndata = 1;
-      if (manager && manager->GetMultiplicity()) {
-         ndata = manager->GetNdata();
+      if (forceDim) { // manager && manager->GetMultiplicity()) {
+
+         if (manager) ndata = manager->GetNdata(kTRUE);
+
+         // let's print the max number of column
+
+         for (i=0;i<ncols;i++) {
+            if (var[i]!=select) {
+               
+               if (ndata < var[i]->GetNdata() ) {
+                   ndata = var[i]->GetNdata();
+               }
+            }
+         }
+         
+         if (ndata<=0) ndata = 1;
       }
 
+      if (lenmax && ndata>(int)lenmax) ndata = lenmax;
       for(int inst=0;inst<ndata;inst++) {
          Bool_t loaded = kFALSE;
          if (select) {
@@ -2325,7 +2401,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
             loaded = kTRUE;
          }
          onerow = Form("* %8d ",entryNumber);
-         if (manager->GetMultiplicity()) {
+         if (hasArray) {
             onerow += Form("* %8d ",inst);
          }
          for (i=0;i<ncols;i++) {
@@ -2352,6 +2428,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       }
    }
    onerow = "***********";
+   if (hasArray) onerow += "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
