@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.105 2002/12/02 18:50:09 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.106 2002/12/02 22:07:08 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2299,6 +2299,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   if (maininfo) clones = (TClonesArray*)maininfo->GetLocalValuePointer(leaf,0);
                   else {
                      // we have a unsplit TClonesArray leaves
+                     // or we did not yet match any of the sub-branches!
+                    
                      TClass *mother_cl;
                      if (leaf->IsA()==TLeafObject::Class()) {
                         // in this case mother_cl is not really used
@@ -2315,7 +2317,15 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                      previnfo = clonesinfo;
                      maininfo = clonesinfo;
 
-                     clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
+                     if (branch->GetListOfBranches()->GetLast()>=0) {
+                        if (branch->IsA() != TBranchElement::Class()) {
+                           Error("DefinedVariable","Unimplemented usage of ClonesArray");
+                           return -1;
+                        }
+                        //branch = ((TBranchElement*)branch)->GetMother();
+                        clones = (TClonesArray*)((TBranchElement*)branch)->GetObject();
+                     } else 
+                        clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                   }
                   // NOTE clones can be zero!
                   TClass * inside_cl = clones->GetClass();

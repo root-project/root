@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.3 2003/01/11 12:47:02 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.4 2003/01/13 15:04:30 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -75,6 +75,7 @@ void TSelectorDraw::Begin(TTree *tree)
 {
    // Called everytime a loop on the tree(s) starts.
 
+   SetStatus(0);
    fSelectedRows   = 0;
    fTree = tree;
 
