@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.8 2004/12/17 22:34:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMLPAnalyzer.cxx,v 1.9 2005/02/03 07:29:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   25/04/04
 
 /*************************************************************************
@@ -336,9 +336,7 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    TLegend *legend = new TLegend(.75, .80, .95, .95);
    legend->AddEntry(bgh, "Background");
    legend->AddEntry(sigh,"Signal");
-   //stack->Draw("nostack"); TODO - FIX STACK!
-   bgh->Draw();
-   sigh->Draw("same");
+   stack->Draw("nostack"); 
    legend->Draw();
    // restore the default event list
    data->SetEventList(current);
