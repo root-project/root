@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.108 2002/09/06 20:48:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.109 2002/09/17 08:31:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4195,8 +4195,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    TObject *obj;
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
-      out<<"   "<<GetName()<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
       if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   "<<GetName()<<"->GetListOfFunctions()->Add(ptstats);"<<endl;
          out<<"   ptstats->SetParent("<<GetName()<<"->GetListOfFunctions());"<<endl;
       }
    }
