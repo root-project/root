@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafL.cxx,v 1.1 2003/12/19 13:40:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafL.cxx,v 1.2 2003/12/19 16:10:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -108,7 +108,7 @@ Double_t TLeafL::GetValue(Int_t i) const
 // if leaf is a simple type, i must be set to 0
 // if leaf is an array, i is the array element number to be returned
 
-   if (fIsUnsigned) return (Double_t)(ULong64_t)fValue[i];
+   if (fIsUnsigned) return (Double_t)((ULong64_t)fValue[i]);
    return fValue[i];
 }
 
