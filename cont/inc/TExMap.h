@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.2 2001/05/21 11:18:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.3 2003/06/23 07:13:08 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -38,14 +38,18 @@ friend class TExMapIter;
 
 private:
    struct Assoc_t {
+   private:
       ULong_t  fHash;
+   public:
       Long_t   fKey;
       Long_t   fValue;
-      Assoc_t(ULong_t hash, Long_t key, Long_t val)
-         { fHash = hash; fKey = key; fValue = val; }
+      inline void SetHash(ULong_t h) { fHash = (h | 1); } // bit(0) is "1" when in use
+      inline ULong_t GetHash() const { return fHash; }
+      inline Bool_t InUse() const { return fHash & 1; }
+      inline void Clear() { fHash = 0x0; }
    };
 
-   Assoc_t   **fTable;
+   Assoc_t    *fTable;
    Int_t       fSize;
    Int_t       fTally;
 

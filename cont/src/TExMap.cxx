@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.4 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.5 2003/06/23 07:13:09 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 
 #include "TExMap.h"
 #include "TMath.h"
-
+#include "TError.h"
 
 ClassImp(TExMap)
 
@@ -31,9 +31,15 @@ TExMap::TExMap(Int_t mapSize)
 {
    // Create a TExMap.
 
+   if (mapSize < 4) mapSize = 4; // needed for automatic resizing to
+                                 // guarantee that one slot is always empty
+
    fSize  = (Int_t)TMath::NextPrime(mapSize);
-   fTable = new Assoc_t* [fSize];
-   memset(fTable, 0, fSize*sizeof(Assoc_t*));
+   fTable = new Assoc_t [fSize];
+
+   for (int i=fSize; --i >= 0;) {
+      fTable[i].Clear();
+   }
    fTally = 0;
 }
 
@@ -44,12 +50,8 @@ TExMap::TExMap(const TExMap &map) : TObject(map)
 
    fSize  = map.fSize;
    fTally = map.fTally;
-   fTable = new Assoc_t* [fSize];
-   memset(fTable, 0, fSize*sizeof(Assoc_t*));
-   for (Int_t i = 0; i < fSize; i++)
-      if (map.fTable[i])
-         fTable[i] = new Assoc_t(map.fTable[i]->fHash, map.fTable[i]->fKey,
-                                 map.fTable[i]->fValue);
+   fTable = new Assoc_t [fSize];
+   memcpy(fTable, map.fTable, fSize*sizeof(Assoc_t));
 }
 
 //______________________________________________________________________________
@@ -57,8 +59,6 @@ TExMap::~TExMap()
 {
    // Delete TExMap.
 
-   for (Int_t i = 0; i < fSize; i++)
-      delete fTable[i];
    delete [] fTable; fTable = 0;
 }
 
@@ -71,8 +71,10 @@ void TExMap::Add(ULong_t hash, Long_t key, Long_t value)
       return;
 
    Int_t slot = FindElement(hash, key);
-   if (fTable[slot] == 0) {
-      fTable[slot] = new Assoc_t(hash, key, value);
+   if (!fTable[slot].InUse()) {
+      fTable[slot].SetHash(hash);
+      fTable[slot].fKey = key;
+      fTable[slot].fValue = value;
       fTally++;
       if (HighWaterMark())
          Expand(2 * fSize);
@@ -85,6 +87,8 @@ Long_t &TExMap::operator()(ULong_t hash, Long_t key)
 {
    // Return a reference to the value belonging to the key with the
    // specified hash value. If the key does not exist it will be added.
+   // NOTE: the reference will be invalidated an Expand() triggered by
+   // an Add() or another operator() call.
 
    static Long_t err;
    if (!fTable) {
@@ -93,15 +97,17 @@ Long_t &TExMap::operator()(ULong_t hash, Long_t key)
    }
 
    Int_t slot = FindElement(hash, key);
-   if (fTable[slot] == 0) {
-      fTable[slot] = new Assoc_t(hash, key, 0);
+   if (!fTable[slot].InUse()) {
+      fTable[slot].SetHash(hash);
+      fTable[slot].fKey = key;
+      fTable[slot].fValue = 0;
       fTally++;
       if (HighWaterMark()) {
          Expand(2 * fSize);
          slot = FindElement(hash, key);
       }
    }
-   return fTable[slot]->fValue;
+   return fTable[slot].fValue;
 }
 
 //______________________________________________________________________________
@@ -109,12 +115,10 @@ void TExMap::Delete(Option_t *)
 {
    // Delete all entries stored in the TExMap.
 
-   for (int i = 0; i < fSize; i++) {
-      if (fTable[i]) {
-         delete fTable[i];
-         fTable[i] = 0;
-      }
+   for (int i=fSize; --i >= 0;) {
+      fTable[i].Clear();
    }
+
    fTally = 0;
 }
 
@@ -126,15 +130,16 @@ Long_t TExMap::GetValue(ULong_t hash, Long_t key)
 
    if (!fTable) return 0;
 
+   hash |= 0x1;
    Int_t slot = Int_t(hash % fSize);
-   for (int n = 0; n < fSize; n++) {
-      if (!fTable[slot]) return 0;
-      if (key == fTable[slot]->fKey) return fTable[slot]->fValue;
+   Int_t firstSlot = slot;
+   do {
+      if (!fTable[slot].InUse()) return 0;
+      if (key == fTable[slot].fKey) return fTable[slot].fValue;
       if (++slot == fSize) slot = 0;
-   }
+   } while(firstSlot != slot);
 
-   if (fTable[slot])
-      return fTable[slot]->fValue;
+   Error("GetValue", "Table full");
    return 0;
 }
 
@@ -147,22 +152,14 @@ void TExMap::Remove(ULong_t hash, Long_t key)
       return;
 
    Int_t i = FindElement(hash, key);
-   if (fTable[i] == 0) {
-      Warning("Remove", "key %ld not found at %d", key, i);
-      for (int j = 0; j < fSize; j++) {
-         if (fTable[j] && fTable[j]->fKey == key) {
-            Error("Remove", "%ld found at %d !!!", key, j);
-            i = j;
-         }
-      }
+   if (!fTable[i].InUse()) {
+      Error("Remove", "key %ld not found at %d", key, i);
+      return;
    }
 
-   if (fTable[i]) {
-      delete fTable[i];
-      fTable[i] = 0;
-      FixCollisions(i);
-      fTally--;
-   }
+   fTable[i].Clear();
+   FixCollisions(i);
+   fTally--;
 }
 
 //______________________________________________________________________________
@@ -173,13 +170,17 @@ Int_t TExMap::FindElement(ULong_t hash, Long_t key)
 
    if (!fTable) return 0;
 
+   hash |= 0x1;
    Int_t slot = Int_t(hash % fSize);
-   for (int n = 0; n < fSize; n++) {
-      if (!fTable[slot]) return slot;
-      if (key == fTable[slot]->fKey) return slot;
+   Int_t firstSlot = slot;
+   do {
+      if (!fTable[slot].InUse()) return slot;
+      if (key == fTable[slot].fKey) return slot;
       if (++slot == fSize) slot = 0;
-   }
-   return slot;
+   } while(firstSlot != slot);
+
+   Error("FindElement", "Table full");
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -188,18 +189,18 @@ void TExMap::FixCollisions(Int_t index)
    // Rehash the map in case an entry has been removed.
 
    Int_t oldIndex, nextIndex;
-   Assoc_t *nextObject;
+   Assoc_t nextObject;
 
    for (oldIndex = index+1; ;oldIndex++) {
       if (oldIndex >= fSize)
          oldIndex = 0;
       nextObject = fTable[oldIndex];
-      if (nextObject == 0)
+      if (!nextObject.InUse())
          break;
-      nextIndex = FindElement(nextObject->fHash, nextObject->fKey);
+      nextIndex = FindElement(nextObject.GetHash(), nextObject.fKey);
       if (nextIndex != oldIndex) {
          fTable[nextIndex] = nextObject;
-         fTable[oldIndex] = 0;
+         fTable[oldIndex].Clear();
       }
    }
 }
@@ -209,17 +210,21 @@ void TExMap::Expand(Int_t newSize)
 {
    // Expand the TExMap.
 
-   Assoc_t **oldTable = fTable, *op;
+   Assoc_t *oldTable = fTable;
    Int_t oldsize = fSize;
    newSize = (Int_t)TMath::NextPrime(newSize);
-   fTable  = new Assoc_t* [newSize];
-   memset(fTable, 0, newSize*sizeof(Assoc_t*));
+   fTable  = new Assoc_t [newSize];
+
+   for (int i=newSize; --i >= 0;) {
+      fTable[i].Clear();
+   }
+
    fSize   = newSize;
    for (int i = 0; i < oldsize; i++)
-      if ((op = oldTable[i])) {
-         Int_t slot = FindElement(op->fHash, op->fKey);
-         if (fTable[slot] == 0)
-            fTable[slot] = op;
+      if (oldTable[i].InUse()) {
+         Int_t slot = FindElement(oldTable[i].GetHash(), oldTable[i].fKey);
+         if (!fTable[slot].InUse())
+            fTable[slot] = oldTable[i];
          else
             Error("Expand", "slot %d not empty (should never happen)", slot);
       }
@@ -254,10 +259,10 @@ void TExMap::Streamer(TBuffer &b)
       b << fTally;
 
       for (i=0;i<fSize;i++) {
-         if (!fTable[i]) continue;
-         b << fTable[i]->fHash;
-         b << fTable[i]->fKey;
-         b << fTable[i]->fValue;
+         if (!fTable[i].InUse()) continue;
+         b << fTable[i].GetHash();
+         b << fTable[i].fKey;
+         b << fTable[i].fValue;
       }
       b.SetByteCount(R__c, kTRUE);
    }
@@ -277,15 +282,15 @@ Bool_t TExMapIter::Next(ULong_t &hash, Long_t &key, Long_t &value)
 {
    // Get next entry from TExMap. Returns kFALSE at end of map.
 
-   while (fCursor < fMap->fSize && !fMap->fTable[fCursor])
+   while (fCursor < fMap->fSize && !fMap->fTable[fCursor].InUse())
       fCursor++;
 
    if (fCursor == fMap->fSize)
       return kFALSE;
 
-   hash  = fMap->fTable[fCursor]->fHash;
-   key   = fMap->fTable[fCursor]->fKey;
-   value = fMap->fTable[fCursor]->fValue;
+   hash  = fMap->fTable[fCursor].GetHash();
+   key   = fMap->fTable[fCursor].fKey;
+   value = fMap->fTable[fCursor].fValue;
    fCursor++;
 
    return kTRUE;
