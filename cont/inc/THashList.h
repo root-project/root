@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.3 2000/09/08 16:41:25 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.4 2000/12/13 15:13:46 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
    void       AddAfter(TObjLink *after, TObject *obj);
    void       AddBefore(TObject *before, TObject *obj);
    void       AddBefore(TObjLink *before, TObject *obj);
+   void       RecursiveRemove(TObject *obj);
    void       Rehash(Int_t newCapacity);
    TObject   *Remove(TObject *obj);
    TObject   *Remove(TObjLink *lnk);

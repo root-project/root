@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.5 2001/03/07 11:51:34 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -205,6 +205,31 @@ TObject *THashList::FindObject(const TObject *obj) const
    // Find object using its hash value (returned by its Hash() member).
 
    return fTable->FindObject(obj);
+}
+
+//______________________________________________________________________________
+void THashList::RecursiveRemove(TObject *obj)
+{
+   // Remove object from this collection and recursively remove the object
+   // from all other objects (and collections).
+   // This function overrides TCollection::RecursiveRemove that calls
+   // the Remove function. THashList::Remove cannot be called because
+   // it uses the hash value of the hash table. This hash value
+   // is not available anymore when RecursiveRemove is called from
+   // the TObject destructor.
+
+   if (!obj) return;
+
+   // Remove obj in the list itself
+   TObject *object = TList::Remove(obj);
+   if (object) fTable->RemoveSlow(object);
+
+   // Scan again the list and invoke RecursiveRemove for all objects
+   TIter next(this);
+
+   while ((object = next())) {
+      if (object->TestBit(kNotDeleted)) object->RecursiveRemove(obj);
+   }
 }
 
 //______________________________________________________________________________
