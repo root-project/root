@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.35 2004/06/16 08:16:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.36 2004/06/16 09:18:57 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -474,7 +474,8 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                case kKey_Up:
                   if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->Before(ce);
                   while (ce && ((ce->GetType() == kMenuSeparator) ||
-                         (ce->GetType() == kMenuLabel))) {
+                         (ce->GetType() == kMenuLabel) ||
+                         !(ce->GetStatus() & kMenuEnableMask))) {
                      ce = (TGMenuEntry*)menu->GetListOfEntries()->Before(ce);
                   }
                   if (!ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->Last();
@@ -482,7 +483,8 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                case kKey_Down:
                   if (ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->After(ce);
                   while (ce && ((ce->GetType() == kMenuSeparator) ||
-                         (ce->GetType() == kMenuLabel))) {
+                         (ce->GetType() == kMenuLabel) ||
+                         !(ce->GetStatus() & kMenuEnableMask))) {
                      ce = (TGMenuEntry*)menu->GetListOfEntries()->After(ce);
                   }
                   if (!ce) ce = (TGMenuEntry*)menu->GetListOfEntries()->First();
@@ -490,13 +492,17 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                case kKey_Enter:
                case kKey_Return:
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+                  fCurrent->SetState(kFALSE);
+                  menu->fStick = kFALSE;
                   Event_t ev;
                   ev.fType = kButtonRelease;
                   ev.fWindow = menu->GetId();
-                  menu->fStick = kFALSE;
                   menu->HandleButton(&ev);
                   break;
                case kKey_Escape:
+                  gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
+                  fCurrent->SetState(kFALSE);
+                  fStick = kFALSE;
                   menu->EndMenu(dummy);
                default:
                   break;
