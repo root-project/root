@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.48 2003/08/23 00:08:12 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.49 2003/09/29 12:31:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1325,7 +1325,7 @@ void TCanvas::Resize(Option_t *)
 //*-*- Loop on all pads to recompute conversion coefficients
    TPad::ResizePad();
 
-   padsav->cd();
+   if (padsav) padsav->cd();
 }
 
 //______________________________________________________________________________
