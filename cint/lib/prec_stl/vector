@@ -18,6 +18,7 @@
 
 #include <iterator>
 #include <memory>
+#include <utility>
 
 #if defined(G__ANSIISOLIB)
 template<class T,class Allocator=allocator<T> >
@@ -95,6 +96,13 @@ class vector {
 
   typedef const reverse_iterator const_reverse_iterator;
 
+#if (G__GNUC>=3) 
+  friend bool operator==(vector::const_iterator& x
+                        ,vector::const_iterator& y) const;
+  friend bool operator!=(vector::const_iterator& x
+                        ,vector::const_iterator& y) const;
+#endif
+
 #if 0
   friend random_access_iterator_tag 
     iterator_category(random_access_iterator<T,vector::difference_type>& x);
@@ -135,7 +143,7 @@ class vector {
   void erase(iterator position) ;
   void erase(iterator first,iterator last) ;
 
-#if 0
+#if (G__GNUC>=3)
   // doesn't work on VC++ 5.0
   friend bool operator==(const vector& x, const vector& y);
   friend bool operator< (const vector& x, const vector& y);
@@ -151,10 +159,188 @@ class vector {
 #endif
 
 
-  // Generic algorithm
-  friend void reverse(vector::iterator first,vector::iterator last);
-  //friend void reverse(vector::reverse_iterator first,vector::reverse_itetator last);
+#ifndef G__NOALGORITHM
 
+  // Generic algorithm
+#if defined(G__GNUC) || defined(G__BORLAND)
+
+  // input iter
+  friend vector::iterator 
+    find(vector::iterator first,vector::iterator last,const T& value);
+  // forward iter
+  friend vector::iterator 
+    find_end(vector::iterator first1,vector::iterator last1,
+	     vector::iterator first2,vector::iterator last2);
+  friend vector::iterator 
+    find_first_of(vector::iterator first1,vector::iterator last1,
+	          vector::iterator first2,vector::iterator last2);
+  friend vector::iterator 
+    adjacent_find(vector::iterator first,vector::iterator last);
+  // input iter
+#if !defined(G__BORLAND)
+  friend vector::difference_type
+    count(vector::iterator first,vector::iterator last,const T& value);
+#endif
+#if 0
+  friend pair<vector::iterator,vector::iterator>
+    mismatch(vector::iterator first1,vector::iterator last1,
+             vector::iterator first2);
+#endif
+  friend bool
+    equal(vector::iterator first1,vector::iterator last1,
+          vector::iterator first2);
+  // forward iter
+  friend vector::iterator
+    search(vector::iterator first1,vector::iterator last1,
+           vector::iterator first2,vector::iterator last2);
+  friend vector::iterator
+    search_n(vector::iterator first,vector::iterator last
+             ,vector::size_type count,const T& value);
+  // input and output iter -> forward iter
+  friend vector::iterator
+    copy(vector::iterator first,vector::iterator last,
+         vector::iterator result);
+  // bidirectional iter
+  friend vector::iterator
+    copy_backward(vector::iterator first,vector::iterator last,
+                  vector::iterator result);
+  // just value_type
+  friend void swap(T& a,T& b);
+  // forward iter
+  friend vector::iterator
+    swap_ranges(vector::iterator first1,vector::iterator last1,
+                vector::iterator first2);
+  friend void iter_swap(vector::iterator a,vector::iterator b);
+  friend void replace(vector::iterator first,vector::iterator last,
+                      const T& old_value,const T& new_value);
+  // input, output iter -> forward iter
+  friend vector::iterator 
+    replace_copy(vector::iterator first,vector::iterator last,
+                 vector::iterator result,
+                 const T& old_value,const T& new_value);
+  // forward iter
+  friend void
+    fill(vector::iterator first,vector::iterator last,const T& value);
+#if (G__GNUC>=3)
+  friend void
+    fill_n(vector::iterator first,vector::size_type n,const T& value);
+#endif
+  friend vector::iterator
+    remove(vector::iterator first,vector::iterator last,const T& value);
+  // input,output iter -> forward iter
+  friend vector::iterator
+    remove_copy(vector::iterator first,vector::iterator last,
+                vector::iterator result,const T& value);
+  friend vector::iterator
+    unique(vector::iterator first,vector::iterator last);
+  friend vector::iterator 
+    unique_copy(vector::iterator first,vector::iterator last,
+                vector::iterator result);
+  friend void reverse(vector::iterator first,vector::iterator last);
+  friend vector::iterator
+     reverse_copy(vector::iterator first,vector::iterator last,
+                  vector::iterator result);
+  // forward iter
+  friend void rotate(vector::iterator first,vector::iterator mid,
+                     vector::iterator last);
+  // forward iter
+  friend vector::iterator 
+    rotate_copy(vector::iterator first,vector::iterator mid,
+                vector::iterator last,vector::iterator result);
+  // randomaccess iter
+  friend void random_shuffle(vector::iterator first,vector::iterator last);
+  // randomaccess iter
+  friend void sort(vector::iterator first,vector::iterator last);
+  friend void stable_sort(vector::iterator first,vector::iterator last);
+  friend void partial_sort(vector::iterator first,vector::iterator mid,
+                           vector::iterator last);
+  friend vector::iterator
+    partial_sort_copy(vector::iterator first,vector::iterator last,
+                      vector::iterator result_first,
+                      vector::iterator result_last);
+  friend void nth_element(vector::iterator first,vector::iterator nth,
+                          vector::iterator last);
+  // forward iter
+  friend vector::iterator 
+    lower_bound(vector::iterator first,vector::iterator last,const T& value);
+  friend vector::iterator 
+    upper_bound(vector::iterator first,vector::iterator last,const T& value);
+#if 0
+  friend pair<vector::iterator,vector::iterator>
+    equal_range(vector::iterator first,vector::iterator last,const T& value);
+#endif
+  friend bool binary_search(vector::iterator first,vector::iterator last,
+                            const T& value);
+  friend vector::iterator merge(vector::iterator first1,vector::iterator last1,
+                                vector::iterator first2,vector::iterator last2,
+                                vector::iterator result);
+  friend void inplace_merge(vector::iterator first,vector::iterator middle,
+                            vector::iterator last);
+  friend bool includes(vector::iterator first1,vector::iterator last1,
+                       vector::iterator first2,vector::iterator last2);
+  friend vector::iterator 
+    set_union(vector::iterator first1,vector::iterator last1,
+              vector::iterator first2,vector::iterator last2,
+              vector::iterator result);
+  friend vector::iterator 
+    set_intersection(vector::iterator first1,vector::iterator last1,
+                     vector::iterator first2,vector::iterator last2,
+                     vector::iterator result);
+  friend vector::iterator 
+    set_difference(vector::iterator first1,vector::iterator last1,
+                   vector::iterator first2,vector::iterator last2,
+                   vector::iterator result);
+  friend vector::iterator 
+    set_symmetric_difference(vector::iterator first1,vector::iterator last1,
+                             vector::iterator first2,vector::iterator last2,
+                             vector::iterator result);
+  // random access
+  friend void push_heap(vector::iterator first,vector::iterator last);
+  friend void pop_heap(vector::iterator first,vector::iterator last);
+  friend void make_heap(vector::iterator first,vector::iterator last);
+  friend void sort_heap(vector::iterator first,vector::iterator last);
+  // min,max, just value_type
+  friend const T& min(const T& a,const T& b);
+  friend const T& max(const T& a,const T& b);
+  // forward iter
+  friend vector::iterator 
+    min_element(vector::iterator first,vector::iterator last);
+  friend vector::iterator 
+    max_element(vector::iterator first,vector::iterator last);
+  // input iter
+  friend bool
+    lexicographical_compare(vector::iterator first1,vector::iterator last1,
+                            vector::iterator first2,vector::iterator last2);
+  // bidirectional iter
+  friend bool next_permutation(vector::iterator first,vector::iterator last);
+  friend bool prev_permutation(vector::iterator first,vector::iterator last);
+
+#elif defined(G__VISUAL)
+
+  friend void reverse(vector::iterator first,vector::iterator last);
+  friend void sort(vector::iterator first,vector::iterator last);
+
+  friend vector::iterator 
+    find(vector::iterator first,vector::iterator last,const T& value);
+  friend vector::iterator
+    search(vector::iterator first1,vector::iterator last1,
+           vector::iterator first2,vector::iterator last2);
+  friend vector::iterator
+    copy(vector::iterator first,vector::iterator last,
+         vector::iterator result);
+  friend void
+    fill(vector::iterator first,vector::iterator last,const T& value);
+#if 0
+  // this is the limit that VC++ can handle
+  friend vector::iterator
+    remove(vector::iterator first,vector::iterator last,const T& value);
+  friend vector::iterator
+    unique(vector::iterator first,vector::iterator last);
+#endif
+
+#endif // G__VISUAL,G__GNUC,G__BORLAND
+
+#endif // G__NOALGORITHM
 
   // iterator_category resolution
   //friend random_access_iterator_tag iterator_category(vector::iterator x);

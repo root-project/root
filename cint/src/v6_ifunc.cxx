@@ -4821,7 +4821,7 @@ int recursive;
 	    ifunc->hash[ifn] = hash;
 	  }
 #endif
-	  funclist = G__funclist_add(funclist,ifunc,ifn);
+	  funclist = G__funclist_add(funclist,ifunc,ifn,0);
 	  if(ifunc->para_nu[ifn]<libp->paran ||
 	     (ifunc->para_nu[ifn]>libp->paran&&
 	      !ifunc->para_default[ifn][libp->paran])) {
@@ -4892,7 +4892,7 @@ int recursive;
 	   ) {
 	}
 	else {
-	  funclist = G__funclist_add(funclist,p_ifunc,ifn);
+	  funclist = G__funclist_add(funclist,p_ifunc,ifn,0);
 	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,recursive);
 	  funclist->ifunc = 0; /* added as dummy */
 	}
@@ -4990,7 +4990,7 @@ int recursive;
 	  continue;
 	}
 #endif
-	funclist = G__funclist_add(funclist,p_ifunc,ifn);
+	funclist = G__funclist_add(funclist,p_ifunc,ifn,0);
 	if(p_ifunc->para_nu[ifn]<libp->paran ||
 	   (p_ifunc->para_nu[ifn]>libp->paran&&
 	    !p_ifunc->para_default[ifn][libp->paran])

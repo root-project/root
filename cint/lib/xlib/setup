@@ -34,6 +34,7 @@ MACRO='-DXLIB_ILLEGAL_ACCESS'
 makecint -mk $MKFILE -dl $DLL $MACRO -h $HDR $X11INC -l $X11LIB
 make clean
 make
+exit
 mv $DLL $CINTSYSDIR/include/X11/$DLL
 make clean
 rm $MKFILE

@@ -197,6 +197,43 @@ class multiset {
   // specialized algorithms:
   //friend void swap(multiset& x, multiset& y);
 
+#ifndef G__NOALGORITHM
+  // Generic algorithm
+#if defined(G__GNUC) || defined(G__BORLAND)
+
+  friend multiset::iterator 
+    find(multiset::iterator first,multiset::iterator last,const Key& value);
+  friend multiset::iterator
+    search(multiset::iterator first1,multiset::iterator last1,
+           multiset::iterator first2,multiset::iterator last2);
+
+#elif defined(G__VISUAL)
+
+  friend void reverse(multiset::iterator first,multiset::iterator last);
+#if 0
+  friend void sort(multiset::iterator first,multiset::iterator last);
+#endif
+
+  friend multiset::iterator 
+    find(multiset::iterator first,multiset::iterator last,const Key& value);
+  friend multiset::iterator
+    search(multiset::iterator first1,multiset::iterator last1,
+           multiset::iterator first2,multiset::iterator last2);
+  friend multiset::iterator
+    copy(multiset::iterator first,multiset::iterator last,
+         multiset::iterator result);
+  friend void
+    fill(multiset::iterator first,multiset::iterator last,const Key& value);
+#if 0
+  friend multiset::iterator
+    remove(multiset::iterator first,multiset::iterator last,const Key& value);
+  friend multiset::iterator
+    unique(multiset::iterator first,multiset::iterator last);
+#endif
+
+#endif // G__GNUC || G__BORLAND
+#endif // G__NOALGORITHM
+
 };
 
 #pragma endif

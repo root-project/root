@@ -14,6 +14,7 @@ extern "C" void G__set_cpp_environmentG__stream() {
   G__add_compiledheader("iostrm.h");
   G__add_compiledheader("fstrm.h");
   G__add_compiledheader("sstrm.h");
+  G__add_compiledheader("linkdef.h");
   G__cpp_reset_tagtableG__stream();
 }
 class G__gcc3strmdOcxx_tag {};
@@ -2997,8 +2998,6 @@ G__linked_taginfo G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR = 
 G__linked_taginfo G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ifstream<char,char_traits<char> >" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ofstream<char,char_traits<char> >" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_string = { "string" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_allocatorlEchargR = { "allocator<char>" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_allocatorlEwchar_tgR = { "allocator<wchar_t>" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_stringbuf<char,char_traits<char>,allocator<char> >" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_istringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
 G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_ostringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
@@ -3030,8 +3029,6 @@ extern "C" void G__cpp_reset_tagtableG__stream() {
   G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
   G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR.tagnum = -1 ;
   G__G__streamLN_string.tagnum = -1 ;
-  G__G__streamLN_allocatorlEchargR.tagnum = -1 ;
-  G__G__streamLN_allocatorlEwchar_tgR.tagnum = -1 ;
   G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR.tagnum = -1 ;
   G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR.tagnum = -1 ;
   G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR.tagnum = -1 ;
@@ -3073,8 +3070,6 @@ extern "C" void G__cpp_setup_tagtableG__stream() {
 ,G__setup_memfuncbasic_ifstreamlEcharcOchar_traitslEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR),sizeof(basic_ofstream<char,char_traits<char> >),-1,1280,(char*)NULL,G__setup_memvarbasic_ofstreamlEcharcOchar_traitslEchargRsPgR
 ,G__setup_memfuncbasic_ofstreamlEcharcOchar_traitslEchargRsPgR);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_allocatorlEchargR),0,-1,0,(char*)NULL,NULL,NULL);
-   G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_allocatorlEwchar_tgR),0,-1,0,(char*)NULL,NULL,NULL);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_stringbuf<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL
 ,G__setup_memvarbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR,G__setup_memfuncbasic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR),sizeof(basic_istringstream<char,char_traits<char>,allocator<char> >),-1,1280,(char*)NULL

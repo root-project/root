@@ -197,6 +197,35 @@ class set {
   // specialized algorithms:
   //friend void swap(set& x, set& y);
 
+
+#ifndef G__NOALGORITHM
+  // Generic algorithm
+#if defined(G__GNUC) || defined(G__BORLAND)
+
+  friend set::iterator 
+    find(set::iterator first,set::iterator last,const Key& value);
+  friend set::iterator
+    search(set::iterator first1,set::iterator last1,
+           set::iterator first2,set::iterator last2);
+
+#elif defind(G__VISUAL)
+
+  friend void reverse(set::iterator first,set::iterator last);
+
+  friend set::iterator 
+    find(set::iterator first,set::iterator last,const Key& value);
+  friend set::iterator
+    search(set::iterator first1,set::iterator last1,
+           set::iterator first2,set::iterator last2);
+  friend set::iterator
+    copy(set::iterator first,set::iterator last,
+         set::iterator result);
+  friend void
+    fill(set::iterator first,set::iterator last,const Key& value);
+
+#endif // G__GNUC || G__BORLAND
+#endif // G__NOALGORITHM
+
 };
 
 #pragma endif

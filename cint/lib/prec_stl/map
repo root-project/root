@@ -195,9 +195,12 @@ class map {
   //friend void swap(map& x, map& y);
 #endif
 
+#ifndef G__NOALGORITHM
   // Generic algorithm
-  //friend void reverse(map::iterator first,map::iterator last);
-  //friend void reverse(map::reverse_iterator first,map::reverse_itetator last);
+  friend map::iterator
+    search(map::iterator first1,map::iterator last1,
+           map::iterator first2,map::iterator last2);
+#endif
 
   // iterator_category resolution
   //friend bidirectional_iterator_tag iterator_category(map::iterator x);

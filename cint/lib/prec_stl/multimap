@@ -195,6 +195,14 @@ class multimap {
   //friend void swap(multimap& x, multimap& y);
 #endif
 
+#ifndef G__NOALGORITHM
+  // Generic algorithm
+  friend multimap::iterator
+    search(multimap::iterator first1,multimap::iterator last1,
+           multimap::iterator first2,multimap::iterator last2);
+#endif
+
+
   // Generic algorithm
   //friend void reverse(multimap::iterator first,multimap::iterator last);
   //friend void reverse(multimap::reverse_iterator first,multimap::reverse_itetator last);

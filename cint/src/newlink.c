@@ -680,6 +680,33 @@ void G__gen_cpplink()
   if(!hfp) G__fileerror(G__CPPLINK_H);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1589
+  {
+    int algoflag=0;
+    int filen=0;
+    char *fname;
+    for(filen=0;filen<G__nfile;filen++) {
+      fname = G__srcfile[filen].filename;
+      if(strcmp(fname,"vector")==0 || strcmp(fname,"list")==0 || 
+	 strcmp(fname,"deque")==0 || strcmp(fname,"map")==0 || 
+	 strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
+	 strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 || 
+	 strcmp(fname,"queue")==0) {
+	algoflag = 1;
+      }
+      if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 || 
+	 strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 || 
+	 strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 || 
+	 strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 || 
+	 strcmp(fname,"queue.h")==0) {
+	algoflag = 2;
+      }
+    }
+    if(algoflag&1) fprintf(hfp,"#include <algorithm>\n");
+    if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
+  }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION883
   if(G__CPPLINK==G__globalcomp&&-1!=G__defined_tagname("G__longlong",2)) {
 #if defined(__hpux) && !defined(G__ROOT)
@@ -5692,17 +5719,26 @@ FILE *fp;
   int pvoidflag;
   G__value buf;
   char value[G__ONELINE],ttt[G__ONELINE];
+#ifndef G__OLDIMPLEMENTATION1590
+  int divn=0;
+  int maxfnc=100;
+  int fnc=0;
+#endif
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global variable information setup for each class\n");
   fprintf(fp,"*********************************************************/\n");
 
+#ifndef G__OLDIMPLEMENTATION1590
+  fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
+#else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_global%s() {\n",G__DLLID);
   }
   else {
     fprintf(fp,"void G__c_setup_global%s() {\n",G__DLLID);
   }
+#endif
 
   fprintf(fp,"\n   /* Setting up global variables */\n");
   var = &G__global;
@@ -5710,6 +5746,13 @@ FILE *fp;
 
   while((struct G__var_array*)NULL!=var) {
     for(j=0;j<var->allvar;j++) {
+#ifndef G__OLDIMPLEMENTATION1590
+      if(fnc++>maxfnc) {
+	fnc=0;
+	fprintf(fp,"}\n\n");
+	fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
+      }
+#endif
       if((G__AUTO==var->statictype[j] /* not static */ ||
 	  (0==var->p[j] && G__COMPILEDGLOBAL==var->statictype[j] &&
 	   INT_MAX == var->varlabel[j][1])) && /* extern type v[]; */
@@ -5791,6 +5834,21 @@ FILE *fp;
   fprintf(fp,"   G__resetglobalenv();\n");
 
   fprintf(fp,"}\n");
+
+#ifndef G__OLDIMPLEMENTATION1590
+  if(G__CPPLINK == G__globalcomp) {
+    fprintf(fp,"extern \"C\" void G__cpp_setup_global%s() {\n",G__DLLID);
+  }
+  else {
+    fprintf(fp,"void G__c_setup_global%s() {\n",G__DLLID);
+  }
+  for(fnc=0;fnc<divn;fnc++) {
+    fprintf(fp,"  G__cpp_setup_global%d();\n",fnc);
+  }
+  fprintf(fp,"}\n");
+#endif
+
+
 #endif
 }
 
@@ -5945,17 +6003,26 @@ FILE *fp;
   int j,k;
   struct G__ifunc_table *ifunc;
   char buf[G__ONELINE];
+#ifndef G__OLDIMPLEMENTATION1590
+  int divn=0;
+  int maxfnc=100;
+  int fnc=0;
+#endif
 
   fprintf(fp,"\n/*********************************************************\n");
   fprintf(fp,"* Global function information setup for each class\n");
   fprintf(fp,"*********************************************************/\n");
 
+#ifndef G__OLDIMPLEMENTATION1590
+  fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
+#else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_func%s() {\n",G__DLLID);
   }
   else {
     fprintf(fp,"void G__c_setup_func%s() {\n",G__DLLID);
   }
+#endif
 
   ifunc = &G__ifunc;
 
@@ -5963,6 +6030,13 @@ FILE *fp;
 
   while((struct G__ifunc_table*)NULL!=ifunc) {
     for(j=0;j<ifunc->allifunc;j++) {
+#ifndef G__OLDIMPLEMENTATION1590
+      if(fnc++>maxfnc) {
+	fnc=0;
+	fprintf(fp,"}\n\n");
+	fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
+      }
+#endif
       if(G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */
 	 G__PUBLIC==ifunc->access[j] && /* public, this is always true */
 	 0==ifunc->staticalloc[j] &&
@@ -6085,7 +6159,20 @@ FILE *fp;
     fprintf(fp,"  %s();\n",G__INITFUNC);
   }
 
+  fprintf(fp,"}\n\n");
+
+#ifndef G__OLDIMPLEMENTATION1590
+  if(G__CPPLINK == G__globalcomp) {
+    fprintf(fp,"extern \"C\" void G__cpp_setup_func%s() {\n",G__DLLID);
+  }
+  else {
+    fprintf(fp,"void G__c_setup_func%s() {\n",G__DLLID);
+  }
+  for(fnc=0;fnc<divn;fnc++) {
+    fprintf(fp,"  G__cpp_setup_func%d();\n",fnc);
+  }
   fprintf(fp,"}\n");
+#endif
 }
 
 /**************************************************************************

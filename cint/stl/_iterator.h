@@ -66,6 +66,13 @@ inline random_access_iterator_tag iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
+#if (G__GNUC>=3)
+template <class T, class Container> 
+inline T* value_type(const __normal_iterator<T, Container>&) {
+    return (T*)(0); 
+}
+#endif
+
 template <class T, class Distance> 
 inline T* value_type(const input_iterator<T, Distance>&) {
     return (T*)(0); 
