@@ -7,7 +7,7 @@
  * Description:
  *  Class and member function template
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -1388,6 +1388,25 @@ void G__declare_template()
     else { /* if(strncmp(temp,"::",2)==0) { */
       /*2 template<class T> A<T>::B<T> A<T>::f()  ::B<T>
        *4 template<class T> A<T>::B<T> f()        ::B<T> */
+#ifndef G__OLDIMPLEMENTATION1633
+      /* take out keywords const */
+      fpos_t posx;
+      int linex;
+      G__disp_mask = 1000;
+      fgetpos(G__ifile.fp,&posx);
+      linex = G__ifile.line_number;
+      c=G__fgetname(temp,"*(;<");
+      if(0==strcmp(temp,"const")) {
+	G__constvar = G__CONSTVAR;
+	if(G__dispsource) G__fprinterr(G__serr,"%s",temp);
+	if(!isspace(c)) fseek(G__ifile.fp,-1,SEEK_CUR);
+      }
+      else {
+	G__disp_mask = 0;
+	fsetpos(G__ifile.fp,&posx);
+	G__ifile.line_number = linex;
+      }
+#endif
       c=G__fgetstream(temp,"(;<");
       /* Judge by c? '('  global or '<' member */
     }
@@ -1432,7 +1451,11 @@ void G__declare_template()
      *                               ^              */
     do {
 #ifndef G__OLDIMPLEMENTATION1488
+#ifndef G__OLDIMPLEMENTATION1638
+      c=G__fgetname_template(temp,"(<&*");
+#else
       c=G__fgetname_template(temp,"(<");
+#endif
       if(isspace(c) && strcmp(temp,"operator")==0) {
 	c=G__fgetstream(temp+8,"(");
 	if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");

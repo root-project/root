@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.47 2001/12/21 14:43:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.50 2002/02/23 16:04:54 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
+#include "TVirtualMutex.h"
 
 #ifdef WIN32
 #  ifndef ROOT_TGWin32Command
@@ -242,7 +243,11 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
          } else {
             int local_error = 0;
             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
-            if (error) *error = (EErrorCode)local_error;
+            if (error) {
+               *error = (EErrorCode)local_error;
+               if (*error == 0 && G__get_return(0) == G__RETURN_EXIT2)
+                  *error = kExit;
+            }
          }
 
          gROOT->SetLineHasBeenProcessed();
@@ -684,6 +689,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
 
    void       *address;
    long        offset;
+   R__LOCKGUARD(gCINTMutex);
    G__CallFunc func;
 
    // set pointer to interface method and arguments

@@ -542,7 +542,10 @@ array phase(carray& a)
   G__ary_atan(c.dat,c.dat,a.n);
   c.n=a.n;
   c = c*180/3.141592;
-  for(i=0;i<c.n;i++) if(a.re[i]<0) c.dat[i] = c.dat[i]-180;
+  for(i=0;i<c.n;i++) {
+    if(a.re[i]<0) c.dat[i] = c.dat[i]-180;
+    if(i && c.dat[i-1]>80 && c.dat[i]<-200) c.dat[i] = c.dat[i] + 360;
+  }
   return(c);
 }
 

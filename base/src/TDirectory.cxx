@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.19 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.21 2002/02/11 09:08:10 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -22,9 +22,8 @@
 #include "TROOT.h"
 #include "TError.h"
 #include "Bytes.h"
-#include "TRegexp.h"
 #include "TStreamerInfo.h"
-
+#include "TRegexp.h"
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
 
@@ -259,7 +258,6 @@ void TDirectory::Build()
    fMother     = gDirectory;
    fFile       = gFile;
    SetBit(kCanDelete);
-   TStreamerInfo::SetCurrentFile(fFile);
 }
 
 //______________________________________________________________________________
@@ -290,7 +288,6 @@ Bool_t TDirectory::cd1(const char *apath)
    if (!nch) {
       gDirectory = this;
       gFile      = fFile;
-      TStreamerInfo::SetCurrentFile(fFile);
       return kTRUE;
    }
 
@@ -551,7 +548,6 @@ void TDirectory::Close(Option_t *)
       else
          gDirectory = gROOT;
    }
-   TStreamerInfo::SetCurrentFile(gFile);
 
    TCollection::EmptyGarbageCollection();
 }
@@ -1146,20 +1142,21 @@ Int_t TDirectory::ReadKeys()
    frombuf(buffer, &fSeekKeys);
    delete [] header;
 
-   TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
-   headerkey->ReadFile();
-   buffer = headerkey->GetBuffer();
-   headerkey->ReadBuffer(buffer);
-   Int_t nkeys;
-   TKey *key;
-   frombuf(buffer, &nkeys);
-   for (Int_t i = 0; i < nkeys; i++) {
-      key = new TKey();
-      key->ReadBuffer(buffer);
-      fKeys->Add(key);
+   Int_t nkeys = 0;
+   if ( fSeekKeys >  0) {
+      TKey *headerkey    = new TKey(fSeekKeys,fNbytesKeys);
+      headerkey->ReadFile();
+      buffer = headerkey->GetBuffer();
+      headerkey->ReadBuffer(buffer);
+      TKey *key;
+      frombuf(buffer, &nkeys);
+      for (Int_t i = 0; i < nkeys; i++) {
+         key = new TKey();
+         key->ReadBuffer(buffer);
+         fKeys->Add(key);
+      }
+      delete headerkey;
    }
-
-   delete headerkey;
 
    cursav->cd();
    return nkeys;

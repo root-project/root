@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.7 2002/01/15 00:45:21 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.8 2002/01/18 14:24:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TTree;
 class TSelector : public TObject {
 protected:
    TString   fOption;  //option given to TTree::Process
-   TObject  *fObject;  //current oject if processing object (vs. TTree)
+   TObject  *fObject;  //current object if processing object (vs. TTree)
    TList    *fInput;   //list of objects available during processing (on PROOF)
    TList    *fOutput;  //list of objects created during processing (on PROOF)
 
@@ -43,14 +43,14 @@ public:
    virtual            ~TSelector();
    virtual void        Begin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
-   virtual const char *GetOption() const { return fOption; }
+           const char *GetOption() const { return fOption.Data();}
    virtual Bool_t      ProcessCut(Int_t entry) { return kTRUE; }
    virtual void        ProcessFill(Int_t entry) { }
    virtual Bool_t      Process() { return kFALSE; }
-   virtual void        SetOption(const char *option) { fOption = option; }
-   virtual void        SetObject(TObject *obj) { fObject = obj; }
-   virtual void        SetInputList(TList *input) { fInput = input; }
-   virtual TList      *GetOutputList() const { return fOutput; }
+           void        SetOption(const char *option) { fOption = option; }
+           void        SetObject(TObject *obj) { fObject = obj; }
+           void        SetInputList(TList *input) { fInput = input; }
+           TList      *GetOutputList() const { return fOutput; }
    virtual void        Terminate() { }
 
    static  TSelector  *GetSelector(const char *filename);

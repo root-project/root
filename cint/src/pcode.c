@@ -7,7 +7,7 @@
  * Description:
  *  Loop compilation related source code
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -3619,7 +3619,7 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
-  *(int*)(var->p[ig15]+offset)=(int)G__intM(val)?1:0;
+  *(unsigned char*)(var->p[ig15]+offset)=(unsigned char)(G__intM(val)?1:0);
 }
 #endif
 /****************************************************************
@@ -5719,7 +5719,7 @@ G__value *bufm2;
  case 'r': *(unsigned short*)p=v; break;  \
  case 'b': *(unsigned char*)p=v;  break;  \
  case 'k': *(unsigned long*)p=v;  break;  \
- case 'g': *(int*)p=v?1:0;/*1604*/break;  \
+ case 'g': *(unsigned char*)p=v?1:0;/*1604*/break;  \
  default:  *(long*)p=v;           break;  \
  }
 
@@ -7221,7 +7221,7 @@ long *pinst;
     case 'f': *pinst = (long)G__LD_p0_float; break;
     case 'd': *pinst = (long)G__LD_p0_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_p0_int; break;
+    case 'g': *pinst = (long)G__LD_p0_uchar; break;
 #endif
     default: done=0; break;
     }
@@ -7255,7 +7255,7 @@ long *pinst;
     case 'f': *pinst = (long)G__LD_p1_float; break;
     case 'd': *pinst = (long)G__LD_p1_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_p1_int; break;
+    case 'g': *pinst = (long)G__LD_p1_uchar; break;
 #endif
     default: done=0; break;
     }
@@ -7290,7 +7290,7 @@ long *pinst;
     case 'f': *pinst = (long)G__LD_pn_float; break;
     case 'd': *pinst = (long)G__LD_pn_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_pn_int; break;
+    case 'g': *pinst = (long)G__LD_pn_uchar; break;
 #endif
     default: done=0; break;
     }
@@ -7394,7 +7394,7 @@ long *pinst;
     case 'f': *pinst = (long)G__ST_p1_float; break;
     case 'd': *pinst = (long)G__ST_p1_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_p1_int; break; /* to be fixed */
+    case 'g': *pinst = (long)G__ST_p1_uchar; break; /* to be fixed */
 #endif
     default: done=0; break;
     }
@@ -7429,7 +7429,7 @@ long *pinst;
     case 'f': *pinst = (long)G__ST_pn_float; break;
     case 'd': *pinst = (long)G__ST_pn_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_pn_int; break; /* to be fixed */
+    case 'g': *pinst = (long)G__ST_pn_uchar; break; /* to be fixed */
 #endif
     default: done=0; break;
     }
@@ -7499,7 +7499,7 @@ long *pinst;
     case 'f': *pinst = (long)G__LD_Rp0_float; break;
     case 'd': *pinst = (long)G__LD_Rp0_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_Rp0_int; break; /* to be fixed */
+    case 'g': *pinst = (long)G__LD_Rp0_uchar; break; /* to be fixed */
 #endif
     default: done=0; break;
     }
@@ -7532,7 +7532,7 @@ long *pinst;
     case 'f': *pinst = (long)G__ST_Rp0_float; break;
     case 'd': *pinst = (long)G__ST_Rp0_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__ST_Rp0_int; break; /* to be fixed */
+    case 'g': *pinst = (long)G__ST_Rp0_uchar; break; /* to be fixed */
 #endif
     default: done=0; break;
     }
@@ -7565,7 +7565,7 @@ long *pinst;
     case 'f': *pinst = (long)G__LD_RP0_float; break;
     case 'd': *pinst = (long)G__LD_RP0_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
-    case 'g': *pinst = (long)G__LD_RP0_int; break; /* to be fixed */
+    case 'g': *pinst = (long)G__LD_RP0_uchar; break; /* to be fixed */
 #endif
     default: done=0; break;
     }

@@ -35,7 +35,11 @@
 *KEEP,HCBOOK.
       INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
       REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,HCV(9989)
+*
+* VERY IMPORTANT. The dimension of /pawc/must be the same as
+*                 in THbookFile. Otherwise FATAL on Windows
+      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
+     +HCV(2000000-11)
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
@@ -162,3 +166,29 @@
 *
       END
 
+      subroutine hntvar3(id,last,chvar)
+      character *80 allvars
+      common/callvars/allvars(100)
+      common/calloff/ioffset(100)
+      character *(*) chvar
+      integer id,ivar,last
+      save ivar
+      data ivar/0/
+      if (ivar.ne.0) then
+         if (allvars(ivar).ne.chvar) then
+            ivar = ivar+1
+            allvars(ivar) = chvar
+            ioffset(ivar) = 0
+         endif
+      else
+         ivar = ivar+1
+         allvars(ivar) = chvar
+         ioffset(ivar) = 0
+      endif
+      ier = 0
+      if (last.ne.0) then
+         call hgnt1(id,'*',allvars,ioffset,-ivar,1,ier)
+         allvars(1) = ' '
+         ivar = 0
+      endif
+      end

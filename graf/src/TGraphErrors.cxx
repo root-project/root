@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.20 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.21 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -274,6 +274,13 @@ void TGraphErrors::Paint(Option_t *option)
    // if option "[]" is specified only the end vertical/horizonthal lines
    // of the error bars are drawn. This option is interesting to superimpose
    // systematic errors on top of a graph with statistical errors.
+   //
+   // Use gStyle->SetErrorX(dx) to control the size of the error along x.
+   // set dx = 0 to suppress the error along x.
+   //
+   // Use gStyle->SetEndErrorSize(np) to control the size of the lines
+   // at the end of the error bars (when option 1 is used).
+   // By default np=1. (np reprersents the number of pixels).
 
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
@@ -316,8 +323,9 @@ void TGraphErrors::Paint(Option_t *option)
 //*-*-      define the offset of the error bars due to the symbol size
    s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   tx   = 0.50*s2x;
-   ty   = 0.50*s2y;
+   Int_t dxend = Int_t(1+gStyle->GetEndErrorSize());
+   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));

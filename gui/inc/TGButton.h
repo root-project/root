@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.11 2002/02/23 16:19:24 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -118,10 +118,10 @@ public:
    virtual Bool_t       IsExclusiveToggle() const { return kFALSE; }
    virtual void         Toggle() { SetDown(IsDown() ? kFALSE : kTRUE); }
 
-   virtual void Pressed()  { Emit("Pressed()"); }   //*SIGNAL*
-   virtual void Released() { Emit("Released()"); }  //*SIGNAL*
-   virtual void Clicked()  { Emit("Clicked()"); }   //*SIGNAL*
-   virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  //*SIGNAL*
+   virtual void Pressed()  { Emit("Pressed()"); }   // *SIGNAL*
+   virtual void Released() { Emit("Released()"); }  // *SIGNAL*
+   virtual void Clicked()  { Emit("Clicked()"); }   // *SIGNAL*
+   virtual void Toggled(Bool_t on) { Emit("Toggled(Bool_t)", on); }  // *SIGNAL*
 
    ClassDef(TGButton,0)  // Button widget abstract base class
 };

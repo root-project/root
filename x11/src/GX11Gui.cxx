@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.19 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.22 2002/02/21 12:14:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -14,8 +14,8 @@
 // TGX11 (GUI related part)                                             //
 //                                                                      //
 // This class is the basic interface to the X11 graphics system. It is  //
-// an implementation of the abstract TVirtualX class. The companion class    //
-// for Win32 is TGWin32.                                                //
+// an implementation of the abstract TVirtualX class. The companion     //
+// class for Win32 is TGWin32.                                          //
 //                                                                      //
 // This file contains the implementation of the GUI methods of the      //
 // TGX11 class. Most of the methods are used by the machine independent //
@@ -35,6 +35,7 @@
 #include "TException.h"
 #include "TClassTable.h"
 #include "KeySymbols.h"
+#include "TEnv.h"
 
 
 //---- MWM Hints stuff
@@ -162,7 +163,8 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
-   ::Error("RootX11ErrorHandler", "%s (XID: %u)", msg, err->resourceid);
+   ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
+           err->resourceid, err->request_code);
    if (TROOT::Initialized()) {
       //Getlinem(kInit, "Root > ");
       Throw(2);
@@ -271,7 +273,7 @@ void TGX11::IconifyWindow(Window_t id)
 {
    // Iconify the window.
 
-   XIconifyWindow(fDisplay, (Window) id, DefaultScreen(fDisplay));
+   XIconifyWindow(fDisplay, (Window) id, fScreenNumber);
 }
 
 //______________________________________________________________________________
@@ -303,6 +305,15 @@ Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
 
    if (attr)
       MapSetWindowAttributes(attr, xmask, xattr);
+
+   if (depth == 0)
+      depth = fDepth;
+   if (visual == 0)
+      visual = fVisual;
+   if (fColormap && !(xmask & CWColormap)) {
+      xmask |= CWColormap;
+      xattr.colormap = fColormap;
+   }
 
    return (Window_t) XCreateWindow(fDisplay, (Window) parent, x, y,
                                    w, h, border, depth, clss, (Visual*)visual,
@@ -695,7 +706,10 @@ void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
    attr.fBackingPlanes      = xattr.backing_planes;
    attr.fBackingPixel       = xattr.backing_pixel;
    attr.fSaveUnder          = (Bool_t) xattr.save_under;
-   attr.fColormap           = (Colormap_t) xattr.colormap;
+   if ((Window) id == fRootWin)
+      attr.fColormap        = (Colormap_t) fColormap;
+   else
+      attr.fColormap        = (Colormap_t) xattr.colormap;
    attr.fMapInstalled       = (Bool_t) xattr.map_installed;
    attr.fMapState           = xattr.map_state;         // ident mapping
    attr.fAllEventMasks      = xattr.all_event_masks;   // not ident, but not used by GUI classes
@@ -728,7 +742,7 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
    XSetErrorHandler(RootX11ErrorHandler);
    XSetIOErrorHandler(RootX11IOErrorHandler);
 
-   if (gDebug > 4)
+   if (gEnv->GetValue("X11.Sync", 0))
       XSynchronize(dpy, 1);
 
    // Init the GX11 class, sets a.o. fDisplay.
@@ -748,12 +762,52 @@ void TGX11::CloseDisplay()
 }
 
 //______________________________________________________________________________
-Display_t TGX11::GetDisplay()
+Display_t TGX11::GetDisplay() const
 {
    // Returns handle to display (might be usefull in some cases where
-   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL interface).
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
 
    return (Display_t) fDisplay;
+}
+
+//______________________________________________________________________________
+Visual_t TGX11::GetVisual() const
+{
+   // Returns handle to visual (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   return (Visual_t) fVisual;
+}
+
+//______________________________________________________________________________
+Colormap_t TGX11::GetColormap() const
+{
+   // Returns handle to colormap (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   return (Colormap_t) fColormap;
+}
+
+//______________________________________________________________________________
+Int_t TGX11::GetScreen() const
+{
+   // Returns screen number (might be usefull in some cases where
+   // direct X11 manipulation outside of TVirtualX is needed, e.g. GL
+   // interface).
+
+   return fScreenNumber;
+}
+
+//______________________________________________________________________________
+Int_t TGX11::GetDepth() const
+{
+   // Returns depth of screen (number of bit planes). Equivalent to
+   // GetPlanes().
+
+   return fDepth;
 }
 
 //______________________________________________________________________________
@@ -770,16 +824,16 @@ Atom_t TGX11::InternAtom(const char *atom_name, Bool_t only_if_exist)
 }
 
 //______________________________________________________________________________
-Window_t TGX11::GetDefaultRootWindow()
+Window_t TGX11::GetDefaultRootWindow() const
 {
    // Return handle to the default root window created when calling
    // XOpenDisplay().
 
-   return (Window_t) XDefaultRootWindow(fDisplay);
+   return (Window_t) fRootWin;
 }
 
 //______________________________________________________________________________
-Window_t TGX11::GetParent(Window_t id)
+Window_t TGX11::GetParent(Window_t id) const
 {
    // Return the parent of the window.
 
@@ -837,6 +891,9 @@ GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
 
    if (gval)
       MapGCValues(*gval, xmask, xgval);
+
+   if ((Drawable) id == fRootWin)
+      id = (Drawable_t) fVisRootWin;
 
    GC gc = XCreateGC(fDisplay, (Drawable) id, xmask, &xgval);
 
@@ -912,8 +969,7 @@ Pixmap_t TGX11::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
    // Creates a pixmap of the width and height you specified
    // and returns a pixmap ID that identifies it.
 
-   return (Pixmap_t) XCreatePixmap(fDisplay, (Drawable) id, w, h,
-                        DefaultDepth(fDisplay, DefaultScreen(fDisplay)));
+   return (Pixmap_t) XCreatePixmap(fDisplay, (Drawable) id, w, h, fDepth);
 }
 
 //______________________________________________________________________________

@@ -33,8 +33,11 @@ Root.MemCheck:           0
 Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
-# When >4 X11 runs in synchronous mode.
 Root.Debug:              0
+
+# Settings for X11 behaviour.
+X11.Sync:                no
+X11.FindBestVisual:      yes
 
 # Default editor
 Unix.*.Editor:           vi
@@ -112,6 +115,11 @@ Rint.Logoff:             rootlogoff.C
 # Record session commands, set to "-" to turn off command recording
 Rint.History:            $(HOME)/.root_hist
 
+# ACLiC customization.
+# ACLiC.Linkdef specifies the suffix that will be added to the script name to
+# try to locate a custom linkdef file when generating the dictionary.
+ACLiC.Linkdef:          _linkdef
+
 # Plugin library handlers
 +Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache
@@ -124,4 +132,3 @@ Rint.History:            $(HOME)/.root_hist
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
 Rint.Canvas.HighLightColor:      5
-

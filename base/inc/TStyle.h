@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.9 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.10 2002/01/23 09:33:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -66,9 +66,9 @@ private:
         Int_t         fErrorMarker;       //marker for error bars
         Int_t         fShowEventStatus;   //Show event status panel
         TAttText      fAttDate;           //canvas date attribute
-        Float_t       fDateX;             //X position of the date in the canvas 9in NDC)
-        Float_t       fDateY;             //Y position of the date in the canvas 9in NDC)
-        Float_t       fErrorMsize;        //marker size for error bars
+        Float_t       fDateX;             //X position of the date in the canvas (in NDC)
+        Float_t       fDateY;             //Y position of the date in the canvas (in NDC)
+        Float_t       fEndErrorSize;      //Size of lines at the end of error bars
         Float_t       fErrorX;            //per cent of bin width for errors along X
         Color_t       fFuncColor;         //function color
         Style_t       fFuncStyle;         //function style
@@ -171,7 +171,7 @@ public:
         Float_t          GetBarWidth() const {return fBarWidth;}
         Int_t            GetDrawBorder() const {return fDrawBorder;}
         Int_t            GetErrorMarker() const {return fErrorMarker;}
-        Float_t          GetErrorMsize() const {return fErrorMsize;}
+        Float_t          GetEndErrorSize() const {return fEndErrorSize;}
         Float_t          GetErrorX() const {return fErrorX;}
         Color_t          GetCanvasColor() const {return fCanvasColor;}
         Width_t          GetCanvasBorderSize() const {return fCanvasBorderSize;}
@@ -289,7 +289,7 @@ public:
         void             SetDateX(Float_t x=0.01) {fDateX = x;}
         void             SetDateY(Float_t y=0.01) {fDateY = y;}
         void             SetErrorMarker(Int_t marker=21) {fErrorMarker = marker;}
-        void             SetErrorMsize(Float_t msize=0.05) {fErrorMsize = msize;}
+        void             SetEndErrorSize(Float_t np=1) {fEndErrorSize = np;}
         void             SetErrorX(Float_t errorx=0.5) {fErrorX = errorx;}
         void             SetDrawBorder(Int_t drawborder=1) {fDrawBorder = drawborder;}
         void             SetCanvasColor(Color_t color=19) {fCanvasColor = color;}
@@ -361,7 +361,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,7)  //A collection of all graphics attributes
+        ClassDef(TStyle,8)  //A collection of all graphics attributes
 };
 
 

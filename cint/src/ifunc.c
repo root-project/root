@@ -7,7 +7,7 @@
  * Description:
  *  interpret function and new style compiled function
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -89,7 +89,7 @@ struct G__param *libp;
 	break;
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g':
-	libp->para[itemp].ref = (long)G__Intref(&libp->para[itemp]);
+	libp->para[itemp].ref = (long)G__UCharref(&libp->para[itemp]);
 	break;
 #endif
       }
@@ -355,7 +355,7 @@ int hash; /* not use */
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
 	case 'g':
-	  G__asm_stack[j].ref=(long)G__Intref(&libp->para[i]);
+	  G__asm_stack[j].ref=(long)G__UCharref(&libp->para[i]);
 	  break;
 #endif
 	default:
@@ -4709,6 +4709,10 @@ int ifn;
   int i;
   int store_iscpp = G__iscpp;
   G__iscpp = 1;
+
+#ifndef G__OLDIMPLEMENTATION1639
+  if(!ifunc || !ifunc->pentry[ifn]) return;
+#endif
   
 #ifndef G__OLDIMPLEMENTATION1485
   if(G__serr==fp) {
@@ -5157,7 +5161,8 @@ int recursive;
 #endif
 
 #ifdef G__ASM_DBG2
-  G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
+  if(G__dispsource) 
+    G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);
 #endif
 
   if(!match) {
@@ -6511,9 +6516,6 @@ asm_ifunc_start:   /* loop compilation execution label */
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.sh);
 	    break;
 	  case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-	  case 'g':
-#endif
 	    G__Mint(libp->para[ipara]);
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.in);
 	    break;
@@ -6521,6 +6523,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.i);
 	    break;
 	  case 'b':
+#ifndef G__OLDIMPLEMENTATION1604
+	  case 'g':
+#endif
 	    G__Muchar(libp->para[ipara]);
 	    G__ansipara.ref = (long)(&libp->para[ipara].obj.uch);
 	    break;

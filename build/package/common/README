@@ -134,10 +134,10 @@ The source tree is configured with
   ./configure <arch> \
 		--prefix=<prefix>				\
 		--etcdir=<etcdir> 				\
-    --enable-star \
+		--enable-star					\
 		--enable-thread 				\
 		--enable-shared 				\
-    --enable-soversion \
+		--enable-soversion				\
 		--disable-afs 					\
 		--disable-srp 					\
 		--with-sys-iconpath=/usr/share/pixmaps		\
@@ -373,7 +373,7 @@ example, to build only the basic (read: minimal) set of packages
 libroot, libroot-dev, root-bin, root-daemon and root-cint, the
 definition should read:  
 
-	pkgs="task-root root-daemon root-cint root-bin libroot-dev libroot"  
+    pkgs="task-root root-daemon root-cint root-bin libroot-dev libroot"  
 
 Please note that the order is important (See note one ".files" files
 below). 

@@ -167,6 +167,7 @@ void TBenchmark::Stop(const char *name)
    Int_t bench = GetBench(name);
    if (bench < 0) return;
 
+   fTimer[bench].Stop();
    fRealTime[bench] = fTimer[bench].RealTime();
    fCpuTime[bench]  = fTimer[bench].CpuTime();
 

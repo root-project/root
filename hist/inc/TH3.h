@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.15 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.17 2002/02/18 23:09:41 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -74,15 +74,15 @@ public:
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual void    GetRandom3(Axis_t &x, Axis_t &y, Axis_t &z);
    virtual void    GetStats(Stat_t *stats) const;
-   virtual Stat_t  Integral(Option_t *option="");
-   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") {return 0;}
-   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
-   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="");
+   virtual Stat_t  Integral(Option_t *option="") const;
+   virtual Stat_t  Integral(Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") const {return 0;}
+   virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
    virtual Int_t   Merge(TCollection *list);
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
-                                 Int_t lastybin=9999, Option_t *option=""); // *MENU*
-          TH1     *Project3D(Option_t *option="x"); // *MENU*
+                                 Int_t lastybin=9999, Option_t *option="") const; // *MENU*
+          TH1     *Project3D(Option_t *option="x") const; // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
    virtual void    Sizeof3D() const;
@@ -118,7 +118,7 @@ public:
                                  {fArray[bin] = Char_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
+   virtual void    SetBinsLength(Int_t n=-1);
            TH3C&   operator=(const TH3C &h1);
    friend  TH3C    operator*(Float_t c1, TH3C &h1);
    friend  TH3C    operator*(TH3C &h1, Float_t c1) {return operator*(c1,h1);}
@@ -158,7 +158,7 @@ public:
                                  {fArray[bin] = Short_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
+   virtual void    SetBinsLength(Int_t n=-1);
            TH3S&   operator=(const TH3S &h1);
    friend  TH3S    operator*(Float_t c1, TH3S &h1);
    friend  TH3S    operator*(TH3S &h1, Float_t c1) {return operator*(c1,h1);}
@@ -200,7 +200,7 @@ public:
                                  {fArray[bin] = Float_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
+   virtual void    SetBinsLength(Int_t n=-1);
            TH3F&   operator=(const TH3F &h1);
    friend  TH3F    operator*(Float_t c1, TH3F &h1);
    friend  TH3F    operator*(TH3F &h1, Float_t c1) {return operator*(c1,h1);}
@@ -241,7 +241,7 @@ public:
                                  {fArray[bin] = Double_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
+   virtual void    SetBinsLength(Int_t n=-1);
            TH3D&   operator=(const TH3D &h1);
    friend  TH3D    operator*(Float_t c1, TH3D &h1);
    friend  TH3D    operator*(TH3D &h1, Float_t c1) {return operator*(c1,h1);}

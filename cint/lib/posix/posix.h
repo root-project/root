@@ -7,7 +7,7 @@
  * Description:
  *  Create POSIX related function interface
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for non-commercial purpose is hereby granted without fee,
@@ -95,7 +95,11 @@ extern int telldir(DIR* dir);
 #endif /* __MAKECINT__ */
 
 extern struct dirent *readdir(DIR *dir);
+#if defined(G__KCC) || defined(__KCC)
+extern void seekdir(DIR* dir,off_t loc);
+#else
 extern void seekdir(DIR* dir,long loc);
+#endif
 #if !defined(G__SUN) && !defined(__sun)
 extern void rewinddir(DIR *dir);
 #endif
@@ -217,6 +221,8 @@ extern char *getwd(char *buf);
 extern long setpgrp(void);
 #elif defined(G__FBSD) || defined(__FreeBSD__)
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
+#elif defined(G__KCC) || defined(__KCC)
+extern pid_t setpgrp(void);
 #else
 extern int setpgrp(void);
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.3 2000/12/11 00:01:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.4 2001/02/07 20:54:01 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TSpline
 #define ROOT_TSpline
 
@@ -54,7 +55,7 @@ public:
   virtual Double_t  Eval(Double_t x) const=0;
            void     SetNpx(Int_t n) {fNpx=n;}
 
-  ClassDef (TSpline,2)
+  ClassDef (TSpline,2) // Spline base class
 };
 
 
@@ -74,7 +75,7 @@ public:
 
   virtual Double_t Eval(Double_t) const {return fY;}
 
-  ClassDef(TSplinePoly,1)
+  ClassDef(TSplinePoly,1) // Spline polynomial terms
 };
 
 
@@ -97,7 +98,7 @@ public:
     return (fY+dx*(fB+dx*(fC+dx*fD)));
   }
 
-  ClassDef(TSplinePoly3,1)
+  ClassDef(TSplinePoly3,1)  // Third spline polynomial terms
 
 };
 
@@ -126,7 +127,7 @@ public:
     return (fY+dx*(fB+dx*(fC+dx*(fD+dx*(fE+dx*fF)))));
   }
 
-  ClassDef(TSplinePoly5,1)
+  ClassDef(TSplinePoly5,1)  // Quintic spline polynomial terms
 
 };
 
@@ -172,7 +173,7 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline3,2)
+  ClassDef (TSpline3,2)  // Class to create third natural splines
 };
 
 
@@ -224,7 +225,7 @@ public:
     {x=fPoly[i].X(); y=fPoly[i].Y();}
   static void Test();
 
-  ClassDef (TSpline5,2)
+  ClassDef (TSpline5,2) // Class to create quintic natural splines
 };
 
 #endif

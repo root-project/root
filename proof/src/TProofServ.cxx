@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.14 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.15 2002/01/18 14:24:09 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -201,6 +201,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    fLogLevel    = 1;
    fRealTime    = 0.0;
    fCpuTime     = 0.0;
+   fProof       = 0;
    fSocket      = new TSocket(0);
 
    GetOptions(argc, argv);
@@ -266,7 +267,7 @@ TProofServ::TProofServ(int *argc, char **argv)
          master += ":";
          master += a.GetPort();
       }
-      new TProof(master, fConfFile, fConfDir, fLogLevel);
+      fProof = new TProof(master, fConfFile, fConfDir, fLogLevel);
       SendLogFile();
    }
 }
@@ -446,7 +447,7 @@ void TProofServ::HandleSocketInput()
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
          if (IsMaster() && IsParallel()) {
-            gProof->SendCommand(str);
+            fProof->SendCommand(str);
          } else {
             if (fLogLevel > 1) {
                if (IsMaster())
@@ -476,12 +477,12 @@ void TProofServ::HandleSocketInput()
          mess->ReadString(str, sizeof(str));
          sscanf(str, "%d", &fLogLevel);
          if (IsMaster())
-            gProof->SetLogLevel(fLogLevel);
+            fProof->SetLogLevel(fLogLevel);
          break;
 
       case kPROOF_PING:
          if (IsMaster())
-            gProof->Ping();
+            fProof->Ping();
          // do nothing (ping is already acknowledged)
          break;
 
@@ -531,9 +532,9 @@ void TProofServ::HandleSocketInput()
             TProofPlayer *p;
 
             if (IsMaster()) {
-               p = new TProofPlayerRemote(gProof);
+               p = new TProofPlayerRemote(fProof);
             } else {
-               p = new TProofPlayerSlave;
+               p = new TProofPlayerSlave(fSocket);
             }
 
             TIter next(input);
@@ -545,16 +546,15 @@ void TProofServ::HandleSocketInput()
 
             p->Process(dset, filename, nentries, first);
 
-            TList *output;
-            if (IsMaster()) {
-               // handle slave output
-            } else {
-               output = p->GetOutputList();
-            }
-
             // return output!
+::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: SendObject");
+
+            fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
+
+::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: SendLogFile");
 
             SendLogFile();
+::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: Done");
 
             delete p;
          }
@@ -603,7 +603,7 @@ void TProofServ::HandleSocketInput()
          if (IsMaster()) {
             Int_t nodes;
             (*mess) >> nodes;
-            gProof->SetParallel(nodes);
+            fProof->SetParallel(nodes);
             SendLogFile();
          }
          break;
@@ -678,7 +678,7 @@ void TProofServ::HandleUrgentData()
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
-            gProof->Interrupt(TProof::kHardInterrupt);
+            fProof->Interrupt(TProof::kHardInterrupt);
 
          // Flush input socket
          while (1) {
@@ -720,7 +720,7 @@ void TProofServ::HandleUrgentData()
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
-            gProof->Interrupt(TProof::kSoftInterrupt);
+            fProof->Interrupt(TProof::kSoftInterrupt);
 
          if (wasted) {
             Error("HandleUrgentData", "soft interrupt flushed stream");
@@ -739,7 +739,7 @@ void TProofServ::HandleUrgentData()
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
-            gProof->Interrupt(TProof::kShutdownInterrupt);
+            fProof->Interrupt(TProof::kShutdownInterrupt);
 
          Terminate(0);  // will not return from here....
 
@@ -765,7 +765,7 @@ void TProofServ::HandleSigPipe()
       if (fSocket->Send(kPROOF_PING | kMESS_ACK) < 0) {
          Info("HandleSigPipe", "Master: KeepAlive probe failed");
          // Tell slaves we are going to close since there is no client anymore
-         gProof->Interrupt(TProof::kShutdownInterrupt);
+         fProof->Interrupt(TProof::kShutdownInterrupt);
          Terminate(0);
       }
    } else {
@@ -793,7 +793,7 @@ Bool_t TProofServ::IsParallel() const
    // True if in parallel mode.
 
    if (IsMaster())
-      return gProof->IsParallel();
+      return fProof->IsParallel();
    else
       return kFALSE;
 }
@@ -804,7 +804,7 @@ void TProofServ::Print(Option_t *) const
    // Print status of slave server.
 
    if (IsMaster())
-      gProof->Print();
+      fProof->Print();
    else
       Printf("This is slave %s", gSystem->HostName());
 }
@@ -990,7 +990,7 @@ void TProofServ::SendLogFile(Int_t status)
 
    TMessage mess(kPROOF_LOGDONE);
    if (IsMaster())
-      mess << status << gProof->GetNumberOfActiveSlaves();
+      mess << status << fProof->GetNumberOfActiveSlaves();
    else
       mess << status << (Int_t) 1;
 
@@ -1008,7 +1008,7 @@ void TProofServ::SendStatus()
       mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime << workdir;
       fSocket->Send(mess);
    } else {
-      fSocket->Send(gProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);
+      fSocket->Send(fProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);
    }
 }
 

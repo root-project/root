@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.16 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.17 2002/01/31 07:27:11 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1042,7 +1042,8 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
             } else {
                thisLineIsCommented = kFALSE;
                if (flag) {
-                  out << fLine << endl;
+                  ExpandKeywords(out, fLine, classPtr, flag);
+                  out<<endl;
                } else {
                   extractComments = kFALSE;
                   if (!firstCommentLine) {
@@ -2175,11 +2176,25 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
       hide = kFALSE;
 
       // skip until start of the word
-      while (!IsWord(*keyword) && *keyword) {
+      while (!IsWord(*keyword) && *keyword){
          if (!flag)
             ReplaceSpecialChars(out, *keyword);
          else
-            out << *keyword;
+            // protect html code from special chars
+            if (*keyword>31)
+               if (*keyword=='<'){
+                  if (keyword==strstr(keyword,"<pre>")
+                      || keyword==strstr(keyword,"<PRE>"))
+                     keyword+=4;
+                  else
+                  if (keyword==strstr(keyword,"</pre>")
+                      || keyword==strstr(keyword,"</PRE>"))
+                     keyword+=5;
+                  else
+                     out << *keyword;
+               }
+               else
+                  out << *keyword;
          keyword++;
       }
 

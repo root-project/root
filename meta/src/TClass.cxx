@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.68 2002/01/29 07:44:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.70 2002/02/22 09:37:29 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "Api.h"
+#include "TVirtualMutex.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -1212,6 +1213,7 @@ void *TClass::New(Bool_t defConstructor)
    }
 
    fgCallingNew = defConstructor;
+   R__LOCKGUARD(gCINTMutex);
    void *p = GetClassInfo()->New();
    fgCallingNew = kFALSE;
    if (!p) {
@@ -1238,6 +1240,7 @@ void *TClass::New(void *arena, Bool_t defConstructor)
    }
 
    fgCallingNew = defConstructor;
+   R__LOCKGUARD(gCINTMutex);
    void *p = GetClassInfo()->New(arena);
    fgCallingNew = kFALSE;
    if (!p) Error("New with placement", "cannot create object of class %s", GetName());
@@ -1257,6 +1260,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    long  offset;
    char  dtor[64];
    sprintf(dtor, "~%s", GetName());
+   R__LOCKGUARD(gCINTMutex);
    func.SetFunc(fClassInfo->GetMethod(dtor, "", &offset).InterfaceMethod());
    address = (void*)((long)obj + offset);
    if (dtorOnly) {
@@ -1621,7 +1625,7 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
       sinfo->Build();
 
-      if (version == -1) sinfo->BuildFake();
+      if (version == -1) sinfo->BuildFake((TFile *)b.GetParent());
 
    } else if (!sinfo->GetOffsets()) {
       BuildRealData(pointer);

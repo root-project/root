@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32ContextMenuImp.cxx,v 1.2 2002/02/21 15:40:08 rdm Exp $
 // Author: Valery Fine   22/02/96
 
 /*************************************************************************
@@ -193,9 +193,10 @@ void       TWin32ContextMenuImp::Dialog( TObject *object, TMethod *method )
          if (datatype) {
            strcpy(basictype, datatype->GetTypeName());
          } else {
-            if (strncmp(type, "enum", 4) != 0)
+            TClass *cl = gROOT->GetClass(type);
+            if (strncmp(type, "enum", 4) && (cl && !(cl->Property() & kIsEnum)))
               Warning("Dialog", "data type is not basic type, assuming (int)");
-           strcpy(basictype, "int");
+            strcpy(basictype, "int");
         }
 
         if (strchr(argname, '*')) {
@@ -205,13 +206,7 @@ void       TWin32ContextMenuImp::Dialog( TObject *object, TMethod *method )
 
         TDataMember *m = argument->GetDataMember();
         Text_t val[256]= "";
-        if (m && m->GetterMethod()) {
-
-         // WARNING !!!!!!!!
-         // MUST "reset" getter method!!! otherwise TAxis methods doesn't work!!!
-         Text_t gettername[256] = "";
-         strcpy(gettername, m->GetterMethod()->GetMethodName());
-         m->GetterMethod()->Init(object->IsA(), gettername, "");
+        if (m && m->GetterMethod(object->IsA())) {
 
          // Get the current value and form it as a text:
 

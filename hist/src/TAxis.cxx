@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.27 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.29 2002/02/14 13:22:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -134,6 +134,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 //   width in years ?
                   if (awidth>=6) {
                      awidth /= 12; reasformat = 6;
+                     if (awidth>=2) {
+                        awidth /= 12; reasformat = 7;
+                     }                  
                   }
                }
             }
@@ -162,6 +165,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
         break;
       case 6:
         formatstr = "%d/%m/%y";
+        break;
+      case 7:
+        formatstr = "%m/%y";
         break;
       default:
         formatstr = "%H:%M:%S";
@@ -568,7 +574,7 @@ Axis_t TAxis::GetBinWidth(Int_t bin) const
 
 
 //______________________________________________________________________________
-void TAxis::GetCenter(Axis_t *center)
+void TAxis::GetCenter(Axis_t *center) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the center of all bins-*-*-*-*-*-*-*
 //*-*              ===========================================
@@ -577,7 +583,7 @@ void TAxis::GetCenter(Axis_t *center)
 }
 
 //______________________________________________________________________________
-void TAxis::GetLowEdge(Axis_t *edge)
+void TAxis::GetLowEdge(Axis_t *edge) const
 {
 //*-*-*-*-*-*-*-*-*Return an array with the lod edge of all bins-*-*-*-*-*-*-*
 //*-*              =============================================

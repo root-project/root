@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.4 2001/02/17 11:42:23 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.5 2001/05/11 17:20:14 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -139,7 +139,7 @@ TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 
    fHinting     = kTRUE;
    fSmoothing   = kFALSE;
-   if (DefaultDepth(fDisplay,fScreenNumber) > 8)
+   if (fDepth > 8)
       fSmoothing = kTRUE;
 
    TT_Error error;
@@ -312,8 +312,8 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    if (!IsVisible(x, y1, w, h)) return;
 
    // create image that will contain the text
-   UInt_t depth = DefaultDepth(fDisplay, fScreenNumber);
-   XImage *xim = XCreateImage(fDisplay, DefaultVisual(fDisplay, fScreenNumber),
+   UInt_t depth = fDepth;
+   XImage *xim = XCreateImage(fDisplay, fVisual,
                               depth, ZPixmap, 0, 0, w, h,
                               depth == 24 ? 32 : (depth==15?16:depth), 0);
 
@@ -407,8 +407,8 @@ void TGX11TTF::DrawRotatedText(Int_t x, Int_t y, Float_t angle, const char *text
    if (!IsVisible(x1, y1, w, h)) return;
 
    // create image that will contain the text
-   UInt_t depth = DefaultDepth(fDisplay, fScreenNumber);
-   XImage *xim = XCreateImage(fDisplay, DefaultVisual(fDisplay, fScreenNumber),
+   UInt_t depth = fDepth;
+   XImage *xim = XCreateImage(fDisplay, fVisual,
                               depth, ZPixmap, 0, 0, w, h,
                               depth == 24 ? 32 : (depth==15?16:depth), 0);
 
@@ -1347,7 +1347,7 @@ void TGX11TTF::SetSmoothing(Bool_t state)
 {
    // Set smoothing (anit-aliasing) flag. If status changes clear cache.
 
-   if (state && DefaultDepth(fDisplay,fScreenNumber) <= 8)
+   if (state && fDepth <= 8)
       Warning("SetSmoothing", "the colormap might not have enough free color "
                               "cells to fully support smoothing");
 

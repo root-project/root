@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.6 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.8 2002/02/19 17:43:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,9 +31,15 @@ ClassImp(TMultiGraph)
 //     TGraph *gr1 = new TGraph(...
 //     TGraphErrors *gr2 = new TGraphErrors(...
 //     TMultiGraph *mg = new TMultiGraph();
-//     mg->Add(gr1);
-//     mg->Add(gr2);
-//     mg->Draw("alp");
+//     mg->Add(gr1,"lp");
+//     mg->Add(gr2,"cp");
+//     mg->Draw("a");
+//
+//  The drawing option for each TGraph may be specified as an optional
+//  second argument of the Add function.
+//  If a draw option is specified, it will be used to draw the graph,
+//  otherwise the graph will be drawn with the option specified in
+//  TMultiGraph::Draw
 
 //______________________________________________________________________________
 TMultiGraph::TMultiGraph(): TNamed()
@@ -72,12 +78,12 @@ TMultiGraph::~TMultiGraph()
 }
 
 //______________________________________________________________________________
-void TMultiGraph::Add(TGraph *graph)
+void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
 {
    // add a new graph to the list of graphs
 
    if (!fGraphs) fGraphs = new TList();
-   fGraphs->Add(graph);
+   fGraphs->Add(graph,chopt);
 }
 
 //______________________________________________________________________________
@@ -120,6 +126,12 @@ void TMultiGraph::Draw(Option_t *option)
 //*-*                  ==========================================
 //
 //   Options to draw a graph are described in TGraph::PainGraph
+//
+//  The drawing option for each TGraph may be specified as an optional
+//  second argument of the Add function.
+//  If a draw option is specified, it will be used to draw the graph,
+//  otherwise the graph will be drawn with the option specified in
+//  TMultiGraph::Draw
 
   AppendPad(option);
 }
@@ -147,7 +159,9 @@ TAxis *TMultiGraph::GetXaxis() const
    // Get x axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetXaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
 }
 
 //______________________________________________________________________________
@@ -156,7 +170,9 @@ TAxis *TMultiGraph::GetYaxis() const
    // Get y axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetYaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
 }
 
 //______________________________________________________________________________
@@ -286,14 +302,19 @@ void TMultiGraph::Paint(Option_t *option)
         if (ytitle) {fHistogram->GetYaxis()->SetTitle(ytitle); delete [] ytitle;}
         if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
      }
-     fHistogram->Paint();
+     fHistogram->Paint("0");
    }
 
    if (fGraphs) {
-     TIter   next(fGraphs);
-     while ((g = (TGraph*) next())) {
-       g->Paint(chopt);
-     }
+      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+      TObject *obj;
+
+      while (lnk) {
+         obj = lnk->GetObject();
+         if (strlen(lnk->GetOption())) obj->Paint(lnk->GetOption());
+         else                          obj->Paint(chopt);
+         lnk = (TObjOptLink*)lnk->Next();
+      }
    }
 }
 

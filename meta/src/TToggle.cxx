@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TToggle.cxx,v 1.2 2001/10/29 16:23:54 rdm Exp $
 // Author: Piotr Golonka   30/07/97
 
 /*************************************************************************
@@ -41,17 +41,18 @@ ClassImp(TToggle)
 //______________________________________________________________________________
 TToggle::TToggle()
 {
-// TToggle default constructor. You have to initialize it before using
-// by making a call to SetToggledVariable() or SetToggledObject()
-    fState      =  0;
-    fValue      = -1;
-    fOnValue    =  1;
-    fOffValue   =  0;
-    fInitialized=  0;
-    fObject     =  0;
-    fGetter     =  0;
-    fSetter     =  0;
-    fTglVariable=  0;
+   // TToggle default constructor. You have to initialize it before using
+   // by making a call to SetToggledVariable() or SetToggledObject().
+
+   fState       =  0;
+   fValue       = -1;
+   fOnValue     =  1;
+   fOffValue    =  0;
+   fInitialized =  0;
+   fObject      =  0;
+   fGetter      =  0;
+   fSetter      =  0;
+   fTglVariable =  0;
 }
 
 //______________________________________________________________________________
@@ -140,15 +141,16 @@ void TToggle::Toggle()
 //______________________________________________________________________________
 void TToggle::SetToggledObject(TObject *obj, TMethod *anymethod)
 {
-   // Initializes it to toggle an object's datamember using this object's method.
+   // Initializes it to toggle an object's datamember using this object's
+   // method.
 
    fObject=obj;
    TDataMember *m=anymethod->FindDataMember();
    if (!m)
       Error("SetToggledObject", "cannot determine TDataMember!");
    else {
-      fGetter=m->GetterMethod();
-      fSetter=m->SetterMethod();
+      fGetter=m->GetterMethod(obj->IsA());
+      fSetter=m->SetterMethod(obj->IsA());
       fInitialized = 1;
    }
 }

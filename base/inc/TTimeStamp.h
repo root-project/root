@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.3 2002/02/05 10:46:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.5 2002/02/08 17:50:52 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -47,7 +47,8 @@
 #endif
 
 #include <time.h>
-#if defined(__CINT__) || defined(R__WIN32) || defined(R__MACOSX)
+#if defined(__CINT__) || defined(R__WIN32) || defined(R__MACOSX) || \
+    (defined(linux) && defined(R__KCC) && !defined(__timespec_defined))
 // Explicit definition of timespec 'cause "rootcint" won't look in
 // appropriate <time.h>. time_t appears to be defined as "typedef long time_t;"
 // in CINT version of <time.h>.  This isn't required by the standard:
@@ -162,7 +163,7 @@ public:
    static Bool_t  IsLeapYear(Int_t year);
    static void    DumpTMStruct(const tm_t &tmstruct);
 
-   ClassDef(TTimeStamp,1)
+   ClassDef(TTimeStamp,1)  //Encapsulates seconds and ns since EPOCH
 };
 
 

@@ -185,7 +185,7 @@ while (<DBGinfo>){
     $filename{$addr} =$';
     #    print "$addr   $filename{$addr}\n";
   }else{
-    $line{$addr} = $_;
+    $line{$addr} = $_ if ! /^\s*l/;
   }
   for ($j = 0; $j <= $#FILTER; ++$j){
     if (   ( $line{$addr} =~ /(${FILTER[$j]})/ )  ||

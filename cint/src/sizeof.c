@@ -86,6 +86,10 @@ G__value *object;
     return(G__struct.size[object->tagnum]);
   case 'A': /* pointer to function */
     return(G__P2MFALLOC);
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'G': /* bool */
+    return(G__CHARALLOC);
+#endif
   }
   return(1);
 }
@@ -184,13 +188,13 @@ char *typename;
     switch(G__newtype.type[typenum]) {
     case 'b':
     case 'c':
+#ifndef G__OLDIMPLEMENTATION1604
+    case 'g':
+#endif
       result = sizeof(char);
       break;
     case 'h':
     case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g':
-#endif
       result = sizeof(int);
       break;
     case 'r':
@@ -269,6 +273,9 @@ char *typename;
 #endif
   if(strcmp(typename,"FILE")==0)
     return(sizeof(FILE));
+#ifndef G__OLDIMPLEMENTATION1604
+  if(strcmp(typename,"bool")==0) return(sizeof(unsigned char));
+#endif
 
 #ifndef G__OLDIMPLEMENTATION406
   while('*'==typename[pointlevel]) ++pointlevel;
@@ -285,7 +292,12 @@ char *typename;
 #endif
   if(var) {
     if(INT_MAX==var->varlabel[ig15][1]) {
+#ifndef G__OLDIMPLEMENTATION1634
+      if('c'==var->type[ig15]) return(strlen((char*)var->p[ig15]));
+      else return(sizeof(void *));
+#else
       return(sizeof(void *));
+#endif
     }
     buf.type=var->type[ig15];
     buf.tagnum = var->p_tagtable[ig15];
@@ -339,7 +351,12 @@ char *typename;
 
 #ifndef G__OLDIMPLEMENTATION649
   buf = G__getexpr(typename);
-  if(buf.type) return(G__sizeof(&buf));
+  if(buf.type) {
+#ifndef G__OLDIMPLEMENTATION1637
+    if('C'==buf.type && '"'==typename[0]) return(strlen((char*)buf.obj.i)+1);
+#endif
+    return(G__sizeof(&buf));
+  }
 #endif
 
   return(-1);
@@ -411,6 +428,9 @@ char *typenamein;
       switch(tolower(type)) {
       case 'b':
       case 'c':
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g':
+#endif
 	size = G__CHARALLOC;
 	break;
       case 'r':
@@ -419,9 +439,6 @@ char *typenamein;
 	break;
       case 'h':
       case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-      case 'g':
-#endif
 	size = G__INTALLOC;
 	break;
       case 'k':
@@ -1184,6 +1201,9 @@ int objsize;
   switch(t) {
   case 'c':
   case 'b':
+#ifndef G__OLDIMPLEMENTATION1604
+  case 'g':
+#endif
     *(char*)(p) = (char)G__int(*pval);
     break;
   case 'r':
@@ -1192,9 +1212,6 @@ int objsize;
     break;
   case 'h':
   case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
     *(int*)(p) = (int)G__int(*pval);
     break;
   case 'k':

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.15 2001/10/22 14:54:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.16 2002/01/17 12:15:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -177,6 +177,7 @@ protected:
    TString          fObjExt;           //Extension of object files (.o, .obj, etc.)
    TString          fMakeSharedLib;    //Directive used to build a shared library
    TString          fMakeExe;          //Directive used to build an executable
+   TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
 
    virtual const char    *ExpandFileName(const char *fname);
@@ -303,18 +304,20 @@ public:
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "");
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildNode() const;
-   virtual const char     *GetMakeSharedLib() const;
-   virtual const char     *GetMakeExe() const;
    virtual const char     *GetIncludePath();
    virtual const char     *GetLinkedLibs() const;
+   virtual const char     *GetLinkdefSuffix() const;
+   virtual const char     *GetMakeSharedLib() const;
+   virtual const char     *GetMakeExe() const;
    virtual const char     *GetSoExt() const;
    virtual const char     *GetObjExt() const;
+   virtual void            SetIncludePath(const char *includePath);
    virtual void            SetMakeSharedLib(const char *directives);
    virtual void            SetMakeExe(const char *directives);
-   virtual void            SetIncludePath(const char *IncludePath);
-   virtual void            SetLinkedLibs(const char *LinkedLibs);
-   virtual void            SetSoExt(const char *SoExt);
-   virtual void            SetObjExt(const char *ObjExt);
+   virtual void            SetLinkedLibs(const char *linkedLibs);
+   virtual void            SetLinkdefSuffix(const char *suffix);
+   virtual void            SetSoExt(const char *soExt);
+   virtual void            SetObjExt(const char *objExt);
    virtual void            CleanCompiledMacros();
 
    ClassDef(TSystem,0)  //ABC defining a generic interface to the OS

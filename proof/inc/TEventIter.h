@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.1 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.h,v 1.1 2002/01/18 14:24:09 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -29,26 +29,91 @@ class TDSet;
 class TSelector;
 class TFile;
 class TIter;
+class TTree;
+class TSocket;
 
+
+//------------------------------------------------------------------------
 
 class TEventIter : public TObject {
-
-private:
-   Bool_t   fIsTree;
-   TFile   *fFile;
-   TList   *fKeys;
-   TString  fClassName;
-   TIter   *fNext;
-   TObject *fObj;
-
 public:
-   TEventIter();
-   TEventIter(TDSet *set);
+            TEventIter();
+   virtual ~TEventIter();
 
-   Bool_t GetNextEvent(TSelector *selector);
+   virtual Bool_t Init(TSelector *selector) = 0;
+   virtual Bool_t GetNextEvent(TSelector *selector) = 0;
+   virtual Double_t GetEntry() const = 0;
 
    ClassDef(TEventIter,1)  // Event iterator used by TProofPlayer's
 };
+
+//------------------------------------------------------------------------
+
+class TEventIterLocal : public TEventIter {
+
+private:
+   Bool_t   fIsTree;
+   TList   *fFiles;
+   TIter   *fNextFile;
+
+   TFile   *fFile;
+   Double_t fMaxEntry;
+   Double_t fEntry;
+
+   TString  fClassName;
+   TList   *fKeys;
+   TIter   *fNextKey;
+   TObject *fObj;
+
+   TTree   *fTree;
+
+   Bool_t GetNextEventTree(TSelector *selector);
+   Bool_t GetNextEventObj(TSelector *selector);
+   Bool_t LoadNextTree();
+
+public:
+   TEventIterLocal();
+   TEventIterLocal(TDSet *set);
+  ~TEventIterLocal();
+
+   Bool_t   Init(TSelector *selector);
+   Bool_t   GetNextEvent(TSelector *selector);
+   Double_t GetEntry() const { return fEntry; };
+
+   ClassDef(TEventIterLocal,1)  // Event iterator used by local TProofPlayer
+};
+
+
+//------------------------------------------------------------------------
+
+class TEventIterSlave : public TEventIter {
+private:
+   TSocket  *fSocket;
+   Bool_t   fIsTree;
+
+   TFile   *fFile;
+   Double_t fEntry;
+   Double_t fMaxEntry;
+
+   TString  fClassName;
+   TList   *fKeys;
+   TIter   *fNextKey;
+   TObject *fObj;
+
+   TTree   *fTree;
+
+public:
+   TEventIterSlave();
+   TEventIterSlave(TSocket *socket);
+  ~TEventIterSlave();
+
+   Bool_t Init(TSelector *selector);
+   Bool_t GetNextEvent(TSelector *selector);
+   Double_t GetEntry() const { return fEntry; };
+
+   ClassDef(TEventIterSlave,1)  // Event iterator used by TProofPlayer on Slave
+};
+
 
 #endif
 

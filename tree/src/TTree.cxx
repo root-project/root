@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.110 2002/01/24 09:54:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.113 2002/02/10 10:13:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1201,7 +1201,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 
    branch->SetAddress(add);
 
-   if (delobj) delete objadd;
+   if (delobj) {delete objadd; *ppointer=0;}
    return branch;
 }
 
@@ -1282,7 +1282,7 @@ TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
    if (!cl) return 0;
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
-   sinfo->ForceWriteInfo();
+   if(fDirectory) sinfo->ForceWriteInfo(fDirectory->GetFile());
 
    // Create StreamerInfo for all base classes
    TBaseClass *base;
@@ -1823,9 +1823,6 @@ Int_t TTree::Fill()
    Int_t nbytes = 0;
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
-
-   if (fDirectory) TStreamerInfo::SetCurrentFile(fDirectory->GetFile());
-   else            TStreamerInfo::SetCurrentFile(0);
 
     //case of one single super branch. Automatically update
     // all the branch addresses if a new object was created
@@ -3179,10 +3176,10 @@ void TTree::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          fDirectory = gDirectory;
-         gDirectory->Append(this);
          TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (fEstimate <= 10000) fEstimate = 1000000;
          fSavedBytes = fTotBytes;
+         gDirectory->Append(this);
          return;
       }
       //====process old versions before automatic schema evolution

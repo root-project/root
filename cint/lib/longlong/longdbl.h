@@ -31,7 +31,7 @@
 #else
 #include <iostream.h>
 #endif
-#ifndef __hpux
+#if !defined(__hpux) && !defined(_MSC_VER)
 using namespace std;
 #endif
 #endif

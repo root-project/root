@@ -1,5 +1,5 @@
-// @(#)root/star:$Name$:$Id$
-// Author: 
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// Author:
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,9 +8,10 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TPolyLineShape
 #define ROOT_TPolyLineShape
-// $Id: TPolyLineShape.h,v 1.14 1999/12/21 18:57:14 fine Exp $
+
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -30,8 +31,12 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
+#ifndef ROOT_TShape
 #include "TShape.h"
+#endif
+#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
+#endif
 
 class TPoints3DABC;
 class TVirtualPad;
@@ -93,7 +98,7 @@ public:
    virtual void         SetWidthFactor(Float_t fact=1.0){fWidthFactor = fact;} //*MENU
    virtual Int_t        Size() const;
    virtual void         Sizeof3D() const;
-   ClassDef(TPolyLineShape,0) // the base class to define an abstract 3D shape of STAR "event" geometry
+   ClassDef(TPolyLineShape,0) // The base class to define an abstract 3D shape of STAR "event" geometry
 };
 
 

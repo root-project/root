@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.16 2002/01/02 21:48:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.18 2002/02/20 16:48:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
     TH1              *GetHistogram() const {return fHistogram;}
     TTreeFormula     *GetMultiplicity() const   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
+    virtual Int_t     GetNfill() const {return fNfill;}
     TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
     const char       *GetScanFileName() const {return fScanFileName;}
@@ -125,11 +126,11 @@ public:
     void              SetScanFileName(const char *name) {fScanFileName=name;}
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
-    virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option 
+    virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                        ,Int_t nentries, Int_t firstentry);
     virtual void      UpdateFormulaLeaves();
-    
-    ClassDef(TTreePlayer,1)  //manager class to play with TTrees
+
+    ClassDef(TTreePlayer,1)  //Manager class to play with TTrees
 };
 
 #endif

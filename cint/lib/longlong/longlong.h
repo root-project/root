@@ -29,7 +29,7 @@
 #else
 #include <iostream.h>
 #endif
-#ifndef __hpux
+#if !defined(__hpux) && !defined(_MSC_VER)
 using namespace std;
 #endif
 #endif
@@ -46,7 +46,13 @@ using namespace std;
 **************************************************************************/
 #elif defined(_WIN32)||defined(_WINDOWS)||defined(_Windows)||defined(_WINDOWS_)
 
+#if defined(_MSC_VER)
 typedef _int64 G__int64;
+#elif defined(__BCPLUSPLUS__)
+typedef __int64 G__int64;
+#else
+typedef long long G__int64;
+#endif
 
 /**************************************************************************
 * LINUX

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.57 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.58 2002/01/26 09:36:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1061,7 +1061,9 @@ TAxis *TGraph::GetXaxis() const
    // Get x axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetXaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
 }
 
 //______________________________________________________________________________
@@ -1070,7 +1072,9 @@ TAxis *TGraph::GetYaxis() const
    // Get y axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetYaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.1 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.1 2002/01/18 14:24:09 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -28,6 +28,7 @@ class TSelector;
 class TDSet;
 class TEventList;
 class TProof;
+class TSocket;
 
 
 //------------------------------------------------------------------------
@@ -35,8 +36,9 @@ class TProof;
 class TProofPlayer : public TObject {
 
 protected:
-   TList   *fInput;    //-> list with input objects
-   TList   *fOutput;   //   list with output objects
+   TList      *fInput;     //-> list with input objects
+   TList      *fOutput;    //   list with output objects
+   TSelector  *fSelector;  //!  The latest selector
 
 public:
    TProofPlayer();
@@ -51,6 +53,8 @@ public:
    virtual void      ClearInput();
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
+   virtual void      StoreOutput(TList *out);   // Adopts the list
+
 
    ClassDef(TProofPlayer,1)  // Abstract PROOF player
 };
@@ -77,16 +81,20 @@ public:
 class TProofPlayerRemote : public TProofPlayer {
 
 private:
-   TProof  *fProof;   // link to associated PROOF session
+   TProof  *fProof;        // Link to associated PROOF session
+   TList   *fOutputLists;  // Results returned by slaves
 
 public:
-   TProofPlayerRemote() { fProof = 0; }
+   TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }
    TProofPlayerRemote(TProof *proof);
+  ~TProofPlayerRemote();   // Owns the fOutput list
 
-   Int_t  Process(TDSet *set,
-                  const char *selector,
-                  Int_t nentries = -1, Int_t first = 0,
-                  TEventList *evl = 0);
+   Int_t    Process(TDSet *set,
+                    const char *selector,
+                    Int_t nentries = -1, Int_t first = 0,
+                    TEventList *evl = 0);
+   void     StoreOutput(TList *out);   // Adopts the list
+   void     MergeOutput();
 
    ClassDef(TProofPlayerRemote,1)  // PROOF player running on master server
 };
@@ -95,9 +103,12 @@ public:
 // -------------------------------------------------------------------
 
 class TProofPlayerSlave : public TProofPlayer {
+private:
+   TSocket *fSocket;
 
 public:
    TProofPlayerSlave();
+   TProofPlayerSlave(TSocket *socket);
 
    Int_t  Process(TDSet *set,
                   const char *selector,

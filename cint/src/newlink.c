@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -4233,7 +4233,7 @@ int k;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
-	  fprintf(fp,"*(%s*)G__Intref(&libp->para[%d])"
+	  fprintf(fp,"*(%s*)G__UCharref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
 #endif
@@ -4284,7 +4284,7 @@ int k;
 	  break;
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Muchar(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
 #endif
@@ -6976,6 +6976,30 @@ int link_stub;
 
   /* Get link language interface */
   c = G__fgetname_template(buf,";\n\r");
+
+#ifndef G__OLDIMPLEMENTATION1272
+  if(strncmp(buf,"postproc",5)==0) {
+    int store_globalcomp2 = G__globalcomp;
+    int store_globalcomp3 = G__store_globalcomp;
+    int store_prerun = G__prerun;
+    G__globalcomp = G__NOLINK;
+    G__store_globalcomp = G__NOLINK;
+    G__prerun = 0;
+    c = G__fgetname_template(buf,";");
+    if(G__LOADFILE_SUCCESS<=G__loadfile(buf)) {
+      char buf2[G__ONELINE];
+      c = G__fgetstream(buf2,";");
+      G__calc(buf2);
+      G__unloadfile(buf);
+    }
+    G__globalcomp = store_globalcomp2;
+    G__store_globalcomp = store_globalcomp3;
+    G__prerun = store_prerun;
+    if(';'!=c) G__fignorestream(";");
+    return;
+  }
+#endif
+
   if(G__SPECIFYLINK==link_stub) {
     if(strcmp(buf,"C++")==0) {
       globalcomp = G__CPPLINK;
@@ -7022,29 +7046,6 @@ int link_stub;
       globalcomp = G__NOLINK; /* off */
     }
   }
-
-#ifndef G__OLDIMPLEMENTATION1272
-  if(strncmp(buf,"postproc",5)==0) {
-    int store_globalcomp2 = G__globalcomp;
-    int store_globalcomp3 = G__store_globalcomp;
-    int store_prerun = G__prerun;
-    G__globalcomp = G__NOLINK;
-    G__store_globalcomp = G__NOLINK;
-    G__prerun = 0;
-    c = G__fgetname_template(buf,";");
-    if(G__LOADFILE_SUCCESS<=G__loadfile(buf)) {
-      char buf2[G__ONELINE];
-      c = G__fgetstream(buf2,";");
-      G__calc(buf2);
-      G__unloadfile(buf);
-    }
-    G__globalcomp = store_globalcomp2;
-    G__store_globalcomp = store_globalcomp3;
-    G__prerun = store_prerun;
-    if(';'!=c) G__fignorestream(";");
-    return;
-  }
-#endif
 
   if(';'==c)  return;
 

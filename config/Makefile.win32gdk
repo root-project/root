@@ -98,3 +98,7 @@ GLLIBDEP            = $(G3DLIB) $(WIN32GDKLIB) $(GUILIB) $(GDKDLLS) $(GDKLIBS)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32gdk.lib lib/libGui.lib \
                       Glu32.lib Opengl32.lib $(GDKLIBS)
 RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
+                      lib/libGraf.lib lib/libTreePlayer.lib

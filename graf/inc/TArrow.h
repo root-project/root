@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.2 2000/06/13 10:43:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
         virtual void   SetArrowSize(Float_t arrowsize=0.05) {fArrowSize=arrowsize;} // *MENU*
         virtual void   SetOption(Option_t *option=">"){ fOption = option;}
 
-        ClassDef(TArrow,1)  //one arrow --->
+        ClassDef(TArrow,1)  // An arrow (line with a arrowhead)
 };
 
 #endif

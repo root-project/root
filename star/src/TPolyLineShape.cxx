@@ -1,6 +1,6 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TPolyLineShape.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: 
-// $Id: TPolyLineShape.cxx,v 1.21 1999/12/21 18:57:14 fine Exp $
+// $Id: TPolyLineShape.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // ***********************************************************************
 // *  C++ class library to define an abstract 3D shape os STAR "event" geometry
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved
@@ -29,10 +29,10 @@
 #include "TBRIK.h"
 #include "TSPHE.h"
 #include "TView.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TPadView3D.h"
 #include "TPoint.h"
-#include "TPostScript.h"
+#include "TVirtualPS.h"
 
 //////////////////////////////////////////////////////////////////////////////////////
 //                                                                                  //

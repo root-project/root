@@ -7,7 +7,7 @@
  * Description:
  *  Stub file for making iostream library
  ************************************************************************
- * Copyright(c) 1991~1999,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1991~2002,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  ************************************************************************/
 
@@ -21,6 +21,113 @@
 #else
 #include <iostream.h>
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1635
+#ifdef G__NEWSTDHEADER
+#include <fstream>
+#else
+#include <fstream.h>
+#endif
+/********************************************************************
+ * static variables for iostream redirection
+ ********************************************************************/
+static streambuf *G__store_cout;
+static streambuf *G__store_cerr;
+static streambuf *G__store_cin;
+static ofstream  *G__redirected_cout;
+static ofstream  *G__redirected_cerr;
+static ifstream  *G__redirected_cin;
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__unredirectcout() {
+  if(G__store_cout) {
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+    cout << G__store_cout;
+#else
+    cout.rdbuf(G__store_cout);
+#endif
+    G__store_cout = 0;
+  }
+  if(G__redirected_cout) {
+    delete G__redirected_cout;
+    G__redirected_cout = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__redirectcout(const char* filename) {
+  G__unredirectcout();
+  G__redirected_cout = new ofstream(filename,ios::app);
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+  G__store_cout = cout.rdbuf() ;
+  cout << G__redirected_cout->rdbuf() ;
+#else
+  G__store_cout = cout.rdbuf(G__redirected_cout->rdbuf()) ;
+#endif
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__unredirectcerr() {
+  if(G__store_cerr) {
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+    cerr << G__store_cerr;
+#else
+    cerr.rdbuf(G__store_cerr);
+#endif
+    G__store_cerr = 0;
+  }
+  if(G__redirected_cerr) {
+    delete G__redirected_cerr;
+    G__redirected_cerr = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__redirectcerr(const char* filename) {
+  G__unredirectcerr();
+  G__redirected_cerr = new ofstream(filename,ios::app);
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+  G__store_cerr = cerr.rdbuf() ;
+  cerr << G__redirected_cerr->rdbuf() ;
+#else
+  G__store_cerr = cerr.rdbuf(G__redirected_cerr->rdbuf()) ;
+#endif
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__unredirectcin() {
+  if(G__store_cin) {
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+    cin >> G__store_cin;
+#else
+    cin.rdbuf(G__store_cin);
+#endif
+    G__store_cin = 0;
+  }
+  if(G__redirected_cin) {
+    delete G__redirected_cin;
+    G__redirected_cin = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__redirectcin(const char* filename) {
+  G__unredirectcin();
+  G__redirected_cin = new ifstream(filename,ios::in);
+#if (defined(__sgi) || defined(__alpha) || defined(__hpux)) && !defined(__GNUC__) 
+  G__store_cin = cin.rdbuf() ;
+  cin >> G__redirected_cin->rdbuf() ;
+#else
+  G__store_cin = cin.rdbuf(G__redirected_cin->rdbuf()) ;
+#endif
+}
+#endif /* 1635 */
 
 
 #else

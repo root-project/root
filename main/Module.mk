@@ -28,9 +28,15 @@ PROOFSERVO   := $(PROOFSERVS:.cxx=.o)
 PROOFSERVDEP := $(PROOFSERVO:.o=.d)
 PROOFSERV    := bin/proofserv$(EXEEXT)
 
+##### hadd #####
+HADDS        := $(MODDIRS)/hadd.cxx
+HADDO        := $(HADDS:.cxx=.o)
+HADDDEP      := $(HADDO:.o=.d)
+HADD         := bin/hadd$(EXEEXT)
+
 ##### h2root #####
 H2ROOTS1     := $(MODDIRS)/h2root.cxx
-H2ROOTS2     := $(MODDIRS)/hntvar2.f
+H2ROOTS2     := $(HBOOKS2)
 H2ROOTS3     := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
@@ -49,13 +55,13 @@ endif
 G2ROOT       := bin/g2root$(EXEEXT)
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 ifneq ($(CERNLIBS),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
-INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(H2ROOTDEP)
+INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP)
 
 ##### local rules #####
 $(ROOTEXE):     $(ROOTEXEO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
@@ -74,6 +80,10 @@ $(PROOFSERV):   $(PROOFSERVO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) \
 		   $(RPATH) $(ROOTLIBS) $(PROOFLIBS) $(SYSLIBS)
 
+$(HADD):        $(HADDO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+                $(TREELIB) $(MATRIXLIB)
+		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(RPATH) $(ROOTLIBS) $(SYSLIBS)
+
 $(H2ROOT):      $(H2ROOTO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(H2ROOTO) \
@@ -85,18 +95,19 @@ $(G2ROOT):      $(G2ROOTO)
 		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
 
 ifneq ($(CERNLIBS),)
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(H2ROOT) $(G2ROOT)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD) $(H2ROOT) $(G2ROOT)
 else
-all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(HADD)
 endif
 
 clean-main:
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(H2ROOTO) $(G2ROOTO)
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) $(G2ROOTO)
 
 clean::         clean-main
 
 distclean-main: clean-main
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERV) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT)
+		   $(PROOFSERV) $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) \
+		   $(G2ROOT)
 
 distclean::     distclean-main

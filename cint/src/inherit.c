@@ -7,7 +7,7 @@
  * Description:
  *  Class inheritance 
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -572,7 +572,7 @@ struct G__baseparam *pbaseparam;
 #ifndef G__OLDIMPLEMENTATION1604
 	      case 'g':
 		lval = G__int(G__getexpr(pbaseparam->param[j]))?1:0;
-		*(int*)addr = lval;
+		*(unsigned char*)addr = lval;
 		break;
 #endif
 	      default:

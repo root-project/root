@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.22 2002/02/02 13:19:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.24 2002/02/25 12:36:52 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -67,11 +67,11 @@ TBuffer::TBuffer(EMode mode)
    fMap      = 0;
    fParent   = 0;
    fDisplacement = 0;
-   
+
    SetBit(kIsOwner);
 
    fBuffer = new char[fBufSize+kExtraSpace];
-   
+
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
 }
@@ -91,11 +91,11 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fMap      = 0;
    fParent   = 0;
    fDisplacement = 0;
-   
+
    SetBit(kIsOwner);
 
    fBuffer = new char[fBufSize+kExtraSpace];
-   
+
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
 }
@@ -118,7 +118,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
    fMap      = 0;
    fParent   = 0;
    fDisplacement = 0;
-   
+
    SetBit(kIsOwner);
 
    if (buf) {
@@ -146,12 +146,13 @@ TBuffer::~TBuffer()
 }
 
 //______________________________________________________________________________
-void frombufOld(char *&buf, Long_t *x)
+static void frombufOld(char *&buf, Long_t *x)
 {
-// files written with versions older than 3.00/06 had a non-portable
-// implementation of Long_t/ULong_t. These types should not have been used at all.
-// However, because some users had already written many files with these types
-// we provide this dirty patch for "backward compatibility"
+   // Files written with versions older than 3.00/06 had a non-portable
+   // implementation of Long_t/ULong_t. These types should not have been
+   // used at all. However, because some users had already written many
+   // files with these types we provide this dirty patch for "backward
+   // compatibility"
 
 #ifdef R__BYTESWAP
 #ifdef R__B64
@@ -316,7 +317,7 @@ void TBuffer::Expand(Int_t newsize)
 TObject *TBuffer::GetParent() const
 {
    // return pointer to parent of this buffer
-   
+
    return fParent;
 }
 
@@ -325,7 +326,7 @@ TObject *TBuffer::GetParent() const
 void TBuffer::SetParent(TObject *parent)
 {
    // Set parent owning this buffer
-   
+
    fParent = parent;
 }
 
@@ -340,7 +341,7 @@ void TBuffer::MapObject(const TObject *obj, UInt_t offset)
    // (default value for offset).
 
    if (!fMap) InitMap();
-   
+
    if (IsWriting()) {
       if (obj) {
          CheckCount(offset);
@@ -563,6 +564,34 @@ void TBuffer::WriteString(const Text_t *s)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadArray(Bool_t *&b)
+{
+   // Read array of bools from the I/O buffer. Returns the number of
+   // bools read. If argument is a 0 pointer then space will be
+   // allocated for the array.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (!n) return n;
+
+   if (!b) b = new Bool_t[n];
+
+   if (sizeof(Bool_t) > 1) {
+      for (int i = 0; i < n; i++)
+         frombuf(fBufCur, &b[i]);
+   } else {
+      Int_t l = sizeof(Bool_t)*n;
+      memcpy(b, fBufCur, l);
+      fBufCur += l;
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadArray(Char_t *&c)
 {
    // Read array of characters from the I/O buffer. Returns the number of
@@ -581,6 +610,7 @@ Int_t TBuffer::ReadArray(Char_t *&c)
    Int_t l = sizeof(Char_t)*n;
    memcpy(c, fBufCur, l);
    fBufCur += l;
+
    return n;
 }
 
@@ -736,6 +766,33 @@ Int_t TBuffer::ReadArray(Double_t *&d)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadStaticArray(Bool_t *b)
+{
+   // Read array of bools from the I/O buffer. Returns the number of bools
+   // read.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (!n) return n;
+
+   if (!b) return 0;
+
+   if (sizeof(Bool_t) > 1) {
+      for (int i = 0; i < n; i++)
+         frombuf(fBufCur, &b[i]);
+   } else {
+      Int_t l = sizeof(Bool_t)*n;
+      memcpy(b, fBufCur, l);
+      fBufCur += l;
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadStaticArray(Char_t *c)
 {
    // Read array of characters from the I/O buffer. Returns the number of
@@ -753,6 +810,7 @@ Int_t TBuffer::ReadStaticArray(Char_t *c)
    Int_t l = sizeof(Char_t)*n;
    memcpy(c, fBufCur, l);
    fBufCur += l;
+
    return n;
 }
 
@@ -904,6 +962,23 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
 }
 
 //______________________________________________________________________________
+void TBuffer::ReadFastArray(Bool_t *b, Int_t n)
+{
+   // Read array of n bools from the I/O buffer.
+
+   if (n <= 0) return;
+
+   if (sizeof(Bool_t) > 1) {
+      for (int i = 0; i < n; i++)
+         frombuf(fBufCur, &b[i]);
+   } else {
+      Int_t l = sizeof(Bool_t)*n;
+      memcpy(b, fBufCur, l);
+      fBufCur += l;
+   }
+}
+
+//______________________________________________________________________________
 void TBuffer::ReadFastArray(Char_t *c, Int_t n)
 {
    // Read array of n characters from the I/O buffer.
@@ -1027,6 +1102,31 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
    memcpy(d, fBufCur, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteArray(const Bool_t *b, Int_t n)
+{
+   // Write array of n bools into the I/O buffer.
+
+   Assert(IsWriting());
+
+   *this << n;
+
+   if (!n) return;
+
+   Assert(b);
+
+   Int_t l = sizeof(UChar_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   if (sizeof(Bool_t) > 1) {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, b[i]);
+   } else {
+      memcpy(fBufCur, b, l);
+      fBufCur += l;
+   }
 }
 
 //______________________________________________________________________________
@@ -1182,6 +1282,24 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 #endif
 }
 
+//______________________________________________________________________________
+void TBuffer::WriteFastArray(const Bool_t *b, Int_t n)
+{
+   // Write array of n bools into the I/O buffer.
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(UChar_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   if (sizeof(Bool_t) > 1) {
+      for (int i = 0; i < n; i++)
+         tobuf(fBufCur, b[i]);
+   } else {
+      memcpy(fBufCur, b, l);
+      fBufCur += l;
+   }
+}
 
 //______________________________________________________________________________
 void TBuffer::WriteFastArray(const Char_t *c, Int_t n)
@@ -1225,6 +1343,7 @@ void TBuffer::WriteFastArray(const Short_t *h, Int_t n)
 void TBuffer::WriteFastArray(const Int_t *ii, Int_t n)
 {
    // Write array of n ints into the I/O buffer.
+
    if (n <= 0) return;
 
    Int_t l = sizeof(Int_t)*n;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.21 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.22 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -225,7 +225,7 @@ void TProfile::Add(TF1 *, Double_t )
 
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, Double_t c1)
+void TProfile::Add(const TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
@@ -267,7 +267,7 @@ void TProfile::Add(TH1 *h1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
+void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile by the addition of h1 and h2*-*-*
 //*-*      =============================================================
@@ -403,7 +403,7 @@ void TProfile::Divide(TF1 *, Double_t )
 }
 
 //______________________________________________________________________________
-void TProfile::Divide(TH1 *h1)
+void TProfile::Divide(const TH1 *h1)
 {
 //*-*-*-*-*-*-*-*-*-*-*Divide this profile by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -462,7 +462,7 @@ void TProfile::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TProfile::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile by the division of h1 by h2*-*-*
 //*-*      ============================================================
@@ -1087,7 +1087,7 @@ void TProfile::Multiply(TF1 *, Double_t )
 }
 
 //______________________________________________________________________________
-void TProfile::Multiply(TH1 *)
+void TProfile::Multiply(const TH1 *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Multiply this profile by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
@@ -1099,7 +1099,7 @@ void TProfile::Multiply(TH1 *)
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
+void TProfile::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -1111,7 +1111,7 @@ void TProfile::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
 }
 
 //______________________________________________________________________________
-TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
+TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 {
 //*-*-*-*-*Project this profile into a 1-D histogram along X*-*-*-*-*-*-*
 //*-*      =================================================
@@ -1134,7 +1134,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
      sprintf(pname,"%s%s",GetName(),name);
   }
   TH1D *h1;
-  TArrayD *bins = fXaxis.GetXbins();
+  const TArrayD *bins = fXaxis.GetXbins();
   if (bins->fN == 0) {
      h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
   } else {

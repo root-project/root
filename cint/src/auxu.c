@@ -7,7 +7,7 @@
  * Description:
  *  Auxuary function  
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -361,6 +361,9 @@ G__value *buf1,*buf2;
 	  
 	case 'b':
 	case 'c':
+#ifndef G__OLDIMPLEMENTATION1604
+	case 'g':
+#endif
 	  memcpy(
 	         (void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])
@@ -379,9 +382,6 @@ G__value *buf1,*buf2;
 	  
 	case 'h':
 	case 'i':
-#ifndef G__OLDIMPLEMENTATION1604
-	case 'g':
-#endif
 	  memcpy(
 	         (void *)(buf1->obj.i+var1->p[i])
 		 ,(void *)(buf2->obj.i+var2->p[i])

@@ -274,6 +274,8 @@ struct G__breakcontinue_list *G__pbreakcontinue;
 *********************************************************************/
 struct G__ConstStringList G__conststringlist;
 struct G__ConstStringList *G__plastconststring;
+#ifdef G__OLDIMPLEMENTATION1636
+#endif
 
 FILE *G__stderr;
 FILE *G__stdout;

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.12 2002/01/09 15:18:05 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.14 2002/02/23 10:15:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,10 +24,12 @@
 #ifndef ROOT_RConfig
 #include "RConfig.h"
 #endif
+#ifndef ROOT_DllImport
+#include "DllImport.h"
+#endif
 
 #include <stdio.h>
 
-#include "DllImport.h"
 
 
 //---- forward declared class types --------------------------------------------
@@ -62,7 +64,7 @@ typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned lo
 typedef float          Float_t;     //Float 4 bytes (float)
 typedef double         Double_t;    //Float 8 bytes (double)
 typedef char           Text_t;      //General string (char)
-typedef unsigned char  Bool_t;      //Boolean (0=false, 1=true) (unsigned char)
+typedef bool           Bool_t;      //Boolean (0=false, 1=true) (bool)
 typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)
 typedef short          Version_t;   //Class version identifier (short)
 typedef const char     Option_t;    //Option string (const char)

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.5 2001/01/12 11:24:36 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.7 2002/02/10 20:02:17 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
   inline void SetY(Double_t);
   inline void SetZ(Double_t);
   inline void SetXYZ(Double_t x, Double_t y, Double_t z);
-  // Set the components in cartesian coordinate system.
+  inline void SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi);
 
   inline void GetXYZ(Double_t *carray) const;
   inline void GetXYZ(Float_t *carray) const;
@@ -180,7 +180,7 @@ private:
   Double_t fX, fY, fZ;
   // The components.
 
-  ClassDef(TVector3,3) // A three vector
+  ClassDef(TVector3,3) // A 3D physics vector
 
 };
 
@@ -412,6 +412,11 @@ inline TVector2 TVector3::EtaPhiVector() {
 
 inline TVector2 TVector3::XYvector() {
   return TVector2(fX,fY);
+}
+
+inline void TVector3::SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi) {
+  Double_t apt = TMath::Abs(pt);
+  SetXYZ(apt*TMath::Cos(phi), apt*TMath::Sin(phi), apt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))) );
 }
 
 #endif

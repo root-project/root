@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.8 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.9 2002/01/20 10:21:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -191,7 +191,7 @@ void TProfile2D::Add(TF1 *, Double_t )
 
 
 //______________________________________________________________________________
-void TProfile2D::Add(TH1 *h1, Double_t c1)
+void TProfile2D::Add(const TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
@@ -241,7 +241,7 @@ void TProfile2D::Add(TH1 *h1, Double_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
+void TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile2D by the addition of h1 and h2*-*-*
 //*-*      ===============================================================
@@ -386,7 +386,7 @@ void TProfile2D::Divide(TF1 *, Double_t )
 }
 
 //______________________________________________________________________________
-void TProfile2D::Divide(TH1 *h1)
+void TProfile2D::Divide(const TH1 *h1)
 {
 //*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
@@ -453,7 +453,7 @@ void TProfile2D::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TProfile2D::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
+void TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
 //*-*      ==============================================================
@@ -1184,7 +1184,7 @@ void TProfile2D::Multiply(TF1 *, Double_t )
 }
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(TH1 *)
+void TProfile2D::Multiply(const TH1 *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
@@ -1196,7 +1196,7 @@ void TProfile2D::Multiply(TH1 *)
 
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
+void TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -1208,7 +1208,7 @@ void TProfile2D::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
 }
 
 //______________________________________________________________________________
-TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option)
+TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const 
 {
 //*-*-*-*-*Project this profile2D into a 2-D histogram along X,Y*-*-*-*-*-*-*
 //*-*      =====================================================

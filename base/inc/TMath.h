@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.13 2002/01/18 18:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.14 2002/02/05 22:51:51 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -150,6 +150,8 @@ public:
    static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
+   static void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
+   static void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
    // Advanced
    static Float_t *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);     // Calculate the Cross Product of two vectors

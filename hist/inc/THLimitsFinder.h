@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.3 2001/12/09 17:33:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.1 2002/01/15 10:22:27 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class THLimitsFinder : public TObject {
 
 protected:
     static THLimitsFinder *fgLimitsFinder;   //!Pointer to hist limits finder
-      
+
 public:
     THLimitsFinder();
     virtual ~THLimitsFinder();
@@ -45,7 +45,7 @@ public:
     static THLimitsFinder *GetLimitsFinder();
     static  void       SetLimitsFinder(THLimitsFinder *finder);
 
-    ClassDef(THLimitsFinder,0)  //class to find nice axis limits
+    ClassDef(THLimitsFinder,0)  //Class to find best axis limits
 };
 
 #endif

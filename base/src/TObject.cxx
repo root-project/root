@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.35 2002/02/07 07:31:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.36 2002/02/07 08:06:07 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -383,18 +383,24 @@ TObject *TObject::DrawClone(Option_t *option) const
 {
    // Draw a clone of this object in the current pad
 
+   TVirtualPad *pad = gROOT->GetSelectedPad();
+   TVirtualPad *padsav = gPad;
+   if (pad) pad->cd();
+   
    TObject *newobj = Clone();
    if (!newobj) return 0;
-   TVirtualPad *pad = gROOT->GetSelectedPad();
    if (pad) {
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
       pad->Modified(kTRUE);
       pad->Update();
+      if (padsav) padsav->cd();
       return newobj;
    }
    if (strlen(option))  newobj->Draw(option);
    else                 newobj->Draw(GetDrawOption());
+   if (padsav) padsav->cd();
+   
    return newobj;
 }
 

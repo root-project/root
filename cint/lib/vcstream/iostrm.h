@@ -5,9 +5,9 @@
  * header file iostream.sut.h
  ************************************************************************
  * Description:
- *  Stub file for making iostream library
+ *  Stub file for making iostream library for Microsoft Visual C++ compiler
  ************************************************************************
- * Copyright(c) 1991~1999,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1991~2002,  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  ************************************************************************/
 
@@ -17,6 +17,85 @@
 #ifndef __CINT__
 
 #include <iostream.h>
+
+#ifndef G__OLDIMPLEMENTATION1635
+#include <fstream.h>
+/********************************************************************
+ * static variables for iostream redirection
+ ********************************************************************/
+static streambuf *G__store_cout;
+static streambuf *G__store_cerr;
+static streambuf *G__store_cin;
+static ofstream  *G__redirected_cout;
+static ofstream  *G__redirected_cerr;
+static ifstream  *G__redirected_cin;
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__unredirectcout() {
+  if(G__store_cout) {
+    cout << G__store_cout;
+    G__store_cout = 0;
+  }
+  if(G__redirected_cout) {
+    delete G__redirected_cout;
+    G__redirected_cout = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcout
+ ********************************************************************/
+extern "C" void G__redirectcout(const char* filename) {
+  G__unredirectcout();
+  G__redirected_cout = new ofstream(filename,ios::app);
+  G__store_cout = cout.rdbuf() ;
+  cout << G__redirected_cout->rdbuf() ;
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__unredirectcerr() {
+  if(G__store_cerr) {
+    cerr << G__store_cerr;
+    G__store_cerr = 0;
+  }
+  if(G__redirected_cerr) {
+    delete G__redirected_cerr;
+    G__redirected_cerr = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcerr
+ ********************************************************************/
+extern "C" void G__redirectcerr(const char* filename) {
+  G__unredirectcerr();
+  G__redirected_cerr = new ofstream(filename,ios::app);
+  G__store_cerr = cerr.rdbuf() ;
+  cerr << G__redirected_cerr->rdbuf() ;
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__unredirectcin() {
+  if(G__store_cin) {
+    cin >> G__store_cin;
+    G__store_cin = 0;
+  }
+  if(G__redirected_cin) {
+    delete G__redirected_cin;
+    G__redirected_cin = 0;
+  }
+}
+/********************************************************************
+ * G__redirectcin
+ ********************************************************************/
+extern "C" void G__redirectcin(const char* filename) {
+  G__unredirectcin();
+  G__redirected_cin = new ifstream(filename,ios::in);
+  G__store_cin = cin.rdbuf() ;
+  cin >> G__redirected_cin->rdbuf() ;
+}
+#endif /* 1635 */
 
 #else
 

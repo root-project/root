@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.3 2001/11/04 17:29:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.5 2002/02/14 18:04:15 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -39,6 +39,12 @@
 
 class TVirtualPS : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {
 
+protected:
+   Int_t        fLenBuffer;       //Buffer length
+   Bool_t       fPrinted;         //True when a page must be printed
+   ofstream    *fStream;          //File stream identifier
+   char         fBuffer[512];     //File buffer
+
 public:
    TVirtualPS();
    TVirtualPS(const char *filename, Int_t type=-111);
@@ -56,9 +62,13 @@ public:
    virtual void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) = 0;
    virtual void  NewPage() = 0;
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
-   virtual void  PrintFast(Int_t nch, const char *string="") = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
    virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
+
+   void  PrintFast(Int_t nch, const char *string="");
+   void  PrintStr(const char *string="");
+   void  WriteInteger(Int_t i, Bool_t space=kTRUE);
+   void  WriteReal(Float_t r);
 
    ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };

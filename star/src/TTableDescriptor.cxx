@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.9 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.8 2001/05/31 06:36:36 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.9 2001/07/11 06:46:19 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -227,7 +227,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     }
     else Error("LearnTable","Wrong data type for <%s> structure",classPtr->GetName());
     elementDescriptor.fSize   =  globalIndex * (elementDescriptor.fTypeSize);
-    elementDescriptor.fOffset = member->GetOffset();
+    elementDescriptor.fOffset = member->GetOffsetCint();
     AddAt(&elementDescriptor,columnIndex); columnIndex++;
     (new TDataSet(varname,comments))->SetTitle(member->GetTitle());
   }

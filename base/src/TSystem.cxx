@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.30 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.32 2002/02/14 19:11:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TApplication.h"
 #include "TException.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TBrowser.h"
 #include "TString.h"
 #include "TOrdCollection.h"
@@ -1419,7 +1420,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
   static const int maxforbidden = 26;
-  static const char *forbidden_chars[maxforbidden] = 
+  static const char *forbidden_chars[maxforbidden] =
         { "+","-","*","/","&","%","|","^",">","<","=","~",".",
           "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
   for( int ic = 0; ic < maxforbidden; ic++ ) {
@@ -1459,17 +1460,33 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     incPath.ReplaceAll(" :",":");
   }
   incPath.Prepend(file_location+":.:");
-  if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
+
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
-  for ( int i = 0; i < 6; i++ ) {
-    char * name;
-    TString lookup = BaseName( filename_noext );
-    lookup.Append(extensions[i]);
-    name = Which(incPath,lookup);
-    if (name) {
-      linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< endl;
-      delete name;
-    }
+
+  int i;
+  for (i = 0; i < 6; i++ ) {
+     char * name;
+     TString extra_linkdef = BaseName( filename_noext );
+     extra_linkdef.Append(GetLinkdefSuffix());
+     extra_linkdef.Append(extensions[i]);
+     name = Which(incPath,extra_linkdef);
+     if (name) {
+        if (gDebug>4) Info("ACLiC","including extra linkdef file: %s",name);
+        linkdefFile << "#include \"" << name << "\"" << endl;
+        delete name;
+     }
+  }
+
+  if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
+  for (i = 0; i < 6; i++ ) {
+     char * name;
+     TString lookup = BaseName( filename_noext );
+     lookup.Append(extensions[i]);
+     name = Which(incPath,lookup);
+     if (name) {
+        linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< endl;
+        delete name;
+     }
   }
   linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
   linkdefFile << endl;
@@ -1635,6 +1652,16 @@ const char *TSystem::GetLinkedLibs() const
 }
 
 //______________________________________________________________________________
+const char *TSystem::GetLinkdefSuffix() const
+{
+   if (fLinkdefSuffix.Length()==0) {
+      if (!gEnv) return "_linkdef";
+      const_cast<TSystem*>(this)->fLinkdefSuffix = gEnv->GetValue("ACLiC.Linkdef","_linkdef");
+   }
+   return fLinkdefSuffix;
+}
+
+//______________________________________________________________________________
 const char *TSystem::GetSoExt() const
 {
    return fSoExt;
@@ -1732,6 +1759,25 @@ void  TSystem::SetLinkedLibs(const char *LinkedLibs)
 
    fLinkedLibs = LinkedLibs;
 }
+
+//______________________________________________________________________________
+void  TSystem::SetLinkdefSuffix(const char *suffix)
+{
+   // The 'suffix' will be appended to the name of a script loaded by ACLiC
+   // and used to locate any eventual additional linkdef information that
+   // ACLiC should used to produce the dictionary.
+   // So by default, when doing .L MyScript.cxx, ACLiC will look
+   // for a file name MyScript_linkdef and having one of the .h (.hpp,
+   // etc.) extensions.  If such a file exist, it will be added to
+   // the end of the linkdef file used to created the ACLiC dictionary.
+   // This effectively enable the full customization of the creation
+   // of the dictionary.  It should be noted that the file is intended
+   // as a linkdef 'fragment', so usually you would not list the
+   // typical '#pragma link off ....".
+
+   fLinkdefSuffix = suffix;
+}
+
 
 //______________________________________________________________________________
 void TSystem::SetSoExt(const char *SoExt)

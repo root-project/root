@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.10 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.11 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    fY = new Double_t[fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   fLastPoint = fN-1;
    fOption = option;
 }
 
@@ -65,6 +66,7 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===========================
+   fLastPoint = -1;
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
@@ -81,7 +83,6 @@ TPolyLine::~TPolyLine()
 //*-*                  ===========================
    if (fX) delete [] fX;
    if (fY) delete [] fY;
-   fLastPoint = fN-1;
 }
 
 //______________________________________________________________________________

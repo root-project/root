@@ -1080,32 +1080,26 @@ static int G__fstreambase_open_5_0(G__value *result7,G__CONST char *funcname,str
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-/*
-static int G__fstreambase_is_open_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)((const fstreambase*)(G__getstructoffset()))->is_open());
-   return(1 || funcname || hash || result7 || libp) ;
-}
-*/
-static int G__fstreambase_close_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__fstreambase_close_6_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       ((fstreambase*)(G__getstructoffset()))->close();
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__fstreambase_setbuf_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__fstreambase_setbuf_7_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       ((fstreambase*)(G__getstructoffset()))->setbuf((char*)G__int(libp->para[0]),(int)G__int(libp->para[1]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__fstreambase_rdbuf_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__fstreambase_rdbuf_8_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,85,(long)((fstreambase*)(G__getstructoffset()))->rdbuf());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic destructor
 typedef fstreambase G__Tfstreambase;
-static int G__fstreambase_wAfstreambase_0_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__fstreambase_wAfstreambase_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -2528,13 +2522,12 @@ static void G__setup_memfuncfstreambase(void) {
    G__memfunc_setup("open",434,G__fstreambase_open_5_0,121,-1,-1,0,3,1,1,0,
 "C - - 10 - name i - - 0 - mode "
 "i - - 0 - prot",(char*)NULL,(void*)NULL,0);
-//   G__memfunc_setup("is_open",749,G__fstreambase_is_open_6_0,105,-1,-1,0,0,1,1,8,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("close",534,G__fstreambase_close_7_0,121,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("setbuf",649,G__fstreambase_setbuf_8_0,121,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("close",534,G__fstreambase_close_6_0,121,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("setbuf",649,G__fstreambase_setbuf_7_0,121,-1,-1,0,2,1,1,0,
 "C - - 0 - p i - - 0 - l",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("rdbuf",531,G__fstreambase_rdbuf_9_0,85,G__get_linked_tagnum(&G__G__streamLN_filebuf),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("rdbuf",531,G__fstreambase_rdbuf_8_0,85,G__get_linked_tagnum(&G__G__streamLN_filebuf),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~fstreambase",1291,G__fstreambase_wAfstreambase_0_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   G__memfunc_setup("~fstreambase",1291,G__fstreambase_wAfstreambase_9_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 

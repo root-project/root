@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.5 2001/11/11 15:44:52 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.7 2002/02/23 10:15:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -46,6 +46,12 @@
 #endif
 
 //______________________________________________________________________________
+inline void tobuf(char *&buf, Bool_t x)
+{
+   UChar_t x1 = x;
+   *buf++ = x1;
+}
+
 inline void tobuf(char *&buf, UChar_t x)
 {
    *buf++ = x;
@@ -190,6 +196,13 @@ inline void tobuf(char *&buf, Double_t x)
    memcpy(buf, &x, sizeof(Double_t));
 #endif
    buf += sizeof(Double_t);
+}
+
+inline void frombuf(char *&buf, Bool_t *x)
+{
+   UChar_t x1;
+   x1 = *buf++;
+   *x = x1;
 }
 
 inline void frombuf(char *&buf, UChar_t *x)

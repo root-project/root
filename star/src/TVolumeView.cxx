@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.10 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.11 2002/01/24 11:39:31 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 #include <assert.h>
@@ -26,7 +26,7 @@
 // pointer to wrap any TObject onto TDataSet object                     //
 //                                                                      //
 //  BE CAREFUL !!!                                                      //
-//  One has to use it carefully no conrol over that extra object        //
+//  One has to use it carefully no control over that extra object       //
 //  is performed. This means: the object m_Obj data-member points to can//
 //  be destroyed with no this kbject notifying.                         //
 //  There is no tool /protection to check whether m_Obj is till alive.  //

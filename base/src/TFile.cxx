@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.50 2002/02/01 07:14:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.54 2002/02/25 07:38:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -417,19 +417,30 @@ void TFile::Init(Bool_t create)
          goto zombie;
       }
 //*-* -------------Check if file is truncated
-      Long_t id, size, flags, modtime;
-      gSystem->GetPathInfo(GetName(), &id, &size, &flags, &modtime);
+      Long_t size;
+      if ((size = GetSize()) == -1) {
+         Error("TFile", "cannot stat the file %s", GetName());
+         goto zombie;
+      }
 //*-* -------------Read keys of the top directory
+
       if (fSeekKeys > fBEGIN && fEND <= size) {
          TDirectory::ReadKeys();
          gDirectory = this;
+         if (!GetNkeys()) Recover();
       } else {
          if (fEND > size) {
             Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
          } else {
             Warning("TFile","file %s probably not closed, trying to recover",GetName());
          }
-         if (!Recover()) goto zombie;
+         Int_t nrecov = Recover();
+         if (nrecov) {
+            Warning("Recover", "successfully recovered %d keys", nrecov);
+         } else {
+            Warning("Recover", "no keys recovered: file is a Zombie");
+            goto zombie;
+         }
       }
    }
    gROOT->GetListOfFiles()->Add(this);
@@ -460,7 +471,6 @@ void TFile::Close(Option_t *)
    if (!IsOpen()) return;
 
    if (IsWritable()) {
-      TStreamerInfo::SetCurrentFile(this);
       WriteStreamerInfo();
    }
 
@@ -507,7 +517,6 @@ void TFile::Close(Option_t *)
       gFile      = 0;
       gDirectory = gROOT;
    }
-   TStreamerInfo::SetCurrentFile(gFile);
 
    //delete the TProcessIDs
    TIter next(fProcessIDs);
@@ -710,7 +719,8 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
 //______________________________________________________________________________
 Seek_t TFile::GetSize() const
 {
-   // Returns the current file size.
+   // Returns the current file size. Returns -1 in case the file could not
+   // be stat'ed.
 
    Long_t id, size, flags, modtime;
 #if defined(R__AIX) || (defined(R__HPUX) && !defined(R__ACC))
@@ -719,7 +729,7 @@ Seek_t TFile::GetSize() const
    if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
 #endif
       Error("GetSize", "cannot stat the file %s", GetName());
-      return 0;
+      return -1;
    }
 
    return size;
@@ -954,9 +964,9 @@ Int_t TFile::Recover()
 //*-*              ===============================================
 //
 //  The function returns the number of keys that have been recovered.
-//  If no keys can be recovered, the file will be declared Zombie by 
+//  If no keys can be recovered, the file will be declared Zombie by
 //  the calling function.
-       
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -966,8 +976,8 @@ Int_t TFile::Recover()
    char     nwhc;
    Seek_t   idcur = fBEGIN;
 
-   Long_t id, size, flags, modtime;
-   if (SysStat(fD, &id, &size, &flags, &modtime)) {
+   Long_t size;
+   if ((size = GetSize()) == -1) {
       Error("Recover", "cannot stat the file %s", GetName());
       return 0;
    }
@@ -1027,8 +1037,6 @@ Int_t TFile::Recover()
       if (nrecov) Write();
    }
    delete [] header;
-   if (nrecov) Warning("Recover", "successfully recovered %d keys", nrecov);
-   else        Warning("Recover", "no keys recovered: file is a Zombie");
    return nrecov;
 }
 
@@ -1714,7 +1722,8 @@ Int_t TFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags,
                      Long_t *modtime)
 {
    // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
+   // identical to TSystem::GetPathInfo(). The function returns 0 in
+   // case of success and 1 if the file could not be stat'ed.
 
    return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
 }

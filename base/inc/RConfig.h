@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.29 2002/01/24 11:39:26 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.31 2002/02/23 10:15:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,6 +22,11 @@
 #ifndef ROOT_RVersion
 #include "RVersion.h"
 #endif
+
+
+/*---- new C++ features ------------------------------------------------------*/
+
+#define R__RTTI
 
 
 /*---- machines --------------------------------------------------------------*/

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.8 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.9 2002/01/24 11:39:29 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -309,13 +309,47 @@ void THStack::Paint(Option_t *option)
 // By default, histograms are shown stacked.
 //    -the first histogram is paint
 //    -then the sum of the first and second, etc
+//
 // If option "nostack" is specified, histograms are all paint in the same pad
 // as if the option "same" had been specified.
+//
+// if option "pads" is specified, the current pad/canvas is subdivided into
+// a number of pads equal to the number of histograms and each histogram 
+// is paint into a separate pad.
 //
 // See THistPainter::Paint for a list of valid options.
 
    TString opt = option;
    opt.ToLower();
+   
+   if (opt.Contains("pads")) {
+      Int_t npads = fHists->GetEntries();
+      TVirtualPad *padsav = gPad;
+      //if pad is not already divided into subpads, divide it
+      Int_t nps = 0;
+      TObject *obj;
+      TIter nextp(padsav->GetListOfPrimitives());
+      while ((obj = nextp())) {
+         if (obj->InheritsFrom(TVirtualPad::Class())) nps++;
+      }
+      if (nps < npads) {
+         padsav->Clear();
+         Int_t nx = (Int_t)TMath::Sqrt((Double_t)npads);
+         if (nx*nx < npads) nx++;
+         padsav->Divide(nx,nx);
+      }
+      TH1 *h;
+      TIter next(fHists);
+      Int_t i = 0;
+      while ((h=(TH1*)next())) {
+         i++;
+         padsav->cd(i);
+         h->Draw();
+      }
+      padsav->cd();
+      return;
+   }
+   
    char loption[32];
    sprintf(loption,"%s",opt.Data());
    char *nostack = strstr(loption,"nostack");

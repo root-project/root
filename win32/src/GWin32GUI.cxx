@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.5 2000/10/19 10:42:31 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.6 2001/04/03 10:34:28 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -250,7 +250,7 @@ Atom_t       TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
  return 0;
 }
 //______________________________________________________________________________
-Window_t     TGWin32::GetParent(Window_t id)
+Window_t     TGWin32::GetParent(Window_t id) const
 {
    // Return the parent of the window.
  return 0;
