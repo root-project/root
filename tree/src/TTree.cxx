@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.88 2001/08/16 16:36:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.89 2001/08/17 14:40:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1310,7 +1310,7 @@ void TTree::Delete(Option_t *option)
 
    // delete all baskets and header from file
    if (file && !strcmp(option,"all")) {
-      if (!gFile->IsWritable()) {
+      if (!file->IsWritable()) {
          Error("Delete","File : %s is not writable, cannot delete Tree:%s", file->GetName(),GetName());
          return;
       }
