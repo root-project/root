@@ -118,6 +118,7 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t id, Int_t width,
 
    TGCompositeFrame *f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGButtonGroup *bgr = new TGButtonGroup(f6,3,1,3,0, "Border Mode");
+   bgr->SetRadioButtonExclusive(kTRUE);
    fBmode = new TGRadioButton(bgr, " Sinken border", 77);
    fBmode->SetToolTipText("Set a sinken border of the pad/canvas");
    fBmode0 = new TGRadioButton(bgr, " No border", 78);
