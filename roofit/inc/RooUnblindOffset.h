@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUnblindOffset.rdl,v 1.1 2001/11/20 04:00:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -21,7 +21,10 @@ public:
   // Constructors, assignment etc
   RooUnblindOffset() ;
   RooUnblindOffset(const char *name, const char *title, 
-		      const char *blindString, Double_t scale, RooAbsReal& blindValue);
+		   const char *blindString, Double_t scale, RooAbsReal& blindValue);
+  RooUnblindOffset(const char *name, const char *title, 
+		   const char *blindString, Double_t scale, RooAbsReal& blindValue,
+		   RooAbsCategory& blindState);
   RooUnblindOffset(const RooUnblindOffset& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooUnblindOffset(*this,newname); }  
   virtual ~RooUnblindOffset();

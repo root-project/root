@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.17 2001/11/02 03:07:06 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.18 2002/01/16 01:35:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -86,6 +86,8 @@ Int_t RooGaussModel::basisCode(const char* name) const
   if (!TString("exp(-@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
   if (!TString("exp(@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
   if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
+  if (!TString("(@0/@1)*exp(-@0/@1)").CompareTo(name)) return linBasisPlus ;
+  if (!TString("(@0/@1)*(@0/@1)*exp(-@0/@1)").CompareTo(name)) return quadBasisPlus ;
   return 0 ;
 } 
 
@@ -98,6 +100,7 @@ Double_t RooGaussModel::evaluate() const
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static Double_t root2(sqrt(2)) ;
   static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
+  static Double_t rootpi(sqrt(atan2(0,-1))) ;
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -113,14 +116,15 @@ Double_t RooGaussModel::evaluate() const
     return result ;
   }
 
-  // *** 2nd form: 0, used for sinBasis and cosBasis with tau=0 ***
+  // *** 2nd form: 0, used for sinBasis, linBasis, and quadBasis with tau=0 ***
   if (tau==0) {
     if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
-  Double_t omega = (basisType!=expBasis) ?((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+  Double_t omega = (basisType==sinBasis || basisType==cosBasis)
+    ? ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
   Double_t xprime = (x-(mean*msf))/tau ;
   Double_t c = (sigma*ssf)/(root2*tau) ; 
   Double_t u = xprime/(2*c) ;
@@ -155,6 +159,35 @@ Double_t RooGaussModel::evaluate() const
     return result ;  
   }
 
+  // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
+  if (basisType==linBasis) {
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+			     << ") 6th form tau = " << tau << endl ;
+
+    assert(basisSign==Plus);  // This should only be for positive times
+
+    Double_t f0 = exp(-xprime+c*c) * erfc(-u+c);
+    Double_t f1 = exp(-u*u);
+
+    return (xprime - 2*c*c)*f0 + (2*c/rootpi)*f1 ; 
+  }
+
+  // *** 7th form: Convolution with (t/tau)^2*exp(-t/tau), used for quadBasis ***
+  if (basisType==quadBasis) {
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+			     << ") 7th form tau = " << tau << endl ;
+
+    assert(basisSign==Plus);  // This should only be for positive times
+
+    Double_t f0 = exp(-xprime+c*c) * erfc(-u+c);
+    Double_t f1 = exp(-u*u);
+
+    Double_t x2c2 = xprime - 2*c*c; 
+
+    return ( x2c2*x2c2*f0 + (2*c/rootpi)*x2c2*f1 + 2*c*c*f0 );
+  }
+
+
   assert(0) ;
   return 0 ;
 }
@@ -180,6 +213,8 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
   case cosBasisPlus:
   case cosBasisMinus:
   case cosBasisSum:
+  case linBasisPlus:
+  case quadBasisPlus:
     if (matchArgs(allVars,analVars,convVar())) return 1 ;
     break ;
   }
@@ -193,13 +228,15 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 {
   static Double_t root2 = sqrt(2) ;
   static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+  static Double_t rootpi = sqrt(atan2(0.0,-1.0));
 
   // Code must be 1
   assert(code==1) ;
 
+
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
-  
+
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   Double_t tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
 
@@ -222,13 +259,17 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     return result ;
   }
 
-  Double_t omega = (basisType!=expBasis) ?((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
 
-  // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
-  if (tau==0&&omega!=0) {
+  Double_t omega = ((basisType==sinBasis)||(basisType==cosBasis)) ?
+    ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+
+  // *** 2nd form: unity, used for sinBasis and linBasis with tau=0 (PDF is zero) ***
+  if (tau==0) {
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
+
+  
 
   // *** 3rd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   Double_t c = (sigma*ssf)/(root2*tau) ; 
@@ -292,6 +333,57 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
     }
 
     return result ;
+  }
+
+  // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
+  if (basisType==linBasis) {
+    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
+			     << ") 6th form tau=" << tau << endl ;
+
+    Double_t f0 = erf(-umax) - erf(-umin);
+    Double_t f1 = exp(-umax*umax) - exp(-umin*umin);
+
+    Double_t tmp1 = exp(-xpmax)*erfc(-umax + c);
+    Double_t tmp2 = exp(-xpmin)*erfc(-umin + c);
+
+    Double_t f2 = tmp1 - tmp2;
+    Double_t f3 = xpmax*tmp1 - xpmin*tmp2;
+
+    Double_t expc2 = exp(c*c);
+
+    return -tau*(              f0 +
+		  (2*c/rootpi)*f1 +
+	     (1 - 2*c*c)*expc2*f2 +
+			 expc2*f3
+		);
+  }
+
+  // *** 7th form: Convolution with (t/tau)*(t/tau)*exp(-t/tau), used for quadBasis ***
+  if (basisType==quadBasis) {
+    if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName()
+			     << ") 7th form tau=" << tau << endl ;
+
+    Double_t f0 = erf(-umax) - erf(-umin);
+
+    Double_t tmpA1 = exp(-umax*umax);
+    Double_t tmpA2 = exp(-umin*umin);
+
+    Double_t f1 = tmpA1 - tmpA2;
+    Double_t f2 = umax*tmpA1 - umin*tmpA2;
+
+    Double_t tmpB1 = exp(-xpmax)*erfc(-umax + c);
+    Double_t tmpB2 = exp(-xpmin)*erfc(-umin + c);
+
+    Double_t f3 = tmpB1 - tmpB2;
+    Double_t f4 = xpmax*tmpB1 - xpmin*tmpB2;
+    Double_t f5 = xpmax*xpmax*tmpB1 - xpmin*xpmin*tmpB2;
+
+    Double_t expc2 = exp(c*c);
+
+    return -tau*( 2*f0 +
+		  (4*c/rootpi)*((1-c*c)*f1 + c*f2) +
+		  (2*c*c*(2*c*c-1) + 2)*expc2*f3 - (4*c*c-2)*expc2*f4 + expc2*f5
+                );
   }
 
   assert(0) ;

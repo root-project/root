@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooUnblindOffset.cc,v 1.1 2001/11/20 04:00:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,6 +41,16 @@ RooUnblindOffset::RooUnblindOffset() : _blindEngine("")
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title), _blindEngine(blindString,RooBlindTools::full,0.,scale), _value("value","Offset blinded value",this,cpasym) 
+{  
+  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+}
+
+RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
+				   const char *blindString, Double_t scale, RooAbsReal& cpasym,
+				   RooAbsCategory& blindState)
+  : RooAbsHiddenReal(name,title,blindState),
+    _blindEngine(blindString,RooBlindTools::full,0.,scale),
+    _value("value","Offset blinded value",this,cpasym) 
 {  
   // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 }
