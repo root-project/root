@@ -365,8 +365,12 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
           setenv X509_CERT_DIR /etc/grid-securiy/certificates
 
        (or export X509_CERT_DIR=/etc/grid-securiy/certificates for a bash shell). 
+
+   .6) If ROOT has been built on a different machine, make sure that the correct
+       (if any) GTK patch has been applied; a version mismatch may cause very 
+       strange failures, quite difficult to debug / identify.
         
-   .6) mailto: gerardo.ganis@cern.ch.
+   .7) mailto: gerardo.ganis@cern.ch.
 
 --------------------------------------------------------------------------------------
-Last update: September 23, 2004
+Last update: January 13, 2005
