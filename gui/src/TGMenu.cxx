@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.3 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.4 2000/10/17 12:34:53 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -77,8 +77,8 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fStick   = kTRUE;
 
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask | kEnterWindowMask,
-                    kNone, kNone);
+                       kButtonPressMask | kButtonReleaseMask | kEnterWindowMask,
+                       kNone, kNone);
 }
 
 //______________________________________________________________________________
@@ -96,7 +96,7 @@ TGMenuBar::~TGMenuBar()
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
       t = (TGMenuTitle *) el->fFrame;
-      if ((keycode = t->GetHotKeyCode()) != 0)
+      if ((keycode = t->GetHotKeyCode()) != 0 && main)
          main->RemoveBind(this, keycode, kKeyMod1Mask);
    }
 
@@ -106,15 +106,17 @@ TGMenuBar::~TGMenuBar()
 }
 
 //______________________________________________________________________________
-void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l)
+void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
+                         TGPopupMenu *before)
 {
    // Add popup menu to menu bar. The hot string will be adopted by the
    // menubar (actually the menu title) and deleted when possible.
+   // If before is not 0 the menu will be added before it.
 
    TGMenuTitle *t;
    Int_t keycode;
 
-   AddFrame(t = new TGMenuTitle(this, s, menu), l);
+   AddFrameBefore(t = new TGMenuTitle(this, s, menu), l, before);
    fTitles->Add(t);  // keep track of menu titles for later cleanup in dtor
 
    if ((keycode = t->GetHotKeyCode()) != 0) {
@@ -124,23 +126,103 @@ void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l)
 }
 
 //______________________________________________________________________________
-void TGMenuBar::AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l)
+void TGMenuBar::AddPopup(const char *s, TGPopupMenu *menu, TGLayoutHints *l,
+                         TGPopupMenu *before)
 {
-   // Add popup menu to menu bar.
+   // Add popup menu to menu bar. If before is not 0 the menu will be
+   // added before it.
 
-   AddPopup(new TGHotString(s), menu, l);
+   AddPopup(new TGHotString(s), menu, l, before);
 }
 
 //______________________________________________________________________________
-void TGMenuBar::AddFrame(TGFrame *f, TGLayoutHints *l)
+void TGMenuBar::AddFrameBefore(TGFrame *f, TGLayoutHints *l,
+                               TGPopupMenu *before)
 {
    // Private version of AddFrame for menubar, to make sure that we
-   // indeed only add TGMenuTitle objects to it.
+   // indeed only add TGMenuTitle objects to it. If before is not 0
+   // the menu will be added before it.
 
-   if (f->IsA() == TGMenuTitle::Class())
-      TGCompositeFrame::AddFrame(f, l);
-   else
-      Error("AddFrame", "may only add TGMenuTitle objects to a menu bar");
+   if (f->IsA() != TGMenuTitle::Class()) {
+      Error("AddFrameBefore", "may only add TGMenuTitle objects to a menu bar");
+      return;
+   }
+
+   if (!before) {
+      AddFrame(f, l);
+      return;
+   }
+
+   TGFrameElement *nw;
+
+   nw = new TGFrameElement;
+   nw->fFrame  = f;
+   nw->fLayout = l ? l : fgDefaultHints;
+   nw->fState  = 1;
+
+   TGFrameElement *el;
+   TIter next(fList);
+   while ((el = (TGFrameElement *) next())) {
+      TGMenuTitle *t = (TGMenuTitle *) el->fFrame;
+      if (t->GetMenu() == before) {
+         fList->AddBefore(el, nw);
+         return;
+      }
+   }
+   fList->Add(nw);
+}
+
+//______________________________________________________________________________
+TGPopupMenu *TGMenuBar::GetPopup(const char *s)
+{
+   // Return popup menu with the specified name. Returns 0 if menu is
+   // not found. Returnes menu can be used as "before" in AddPopup().
+   // Don't use hot key (&) in name.
+
+   if (!GetList()) return 0;
+
+   TGFrameElement *el;
+   TIter next(GetList());
+   TString str = s;
+
+   while ((el = (TGFrameElement *) next())) {
+      TGMenuTitle *t = (TGMenuTitle *) el->fFrame;
+      if (str == t->GetName())
+         return t->GetMenu();
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TGPopupMenu *TGMenuBar::RemovePopup(const char *s)
+{
+   // Remove popup menu from menu bar. Returned menu has to be deleted by
+   // the user, or can be re-used in another AddPopup(). Returns 0 if
+   // menu is not found. Don't use hot key (&) in name.
+
+   if (!GetList()) return 0;
+
+   TGFrameElement *el;
+   TIter next(GetList());
+   TString str = s;
+
+   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
+
+   while ((el = (TGFrameElement *) next())) {
+      TGMenuTitle *t = (TGMenuTitle *) el->fFrame;
+      if (str == t->GetName()) {
+         Int_t keycode;
+         if ((keycode = t->GetHotKeyCode()) != 0 && main)
+            main->RemoveBind(this, keycode, kKeyMod1Mask);
+         TGPopupMenu *m = t->GetMenu();
+         fTitles->Remove(t);
+         t->DestroyWindow();
+         RemoveFrame(t);
+         delete t;
+         return m;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -155,7 +237,7 @@ Bool_t TGMenuBar::HandleMotion(Event_t *event)
    fStick = kFALSE; // use some threshold!
 
    gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
-                              dummy, dummy, wtarget);
+                                   dummy, dummy, wtarget);
    target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
    if (target != 0 && target != fCurrent) {
@@ -188,7 +270,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
    if (event->fType == kButtonPress) {
 
       gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
-                                 dummy, dummy, wtarget);
+                                      dummy, dummy, wtarget);
       target = (TGMenuTitle*) fClient->GetWindowById(wtarget);
 
       if (target != 0) {
@@ -206,7 +288,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
             fCurrent = target;
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                              kPointerMotionMask, kNone, fgDefaultCursor);
+                                   kPointerMotionMask, kNone, fgDefaultCursor);
          }
       }
    }
@@ -216,12 +298,13 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
          fStick = kFALSE;
          return kTRUE;
       }
-      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
 
       TGFrameElement *el;
       TIter next(fList);
       while ((el = (TGFrameElement *) next()))
          ((TGMenuTitle*)el->fFrame)->SetState(kFALSE);
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
 
       if (fCurrent != 0) {
          target   = fCurrent; // tricky, because WaitFor
@@ -264,7 +347,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
             fCurrent = target;
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                              kPointerMotionMask, kNone, fgDefaultCursor);
+                                   kPointerMotionMask, kNone, fgDefaultCursor);
          }
       }
    }
@@ -300,7 +383,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
 //______________________________________________________________________________
 TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
-    : TGFrame(p, w, h, options | kOwnBackground)
+    : TGFrame(p ? p : gClient->GetRoot(), w, h, options | kOwnBackground)
 {
    // Create a popup menu.
 
@@ -313,6 +396,7 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fDelay     = 0;
    fEntryList = new TList;
 
+   // in case any of these magic values is changes, check also Reposition()
    fBorderWidth = 3;
    fHeight      = 6;
    fWidth       = 8;
@@ -343,11 +427,13 @@ TGPopupMenu::~TGPopupMenu()
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud, const TGPicture *p)
+void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
+                           const TGPicture *p, TGMenuEntry *before)
 {
    // Add a menu entry. The hotstring is adopted by the menu (actually by
    // the TGMenuEntry) and deleted when possible. A possible picture is
    // borrowed from the picture pool and therefore not adopted.
+   // If before is not 0, the entry will be added before it.
 
    TGMenuEntry *nw = new TGMenuEntry;
 
@@ -361,7 +447,10 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud, const TGPicture *
    nw->fEx       = 2;
    nw->fEy       = fHeight-2;
 
-   fEntryList->Add(nw);
+   if (before)
+      fEntryList->AddBefore(before, nw);
+   else
+      fEntryList->Add(nw);
 
    UInt_t tw, pw = 0;
    tw = gVirtualX->TextWidth(fHifontStruct, s->GetString(), s->GetLength());
@@ -371,25 +460,33 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud, const TGPicture *
    }
 
    Int_t max_ascent, max_descent;
-   fWidth = TMath::Max(fWidth, tw + pw /*+8*/+18+12);
+   nw->fEw = tw + pw /*+8*/+18+12;
+   fWidth = TMath::Max(fWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   fHeight += max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + 3;
+   fHeight += nw->fEh;
 
-   Resize(fWidth, fHeight);
+   if (before)
+      Reposition();
+   else
+      Resize(fWidth, fHeight);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddEntry(const char *s, Int_t id, void *ud, const TGPicture *p)
+void TGPopupMenu::AddEntry(const char *s, Int_t id, void *ud,
+                           const TGPicture *p, TGMenuEntry *before)
 {
    // Add a menu entry. The string s in not adopted.
+   // If before is not 0, the entry will be added before it.
 
-   AddEntry(new TGHotString(s), id, ud, p);
+   AddEntry(new TGHotString(s), id, ud, p, before);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddSeparator()
+void TGPopupMenu::AddSeparator(TGMenuEntry *before)
 {
    // Add a menu separator to the menu.
+   // If before is not 0, the entry will be added before it.
 
    TGMenuEntry *nw = new TGMenuEntry;
 
@@ -403,19 +500,29 @@ void TGPopupMenu::AddSeparator()
    nw->fEx       = 2;
    nw->fEy       = fHeight-2;
 
-   fEntryList->Add(nw);
+   if (before)
+      fEntryList->AddBefore(before, nw);
+   else
+      fEntryList->Add(nw);
 
-   fHeight += 4;
+   nw->fEw = 0;
+   nw->fEh = 4;
+   fHeight += nw->fEh;
 
-   Resize(fWidth, fHeight);
+   if (before)
+      Reposition();
+   else
+      Resize(fWidth, fHeight);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p)
+void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p,
+                           TGMenuEntry *before)
 {
    // Add a menu label to the menu. The hotstring is adopted by the menu
    // (actually by the TGMenuEntry) and deleted when possible. A possible
    // picture is borrowed from the picture pool and therefore not adopted.
+   // If before is not 0, the entry will be added before it.
 
    TGMenuEntry *nw = new TGMenuEntry;
 
@@ -429,7 +536,10 @@ void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p)
    nw->fEx       = 2;
    nw->fEy       = fHeight-2;
 
-   fEntryList->Add(nw);
+   if (before)
+      fEntryList->AddBefore(before, nw);
+   else
+      fEntryList->Add(nw);
 
    UInt_t tw, pw = 0;
    tw = gVirtualX->TextWidth(fHifontStruct, s->GetString(), s->GetLength());
@@ -439,26 +549,35 @@ void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p)
    }
 
    Int_t max_ascent, max_descent;
-   fWidth = TMath::Max(fWidth, tw + pw /*+8*/+18+12);
+   nw->fEw = tw + pw /*+8*/+18+12;
+   fWidth = TMath::Max(fWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   fHeight += max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + 3;
+   fHeight += nw->fEh;
 
-   Resize(fWidth, fHeight);
+   if (before)
+      Reposition();
+   else
+      Resize(fWidth, fHeight);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddLabel(const char *s, const TGPicture *p)
+void TGPopupMenu::AddLabel(const char *s, const TGPicture *p,
+                           TGMenuEntry *before)
 {
    // Add a menu label to the menu. The string s in not adopted.
+   // If before is not 0, the entry will be added before it.
 
-   AddLabel(new TGHotString(s), p);
+   AddLabel(new TGHotString(s), p, before);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup)
+void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup,
+                           TGMenuEntry *before)
 {
    // Add a (cascading) popup menu to a popup menu. The hotstring is adopted
    // by the menu (actually by the TGMenuEntry) and deleted when possible.
+   // If before is not 0, the entry will be added before it.
 
    TGMenuEntry *nw = new TGMenuEntry;
 
@@ -472,25 +591,65 @@ void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup)
    nw->fEx       = 2;
    nw->fEy       = fHeight-2;
 
-   fEntryList->Add(nw);
+   if (before)
+      fEntryList->AddBefore(before, nw);
+   else
+      fEntryList->Add(nw);
 
-   UInt_t tw = gVirtualX->TextWidth(fHifontStruct, s->GetString(), s->GetLength());
+   UInt_t tw = gVirtualX->TextWidth(fHifontStruct, s->GetString(),
+                                    s->GetLength());
 
    Int_t max_ascent, max_descent;
-   fWidth = TMath::Max(fWidth, tw +8+18+12);
+   nw->fEw = tw +8+18+12;
+   fWidth = TMath::Max(fWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
-   fHeight += max_ascent + max_descent + 3;
+   nw->fEh = max_ascent + max_descent + 3;
+   fHeight += nw->fEh;
 
-   Resize(fWidth, fHeight);
+   if (before)
+      Reposition();
+   else
+      Resize(fWidth, fHeight);
 }
 
 //______________________________________________________________________________
-void TGPopupMenu::AddPopup(const char *s, TGPopupMenu *popup)
+void TGPopupMenu::AddPopup(const char *s, TGPopupMenu *popup,
+                           TGMenuEntry *before)
 {
    // Add a (cascading) popup menu to a popup menu. The string s is not
-   // adopted.
+   // adopted. If before is not 0, the entry will be added before it.
 
-   AddPopup(new TGHotString(s), popup);
+   AddPopup(new TGHotString(s), popup, before);
+}
+
+//______________________________________________________________________________
+void TGPopupMenu::Reposition()
+{
+   // Reposition entries in popup menu. Called after menu item has been
+   // hidden or removed or inserted at a specified location.
+
+   // in case any of these magic values is changes, check also the ctor.
+   fHeight = 6;
+   fWidth  = 8;
+   fXl     = 16;
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next())) {
+
+      if (ptr->fStatus & kMenuHideMask) continue;
+
+      if (ptr->fPic) {
+         UInt_t pw = ptr->fPic->GetWidth();
+         if (pw+12 > fXl) { fWidth += pw+12-fXl; fXl = pw+12; }
+      }
+      ptr->fEx = 2;
+      ptr->fEy = fHeight-2;
+      fWidth   = TMath::Max(fWidth, ptr->fEw);
+      fHeight += ptr->fEh;
+   }
+   Resize(fWidth, fHeight);
 }
 
 //______________________________________________________________________________
@@ -520,7 +679,7 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
 
    if (grab_pointer) {
       gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                        kPointerMotionMask, kNone, fgDefaultCursor);
+                             kPointerMotionMask, kNone, fgDefaultCursor);
       fHasGrab = kTRUE;
    } else {
       fHasGrab = kFALSE;
@@ -582,8 +741,8 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
          fStick = kFALSE;
          return kTRUE;
       }
-//    if (fCurrent != NULL)
-//      if (fCurrent->fType == kMenuPopup) return kTRUE;
+      //if (fCurrent != 0)
+      //   if (fCurrent->fType == kMenuPopup) return kTRUE;
       id = EndMenu(ud);
       if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
       if (fCurrent != 0) {
@@ -604,20 +763,16 @@ Bool_t TGPopupMenu::HandleCrossing(Event_t *event)
    // Handle pointer crossing event in popup menu.
 
    if (event->fType == kEnterNotify) {
-      Int_t h, max_ascent, max_descent;
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
       TGMenuEntry *ptr;
       TIter next(fEntryList);
 
       while ((ptr = (TGMenuEntry *) next())) {
-         if (ptr->fType == kMenuSeparator) {
-            h = 4;
-         } else {
-            h = max_ascent + max_descent + 3;
-         }
+         if (ptr->fStatus & kMenuHideMask) continue;
+
          if ((event->fX >= ptr->fEx) && (event->fX <= ptr->fEx+(Int_t)fWidth-10) &&
-             (event->fY >= ptr->fEy) && (event->fY <= ptr->fEy+h)) break;
+             (event->fY >= ptr->fEy) && (event->fY <= ptr->fEy+(Int_t)ptr->fEh))
+            break;
       }
       Activate(ptr);
    } else {
@@ -634,21 +789,16 @@ Bool_t TGPopupMenu::HandleMotion(Event_t *event)
 
    TGFrame::HandleMotion(event);
 
-   Int_t h, max_ascent, max_descent;
-   gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-
    TGMenuEntry *ptr;
    TIter next(fEntryList);
 
    fStick = kFALSE;   // be careful with this, use some threshold
    while ((ptr = (TGMenuEntry *) next())) {
-      if (ptr->fType == kMenuSeparator) {
-         h = 4;
-      } else {
-         h = max_ascent + max_descent + 3;
-      }
+      if (ptr->fStatus & kMenuHideMask) continue;
+
       if ((event->fX >= ptr->fEx) && (event->fX <= ptr->fEx+(Int_t)fWidth-4) &&  //fWidth-10??
-          (event->fY >= ptr->fEy) && (event->fY <= ptr->fEy+h)) break;
+          (event->fY >= ptr->fEy) && (event->fY <= ptr->fEy+(Int_t)ptr->fEh))
+         break;
    }
    Activate(ptr);
 
@@ -707,9 +857,9 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
          Window_t wdummy;
 
          gVirtualX->TranslateCoordinates(fId,
-                                    (fCurrent->fPopup->GetParent())->GetId(),
-                                    fCurrent->fEx+fWidth, fCurrent->fEy,
-                                    ax, ay, wdummy);
+                                       (fCurrent->fPopup->GetParent())->GetId(),
+                                       fCurrent->fEx+fWidth, fCurrent->fEy,
+                                       ax, ay, wdummy);
 
          fCurrent->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
       }
@@ -741,6 +891,9 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
    FontStruct_t  font;
    GCValues_t    gcval;
 
+   if (entry->fStatus & kMenuHideMask)
+      return;
+
    if (entry->fStatus & kMenuDefaultMask) {
       font = fHifontStruct;
       gcval.fMask = kGCFont;
@@ -762,7 +915,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
       case kMenuEntry:
          if ((entry->fStatus & kMenuActiveMask) && entry->fType != kMenuLabel) {
             gVirtualX->FillRectangle(fId, fSelbackGC, entry->fEx+1, entry->fEy-1,
-                                fWidth-6, max_ascent + max_descent + 3);
+                                     fWidth-6, max_ascent + max_descent + 3);
             if (entry->fType == kMenuPopup)
                DrawTrianglePattern(fSelGC, fWidth-10, entry->fEy+3, fWidth-6, entry->fEy+11);
             if (entry->fStatus & kMenuCheckedMask)
@@ -776,7 +929,7 @@ void TGPopupMenu::DrawEntry(TGMenuEntry *entry)
                            tx, ty);
          } else {
             gVirtualX->FillRectangle(fId, fgBckgndGC(), entry->fEx+1, entry->fEy-1,
-                                fWidth-6, max_ascent + max_descent + 3);
+                                     fWidth-6, max_ascent + max_descent + 3);
             if (entry->fType == kMenuPopup)
                DrawTrianglePattern(fNormGC, fWidth-10, entry->fEy+3, fWidth-6, entry->fEy+11);
             if (entry->fStatus & kMenuCheckedMask)
@@ -902,13 +1055,20 @@ void TGPopupMenu::DefaultEntry(Int_t id)
 //______________________________________________________________________________
 void TGPopupMenu::EnableEntry(Int_t id)
 {
-   // Enable entry.
+   // Enable entry. By default entries are enabled.
 
    TGMenuEntry *ptr;
    TIter next(fEntryList);
 
    while ((ptr = (TGMenuEntry *) next()))
-      if (ptr->fEntryId == id) { ptr->fStatus |= kMenuEnableMask; break; }
+      if (ptr->fEntryId == id) {
+         ptr->fStatus |= kMenuEnableMask;
+         if (ptr->fStatus & kMenuHideMask) {
+            ptr->fStatus &= ~kMenuHideMask;
+            Reposition();
+         }
+         break;
+      }
 }
 
 //______________________________________________________________________________
@@ -934,6 +1094,38 @@ Bool_t TGPopupMenu::IsEntryEnabled(Int_t id)
    while ((ptr = (TGMenuEntry *) next()))
       if (ptr->fEntryId == id)
          return (ptr->fStatus & kMenuEnableMask) ? kTRUE : kFALSE;
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGPopupMenu::HideEntry(Int_t id)
+{
+   // Hide entry (hidden entries are not shown in the menu).
+   // To enable a hidden entry call EnableEntry().
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr->fEntryId == id) {
+         ptr->fStatus |=  kMenuHideMask;
+         ptr->fStatus &= ~kMenuEnableMask;
+         Reposition();
+         break;
+      }
+}
+
+//______________________________________________________________________________
+Bool_t TGPopupMenu::IsEntryHidden(Int_t id)
+{
+   // Return true if menu entry is hidden.
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr->fEntryId == id)
+         return (ptr->fStatus & kMenuHideMask) ? kTRUE : kFALSE;
    return kFALSE;
 }
 
@@ -1006,6 +1198,78 @@ Bool_t TGPopupMenu::IsEntryRChecked(Int_t id)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+TGMenuEntry *TGPopupMenu::GetEntry(Int_t id)
+{
+   // Find entry with specified id. Use the returned entry in DeleteEntry()
+   // or as the "before" item in the AddXXXX() methods. Returns 0 if entry
+   // is not found. To find entries that don't have an id like the separators,
+   // use the GetListOfEntries() method to get the complete entry
+   // list and iterate over it and check the type of each entry
+   // to find the separators.
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr->fEntryId == id)
+         return ptr;
+   return 0;
+}
+
+//______________________________________________________________________________
+TGMenuEntry *TGPopupMenu::GetEntry(const char *s)
+{
+   // Find entry with specified name. Name must match the original
+   // name without hot key symbol, like "Print" and not "&Print".
+   // Use the returned entry in DeleteEntry() or as the "before" item
+   // in the AddXXXX() methods. Returns 0 if entry is not found.
+   // To find entries that don't have a name like the separators,
+   // use the GetListOfEntries() method to get the complete entry
+   // list and iterate over it and check the type of each entry
+   // to find the separators.
+
+   return (TGMenuEntry*) fEntryList->FindObject(s);
+}
+
+//______________________________________________________________________________
+void TGPopupMenu::DeleteEntry(Int_t id)
+{
+   // Delete entry with specified id from menu.
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr->fEntryId == id) {
+         fEntryList->Remove(ptr);
+         delete ptr;
+         Reposition();
+         if (fCurrent == ptr)
+            fCurrent = 0;
+         return;
+      }
+}
+
+//______________________________________________________________________________
+void TGPopupMenu::DeleteEntry(TGMenuEntry *entry)
+{
+   // Delete specified entry from menu.
+
+   TGMenuEntry *ptr;
+   TIter next(fEntryList);
+
+   while ((ptr = (TGMenuEntry *) next()))
+      if (ptr == entry) {
+         fEntryList->Remove(ptr);
+         delete ptr;
+         Reposition();
+         if (fCurrent == ptr)
+            fCurrent = 0;
+         return;
+      }
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -1055,9 +1319,9 @@ void TGMenuTitle::SetState(Bool_t state)
          Window_t wdummy;
 
          gVirtualX->TranslateCoordinates(fId, (fMenu->GetParent())->GetId(),
-                                    0, 0, ax, ay, wdummy);
+                                         0, 0, ax, ay, wdummy);
 
-         // Place the menu just under the window :
+         // place the menu just under the window:
          fMenu->PlaceMenu(ax-1, ay+fHeight, kTRUE, kFALSE); //kTRUE);
       }
    } else {
