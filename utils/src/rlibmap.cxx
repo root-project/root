@@ -22,9 +22,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <string>
 #include <map>
+#ifndef WIN32
+#   include <unistd.h>
+#else
+#   define ssize_t int
+#   include <io.h>
+#   include <sys/types.h>
+#endif
 
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
@@ -98,6 +104,40 @@ const char  kDefined = 'T';
 
 using namespace std;
 
+
+#ifdef WIN32
+#include <windows.h>
+
+#define ftruncate(fd, size)  win32_ftruncate(fd, size)
+
+int win32_ftruncate(int fd, ssize_t size)
+{
+   HANDLE hfile;
+   int curpos;
+
+   if (fd < 0) return -1;
+
+   hfile = (HANDLE) _get_osfhandle(fd);
+   curpos = ::SetFilePointer(hfile, 0, 0, FILE_CURRENT);
+   if (curpos == 0xFFFFFFFF ||
+       ::SetFilePointer(hfile, size, 0, FILE_BEGIN) == 0xFFFFFFFF ||
+       !::SetEndOfFile(hfile)) {
+         int error = ::GetLastError();
+
+      switch (error) {
+         case ERROR_INVALID_HANDLE:
+            errno = EBADF;
+            break;
+         default:
+            errno = EIO;
+         break;
+      }
+      return -1;
+   }
+   return 0;
+}
+
+#endif // WIN32
 
 int removelibs(char **libs, bool fullpath, FILE *fp)
 {
