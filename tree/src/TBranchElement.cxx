@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.93 2002/10/18 16:32:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.94 2002/11/13 17:32:06 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 #include "TVirtualPad.h"
 #include "TClass.h"
 #include "TBaseClass.h"
-#include "TRealData.h"
 #include "TDataType.h"
 #include "TDataMember.h"
 #include "TStreamerInfo.h"
@@ -1386,38 +1385,13 @@ void TBranchElement::SetAddress(void *add)
    if (fType == 31) {
       if (fClassName != fParentName) {
          TClass *clparent = gROOT->GetClass(GetParentName());
-         Int_t mOffset = 0;
-         Int_t baseOffset = 0;
          TClass *clm = gROOT->GetClass(GetClassName());
-         TStreamerInfo *binfo = clparent->GetStreamerInfo();
          if (clparent != clm) {
-            char pname[kMaxLen];
-            strcpy(pname,GetName());
-            char *clast = (char*)strrchr(pname,'.');
+            const char *clast = strchr(GetName(),'.');
             if (clast) {
-               *clast = 0;
-               char *clast2 = (char*)strrchr(pname,'.');
-               if (clast2) {
-                  binfo->GetStreamerElement(clast2+1,mOffset);
-                  *clast2 = 0;
-                  char *clast3 = (char*)strrchr(pname,'.');
-                  if (clast3) {
-                     TStreamerElement *el3 = binfo->GetStreamerElement(clast3+1,mOffset);
-                     if (el3) {
-                        Int_t mOffset2 = 0;
-                        el3->GetClassPointer()->GetStreamerInfo()->GetStreamerElement(clast2+1,mOffset2);
-                        mOffset += mOffset2;
-                     }
-                  }
-               }
-               if (!clparent->GetBaseClass(clm)) fOffset = mOffset;
-               if (!mOffset) {
-                  if (clparent->GetBaseClass(clm)) {
-                     baseOffset = clparent->GetBaseClassOffset(clm);
-                     if (baseOffset < 0) baseOffset = 0;
-                     fOffset = baseOffset;
-                  }
-               }
+               Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
+               fOffset = clparent->GetDataMemberOffset(clast+1) - offsets[fID];
+               //printf("clast+1=%s, fOffset=%d\n",clast+1,fOffset);
             }
          }
       }
@@ -1443,13 +1417,9 @@ void TBranchElement::SetAddress(void *add)
 //printf("i=%d, clm=%s,clparent=%s, branch=%s, btype=%d, nb2=%d, info=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),btype,nb2,info->GetName(),cinfo->GetOffsets()[id]);
 
       if (clparent != clm) {
-         char pname[kMaxLen];
-         strcpy(pname,branch->GetName());
-         const char *clast = strchr(pname,'.');
+         const char *clast = strchr(branch->GetName(),'.');
          if (clast) {
-            clparent->BuildRealData();
-            TRealData *rd = (TRealData*)clparent->GetListOfRealData()->FindObject(clast+1);
-            if (rd) mOffset = rd->GetThisOffset();
+            mOffset = clparent->GetDataMemberOffset(clast+1);
             if (btype == 0 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - info->GetOffsets()[id];;
          }
       }
