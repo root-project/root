@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.3 2004/07/12 20:04:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.4 2004/07/23 16:51:01 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -133,16 +133,16 @@ TGHotString::TGHotString(const char *s) : TGString()
 {
    // Create a hot string.
 
-   if (!s) return;
-
-   char *dup = StrDup(s);
-   char *p;
-
    fLastGC = 0;
    fOff1 = fOff2 = 0;
 
    fHotChar = 0;
    fHotPos  = 0;    // No hotkey defaults the offset to zero
+
+   if (!s) return;
+
+   char *dup = StrDup(s);
+   char *p;
 
    for (p = dup; *p; p++) {
       if (*p == '&') {
