@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.5 2004/02/06 16:25:58 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.cxx,v 1.6 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -192,8 +192,8 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 }
 
 //______________________________________________________________________________
-Double_t cdivr, cdivi;
-void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
+static Double_t cdivr, cdivi;
+static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
 // Complex scalar division.
   Double_t r,d;
   if (TMath::Abs(yr) > TMath::Abs(yi)) {
