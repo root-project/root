@@ -1318,12 +1318,13 @@ fi
 #
 if test ! "x$enable_dcache" = "xno" ; then
     check_header "dcap.h" "$dcapincdir" $DCACHE $DCACHE/include \
-        /products/dcache/include \
+        /opt/d-cache/dcap/include /products/dcache/include \
         /opt/dcache/include /usr/include /usr/local/include
     dcapincdir=$found_dir
 
     check_library "libdcap" "$enable_shared" "$dcaplibdir" $DCACHE $DCACHE/lib \
-	/products/dcache/lib /opt/dcache/lib /usr/lib /usr/local/lib
+	/opt/d-cache/dcap/lib /products/dcache/lib /opt/dcache/lib \
+        /usr/lib /usr/local/lib
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
