@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.56 2003/03/03 20:42:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.57 2003/03/11 02:27:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1740,10 +1740,11 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    // the file name end up in the file produced
    // by rootcint as a variable name so all character need to be valid!
-   static const int maxforbidden = 26;
+   static const int maxforbidden = 27;
    static const char *forbidden_chars[maxforbidden] =
-         { "+","-","*","/","&","%","|","^",">","<","=","~",".",
-           "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
+         { "+","-","*","/","&","%","|","^",">","<",
+           "=","~",".","(",")","[","]","!",",","$",
+           " ",":","'","#","@","\\","\"" };
    for( int ic = 0; ic < maxforbidden; ic++ ) {
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
