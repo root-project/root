@@ -40,7 +40,7 @@ include $(ROOTTEST_HOME)/scripts/Common.mk
 
 $(TEST_TARGETS_DIR): %.test:
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; gmake CURRENTDIR=$* --no-print-directory test; \
+	@(cd $*; $(MAKE) CURRENTDIR=$* --no-print-directory test; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
          len=`echo Tests in $(CALLDIR)/$* | wc -m `;end=`expr 68 - $$len`;printf 'Test in %s %.*s ' $(CALLDIR)/$* $$end $(DOTS); \
@@ -54,7 +54,7 @@ $(TEST_TARGETS_DIR): %.test:
 #     if [ $$result -ne 0 ] ; then false ; fi )
 
 $(CLEAN_TARGETS_DIR): %.clean:
-	@(cd $*; gmake --no-print-directory clean)
+	@(cd $*; $(MAKE) --no-print-directory clean)
 
 ifneq ($(V),) 
 VERBOSE:=$(V)
@@ -148,6 +148,7 @@ DllSuf        = so
 OutPutOpt     = -o 
 endif
 
+
 ifeq ($(ARCH),linuxicc)
 
 ROOT_LOC = $(ROOTSYS)
@@ -164,6 +165,46 @@ SOFLAGS  = -shared
 DllSuf   = so
 ExeSuf   = 
 OutPutOpt= -o 
+endif
+
+
+ifeq ($(ARCH),macosx)
+
+ROOT_LOC = $(ROOTSYS)
+
+# MacOSX with cc/g++
+CXX           = g++
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+else
+CXXFLAGS      += -O -pipe -Wall -fPIC -Wno-long-double -Woverloaded-virtual
+endif
+ifeq ($(MACOSX_MINOR),) 
+  export MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
+endif
+ifeq ($(MACOSX_MINOR),4)
+UNDEF\OPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.4 c++
+else
+ifeq ($(MACOSX_MINOR),3)
+UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
+else
+UNDEFOPT      = suppress
+LD            = c++
+endif
+endif
+SOFLAGS       = -dynamiclib -single_module -undefined $(UNDEFOPT)
+ifeq ($(ROOTBUILD),debug)
+LDFLAGS       = -g
+else
+LDFLAGS       = -O
+endif
+ObjSuf        = o
+SrcSuf        = cxx
+ExeSuf        =
+DllSuf        = so
+OutPutOpt     = -o 
 endif
 
 # Track the version of ROOT we are runing with
@@ -190,7 +231,7 @@ UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
 ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
 $(ROOTMAP): 
-	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; gmake map)'
+	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; $(MAKE) map)'
 
 UTILS_PREREQ =  $(UTILS_LIBS) $(ROOTMAP)
 
@@ -242,16 +283,30 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+ifeq ($(PYTHONPATH),)
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib python $< > $@ 2>&1
+else 
 	$(CMDECHO) python $< > $@ 2>&1
+endif
 
 .PRECIOUS: %_C.$(DllSuf) 
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b run$*.C+ > $@ 2>&1
 
+ifneq ($(ARCH),macosx)
+
 define BuildWithLib
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
 endef
+
+else
+
+define BuildWithLib
+        $(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.dylib,$^)\",\"\"\) > $*.build.log 2>&1
+endef
+
+endif
 
 define WarnFailTest
 	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURRENTDIR))"
@@ -264,6 +319,7 @@ endef
 define TestDiffW
 	$(CMDECHO) diff -b -w $@.ref $<
 endef
+
 
 define BuildFromObj
 $(CMDECHO) ( touch dummy$$$$.C && \

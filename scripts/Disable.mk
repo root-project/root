@@ -12,7 +12,7 @@ test: tests ;
 test:
 
 $(CLEAN_TARGETS_DIR): %.clean:
-	@(cd $*; gmake --no-print-directory clean)
+	@(cd $*; $(MAKE) --no-print-directory clean)
 
 clean:  $(CLEAN_TARGETS_DIR)
 
