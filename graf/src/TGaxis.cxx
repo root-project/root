@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.21 2001/10/18 07:56:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.22 2001/10/30 15:56:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TLatex.h"
 #include "TStyle.h"
 #include "TF1.h"
+#include "TAxis.h"
 #include "TMath.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
@@ -494,6 +495,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
 
+   Bool_t noExponent = TestBit(TAxis::kNoExponent);
+   
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
    Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t RWxmin = gPad->GetX1();
@@ -1075,7 +1078,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              format. If AF >=0 x10 n cannot be used
                Double_t xmicros = 0.00099;
                if (fgMaxDigits) xmicros = TMath::Power(10,-fgMaxDigits);
-               if ((TMath::Abs(wmax-wmin)/Double_t(N1A)) < xmicros) {
+               if (!noExponent && (TMath::Abs(wmax-wmin)/Double_t(N1A)) < xmicros) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
                      FLEXE   = kTRUE;
@@ -1092,8 +1095,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                else         AF = TMath::Log10(WW*0.0001);
                AF += epsilon;
                NF  = Int_t(AF)+1;
-               if (NF > fgMaxDigits)  FLEXPO = kTRUE;
-               if (NF < -fgMaxDigits) FLEXNE = kTRUE;
+               if (!noExponent && NF > fgMaxDigits)  FLEXPO = kTRUE;
+               if (!noExponent && NF < -fgMaxDigits) FLEXNE = kTRUE;
 
 //*-*-              Use x 10 n format.
 
@@ -1394,13 +1397,17 @@ L110:
          if (!OptionUnlab)  {
 
 //*-*-              Here we generate labels (numeric only).
-            if (LogInteger) {
+            if (LogInteger || noExponent) {
                rlab = TMath::Power(10,labelnumber);
-               sprintf(LABEL, "%d", Int_t(rlab));
+               sprintf(LABEL, "%f", rlab);
                LabelsLimits(LABEL,first,last);
-                  if (LABEL[last] == '.') {LABEL[last] = 0; last--;}
-            }
-            else {
+               while (last > first) {
+                  if (LABEL[last] != '0') break;
+                  LABEL[last] = 0;
+                  last--;
+               }
+               if (LABEL[last] == '.') {LABEL[last] = 0; last--;}
+            } else {
                sprintf(LABEL, "%d", labelnumber);
                LabelsLimits(LABEL,first,last);
             }
@@ -1416,9 +1423,11 @@ L110:
                      else                  XX    += 0.50*charheight;
                   }
                }
+               if (noExponent) XX += 0.25*charheight;
             }
             if ((Y0 == Y1) && !OptionDown && !OptionUp) {
                if (Lside < 0) YY  -= charheight;
+               if (noExponent) YY += 0.5*charheight;
             }
             if (N1A == 0)goto L210;
             KMOD = NBININ/N1A;
@@ -1426,7 +1435,7 @@ L110:
             if ((NBININ <= N1A) || (j == 1) || (j == NBININ) || ((NBININ > N1A)
             && (j%KMOD == 0))) {
                if ((labelnumber != 0) && (labelnumber != 1)) {
-                  if (LogInteger) {
+                  if (LogInteger || noExponent) {
                      textaxis->PaintTextNDC(XX,YY,&LABEL[first]);
                   }
                   else {
@@ -1853,6 +1862,18 @@ void TGaxis::SetName(const char *name)
 //*-*-*-*-*-*-*-*-*-*-*Change the name of the axis*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ============================
    fName = name;
+}
+
+//______________________________________________________________________________
+void TGaxis::SetNoExponent(Bool_t noExponent)
+{
+// Set the NoExponent flag
+// By default, an exponent of the form 10^N is used when the label values
+// are either all very small or very large.
+// One can disable the exponent by calling axis.SetNoExponent(kTRUE).
+
+   if (noExponent) SetBit(kNoExponent);
+   else            ResetBit(kNoExponent);
 }
 
 //______________________________________________________________________________
