@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.65 2004/09/20 19:34:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.66 2004/10/11 22:46:52 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -344,7 +344,11 @@ void TObject::Dump() const
    //   fFillColor               19          fill area color
    //   fFillStyle               1001        fill area style
 
-   Printf("==>Dumping object at:%lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
+   if (sizeof(this) == 4)
+      Printf("==> Dumping object at: 0x%08lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
+   else
+      Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
+
    char parent[256];
    parent[0] = 0;
    TDumpMembers dm;

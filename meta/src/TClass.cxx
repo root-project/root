@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.157 2005/01/14 15:08:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.158 2005/01/17 16:26:41 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -145,7 +145,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
           TDatime::GetDateTime(cdatime[0],cdate,ctime);
           sprintf(&line[kvalue],"%d/%d",cdate,ctime);
        } else if (isbits) {
-          sprintf(&line[kvalue],"0x%lx", *(ULong_t*)pointer);
+          sprintf(&line[kvalue],"0x%08lx", *(UInt_t*)pointer);
        } else {
           strcpy(&line[kvalue], membertype->AsString(pointer));
        }
@@ -580,7 +580,7 @@ void TClass::Init(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
          if (info->GetClassVersion()==cversion) {
             // We need to force a recall to BuildOld
-            
+
          }
       }
       oldcl->GetStreamerInfos()->Clear();
@@ -883,8 +883,8 @@ void TClass::BuildRealData(void *pointer)
          func.SetFunc(fClassInfo->GetMethod("ShowMembers",
                                             "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
-            if (strcmp(GetName(),"string")!=0) { 
-               // For std::string we know that we do not have a ShowMembers function and 
+            if (strcmp(GetName(),"string")!=0) {
+               // For std::string we know that we do not have a ShowMembers function and
                // that it's okay.
                Error("BuildRealData","can not find any ShowMembers function for %s!",GetName());
             }
@@ -999,14 +999,14 @@ Bool_t TClass::CanSplit() const
 
       } else {
 
-         // However we do not split collections of collections 
+         // However we do not split collections of collections
          // nor collections of strings
-         // nor collections of pointers 
+         // nor collections of pointers
          // (actually we __could__ split collection of pointers to non-virtual class,
          //  but we dont for now).
- 
+
          if (GetCollectionProxy()->HasPointers()) return kFALSE;
-         
+
          TClass *valueClass = GetCollectionProxy()->GetValueClass();
          if (valueClass == 0) return kFALSE;
          if (valueClass==TString::Class() || valueClass==gROOT->GetClass("string"))
@@ -1680,7 +1680,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
 
          info->Update(this, newcl);
       }
-      
+
       if (acl->GetCollectionProxy() && acl->GetCollectionProxy()->GetValueClass()==this) {
          acl->GetCollectionProxy()->SetValueClass(newcl);
          // We should also inform all the TBranchElement :( but we do not have a master list :(

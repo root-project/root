@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.14 2005/01/14 15:08:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.15 2005/01/17 16:26:41 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -31,10 +31,10 @@ ClassImp(TInspectCanvas)
 
 class TInspectorObject : public TObject
 {
-   // This class is designed to wrap a Foreign object in order to 
+   // This class is designed to wrap a Foreign object in order to
    // inject it into the Browse sub-system.
 
-public: 
+public:
 
    TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
   ~TInspectorObject(){;}
@@ -49,7 +49,7 @@ private:
    void     *fObj;   //! pointer to the foreign object
    TClass   *fClass; //! pointer to class of the foreign object
 
-};  
+};
 
 //______________________________________________________________________________//*-*
 //*-*   A InspectCanvas is a canvas specialized to inspect Root objects.
@@ -227,7 +227,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
       sprintf(line,"%s:%d","Foreign object",0);
       ttitle.DrawText(xvalue+0.2, y3+0.1, line);
       ttitle.SetTextColor(6);
-      ttitle.DrawText(xtitle+2, y3+0.1, "no title given");      
+      ttitle.DrawText(xtitle+2, y3+0.1, "no title given");
    }
    ttitle.SetTextSize(tsize);
    ttitle.SetTextColor(1);
@@ -269,7 +269,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
 
          TClass *clm=0;
          if (!membertype) {
-            clm = member->GetClass(); 
+            clm = member->GetClass();
          }
 
          if (member->IsaPointer()) {
@@ -278,7 +278,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
                //NOTE: memory leak!
                p3pointer = (char**)new TInspectorObject(p3pointer,clm);
             }
-            
+
             if (!p3pointer) {
                sprintf(&line[kvalue],"->0");
             } else if (!member->IsBasic()) {
@@ -302,7 +302,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
                TDatime::GetDateTime(cdatime[0],cdate,ctime);
                sprintf(&line[kvalue],"%d/%d",cdate,ctime);
             } else if (isbits) {
-               sprintf(&line[kvalue],"0x%lx", *(ULong_t*)pointer);
+               sprintf(&line[kvalue],"0x%08lx", *(UInt_t*)pointer);
             } else {
                strncpy(&line[kvalue], membertype->AsString(pointer),128);
             }
