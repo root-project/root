@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.60 2001/12/10 08:05:27 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.61 2001/12/14 13:31:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,8 +55,6 @@
 #include "TDatime.h"
 #include "TColor.h"
 
-const Int_t kDistanceMaximum = 5;
-
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 const Int_t kButton    = 101;
@@ -66,6 +64,8 @@ const Int_t kCurlyArc  = 201;
 
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
+
+Int_t TPad::fgMaxPickDistance = 5;
 
 ClassImpQ(TPad)
 
@@ -2241,6 +2241,13 @@ Color_t TPad::GetHighLightColor() const
 }
 
 //______________________________________________________________________________
+Int_t TPad::GetMaxPickDistance() 
+{
+   //static function (see also TPad::SetMaxPickDistance)
+   return fgMaxPickDistance;
+}
+
+//______________________________________________________________________________
 TObject *TPad::GetSelected() const
 {
    return fCanvas->GetSelected();
@@ -3435,7 +3442,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    TPad *pick   = 0;
    TPad *picked = this;
    pickobj      = 0;
-   if (DistancetoPrimitive(px,py) < kDistanceMaximum) {
+   if (DistancetoPrimitive(px,py) < fgMaxPickDistance) {
       dummyLink.SetObject(this);
       pickobj = &dummyLink;
    }
@@ -3460,7 +3467,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
          if (!gotPrim) {
             if (!obj->TestBit(kCannotPick)) {
                dist = obj->DistancetoPrimitive(px, py);
-               if (dist < kDistanceMaximum) {
+               if (dist < fgMaxPickDistance) {
                   pickobj = lnk;
                   gotPrim = kTRUE;
                   if (dist == 0) break;
@@ -4322,6 +4329,18 @@ void TPad::SetCrosshair(Int_t crhair)
          pad->SetCrosshair(crhair);
       }
    }
+}
+
+//______________________________________________________________________________
+void TPad::SetMaxPickDistance(Int_t maxPick)
+{
+   // static function to set the maximum Pick Distance fgMaxPickDistance
+   // This parameter is used in TPad::Pick to select an object if
+   // its DistancetoPrimitive returns a value < fgMaxPickDistance
+   // The default value is 5 pixels. Setting a smaller value will make
+   // picking more precise but also more difficult
+   
+   fgMaxPickDistance = maxPick;
 }
 
 //______________________________________________________________________________

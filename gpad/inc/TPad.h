@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.12 2001/10/30 17:22:32 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.13 2001/12/04 12:04:57 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -109,7 +109,8 @@ protected:
    TView        *fView;            //! Pointer to 3-D view (if one exists)
    TObject      *fPadPointer;      //! free pointer
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
-
+   static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
+   
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  HideToolTip(Int_t event);
@@ -211,6 +212,7 @@ public:
    Double_t          GetX2() const { return fX2; }
    Double_t          GetY1() const { return fY1; }
    Double_t          GetY2() const { return fY2; }
+   static Int_t      GetMaxPickDistance();
    TList            *GetListOfPrimitives() const {return fPrimitives;}
    TList            *GetListOfExecs() const {return fExecs;}
    virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
@@ -305,6 +307,7 @@ public:
    virtual void      SetAttLinePS(Color_t color, Style_t style, Width_t lwidth);
    virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize);
    virtual void      SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
+   static  void      SetMaxPickDistance(Int_t maxPick=5);
    virtual void      SetName(const char *name) {fName = name;} // *MENU*
    virtual void      SetSelected(TObject *obj);
    virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey;}
