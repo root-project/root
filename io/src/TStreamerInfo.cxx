@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.204 2004/09/01 07:07:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.205 2004/10/19 11:00:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -672,9 +672,81 @@ void TStreamerInfo::BuildOld()
                   if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s/%d",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName(),newtype);
                }
             } else {
-               element->SetNewType(-2);
-               Warning("BuildOld","Cannot convert %s::%s from type:%s to type:%s, skip element",
-                       GetName(),element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
+               TClass *oldcl = gROOT->GetClass(element->GetTypeName());
+               TClass *newcl = gROOT->GetClass(dm->GetFullTypeName());
+
+               // Let see if newcl is just oldcl in a namespace.
+               bool possibleMatch = (oldcl && !oldcl->IsLoaded());
+
+
+               // First test that oldcl is not a scope of any sort
+               if (possibleMatch) { 
+                  for(int i = 0, done = false; i<strlen(oldcl->GetName()) && !done ; ++i) {
+                     switch ( oldcl->GetName()[i] ) {
+                        case ':' : possibleMatch = kFALSE; done = kTRUE; break; /* old class is in some scope */
+                        case '<' : done = kTRUE; break; /* we got to a template parameter, so the old class was not in any scope */
+                     }
+                  }
+               }
+                  
+               // And now let's test that the new name ends with the old name
+                  
+               if (possibleMatch && strlen(newcl->GetName()) > strlen(oldcl->GetName()) ) {
+                  UInt_t newlen = strlen(newcl->GetName());
+                  UInt_t oldlen = strlen(oldcl->GetName());
+                  const char* newEnd = & ( newcl->GetName()[ newlen - oldlen ] );
+                  possibleMatch = (0 == strcmp( newEnd, oldcl->GetName() ) );
+               } else {
+                  possibleMatch = kFALSE;
+               }
+               if (possibleMatch) {
+                  Int_t oldv = oldcl->GetStreamerInfo()->GetClassVersion();
+
+                  if (   oldv < newcl->GetStreamerInfos()->GetSize() 
+                      && newcl->GetStreamerInfos()->At(oldv)
+                      && strcmp( newcl->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+                                 oldcl->GetName() ) != 0 ) {
+                     // The new class has already a TStreamerInfo for the the same version as
+                     // the old class and this was not the result of an import.  So we do not 
+                     // have a match
+                     possibleMatch = kFALSE;
+                  }
+               }
+               if (possibleMatch) {
+                  // Now we know that the new class of the data member has the same name as the old class
+                  // except that the new class is in a namespace!
+                  // To allow the automatic schema evolution, all we need to do, is to add the TStreamerInfo from
+                  // the old class to the new class and make sure to connect the TStreamerElement appropriately!
+                  TIter next(oldcl->GetStreamerInfos());
+                  TStreamerInfo *info;
+                  while ((info = (TStreamerInfo*)next())) {
+                     info = (TStreamerInfo*)info->Clone();
+                     info->SetClass(newcl);
+                     UInt_t oldv = info->GetClassVersion();
+                     if (  oldv > newcl->GetStreamerInfos()->GetSize() 
+                        || newcl->GetStreamerInfos()->UncheckedAt(oldv)==0 ) {
+
+                        newcl->GetStreamerInfos()->AddAtAndExpand(info,oldv);
+                     } else {
+                        // We verify that we are consitent and that 
+                        //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
+                        // is already the same as info.
+                        if ( strcmp( newcl->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+                           oldcl->GetName() ) != 0 ) {
+                           Warning("BuildOld","Can not properly load the TStreamerInfo from %s into %s due to a conflict for the class version %d",
+                                  oldcl->GetName(), newcl->GetName(), oldv);
+                           possibleMatch = kFALSE;
+                           break;
+                        }
+                     }
+                  }
+               }
+               if (possibleMatch) element->SetTypeName(dm->GetFullTypeName());
+               else {
+                  element->SetNewType(-2);
+                  Warning("BuildOld","Cannot convert %s::%s from type:%s to type:%s, skip element",
+                          GetName(),element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
+               }
             }
          }
       } else {
