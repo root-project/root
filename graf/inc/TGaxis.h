@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.10 2002/01/15 10:24:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.11 2002/11/05 11:37:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -103,7 +103,7 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
         virtual void    Paint(Option_t *chopt="");
         virtual void    PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                   Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
-                                  Double_t gridlength = 0);
+                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
         virtual void    Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                               ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
         virtual void    SavePrimitive(ofstream &out, Option_t *option);

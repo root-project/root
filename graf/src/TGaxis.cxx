@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.40 2002/09/11 08:51:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.41 2002/11/05 11:37:36 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -329,7 +329,7 @@ void TGaxis::Paint(Option_t *)
 //______________________________________________________________________________
 void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
                        Double_t &wmin, Double_t &wmax, Int_t &ndiv,   Option_t *chopt,
-                       Double_t gridlength)
+                       Double_t gridlength, Bool_t drawGridOnly)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Control function to draw an axis*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ================================
@@ -832,7 +832,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
 //*-*-              Draw axis title if it exists
-   if (strlen(GetTitle())) {
+   if (!drawGridOnly && strlen(GetTitle())) {
       textaxis->SetTextSize (GetTitleSize());
       charheight = GetTitleSize();
       if ((GetTextFont() % 10) > 2) {
@@ -894,7 +894,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       charheight /= padh;
    }
    if (!OptionUp && !OptionDown && !OptionY) {
-      if (OptionText && ((ymin == ymax) || (xmin == xmax))) {
+      if (!drawGridOnly && OptionText && ((ymin == ymax) || (xmin == xmax))) {
          textaxis->SetTextAlign(32);
          OptionText = 2;
          Int_t nl = fAxis->GetLast()-fAxis->GetFirst()+1;
@@ -1037,7 +1037,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                }
             }
-            lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
             if (OptionGrid) {
                if (ltick == 0) {
@@ -1087,7 +1087,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      }
                   }
                }
-               lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
                if (OptionGrid) {
                   if (ltick == 0) {
@@ -1131,7 +1131,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      }
                   }
                }
-               lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
                if (OptionGrid) {
                   if (ltick == 0) {
                      Rotate(Xtick1,0,cosphi,sinphi,XX0,YY0 ,xpl2,ypl2);
@@ -1146,7 +1146,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
 //*-*-              Draw the numeric labels if needed...
-   if (!OptionUnlab) {
+   if (!drawGridOnly && !OptionUnlab) {
       if (!OptionLog) {
          if (N1A) {
 //*-*-              Spacing of labels
@@ -1489,7 +1489,7 @@ L110:
                }
             }
          }
-         lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+         if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
          if (OptionGrid) {
             Rotate(Xone,0,cosphi,sinphi,X0,Y0,xpl2,ypl2);
@@ -1497,7 +1497,7 @@ L110:
             linegrid->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
          }
 
-         if (!OptionUnlab)  {
+         if (!drawGridOnly && !OptionUnlab)  {
 
 //*-*-              We generate labels (numeric only).
             if (LogInteger || noExponent) {
@@ -1600,7 +1600,7 @@ L160:
             }
             IDN = N1A*2;
             if ((NBININ <= IDN) || ((NBININ > IDN) && (k == 5))) {
-               lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               if (!drawGridOnly) lineaxis->PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
 
 //*-*- Draw the intermediate LOG labels if requested
 
