@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.22 2001/12/07 21:58:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.23 2001/12/09 17:32:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -203,8 +203,8 @@ public:
     virtual TAxis   *GetZaxis() {return &fZaxis;}
     virtual Stat_t   Integral(Option_t *option="");
     virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="");
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t */*option*/="") {return 0;}
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t */*option*/="" ) {return 0;}
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * ="") {return 0;}
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="" ) {return 0;}
     virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(TH1 *h1);
