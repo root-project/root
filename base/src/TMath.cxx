@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.23 2002/07/02 06:43:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.24 2002/08/16 13:43:10 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -770,7 +770,7 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    // [2] R. J. Wells, Rapid Approximation to the Voigt/Faddeeva Function and
    // it's Derivatives.
 
-   Double_t RO, R1;
+   Double_t R0, R1;
 
    if (R < 2) R = 2;
    if (R > 5) R = 5;
@@ -801,8 +801,8 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    int RG1, RG2, RG3; 				 // y polynomial flags 
    Double_t ABX, XQ, YQ, YRRTPI; 		 // --x--, x^2, y^2, y/SQRT(pi)
    Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4; 	 // --x-- on region boundaries 
-   Double_t A0, D0, D2, E0, E2, E4, H0, H2, H4, H6;// W4 temporary variables 
-   Double_t P0, P2, P4, P6, P8, Z0, Z2, Z4, Z6, Z8; 
+   Double_t A0=0, D0=0, D2=0, E0=0, E2=0, E4=0, H0=0, H2=0, H4=0, H6=0;// W4 temporary variables 
+   Double_t P0=0, P2=0, P4=0, P6=0, P8=0, Z0=0, Z2=0, Z4=0, Z6=0, Z8=0; 
    Double_t XP[6], XM[6], YP[6], YM[6];          // CPF12 temporary values 
    Double_t MQ[6], PQ[6], MF[6], PF[6]; 
    Double_t D, YF, YPY0, YPY0Q;

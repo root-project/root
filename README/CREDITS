@@ -198,6 +198,10 @@ N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
 D: contributed to styles Bold, Video, Pub
 
+N: Miha Puc
+E: miha.puc@marvin.fmf.uni-lj.si
+D: contributed to TMath::Voigt
+
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
