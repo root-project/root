@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.5 2001/01/29 00:03:55 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
    virtual ~TSocket() { Close(); }
 
    virtual void          Close(Option_t *opt="");
-   Int_t                 GetDescriptor() const { return fSocket; }
+   virtual Int_t         GetDescriptor() const { return fSocket; }
    TInetAddress          GetInetAddress() const { return fAddress; }
    virtual TInetAddress  GetLocalInetAddress();
    Int_t                 GetPort() const { return fAddress.GetPort(); }

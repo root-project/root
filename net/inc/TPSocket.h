@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.2 2001/01/26 17:11:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.3 2001/01/29 00:03:55 rdm Exp $
 // Author: Fons Rademakers   20/1/2001
 
 /*************************************************************************
@@ -59,14 +59,21 @@ public:
    virtual ~TPSocket();
 
    void          Close(Option_t *opt="");
+   Int_t         GetDescriptor() const { return fSockets ? fSockets[0]->GetDescriptor() : -1; }
    TInetAddress  GetLocalInetAddress();
 
    Int_t   Send(const TMessage &mess);
+   Int_t   Send(Int_t kind) { return TSocket::Send(kind); }
+   Int_t   Send(Int_t status, Int_t kind) { return TSocket::Send(status, kind); }
+   Int_t   Send(const char *mess, Int_t kind = kMESS_STRING) { return Send(mess, kind); }
    Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt);
    Int_t   Recv(TMessage *&mess);
+   Int_t   Recv(Int_t &status, Int_t &kind) { return TSocket::Recv(status, kind); }
+   Int_t   Recv(char *mess, Int_t max) { return TSocket::Recv(mess, max); }
+   Int_t   Recv(char *mess, Int_t max, Int_t &kind) { return TSocket::Recv(mess, max, kind); }
    Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt);
 
-   Bool_t  IsValid() const { return fSockets == 0 ? kFALSE : kTRUE; }
+   Bool_t  IsValid() const { return fSockets ? kTRUE : kFALSE; }
    Int_t   GetErrorCode() const;
    Int_t   SetOption(ESockOptions opt, Int_t val);
    Int_t   GetOption(ESockOptions opt, Int_t &val);
