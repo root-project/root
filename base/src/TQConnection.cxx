@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.12 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.13 2003/05/11 14:09:10 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -36,7 +36,6 @@
 ClassImpQ(TQConnection)
 
 char *gTQSlotParams;          // used to pass string parameter
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -322,6 +321,7 @@ TQConnection::TQConnection(TClass *cl, void *receiver, const char *method_name)
          Warning("TQConnection", "%s cannot be compiled", method_name);
    }
 
+   if (cl) fClassName = cl->GetName();
    fSlot = new TQSlot(cl, method_name, funcname);
    fSlot->AddReference(); //update counter of references to slot
 }
@@ -334,6 +334,7 @@ TQConnection::TQConnection(const char *class_name, void *receiver,
    //    Creates connection to method of class specified by name,
    //    it could be interpreted class and with method == funcname.
 
+   fClassName = class_name;
    fSlot = new TQSlot(class_name, funcname);  // new slot-method
    fSlot->AddReference();     // update counter of references to slot
    fReceiver = receiver;      // fReceiver is pointer to receiver
@@ -367,7 +368,7 @@ TQConnection::~TQConnection()
 //______________________________________________________________________________
 const char *TQConnection::GetName() const
 {
-   // Returns name of connection
+   // Returns name of connection (aka name of slot)
 
    return fSlot->GetName();
 }

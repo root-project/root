@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.3 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.h,v 1.4 2003/09/05 12:57:07 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -34,15 +34,13 @@
 #include "TQObject.h"
 #endif
 
-
 class TQSlot;
-
-
 class TQConnection : public TList, public TQObject {
 
 protected:
    TQSlot  *fSlot;      // slot-method calling interface
    void    *fReceiver;  // ptr to object to which slot is applied
+   TString fClassName;  // class name of the receiver 
 
 public:
    TQConnection();
@@ -54,6 +52,7 @@ public:
 
    const char *GetName() const;
    void *GetReceiver() const { return fReceiver; }
+   const char *GetClassName() const { return fClassName.Data(); } 
    void Destroyed();         // *SIGNAL*
    void ExecuteMethod();
    void ExecuteMethod(Long_t param);
