@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.55 2003/08/31 00:52:32 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.56 2003/09/02 16:14:52 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -53,7 +53,7 @@
 //                                                                      //
 // and to /etc/inetd.conf:                                              //
 //                                                                      //
-// rootd stream tcp nowait root /user/rdm/root/bin/rootd rootd -i       //
+// rootd stream tcp nowait root /usr/local/root/bin/rootd rootd -i      //
 //                                                                      //
 // Force inetd to reread its conf file with "kill -HUP <pid inetd>".    //
 //                                                                      //
@@ -70,7 +70,7 @@
 //      socket_type     = stream                                        //
 //      wait            = no                                            //
 //      user            = root                                          //
-//      server          = /usr/local/bin/rootd                          //
+//      server          = /usr/local/root/bin/rootd                     //
 //      server_args     = -i -d 0                                       //
 // }                                                                    //
 //                                                                      //
@@ -346,11 +346,11 @@ int     gPort2                   = 0;
 int     gProtocol                = 8;       // increase when protocol changes
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
+char    gRootdTab[kMAXPATHLEN]   = { 0 };   // keeps track of open files
 int     gUploaded                = 0;
 int     gWritable                = 0;
 int     gReadOnly                = 0;
 
-char    kRootdTab[kMAXPATHLEN]   = "/usr/tmp/rootdtab";
 
 #ifdef R__KRB5
 extern krb5_keytab  gKeytab;      // to allow specifying on the command line
@@ -602,7 +602,7 @@ again:
 //______________________________________________________________________________
 int RootdCheckTab(int mode)
 {
-   // Checks kRootdTab file to see if file can be opened. If mode=1 then
+   // Checks gRootdTab file to see if file can be opened. If mode=1 then
    // check if file can safely be opened in write mode, i.e. see if file
    // is not already opened in either read or write mode. If mode=0 then
    // check if file can safely be opened in read mode, i.e. see if file
@@ -620,7 +620,7 @@ int RootdCheckTab(int mode)
    // The lockf() call can fail if the directory is NFS mounted
    // and the lockd daemon is not running.
 
-   const char *sfile = kRootdTab;
+   const char *sfile = gRootdTab;
    int fid, create = 0;
 
    int noupdate = 0;
@@ -639,7 +639,7 @@ again:
 
    if (fid == -1) {
       if (sfile[1] == 'u') {
-         sfile = kRootdTab+4;
+         sfile = gRootdTab+4;
          goto again;
       }
       Error(ErrSys, kErrFatal, "RootdCheckTab: error opening %s", sfile);
@@ -650,7 +650,7 @@ again:
       if (sfile[1] == 'u' && create) {
          close(fid);
          remove(sfile);
-         sfile = kRootdTab+4;
+         sfile = gRootdTab+4;
          goto again;
       }
       Error(ErrSys, kErrFatal, "RootdCheckTab: error locking %s", sfile);
@@ -742,19 +742,19 @@ again:
 //______________________________________________________________________________
 void RootdCloseTab(int force=0)
 {
-   // Removes from the kRootdTab file the reference to gFile for the
+   // Removes from the gRootdTab file the reference to gFile for the
    // current rootd. If force = 1, then remove all references for gFile
-   // from the kRootdTab file. This might be necessary in case something
+   // from the gRootdTab file. This might be necessary in case something
    // funny happened and the original reference was not correctly removed.
    // Stale locks are detected by checking each pid and then removed.
 
-   const char *sfile = kRootdTab;
+   const char *sfile = gRootdTab;
    int fid;
 
 again:
    if (access(sfile, F_OK) == -1) {
       if (sfile[1] == 'u') {
-         sfile = kRootdTab+4;
+         sfile = gRootdTab+4;
          goto again;
       }
       ErrorInfo("RootdCloseTab: file %s does not exist", sfile);
@@ -1998,9 +1998,6 @@ void RootdLoop()
    const char *OpenHost = NetRemoteHost();
    strcpy(gOpenHost, OpenHost);
 
-   // Set auth tab file in RPDUtil ...
-   RpdSetAuthTabFile(gRpdAuthTab);
-
    while (1) {
 
       if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
@@ -2169,7 +2166,7 @@ int main(int argc, char **argv)
    gErrFatal = ErrFatal;
    gErr      = Err;
 
-   // function for dealing with SIGPIPE signals (used in NetSetOptions,
+   // function for dealing with SIGPIPE signals (used in NetSetOptions(),
    // rpdutils/net.cxx)
    gSigPipeHook = SigPipe;
 
@@ -2355,18 +2352,21 @@ int main(int argc, char **argv)
          }
 
    // dir for temporary files
-   if (strlen(gTmpDir) <= 0) {
-      sprintf(gTmpDir, "/usr/tmp");
-      if (access(gTmpDir, R_OK) || access(gTmpDir, W_OK)) {
-         sprintf(gTmpDir, "/tmp");
+   if (strlen(gTmpDir) == 0) {
+      strcpy(gTmpDir, "/usr/tmp");
+      if (access(gTmpDir, W_OK) == -1) {
+         strcpy(gTmpDir, "/tmp");
       }
    }
 
    // root tab file
-   sprintf(kRootdTab, "%s/rootdtab", gTmpDir);
+   sprintf(gRootdTab, "%s/rootdtab", gTmpDir);
 
    // authentication tab file
    sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
+
+   // Set auth tab file in rpdutils...
+   RpdSetAuthTabFile(gRpdAuthTab);
 
    // Log to stderr if not started as daemon ...
    if (gForegroundFlag) RpdSetRootLogFlag(1);
@@ -2379,15 +2379,17 @@ int main(int argc, char **argv)
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
-      if (getenv("ROOTSYS")) {
-         strcpy(gConfDir, getenv("ROOTSYS"));
-         sprintf(gExecDir, "%s/bin", gConfDir);
-         sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
-         if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
-      } else {
-         if (!gInetdFlag)
-            fprintf(stderr, "no config directory specified\n");
-         Error(ErrFatal, kErrFatal, "no config directory specified");
+      if (strlen(gConfDir) == 0) {
+         if (getenv("ROOTSYS")) {
+            strcpy(gConfDir, getenv("ROOTSYS"));
+            sprintf(gExecDir, "%s/bin", gConfDir);
+            sprintf(gAuthAllow, "%s/etc/rpdauth.allow", gConfDir);
+            if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
+         } else {
+            if (!gInetdFlag)
+               fprintf(stderr, "rootd: no config directory specified\n");
+            Error(ErrFatal, kErrFatal, "main: no config directory specified");
+         }
       }
 #else
       strcpy(gConfDir, ROOTPREFIX);

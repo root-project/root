@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.36 2003/08/31 00:52:32 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.37 2003/09/02 16:14:52 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -73,7 +73,7 @@
 //      socket_type     = stream                                        //
 //      wait            = no                                            //
 //      user            = root                                          //
-//      server          = /usr/local/bin/proofd                         //
+//      server          = /usr/local/root/bin/proofd                    //
 //      server_args     = -i -d 0 /usr/local/root                       //
 // }                                                                    //
 //                                                                      //
@@ -936,9 +936,6 @@ void ProofdExec()
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gOpenHost = %s", gOpenHost);
 
-   // Set auth tab flag in RPDUtil ...
-   RpdSetAuthTabFile(gRpdAuthTab);
-
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
 
@@ -1204,6 +1201,20 @@ int main(int argc, char **argv)
                Error(ErrFatal, -1, "unknown command line option: %c", *s);
          }
 
+   // dir for temporary files
+   if (strlen(gTmpDir) == 0) {
+      strcpy(gTmpDir, "/usr/tmp");
+      if (access(gTmpDir, W_OK) == -1) {
+         strcpy(gTmpDir, "/tmp");
+      }
+   }
+
+   // authentication tab file
+   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
+
+   // Set auth tab flag in RPDUtil ...
+   RpdSetAuthTabFile(gRpdAuthTab);
+
    if (argc > 0) {
       strncpy(gConfDir, *argv, kMAXPATHLEN-1);
       gConfDir[kMAXPATHLEN-1] = 0;
@@ -1219,8 +1230,8 @@ int main(int argc, char **argv)
          if (gDebug > 0) ErrorInfo("main: no config directory specified using ROOTSYS (%s)", gConfDir);
       } else {
          if (!gInetdFlag)
-            fprintf(stderr, "no config directory specified\n");
-         Error(ErrFatal, -1, "no config directory specified");
+            fprintf(stderr, "proofd: no config directory specified\n");
+         Error(ErrFatal, -1, "main: no config directory specified");
       }
 #else
       strcpy(gConfDir, ROOTPREFIX);
@@ -1238,27 +1249,16 @@ int main(int argc, char **argv)
    sprintf(arg0, "%s/bin/proofserv", gConfDir);
    if (access(arg0, X_OK) == -1) {
       if (!gInetdFlag)
-         fprintf(stderr, "incorrect config directory specified (%s)\n", gConfDir);
-      Error(ErrFatal, -1, "incorrect config directory specified (%s)", gConfDir);
+         fprintf(stderr, "proofd: incorrect config directory specified (%s)\n", gConfDir);
+      Error(ErrFatal, -1, "main: incorrect config directory specified (%s)", gConfDir);
    }
-
-   // dir for temporary files
-   if (strlen(gTmpDir) <= 0) {
-      sprintf(gTmpDir, "/usr/tmp");
-      if (access(gTmpDir, R_OK) || access(gTmpDir, W_OK)) {
-         sprintf(gTmpDir, "/tmp");
-      }
-   }
-
-   // authentication tab file
-   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
 
    // Log to stderr if not started as daemon ...
    if (gForegroundFlag) RpdSetRootLogFlag(1);
 
    // Check if at any level there is request for Globus Authetication
    // for proofd or rootd
-   sprintf(gRcFile, "%s", ".rootrc");
+   strcpy(gRcFile, ".rootrc");
    CheckGlobus(gRcFile);
    if (gDebug > 0)
       ErrorInfo("main: gGlobus: %d, gRcFile: %s", gGlobus, gRcFile);
