@@ -32,6 +32,10 @@ endif
 ifeq ($(EXPLICITLINK),yes)
 include config/Makefile.depend
 endif
+ifneq ($(findstring map, $(MAKECMDGOALS)),)
+#ifeq ($(MAKECMDGOALS), map-pythia)
+include config/Makefile.depend
+endif
 
 ##### Allow local macros #####
 
@@ -42,7 +46,7 @@ endif
 MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 newdelete hist tree freetype graf g3d gpad gui minuit \
                 histpainter treeplayer treeviewer proof physics postscript \
-                rint html eg geom geompainter vmc fumili mlp gedold ged xml
+                rint html eg geom geompainter vmc fumili mlp gedold ged
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -125,6 +129,11 @@ endif
 ifneq ($(PYTHONINCDIR),)
 ifneq ($(PYTHONLIB),)
 MODULES      += pyroot
+endif
+endif
+ifneq ($(XMLINCDIR),)
+ifneq ($(XMLCLILIB),)
+MODULES      += xml
 endif
 endif
 ifneq ($(TABLE),)
@@ -293,8 +302,9 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                static debian redhat skip \
+                static map debian redhat skip \
                 $(patsubst %,all-%,$(MODULES)) \
+                $(patsubst %,map-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
 
@@ -491,9 +501,6 @@ changelog:
 html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
-
-map: $(RLIBMAP) rootlibs
-	$(RLIBMAP) -o $(ROOTMAP) $(ALLLIBS)
 
 install: all map
 	@if [ -d $(BINDIR) ]; then \
