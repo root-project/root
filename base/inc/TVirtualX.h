@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.17 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.18 2003/02/11 12:29:06 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -562,7 +562,7 @@ inline void         TVirtualX::glGetFloatv(UInt_t, Float_t *) { }
 inline void         TVirtualX::glGetIntegerv(UInt_t, Int_t *) { }
 inline Int_t        TVirtualX::glGetError() { return 0; }
 inline void         TVirtualX::glEndList() { }
-inline void         TVirtualX::glBegin(UInt_t mode) { }
+inline void         TVirtualX::glBegin(UInt_t ) { }
 inline void         TVirtualX::glEnd() { }
 inline void         TVirtualX::glPushMatrix() { }
 inline void         TVirtualX::glPopMatrix() { }
