@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.5 2004/11/05 11:38:05 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.6 2004/11/05 14:32:35 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -64,6 +64,9 @@ namespace ROOT {
     int                 refCount;
     T& iter() { return *(T*)buff; }
   };
+#if defined(R__VCXX6)
+  template <class T> void Destruct(T* obj) { obj->~T(); }
+#endif
 }
 
 /** @class TCollectionProxy TCollectionProxy.h cont/TCollectionProxy.h
@@ -193,9 +196,8 @@ public:
       PValue_t m = PValue_t(e->start);
 #if defined(R__VCXX6)
       PCont_t  c = PCont_t(e->object);
-      TYPENAME T::allocator_type a = c->get_allocator();
       for (size_t i=0; i < e->size; ++i, ++m )
-        a.destroy(m);
+         ROOT::Destruct(m);
 #else
       for (size_t i=0; i < e->size; ++i, ++m )
         m->~Value_t();
