@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -143,6 +143,22 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
        }
     }
 
+//*-* check if point is on the color palette
+   if (strcmp(fH->GetDrawOption(),"colz") == 0 || strcmp(fH->GetDrawOption(),"COLZ") == 0) {
+      if (py <= puymin && py > puymax) {
+         Float_t xup  = gPad->GetUxmax();
+         Float_t x2   = gPad->GetX2();
+         Float_t xr   = 0.05*(x2 - gPad->GetX1());
+         Float_t xmin = xup +0.1*xr;
+         Float_t xmax = xmin + xr;
+         if (xmax > x2) xmax = x2-0.01*xr;
+         Int_t xzaxis = gPad->XtoAbsPixel(xmax);
+         if (TMath::Abs(px-xzaxis) < kMaxDiff) {
+            gPad->SetSelected(fZaxis);
+            return 0;
+         }   
+      }   
+   }    
 //*-*- if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
@@ -2428,14 +2444,22 @@ void THistPainter::PaintPalette()
       fH->TAttFill::Modify();
       gPad->PaintBox(xmin,ymin+i*dy,xmax,ymin+(i+1)*dy);
    }
+   TAxis *zaxis = fH->GetZaxis();
+   //Draw the palette axis using the Z axis parameters
    TGaxis axis;
-   axis.SetLineColor(gStyle->GetAxisColor("Z"));
-   axis.SetTextColor(gStyle->GetLabelColor("Z"));
-   axis.SetTextFont(gStyle->GetLabelFont("Z"));
-   axis.SetLabelOffset(gStyle->GetLabelOffset("Z"));
-   axis.SetLabelSize(gStyle->GetLabelSize("Z"));
-   axis.SetTickSize(gStyle->GetTickLength("Z"));
-   Int_t ndiv = 10;
+   axis.SetLineColor(zaxis->GetAxisColor());
+   axis.SetTextColor(zaxis->GetTitleColor());
+   axis.SetTextFont(zaxis->GetTitleFont());
+   axis.SetLabelColor(zaxis->GetLabelColor());
+   axis.SetLabelFont(zaxis->GetLabelFont());
+   axis.SetLabelSize(zaxis->GetLabelSize());
+   axis.SetLabelOffset(zaxis->GetLabelOffset());
+   axis.SetTickSize(zaxis->GetTickLength());
+   axis.SetTitle(zaxis->GetTitle());
+   axis.SetTitleOffset(zaxis->GetTitleOffset());
+   axis.SetTitleSize(zaxis->GetTitleSize());
+   axis.SetBit(TGaxis::kCenterTitle, zaxis->TestBit(TGaxis::kCenterTitle));
+   Int_t ndiv = zaxis->GetNdivisions();
    Float_t wmin = Hparam.zmin;
    Float_t wmax = Hparam.zmax;
    if (Hoption.Logz) {
