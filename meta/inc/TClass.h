@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.11 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.12 2000/12/20 17:36:18 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -124,6 +124,7 @@ public:
    Bool_t         InheritsFrom(const TClass *cl) const;
    Bool_t         IsFolder() const {return kTRUE;}
    void          *New(Bool_t defConstructor = kTRUE);
+   void          *New(void *arena, Bool_t defConstructor = kTRUE);
    void           Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    Int_t          ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t          ReadBuffer(TBuffer &b, void *pointer);

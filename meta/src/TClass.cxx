@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.29 2001/02/02 11:24:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.30 2001/02/07 21:06:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -207,12 +207,12 @@ TClass::TClass(const char *name, Version_t cversion,
       if (oldcl->CanIgnoreTObjectStreamer()) {
          printf("old class: %s has IgnoreTobjectStreamer bit\n",name);
          IgnoreTObjectStreamer();
-      } 
+      }
       if (oldcl->CanBypassStreamer()) {
          printf("old class: %s has BypassStreamer bit\n",name);
          BypassStreamer();
-      } 
-      
+      }
+
       TStreamerInfo *info;
       TIter next(oldcl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)next())) {
@@ -300,7 +300,7 @@ void TClass::BuildRealData(void *pointer)
    fRealData = new TList;
 
    if ((!pointer) && (Property() & kIsAbstract)) return;
-   
+
    // Create an instance of this class
    if (!realDataObject) {
       if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
@@ -949,6 +949,22 @@ void *TClass::New(Bool_t defConstructor)
    void *p = GetClassInfo()->New();
    fgCallingNew = kFALSE;
    if (!p) Error("New", "no default ctor for class %s", GetName());
+
+   return p;
+}
+
+//______________________________________________________________________________
+void *TClass::New(void *arena, Bool_t defConstructor)
+{
+   // Return a pointer to a newly allocated object of this class.
+   // The class must have a default constructor.
+
+   if (!fClassInfo) return 0;
+
+   fgCallingNew = defConstructor;
+   void *p = GetClassInfo()->New(arena);
+   fgCallingNew = kFALSE;
+   if (!p) Error("New with placments", "no default ctor for class %s", GetName());
 
    return p;
 }
