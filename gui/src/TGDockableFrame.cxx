@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.1 2004/07/08 14:40:28 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.2 2004/07/08 17:01:30 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -53,22 +53,18 @@ TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
 {
    // Create a dock button (i.e. button with two vertical bars).
 
-   Resize(10, GetDefaultHeight());
+   fWidgetFlags = kWidgetIsEnabled;
    fMouseOn = kFALSE;
+   Resize(10, GetDefaultHeight());
 
    fNormBg = fBackground;
-   TColor c;
-   Float_t r,g,b;
-   c.Pixel2RGB(fNormBg, r, g, b);
-   c.SetRGB(r, g, b);
-   Float_t newL = c.GetLight() + (255 - c.GetLight()) * 45 / 100;
-   Float_t newR = c.GetRed();
-   Float_t newG = c.GetGreen();
-   Float_t newB = c.GetBlue();
-   c.HLStoRGB(c.GetHue(), newL, c.GetSaturation(), newR, newG, newB);
-   c.SetRGB(newR, newG, newB);
 
-   fHiBg = c.GetPixel();
+   Float_t r, g, b, h, l, s;
+   TColor::Pixel2RGB(fNormBg, r, g, b);
+   TColor::RGB2HLS(r, g, b, h, l, s);
+   l = l + (1. - l) * 45. / 100.;
+   TColor::HLS2RGB(h, l, s, r, g, b);
+   fHiBg = TColor::RGB2Pixel(r, g, b);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
@@ -89,12 +85,11 @@ Bool_t TGDockButton::HandleCrossing(Event_t *event)
    TGButton::HandleCrossing(event);
    if (event->fType == kLeaveNotify) {
       fMouseOn = kFALSE;
-printf("mouseoff\n");
    } else if (event->fType == kEnterNotify) {
       fMouseOn = kTRUE;
-printf("mouseon\n");
    }
-   if (IsEnabled()) fClient->NeedRedraw(this);
+   if (IsEnabled())
+      fClient->NeedRedraw(this);
 
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.1 2004/07/08 14:40:28 rdm Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -47,8 +47,6 @@
 
 class TGDockableFrame;
 
-
-//----------------------------------------------------------------------
 
 class TGDockButton : public TGButton {
 protected:
