@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name$:$Id$
+// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -29,8 +29,8 @@ class TRint : public TApplication {
 
 private:
    Int_t       fNcmd;               //Command history number
+   TString     fDefaultPrompt;      //Default prompt: "root [%d] "
    char        fPrompt[64];         //Interpreter prompt
-   const char *fDefaultPrompt;      //Default prompt: "root [%d] "
    Bool_t      fInterrupt;          //If true macro execution will be stopped
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.2 2000/05/31 18:43:50 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.3 2000/06/13 18:49:00 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -297,7 +297,7 @@ char *TRint::GetPrompt()
    if (s[0])
       strcpy(fPrompt, s);
    else
-      sprintf(fPrompt, fDefaultPrompt, fNcmd);
+      sprintf(fPrompt, fDefaultPrompt.Data(), fNcmd);
 
    return fPrompt;
 }
@@ -313,14 +313,14 @@ const char *TRint::SetPrompt(const char *newPrompt)
    // root [0] ((TRint*)gROOT->GetApplication())->SetPrompt("aap> ")
    // aap>
 
-   const char *op = fDefaultPrompt;
+   static TString op = fDefaultPrompt;
 
-   if (strlen(newPrompt) <= 55)
+   if (newPrompt && strlen(newPrompt) <= 55)
       fDefaultPrompt = newPrompt;
    else
       Error("SetPrompt", "newPrompt too long (> 55 characters)");
 
-   return op;
+   return op.Data();
 }
 
 //______________________________________________________________________________
