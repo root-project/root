@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.35 2003/03/11 14:35:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.36 2003/04/12 17:14:32 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1906,26 +1906,6 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
       delete[] fTabSize;
       w = (UInt_t)fs.Width();
       h = (UInt_t)fs.Height();
-}
-
-//______________________________________________________________________________
-void TLatex::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
-{
-// Return text extent for a string text. No TLatex parsing is done.
-// It uses the TTF text extent. It is used to get the size of various
-// pieces of text in a TLatex string
-//  in w return total text width
-//  in h return text height
-
-   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
-   
-   TTF::SetTextFont(fTextFont);
-   TTF::SetTextSize(tsize);
-   TTF::GetTextExtent(w, h, (char*)text);
 }
 
 //______________________________________________________________________________
