@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.35 2003/02/25 14:17:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.36 2003/04/03 09:10:41 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1200,14 +1200,12 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
 
 // Fill the projected histogram
   Double_t cont,err;
-  printf("before the loop\n");
   for (Int_t binx =0;binx<=nx+1;binx++) {
      cont  = GetBinContent(binx);
      err   = GetBinError(binx);
      if (cont)          h1->Fill(fXaxis.GetBinCenter(binx), cont);
      if (computeErrors) h1->SetBinError(binx,err);
   }
-printf("before SetEntries\n");
   h1->SetEntries(fEntries);
   return h1;
 }
