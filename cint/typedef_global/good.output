@@ -1,0 +1,21 @@
+  *******************************************
+  *                                         *
+  *        W E L C O M E  to  R O O T       *
+  *                                         *
+  *   Version   3.03/09 26 September 2002   *
+  *                                         *
+  *  You are welcome to visit our Web site  *
+  *          http://root.cern.ch            *
+  *                                         *
+  *******************************************
+
+Compiled for linux with thread support.
+
+CINT/ROOT C/C++ Interpreter version 5.15.58, Sep 16 2002
+Type ? for help. Commands must be C++ statements.
+Enclose multiple statements between { }.
+
+Processing run.C...
+List of typedefs
+myclbad.so        1 typedef ConstLink<Toy> MyClass<Toy>::value_type
+(const class TClass*)0x8545e88

@@ -1,7 +1,7 @@
 all: tests
 
 
-SUBDIRS = specialobj template other
+SUBDIRS = specialobj template other typedef_global
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 
