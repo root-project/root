@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.3 2001/01/09 18:33:59 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -228,7 +228,7 @@ TObject *TOrdCollection::First() const
 }
 
 //______________________________________________________________________________
-TObject **TOrdCollection::GetObjectRef(TObject *obj)
+TObject **TOrdCollection::GetObjectRef(TObject *obj) const
 {
    // return address of pointer obj
    Int_t index = IndexOf(obj);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.8 2001/03/07 11:51:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.9 2001/03/29 10:57:01 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -473,7 +473,7 @@ TObject *TList::First() const
 }
 
 //______________________________________________________________________________
-TObject **TList::GetObjectRef(TObject *obj) 
+TObject **TList::GetObjectRef(TObject *obj) const
 {
    // Return address of pointer to obj
 

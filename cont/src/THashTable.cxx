@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.4 2001/03/29 10:57:01 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -183,7 +183,7 @@ TObject *THashTable::FindObject(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObject **THashTable::GetObjectRef(TObject *obj)
+TObject **THashTable::GetObjectRef(TObject *obj) const
 {
    // Return address of pointer to obj
 

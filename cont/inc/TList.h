@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.6 2001/03/04 22:11:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.7 2001/03/29 10:57:01 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    virtual TObject  *Before(TObject *obj) const;
    virtual TObject  *First() const;
    virtual TObjLink *FirstLink() const { return fFirst; }
-   virtual TObject **GetObjectRef(TObject *obj);
+   virtual TObject **GetObjectRef(TObject *obj) const;
    virtual TObject  *Last() const;
    virtual TObjLink *LastLink() const { return fLast; }
 
