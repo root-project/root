@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.62 2004/07/05 17:51:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.63 2004/07/06 07:10:46 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3300,7 +3300,7 @@ Double_t TMath::Beta(Double_t p, Double_t q){
 Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b){
   // Continued fraction evaluation by modified Lentz's method
   // used in calculation of incomplete Beta function
-  Int_t itmax = 100;
+  Int_t itmax = 500;
   Double_t eps = 3.e-7;
   Double_t fpmin = 1.e-30;
 
@@ -3335,7 +3335,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b){
     if (TMath::Abs(del-1)<=eps) break;
   }
   if (m>itmax) {
-      printf("Betacf: a or b too big, or itmax too small, a=%g, b=%g, itmax=%d\n",a,b,itmax);
+      printf("Betacf: a or b too big, or itmax too small, a=%g, b=%g, x=%g, h=%g, itmax=%d\n",a,b,x,h,itmax);
    }
    return h;
 }
