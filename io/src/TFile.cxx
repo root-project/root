@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.32 2001/01/28 13:55:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.33 2001/02/02 11:04:39 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -865,8 +865,8 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 
    if (IsOpen()) {
       ssize_t siz;
-      while ((siz = SysRead(fD, buf, len)) < 0 && TSystem::GetErrno() == EINTR)
-         TSystem::ResetErrno();
+      while ((siz = SysRead(fD, buf, len)) < 0 && GetErrno() == EINTR)
+         ResetErrno();
       if (siz < 0) {
          SysError("ReadBuffer", "error reading from file %s", GetName());
          return kTRUE;
@@ -1149,8 +1149,8 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
    if (IsOpen() && fWritable) {
       ssize_t siz;
       gSystem->IgnoreInterrupt();
-      while ((siz = SysWrite(fD, buf, len)) < 0 && TSystem::GetErrno() == EINTR)
-         TSystem::ResetErrno();
+      while ((siz = SysWrite(fD, buf, len)) < 0 && GetErrno() == EINTR)
+         ResetErrno();
       gSystem->IgnoreInterrupt(kFALSE);
       if (siz < 0) {
          SysError("WriteBuffer", "error writing to file %s", GetName());
