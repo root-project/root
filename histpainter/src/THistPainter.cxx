@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.206 2005/02/24 11:29:37 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.208 2005/03/10 13:46:10 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1068,7 +1068,7 @@ void THistPainter::Paint(Option_t *option)
 // the previous statistics box, you can change its position
 // with these lines (if h is the pointer to the histogram):
 //
-//  Root > TPaveStats *st = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats")
+//  Root > TPaveStats *st = (TPaveStats*)h->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
 //
