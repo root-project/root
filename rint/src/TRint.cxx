@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.33 2004/05/11 00:19:59 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.34 2004/05/17 12:03:59 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -206,6 +206,7 @@ void TRint::Run(Bool_t retrn)
 
    // Process shell command line input files
    if (InputFiles()) {
+      Bool_t needGetlinemInit = kFALSE;
       TIter next(InputFiles());
       RETRY {
          retval = 0; error = 0;
@@ -226,7 +227,17 @@ void TRint::Run(Bool_t retrn)
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
             fNcmd++;
+
+            // The ProcessLine might throw an 'exception'.  In this case,
+            // GetLinem(kInit,"Root >") is called and we are jump back 
+            // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
+            needGetlinemInit = kFALSE;
             retval = ProcessLine(cmd, kFALSE, &error);
+
+            // The ProcessLine has successfully completed and we need
+            // to call Getlinem(kInit, GetPrompt());
+            needGetlinemInit = kTRUE;
+
             if (error != 0) break;
          }
       } ENDTRY;
@@ -238,7 +249,7 @@ void TRint::Run(Bool_t retrn)
 
       ClearInputFiles();
 
-      Getlinem(kInit, GetPrompt());
+      if (needGetlinemInit) Getlinem(kInit, GetPrompt());
    }
 
    if (QuitOpt()) {
