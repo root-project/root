@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.3 2000/09/05 10:57:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.4 2000/09/07 00:35:30 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -443,7 +443,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fHf->AddFrame(fV1, lo);
 
    TGVSplitter *splitter = new TGVSplitter(fHf);
-   splitter->SetFrame(fV1);
+   splitter->SetFrame(fV1, kTRUE);
    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(splitter);
    fWidgets->Add(lo);
