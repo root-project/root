@@ -58,38 +58,6 @@ extern "C" int G__cpp_dllrevG__stream() { return(G__CREATEDLLREV); }
 * Member function Interface Method
 *********************************************************/
 
-/*********************************************************
-* Class,struct,union,enum tag information setup
-*********************************************************/
-/* Setup class/struct taginfo */
-G__linked_taginfo G__G__streamLN_mbstate_t = { "mbstate_t" , 115 , -1 };
-G__linked_taginfo G__G__streamLN_fposlEmbstate_tgR = { "fpos<mbstate_t>" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_wstreampos = { "wstreampos" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_streamoff = { "streamoff" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_ios_base = { "ios_base" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLio_state = { "ios_base::io_state" , 101 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLopen_mode = { "ios_base::open_mode" , 101 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLseek_dir = { "ios_base::seek_dir" , 101 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLfmt_flags = { "ios_base::fmt_flags" , 101 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLevent = { "ios_base::event" , 101 , -1 };
-G__linked_taginfo G__G__streamLN_ios_basecLcLInit = { "ios_base::Init" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_char_traitslEchargR = { "char_traits<char>" , 115 , -1 };
-G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR = { "basic_istream<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgR = { "basic_ios<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgR = { "basic_streambuf<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR = { "basic_ostream<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry = { "basic_ostream<char,char_traits<char> >::sentry" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry = { "basic_istream<char,char_traits<char> >::sentry" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR = { "basic_filebuf<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ifstream<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ofstream<char,char_traits<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_string = { "string" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_stringbuf<char,char_traits<char>,allocator<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_istringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_ostringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_stringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
-G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR = { "basic_iostream<char,char_traits<char> >" , 99 , -1 };
-
 /* mbstate_t */
 // automatic default constructor
 static int G__mbstate_t_mbstate_t_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -3359,6 +3327,37 @@ extern "C" void G__cpp_setup_funcG__stream() {
   G__cpp_setup_func1();
 }
 
+/*********************************************************
+* Class,struct,union,enum tag information setup
+*********************************************************/
+/* Setup class/struct taginfo */
+G__linked_taginfo G__G__streamLN_mbstate_t = { "mbstate_t" , 115 , -1 };
+G__linked_taginfo G__G__streamLN_fposlEmbstate_tgR = { "fpos<mbstate_t>" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_wstreampos = { "wstreampos" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_streamoff = { "streamoff" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_ios_base = { "ios_base" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLio_state = { "ios_base::io_state" , 101 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLopen_mode = { "ios_base::open_mode" , 101 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLseek_dir = { "ios_base::seek_dir" , 101 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLfmt_flags = { "ios_base::fmt_flags" , 101 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLevent = { "ios_base::event" , 101 , -1 };
+G__linked_taginfo G__G__streamLN_ios_basecLcLInit = { "ios_base::Init" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_char_traitslEchargR = { "char_traits<char>" , 115 , -1 };
+G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR = { "basic_istream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ioslEcharcOchar_traitslEchargRsPgR = { "basic_ios<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_streambuflEcharcOchar_traitslEchargRsPgR = { "basic_streambuf<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR = { "basic_ostream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgRcLcLsentry = { "basic_ostream<char,char_traits<char> >::sentry" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgRcLcLsentry = { "basic_istream<char,char_traits<char> >::sentry" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_filebuflEcharcOchar_traitslEchargRsPgR = { "basic_filebuf<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ifstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ifstream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ofstreamlEcharcOchar_traitslEchargRsPgR = { "basic_ofstream<char,char_traits<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_string = { "string" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_stringbuflEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_stringbuf<char,char_traits<char>,allocator<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_istringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_ostringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR = { "basic_stringstream<char,char_traits<char>,allocator<char> >" , 99 , -1 };
+G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR = { "basic_iostream<char,char_traits<char> >" , 99 , -1 };
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableG__stream() {
