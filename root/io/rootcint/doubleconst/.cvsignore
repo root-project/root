@@ -1,6 +1,7 @@
 *~
 *.o
 *.so
+*.log
 *.a
 Makefile.temp
-ClusterSRCint.*
+CandClusterSRCint.*
