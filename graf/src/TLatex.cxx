@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.40 2003/09/30 10:09:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.41 2003/10/23 09:36:25 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1863,10 +1863,12 @@ Double_t TLatex::GetHeight() const
 {
 // return height of current pad in pixels
 
-   if (gPad->GetWw() < gPad->GetWh())
-      return gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
+   Double_t w = gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
+   Double_t h = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
+   if (w < h)
+      return w;
    else
-      return gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
+      return h;
 }
 
 //______________________________________________________________________________
