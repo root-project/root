@@ -240,12 +240,12 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   gBenchmark->Print("stress");
 #ifndef __CINT__
   const Int_t nr = 7;
-  const Double_t x_b12[] = { 10.,  30.,  50.,  100.,  300.,  500.,   700.};
-  const Double_t y_b12[] = {3.44, 5.02, 6.46, 12.21, 37.84,  65.01, 91.57};
+  const Double_t x_b12[] = { 10.,  30.,   50.,  100.,  300.,  500.,    700.};
+  const Double_t y_b12[] = {6.35, 9.21, 11.66, 21.03, 49.37, 137.39, 378.22};
 #else
   const Int_t nr = 7;
-  const Double_t x_b12[] = { 10.,  30.,  50.,  100.,  300.,  500.,   700.};
-  const Double_t y_b12[] = {9.99,10.78,11.02, 12.34, 30.03, 65.01,  91.57};
+  const Double_t x_b12[] = { 10.,  30.,   50.,  100.,  300.,  500.,    700.};
+  const Double_t y_b12[] = {9.99,10.78, 11.02, 21.03, 49.37, 137.39, 378.22};
 #endif
 
   TF1 f1("f1","pol3",0,1000);
@@ -1241,7 +1241,7 @@ void mstress_determinant(Int_t msize)
 
   if (gVerbose)
     cout << "\nCheck out the determinant of the Hilbert matrix";
-  TMatrixD H = THilbertMatrixD(3,3);
+  TMatrixDSym H = THilbertMatrixDSym(3);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
@@ -1249,7 +1249,7 @@ void mstress_determinant(Int_t msize)
   }
 
   H.ResizeTo(4,4);
-  H = THilbertMatrixD(4,4);
+  H = THilbertMatrixDSym(4);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
@@ -1257,7 +1257,7 @@ void mstress_determinant(Int_t msize)
   }
 
   H.ResizeTo(5,5);
-  H = THilbertMatrixD(5,5);
+  H = THilbertMatrixDSym(5);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
@@ -1272,6 +1272,13 @@ void mstress_determinant(Int_t msize)
   }
 
   if (gVerbose) {
+    TDecompChol chol(H);
+    Double_t d1,d2;
+    chol.Det(d1,d2);
+    cout  << "\n chol det = " << d1*TMath::Power(2.0,d2) <<endl;
+  }
+
+  if (gVerbose) {
     TDecompSVD svd(H);
     Double_t d1,d2;
     svd.Det(d1,d2);
@@ -1279,7 +1286,7 @@ void mstress_determinant(Int_t msize)
   }
 
   H.ResizeTo(7,7);
-  H = THilbertMatrixD(7,7);
+  H = THilbertMatrixDSym(7);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
@@ -1287,7 +1294,7 @@ void mstress_determinant(Int_t msize)
   }
 
   H.ResizeTo(9,9);
-  H = THilbertMatrixD(9,9);
+  H = THilbertMatrixDSym(9);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
@@ -1295,7 +1302,7 @@ void mstress_determinant(Int_t msize)
   }
 
   H.ResizeTo(10,10);
-  H = THilbertMatrixD(10,10);
+  H = THilbertMatrixDSym(10);
   H.SetTol(1.0e-20);
   if (gVerbose) {
     cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
@@ -1411,8 +1418,8 @@ void mstress_mm_multiplications()
       if (verbose)
         cout << "Check n * m  == n * m_sym; m_sym * n == m * n; m_sym * m_sym == m * m" <<endl;
 
-      const TMatrixD n     = THilbertMatrixD(0,msize-1,0,msize-1);
-      const TMatrixD m     = n;
+      const TMatrixD     n     = THilbertMatrixD(0,msize-1,0,msize-1);
+      const TMatrixD     m     = n;
       const TMatrixDSym  m_sym = THilbertMatrixDSym(0,msize-1);
 
       const TMatrixD nm1 = n * m_sym;
@@ -1638,9 +1645,9 @@ void mstress_vm_multiplications()
 {
   Bool_t ok = kTRUE;
 
-  Int_t iloop = 0;
+  Int_t iloop = gNrLoop;
   Int_t nr    = 0;
-  while (iloop <= gNrLoop) {
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Double_t epsilon = EPSILON*msize/100;
@@ -1708,7 +1715,7 @@ void mstress_vm_multiplications()
     if (nr >= Int_t(1.0e+3/msize/msize)) {
 #endif
       nr = 0;
-      iloop++;
+      iloop--;
     } else 
       nr++;
 
@@ -1733,9 +1740,9 @@ void mstress_inversion()
 {
   Bool_t ok = kTRUE;
 
-  Int_t iloop = 0;
+  Int_t iloop = gNrLoop;
   Int_t nr    = 0;
-  while (iloop <= gNrLoop) {
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Double_t epsilon = EPSILON*msize/10;
@@ -1801,6 +1808,22 @@ void mstress_inversion()
       ok &= VerifyMatrixIdentity(mim,unit,verbose,epsilon);
 
       if (verbose)
+        cout << "Test inversion through the matrix decompositions" << endl;
+
+      TMatrixDSym ms = THilbertMatrixDSym(msize);
+      TMatrixDDiag(ms) += 1;
+      TMatrixD inv_svd (msize,msize); TDecompSVD  svd (ms); svd.Invert(inv_svd);
+      ok &= VerifyMatrixIdentity(inv_svd,m,verbose,epsilon);
+      TMatrixD inv_lu  (msize,msize); TDecompLU   lu  (ms); lu.Invert(inv_lu);
+      if (msize <= 10) {
+        ok &= VerifyMatrixIdentity(inv_lu,m,verbose,epsilon);
+        TMatrixD inv_chol(msize,msize); TDecompChol chol(ms); chol.Invert(inv_chol);
+        ok &= VerifyMatrixIdentity(inv_chol,m,verbose,epsilon);
+      }
+      TMatrixD inv_qrh (msize,msize); TDecompQRH  qrh (ms); qrh.Invert(inv_qrh);
+      ok &= VerifyMatrixIdentity(inv_qrh,m,verbose,epsilon);
+
+      if (verbose)
         cout << "\tcheck to see M * M^(-1) is E" << endl;
       TMatrixD mmi = morig; mmi *= m;
       ok &= VerifyMatrixIdentity(mmi,unit,verbose,epsilon);
@@ -1812,7 +1835,7 @@ void mstress_inversion()
     if (nr >= Int_t(1.0e+3/msize/msize)) {
 #endif
       nr = 0;
-      iloop++;
+      iloop--;
     } else 
       nr++;
 
@@ -1867,8 +1890,8 @@ void mstress_matrix_io()
   TFile *f = new TFile("vmatrix.root", "RECREATE");
 
   Char_t name[80];
-  Int_t iloop = 0;
-  while (iloop <= gNrLoop) {
+  Int_t iloop = gNrLoop;
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Int_t verbose = (gVerbose && iloop==gNrLoop);
@@ -1902,7 +1925,7 @@ void mstress_matrix_io()
 
     delete [] pattern_array;
 
-    iloop++;
+    iloop--;
   }
 
   if (gVerbose)
@@ -1913,8 +1936,8 @@ void mstress_matrix_io()
     cout << "\nOpen database in read-only mode and read matrix" << endl;
   TFile *f1 = new TFile("vmatrix.root");
 
-  iloop = 0;
-  while (iloop <= gNrLoop) {
+  iloop = gNrLoop;
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Int_t verbose = (gVerbose && iloop==gNrLoop);
@@ -1934,7 +1957,7 @@ void mstress_matrix_io()
     ok &= ((*mar) == m) ? kTRUE : kFALSE;
     ok &= ((*msr) == m) ? kTRUE : kFALSE;
 
-    iloop++;
+    iloop--;
   }
 
   delete f1;
@@ -2524,8 +2547,8 @@ void vstress_vector_io()
   TFile *f = new TFile("vvector.root","RECREATE");
 
   Char_t name[80];
-  Int_t iloop = 0;
-  while (iloop <= gNrLoop) {
+  Int_t iloop = gNrLoop;
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Int_t verbose = (gVerbose && iloop==gNrLoop);
@@ -2549,7 +2572,7 @@ void vstress_vector_io()
 
     delete [] pattern_array;
 
-    iloop++;
+    iloop--;
   }
 
   if (gVerbose)
@@ -2560,8 +2583,8 @@ void vstress_vector_io()
     cout << "\nOpen database in read-only mode and read vector" << endl;
   TFile *f1 = new TFile("vvector.root");
 
-  iloop = 0;
-  while (iloop <= gNrLoop) {
+  iloop = gNrLoop;
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
     const Int_t verbose = (gVerbose && iloop==gNrLoop);
@@ -2579,7 +2602,7 @@ void vstress_vector_io()
     ok &= ((*vr) == v)  ? kTRUE : kFALSE;
     ok &= ((*var) == v) ? kTRUE : kFALSE;
 
-    iloop++;
+    iloop--;
   }
 
   delete f1;
@@ -2778,14 +2801,13 @@ void astress_lineqn()
 
   Bool_t ok = kTRUE;
 
-  Int_t iloop = 0;
+  Int_t iloop = gNrLoop;
   Int_t nr    = 0;
 
-  while (iloop <= gNrLoop) {
+  while (iloop >= 0) {
     const Int_t msize = gSizeA[iloop];
 
-    //const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
-    const Int_t verbose = (gVerbose && nr==0);
+    const Int_t verbose = (gVerbose && nr==0 && iloop==gNrLoop);
 
     if (verbose)
       cout << "\nSolve Ax=b for size = " << msize <<endl;
@@ -2793,12 +2815,9 @@ void astress_lineqn()
     // Since The Hilbert matrix is accuracy "challenged", I will use a diagonaly
     // dominant one fore sizes > 100, otherwise the verification might fail
 
-    TMatrixD m_orig = THilbertMatrixD(msize,msize);
-    if (msize > 100) {
-      TMatrixDDiag diag = TMatrixDDiag(m_orig,0);
-      diag += 1.;
-    }
-    const TMatrixD m = m_orig;
+    TMatrixDSym m = THilbertMatrixDSym(msize);
+    TMatrixDDiag diag = TMatrixDDiag(m,0);
+    diag += 1.;
 
     TVectorD rowsum(msize); rowsum.Zero();
     TVectorD colsum(msize); colsum.Zero();
@@ -2816,11 +2835,23 @@ void astress_lineqn()
       b = rowsum;
       lu.Solve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
       b = colsum;
       lu.TransSolve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+    }
+
+    {
+      TDecompChol chol(m,1.0e-20);
+      b = rowsum;
+      chol.Solve(b);
+      if (msize < 10)
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
+      b = colsum;
+      chol.TransSolve(b);
+      if (msize < 10)
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
     }
 
     {
@@ -2828,11 +2859,11 @@ void astress_lineqn()
       b = rowsum;
       qrh.Solve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
       b = colsum;
       qrh.TransSolve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
     }
 
     {
@@ -2840,11 +2871,11 @@ void astress_lineqn()
       b = rowsum;
       svd.Solve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
       b = colsum;
       svd.TransSolve(b);
       if (msize < 10)
-        ok &= VerifyVectorValue(b,1.0,verbose,5.0e-3);
+        ok &= VerifyVectorValue(b,1.0,verbose,msize*EPSILON);
     }
 
 #ifndef __CINT__
@@ -2853,7 +2884,7 @@ void astress_lineqn()
     if (nr >= Int_t(1.0e+3/msize/msize)) {
 #endif
       nr = 0;
-      iloop++;
+      iloop--;
     } else
       nr++;
 
@@ -2996,7 +3027,7 @@ void astress_decomp_io(Int_t msize)
 
   Bool_t ok = kTRUE;
 
-  const TMatrixD m = THilbertMatrixD(msize,msize);
+  const TMatrixDSym m = THilbertMatrixDSym(msize);
   TVectorD rowsum(msize); rowsum.Zero();
   TVectorD colsum(msize); colsum.Zero();
 
@@ -3012,12 +3043,14 @@ void astress_decomp_io(Int_t msize)
 
   TFile *f = new TFile("vdecomp.root", "RECREATE");
 
-  TDecompLU lu(m,1.0e-20);
-  TDecompQRH qrh(m,1.0e-20);
-  TDecompSVD svd(m);
+  TDecompLU   lu(m,1.0e-20);
+  TDecompQRH  qrh(m,1.0e-20);
+  TDecompChol chol(m,1.0e-20);
+  TDecompSVD  svd(m);
 
   lu.Write("lu");
   qrh.Write("qrh");
+  chol.Write("chol");
   svd.Write("svd");
 
   if (gVerbose)
@@ -3041,6 +3074,20 @@ void astress_decomp_io(Int_t msize)
     lu.TransSolve(b1);
     b2 = colsum;
     rlu->TransSolve(b2);
+    ok &= (b1 == b2);
+  }
+
+  {
+    TDecompChol *rchol = (TDecompChol*) f1->Get("chol");
+    TVectorD b1(rowsum);
+    chol.Solve(b1);
+    TVectorD b2(rowsum);
+    rchol->Solve(b2);
+    ok &= (b1 == b2);
+    b1 = colsum;
+    chol.TransSolve(b1);
+    b2 = colsum;
+    rchol->TransSolve(b2);
     ok &= (b1 == b2);
   }
 
