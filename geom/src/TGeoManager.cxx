@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.81 2004/04/26 13:06:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.82 2004/05/12 07:02:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2552,7 +2552,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // convert current point and direction to local reference
    Int_t iact = 3;
    fStep = TGeoShape::Big();
-   fNextNode = 0;
+//   fNextNode = 0;
    Bool_t computeGlobal = kFALSE;
    if (stepmax<1E20) {
       if (stepmax <= 0) {
@@ -2601,7 +2601,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          fNextNode = fTopNode;
          return fTopNode;
       }
-      fNextNode = 0;
+      fNextNode = fTopNode;
       return 0;   
    }
    fCache->MasterToLocal(fPoint, &point[0]);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.27 2004/04/22 22:24:08 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.28 2004/04/23 12:42:06 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -594,6 +594,7 @@ TGeoCacheDummy::TGeoCacheDummy()
    fNodeBranch = 0;
    fMatrixBranch = 0;
    fMPB = 0;
+   fMatrix = 0;
 }
 
 //_____________________________________________________________________________
@@ -641,7 +642,7 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
    fNode = newnode;
    fNodeBranch[fLevel] = fNode;
    TGeoMatrix  *local = newnode->GetMatrix();
-   TGeoHMatrix *newmat = fMPB[fLevel+1];
+   TGeoHMatrix *newmat = fMPB[fLevel];
    if (!local->IsIdentity()) {
       *newmat = fMatrix;
       newmat->Multiply(local);
@@ -1582,6 +1583,7 @@ TGeoCacheStateDummy::TGeoCacheStateDummy()
 //--- Default ctor
    fNodeBranch = 0;
    fMatrixBranch = 0;
+   fMatPtr = 0;
 }
 
 //_____________________________________________________________________________
@@ -1590,6 +1592,7 @@ TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t /*capacity*/)
 //--- ctor
    fNodeBranch = new TGeoNode *[30];
    fMatrixBranch = new TGeoHMatrix *[30];
+   fMatPtr = new TGeoHMatrix *[30];
    for (Int_t i=0; i<30; i++)
       fMatrixBranch[i] = new TGeoHMatrix("global");
    fPoint = new Double_t[3];
@@ -1604,6 +1607,7 @@ TGeoCacheStateDummy::~TGeoCacheStateDummy()
       for (Int_t i=0; i<30; i++)
          delete fMatrixBranch[i];
       delete [] fMatrixBranch;
+      delete [] fMatPtr;
       delete [] fPoint;
    }
 }
@@ -1619,8 +1623,15 @@ void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, D
    TGeoHMatrix **mat_branch  = (TGeoHMatrix **) cache->GetMatrices();
 
    memcpy(fNodeBranch, node_branch+fStart, (level+1-fStart)*sizeof(TGeoNode *));
-   for (Int_t i=0; i<level+1-fStart; i++)
-      *fMatrixBranch[i] = mat_branch[i+fStart];
+   memcpy(fMatPtr, mat_branch+fStart, (level+1-fStart)*sizeof(TGeoHMatrix *));
+   TGeoHMatrix *last = 0;
+   TGeoHMatrix *current;
+   for (Int_t i=0; i<level+1-fStart; i++) {
+      current = mat_branch[i+fStart];
+      if (current == last) continue;
+      *fMatrixBranch[i] = current;
+      last = current;
+   }   
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
 }
@@ -1635,8 +1646,15 @@ Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
    TGeoHMatrix **mat_branch  = (TGeoHMatrix **) cache->GetMatrices();
 
    memcpy(node_branch+fStart, fNodeBranch, (level+1-fStart)*sizeof(TGeoNode *));
-   for (Int_t i=0; i<level+1-fStart; i++)
-      *mat_branch[i+fStart] = fMatrixBranch[i];
+   memcpy(mat_branch+fStart, fMatPtr, (level+1-fStart)*sizeof(TGeoHMatrix *));
+   TGeoHMatrix *last = 0;
+   TGeoHMatrix *current;
+   for (Int_t i=0; i<level+1-fStart; i++) {
+      current = mat_branch[i+fStart];
+      if (current == last) continue;
+      *current = fMatrixBranch[i];
+      last = current;
+   }   
    if (point) memcpy(point, fPoint, 3*sizeof(Double_t));
    return fOverlapping;
 }

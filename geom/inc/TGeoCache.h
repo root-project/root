@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.18 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.19 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -73,6 +73,7 @@ class TGeoCacheStateDummy : public TGeoCacheState
 public:
    TGeoNode           **fNodeBranch;    // last node branch stored
    TGeoHMatrix        **fMatrixBranch;  // global matrices for last branch
+   TGeoHMatrix        **fMatPtr;        // array of matrix pointers
 
 public:
    TGeoCacheStateDummy();
