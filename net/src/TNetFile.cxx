@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.16 2001/02/07 16:08:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.17 2001/02/08 16:10:34 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -68,7 +68,7 @@
 #include "TSysEvtHandler.h"
 #include "Bytes.h"
 
-// Must match order of ERootdErrors enum define in rootd.h
+// Must match order of ERootdErrors enum defined in rootd.h
 const char *kRootdErrStr[] = {
    "undefined error",
    "file not found",
