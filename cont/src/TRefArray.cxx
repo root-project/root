@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.16 2002/08/20 15:17:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.17 2002/12/02 18:50:02 rdm Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -464,7 +464,7 @@ UInt_t TRefArray::GetUID(Int_t at) const
 }
 
 //______________________________________________________________________________
-Int_t TRefArray::IndexOf(const TObject *) const
+Int_t TRefArray::IndexOf(const TObject *obj) const
 {
    // obj != 0 Return index of object in array.
    //          Returns lowerBound-1 in case array doesn't contain the obj.
@@ -472,18 +472,17 @@ Int_t TRefArray::IndexOf(const TObject *) const
    // obj == 0 Return the index of the first empty slot.
    //          Returns lowerBound-1 in case array doesn't contain any empty slot.
 
-/*
    Int_t i;
    if (obj) {
      for (i = 0; i < fSize; i++)
-        if (fUIDs[i] && fUIDs[i]->IsEqual(obj))
+        if (fUIDs[i] && fPID->GetObjectWithID(fUIDs[i]) == obj)
            return i+fLowerBound;
    } else {    // Look for the first empty slot
      for (i = 0; i < fSize; i++)
         if (!fUIDs[i])
            return i+fLowerBound;
    }
-*/
+
    return fLowerBound-1;
 }
 
@@ -590,6 +589,7 @@ void TRefArray::Sort(Int_t)
    // If objects in array are sortable (i.e. IsSortable() returns true
    // for all objects) then sort array.
 
+   Error("Sort","Function not yet implemented");
 /*
    if (GetAbsLast() == -1 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
@@ -613,6 +613,7 @@ Int_t TRefArray::BinarySearch(TObject *, Int_t)
    // Find object using a binary search. Array must first have been sorted.
    // Search can be limited by setting upto to desired index.
 
+   Error("BinarySearch","Function not yet implemented");
 /*
    Int_t   base, position, last, result = 0;
    TObject *op2;
