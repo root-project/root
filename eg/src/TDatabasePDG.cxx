@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.6 2001/03/05 09:22:15 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.7 2001/03/05 10:16:50 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TROOT.h"
@@ -65,10 +65,12 @@ TDatabasePDG::~TDatabasePDG()
 {
    // Cleanup the PDG database.
 
-   fParticleList->Delete();
-   delete fParticleList;
+   if (fParticleList) {
+      fParticleList->Delete();
+      delete fParticleList;
+   }
 				// classes do not own particles...
-   delete fListOfClasses;
+   if (fListOfClasses) delete fListOfClasses;
    gROOT->GetListOfSpecials()->Remove(this);
    fgInstance = 0;
 }
