@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.6 2001/01/25 08:12:56 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.7 2002/02/10 20:02:17 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -180,7 +180,7 @@ private:
   Double_t fX, fY, fZ;
   // The components.
 
-  ClassDef(TVector3,3) // A three vector
+  ClassDef(TVector3,3) // A 3D physics vector
 
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.h,v 1.2 2001/05/29 20:55:28 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.h,v 1.3 2001/05/30 06:03:43 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 /*************************************************************************
@@ -38,7 +38,7 @@ public:
 
      TVolumePosition        *UpdateTempMatrix(TVolumePosition *curPosition);
      void                    ResetPosition(Int_t level=0, TVolumePosition *newPosition=0);
-     ClassDef(TVolumeViewIter,0)
+     ClassDef(TVolumeViewIter,0)  // Volume view iterator
 };
 
 inline Bool_t  TVolumeViewIter::Notify() { return TDataSetIter::Notify();}

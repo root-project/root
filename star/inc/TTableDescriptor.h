@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.4 2001/05/13 11:10:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.5 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -18,9 +18,9 @@
 class TTableDescriptor : public TTable {
   protected:
      friend class TTable;
-     TClass  *fRowClass;                  // TClass defining 
+     TClass  *fRowClass;                  // TClass defining
                                           // the table row C-structure
-     TTableDescriptor *fSecondDescriptor; // shadow descriptor 
+     TTableDescriptor *fSecondDescriptor; // shadow descriptor
                                           // to back TTable::Streamer
      virtual void Init(TClass *classPtr);
 
@@ -75,7 +75,7 @@ class TTableDescriptor : public TTable {
     tableDescriptor_st *begin() const  {                      return GetNRows()? GetTable(0):0;}
     tableDescriptor_st *end()   const  {Long_t i = GetNRows(); return          i? GetTable(i):0;}
 
-    ClassDef(TTableDescriptor,0) // descrpitor defining the internal layout of TTable objects
+    ClassDef(TTableDescriptor,0) // Descriptor defining the internal layout of TTable objects
 };
 
 //______________________________________________________________________________

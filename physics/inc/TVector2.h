@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.4 2000/12/19 09:23:29 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.5 2001/12/02 09:59:15 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -38,7 +38,7 @@ class TVector2 : public TObject {
 //  data members
 //------------------------------------------------------------------------------
 protected:
-					
+
   Double_t    fX;    // components of the vector
   Double_t    fY;
 //------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ public:
 
 
 
-				
-  ClassDef(TVector2,3)  // a two dim physics vector
+
+  ClassDef(TVector2,3)  // A 2D physics vector
 
 };
 
@@ -171,7 +171,7 @@ inline Double_t operator * (const TVector2& v1, const TVector2& v2) {
 
 inline TVector2     operator / (const TVector2& v, Double_t s) {
   return TVector2 (v.fX/s,v.fY/s);
-}	
+}
 
 inline Double_t   operator ^ (const TVector2& v1, const TVector2& v2) {
   return  v1.fX*v2.fY-v1.fY*v2.fX;

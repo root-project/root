@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.7 2002/01/07 18:11:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.8 2002/02/07 09:10:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -51,9 +51,9 @@ protected:
     Int_t       fNcuts;             //Number of graphical cuts
     Int_t       fCutsOpt[kMaxCuts]; //sign of each cut
     TCutG      *fCuts[kMaxCuts];    //Pointers to graphical cuts
-    TObjArray  *fStack;             //Pointer to stack of histograms (if any) 
+    TObjArray  *fStack;             //Pointer to stack of histograms (if any)
     TPaveStats *fStats;             //Pointer to the current stats pave (if any)
-       
+
 public:
     THistPainter();
     virtual ~THistPainter();
@@ -102,7 +102,7 @@ public:
     virtual void       SetStack(TObjArray *stack) {fStack = stack;}
     virtual Int_t      TableInit();
 
-    ClassDef(THistPainter,0)  //helper class to draw histograms
+    ClassDef(THistPainter,0)  //Helper class to draw histograms
 };
 
 #endif

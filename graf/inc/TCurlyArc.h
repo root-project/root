@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.2 2000/06/13 10:47:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
-   ClassDef(TCurlyArc,2) // a curly arc
+   ClassDef(TCurlyArc,2) // A curly arc
 };
 
 #endif

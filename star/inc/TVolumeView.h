@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.1.1.2 2000/12/18 21:05:29 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.h,v 1.4 2001/02/07 08:18:15 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
   virtual void     SavePrimitive(ofstream &out, Option_t *option="");
   virtual void     SetVisibility(Int_t vis=1); // *MENU*
   virtual void     Sizeof3D() const;
-  ClassDef(TVolumeView,1)
+  ClassDef(TVolumeView,1)  // Special kind of TDataSet
 };
 
 inline void    TVolumeView::Add(TDataSet *dataset){ assert(0);}

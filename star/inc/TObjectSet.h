@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.3 2001/05/07 22:16:08 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TObjectSet.h,v 1.2 2001/05/13 11:10:06 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -18,7 +18,7 @@
 //  TObjectSet  - is a container TDataSet                                           //
 //                  This means this object has an extra pointer to an embedded      //
 //                  TObject.                                                        //
-//  Terminology:    This TOvjectSet may be an OWNER of the embeded TObject          //
+//  Terminology:    This TObjectSet may be an OWNER of the embeded TObject          //
 //                  If the container is the owner it can delete the embeded object  //
 //                  otherwsie it leaves that object "as is"                         //
 //                                                                                  //
@@ -38,7 +38,7 @@ public:
   virtual void     Delete(Option_t *opt="");
   virtual Bool_t   DoOwner(Bool_t done=kTRUE);
   virtual Long_t   HasData() const;
-  virtual TObject *GetObject() const; 
+  virtual TObject *GetObject() const;
   virtual TDataSet *Instance() const;
   virtual Bool_t   IsOwner() const;
   virtual void     SetObject(TObject *obj);
@@ -46,11 +46,11 @@ public:
 
   static TObjectSet *instance();
 
-  ClassDef(TObjectSet,1)
+  ClassDef(TObjectSet,1)  // Set of objects
 };
 
 inline TObjectSet *TObjectSet::instance()
-{ return new TObjectSet();}
+{ return new TObjectSet(); }
 
 inline Long_t   TObjectSet::HasData()   const {return fObj ? 1 : 0;}
 inline TObject *TObjectSet::GetObject() const {return fObj;}

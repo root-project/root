@@ -1,18 +1,29 @@
+// @(#)root/physics:$Name:$:$Id:$
+// Author: Adrian Bevan   10/02/2002
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TFeldmanCousins
 #define ROOT_TFeldmanCousins
 
 ////////////////////////////////////////////////////////////////////////////
 // TFeldmanCousins
 //
-// class to calculate the CL upper limit using 
+// Class to calculate the CL upper limit using
 // the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
 //
-// The default confidence interval calvculated using this method is 90% 
-// This is set either by having a default the constructor, or using the 
+// The default confidence interval calculated using this method is 90%
+// This is set either by having a default the constructor, or using the
 // appropriate fraction when instantiating an object of this class (e.g. 0.9)
 //
 // The simple extension to a gaussian resolution function bounded at zero
-// has not been addressed as yet -> `time is of the essence' as they write 
+// has not been addressed as yet -> `time is of the essence' as they write
 // on the wall of the maze in that classic game ...
 //
 // Author: Adrian Bevan, Liverpool University
@@ -20,9 +31,16 @@
 // Copyright Liverpool University 2001       bevan@slac.stanford.edu
 ///////////////////////////////////////////////////////////////////////////
 
-#include "TMath.h"
+#ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TMath
+#include "TMath.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
+
 
 ////////////////////////////////////////
 //    VARIABLES THAT CAN BE ALTERED   //
@@ -81,12 +99,12 @@ public:
   inline Double_t GetNobserved(void)  { return fNobserved;   }
   inline Double_t GetNbackground(void){ return fNbackground; }
   inline Double_t GetCL(void)         { return fCL;          }
-  
+
   inline void SetNobserved(Double_t NObs)  { fNobserved   = NObs;  }
   inline void SetNbackground(Double_t Nbg) { fNbackground = Nbg;   }
   inline void SetCL(Double_t newCL)        { fCL          = newCL; }
-  
-  ClassDef(TFeldmanCousins,1)
+
+  ClassDef(TFeldmanCousins,1)  // Calculate the confidence level using the Feldman-Cousins method
 };
 
 #endif

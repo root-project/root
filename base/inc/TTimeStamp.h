@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.4 2002/02/07 18:05:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.h,v 1.5 2002/02/08 17:50:52 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -163,7 +163,7 @@ public:
    static Bool_t  IsLeapYear(Int_t year);
    static void    DumpTMStruct(const tm_t &tmstruct);
 
-   ClassDef(TTimeStamp,1)
+   ClassDef(TTimeStamp,1)  //Encapsulates seconds and ns since EPOCH
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.3 2001/02/26 10:28:53 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.4 2001/04/06 07:27:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TTVLVEntry                                                        //
+// TTVLVEntry                                                           //
 //                                                                      //
 // This class represent entries that goes into the TreeViewer           //
 // listview container. It subclasses TGLVEntry and adds 2               //
@@ -64,7 +64,7 @@ protected:
    TString        fConvName;   // name converted into true expressions
    TGToolTip     *fTip;        // tool tip associated with item
    Bool_t         fIsCut;      // flag for cut type items
-   TGItemContext *fContext;    // associated context menu 
+   TGItemContext *fContext;    // associated context menu
 
 protected:
    Bool_t         FullConverted();
@@ -101,11 +101,11 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//   TTVLVContainer                                                          //
+//   TTVLVContainer                                                     //
 //                                                                      //
 // This class represent the list view container for the                 //
 // TreeView class. It is a TGLVContainer with item dragging             //
-// capabilities for the TTVLVEntry objects inside                    //
+// capabilities for the TTVLVEntry objects inside                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -140,7 +140,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
 
-   ClassDef(TTVLVContainer,0)  // a dragging-capable LVContainer
+   ClassDef(TTVLVContainer,0)  // A dragging-capable LVContainer
 };
 
 
