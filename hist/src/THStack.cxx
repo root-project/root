@@ -152,18 +152,18 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*- Loop on the list of histograms
    if (!fHists) return distance;
    TH1 *h = 0;
+   const char *doption = GetDrawOption();
    Int_t nhists = fHists->GetEntriesFast();
    for (Int_t i=0;i<nhists;i++) {
       h = (TH1*)fHists->At(i);
-      if (fStack) {
-          //if (h->GetDimension() < 2) h = (TH1*)fStack->At(i);
-          h = (TH1*)fStack->At(i);
-          //else {gPad->SetSelected(fHistogram); return 5;}
-       }
-       Int_t dist = h->DistancetoPrimitive(px,py);
-      if (dist < kMaxDiff) {gPad->SetSelected(fHists->At(i)); return dist;}
+      if (fStack && !strstr(doption,"nostack")) h = (TH1*)fStack->At(i);
+      Int_t dist = h->DistancetoPrimitive(px,py);
+      if (dist < kMaxDiff) {
+         gPad->SetSelected(fHists->At(i)); 
+         gPad->SetCursor(kPointer);
+         return dist;
+      }
    }
-   //gPad->SetSelected(fHistogram);
    return distance;
 }
 
@@ -317,7 +317,9 @@ void THStack::Paint(Option_t *option)
    char loption[32];
    sprintf(loption,"%s",opt.Data());
    char *nostack = strstr(loption,"nostack");
-   if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
+   // do not delete the stack. Another pad may contain the same object
+   // drawn in stack mode!
+   //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
    
    Double_t themax = GetMaximum(option);
    Double_t themin = GetMinimum(option);
