@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.2 2001/06/19 02:17:19 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.3 2001/06/23 01:22:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,7 +14,6 @@
 // 
 
 #include <iostream.h>
-#include <complex.h>
 #include "RooFitModels/RooGaussModel.hh"
 #include "RooFitCore/RooMath.hh"
 
@@ -61,6 +60,7 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 Double_t RooGaussModel::evaluate(const RooDataSet* dset) const 
 {  
+  static Double_t root2(sqrt(2)) ;
   // Special case: no convolution
   if (_basisCode==noBasis) {
     Double_t xprime = (x-mean)/sigma ;
@@ -71,14 +71,20 @@ Double_t RooGaussModel::evaluate(const RooDataSet* dset) const
   Double_t sign = (_basisCode==expBasisPlus||_basisCode==sinBasisPlus||_basisCode==cosBasisPlus)?-1:1 ;
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   Double_t xprime = sign*(x-mean)/tau ;
-  Double_t c = sigma/(sqrt(2)*tau) ; 
+  Double_t c = sigma/(root2*tau) ; 
   Double_t u = xprime/(2*c) ;
 
   Double_t result ;
   if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {
+    cout << "RooGaussModel::evaluate(" << GetName() << "): expBasis" << endl ;
     result = 0.25/tau * exp(xprime+c*c) * erfc(u+c) ;
     return result ;
   }
+//       RFT Implementation
+//       s= -sign*(tval - bias)/tau;
+//       c= sigma/(_root2*tau);
+//       result+= frac*exp(s + c*c)*erfc(0.5*s/c + c);
+
 
   Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
   RooComplex evalTerm = evalCerf(swt,u,c) ;    
@@ -143,21 +149,32 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   // Calculate intermediate variables
   Double_t sign = (_basisCode==expBasisPlus)?-1:1 ;
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-  Double_t c = sigma/(sqrt(2)*tau) ; 
+  Double_t c = sigma/(root2*tau) ; 
   Double_t xpmin = sign*(x.min()-mean)/tau ;
   Double_t xpmax = sign*(x.max()-mean)/tau ;
+  Double_t umin = xpmin/(2*c) ;
+  Double_t umax = xpmax/(2*c) ;
 
   // EXP basis function integrals
   if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {   
-    Double_t result = sign * 0.25 * exp(c*c) * ( erf(xpmax/(2*c)) - erf(xpmin/(2*c)) 
-						 + exp(xpmax)*erfc(xpmax/(2*c)+c)
-						 - exp(xpmin)*erfc(xpmin/(2*c)+c) ) ;     
+    cout << "RooGaussModel::evaluate(" << GetName() << "): expBasis integral" << endl ;
+    Double_t result = sign * 0.25 * ( erf(umax) - erf(umin) + 
+                                      exp(c*c) * ( exp(xpmax)*erfc(umax+c)
+						 - exp(xpmin)*erfc(umin+c) )) ;     
     return result ;
   }
 
+//       RFT Implementation
+//       c= sigma/(_root2*tau);
+//       y1= -sign*(t1 - bias)/tau;
+//       y2= -sign*(t2 - bias)/tau;
+//       u1= y1/(2*c);
+//       u2= y2/(2*c);
+//       result+= frac*(exp(c*c)*(exp(y1)*erfc(u1+c)-exp(y2)*erfc(u2+c))+erf(u1)-erf(u2));
+//       ...
+//       result*= tau*sign ;
+
   // Calculate additional intermediate results for oscillating terms
-  Double_t umin = xpmin/(2*c) ;
-  Double_t umax = xpmax/(2*c) ;
   Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
   RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
 
