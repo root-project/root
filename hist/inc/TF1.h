@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.12 2001/06/05 13:49:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.13 2001/06/27 10:34:16 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -119,6 +119,7 @@ public:
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
+   virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax);
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}

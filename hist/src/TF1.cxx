@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.20 2001/06/05 13:49:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.21 2001/06/27 10:34:15 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1499,6 +1499,16 @@ void TF1::Print(Option_t *option) const
 //*-*                  ==================================
    TFormula::Print(option);
    if (fHistogram) fHistogram->Print(option);
+}
+
+//______________________________________________________________________________
+void TF1::ReleaseParameter(Int_t ipar)
+{
+// Release parameter number ipar If used in a fit, the parameter
+// can vary freely. The parameter limits are reset to 0,0.
+
+   if (ipar < 0 || ipar > fNpar-1) return;
+   SetParLimits(ipar,0,0);
 }
 
 //______________________________________________________________________________
