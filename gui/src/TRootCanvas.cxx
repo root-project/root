@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.56 2004/10/15 15:36:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.57 2004/10/19 17:13:27 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TGLabel.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
+#include "TError.h"
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"
@@ -327,13 +328,19 @@ void TRootCanvas::CreateCanvas(const char *name)
    fFileSaveMenu->AddEntry(Form("%s.&root",name), kFileSaveAsRoot);
    fFileSaveMenu->AddEntry(Form("%s.&xml",name),  kFileSaveAsXML);
 
-   TImage *img = TImage::Create();
-   if (img) {
+   static Int_t img = 0;
+
+   if (!img) {
+      Int_t sav = gErrorIgnoreLevel;
+      gErrorIgnoreLevel = kFatal;
+      img = TImage::Create() ? 1 : -1;
+      gErrorIgnoreLevel = sav;
+   }
+   if (img > 0) {
       fFileSaveMenu->AddEntry(Form("%s.xp&m",name),  kFileSaveAsXPM);
       fFileSaveMenu->AddEntry(Form("%s.&jpg",name),  kFileSaveAsJPG);
       fFileSaveMenu->AddEntry(Form("%s.p&ng",name),  kFileSaveAsPNG);
       fFileSaveMenu->AddEntry(Form("%s.&tiff",name),  kFileSaveAsTIFF);
-      delete img;
    }
 
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());
