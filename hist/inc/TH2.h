@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.24 2003/04/19 16:59:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.25 2003/07/02 21:18:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -31,6 +31,9 @@ class TMatrixD;
 
 class TH2 : public TH1 {
 
+private:
+    TH2(const TH2&); // Intentionally not implemented
+   
 protected:
    Stat_t     fScalefactor;     //Scale factor
    Stat_t     fTsumwy;          //Total Sum of weight*Y

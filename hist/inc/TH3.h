@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.24 2003/04/19 16:59:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.25 2003/07/02 21:18:21 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -31,6 +31,9 @@
 
 
 class TH3 : public TH1, public TAtt3D {
+
+private:
+    TH3(const TH3&); // Intentionally not implemented
 
 protected:
 

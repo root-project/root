@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.157 2003/08/20 06:56:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.158 2003/10/02 20:28:54 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -564,6 +564,12 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
+}
+
+//______________________________________________________________________________
+TH1::TH1(const TH1 &) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
+{
+   // Intentionally not implemented
 }
 
 //______________________________________________________________________________
