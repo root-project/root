@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.12 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.13 2003/01/23 14:25:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -507,7 +507,7 @@ void TGeoTube::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::Safety(Double_t *, Bool_t in) const
+Double_t TGeoTube::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1227,7 +1227,7 @@ void TGeoTubeSeg::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) con
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::Safety(Double_t *, Bool_t in) const
+Double_t TGeoTubeSeg::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1821,7 +1821,7 @@ Double_t TGeoCtub::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
    Warning("Divide", "Division of a cut tube not implemented");
@@ -1870,7 +1870,7 @@ void TGeoCtub::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::Safety(Double_t *, Bool_t in) const
+Double_t TGeoCtub::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

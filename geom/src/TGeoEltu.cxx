@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.6 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -245,7 +245,7 @@ Double_t TGeoEltu::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
    Error("Divide", "Elliptical tubes divisions not implemenetd");
@@ -300,7 +300,7 @@ void TGeoEltu::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoEltu::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

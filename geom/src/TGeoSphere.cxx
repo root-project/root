@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.10 2003/01/13 22:17:22 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.11 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -598,7 +598,7 @@ Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph,
 }
 
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+TGeoVolume *TGeoSphere::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                                Double_t /*start*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
@@ -710,7 +710,7 @@ void TGeoSphere::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) cons
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::Safety(Double_t *, Bool_t in) const
+Double_t TGeoSphere::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

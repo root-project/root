@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.16 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.17 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -465,7 +465,7 @@ void TGeoArb8::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoArb8::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

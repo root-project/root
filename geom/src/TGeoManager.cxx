@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.32 2003/01/20 14:35:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.33 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2210,7 +2210,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
    Int_t oldid = GetNodeId();
    PushPoint();
    // check if still in current volume.
-   TGeoNode *node = FindNode();
+   TGeoNode *node = FindNode(x,y,z);
    Int_t id = GetNodeId();
    PopPoint();
    Bool_t same = ((node==old) && (id==oldid))?kTRUE:kFALSE;

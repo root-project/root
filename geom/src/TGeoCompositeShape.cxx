@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.8 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.9 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -109,7 +109,7 @@ Double_t TGeoCompositeShape::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, 
+TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume  * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, 
                                        Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
@@ -177,7 +177,7 @@ void TGeoCompositeShape::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (fNode) fNode->PaintNext(glmat, option);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoCompositeShape::Safety(Double_t * /*point*/, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
