@@ -1080,7 +1080,7 @@ char *endmark;
   int tmpltflag=0;
   int notmpltflag=0;
 #endif
-#ifndef G__OLDIMPLEMENtATION1056
+#ifndef G__OLDIMPLEMENTATION1056
   char* pp = string;
 #endif
   
@@ -1105,7 +1105,7 @@ char *endmark;
     case '\r':
     case '\f':
       if((single_quote==0)&&(double_quote==0)) {
-#ifndef G__OLDIMPLEMENtATION1056
+#ifndef G__OLDIMPLEMENTATION1056
         string[i] = '\0';
         if (tmpltflag && G__isstoragekeyword (pp)) {
           c = ' ';
@@ -1114,7 +1114,7 @@ char *endmark;
         }
         ignoreflag = 1;
 #else
-#ifndef G__OLDIMPLEMENtATION1005
+#ifndef G__OLDIMPLEMENTATION1005
 	if(0==tmpltflag||0==nest) ignoreflag=1;
 #else
 	ignoreflag=1;
@@ -1139,7 +1139,7 @@ char *endmark;
       break;
 #ifdef G__TEMPLATEMEMFUNC
     case '<':
-#ifndef G__OLDIMPLEMENtATION1056
+#ifndef G__OLDIMPLEMENTATION1056
       if((single_quote==0)&&(double_quote==0)) {
         pp = string + i + 1;
       }

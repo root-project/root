@@ -271,10 +271,10 @@ char *item;
 int G__warnundefined(item)
 char *item;
 {
-#ifndef G__OLDIMPLEMENtATION997
+#ifndef G__OLDIMPLEMENTATION997
   if(G__prerun&&G__static_alloc&&G__func_now>=0) return(0);
 #endif
-#ifndef G__OLDIMPLEMENtATION997
+#ifndef G__OLDIMPLEMENTATION997
   if(G__no_exec_compile && 0==G__asm_noverflow) return(0);
 #endif
   if(G__in_pause) return(0);

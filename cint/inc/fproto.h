@@ -205,6 +205,9 @@ int G__special_func G__P((G__value *result7,char *funcname,struct G__param *libp
 int G__library_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash));
 char *G__charformatter G__P((int ifmt,struct G__param *libp,char *result));
 int G__istypename G__P((char *temp));
+#ifndef G__OLDIMPLEMENTATION1543
+char* G__savestring G__P((char** pbuf,char* name));
+#endif
 void G__make_ifunctable G__P((char *funcheader));
 int G__readansiproto G__P((struct G__ifunc_table *ifunc,int func_now));
 int G__interpret_func G__P((G__value *result7,char *funcname,struct G__param *libp,int hash,struct G__ifunc_table *p_ifunc,int funcmatch,int memfunc_flag));

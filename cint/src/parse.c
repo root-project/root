@@ -4033,6 +4033,13 @@ G__value G__exec_statement()
 	    iout=0;
 	    spaceflag=0;
 	  }
+#ifndef G__OLDIMPLEMENTATION1544
+	  if(strcmp(statement,"throw(")==0) {
+            c=G__fignorestream(")");
+	    iout=0;
+	    spaceflag=0;
+	  }
+#endif
 	  break;
 	  
 	case 4:

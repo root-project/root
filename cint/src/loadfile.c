@@ -279,8 +279,8 @@ char *item;
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
-  char line[G__LONGLINE*2];
-  char argbuf[G__LONGLINE*2];
+  char line[G__LARGEBUF];
+  char argbuf[G__LARGEBUF];
   char *arg[G__MAXARG];
   int argn;
   char *p;
@@ -1846,7 +1846,7 @@ char *outname,*inname;
 int cppflag;
 char *macros,*undeflist,*ppopt,*includepath;
 {
-  char temp[G__LONGLINE*2];
+  char temp[G__LARGEBUF];
   /* char *envcpp; */
   char tmpfile[G__MAXFILENAME];
   int tmplen;

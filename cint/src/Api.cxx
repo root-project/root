@@ -338,7 +338,9 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
   catch(exception& x) {
     char buf[G__LONGLINE];
 #ifdef G__VISUAL
-    sprintf(buf,"new exception(\"%s\")",x.what());
+    // VC++ has problem in typeid(x).name(), so every thrown exception is
+    // translated to G__exception.
+    sprintf(buf,"new G__exception(\"%s\")",x.what());
 #else
     char buf2[G__ONELINE];
     int ox=0;

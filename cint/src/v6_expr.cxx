@@ -121,7 +121,7 @@ char *exprwithspace;
       break;
     case '=': 
     case '(': 
-#ifndef G__OLDIMPLEMENTATINO994
+#ifndef G__OLDIMPLEMENTATION994
     case ')': 
 #endif
     case ',': 

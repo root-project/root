@@ -179,7 +179,11 @@ int G__using_namespace()
       /* copy variable information */
       if(avar) {
 	int ii;
+#ifndef G__OLDIMPLEMENTATION1543
+	G__savestring(&avar->varnamebuf[aig15],var->varnamebuf[ig15]);
+#else
 	strcpy(avar->varnamebuf[aig15],var->varnamebuf[ig15]);
+#endif
 	avar->hash[aig15]=var->hash[ig15];
 	for(ii=0;ii<G__MAXVARDIM;ii++) {
 	  avar->varlabel[aig15][ii]=var->varlabel[ig15][ii];
@@ -664,6 +668,13 @@ int type;
     G__struct.memvar[i]->allvar=0;
     G__struct.memvar[i]->next = NULL;
     G__struct.memvar[i]->tagnum = i;
+#ifndef G__OLDIMPLEMENTATION1543
+    { 
+      int ix;
+      for(ix=0;ix<G__MEMDEPTH;ix++) 
+	G__struct.memvar[i]->varnamebuf[ix]=(char*)NULL;
+    }
+#endif
     
     /***********************************************************
      * Allocate and initialize member function table list
@@ -674,6 +685,13 @@ int type;
     G__struct.memfunc[i]->page = 0;
 #ifdef G__NEWINHERIT
     G__struct.memfunc[i]->tagnum = i;
+#endif
+#ifndef G__OLDIMPLEMENTATION1543
+    {
+      int ix;
+      for(ix=0;ix<G__MAXIFUNC;ix++) 
+	G__struct.memfunc[i]->funcname[ix]=(char*)NULL;
+    }
 #endif
 
     /***********************************************************
@@ -760,6 +778,12 @@ int *pig15;
     var->paran[0]=0;
     var->next=NULL;
     var->allvar=0;
+#ifndef G__OLDIMPLEMENTATION1543
+    { 
+      int ix;
+      for(ix=0;ix<G__MEMDEPTH;ix++) var->varnamebuf[ix]=(char*)NULL;
+    }
+#endif
     *pig15=0;
   }
   return(var);
@@ -779,7 +803,11 @@ int statictype;
 {
   int i;
   envvar->p[envig15]=offset;
+#ifndef G__OLDIMPLEMENTATION1543
+  G__savestring(&envvar->varnamebuf[envig15],var->varnamebuf[ig15]);
+#else
   strcpy(envvar->varnamebuf[envig15],var->varnamebuf[ig15]);
+#endif
   envvar->hash[envig15]=var->hash[ig15];
   for(i=0;i<G__MAXVARDIM;i++) 
     envvar->varlabel[envig15][i]=var->varlabel[ig15][i];
@@ -1496,6 +1524,9 @@ char type;
 	enumval.type = 'i' ;
 	enumval.tagnum = G__tagnum ;
 	enumval.typenum = -1 ;
+#ifndef G__OLDIMPLEMENTATION1259
+        enumval.isconst = 0;
+#endif
 	G__constvar=G__CONSTVAR;
 	G__enumdef=1;
 	do {

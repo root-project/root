@@ -372,7 +372,7 @@ void G__rewind_undo_position()
     if('y'==tolower(buf[0])) {
       G__scratch_upto(&undodictpos[undoindex]);
       undodictpos[undoindex].var=(struct G__var_array*)NULL;
-      G__fprinterr(G__serr,"!!! Dictionary position rewinded !!!\n");
+      G__fprinterr(G__serr,"!!! Dictionary position rewound !!!\n");
     }
     else {
       G__increment_undo_index(&undoindex);
@@ -645,7 +645,7 @@ void G__rewinddictionary()
       G__clearfilebusy(errordictpos.nfile);
       G__scratch_upto(&errordictpos);
 #ifndef G__ROOT
-      G__fprinterr(G__serr,"!!!Dictionary position rewinded... ");
+      G__fprinterr(G__serr,"!!!Dictionary position rewound... ");
 #endif
     }
     else {
@@ -2680,6 +2680,8 @@ G__value *rslt;
 #endif
       G__more(G__sout,"Quit:        q         : quit cint\n");
       G__more(G__sout,"             qqq       : quit cint - mandatory\n");
+      G__more(G__sout,"             qqqqq     : exit process immediately\n");
+      G__more(G__sout,"             qqqqqqq   : abort process\n");
     }
 
     else if(strncmp("/",com,1)==0) {
@@ -3098,14 +3100,26 @@ G__value *rslt;
       return(ignore);
     }
 
+    else if( strncmp(command,"qqqqqqq",7)==0 ||
+	     strncmp(command,"QQQQQQQ",7)==0) {
+      abort();
+    }
+    else if( strncmp(command,"qqqqq",5)==0 ||
+	     strncmp(command,"QQQQQ",5)==0) {
+      G__fprinterr(G__serr,"If you can not quit with 'qqqqq', try 'qqqqqqq'.\n");
+      exit(EXIT_FAILURE);
+    }
+
     else if( strncmp(command,"qqq",3)==0 ||
 	     strncmp(command,"QQQ",3)==0) {
       fprintf(G__sout,"*** Process will be killed ***\n");
       strcpy(command,G__input("Are you sure(y/Y/n)? "));
       if(command[0]=='Y') {
+	G__fprinterr(G__serr,"If you can not quit with 'qqq', try 'qqqqq'.\n");
 	exit(EXIT_FAILURE); 
       }
       else if(command[0]=='y') {
+	G__fprinterr(G__serr,"If you can not quit with 'qqq', try 'qqqqq'.\n");
 #ifndef G__OLDIMPLEMENTATION464
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
@@ -3174,6 +3188,9 @@ G__value *rslt;
 	G__UnlockCriticalSection();
 #endif
 	return(ignore);
+      }
+      else {
+	G__fprinterr(G__serr,"If you can not quit with 'q', try 'qqq'.\n");
       }
 
       G__stepover=0;

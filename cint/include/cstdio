@@ -1,4 +1,4 @@
 namespace std {
 #include <stdio.h>
-typedef FILE FILE;
+typedef FILE FILE;  // this becomes std::FILE
 }

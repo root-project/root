@@ -1582,7 +1582,7 @@ int tagnum,typenum;      /* overrides global variables */
           /* PHILIPPE17: the following is fixed in 1306! */
 	  /* static class object member must call constructor 
 	   * TO BE IMPLEMENTED */
-#ifndef G__OLDIMPLEMENtATION1296
+#ifndef G__OLDIMPLEMENTATION1296
 	  sprintf(temp,"%s::%s",G__fulltagname(G__def_tagnum,1),new_name+i);
 #else
 	  sprintf(temp,"%s::%s",G__struct.name[G__def_tagnum],new_name+i);

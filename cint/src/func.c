@@ -907,7 +907,7 @@ int memfunc_flag;
 #else
 	fpara.parameter[fpara.paran][ig35++]=item[ig15++];
 #endif
-#ifndef G__OLDIMPLEMENtATION1036
+#ifndef G__OLDIMPLEMENTATION1036
 	if(ig35>=G__ONELINE-1) {
 #ifndef G__OLDIMPLEMENTATION1340
 	  if(result7[0]=='"') {
@@ -1527,7 +1527,7 @@ int memfunc_flag;
 	  switch(memfunc_flag) {
 	  case G__CALLCONSTRUCTOR:
 	  case G__TRYCONSTRUCTOR:
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	  case G__TRYIMPLICITCONSTRUCTOR:
 #endif
 	    /* constructor for base class and class members default 
@@ -1626,7 +1626,7 @@ int memfunc_flag;
 	G__store_struct_offset = store_struct_offset;
 	G__tagnum = store_tagnum;
 	if(fpara.paran && 'u'==fpara.para[0].type&&
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	   (G__TRYCONSTRUCTOR==memfunc_flag||
 	    G__TRYIMPLICITCONSTRUCTOR==memfunc_flag)
 #else

@@ -147,7 +147,7 @@ void G__define_type()
   int typenum;
   int isorgtypepointer=0;
   int store_def_tagnum;
-#ifndef G__OLDIMPLEMENTATINO188
+#ifndef G__OLDIMPLEMENTATION188
   int reftype=G__PARANORMAL;
   int rawunsigned=0;
 #endif
@@ -295,7 +295,7 @@ void G__define_type()
    *                        ^
    */
 
-#ifndef G__OLDIMPLEMENTATINO188
+#ifndef G__OLDIMPLEMENTATION188
   if('\0'!=type1[0] && '&'==type1[strlen(type1)-1]) {
     reftype=G__PARAREFERENCE;
     type1[strlen(type1)-1]='\0';

@@ -263,6 +263,12 @@ int ifn;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
+#ifndef G__OLDIMPLEMENTATION1543
+    if(ifunc->funcname[i]) {
+      free((void*)ifunc->funcname[i]);
+      ifunc->funcname[i] = (char*)NULL;
+    }
+#endif
 #ifdef G__ASM_WHOLEFUNC
     if(ifunc->pentry[i]->bytecode) {
       G__free_bytecode(ifunc->pentry[i]->bytecode);
@@ -407,6 +413,12 @@ int tagnum;
 	    }
 	    free((void*)var->p[i]);
 	  }
+#ifndef G__OLDIMPLEMENTATION1543
+	  if(var->varnamebuf[i]) {
+	    free((void*)var->varnamebuf[i]);
+	    var->varnamebuf[i] = (char*)NULL;
+	  }
+#endif
 	}
 	var=var->next;
       }
@@ -423,6 +435,12 @@ int tagnum;
 	     -1!=var->p_tagtable[i]&&'e'==G__struct.type[var->p_tagtable[i]]) {
 	    free((void*)var->p[i]);
 	  }
+#ifndef G__OLDIMPLEMENTATION1543
+	  if(var->varnamebuf[i]) {
+	    free((void*)var->varnamebuf[i]);
+	    var->varnamebuf[i] = (char*)NULL;
+	  }
+#endif
 	}
 	var=var->next;
       }
@@ -736,6 +754,12 @@ int ig15;
     for(itemp1=0;itemp1<G__MAXVARDIM;itemp1++) {
       var->varlabel[itemp][itemp1]=0;
     }
+#ifndef G__OLDIMPLEMENTATION1543
+    if(var->varnamebuf[itemp]) {
+      free((void*)var->varnamebuf[itemp]);
+      var->varnamebuf[itemp] = (char*)NULL;
+    }
+#endif
 
   }
   

@@ -9,6 +9,7 @@
 #define FFT_MAX 4096
 
 #define G__FFTSL
+/* #define G__STDFFT */
 
 
 /*******************************************************************/
@@ -167,7 +168,6 @@ int fft_cal(double *x,double *re,double *im,int ndat)
   return(0);
 }   
 
-
 /*******************************************************************/
 /*  fft.c             1987   1/8           M.Goto                  */
 /*******************************************************************/
@@ -185,8 +185,10 @@ int fft(double *x,double *re,double *im,int ndat)
   
   for (i=0;i<ndat;i++) {
     x[i]  = dfreq * i ;
+#ifndef G__STDFFT
     re[i] /= ndat;
     im[i] /= ndat;
+#endif
   }
   return(0);
 }
@@ -216,10 +218,18 @@ int ifft(double *x,double *re,double *im,int ndat)
     j= ndat - i ;
     tmp = re[i];
     re[i]=re[j];
+#ifndef G__STDFFT
     re[j]=tmp;
+#else
+    re[j]=tmp/ndat;
+#endif
     tmp = im[i];
     im[i]=im[j];
+#ifndef G__STDFFT
     im[j]=tmp;
+#else
+    im[j]=tmp/ndat;
+#endif
   }
   return(0);
 }
@@ -238,9 +248,12 @@ int spectrum(double *x,double *y,int ndat)
   
   fft(x,y,im,ndat);
   
-  for (i=0;i<ndat;i++) {
-    y[i] = sqrt(y[i]*y[i] + im[i]*im[i]) * 1.41421356;
-  }
+#ifndef G__STDFFT
+  for (i=0;i<ndat;i++) y[i] = sqrt(y[i]*y[i] + im[i]*im[i]) * 1.41421356;
+#else
+  double k = 1.41421356/ndat;
+  for (i=0;i<ndat;i++) y[i] = sqrt(y[i]*y[i] + im[i]*im[i]) * k;
+#endif
 
   free((void*)im);
   return(0);
@@ -279,8 +292,7 @@ int cepstrum(double *x,double *y,int ndat)
   
   spectrum(x,y,ndat);
   
-  for (i=0;i<ndat;i++)
-    y[i] = log(y[i]);
+  for (i=0;i<ndat;i++) y[i] = log(y[i]);
   
   spectrum(x,y,ndat);
   return(0);

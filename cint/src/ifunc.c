@@ -7,7 +7,7 @@
  * Description:
  *  interpret function and new style compiled function
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -26,6 +26,21 @@ extern int G__const_noerror;
 
 #ifndef G__OLDIMPLEMENTATION1516
 static int G__calldepth = 0;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1543
+/***********************************************************************
+ * G__savestring()
+ ***********************************************************************/
+char *G__savestring(pbuf,name)
+char** pbuf;
+char *name;
+{
+  G__ASSERT(pbuf);
+  if(*pbuf) free((void*)(*pbuf));
+  *pbuf = (char*)malloc(strlen(name)+1);
+  return(strcpy(*pbuf,name));
+}
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1167
@@ -795,6 +810,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__p_ifunc->next->page = G__p_ifunc->page+1;
     G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
     G__p_ifunc = G__p_ifunc->next;
+#ifndef G__OLDIMPLEMENTATION1543
+    {
+      int ix;
+      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->funcname[ix] = (char*)NULL;
+    }
+#endif
   }
   store_ifunc_tmp = G__p_ifunc;
 #endif
@@ -820,11 +841,15 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	funcheader[G__MAXNAME+1]=0;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1543
+      G__savestring(&G__p_ifunc->funcname[func_now],funcheader+numstar);
+#else /* 1543 */
 #ifndef G__OLDIMPLEMENTATION853
       strcpy(G__p_ifunc->funcname[func_now],funcheader+numstar);
 #else
       strcpy(G__p_ifunc->funcname[func_now],funcheader+2);
 #endif
+#endif /* 1543 */
       if(isupper(G__var_type)) {
 	switch(G__reftype) {
 	case G__PARANORMAL:
@@ -862,7 +887,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	funcheader[G__MAXNAME]=0;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1543
+      G__savestring(&G__p_ifunc->funcname[func_now],funcheader+1);
+#else
       strcpy(G__p_ifunc->funcname[func_now],funcheader+1);
+#endif
       if(isupper(G__var_type)) {
 	switch(G__reftype) {
 	case G__PARANORMAL:
@@ -890,7 +919,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
       funcheader[G__MAXNAME-1]=0;
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1543
+    G__savestring(&G__p_ifunc->funcname[func_now],funcheader);
+#else
     strcpy(G__p_ifunc->funcname[func_now],funcheader);
+#endif
     if((char*)NULL!=(pt1=strstr(funcheader,">>")) && 
        (char*)NULL!=strchr(funcheader,'<')) {
       char *pt2;
@@ -914,7 +947,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
    *************************************************************/
   if(G__HASH_OPERATOR==G__p_ifunc->hash[func_now] &&
      strcmp(G__p_ifunc->funcname[func_now],"operator")==0) {
+#ifndef G__OLDIMPLEMENTATION1543
+    {
+      char *tmpp=(char*)("operator()");
+      G__savestring(&G__p_ifunc->funcname[func_now],tmpp);
+    }
+#else
     strcpy(G__p_ifunc->funcname[func_now],"operator()");
+#endif
     G__p_ifunc->hash[func_now] += ('('+')');
   }
 
@@ -1647,6 +1687,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
       else if(1==G__p_ifunc->ispurevirtual[func_now]) {
 	ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
       }
+#ifndef G__OLDIMPLEMENTATION1543
+      if((ifunc!=G__p_ifunc || iexist!=func_now) && 
+	 G__p_ifunc->funcname[func_now]) {
+	free((void*)G__p_ifunc->funcname[func_now]);
+	G__p_ifunc->funcname[func_now] = (char*)NULL;
+      }
+#endif
     } /* of if(G__p_ifunc->entry[func_now].p) */
     else {
       /* Entry not used, must free allocated default argument buffer */
@@ -1667,6 +1714,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	  G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
 	}
       }
+#ifndef G__OLDIMPLEMENTATION1543
+      if((ifunc!=G__p_ifunc || iexist!=func_now) && 
+	 G__p_ifunc->funcname[func_now]) {
+	free((void*)G__p_ifunc->funcname[func_now]);
+	G__p_ifunc->funcname[func_now] = (char*)NULL;
+      }
+#endif
     }
     G__func_page=ifunc->page;
     G__func_now = iexist;
@@ -1693,6 +1747,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
       G__p_ifunc->next->page = G__p_ifunc->page+1;
 #ifdef G__NEWINHERIT
       G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
+#endif
+#ifndef G__OLDIMPLEMENTATION1543
+      {
+	int ix;
+	for(ix=0;ix<G__MAXIFUNC;ix++) 
+	  G__p_ifunc->next->funcname[ix]=(char*)NULL;
+      }
 #endif
     }
   }
@@ -2901,7 +2962,7 @@ int formal_isconst;
       ++recursive;
       if(G__CPPLINK==G__struct.iscpplink[formal_tagnum]) {
 	/* in case of pre-compiled class */
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	reg=G__getfunction(conv,&match,G__TRYIMPLICITCONSTRUCTOR);
 #else
 	reg=G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
@@ -2932,7 +2993,7 @@ int formal_isconst;
       }
       else {
 	/* in case of interpreted class */
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	G__getfunction(conv,&match,G__TRYIMPLICITCONSTRUCTOR);
 #else
 	G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
@@ -3919,7 +3980,7 @@ struct G__funclist *pmatch;
 	++recursive;
 	if(G__CPPLINK==G__struct.iscpplink[formal_tagnum]) {
 	  /* in case of pre-compiled class */
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	  reg=G__getfunction(conv,&match,G__TRYIMPLICITCONSTRUCTOR);
 #else
 	  reg=G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
@@ -3953,7 +4014,7 @@ struct G__funclist *pmatch;
 	}
 	else {
 	  /* in case of interpreted class */
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
 	  G__getfunction(conv,&match,G__TRYIMPLICITCONSTRUCTOR);
 #else
 	  G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
@@ -5218,6 +5279,9 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1208
 				   ,p_ifunc->para_isconst[ifn][itemp]
 #endif
+#ifndef G__OLDIMPLEMENTATION1250
+				   /* ,p_ifunc->isexplicit[ifn] */
+#endif
 				   );
 	    }
 	    switch(ipara) {
@@ -5814,7 +5878,7 @@ asm_ifunc_start:   /* loop compilation execution label */
      G__asm_loopcompile>3 && G__ASM_FUNC_NOP==G__asm_wholefunction && 
 #ifndef G__TO_BE_DELETED
      G__CALLCONSTRUCTOR!=memfunc_flag && G__TRYCONSTRUCTOR!=memfunc_flag &&
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATION1250
      G__TRYIMPLICITCONSTRUCTOR!=memfunc_flag && 
 #endif
      G__TRYDESTRUCTOR!=memfunc_flag && 
@@ -5918,6 +5982,12 @@ asm_ifunc_start:   /* loop compilation execution label */
     localvar->next=NULL;
     localvar->prev_filenum = G__ifile.filenum;
     localvar->prev_line_number = G__ifile.line_number;
+#ifndef G__OLDIMPLEMENTATION1543
+    { 
+      int ix;
+      for(ix=0;ix<G__MEMDEPTH;ix++) localvar->varnamebuf[ix]=(char*)NULL;
+    }
+#endif
   }
   else {
     G__asm_noverflow = 0;
@@ -6054,6 +6124,12 @@ asm_ifunc_start:   /* loop compilation execution label */
   G_local.tagnum=G__tagnum;
   G_local.struct_offset=G__store_struct_offset;
   G_local.exec_memberfunc=G__exec_memberfunc;
+#ifndef G__OLDIMPLEMENTATION1543
+  {
+    int ix;
+    for(ix=0;ix<G__MEMDEPTH;ix++) G_local.varnamebuf[ix] = (char*)NULL;
+  }
+#endif
 #ifdef G__ASM_WHOLEFUNC
   if(G__ASM_FUNC_COMPILE&G__asm_wholefunction) G__p_local = localvar;
   else                     G__p_local = &G_local;
@@ -6344,7 +6420,7 @@ asm_ifunc_start:   /* loop compilation execution label */
     switch(memfunc_flag) {
     case G__CALLCONSTRUCTOR:
     case G__TRYCONSTRUCTOR:
-#ifndef G__OLDIMPLEMENTATINO1250
+#ifndef G__OLDIMPLEMENTATIO1250
     case G__TRYIMPLICITCONSTRUCTOR:
 #endif
       /* read parameters for base constructors and 
@@ -6615,7 +6691,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifndef G__OLDIMPLEMENTATION1469
 	  G__globalvarpointer = store_globalvarpointer;
 #endif
-#ifndef G__OLDIMPLEMENtATION1274
+#ifndef G__OLDIMPLEMENTATION1274
 	  if(itemp) {
 #ifndef G__OLDIMPLEMENTATION1507
 	    G__free_tempobject();
@@ -7175,7 +7251,7 @@ int funcmatch;
 				   ,p_ifunc->para_isconst[ifn][itemp]
 #endif
 #ifndef G__OLDIMPLEMENTATION1250
-				   ,p_ifunc->isexplicit[ifn]
+				   /* ,p_ifunc->isexplicit[ifn] */
 #endif
 				   );
 	    }

@@ -136,6 +136,9 @@ G__value result3;
 #endif
     strcpy(casttype,casttype+5);
   }
+#ifndef G__OLDIMPLEMENTATION1539
+  if(isspace(casttype[0])) strcpy(casttype,casttype+1);
+#endif
   lenitem=strlen(casttype);
   castflag=0;
 

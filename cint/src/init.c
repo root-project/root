@@ -627,6 +627,12 @@ char *argv[] ;
 #ifdef G__NEWINHERIT
   G__ifunc.tagnum = -1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1543
+  {
+    int ix;
+    for(ix=0;ix<G__MAXIFUNC;ix++) G__ifunc.funcname[ix] = (char*)NULL;
+  }
+#endif
   G__p_ifunc = &G__ifunc ;
 
 
@@ -1742,6 +1748,12 @@ int G__init_globals()
   G__global.prev_local = (struct G__var_array *)NULL;
   G__global.prev_filenum = -1;
   G__global.tagnum = -1;
+#ifndef G__OLDIMPLEMENTATION1543
+  {
+    int ix;
+    for(ix=0;ix<G__MEMDEPTH;ix++) G__global.varnamebuf[ix] = (char*)NULL;
+  }
+#endif
   G__cpp_aryconstruct=0;
   G__cppconstruct=0;
 
@@ -1998,6 +2010,9 @@ void G__platformMacro()
    ***********************************************************************/
 #ifdef __GNUC__
   sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
+#endif
+#ifdef G__CYGWIN
+  sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
 #endif
 #ifdef __GNUC_MINOR__
   sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__add_macro(temp);

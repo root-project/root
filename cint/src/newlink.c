@@ -176,16 +176,18 @@ static int G__isDLL=0;
 static char G__CINTLIBNAME[10] = "LIBCINT";
 #endif
 
+#define G__MAXDLLNAMEBUF 512
+
 static char G__PROJNAME[G__MAXNAME];
 #ifndef G__OLDIMPLEMENTATION1098
-static char G__DLLID[G__MAXNAME];
+static char G__DLLID[G__MAXDLLNAMEBUF];
 #else
 static char *G__DLLID;
 #endif
 static char *G__INITFUNC;
 
 #ifndef G__OLDIMPLEMENTATION1423
-static char G__NEWID[G__MAXNAME];
+static char G__NEWID[G__MAXDLLNAMEBUF];
 #endif
 
 #ifndef G__FONS60
@@ -3698,7 +3700,7 @@ struct G__ifunc_table *ifunc;
       fprintf(fp,"%s(",ifunc->funcname[ifn]);
 #endif
 
-#ifndef G__OLDIMPLEMENTATINO274
+#ifndef G__OLDIMPLEMENTATION274
       if(m>6) fprintf(fp,"\n");
 #endif
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -3765,7 +3767,7 @@ struct G__ifunc_table *ifunc;
     fprintf(fp,"%s(",ifunc->funcname[ifn]);
 #endif
 
-#ifndef G__OLDIMPLEMENTATINO274
+#ifndef G__OLDIMPLEMENTATION274
     if(m>6) fprintf(fp,"\n");
 #endif
     for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -4393,7 +4395,10 @@ FILE *hfp;
 	if('e'==G__struct.type[i])
 	  fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,NULL);\n"
 		  ,G__mark_linked_tagnum(i) ,"int" ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		  +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		  ,G__struct.isabstract[i]
@@ -4406,7 +4411,10 @@ FILE *hfp;
 		  ,G__mark_linked_tagnum(i)
 		  /* ,G__type2string('u',i,-1,0,0) */
 		  ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		  +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		  ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		  ,G__struct.isabstract[i]
@@ -4423,7 +4431,10 @@ FILE *hfp;
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
 		      ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		      +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		      ,G__struct.isabstract[i]
@@ -4434,7 +4445,10 @@ FILE *hfp;
 		      ,G__mark_linked_tagnum(i)
 		      ,G__type2string('u',i,-1,0,0)
 		      ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		      +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		      ,G__struct.isabstract[i]
@@ -4445,7 +4459,10 @@ FILE *hfp;
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
 		    ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		    ,G__struct.isabstract[i]
@@ -4459,7 +4476,10 @@ FILE *hfp;
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
 		    ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		    ,G__struct.isabstract[i]
@@ -4471,7 +4491,10 @@ FILE *hfp;
 		    ,G__mark_linked_tagnum(i)
 		    ,G__type2string('u',i,-1,0,0)
 		    ,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		    ,G__struct.isabstract[i]
@@ -4485,7 +4508,10 @@ FILE *hfp;
 	fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),0,%d,%d,%s,NULL,NULL);\n"
 		,G__mark_linked_tagnum(i)
 		,G__globalcomp 
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		    ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		    +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
 		,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
 #else
 		,G__struct.isabstract[i]
@@ -6027,7 +6053,11 @@ G__incsetup setup_memfunc;
 #endif
   G__struct.size[tagnum] = size;
   G__struct.iscpplink[tagnum] = cpplink;
-#ifndef G__OLDIMPLEMENTATION1442
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+  G__struct.rootflag[tagnum] = (isabstract/0x10000)%0x100;
+  G__struct.funcs[tagnum] = (isabstract/0x100)%0x100;
+  G__struct.isabstract[tagnum] = isabstract%0x100;
+#elif !defined(G__OLDIMPLEMENTATION1442)
   G__struct.funcs[tagnum] = isabstract/0x100;
   G__struct.isabstract[tagnum] = isabstract%0x100;
 #else
@@ -6284,7 +6314,11 @@ int isvirtual;
 #ifndef G__SMALLOBJECT
   G__func_now=G__p_ifunc->allifunc;
 
+#ifndef G__OLDIMPLEMENTATION1543
+  G__savestring(&G__p_ifunc->funcname[G__func_now],funcname);
+#else
   strcpy(G__p_ifunc->funcname[G__func_now],funcname);
+#endif
   G__p_ifunc->hash[G__func_now] = hash;
 
   /* set entry pointer */
@@ -6527,6 +6561,12 @@ int G__memfunc_next()
 
     /* set next G__p_ifunc */
     G__p_ifunc = G__p_ifunc->next;
+#ifndef G__OLDIMPLEMENTATION1543
+    {
+      int ix;
+      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->funcname[ix] = (char*)NULL;
+    }
+#endif
   }
 #endif
   return(0);
@@ -6869,7 +6909,7 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION886
     int len;
     char* p2;
-#ifndef G__OLDIMPLEMENtATION1257
+#ifndef G__OLDIMPLEMENTATION1257
     int rf1 = 0;
     int rf2 = 0;
     int rf3 = 0;
@@ -6893,7 +6933,7 @@ int link_stub;
 #else
     c = G__fgetstream(buf,";\n\r");
 #endif
-#ifndef G__OLDIMPLEMENtATION1257
+#ifndef G__OLDIMPLEMENTATION1257
     for (iirf = 0; iirf < 3; iirf++) {
       if (buf[strlen(buf)-1] == '-') {
 	rf1 = 1;
@@ -6990,7 +7030,7 @@ int link_stub;
 #endif /* G__REGEXP */
     } /* if(p) */
     else {
-#ifdef G__OLDIMPLEMENtATION1257
+#ifdef G__OLDIMPLEMENTATION1257
 #ifdef G__ROOTSPECIAL
       int rf1 = 0;
       int rf2 = 0;
@@ -8473,7 +8513,7 @@ void G__gen_extra_include() {
        (Specifically, the extra include files have to be include 
        before any forward declarations!) */
     
-    tempfile = (char*) malloc(strlen(G__CPPLINK_H)+5);
+    tempfile = (char*) malloc(strlen(G__CPPLINK_H)+6);
     sprintf(tempfile,"%s.temp", G__CPPLINK_H);
     rename(G__CPPLINK_H,tempfile);
     

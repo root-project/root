@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015002
-#define G__CINTVERSIONSTR  "5.15.02, June 2 2001"
+#define G__CINTVERSION      5015003
+#define G__CINTVERSIONSTR  "5.15.03, June 5 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -79,7 +79,9 @@
  * in platform dependency file OTHMACRO flag. Reason of not making this
  * default is because some old compilers may not support exception. */
 /* #define G__EXCEPTIONWRAPPER */
-/* #define G__STD_EXCEPTION */
+#if defined(_WIN32) || defined(_WINDOWS) || defined(_Windows) || defined(_WINDOWS_)
+#define G__STD_EXCEPTION
+#endif
 #if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
 #define G__EXCEPTIONWRAPPER
 #endif
@@ -589,8 +591,9 @@ typedef int (*G__IgnoreInclude)();
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      128  /* Variable name */
 #endif
+#define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */
-#define G__MAXFILENAME  256  /* Max interpreted source file name length */
+#define G__MAXFILENAME 1024  /* Max interpreted source file name length */
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
 #define G__MAXFUNCPARA   40  /* Function argument */
@@ -950,7 +953,11 @@ struct G__ifunc_table {
   int allifunc;
 
   /* function name and hash for identification */
+#ifndef G__OLDIMPLEMENTATION1543
+  char *funcname[G__MAXIFUNC];
+#else
   char funcname[G__MAXIFUNC][G__MAXNAME];
+#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC],*pentry[G__MAXIFUNC];
@@ -1036,7 +1043,11 @@ struct G__ifunc_table_VMS {
   int allifunc;
 
   /* function name and hash for identification */
+#ifndef G__OLDIMPLEMENTATION1543
+  char *funcname[G__MAXIFUNC];
+#else
   char funcname[G__MAXIFUNC][G__MAXNAME];
+#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC];
@@ -1196,7 +1207,11 @@ struct G__var_array {
   /* union for variable pointer */
   long p[G__MEMDEPTH]; /* used to be int */
   int allvar;
+#ifndef G__OLDIMPLEMENTATION1543
+  char *varnamebuf[G__MEMDEPTH]; /* variable name */
+#else
   char varnamebuf[G__MEMDEPTH][G__MAXNAME]; /* variable name */
+#endif
   int hash[G__MEMDEPTH];                    /* hash table of varname */
   int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
   short paran[G__MEMDEPTH];

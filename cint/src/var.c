@@ -142,7 +142,14 @@ case 'p': /* var = expr; assign to pointer variable  */                      \
           phyaddress=(long*)phyaddress[para[ip].obj.i];                      \
  	}                                                                    \
         /*1068 Dont know how to implement*/                                  \
-        ((CASTTYPE*)(phyaddress))[para[paran-1].obj.i] = CONVFUNC(result);   \
+        switch(var->reftype[ig15]-paran+var->paran[ig15]) { /*1540*/\
+	case G__PARANORMAL: /*1540*/                                         \
+          ((CASTTYPE*)(phyaddress))[para[paran-1].obj.i] = CONVFUNC(result); \
+          break; /*1540*/                                                    \
+        default: /*1540*/                                                    \
+          ((long*)(phyaddress))[para[paran-1].obj.i]=G__int(result);/*1540*/ \
+          break; /*1540*/                                                    \
+	} /*1540*/                                                           \
         /* ron eastman change ends */                                        \
       }                                                                      \
     }                                                                        \
@@ -441,17 +448,20 @@ default : /* 'p' */                                                           \
             result.ref=(long)((long*)(*(long *)(result.ref))+para[ip].obj.i); \
  	  }                                                                   \
  	}						                      \
-  result.ref=(long)((CASTTYPE*)(*((long*)(result.ref)))+para[paran-1].obj.i); \
+/*result.ref=(long)((CASTTYPE*)(*((long*)(result.ref)))+para[paran-1].obj.i);1540*/\
         result.obj.reftype.reftype=var->reftype[ig15]-paran+var->paran[ig15]; \
         switch(result.obj.reftype.reftype) {                                  \
 	case G__PARANORMAL:                                                   \
+   result.ref=(long)((CASTTYPE*)(*((long*)(result.ref)))+para[paran-1].obj.i);/*1540*/\
 	  CONVFUNC(&result,TYPE,*((CASTTYPE*)(result.ref)));                  \
           break;                                                              \
         case 1:                                                               \
+       result.ref=(long)((long*)(*((long*)(result.ref)))+para[paran-1].obj.i);/*1540*/\
 	  G__letint(&result,PTYPE,*((long*)(result.ref)));                    \
           result.obj.reftype.reftype=G__PARANORMAL;                           \
           break;                                                              \
         default:                                                              \
+       result.ref=(long)((long*)(*((long*)(result.ref)))+para[paran-1].obj.i);/*1540*/\
 	  G__letint(&result,PTYPE,*((long*)(result.ref)));                    \
         result.obj.reftype.reftype=var->reftype[ig15]-paran+var->paran[ig15]; \
           break;                                                              \
@@ -1082,7 +1092,13 @@ int var_type;
 #endif
   }
 #ifndef G__OLDIMPLEMENTATION1517
-  else if(G__decl && G__reftype && !G__asm_wholefunction) {
+  else if(G__decl && 
+#ifndef G__OLDIMPLEMENTATION1542
+	  G__PARAREFERENCE==G__reftype 
+#else
+	  G__reftype 
+#endif
+	  && !G__asm_wholefunction) {
     G__redecl(var,ig15);
   }
 #endif
@@ -2058,7 +2074,7 @@ struct G__var_array *varglobal,*varlocal;
     if(item[1]=='(') {
 #endif
       result=G__getexpr(item+1);
-      G__ASSERT(isupper(result.type));
+      G__ASSERT(isupper(result.type)||'u'==result.type);
       para[0]=G__letPvalue(&result,expression);
       return(para[0]);
     }
@@ -5898,6 +5914,12 @@ int parameter00;
     var->paran[0]=0;
     var->next=NULL;
     var->allvar=0;
+#ifndef G__OLDIMPLEMENTATION1543
+    { 
+      int ix;
+      for(ix=0;ix<G__MEMDEPTH;ix++) var->varnamebuf[ix]=(char*)NULL;
+    }
+#endif
     ig15=0;
   }
   
@@ -6231,6 +6253,9 @@ int parameter00;
   /*****************************************************************
    * set variable information to the table
    *****************************************************************/
+#ifndef G__OLDIMPLEMENTATION1543
+  G__savestring(&var->varnamebuf[var->allvar],varname);
+#else /* 1543 */
 #ifndef G__OLDIMPLEMENTATION853
   if(strlen(varname)>G__MAXNAME-1) {
     strncpy(var->varnamebuf[var->allvar],varname,G__MAXNAME-1);
@@ -6244,6 +6269,7 @@ int parameter00;
 #else
   strcpy(var->varnamebuf[var->allvar],varname);
 #endif
+#endif /* 1543 */
   var->hash[var->allvar]=varhash;
 
   ig15 = var->allvar;
@@ -7291,6 +7317,23 @@ int mparen;
 #endif
 #endif
     
+#ifndef G__OLDIMPLEMENTATION1541
+     /* friend function belongs to the inner-most namespace 
+      * not the parent class! In fact, this fix is not perfect, because
+      * a friend function can also be a member function. This fix works
+      * better only because there is no strict checking for non-member
+      * function. */
+    if(G__NOLINK!=G__globalcomp && -1!=G__def_tagnum && 	
+       'n'!=G__struct.type[G__def_tagnum]) {
+      G__fprinterr(G__serr,"Warning: This friend declaration may cause creation of wrong stub function in dictionary. Use '#pragma link off function ...;' to avoid it.");
+      G__printlinenum();
+    }
+    while((G__def_tagnum!=-1)&&(G__struct.type[G__def_tagnum]!='n')) {
+      G__def_tagnum = G__struct.parent_tagnum[G__def_tagnum];
+      G__tagdefining = G__def_tagnum;
+      G__tagnum = G__def_tagnum;
+    }
+#endif
     G__exec_statement();
     
 #ifndef G__FRIEND
