@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.31 2001/01/16 12:34:35 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.32 2001/01/26 16:29:57 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -458,7 +458,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          const char *s = TemplateArg(m).Name();
          if (!strncmp(s, "const ", 6)) s += 6;
          if (m.Property() & G__BIT_ISPOINTER) {
-            fprintf(fp, "         %s = new %s;\n", m.Name(), tmparg);
+            //fprintf(fp, "         %s = new %s;\n", m.Name(), tmparg);
+            fprintf(fp, "         *%s = new %s;\n", m.Name(), tmparg);
          } else {
             fprintf(fp, "         %s.clear();\n", m.Name());
          }
@@ -506,11 +507,14 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          }
          if (m.Property() & G__BIT_ISPOINTER) {
             if (stltype == kMap || stltype == kMultimap) {
-               fprintf(fp, "            %s->insert(make_pair(R__t,R__t2));\n", m.Name());
+               //fprintf(fp, "            %s->insert(make_pair(R__t,R__t2));\n", m.Name());
+               fprintf(fp, "            (*%s)->insert(make_pair(R__t,R__t2));\n", m.Name());
             } else if (stltype == kSet || stltype == kMultiset) {
-               fprintf(fp, "            %s->insert(R__t);\n", m.Name());
+               //fprintf(fp, "            %s->insert(R__t);\n", m.Name());
+               fprintf(fp, "            (*%s)->insert(R__t);\n", m.Name());
             } else {
-               fprintf(fp, "            %s->push_back(R__t);\n", m.Name());
+               //fprintf(fp, "            %s->push_back(R__t);\n", m.Name());
+               fprintf(fp, "            (*%s)->push_back(R__t);\n", m.Name());
             }
          } else {
             if (stltype == kMap || stltype == kMultimap) {
@@ -527,7 +531,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          // create write code
          fprintf(fp, "      {\n");
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "         R__b << %s->size();\n", m.Name());
+            //fprintf(fp, "         R__b << %s->size();\n", m.Name());
+            fprintf(fp, "         R__b << (*%s)->size();\n", m.Name());
          else
             fprintf(fp, "         R__b << %s.size();\n", m.Name());
          char tmparg[512];
@@ -537,7 +542,8 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
          fprintf(fp, "         %s::iterator R__k;\n", tmparg);
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "         for (R__k = %s->begin(); R__k != %s->end(); ++R__k) {\n",
+            //fprintf(fp, "         for (R__k = %s->begin(); R__k != %s->end(); ++R__k) {\n",
+            fprintf(fp, "         for (R__k = (*%s)->begin(); R__k != (*%s)->end(); ++R__k) {\n",
                     m.Name(), m.Name());
          else
             fprintf(fp, "         for (R__k = %s.begin(); R__k != %s.end(); ++R__k) {\n",
