@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.10 2002/05/09 20:22:00 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.11 2002/05/10 21:32:09 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.10 2002/05/09 20:22:00 brun Exp $
+// $Id: Ttypes.h,v 1.11 2002/05/10 21:32:09 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -23,9 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//*KEEP,Rtypes.
+
 #include "Rtypes.h"
-//*KEND.
 
 #ifdef ANSICPP
 #   define _QUOTE2_(name1,name2) _QUOTE_(name1##name2)
@@ -102,7 +101,7 @@ void className::Streamer(TBuffer &R__b) {                           \
 
 #define ClassDefTable(className,structName)         \
   public:                                           \
-     static void TableDictionary();                 \
+     static const char* TableDictionary();          \
   protected:                                        \
      static TTableDescriptor *fgColDescriptors;     \
      virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}                 \
