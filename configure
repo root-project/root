@@ -1147,7 +1147,7 @@ if test ! "x$enable_srp" = "xno" ; then
     fi
 
     srplibdirs="$SRP $SRP/lib $SRP/libsrp /usr/srp/lib /usr/local/srp/lib \
-	/usr/lib/srp /usr/local/lib/srp /usr/lib /usr/local/lib"
+        /usr/lib/srp /usr/local/lib/srp /usr/lib /usr/local/lib"
 
     check_library "libsrp" "no" "$srplibdir" $srplibdirs
     srplib=$found_lib
@@ -1163,20 +1163,25 @@ if test ! "x$enable_srp" = "xno" ; then
         check_library "libcrypto" "$enable_shared" "" $srplibdir $srplibdirs
         gmplib=$found_lib
         gmplibdir=$found_dir
+        if test -r $gmplib && test "x$enable_shared" = "xno" ; then
+           case $arch in
+               linux*) gmplib="$gmplib -ldl"
+           esac
+        fi
     fi
 
     if test "x$srplib" = "x" ; then
         enable_srp="no"
-	srplibdir=""
+        srplibdir=""
     elif test "x$gmplib" = "x" ; then
-	enable_srp="no"
-	gmplibdir=""
+        enable_srp="no"
+        gmplibdir=""
     else
-	srplib="$srplib $gmplib"
-	srplibdir="$srplibdir $gmplibdir"
-	case $arch in
-	linux*) srplib="$srplib -lcrypt" ;;
-	esac
+        srplib="$srplib $gmplib"
+        srplibdir="$srplibdir $gmplibdir"
+        case $arch in
+            linux*) srplib="$srplib -lcrypt" ;;
+        esac
     fi
 
     srputillib=""
