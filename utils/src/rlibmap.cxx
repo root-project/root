@@ -50,7 +50,7 @@ const char  kDefined = 'T';
 const char *kNM = "nm -C";
 const char  kDefined = 'T';
 #elif defined(_WIN32)
-const char *kMN = "nm -C";
+const char *kNM = "nm -C";
 const char  kDefined = 'T';
 #else
 #warning Platform specific case missing
@@ -123,7 +123,7 @@ int libmap(const char *lib, int fullpath, FILE *fp)
 #ifndef _WIN32
    pclose(pf);
 #else
-   close(pf);
+   fclose(pf);
 #endif
 
    const char *libbase = strrchr(lib, '/');
