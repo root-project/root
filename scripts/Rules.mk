@@ -183,7 +183,12 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
 UTILS_LIBS =  $(ROOTTEST_HOME)scripts/utils_cc.$(DllSuf)
 
-utils:  $(UTILS_LIBS)
+ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
+
+$(ROOTMAP): 
+	@echo Error $(ROOTMAP) is required for roottest '(Do cd $$ROOTSYS; gmake map)'
+
+utils:  $(UTILS_LIBS) $(ROOTMAP)
 
 
 %.o: %.C
