@@ -1416,7 +1416,7 @@ char *typename;
       /* global scope */
       if(-1==G__newtype.parent_tagnum[i]
 #ifndef G__OLDIMPLEMTATION1890
-	 && (!p || temp2==p)
+	 && (!p || (temp2==p || strcmp("std",temp2)==0))
 #endif
 	 )
 	thisflag=0x1;
