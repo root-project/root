@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.78 2004/08/11 07:59:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.79 2004/08/20 09:10:02 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -175,7 +175,8 @@ TFormula::TFormula(const char *name,const char *expression) :
       expr[j] = expression[i]; j++;
    }
    expr[j] = 0;
-  Bool_t gausNorm = kFALSE;
+  Bool_t gausNorm   = kFALSE;
+  Bool_t landauNorm = kFALSE;
   if (j) {
      TString chaine = expr;
      // special case for normalized gaus
@@ -183,13 +184,19 @@ TFormula::TFormula(const char *name,const char *expression) :
         gausNorm = kTRUE;
         chaine.ReplaceAll("gausn","gaus");
      }
+     // special case for normalized landau
+     if (chaine.Contains("landaun")) {
+        landauNorm = kTRUE;
+        chaine.ReplaceAll("landaun","landau");
+     }
      SetTitle(chaine.Data());
   }
    delete [] expr;
 
    if (Compile()) return;
    
-   if (gausNorm) SetBit(kNormalized);
+   if (gausNorm)   SetBit(kNormalized);
+   if (landauNorm) SetBit(kNormalized);
    
 //*-*- Store formula in linked list of formula in ROOT
 
@@ -432,15 +439,15 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     yexpo(5)   102 5                ygaus(5)    111 5   ygausn(5)
 //*-*     xyexpo(2)  105 2                xygaus(2)   115 2   xygausn(2)
 //*-*
-//*-*     landau      120 x
-//*-*     landau(0)   120 0
-//*-*     landau(1)   120 1
-//*-*     xlandau     120 x
-//*-*     ylandau     121 x
-//*-*     zlandau     122 x
-//*-*     xylandau    125 x
-//*-*     ylandau(5)  121 5
-//*-*     xylandau(2) 125 2
+//*-*     landau      120 x   landaun (see note below)
+//*-*     landau(0)   120 0   landaun(0)
+//*-*     landau(1)   120 1   landaun(1)
+//*-*     xlandau     120 x   xlandaun
+//*-*     ylandau     121 x   ylandaun
+//*-*     zlandau     122 x   zlandaun
+//*-*     xylandau    125 x   xylandaun
+//*-*     ylandau(5)  121 5   ylandaun(5)
+//*-*     xylandau(2) 125 2   xylandaun(2)
 //*-*
 //*-*     pol0        130 x               pol1        130 1xx
 //*-*     pol0(0)     130 0               pol1(0)     130 100
@@ -479,13 +486,19 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 //*-*     [2]        140 2
 //*-*     etc.
 //*-*
-//*-*   special cases for normalized gaussians
-//*-*   ======================================
+//*-*   special cases for normalized gaussian or landau distributions
+//*-*   =============================================================
 //*-*   the expression "gaus" is a substitute for
 //*-*     [0]*exp(-0.5*((x-[1])/[2])**2)
 //*-*   to obtain a standard normalized gaussian, use "gausn" instead of "gaus"
 //*-*   the expression "gausn" is a substitute for
 //*-*     [0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))
+//*-*
+//*-*   In the same way the expression "landau" is a substitute for
+//*-*     [0]*TMath::Landau(x,[1],[2],kFALSE)
+//*-*   to obtain a standard normalized landau, use "landaun" instead of "landau"
+//*-*   the expression "landaun" is a substitute for
+//*-*     [0]*TMath::Landau(x,[1],[2],kTRUE)
 //*-*
 //*-*   boolean optimization (kBoolOptmize) :
 //*-*   =====================================
@@ -2461,7 +2474,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         #define R__LANDAU(var)                                                                  \
         {                                                                                       \
            pos++; const int param = (oper & kTFOperMask);                                       \
-           tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2]); \
+           tab[pos-1] = fParams[param]*TMath::Landau(x[var],fParams[param+1],fParams[param+2],IsNormalized()); \
            continue;                                                                            \
         }
         // case klandau:
@@ -2469,8 +2482,8 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         case kylandau: R__LANDAU(1);
         case kzlandau: R__LANDAU(2);
         case kxylandau: { pos++; int param = oper&0x7fffff /* ActionParams[i] */ ;
-                          Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2]);
-                          Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3]);
+                          Double_t intermede1=TMath::Landau(x[0], fParams[param+1], fParams[param+2],IsNormalized());
+                          Double_t intermede2=TMath::Landau(x[1], fParams[param+2], fParams[param+3],IsNormalized());
                           tab[pos-1] = fParams[param]*intermede1*intermede2;
                           continue;
         }
