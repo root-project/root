@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.72 2002/06/04 07:29:13 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.73 2002/06/04 14:04:02 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -256,23 +256,26 @@ bool CheckInputOperator(G__ClassInfo &cl)
    // this class.
    G__ClassInfo gcl;
    long offset;
-   char *proto = new char[strlen(cl.Fullname())+13];
-   sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
-   G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
-   delete proto;
-
-   fprintf(stderr, "Class %s: Do not generate operator>>()\n",
-           cl.Fullname());
-   if (!methodinfo.IsValid() ||
-       methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
-       strstr(methodinfo.FileName(),"Rtypes.h")!=0 ) {
-      fprintf(stderr, "ERROR: This version of ROOT requires the presence of an actual declaration of:\n");
-      fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
-      has_input_error = true;
-   } else {
-      // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
-   }
-   return has_input_error;
+   if(!cl.IsTmplt()) {
+      char *proto = new char[strlen(cl.Fullname())+13];
+      sprintf(proto,"TBuffer&,%s*&",cl.Fullname());
+   
+      G__MethodInfo methodinfo = gcl.GetMethod("operator>>",proto,&offset);
+      delete proto;
+     
+      fprintf(stderr, "Class %s: Do not generate operator>>()\n",
+	     cl.Fullname());
+      if (!methodinfo.IsValid() ||
+	   methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
+	   strstr(methodinfo.FileName(),"Rtypes.h")!=0 ) {
+         fprintf(stderr, "ERROR: This version of ROOT requires the presence of an actual declaration of:\n");
+         fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
+         has_input_error = true;
+      } else {
+       // fprintf(stderr, "WARNING: TBuffer &operator>>(TBuffer &,%s *&); defined at line %s %d \n",cl.Fullname(),methodinfo.FileName(),methodinfo.LineNumber());
+      }
+    }
+    return has_input_error;
 }
 
 
@@ -557,9 +560,11 @@ void ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl
      switch (kase) {
 
        case G__BIT_ISFUNDAMENTAL:;
+          fprintf(fp, "            R__b >> %s;\n",R__t);
+          break;
        case G__BIT_ISPOINTER|G___BIT_ISTOBJECT|G___BIT_ISTREAMER:;
-	 fprintf(fp, "            R__b >> %s;\n",R__t);
-	 break;
+         fprintf(fp, "            %s = (%s)R__b.ReadObject(%s);\n",R__t,tiName,tcl);
+         break;
 
        case G__BIT_ISENUM:;
 	 fprintf(fp, "            R__b >> (Int_t&)%s;\n",R__t);
@@ -1239,18 +1244,20 @@ const char *ShortTypeName(const char *typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
 
-   static char t[1024];
-   char *s;
-   if (!strstr(typeDesc, "(*)(") && (s = (char*)strchr(typeDesc, ' ')))
-      strcpy(t, s+1);
-   else
-      strcpy(t, typeDesc);
+  static char t[1024];
+  const char *s;
+  char *p=t;
+  int lev=0;
+  for (s=typeDesc;*s;s++) {
+     if (*s=='<') lev++;
+     if (*s=='>') lev--;
+     if (lev==0 && *s=='*') continue;
+     if (lev==0 && *s==' ') { p = t; continue;}
+     *p++ = *s;
+  }
+  p[0]=0;
 
-   int l = strlen(t);
-   while (l > 0 && t[l-1] == '*')
-      t[--l] = 0;
-
-   return t;
+  return t;
 }
 
 //______________________________________________________________________________
