@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.102 2002/10/02 10:29:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.103 2002/10/23 06:26:58 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3423,7 +3423,7 @@ void THistPainter::PaintLego(Option_t *)
       zmax += 0.5*deltaz;
    }
    Double_t z1c = zmin;
-   Double_t z2c = zmin + deltaz*kHMAX;
+   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
@@ -4354,7 +4354,7 @@ void THistPainter::PaintSurface(Option_t *)
       zmax += 0.5*deltaz;
    }
    Double_t z1c = zmin;
-   Double_t z2c = zmin + deltaz*kHMAX;
+   Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 //     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
