@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.56 2002/03/20 18:54:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.57 2002/03/26 14:09:07 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -747,7 +747,6 @@ TList *TFile::GetStreamerInfoList()
 //   TList *list = f.GetStreamerInfoList();
 //   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
 //   Int_t classversionid = info->GetClassVersion();
-//   list->Delete();
 //   delete list;
 
    TList *list = 0;
@@ -759,6 +758,7 @@ TList *TFile::GetStreamerInfoList()
       ReadBuffer(buf,fNbytesInfo);
       key->ReadBuffer(buf);
       list = (TList*)key->ReadObj();
+      list->SetOwner();
       delete [] buffer;
       delete key;
    } else {
@@ -1589,8 +1589,6 @@ void TFile::ShowStreamerInfo()
    if (!list) return;
    
    list->ls();
-
-   list->Delete();
    delete list;
 }
 
