@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.12 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.13 2000/12/26 14:22:46 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -283,14 +283,18 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
       delete file;
    }
 
-   fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
-   fNtrees++;
-   fEntries += nentries;
+   if (nentries > 0) {
+      fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+      fNtrees++;
+      fEntries += nentries;
 
-   TChainElement *element = new TChainElement(treename,filename);
-   element->SetPacketSize(pksize);
-   element->SetNumberEntries(nentries);
-   fFiles->Add(element);
+      TChainElement *element = new TChainElement(treename,filename);
+      element->SetPacketSize(pksize);
+      element->SetNumberEntries(nentries);
+      fFiles->Add(element);
+   } else {
+      Warning("Add","Adding Tree with no entries from file: %s",filename);
+   }
 
    delete [] filename;
    if (cursav) cursav->cd();
