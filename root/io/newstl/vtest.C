@@ -2,7 +2,8 @@
 #include "test.C"
 
 void vtest() {
-   checkHolder<vectorHolder>();
-   write<vectorHolder>("vector.root");
-   read<vectorHolder>("vector.root");
+   const char* testname = "vector";
+   checkHolder<vectorHolder>(testname);
+   write<vectorHolder>(testname);
+   read<vectorHolder>(testname);
 }

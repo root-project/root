@@ -6,6 +6,9 @@
 
 #include <vector>
 #include <deque>
+#include <list>
+#include <set>
+#include <map>
 
 UInt_t DebugTest(Int_t newLevel = -1) {
    static Bool_t debugLevel = 0;
@@ -47,6 +50,67 @@ template <class T> void TestError(const std::string &test,
 template <class T> void TestError(const std::string &test, 
                                   std::deque<T> *orig, 
                                   std::deque<T> *copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+
+template <class T> void TestError(const std::string &test, 
+                                  const std::list<T> &/*orig*/, 
+                                  const std::list<T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, 
+                                  std::list<T> *orig, 
+                                  std::list<T> *copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, 
+                                  const std::set<T> &/*orig*/, 
+                                  const std::set<T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, 
+                                  std::set<T> *orig, 
+                                  std::set<T> *copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, 
+                                  const std::multiset<T> &/*orig*/, 
+                                  const std::multiset<T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class T> void TestError(const std::string &test, 
+                                  std::multiset<T> *orig, 
+                                  std::multiset<T> *copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class Key, class T> void TestError(const std::string &test, 
+                                             const std::map<Key, T> &/*orig*/, 
+                                             const std::map<Key, T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class Key, class T> void TestError(const std::string &test, 
+                                             std::map<Key, T> *orig, 
+                                             std::map<Key, T> *copy) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class Key, class T> void TestError(const std::string &test, 
+                                             const std::multimap<Key, T> &/*orig*/, 
+                                             const std::multimap<Key, T> &/*copy*/) {
+   TestError(test,"Containers are not equivalent! See previous errors");
+}
+
+template <class Key, class T> void TestError(const std::string &test, 
+                                             std::multimap<Key, T> *orig, 
+                                             std::multimap<Key, T> *copy) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -108,6 +172,13 @@ template <class T> void TestError(const std::string &test, T* orig, T* copy) {
    } else {
       TestError(test, *orig, *copy); 
    }
+}
+
+template <class F, class S> void TestError(const std::string &test,
+                                           const std::pair<F,S> &orig, const std::pair<F,S> &copy) {
+   TestError(test,"pair not equal!");
+   TestError(test, orig.first, copy.first);
+   TestError(test, orig.second, copy.second);
 }
 
 #endif // TEST__OUTPUT

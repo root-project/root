@@ -1,8 +1,8 @@
 #include "dequeHolder.h"
 #include "test.C"
 
-void vtest() {
-   checkHolder<dequeHolder>();
-   write<dequeHolder>("deque.root");
-   read<dequeHolder>("deque.root");
+void dtest() {
+   checkHolder<dequeHolder>("deque");
+   write<dequeHolder>("deque");
+   read<dequeHolder>("deque");
 }

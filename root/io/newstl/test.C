@@ -5,12 +5,12 @@
 
 void TestError(const std::string &test, const char *msg);
 
-template <class HolderClass> Bool_t checkHolder() {
+template <class HolderClass> Bool_t checkHolder(const char *testname = "") {
    HolderClass *holder = new HolderClass( 0 );
-   Bool_t result = holder->Verify(0,"checkHolder",0);
+   Bool_t result = holder->Verify(0,Form("%s checkHolder",testname),0);
    delete holder;
    holder = new HolderClass( 2 );
-   result &= holder->Verify(2,"checkHolder",0);
+   result &= holder->Verify(2,Form("%s checkHolder",testname),0);
    return result;
 }
 
@@ -23,6 +23,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
 
    gSystem->mkdir(dirname);
    TString filename = gSystem->ConcatFileName(dirname, testname );
+   filename += ".root";
 
    TFile *file = new TFile(filename,"RECREATE");
 
@@ -89,7 +90,7 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    delete file;
 }
 
-template <class HolderClass> bool verifyBranch(TTree *chain, const char *bname, int type = 0) {
+template <class HolderClass> bool verifyBranch(const char *testname, TTree *chain, const char *bname, int type = 0) {
    HolderClass **add = 0;
    HolderClass *holder = 0;
 
@@ -119,10 +120,10 @@ template <class HolderClass> bool verifyBranch(TTree *chain, const char *bname, 
    int splitlevel = branch->GetSplitLevel();
 
    switch (type) {
-      case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),bname,splitlevel);
-      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),bname,splitlevel);
-      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),bname,splitlevel);
-      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),bname,splitlevel);
+      case 0: return holder->Verify(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 1: return holder->VerifyScalar(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 2: return holder->VerifyObject(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
+      case 3: return holder->VerifyNested(chain->GetTree()->GetReadEntry(),Form("%s %s",testname,bname),splitlevel);
       default: 
          TestError("treeReading",Form("Unknown type %d in verifyBranch",type));
          return false;
@@ -135,11 +136,14 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
    bool testingTopLevelVectors = false; 
    
    TString filename = gSystem->ConcatFileName(dirname, testname );
+   filename += ".root";
    TFile file(filename,"READ");
 
    holder = dynamic_cast<HolderClass*>( file.Get("holder") );
    if (!holder) result = false;
-   else result &= holder->Verify(0,"Write in dir",0);
+   else {
+      result &= holder->Verify(0,Form("%s: write in dir",testname),0);
+   }
 
    TTree *chain = dynamic_cast<TTree*>( file.Get("stltree") );
 
@@ -154,29 +158,29 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
          break;
       }
 
-      result &= verifyBranch<HolderClass>(chain,"split_2.");
-      result &= verifyBranch<HolderClass>(chain,"split_1.");
-      result &= verifyBranch<HolderClass>(chain,"split0.");
-      result &= verifyBranch<HolderClass>(chain,"split1.");
-      result &= verifyBranch<HolderClass>(chain,"split2.");
-      result &= verifyBranch<HolderClass>(chain,"split99.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split_2.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split_1.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split0.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split1.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split2.");
+      result &= verifyBranch<HolderClass>(testname,chain,"split99.");
 
       if (testingTopLevelVectors) {
          // we know that they all fail! (missing dictionary)
-         result &= verifyBranch<HolderClass>(chain,"scalar0",1);
-         result &= verifyBranch<HolderClass>(chain,"scalar1",1);
-         result &= verifyBranch<HolderClass>(chain,"scalar2",1);
-         result &= verifyBranch<HolderClass>(chain,"scalar99",1);
+         result &= verifyBranch<HolderClass>(testname,chain,"scalar0",1);
+         result &= verifyBranch<HolderClass>(testname,chain,"scalar1",1);
+         result &= verifyBranch<HolderClass>(testname,chain,"scalar2",1);
+         result &= verifyBranch<HolderClass>(testname,chain,"scalar99",1);
          
-         result &= verifyBranch<HolderClass>(chain,"object0",2);
-         result &= verifyBranch<HolderClass>(chain,"object1",2);
-         result &= verifyBranch<HolderClass>(chain,"object2",2);
-         result &= verifyBranch<HolderClass>(chain,"object99",2);
+         result &= verifyBranch<HolderClass>(testname,chain,"object0",2);
+         result &= verifyBranch<HolderClass>(testname,chain,"object1",2);
+         result &= verifyBranch<HolderClass>(testname,chain,"object2",2);
+         result &= verifyBranch<HolderClass>(testname,chain,"object99",2);
          
-         result &= verifyBranch<HolderClass>(chain,"nested0",3);
-         result &= verifyBranch<HolderClass>(chain,"nested1",3);
-         result &= verifyBranch<HolderClass>(chain,"nested2",3);
-         result &= verifyBranch<HolderClass>(chain,"nested99",3);  
+         result &= verifyBranch<HolderClass>(testname,chain,"nested0",3);
+         result &= verifyBranch<HolderClass>(testname,chain,"nested1",3);
+         result &= verifyBranch<HolderClass>(testname,chain,"nested2",3);
+         result &= verifyBranch<HolderClass>(testname,chain,"nested99",3);  
       }
    }
    return result;

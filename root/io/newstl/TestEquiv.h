@@ -16,13 +16,20 @@ template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
 bool IsEquiv(const std::string &, float orig, float copy) {
    float epsilon = 1e-6;
    float diff = orig-copy;
-   return TMath::Abs( diff/copy ) < epsilon;
+   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
+   else return TMath::Abs( diff/copy ) < epsilon;
 }
 
 bool IsEquiv(const std::string &, double orig, double copy) {
    double epsilon = 1e-14;
    double diff = orig-copy;
-   return TMath::Abs( diff/copy ) < epsilon;
+//    std::cerr << "epsilon = " << epsilon 
+//              << " diff = " << diff 
+//              << " div  = " << diff/copy
+//              << " abs = " << TMath::Abs( diff/copy )
+//              << " bool = " << (TMath::Abs( diff/copy ) < epsilon) << std::endl;
+   if (copy < epsilon ) return  TMath::Abs( diff ) < epsilon;
+   else return TMath::Abs( diff/copy ) < epsilon;
 }
 
 bool IsEquiv(const std::string &, const std::string& orig, const std::string& copy) {
@@ -70,11 +77,21 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
    return result;
 }
 
+template <class F, class S> bool IsEquiv(const std::string &test,
+                                         const std::pair<F,S> &orig, const std::pair<F,S> &copy) {
+   return IsEquiv(test, orig.first, copy.first)
+      && IsEquiv(test, orig.second, copy.second);
+}
+
 bool IsEquiv(const std::string &, int orig, int copy) {
    return orig==copy;
 }
 
-bool IsEquiv(const std::string &, UInt_t orig, unsigned int copy) {
+bool IsEquiv(const std::string &, UInt_t orig, UInt_t copy) {
+   return orig==copy;
+}
+
+bool IsEquiv(const std::string &, short orig, short copy) {
    return orig==copy;
 }
 
@@ -82,6 +99,7 @@ bool IsEquiv(const std::string &, char orig, char copy) {
    return orig==copy;
 }
 
-bool IsEquiv(const std::string &, short orig, short copy) {
+bool IsEquiv(const std::string &, bool orig, bool copy) {
    return orig==copy;
 }
+

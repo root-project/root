@@ -12,9 +12,9 @@
 #define R__NO_VAR_ARRAY_OF_CONTAINERS
 #endif
 
-#define R__CAN_SPLIT_VECTOR_OBJECT ROOT_VERSION(3,06,2)
-#if ROOT_VERSION_CODE < R__CAN_SPLIT_VECTOR_OBJECT
-#define R__CANNOT_SPLIT_VECTOR_OBJECT
+#define R__CAN_SPLIT_STL_CONTAINER ROOT_VERSION(3,06,2)
+#if ROOT_VERSION_CODE < R__CAN_SPLIT_STL_CONTAINER
+#define R__CANNOT_SPLIT_STL_CONTAINER
 #endif
 
 #define R__NESTED_CONST_STRING ROOT_VERSION(3,06,2)
@@ -45,10 +45,10 @@ Bool_t HasNestedConstString(TFile *file) {
    return result;
 }
 
-bool HasSplitVectorObject(TFile *file, int splitlevel) {
+bool HasSplitStlContainer(TFile *file, int splitlevel) {
    Bool_t result = (splitlevel<2) || (file->GetVersion() >= R__NESTED_CONTAINER);
    if (!result) {
-      static OutputOneErrorMessage error("splitting vector of object");
+      static OutputOneErrorMessage error("splitting of stl containers");
    }
    return result;
 }

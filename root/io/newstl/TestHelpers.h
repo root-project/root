@@ -12,6 +12,7 @@ public:
    //bool operator==(const Helper &rhs) const { return val==rhs.val; }
    //bool operator!=(const Helper &rhs) const { return !(*this==rhs); }
    bool IsEquiv(const Helper &rhs) const { return  val==rhs.val; }
+   bool operator<(const Helper &rhs) const { return val<rhs.val; }
 };
 
 class THelper : public Helper, public TObject {
@@ -23,5 +24,18 @@ public:
 
 enum EHelper { kZero = 0, kOne, kTwo,
                kEnd = 40 };
+
+bool operator<(const TNamed&lhs, const TNamed&rhs) {
+   return strcmp(lhs.GetName(),rhs.GetName()) < 0;
+}
+
+template <class T> class PtrCmp {
+public:
+   bool operator()(const T * lhs, const T * rhs) {
+      if (lhs==0) return (rhs!=0);
+      if (rhs==0) return false;
+      return *lhs < *rhs;
+   }
+};
 
 #endif // TEST__HELPER
