@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.27 2001/01/07 15:16:23 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.28 2001/01/12 14:27:05 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -380,15 +380,21 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
             else
                fprintf(fp, "               R__b >> R__t;\n");
          } else {
-            if (TemplateArg(m).HasMethod("Streamer"))
+            if (TemplateArg(m).HasMethod("Streamer")) {
                fprintf(fp, "               R__t.Streamer(R__b);\n");
-            else {
-               fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
-                       " method (need manual intervention)\n",
-                       m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
-               fprintf(fp, "               //R__t.Streamer(R__b);\n");
+            } else {
+              if (strcmp(s,"string") == 0) {
+                 fprintf(fp,"               TString s;\n");
+                 fprintf(fp,"               s.Streamer(R__b);\n");
+                 fprintf(fp,"               string = s.Data();\n");
+              } else {
+                 fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
+                          " method (need manual intervention)\n",
+                          m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
+                 fprintf(fp, "               //R__t.Streamer(R__b);\n");
+              }
             }
-         }
+        }
          if (m.Property() & G__BIT_ISPOINTER)
             fprintf(fp, "               %s[l]->push_back(R__t);\n", m.Name());
          else
@@ -473,17 +479,29 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                } else if (stltype == kSet || stltype == kMultiset) {
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
-                  fprintf(fp, "            R__b >> R__t;\n");
+                  if (strcmp(s,"string*") == 0) {
+                     fprintf(fp,"            static TString s;\n");
+                     fprintf(fp,"            s.Streamer(R__b);\n");
+                     fprintf(fp,"            R__t = new string(s.Data());\n");
+                  } else {
+                     fprintf(fp, "            R__b >> R__t;\n");
+                  }
                }
              }
           } else {
-            if (TemplateArg(m).HasMethod("Streamer"))
+            if (TemplateArg(m).HasMethod("Streamer")) {
                fprintf(fp, "            R__t.Streamer(R__b);\n");
-            else {
-               fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
-                       " method (need manual intervention)\n",
-                       m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
-               fprintf(fp, "            //R__t.Streamer(R__b);\n");
+            } else {
+              if (strcmp(s,"string") == 0) {
+                 fprintf(fp,"            static TString s;\n");
+                 fprintf(fp,"            s.Streamer(R__b);\n");
+                 fprintf(fp,"            R__t = s.Data();\n");
+              } else {
+                 fprintf(stderr, "*** Datamember %s::%s: template arg %s has no Streamer()"
+                         " method (need manual intervention)\n",
+                         m.MemberOf()->Name(), m.Name(), TemplateArg(m).Name());
+                 fprintf(fp, "            //R__t.Streamer(R__b);\n");
+              }
             }
          }
          if (m.Property() & G__BIT_ISPOINTER) {
@@ -536,9 +554,19 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                } else if (stltype == kSet || stltype == kMultiset) {
                   fprintf(fp, "            R__b << *R__k;\n");
                } else {
-                  fprintf(fp, "            R__b << *R__k;\n");
+                  if (strcmp(TemplateArg(m).Name(),"string*") == 0) {
+                     fprintf(fp,"            static TString s = (*R__k)->data();\n");
+                     fprintf(fp,"            s.Streamer(R__b);\n");
+                  } else {
+                     if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
+printf("cannot process template argument1 %s\n",tmparg);
+                        fprintf(fp, "            //R__b << *R__k;\n");
+                     } else {
+                        fprintf(fp, "            R__b << *R__k;\n");
+                     }
+                  }
                }
-            }
+           }
          } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
                if (stltype == kMap || stltype == kMultimap) {
@@ -549,9 +577,19 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                   fprintf(fp, "            (*R__k).Streamer(R__b);\n");
                }
             } else {
-               fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+               if (strcmp(TemplateArg(m).Name(),"string") == 0) {
+                  fprintf(fp,"            static TString s = (*R__k).data();\n");
+                  fprintf(fp,"            s.Streamer(R__b);\n");
+               } else {
+                  if (strcmp(TemplateArg(m).Name(),"(unknown)") == 0) {
+printf("cannot process template argument2 %s\n",tmparg);
+                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+                  } else {
+                    fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+                  }
+               }
             }
-         }
+        }
          fprintf(fp, "         }\n");
          fprintf(fp, "      }\n");
       }
