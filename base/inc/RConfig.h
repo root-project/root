@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.10 2000/12/10 11:33:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.11 2000/12/10 14:23:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -77,9 +77,10 @@
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
+#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #   if __SUNPRO_CC >= 0x420
-#      define R__SUNCCBUG     /* to work around a compiler bug */
+#      define R__SUNCCBUG        /* to work around a compiler bug */
 #   endif
 #endif
 
