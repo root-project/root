@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.8 2001/06/06 16:48:33 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.9 2001/09/20 17:07:23 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -116,7 +116,7 @@ public:
    const char       *BaseName(const char *name);
    void              SetProgname(const char *name);
    const char       *GetError();
-   const char       *Hostname();
+   const char       *HostName();
 
    HIMAGELIST GetSmallIconList() { return fhSmallIconList; }
    HICON   GetSmallIcon(Int_t IconIdx) {return fhSmallIconList  ? ImageList_GetIcon(fhSmallIconList,IconIdx,ILD_NORMAL):0; }

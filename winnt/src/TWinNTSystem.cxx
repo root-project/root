@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.20 2001/09/26 06:52:46 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.21 2001/09/27 18:18:59 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -525,18 +525,17 @@ const char *TWinNTSystem::GetError()
 }
 
 //______________________________________________________________________________
-const char *TWinNTSystem::Hostname()
+const char *TWinNTSystem::HostName()
 {
    // Return the system's host name.
 
    if (fHostname == "") {
       char hn[64];
-      int il = sizeof(hn);
-      GetComputerName((LPTSTR)hn,( LPDWORD)&il);
-//      gethostname(hn, sizeof(hn));
+      DWORD il = sizeof(hn);
+      GetComputerName(hn, &il);
       fHostname = hn;
    }
-   return (const char *)fHostname;
+   return fHostname;
 }
 
 //---- EventLoop ---------------------------------------------------------------
