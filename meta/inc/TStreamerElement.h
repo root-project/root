@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.10 2000/12/22 10:44:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.11 2001/01/16 16:20:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
    virtual         ~TStreamerElement();
    Int_t            GetArrayDim() const {return fArrayDim;}
    Int_t            GetArrayLength() const {return fArrayLength;}
-   TClass          *GetClassPointer() const;
+   virtual TClass  *GetClassPointer() const;
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}
    virtual ULong_t  GetMethod() const {return ULong_t(fStreamer);}
@@ -81,14 +81,20 @@ public:
 //________________________________________________________________________
 class TStreamerBase : public TStreamerElement {
 
+protected:
+   TClass          *fBaseClass;           //pointer to base class
+
 public:
 
    TStreamerBase();
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
+   virtual TClass  *GetClassPointer() const {return fBaseClass;}
    const char      *GetInclude() const;
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
    virtual void     Init(TObject *obj=0);
+   Int_t            ReadBuffer (TBuffer &b, char *pointer);
+   Int_t            WriteBuffer(TBuffer &b, char *pointer);
    
    ClassDef(TStreamerBase,1)  //Streamer element of type base class
 };
