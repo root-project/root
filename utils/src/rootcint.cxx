@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.139 2003/07/14 13:10:23 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.140 2003/07/29 16:16:16 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -382,12 +382,12 @@ string R__tmpnam()
       else if((tmp=getenv("TEMP"))) tmpdir = tmp;
       else if((tmp=getenv("TMP"))) tmpdir = tmp;
       else tmpdir = ".";
+      tmpdir += '/';
    }
    
    tmpnam(filename);
    
    string result(tmpdir);
-   result += '/';
    result += filename;
    result += "_rootcint";
 
