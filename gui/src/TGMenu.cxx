@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.39 2004/07/06 10:57:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.40 2004/07/06 14:46:54 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -96,6 +96,7 @@ TGMenuBar::TGMenuBar(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
                        kButtonPressMask | kButtonReleaseMask | kEnterWindowMask,
                        kNone, kNone);
 
+   BindKeys(kTRUE);
    fKeyNavigate = kFALSE;
 }
 
@@ -154,7 +155,7 @@ void TGMenuBar::BindKeys(Bool_t on)
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
       main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -1592,7 +1593,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    Resize(tw + 8, max_ascent + max_descent + 7);
-         
+
    if (p->InheritsFrom(TGMenuBar::Class())) {
       TGMenuBar *bar = (TGMenuBar*)p;
       fMenu->SetMenuBar(bar);
