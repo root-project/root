@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.19 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.20 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -89,7 +89,7 @@ protected:
                                   Long_t timeout);
    static void         WinNTSignal(ESignals sig, SigHandler_t h);
    static char        *WinNTSigname(ESignals sig);
-   static int          WinNTFilestat(const char *path, Long_t *id, Long_t *size,
+   static int          WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
                                     Long_t *flags, Long_t *modtime);
    static int          WinNTFSstat(const char *path, Long_t *id, Long_t *bsize,
                                     Long_t *blocks, Long_t *bfree);
