@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.119 2003/01/17 17:48:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.120 2003/01/31 18:02:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2124,6 +2124,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          for (i=0;i<ncols;i++) var[i]->UpdateFormulaLeaves();
+          if (select) select->UpdateFormulaLeaves();
       }
       if (select) {
          select->GetNdata();
