@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.7 2002/07/24 13:23:17 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.8 2002/07/29 09:22:29 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -226,7 +226,7 @@ void TMap::Print(Option_t *option) const
          printf("Value: ");
          a->Value()->Print();
       } else
-         printf("Value: 0x%x\n", a->Value());
+         printf("Value: 0x%lx\n", (ULong_t) a->Value());
    }
 }
 
