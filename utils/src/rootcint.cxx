@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.91 2002/07/11 21:40:48 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.92 2002/07/19 11:41:01 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2438,8 +2438,13 @@ void WriteShadowClass(G__ClassInfo &cl)
             prefix="::";
          else
             prefix = "";
-
-         fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
+         if ((d.Type()->Property() & G__BIT_ISENUM) && 
+             (type_name.length()==0 || type_name=="enum") || type_name.find("::")==type_name.length()-2 ) {
+            // We have unamed enums, let's fake it:
+            fprintf(fp,"         enum {kDummy} %s", d.Name());
+         } else {
+            fprintf(fp,"         %s%s %s",prefix, type_name.c_str(),d.Name());
+         }
 
          for(int dim = 0; dim < d.ArrayDim(); dim++) {
             fprintf(fp, "[%d]",d.MaxIndex(dim));
