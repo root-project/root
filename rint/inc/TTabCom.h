@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name$:$Id$
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -65,6 +65,8 @@ class TTabCom
      typedef TListIter TContIter;
 
  public: // member functions
+     Int_t Hook(char *buf, int *pLoc);
+
      const TSeqCol* GetListOfClasses();
      const TSeqCol* GetListOfCppDirectives();
      const TSeqCol* GetListOfFilesInPath( const char path[] );
@@ -196,14 +198,10 @@ class TTabCom
      EContext_t DetermineContext() const;
      TString    DeterminePath( const TString& fileName, const char defaultPath[] ) const;
      TString    ExtendPath( const char originalPath[], TString newBase ) const;
-     Int_t      Hook( char* buf, int* pLoc );
      void       InitPatterns();
      TClass*    MakeClassFromClassName( const char className[] ) const;
      TClass*    MakeClassFromVarName( const char varName[], EContext_t& context );
      void       SetPattern( EContext_t handle, const char regexp[] );
-
- private: // friends
-     friend int gl_root_tab_hook(char* buf, int prompt_width, int* pLoc);
 
  private: // data members
      TSeqCol* fpClasses;
@@ -225,6 +223,6 @@ class TTabCom
      ClassDef(TTabCom,0)  //Perform comand line completion when hitting <TAB>
 };
 
-extern TTabCom* gTabCom;
+extern TTabCom *gTabCom;
 
 #endif
