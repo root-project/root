@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.73 2004/07/30 01:13:51 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.74 2004/07/30 10:53:19 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -131,6 +131,7 @@ TCanvas::TCanvas(Bool_t build) : TPad()
       else
          cdef = StrDup(Form("%s",defcanvas));
       Constructor(cdef, cdef, 1);
+      delete [] cdef;
    }
 }
 
