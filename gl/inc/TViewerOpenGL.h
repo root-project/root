@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.15 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.16 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -108,7 +108,7 @@ public:
    Bool_t HandleContainerKey(Event_t *ev);
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
-   void ModifySelected(Int_t id);
+   void ModifyScene(Int_t id);
 
 private:
    void CreateViewer();

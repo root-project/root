@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.4 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.5 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -11,6 +11,8 @@
 
 #ifndef ROOT_TGLRender
 #define ROOT_TGLRender
+
+#include <utility>
 
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
@@ -38,6 +40,11 @@ private:
    //clipping plane equation A*x+B*y+C*z+D=0
    Double_t       fPlaneEqn[4];
    Bool_t         fClipping;
+   Bool_t         fAxes;
+   //temporary
+   Bool_t         fPxs;
+   typedef std::pair<Double_t, Double_t>PDD_t;
+   PDD_t          fAxeD[3];
 
 public:
    TGLRender();
@@ -63,10 +70,16 @@ public:
    }
    void EndMovement();
    void Invalidate();
+   void SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z);
+   void ResetAxes()
+   {
+      fAxes = !fAxes;
+   }
 
 private:
    void BuildGLList(Bool_t execute = kFALSE);
    void RunGLList();
+   void DrawAxes();
 
    TGLRender(const TGLRender &);
    TGLRender & operator = (const TGLRender &);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.7 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.8 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #endif
 
 #include <algorithm>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -24,6 +25,23 @@
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
 #include "TGLCamera.h"
+
+const UChar_t gXyz[][8] = {{0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
+                           {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
+                           {0x7c, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x7c}};
+
+const UChar_t gDigits[][8] = {{0x38, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x38},//0
+                              {0x10, 0x10, 0x10, 0x10, 0x10, 0x70, 0x10, 0x10},//1
+                              {0x7c, 0x44, 0x20, 0x18, 0x04, 0x04, 0x44, 0x38},//2
+                              {0x38, 0x44, 0x04, 0x04, 0x18, 0x04, 0x44, 0x38},//3
+                              {0x04, 0x04, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x44},//4
+                              {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x40, 0x40, 0x7c},//5
+                              {0x7c, 0x44, 0x44, 0x44, 0x7c, 0x40, 0x40, 0x7c},//6
+                              {0x20, 0x20, 0x20, 0x10, 0x08, 0x04, 0x44, 0x7c},//7
+                              {0x38, 0x44, 0x44, 0x44, 0x38, 0x44, 0x44, 0x38},//8
+                              {0x7c, 0x44, 0x04, 0x04, 0x7c, 0x44, 0x44, 0x7c},//9
+                              {0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},//.
+                              {0x00, 0x00, 0x00, 0x00, 0x7c, 0x00, 0x00, 0x00}};//-
 
 //______________________________________________________________________________
 TGLRender::TGLRender()
@@ -44,6 +62,8 @@ TGLRender::TGLRender()
    fFirstT = 0;
    fSelectedObj = 0;
    fSelectionBox = 0;
+   fPxs = kFALSE;
+   fAxes = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -80,10 +100,11 @@ void TGLRender::Traverse()
          glClipPlane(GL_CLIP_PLANE0, fPlaneEqn);
       }
 
+      RunGLList();
       if (fSelectionBox) {
          fSelectionBox->DrawBox();
       }
-      RunGLList();
+      if(fAxes) DrawAxes();
    }
 }
 
@@ -243,4 +264,86 @@ void TGLRender::Invalidate()
    }
    fFirstT = 0;
    BuildGLList();
+}
+
+//______________________________________________________________________________
+void TGLRender::SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z)
+{
+   fAxeD[0] = x;
+   fAxeD[1] = y;
+   fAxeD[2] = z;
+}
+
+//______________________________________________________________________________
+void PrintNumber(Double_t x, Double_t y, Double_t z, Double_t num, Double_t ys)
+{
+   std::ostringstream ss;
+   ss<<num;
+   std::string str(ss.str());
+   glRasterPos3d(x, y, z);
+   for (UInt_t i = 0, e = str.length(); i < e; ++i) {
+      if (str[i] == '.') {
+         glBitmap(8, 8, 0., ys, 7., 0., gDigits[10]);
+         if (i + 1 < e)
+            glBitmap(8, 8, 0., ys, 7., 0., gDigits[str[i + 1] - '0']);
+         break;
+      } else if (str[i] == '-') {
+         glBitmap(8, 8, 0., ys, 7., 0., gDigits[11]);
+      } else {
+         glBitmap(8, 8, 0., ys, 7., 0., gDigits[str[i] - '0']);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TGLRender::DrawAxes()
+{
+   if (!fPxs) {
+      fPxs = kTRUE;
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   }
+   glPushAttrib(GL_DEPTH_BUFFER_BIT);
+   glDisable(GL_DEPTH_TEST);
+
+   const Double_t axeColors[][3] = {{1., 0., 0.}, 
+                                    {0., 1., 0.},
+                                    {0., 0., 1.}};
+   //white axes
+   glDisable(GL_LIGHTING);
+//   glEnable(GL_COLOR_MATERIAL);
+   glColor3dv(axeColors[3]);
+
+   glBegin(GL_LINES);
+   glColor3dv(axeColors[0]);
+   glVertex3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first);
+   glVertex3d(fAxeD[0].second, fAxeD[1].first, fAxeD[2].first);
+   glColor3dv(axeColors[1]);
+   glVertex3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first);
+   glVertex3d(fAxeD[0].first, fAxeD[1].second, fAxeD[2].first);
+   glColor3dv(axeColors[2]);
+   glVertex3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first);
+   glVertex3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second);
+   glEnd();
+
+   glColor3dv(axeColors[0]);
+   glRasterPos3d(fAxeD[0].second, fAxeD[1].first + 12, fAxeD[2].first);
+   glBitmap(8, 8, 0., 0., 0., 0., gXyz[0]);
+   PrintNumber(fAxeD[0].second, fAxeD[1].first, fAxeD[2].first, fAxeD[0].second, 9.);
+   PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[0].first, 0.);
+
+   glColor3dv(axeColors[1]);
+   glRasterPos3d(fAxeD[0].first, fAxeD[1].second + 12, fAxeD[2].first);
+   glBitmap(8, 8, 0, 0, 12., 0, gXyz[1]);   
+   PrintNumber(fAxeD[0].first, fAxeD[1].second, fAxeD[2].first, fAxeD[1].second, 9.);
+   PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[1].first, 9.);
+
+   glColor3dv(axeColors[2]);
+   glRasterPos3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second);
+   glBitmap(8, 8, 0, 0, 0., 0, gXyz[2]);   
+   PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second, fAxeD[2].second, 9.);
+   PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[2].first, -9.);
+
+ //  glDisable(GL_COLOR_MATERIAL);
+   glEnable(GL_LIGHTING);
+   glPopAttrib();
 }

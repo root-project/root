@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.4 2004/10/04 07:38:37 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.5 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -35,6 +35,7 @@ class TGLabel;
 enum EApplyButtonIds {
    kTBcp,
    kTBcpm,
+   kTBda,
    kTBa,
    kTBa1
 };
@@ -148,6 +149,7 @@ private:
    TGNumberEntry  *fGeomData[kTot];
    TGButton       *fApplyButton;
    TGCheckButton  *fClipActivate;
+   TGCheckButton  *fAxesCheck;
 
 public:
    TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *viewer);   

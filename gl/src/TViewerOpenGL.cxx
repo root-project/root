@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.27 2004/10/06 09:47:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.28 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -492,7 +492,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
 {
    TBuffer3D * buff = fPad->GetBuffer3D();
    TObjLink * lnk = fPad->GetListOfPrimitives()->FirstLink();
-  
+   //Two light sources as scene objects
    Float_t col1[] = {0.4f, 0.f, 0.f};
    Float_t col2[] = {0.f, 0.4f, 0.f};
    const Double_t pos[3] = {0., 0., 0.};
@@ -513,6 +513,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
 
    buff->fOption = TBuffer3D::kPAD;
    CalculateViewvolumes();
+   //Calculate light sources positions and "bulb" radius
    Double_t xdiff = fRangeX.second - fRangeX.first;
    Double_t ydiff = fRangeY.second - fRangeY.first;
    Double_t zdiff = fRangeZ.second - fRangeZ.first;
@@ -529,11 +530,11 @@ void TViewerOpenGL::CreateScene(Option_t *)
    box2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
                 std::make_pair(-newRad, newRad));
    box2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-
+   
+   fRender.SetAxes(fRangeX, fRangeY, fRangeZ);
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
-//   gVirtualGL->LightModel(kLIGHT_MODEL_TWO_SIDE, kTRUE);
    gVirtualGL->EnableGL(kLIGHTING);
    gVirtualGL->EnableGL(kLIGHT0);
    gVirtualGL->EnableGL(kLIGHT1);
@@ -610,7 +611,7 @@ void TViewerOpenGL::DrawObjects()const
    MakeCurrent();
    gVirtualGL->NewMVGL();
    Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-   Float_t lig_prop1[] = {.4f, .4f, .4f, 1.f};
+   Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
 
    gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
    gVirtualGL->PushGLMatrix();
@@ -805,7 +806,7 @@ void TViewerOpenGL::CreateCameras()
 }
 
 //______________________________________________________________________________
-void TViewerOpenGL::ModifySelected(Int_t wid)
+void TViewerOpenGL::ModifyScene(Int_t wid)
 {
    MakeCurrent();
    switch (wid) {
@@ -821,6 +822,9 @@ void TViewerOpenGL::ModifySelected(Int_t wid)
          fSelectedObj->GetBox()->Shift(c[0], c[1], c[2]);
          fSelectedObj->Shift(c[0], c[1], c[2]);
       }
+      break;
+   case kTBda:
+      fRender.ResetAxes();
       break;
    case kTBcp:
       if (fRender.ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);

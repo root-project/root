@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.9 2004/10/06 09:47:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.10 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -96,10 +96,10 @@ void TGLSelection::DrawBox()const
    Double_t xmin = fRangeX.first, xmax = fRangeX.second;
    Double_t ymin = fRangeY.first, ymax = fRangeY.second;
    Double_t zmin = fRangeZ.first, zmax = fRangeZ.second;
-   Float_t whiteColor[] = {1.f, 1.f, 1.f, 1.f};
+   glDisable(GL_DEPTH_TEST);
+   glDisable(GL_LIGHTING);
 
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, whiteColor);
-   glMaterialfv(GL_FRONT, GL_EMISSION, whiteColor);
+   glColor3f(1.f, 1.f, 1.f);
    glBegin(GL_LINE_LOOP);
    glVertex3d(xmin, ymin, zmin);
    glVertex3d(xmin, ymax, zmin);
@@ -122,6 +122,9 @@ void TGLSelection::DrawBox()const
    glVertex3d(xmax, ymin, zmin);
    glVertex3d(xmax, ymin, zmax);
    glEnd();
+
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_LIGHTING);   
 }
 
 //______________________________________________________________________________

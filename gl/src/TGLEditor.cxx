@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.7 2004/10/05 12:40:49 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.8 2004/10/08 10:10:42 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -212,7 +212,7 @@ void TGLColorEditor::DoButton()
       break;
    case kTBa:
       fApplyButton->SetState(kButtonDisabled);
-      fViewer->ModifySelected(kTBa);
+      fViewer->ModifyScene(kTBa);
       break;
    }
    DrawSphere();
@@ -423,7 +423,7 @@ void TGLGeometryEditor::DoButton()
 {
    if (TGButton *btn = (TGButton *)gTQSender) {
       Int_t wid = btn->WidgetId();
-      fViewer->ModifySelected(wid);
+      fViewer->ModifyScene(wid);
       if (wid == kTBa1) {
          fApplyButton->SetState(kButtonDisabled);
          fGeomData[kScaleX]->SetNumber(1.0);
@@ -535,6 +535,12 @@ TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *v)
    AddFrame(fApplyButton, fL1);
    fApplyButton->SetState(kButtonDisabled);
    fApplyButton->Connect("Pressed()", "TGLSceneEditor", this, "DoButton()");
+
+   fAxesCheck = new TGCheckButton(this, "Show axes", kTBda);
+   fTrash.AddLast(fAxesCheck);
+   AddFrame(fAxesCheck, fL1);
+   fAxesCheck->Connect("Clicked()", "TGLSceneEditor", this, "DoButton()");
+   fAxesCheck->SetState(kButtonDown);
 }
 
 //______________________________________________________________________________
@@ -596,7 +602,7 @@ void TGLSceneEditor::DoButton()
 {
    if (TGButton *btn = (TGButton *)gTQSender) {
       Int_t wid = btn->WidgetId();
-      fViewer->ModifySelected(wid);
+      fViewer->ModifyScene(wid);
       if (wid == kTBcpm) {
          fApplyButton->SetState(kButtonDisabled);
       } 
