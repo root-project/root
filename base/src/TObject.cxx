@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.14 2000/12/27 22:47:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.15 2001/02/08 11:45:17 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -286,7 +286,7 @@ TObject *TObject::Clone() const
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
    //buffer->WriteObject(this);
-   Streamer(*buffer);
+   ((TObject*)this)->Streamer(*buffer);
    
    // read new object from buffer
    buffer->SetReadMode();
