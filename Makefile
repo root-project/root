@@ -48,14 +48,8 @@ MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp \
                 guibuilder xml
 
-ifeq ($(ARCH),win32old)
-MODULES      += winnt win32 gl
-SYSTEML       = $(WINNTL)
-SYSTEMO       = $(WINNTO)
-SYSTEMDO      = $(WINNTDO)
-else
 ifeq ($(ARCH),win32)
-MODULES      += winnt win32gdk gl
+MODULES      += winnt win32gdk
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
@@ -70,7 +64,6 @@ MODULES      += unix x11 x11ttf x3d rootx rpdutils rootd proofd
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
-endif
 endif
 endif
 ifeq ($(BUILDGL),yes)
@@ -591,7 +584,7 @@ maintainer-clean:: distclean
 version: $(CINTTMP)
 	@$(MAKEVERSION)
 
-cintdlls: $(CINTTMP)
+cintdlls: $(CINTTMP) $(ROOTCINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(ROOTCINTTMP)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
 	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
