@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.132 2003/04/10 17:09:18 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.133 2003/04/11 13:05:48 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -525,6 +525,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
+   Hoption.Off  = 0;
 
 //    special 2-D options
    Hoption.List        = 0;
@@ -628,25 +629,26 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
 
-   if (strstr(chopt,"A")) Hoption.Axis = -1;
-   if (strstr(chopt,"B")) Hoption.Bar  = 1;
+   if (strstr(chopt,"A"))   Hoption.Axis = -1;
+   if (strstr(chopt,"B"))   Hoption.Bar  = 1;
    if (strstr(chopt,"C")) { Hoption.Curve =1; Hoption.Hist = -1;}
-   if (strstr(chopt,"E")) Hoption.Error =1;
-   if (strstr(chopt,"F")) Hoption.Fill =1;
-   if (strstr(chopt,"F2"))Hoption.Fill =2;
+   if (strstr(chopt,"E"))   Hoption.Error =1;
+   if (strstr(chopt,"F"))   Hoption.Fill =1;
+   if (strstr(chopt,"][")) {Hoption.Off  =1; Hoption.Hist =1;}
+   if (strstr(chopt,"F2"))  Hoption.Fill =2;
    if (strstr(chopt,"L")) { Hoption.Line =1; Hoption.Hist = -1;}
    if (strstr(chopt,"P")) { Hoption.Mark =1; Hoption.Hist = -1;}
-   if (strstr(chopt,"Z")) Hoption.Zscale =1;
-   if (strstr(chopt,"*")) Hoption.Star =1;
-   if (strstr(chopt,"+")) Hoption.Plus =1;
-   if (strstr(chopt,"-")) Hoption.Plus =-1;
-   if (strstr(chopt,"H")) Hoption.Hist =2;
-   if (strstr(chopt,"P0")) Hoption.Mark =10;
-   if (strstr(chopt,"E0")) Hoption.Error =10;
-   if (strstr(chopt,"E1")) Hoption.Error =11;
-   if (strstr(chopt,"E2")) Hoption.Error =12;
-   if (strstr(chopt,"E3")) Hoption.Error =13;
-   if (strstr(chopt,"E4")) Hoption.Error =14;
+   if (strstr(chopt,"Z"))   Hoption.Zscale =1;
+   if (strstr(chopt,"*"))   Hoption.Star =1;
+   if (strstr(chopt,"+"))   Hoption.Plus =1;
+   if (strstr(chopt,"-"))   Hoption.Plus =-1;
+   if (strstr(chopt,"H"))   Hoption.Hist =2;
+   if (strstr(chopt,"P0"))  Hoption.Mark =10;
+   if (strstr(chopt,"E0"))  Hoption.Error =10;
+   if (strstr(chopt,"E1"))  Hoption.Error =11;
+   if (strstr(chopt,"E2"))  Hoption.Error =12;
+   if (strstr(chopt,"E3"))  Hoption.Error =13;
+   if (strstr(chopt,"E4"))  Hoption.Error =14;
    
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
@@ -795,6 +797,8 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The following options are supported for 1-D types:
 //    "AH"     : Draw histogram, but not the axis labels and tick marks
+//    "]["     : When this option is selected the first and last vertical lines
+//             : of the histogram are not drawn.
 //    "B"      : Bar chart option
 //    "C"      : Draw a smooth Curve througth the histogram bins
 //    "E"      : Draw error bars
@@ -2852,6 +2856,8 @@ void THistPainter::PaintHist(Option_t *)
          keepx[1] = TMath::Power(10,keepx[1]);
       }
    }
+
+   if (Hoption.Off) strcat(chopth,"][");
 
 //         Draw the histogram
 

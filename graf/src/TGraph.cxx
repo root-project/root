@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.96 2003/03/17 19:23:40 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.97 2003/04/10 20:12:22 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2341,12 +2341,15 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 //               in case the number of points is greater than the number of pixels
 //               in the current pad.
 //
+//  chopt='][' : "Cutoff" style. When this option is selected together with
+//               H option, the first and last vertical lines of the histogram
+//               are not drawn.
 //
 
    const char *where = "PaintGraphHist";
 
    Int_t OptionLine , OptionAxis , OptionCurve, OptionStar , OptionMark;
-   Int_t OptionBar  , OptionRot  , OptionOne;
+   Int_t OptionBar  , OptionRot  , OptionOne  , OptionOff;
    Int_t OptionFill , OptionZ;
    Int_t OptionHist , OptionBins , OptionMarker;
    Int_t i, j, npt;
@@ -2363,23 +2366,24 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
    char choptaxis[10] = " ";
 //*-* ______________________________________
 
-     if (npoints <= 0) {
-     Error(where, "illegal number of points (%d)", npoints);
-     return;
-  }
+   if (npoints <= 0) {
+      Error(where, "illegal number of points (%d)", npoints);
+      return;
+   }
    TString opt = chopt;
    opt.ToUpper();
-   if(opt.Contains("H")) OptionHist = 1;  else OptionHist = 0;
-   if(opt.Contains("F")) OptionFill = 1;  else OptionFill = 0;
-   if(opt.Contains("C")) OptionCurve= 1;  else OptionCurve= 0;
-   if(opt.Contains("*")) OptionStar = 1;  else OptionStar = 0;
-   if(opt.Contains("R")) OptionRot  = 1;  else OptionRot  = 0;
-   if(opt.Contains("1")) OptionOne  = 1;  else OptionOne  = 0;
-   if(opt.Contains("B")) OptionBar  = 1;  else OptionBar  = 0;
-   if(opt.Contains("N")) OptionBins = 1;  else OptionBins = 0;
-   if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
-   if(opt.Contains("P")) OptionMark = 1;  else OptionMark = 0;
-   if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
+   if(opt.Contains("H"))  OptionHist = 1;  else OptionHist = 0;
+   if(opt.Contains("F"))  OptionFill = 1;  else OptionFill = 0;
+   if(opt.Contains("C"))  OptionCurve= 1;  else OptionCurve= 0;
+   if(opt.Contains("*"))  OptionStar = 1;  else OptionStar = 0;
+   if(opt.Contains("R"))  OptionRot  = 1;  else OptionRot  = 0;
+   if(opt.Contains("1"))  OptionOne  = 1;  else OptionOne  = 0;
+   if(opt.Contains("B"))  OptionBar  = 1;  else OptionBar  = 0;
+   if(opt.Contains("N"))  OptionBins = 1;  else OptionBins = 0;
+   if(opt.Contains("L"))  OptionLine = 1;  else OptionLine = 0;
+   if(opt.Contains("P"))  OptionMark = 1;  else OptionMark = 0;
+   if(opt.Contains("A"))  OptionAxis = 1;  else OptionAxis = 0;
+   if(opt.Contains("][")) OptionOff  = 1;  else OptionOff  = 0;
    if(opt.Contains("P0")) OptionMark = 10;
 
    Int_t OptionFill2 = 0;
@@ -2600,7 +2604,27 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               ComputeLogs(npt, OptionZ);
               //gPad->PaintPolyLine(npt,gxworkl,gyworkl);
               //do not draw the two vertical lines on the edges
-              gPad->PaintPolyLine(npt-2,&gxworkl[1],&gyworkl[1]);
+		    Int_t npoints = npt-2;
+		    Int_t point1  = 1;
+              if (OptionOff) {
+                 // remove points before the low cutoff
+			  for (Int_t Ip=point1; Ip<=npoints; Ip++) {
+                    if (gyworkl[Ip] != ywmin) {
+                       point1 = Ip;
+                       break;
+                    }
+                 }
+                 // remove points after the high cutoff
+		       Int_t point2 = npoints;
+			  for (Int_t Ip=point2; Ip>=point1; Ip--) {
+                    if (gyworkl[Ip] != ywmin) {
+                       point2 = Ip;
+                       break;
+                    }
+                 }
+			  npoints = point2-point1+1;
+		    }
+              gPad->PaintPolyLine(npoints,&gxworkl[point1],&gyworkl[point1]);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)

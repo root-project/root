@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.2 2000/08/14 16:50:45 brun Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.3 2002/08/09 08:29:07 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -31,6 +31,7 @@ typedef struct Hoption_t {
    int Curve;       // "C"  A smooth Curve is drawn.
    int Error;       // "E"  Draw Errors with current marker type and size.
    int Fill;        // "F"  A fill area is drawn ("CF" draw a smooth fill area).
+   int Off;         // "][" With H option, the first and last vertical lines are not drawn.
    int Keep;        // "K"  The status of the histogram is kept in memory
    int Line;        // "L"  A simple polyline beetwen every point is drawn.
    int Mark;        // "P"  The current Marker is drawn at each point
