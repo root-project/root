@@ -307,6 +307,7 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
       if (ok && !FillPath(hdc))
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
       SelectObject(hdc, oldpen_or_brush);
+      DeleteObject(hbr);
    }
 // end bb add
 #endif

@@ -1970,7 +1970,7 @@ static void gdk_propagate_shapes(HANDLE win, gboolean merge)
          }
       }
       SetWindowRgn(win, region, TRUE);
-g_free (list);
+      g_free (list);
    } else
       DeleteObject(region);
 }
