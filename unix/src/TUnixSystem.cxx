@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.53 2003/01/27 18:13:55 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.54 2003/02/12 14:15:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -840,12 +840,32 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::Rename(const char *f, const char *t)
+int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 {
-   // Rename a file.
+   // Copy a file. If overwrite is true and file already exists the
+   // file will be overwritten. Returns 0 when successful, -1 in case
+   // of failure, -2 in case the file already exists and overwrite was false.
 
-   ::rename(f, t);
+   if (AccessPathName(f, kReadPermission))
+      return -1;
+
+   if (!AccessPathName(t) && !overwrite)
+      return -2;
+
+   int ret = Exec(Form("cp -f %s %s", f, t));
+   if (ret)
+      return -1;
+   return 0;
+}
+
+//______________________________________________________________________________
+int TUnixSystem::Rename(const char *f, const char *t)
+{
+   // Rename a file. Returns 0 when successful, -1 in case of failure.
+
+   int ret = ::rename(f, t);
    fLastErrorString = GetError();
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -881,7 +901,7 @@ int TUnixSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
    // The function returns 0 in case of success and 1 if the file system could
    // not be stat'ed.
 
-   return UnixFSstat(path, id,  bsize, blocks, bfree);
+   return UnixFSstat(path, id, bsize, blocks, bfree);
 }
 
 //______________________________________________________________________________

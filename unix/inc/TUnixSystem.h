@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.8 2002/02/26 17:57:20 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.9 2002/10/25 00:44:53 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -137,7 +137,8 @@ public:
    Bool_t            ExpandPathName(TString &patbuf);
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
-   void              Rename(const char *from, const char *to);
+   int               CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
+   int               Rename(const char *from, const char *to);
    int               Link(const char *from, const char *to);
    int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);

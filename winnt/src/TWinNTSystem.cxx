@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.41 2003/01/27 18:24:41 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.42 2003/02/12 14:15:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1177,8 +1177,8 @@ char *TWinNTSystem::ConcatFileName(const char *dir, const char *name)
    char *buf = new char[ldir+lname+2];
 
    if (ldir) {
-//*-*  Test whether the last symbol of the directory is a separator
-          char last = dir[ldir-1];
+      // Test whether the last symbol of the directory is a separator
+      char last = dir[ldir-1];
       if (last == '/' || last == '\\' || last == ':')
          sprintf(buf, "%s%s", dir, name);
       else
@@ -1189,12 +1189,32 @@ char *TWinNTSystem::ConcatFileName(const char *dir, const char *name)
 }
 
 //______________________________________________________________________________
-void TWinNTSystem::Rename(const char *f, const char *t)
+int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 {
-   // Rename a file.
+   // Copy a file. If overwrite is true and file already exists the
+   // file will be overwritten. Returns 0 when successful, -1 in case
+   // of failure, -2 in case the file already exists and overwrite was false.
 
-   ::rename(f, t);
+   if (AccessPathName(f, kReadPermission))
+      return -1;
+
+   if (!AccessPathName(t) && !overwrite)
+      return -2;
+
+   Bool_t ret = ::CopyFile(f, t, kFALSE);
+   if (!ret)
+      return -1;
+   return 0;
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::Rename(const char *f, const char *t)
+{
+   // Rename a file. Returns 0 when successful, -1 in case of failure.
+
+   int ret = ::rename(f, t);
    fLastErrorString = sys_errlist[GetErrno()];
+   return ret;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.52 2003/02/20 14:38:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.53 2003/02/20 22:54:34 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -845,11 +845,23 @@ Bool_t TSystem::AccessPathName(const char *, EAccessMode)
 }
 
 //______________________________________________________________________________
-void TSystem::Rename(const char *, const char *)
+int TSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
+{
+   // Copy a file. If overwrite is true and file already exists the
+   // file will be overwritten. Returns 0 when successful, -1 in case
+   // of failure, -2 in case the file already exists and overwrite was false.
+
+   AbstractMethod("CopyFile");
+   return -1;
+}
+
+//______________________________________________________________________________
+int TSystem::Rename(const char *, const char *)
 {
    // Rename a file.
 
    AbstractMethod("Rename");
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -1511,7 +1523,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString defines = " ";
    {
      TString cmd = GetMakeSharedLib();
-     TRegexp rel_def("-D[^\\s\\t\\n\\r]*"); 
+     TRegexp rel_def("-D[^\\s\\t\\n\\r]*");
      Int_t len,pos;
      pos = rel_def.Index(cmd,&len);
      while( len != 0 ) {
@@ -1546,7 +1558,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       TString depfilename = ConcatFileName(depdir, BaseName(filename_noext));
       depfilename += "_" + extension + ".d";
       TString bakdepfilename = depfilename + ".bak";
-      
+
       Long_t lib_time, file_time;
 
 #ifndef WIN32
@@ -1554,11 +1566,11 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 #else
       TString stderrfile = ConcatFileName(build_loc,"stderr.tmp");
 #endif
-      
-      if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0) 
+
+      if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
            ||
            (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
-            && ( lib_time < file_time ) ) 
+            && ( lib_time < file_time ) )
          ) {
          // the library does not exist and is older than the script.
          recompile = kTRUE;
@@ -1574,10 +1586,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          } else {
             needDependencies = true;
          }
-         
+
          if (needDependencies) {
             gSystem->Unlink(depfilename);
-  
+
             // Generate the dependency via standard output, not searching the
             // standard include directories,
             TString touch = "echo > ";
@@ -1595,7 +1607,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
             builddep += " 2>&1 ";
 
             if (gDebug > 4)  ::Info("ACLiC",builddep.Data());
-            
+
             Int_t depbuilt = !gSystem->Exec(touch);
             if (depbuilt) depbuilt = !gSystem->Exec(builddep);
 
@@ -1624,7 +1636,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
             Int_t sz = 256;
             char *line = new char[sz];
             line[0] = 0;
-  
+
             char c;
             Int_t current = 0;
             Int_t nested = 0;
@@ -1649,7 +1661,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                     if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
                       modified |= ( lib_time <= filetime );
                     }
-                  }          
+                  }
                 }
                 current = 0;
                 line[0] = 0;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.23 2002/12/10 19:51:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.24 2002/12/17 02:03:28 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -263,7 +263,8 @@ public:
    virtual Bool_t          ExpandPathName(TString &path); // expand the metacharacters in buf as in the shell
    virtual char           *ExpandPathName(const char *path);
    virtual Bool_t          AccessPathName(const char *path, EAccessMode mode = kFileExists);
-   virtual void            Rename(const char *from, const char *to);
+   virtual int             CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
+   virtual int             Rename(const char *from, const char *to);
    virtual int             Link(const char *from, const char *to);
    virtual int             Symlink(const char *from, const char *to);
    virtual int             Unlink(const char *name);

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.14 2002/12/10 17:26:48 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.15 2003/01/27 18:24:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -180,7 +180,8 @@ public:
    char             *ExpandPathName(const char *path);
    Bool_t            AccessPathName(const char *path, EAccessMode mode = kFileExists);
    Bool_t            IsAbsoluteFileName(const char *dir);
-   void              Rename(const char *from, const char *to);
+   int               CopyFile(const char *from, const char *to, Bool_t overwrite = kFALSE);
+   int               Rename(const char *from, const char *to);
    int               Link(const char *from, const char *to);
    int               Unlink(const char *name);
    int               SetNonBlock(int fd);
