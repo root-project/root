@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.44 2004/07/07 15:03:44 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.45 2004/10/22 08:03:11 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -6535,7 +6535,11 @@ void TMinuit::mnpsdf()
 	ndex  = i*(i-1) / 2;
 	ndexd = ndex + i;
 	fVhmat[ndexd-1] += dg;
-	fPSDFs[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
+   if (fVhmat[ndexd-1]==0) {
+      fPSDFs[i-1] = 1 / 1e-19; // a totally arbitrary silly small value
+   } else {
+      fPSDFs[i-1] = 1 / TMath::Sqrt(fVhmat[ndexd-1]);
+   }
 	for (j = 1; j <= i; ++j) {
 	    ++ndex;
 	    fP[i + j*fMaxpar - fMaxpar-1] = fVhmat[ndex-1]*fPSDFs[i-1]*fPSDFs[j-1];
