@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.4 2000/06/28 14:35:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.5 2000/07/15 05:16:34 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    Sizeof3D() const;
 
-   ClassDef(TH3,2)  //3-Dim histogram base class
+   ClassDef(TH3,3)  //3-Dim histogram base class
 };
 
 //________________________________________________________________________
@@ -103,7 +103,7 @@ public:
    friend  TH3C    operator*(TH3C &h1, TH3C &h2);
    friend  TH3C    operator/(TH3C &h1, TH3C &h2);
 
-   ClassDef(TH3C,2)  //3-Dim histograms (one char per channel)
+   ClassDef(TH3C,3)  //3-Dim histograms (one char per channel)
 };
 
 //________________________________________________________________________
@@ -139,7 +139,7 @@ public:
    friend  TH3S    operator*(TH3S &h1, TH3S &h2);
    friend  TH3S    operator/(TH3S &h1, TH3S &h2);
 
-   ClassDef(TH3S,2)  //3-Dim histograms (one short per channel)
+   ClassDef(TH3S,3)  //3-Dim histograms (one short per channel)
 };
 
 
@@ -177,7 +177,7 @@ public:
    friend  TH3F    operator*(TH3F &h1, TH3F &h2);
    friend  TH3F    operator/(TH3F &h1, TH3F &h2);
 
-   ClassDef(TH3F,2)  //3-Dim histograms (one float per channel)
+   ClassDef(TH3F,3)  //3-Dim histograms (one float per channel)
 };
 
 //________________________________________________________________________
@@ -214,7 +214,7 @@ public:
    friend  TH3D    operator*(TH3D &h1, TH3D &h2);
    friend  TH3D    operator/(TH3D &h1, TH3D &h2);
 
-   ClassDef(TH3D,2)  //3-Dim histograms (one double per channel)
+   ClassDef(TH3D,3)  //3-Dim histograms (one double per channel)
 };
 
 #endif
