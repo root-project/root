@@ -3,7 +3,7 @@ ARCH          = $(shell root-config --arch)
 PLATFORM      = $(ARCH)
 
 TEST_TARGETS += sepDictLibs
-CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict* *.log
+CLEAN_TARGETS +=  *.$(ObjSuf) *.$(DllSuf) *Dict.[Ch] *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -34,7 +34,6 @@ libslave1.$(DllSuf):  Slave1Dict.$(ObjSuf)
 
 libslave2.$(DllSuf):  Slave2Dict.$(ObjSuf)
 	$(BuildFromObjs)
-    
 
 MasterDict.C: MyClass.hh MasterLinkDef.hh
 Slave1Dict.C: MyClass.hh Slave1LinkDef.hh
