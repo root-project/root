@@ -2681,7 +2681,11 @@ int func_now;
 	  }
 #ifndef G__OLDIMPLEMENTATION1009
 	  if(strcmp(name,"const*")==0) {
+#ifndef G__OLDIMPLEMENTATION1884
+	    ifunc->para_isconst[func_now][iin]|=G__CONSTVAR;
+#else
 	    ifunc->para_isconst[func_now][iin]|=G__PCONSTVAR;
+#endif
 	    ++pointlevel; 
 	    name[0]=0;
 	  }

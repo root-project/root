@@ -30,6 +30,7 @@
 #define G__DISPWARN  2
 #define G__DISPNOTE  3
 #define G__DISPALL   4
+#define G__DISPROOTSTRICT 5
 
 /**************************************************************************
 * HSTD local facilities are turned on by defining G__HSTD. 

@@ -2140,7 +2140,11 @@ char *item;
         if(result3.type) known = 1;
       } else
 #endif
-      if(G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
+      if(
+#ifdef G__ROOT
+	 G__dispmsg < G__DISPROOTSTRICT &&
+#endif
+	 G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
 #ifndef G__FONS81
 	/* append $ to object and try to find it again */
 	if (!G__gettingspecial && item[0] != '$') {

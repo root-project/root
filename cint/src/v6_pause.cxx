@@ -2079,6 +2079,10 @@ G__value *rslt;
     }
 #endif
 
+    else if(strncmp("J",com,1)==0) {
+      G__dispmsg = G__int(G__getexpr(string));
+    }
+
     else if(strncmp("file",com,4)==0) {
       G__more_pause((FILE*)NULL,1);
       G__display_files(G__sout);
@@ -2967,6 +2971,7 @@ G__value *rslt;
       G__more(G__sout,"             t         : show function call stack\n");
       G__more(G__sout,"             f [file]  : select file to debug\n");
       G__more(G__sout,"             T         : turn on/off trace mode for all source\n");
+      G__more(G__sout,"             J [stat]  : Set warning level [0-5]\n");
 #ifndef G__OLDIMPLEMENTATION1097
       G__more(G__sout,"             A [1|0]   : allowing automatic variable on/off\n");
 #endif

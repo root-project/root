@@ -266,12 +266,21 @@ struct G__ifunc_table *ifunc;
 	    ,ifunc->funcname[ifn]);
   }
   else {
+#ifndef G__OLDIMPLEMENTATION1892
+    fprintf(fp,"%s "
+	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
+			    ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
+			    ,ifunc->isconst[ifn])
+	    );
+    fprintf(fp,"%s::%s(\n",G__fulltagname(tagnum,1),ifunc->funcname[ifn]);
+#else
     fprintf(fp,"%s %s::%s(\n"
 	    ,G__type2string(ifunc->type[ifn],ifunc->p_tagtable[ifn]
 			    ,ifunc->p_typetable[ifn],ifunc->reftype[ifn]
 			    ,ifunc->isconst[ifn])
 	    ,G__fulltagname(tagnum,1)
 	    ,ifunc->funcname[ifn]);
+#endif
   }
 
   if(G__clock) {

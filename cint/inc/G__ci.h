@@ -21,14 +21,16 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015094
-#define G__CINTVERSIONSTR  "5.15.94, June 30 2003"
+#define G__CINTVERSION      5015098
+#define G__CINTVERSIONSTR  "5.15.98, Aug 5 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
+/* 1885 has side-effect in building ROOT */
+#define G__OLDIMPLEMENTATION1885
 
 /* 1770 changes implementation of skipping function implementation during
  * prerun. In order to activate new implementation, comment out following
@@ -310,9 +312,7 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #define G__DLLIMPORT
 #endif
 
-#if (defined(G__BORLAND)||defined(G__CYGWIN)) && defined(G__CINTBODY)
-#define G__EXPORT __declspec(dllexport)
-#elif (defined(G__VISUAL)||defined(G__CYGWIN)) && defined(G__CINTBODY)
+#if (defined(G__BORLAND)||defined(G__VISUAL)||defined(G__CYGWIN)) && defined(G__CINTBODY)
 #define G__EXPORT __declspec(dllexport)
 #else
 #define G__EXPORT

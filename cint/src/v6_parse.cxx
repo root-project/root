@@ -1524,7 +1524,7 @@ char *macro;
   } while((var=var->next)) ;
   if(682==hash && strcmp(macro,"__CINT__")==0) return(1);
 #ifndef G__OLDIMPLEMENTATION1883
-  if(1316==hash && strcmp(macro,"__CINT_PREPROC__")==0) return(1);
+  if(!G__cpp && 1704==hash && strcmp(macro,"__CINT_INTERNAL_CPP__")==0) return(1);
 #endif
   if(G__iscpp && 1193==hash && strcmp(macro,"__cplusplus")==0) return(1);
 #ifndef G__OLDIMPLEMENTATION869
@@ -1982,12 +1982,17 @@ char* action;
   struct G__tempobject_list *ptempbuf = G__p_tempbuf;
   G__fprinterr(G__serr,"\n%s ",action);
   while(ptempbuf) {
-    G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level
-	    ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
-			    ,ptempbuf->obj.typenum
-			    ,ptempbuf->obj.obj.reftype.reftype
-			    ,ptempbuf->obj.isconst)
-	    ,(void*)ptempbuf->obj.obj.i);
+    if(ptempbuf->obj.type) {
+      G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level
+		   ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
+				   ,ptempbuf->obj.typenum
+				   ,ptempbuf->obj.obj.reftype.reftype
+				   ,ptempbuf->obj.isconst)
+		   ,(void*)ptempbuf->obj.obj.i);
+    }
+    else {
+      G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level,"NULL",0);
+    }
     ptempbuf = ptempbuf->prev;
   }
   G__fprinterr(G__serr,"\n");

@@ -1839,6 +1839,9 @@ char type;
 	    store_decl = G__decl;
 	    G__decl = 1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1885
+	    G__access=store_access;
+#endif
 	  }
 	  G__letvariable(memname,enumval,&G__global ,G__p_local);
 	  if(-1!=store_tagnum) {

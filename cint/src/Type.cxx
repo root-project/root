@@ -72,6 +72,7 @@ void G__TypeInfo::Init(const char *typenamein)
     }
   }
 #endif /* ON707 */
+  class_property = 0;
 }
 ///////////////////////////////////////////////////////////////////////////
 int G__TypeInfo::operator==(const G__TypeInfo& a)

@@ -642,7 +642,7 @@ void G__define_type()
           || (strlen(typename)>strlen("double") && (typename[strlen("double")]=='&' || typename[strlen("double")]=='*')) )
      ) {
      if (strlen(typename)>strlen("double")) {
-        /* Rewind. */
+       /* Rewind. */
         fseek(G__ifile.fp,-1-(strlen(typename) - strlen("double")) ,SEEK_CUR);
      }
 #else
@@ -701,8 +701,8 @@ void G__define_type()
           || (strlen(typename)>=4 && (typename[3]=='&' || typename[3]=='*')) )
      ) {
      if (strlen(typename)>=4) {
-        /* Rewind. */
-        fseek(G__ifile.fp,-1-(strlen(typename) - strlen("int")) ,SEEK_CUR);
+       /* Rewind. */
+       fseek(G__ifile.fp,-1-(strlen(typename) - strlen("int")) ,SEEK_CUR);
      }
 #else
   if(strcmp(typename,"int")==0) {
@@ -1377,7 +1377,11 @@ char *typename;
     if(len==G__newtype.hash[i] && strcmp(G__newtype.name[i],temp)==0) {
       thisflag=0;
       /* global scope */
-      if(-1==G__newtype.parent_tagnum[i])
+      if(-1==G__newtype.parent_tagnum[i]
+#ifndef G__OLDIMPLEMTATION1890
+	 && (!p || temp2==p)
+#endif
+	 )
 	thisflag=0x1;
       /* enclosing tag scope */
       if(G__isenclosingclass(G__newtype.parent_tagnum[i],env_tagnum))

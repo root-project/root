@@ -65,6 +65,10 @@ long G__BaseClassInfo::Property()
     property = G__ClassInfo::Property();
     if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISVIRTUALBASE)
       property|=G__BIT_ISVIRTUAL;
+#ifndef G__OLDIMPLEMENTATION1888
+    if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)
+      property|=G__BIT_ISDIRECTINHERIT;
+#endif
     switch(G__struct.baseclass[derivedtagnum]->baseaccess[basep]) {
     case G__PUBLIC:
       return(property|G__BIT_ISPUBLIC);

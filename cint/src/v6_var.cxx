@@ -1689,6 +1689,10 @@ int isdecl;
 	var=var->next;
       }
       /* next base class if searching for class member */
+#ifndef G__OLDIMPLEMENTATION1889
+      if(isbase&&'e'==G__struct.type[scope_tagnum] 
+	 && G__dispmsg>=G__DISPROOTSTRICT) isbase=0;
+#endif
       if(isbase) {
 	while(baseclass && basen<baseclass->basen) {
 	  if(memfunc_or_friend) {
@@ -1779,6 +1783,9 @@ int isdecl;
 #endif
     var=G__searchvariable(varname,varhash,varlocal,varglobal,pG__struct_offset
 			  ,pstore_struct_offset,pig15,isdecl);
+#ifndef G__OLDIMPLEMENTATION1891
+    if(var) G__gettingspecial=0;
+#endif
   }
 #endif
 #endif
@@ -4587,7 +4594,9 @@ struct G__var_array *varglobal,*varlocal;
 ******************************************************************/
 int G__IsInMacro()
 {
-  if(G__nfile>G__ifile.filenum) return(0);
+  if(G__nfile>G__ifile.filenum
+     || G__dispmsg >= G__DISPROOTSTRICT
+     ) return(0);
   else return(1);
 }
 #endif
@@ -4956,48 +4965,42 @@ int objptr;  /* 1 : object , 2 : pointer */
     else {
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
-#ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1601
-      if(G__ifile.filenum<=G__gettempfilenum()) {
-#else
-      if(G__MAXFILE-1!=G__ifile.filenum) {
+      if(
+#ifdef G__ROOT
+	 G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
+	 G__ifile.filenum<=G__gettempfilenum()) {
 	if(G__dispmsg>=G__DISPWARN) {
 	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	  G__printlinenum();
 	}
       }
-#endif /* G__ROOT */
     }
   }
-#ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
-#ifndef G__OLDIMPLEMENTATION1601
-    if(G__ifile.filenum<=G__gettempfilenum()) {
-#else
-    if(G__MAXFILE-1!=G__ifile.filenum) {
+    if(
+#ifdef G__ROOT
+       G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
+       G__ifile.filenum<=G__gettempfilenum()) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
 	G__printlinenum();
       }
     }
   }
-#endif /* G__ROOT */
 #else /* 1265 */
-#ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1601
-  if(G__ifile.filenum<=G__gettempfilenum() &&
-#else
-  if(G__MAXFILE-1!=G__ifile.filenum &&
+  if(
+#ifdef G__ROOT
+     G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
+     G__ifile.filenum<=G__gettempfilenum() &&
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
     if(G__dispmsg>=G__DISPWARN) {
       G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
       G__printlinenum();
     }
   }
-#endif /* G__ROOT */
 #endif /* 1265 */
 #endif /* 1013 */
 
@@ -5320,48 +5323,42 @@ int objptr;  /* 1 : object , 2 : pointer */
     else {
       G__tagnum = store_tagnumB;
       G__store_struct_offset = store_struct_offsetB;
-#ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1601
-      if(G__ifile.filenum<=G__gettempfilenum()) {
-#else
-      if(G__MAXFILE-1!=G__ifile.filenum) {
+      if(
+#ifdef G__ROOT
+	 G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
+	 G__ifile.filenum<=G__gettempfilenum()) {
 	if(G__dispmsg>=G__DISPWARN) {
 	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
 	  G__printlinenum();
 	}
       }
-#endif
     }
   }
-#ifndef G__ROOT
   if(isupper(result.type)&&1==objptr) {
-#ifndef G__OLDIMPLEMENTATION1601
-    if(G__ifile.filenum<=G__gettempfilenum()) {
-#else
-    if(G__MAXFILE-1!=G__ifile.filenum) {
+    if(
+#ifdef G__ROOT
+       G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
+       G__ifile.filenum<=G__gettempfilenum()) {
       if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
 	G__printlinenum();
       }
     }
   }
-#endif
 #else
-#ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1601
-  if(G__ifile.filenum<=G__gettempfilenum() &&
-#else
-  if(G__MAXFILE-1!=G__ifile.filenum &&
+  if(
+#ifdef G__ROOT
+     G__dispmsg >= G__DISPROOTSTRICT ||
 #endif
-     ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
+     (G__ifile.filenum<=G__gettempfilenum() &&
+     ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr)))){
     if(G__dispmsg>=G__DISPWARN) {
       G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
       G__printlinenum();
     }
   }
-#endif
 #endif
 #endif
   
@@ -6541,7 +6538,11 @@ int parameter00;
    * member access control
    *
    ***************************************************/
-  if(G__def_struct_member) var->access[var->allvar] = G__access;
+  if(G__def_struct_member
+#ifndef G__OLDIMPLEMENTATION1885
+     || (G__enumdef /* && G__dispmsg>=G__DISPROOTSTRICT */)
+#endif
+     ) var->access[var->allvar] = G__access;
   else                     var->access[var->allvar] = G__PUBLIC;
 
 #ifndef G__NEWINHERIT
@@ -7139,8 +7140,40 @@ int parameter00;
       /*******************************************************
        * initialization of string
        *******************************************************/
-      if(result.type=='C'&&
-	 G__var_type=='c') {
+      if(result.type=='C'&& G__var_type=='c') {
+#ifndef G__OLDIMPLEMENTATION1886
+	if(G__asm_wholefunction != G__ASM_FUNC_COMPILE) {
+	  if(strlen((char *)result.obj.i)>var->varlabel[ig15][1]) {
+	    strncpy((char *)var->p[ig15] ,(char *)result.obj.i
+		    ,(size_t)var->varlabel[ig15][1]+1);
+	  }
+	  else {
+	    strcpy((char *)var->p[ig15] ,(char *)result.obj.i);
+	  }
+	}
+	else {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) {
+	    G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
+			 ,G__asm_cp,var->varnamebuf[ig15],ig15,0);
+	  }
+#endif
+	  G__asm_inst[G__asm_cp]=G__LD_LVAR;
+	  G__asm_inst[G__asm_cp+1]=ig15;
+	  G__asm_inst[G__asm_cp+2]=0;
+	  G__asm_inst[G__asm_cp+3]='P';
+	  G__asm_inst[G__asm_cp+4]=(long)var;
+	  G__inc_cp_asm(5,0);
+	  G__asm_inst[G__asm_cp]=G__SWAP;
+	  G__inc_cp_asm(1,0);
+	  G__asm_inst[G__asm_cp]=G__LD_FUNC;
+	  G__asm_inst[G__asm_cp+1] = (long)("strcpy");
+	  G__asm_inst[G__asm_cp+2] = 677;
+	  G__asm_inst[G__asm_cp+3]= 2;
+	  G__asm_inst[G__asm_cp+4]=(long)G__compiled_func;
+	  G__inc_cp_asm(5,0);
+	}
+#else
 	if(strlen((char *)result.obj.i)>var->varlabel[ig15][1]) {
 	  strncpy((char *)var->p[ig15] ,(char *)result.obj.i
 		  ,(size_t)var->varlabel[ig15][1]+1);
@@ -7148,6 +7181,7 @@ int parameter00;
 	else {
 	  strcpy((char *)var->p[ig15] ,(char *)result.obj.i);
 	}
+#endif
       }
     break;
     

@@ -3990,7 +3990,12 @@ int isnonpublicnew;
 	fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
     }
     else {
+#ifndef G__OLDIMPLEMENTATION1887
+      fprintf(fp,"   void *xtmp = (void*)G__int(libp->para[0]);\n");
+      fprintf(fp,"   p=new %s(*(%s*)xtmp);\n",temp,temp);
+#else
       fprintf(fp,"   p=new %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
+#endif
     }
     fprintf(fp,"   result7->obj.i = (long)p;\n");
     fprintf(fp,"   result7->ref = (long)p;\n");
