@@ -64,8 +64,8 @@ echo "	\$(TestDiff)" >> Makefile
 
 touch $1.ref
 
-echo ">" >> $1.ref
-echo "> Processing run$1.C..." >> $1.ref
+echo "" >> $1.ref
+echo "Processing run$1.C..." >> $1.ref
 
 
 if [ ! -s $run$1.C ]; then
