@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.117 2002/12/04 09:54:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.118 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4449,6 +4449,16 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
 //         "N" include comparison of normalizations
 //         "D" Put out a line of "Debug" printout
 //         "M" Return the Maximum Kolmogorov distance instead of prob
+//         "X" Run the pseudo experiments post-processor with the following procedure:
+//             make pseudoexperiments based on random values from the parent
+//             distribution and compare the KS distance of the pseudoexperiment
+//             to the parent distribution. Bin the KS distances in a histogram,
+//             and then take the integral of all the KS values above the value 
+//             obtained from the original data to Monte Carlo distribution.
+//             The number of pseudo-experiments NEXPT is currently fixed at 1000.
+//             The function returns the integral.
+//             (thanks to Ben Kilminster to submit this procedure). Note that
+//             this option "X" is much slower.
 //
 //   The returned function value is the probability of test
 //       (much less than one means NOT compatible)
@@ -4563,7 +4573,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
    }
 
       // Get Kolmogorov probability
-   Double_t z, prb1=0, prb2=0;
+   Double_t z, prb1=0, prb2=0, prb3=0;
    if (afunc1)      z = dfmax*TMath::Sqrt(esum2);
    else if (afunc2) z = dfmax*TMath::Sqrt(esum1);
    else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
@@ -4582,20 +4592,44 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
       if (prb > 0 && prb2 > 0) prb *= prb2*(1-TMath::Log(prb*prb2));
       else                     prb = 0;
    }
+      // X option. Pseudo-experiments post-processor to determine KS probability
+   const Int_t NEXPT = 1000;
+   if (opt.Contains("X")) {
+      Double_t KSEXPT;
+      Bool_t addStatus = fgAddDirectory;
+      fgAddDirectory = kFALSE;
+      TH1F *HDistValues = new TH1F("HDistValues","KS distances",200,0,1);
+      TH1 *HExpt = (TH1*)Clone();
+      fgAddDirectory = addStatus;
+      // make NEXPT experiments (this should be a parameter)
+      for (Int_t i=0; i < NEXPT; i++) {
+         HExpt->Reset();
+         HExpt->FillRandom(h1,ne2);
+         KSEXPT = KolmogorovTest(HExpt,"M");
+         HDistValues->Fill(KSEXPT);
+      }
+      prb3 = HDistValues->Integral(HDistValues->FindBin(dfmax),200)/HDistValues->Integral();
+      delete HDistValues;
+      delete HExpt;
+   }
+   
       // debug printout
    if (opt.Contains("D")) {
-      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+     printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
       printf(" Kolmo Probabil = %g, Max Dist = %g\n",prb,dfmax);
       if (opt.Contains("N"))
       printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+      if (opt.Contains("X"))
+      printf(" Kolmo Probabil = %f with %d pseudo-experiments\n",prb3,NEXPT);
    }
       // This numerical error condition should never occur:
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
-   if(opt.Contains("M"))  return dfmax;
-   else                   return prb;
+   if(opt.Contains("M"))      return dfmax;
+   else if(opt.Contains("X")) return prb3;
+   else                       return prb;
 }
 
 //______________________________________________________________________________
