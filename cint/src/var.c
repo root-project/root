@@ -4978,7 +4978,7 @@ int objptr;  /* 1 : object , 2 : pointer */
 #else
 #ifndef G__ROOT
 #ifndef G__OLDIMPLEMENTATION1601
->   if(G__ifile.filenum<=G__gettempfilenum() &&
+  if(G__ifile.filenum<=G__gettempfilenum() &&
 #else
   if(G__MAXFILE-1!=G__ifile.filenum &&
 #endif
