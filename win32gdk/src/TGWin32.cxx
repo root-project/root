@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.36 2003/12/15 08:54:29 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.37 2003/12/15 10:59:16 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -749,11 +749,6 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
 
-      if ( (msg.message>WM_NCMOUSEMOVE) && 
-           (msg.message<=WM_NCMBUTTONDBLCLK) ) {
-         TGWin32ProxyBase::GlobalLock();
-      }
-
       if (msg.message==TGWin32ProxyBase::fgPostMessageId) {
          if (msg.wParam) {
             TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg.wParam;
@@ -765,6 +760,11 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
          TGWin32ProxyBase::GlobalUnlock();
          continue;
       } else {
+         if ( (msg.message>WM_NCMOUSEMOVE) && 
+              (msg.message<=WM_NCMBUTTONDBLCLK) ) {
+            TGWin32ProxyBase::GlobalLock();
+         }
+
          TGWin32MainThread::LockMSG();
          TranslateMessage (&msg);
          DispatchMessage (&msg);

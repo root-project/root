@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.5 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.6 2003/12/12 11:25:55 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -32,6 +32,7 @@ protected:
    ULong_t           fId;                 // thread id. There is one proxy per client thread
    static ULong_t    fgMainThreadId;      // main thread ID
    static Long_t     fgLock;              // fgLock=1 - all client threads locked
+   UInt_t            fMaxResponseTime;    // max period for waiting response from server thread 
 
    virtual Bool_t ForwardCallBack(Bool_t sync);
    virtual void   SendExitMessage();
