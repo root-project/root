@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.cc,v 1.9 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooUniformBinning.cc,v 1.10 2004/11/29 20:24:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,12 +23,16 @@ ClassImp(RooUniformBinning)
 ;
 
 
-RooUniformBinning::RooUniformBinning() 
+RooUniformBinning::RooUniformBinning(const char* name) : 
+  RooAbsBinning(name)
 {  
   _array = 0 ;
 }
 
-RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) : _array(0), _nbins(nBins)
+RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name) :
+  RooAbsBinning(name),
+  _array(0), 
+  _nbins(nBins)
 {
   setRange(xlo,xhi) ;
 }
@@ -40,7 +44,8 @@ RooUniformBinning::~RooUniformBinning()
 }
 
 
-RooUniformBinning::RooUniformBinning(const RooUniformBinning& other) 
+RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
+  RooAbsBinning(name)
 {
   _array = 0 ;
   _xlo   = other._xlo ;

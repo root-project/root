@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinTransBinning.rdl,v 1.5 2002/09/05 04:33:36 verkerke Exp $
+ *    File: $Id: RooLinTransBinning.rdl,v 1.6 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,10 +22,10 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
-  RooLinTransBinning() {} ; 
-  RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0) ;
-  RooLinTransBinning(const RooLinTransBinning&) ;
-  virtual RooAbsBinning* clone() const { return new RooLinTransBinning(*this) ; }
+  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) {} ; 
+  RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0, const char* name=0) ;
+  RooLinTransBinning(const RooLinTransBinning&, const char* name=0) ;
+  virtual RooAbsBinning* clone(const char* name=0) const { return new RooLinTransBinning(*this,name) ; }
   virtual ~RooLinTransBinning() ;
 
   virtual Int_t numBoundaries() const { return _input->numBoundaries() ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.rdl,v 1.6 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsBinning.rdl,v 1.6 2004/11/29 12:22:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,15 +18,15 @@
 
 #include "Rtypes.h"
 #include "RooFitCore/RooPrintable.hh"
-#include "TObject.h" 
+#include "TNamed.h" 
 class TIterator ;
 
-class RooAbsBinning : public TObject, public RooPrintable {
+class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
-  RooAbsBinning() ;
-  RooAbsBinning(const RooAbsBinning&) {}
-  virtual RooAbsBinning* clone() const = 0 ;
+  RooAbsBinning(const char* name=0) ;
+  RooAbsBinning(const RooAbsBinning&, const char* name=0) {}
+  virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
   virtual ~RooAbsBinning() ;
 
   Int_t numBins() const { return numBoundaries()-1 ; }

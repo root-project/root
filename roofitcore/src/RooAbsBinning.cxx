@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsBinning.cc,v 1.7 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsBinning.cc,v 1.8 2004/11/29 20:21:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,7 @@ ClassImp(RooAbsBinning)
 ;
 
 
-RooAbsBinning::RooAbsBinning() 
+RooAbsBinning::RooAbsBinning(const char* name) : TNamed(name,name)
 {
 }
 
@@ -42,7 +42,7 @@ void RooAbsBinning::printToStream(ostream &os, PrintOption opt, TString indent) 
 
     Bool_t first(kTRUE) ;
     Int_t n = numBins() ;
-    os << "VB(" ;
+    os << "B(" ;
 
     Int_t i ;
     for (i=0 ; i<n ; i++) {

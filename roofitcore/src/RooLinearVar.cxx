@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.cc,v 1.22 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.23 2004/11/29 20:23:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -95,6 +95,7 @@ RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
 RooLinearVar::~RooLinearVar() 
 {
   // Destructor
+  _altBinning.Delete() ;
 }
 
 
@@ -179,8 +180,30 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
 }
 
 
-const RooAbsBinning& RooLinearVar::getBinning() const 
+ RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose) 
 {
-  _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
-  return _binning ;
+  // Normalization binning
+  if (name==0) {
+    _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
+    return _binning ;
+  } 
+
+  // Alternative named range binnings, look for existing translator binning first
+  RooLinTransBinning* altBinning = (RooLinTransBinning*) _altBinning.FindObject(name) ;
+  if (altBinning) {
+    altBinning->updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose),_slope,_offset) ;
+    return *altBinning ;
+  }
+
+  // Create translator binning on the fly
+  RooAbsBinning& sourceBinning = ((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose) ;
+  RooLinTransBinning* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
+  _altBinning.Add(transBinning) ;
+
+  return *transBinning ;
+}
+
+const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose) const
+{
+  return const_cast<RooLinearVar*>(this)->getBinning(name,verbose) ;
 }

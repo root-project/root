@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinTransBinning.cc,v 1.7 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooLinTransBinning.cc,v 1.8 2004/11/29 20:23:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,7 +26,9 @@ ClassImp(RooLinTransBinning)
 ;
 
 
-RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset) : _array(0) 
+RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset, const char* name) :
+  RooAbsBinning(name),
+  _array(0) 
 {
   // Constructor
   updateInput(input,slope,offset) ;
@@ -34,7 +36,9 @@ RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slop
 
 
 
-RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other) : _array(0)
+RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
+  RooAbsBinning(name),
+  _array(0)
 {
   // Copy constructor
   _input = other._input ;

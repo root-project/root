@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.46 2004/11/29 12:22:23 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.47 2004/11/29 20:24:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,6 +30,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooErrorVar.hh"
+#include "RooFitCore/RooRangeBinning.hh"
 using std::cout;
 using std::endl;
 using std::istream;
@@ -94,6 +95,13 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 {
   // Copy Constructor
   _binning = other._binning->clone() ;
+
+  TIterator* iter = other._altBinning.MakeIterator() ;
+  RooAbsBinning* binning ;
+  while(binning=(RooAbsBinning*)iter->Next()) {
+    _altBinning.Add(binning->clone()) ;
+  }
+  delete iter ;
 }
 
 
@@ -101,6 +109,7 @@ RooRealVar::~RooRealVar()
 {
   // Destructor
   delete _binning ;
+  _altBinning.Delete() ;
 }
 
 void RooRealVar::setVal(Double_t value) {
@@ -122,68 +131,136 @@ RooErrorVar* RooRealVar::errorVar() const
 }
 
 
-void RooRealVar::setBinning(const RooAbsBinning& binning) 
+
+const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose) const 
 {
-  if (_binning) delete _binning ;
-  _binning = binning.clone() ;
+  return const_cast<RooRealVar*>(this)->getBinning(name, verbose) ;
 }
 
 
-void RooRealVar::setFitMin(Double_t value) 
+RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose) 
+{
+  // Return default (normalization) binning and range if no name is specified
+  if (name==0) {
+    return *_binning ;
+  }
+  
+  // Check if binning with this name has been created already
+  RooAbsBinning* binning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+  if (binning) {
+    return *binning ;
+  }
+
+  // Create a new RooRangeBinning with this name with default range
+  binning = new RooRangeBinning(getFitMin(),getFitMax(),name) ;
+  if (verbose) {
+    cout << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
+	 << name << "' created with default bounds" << endl ;
+  }
+
+  _altBinning.Add(binning) ;
+
+  return *binning ;
+}
+
+
+
+void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name) 
+{
+  if (!name) {
+    if (_binning) delete _binning ;
+    _binning = binning.clone() ;
+  } else {
+
+    // Remove any old binning with this name
+    RooAbsBinning* oldBinning = (RooAbsBinning*) _altBinning.FindObject(name) ;
+    if (oldBinning) {
+      _altBinning.Remove(oldBinning) ;
+      delete oldBinning ;
+    }
+
+    // Insert new binning in list of alternative binnings
+    RooAbsBinning* newBinning = binning.clone() ;
+    newBinning->SetName(name) ;
+    newBinning->SetTitle(name) ;
+    _altBinning.Add(newBinning) ;
+
+  }
+  
+
+}
+
+
+void RooRealVar::setFitMin(Double_t value, const char* name) 
 {
   // Set new minimum of fit range 
+  RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
   if (value >= getFitMax()) {
     cout << "RooRealVar::setFitMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
-    _binning->setMin(getFitMax()) ;
+    binning.setMin(getFitMax()) ;
   } else {
-    _binning->setMin(value) ;
+    binning.setMin(value) ;
   }
 
   // Clip current value in window if it fell out
-  Double_t clipValue ;
-  if (!inFitRange(_value,&clipValue)) {
-    setVal(clipValue) ;
+  if (!name) {
+    Double_t clipValue ;
+    if (!inFitRange(_value,&clipValue)) {
+      setVal(clipValue) ;
+    }
   }
-
+    
   setShapeDirty() ;
 }
 
-void RooRealVar::setFitMax(Double_t value)
+void RooRealVar::setFitMax(Double_t value, const char* name)
 {
   // Set new maximum of fit range 
+  RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
   if (value < getFitMin()) {
     cout << "RooRealVar::setFitMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _binning->setMax(getFitMin()) ;
+    binning.setMax(getFitMin()) ;
   } else {
-    _binning->setMax(value) ;
+    binning.setMax(value) ;
   }
 
   // Clip current value in window if it fell out
-  Double_t clipValue ;
-  if (!inFitRange(_value,&clipValue)) {
-    setVal(clipValue) ;
+  if (!name) {
+    Double_t clipValue ;
+    if (!inFitRange(_value,&clipValue)) {
+      setVal(clipValue) ;
+    }
   }
 
   setShapeDirty() ;
 }
 
-void RooRealVar::setFitRange(Double_t min, Double_t max) 
+void RooRealVar::setFitRange(Double_t min, Double_t max, const char* name) 
 {
+  Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
+
   // Set new fit range 
+  RooAbsBinning& binning = getBinning(name,kFALSE) ;
 
   // Check if new limit is consistent
   if (min>max) {
     cout << "RooRealVar::setFitRange(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _binning->setRange(min,min) ;
+    binning.setRange(min,min) ;
   } else {
-    _binning->setRange(min,max) ;
+    binning.setRange(min,max) ;
+  }
+
+  if (!exists) {
+    cout << "RooRealVar::setFitRange(" << GetName() 
+	 << ") new range named '" << name << "' created with bounds [" 
+	 << min << "," << max << "]" << endl ;
   }
 
   setShapeDirty() ;  

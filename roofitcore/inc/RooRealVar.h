@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.40 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.40 2004/11/29 12:22:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,19 +57,20 @@ public:
   RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
-  void setFitMin(Double_t value) ;
-  void setFitMax(Double_t value) ;
-  void setFitRange(Double_t min, Double_t max) ;
+  void setFitMin(Double_t value, const char* name=0) ;
+  void setFitMax(Double_t value, const char* name=0) ;
+  void setFitRange(Double_t min, Double_t max, const char* name=0) ;
   void setFitBins(Int_t nBins) { setBinning(RooUniformBinning(getFitMin(),getFitMax(),nBins)) ; } 
-  void setBinning(const RooAbsBinning& binning) ;
+  void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
   // RooAbsRealLValue implementation
-  const RooAbsBinning& getBinning() const { return *_binning ; }
+  const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
+  RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ; 
 
   // Set infinite fit range limits
-  inline void removeFitMin() { _binning->setMin(-RooNumber::infinity) ; }
-  inline void removeFitMax() { _binning->setMax(RooNumber::infinity) ; }
-  inline void removeFitRange() { _binning->setRange(-RooNumber::infinity,RooNumber::infinity) ; }
+  inline void removeFitMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }
+  inline void removeFitMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
+  inline void removeFitRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
  
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
@@ -97,6 +98,11 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) const ;
 
+  Double_t  *_min ;
+  Double_t  *_max ;
+  TString   *_name ;
+
+  RooLinkedList _altBinning ;  //! Optional alternative ranges and binnings
 //   Double_t _fitMin ;    // Minimum of fit range [ obsolete ]
 //   Double_t _fitMax ;    // Maximum of fit range [ obsolete ]
 //   Int_t    _fitBins ;   // Number of bins in fit range for binned fits [ obsolete ] 

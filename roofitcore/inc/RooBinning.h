@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.rdl,v 1.5 2003/04/08 01:27:34 wverkerke Exp $
+ *    File: $Id: RooBinning.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,11 +28,11 @@ class RooRealVar ;
 class RooBinning : public RooAbsBinning {
 public:
 
-  RooBinning(Double_t xlo=-RooNumber::infinity, Double_t xhi=RooNumber::infinity) ;
-  RooBinning(Int_t nBins, Double_t xlo, Double_t xhi) ;
-  RooBinning(Int_t nBins, const Double_t* boundaries) ;
-  RooBinning(const RooBinning& other) ;
-  RooAbsBinning* clone() const { return new RooBinning(*this) ; }
+  RooBinning(Double_t xlo=-RooNumber::infinity, Double_t xhi=RooNumber::infinity, const char* name=0) ;
+  RooBinning(Int_t nBins, Double_t xlo, Double_t xhi, const char* name=0) ;
+  RooBinning(Int_t nBins, const Double_t* boundaries, const char* name=0) ;
+  RooBinning(const RooBinning& other, const char* name=0) ;
+  RooAbsBinning* clone(const char* name=0) const { return new RooBinning(*this,name?name:GetName()) ; }
   ~RooBinning() ;
 
   virtual Int_t numBoundaries() const { return _nbins+1 ; }

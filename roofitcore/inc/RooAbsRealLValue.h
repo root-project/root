@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.24 2004/08/09 00:00:53 bartoldu Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.24 2004/11/29 12:22:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,12 +51,13 @@ public:
   virtual Double_t getFitBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
   
   // Get fit range limits
-  virtual const RooAbsBinning& getBinning() const = 0 ;
-  virtual Double_t getFitMin() const { return getBinning().lowBound() ; }
-  virtual Double_t getFitMax() const { return getBinning().highBound() ; }
-  virtual Int_t getFitBins() const { return getBinning().numBins() ; }
-  inline Bool_t hasFitMin() const { return !RooNumber::isInfinite(getFitMin()); }
-  inline Bool_t hasFitMax() const { return !RooNumber::isInfinite(getFitMax()); }
+  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const = 0 ;
+  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) = 0 ;
+  virtual Double_t getFitMin(const char* name=0) const { return getBinning(name).lowBound() ; }
+  virtual Double_t getFitMax(const char* name=0) const { return getBinning(name).highBound() ; }
+  virtual Int_t getFitBins(const char* name=0) const { return getBinning(name).numBins() ; }
+  inline Bool_t hasFitMin(const char* name=0) const { return !RooNumber::isInfinite(getFitMin(name)); }
+  inline Bool_t hasFitMax(const char* name=0) const { return !RooNumber::isInfinite(getFitMax(name)); }
 
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const { return kTRUE ; }
   virtual Double_t jacobian() const { return 1 ; }

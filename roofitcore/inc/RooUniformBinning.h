@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooUniformBinning.rdl,v 1.6 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooUniformBinning.rdl,v 1.6 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,10 +23,10 @@ class TIterator ;
 class RooUniformBinning : public RooAbsBinning {
 public:
 
-  RooUniformBinning() ;
-  RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) ;
-  RooUniformBinning(const RooUniformBinning& other) ;
-  RooAbsBinning* clone() const { return new RooUniformBinning(*this) ; }
+  RooUniformBinning(const char* name=0) ;
+  RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name=0) ;
+  RooUniformBinning(const RooUniformBinning& other, const char* name=0) ;
+  RooAbsBinning* clone(const char* name=0) const { return new RooUniformBinning(*this,name?name:GetName()) ; }
   virtual ~RooUniformBinning() ;
 
   virtual void setRange(Double_t xlo, Double_t xhi) ;

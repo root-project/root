@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinearVar.rdl,v 1.13 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.13 2004/11/29 12:22:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,14 +39,8 @@ public:
   virtual void setVal(Double_t value) ;
 
   // Jacobian and limits
-//   virtual Double_t getFitMin() const ;
-//   virtual Double_t getFitMax() const ;
-//   virtual Double_t fitBinCenter(Int_t i) const ;
-//   virtual Double_t fitBinLow(Int_t i) const ;
-//   virtual Double_t fitBinHigh(Int_t i) const ;
-//   virtual Double_t fitBinWidth(Int_t i) const ;
-//   virtual Int_t getFitBins() const ;
-  virtual const RooAbsBinning& getBinning() const ;
+  virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
+  virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE)  ;
 
   virtual Double_t jacobian() const ;
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
@@ -63,6 +57,7 @@ protected:
   virtual Double_t evaluate() const ;
 
   mutable RooLinTransBinning _binning ;
+  RooLinkedList _altBinning ; //!
   RooRealProxy _var ;  
   RooRealProxy _slope ;
   RooRealProxy _offset ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvPdf.cc,v 1.2 2004/11/30 16:08:21 wverkerke Exp $
+ *    File: $Id: RooNumConvPdf.cc,v 1.3 2004/12/02 14:10:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -106,7 +106,11 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   // Make temporary clone of original convolution to preserve configuration information
   // This information will be propagated to a newly create convolution in a subsequent
   // call to initialize() 
-  _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
+  if (other._conv) {
+    _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
+  } else {
+    _conv = 0 ;
+  }
 }
 
 

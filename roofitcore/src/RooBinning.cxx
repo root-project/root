@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.11 2004/11/29 12:22:15 wverkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.12 2004/11/29 20:23:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,11 @@ ClassImp(RooBinning)
 ;
 
 
-RooBinning::RooBinning(Double_t xlo, Double_t xhi) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
+RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) : 
+  RooAbsBinning(name), 
+  _ownBoundLo(kTRUE), 
+  _ownBoundHi(kTRUE), 
+  _array(0)
 {
   _bIter = binIterator() ;
 
@@ -43,7 +47,11 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi) : _ownBoundLo(kTRUE), _ownBou
 
 
 
-RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
+RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name) : 
+  RooAbsBinning(name), 
+  _ownBoundLo(kTRUE), 
+  _ownBoundHi(kTRUE), 
+  _array(0)
 {
   _bIter = binIterator() ;
 
@@ -55,7 +63,11 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi) : _ownBoundLo(kT
 
 
 
-RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
+RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name) : 
+  RooAbsBinning(name),
+  _ownBoundLo(kTRUE), 
+  _ownBoundHi(kTRUE), 
+  _array(0)
 {
   _bIter = binIterator() ;
 
@@ -66,7 +78,9 @@ RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries) : _ownBoundLo(kT
 
 
 
-RooBinning::RooBinning(const RooBinning& other) : _array(0)
+RooBinning::RooBinning(const RooBinning& other, const char* name) : 
+  RooAbsBinning(name),
+  _array(0)
 { 
   // Copy constructor
   _boundaries.Delete() ;
