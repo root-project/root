@@ -20,6 +20,14 @@
 
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION1932
+#if defined(G__WIN32)
+#include <windows.h>
+#elif defined(G__POSIX)
+#include <unistd.h> /* already included in G__ci.h */
+#endif
+#endif
+
 #ifndef __CINT__
 void G__display_tempobject G__P((char* action));
 #endif
@@ -5306,6 +5314,23 @@ int hash;
   if(strcmp(funcname,"G__set_errmsgcallback")==0) {
     if(G__no_exec_compile) return(1);
     G__set_errmsgcallback((void*)G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1932
+  if(strcmp(funcname,"G__chdir")==0) {
+    char *stringb=(char*)G__int(libp->para[0]);
+    if(G__no_exec_compile) return(1);
+    G__CHECKNONULL(0,'C');
+#if defined(G__WIN32)
+    if(FALSE==SetCurrentDirectory(stringb))
+      G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
+#elif defined(G__POSIX)
+    if(0!=chdir(stringb))
+      G__fprinterr(G__serr,"can not change directory to %s\n",stringb);
+#endif
     *result7 = G__null;
     return(1);
   }

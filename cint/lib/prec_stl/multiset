@@ -173,7 +173,7 @@ class multiset {
   size_type     size() const;
   size_type     max_size() const;
   // modifiers:
-  //pair<iterator,bool> insert(const Key& x);
+  iterator            insert(const Key& x);
   iterator            insert(iterator position, const Key& x);
 #if 0
   template <class InputIterator>

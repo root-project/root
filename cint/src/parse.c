@@ -1482,7 +1482,7 @@ char* temp;
      *****************************/
     /******************************
      *   #ifdef __cplusplus
-     *   extern "C" { ... }
+     *   extern "C" {  ...  }
      *   #endif
      *****************************/
     
@@ -1500,11 +1500,14 @@ char* temp;
       cin = G__fgetstream(temp,"{\r\n");
 
       if(0!=temp[0] || '{'!=cin)  goto goback;
+#ifndef G__OLDIMPLEMENTATION1933
       cin = G__fgetstream(temp,"\n\r");
       if (cin=='}' && 0==strcmp(fname,"C")) {
         goto goback;
       }
-
+#else
+      G__fignoreline();
+#endif
       cin = G__fgetstream(temp,"#\n\r");
       if('#'!=cin) goto goback;
       cin = G__fgetstream(temp,"\n\r");

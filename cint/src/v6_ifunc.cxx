@@ -18,7 +18,6 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-#define G__OLDIMPLEMENTATION1928
 
 #include "common.h"
 
@@ -8542,6 +8541,11 @@ long *poffset;
  {
    int tagnum = p_ifunc->tagnum;
    int ifn = (int)(*pifn);
+
+#ifndef G__OLDIMPLEMENTATION1931
+   if(-1!=tagnum) G__incsetup_memfunc(tagnum);
+#endif
+
    ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
 			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
    *poffset = 0;
