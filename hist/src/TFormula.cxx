@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.87 2005/03/04 09:06:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.88 2005/03/04 09:29:59 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2795,10 +2795,10 @@ void TFormula::ProcessLinear(TString &formula)
    char *pch;
    Int_t nf;
    //replace "++" with "+[i]*"
-   pch=strstr(formula.Data(), "++");
+   pch= (char*)strstr(formula.Data(), "++");
    if (pch) 
       formula.Insert(0, "[0]*");
-   pch=strstr(formula.Data(), "++");
+   pch= (char*)strstr(formula.Data(), "++");
    if (pch){ 
       //if there are "++", replaces them with +[i]*
       nf = 1;
@@ -2806,19 +2806,19 @@ void TFormula::ProcessLinear(TString &formula)
 	 sprintf(repl, "+[%d]*", nf);
 	 Int_t offset = pch-formula.Data();
 	 formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+5);
-	 pch = strstr(formula.Data()+offset, "++");   
+	 pch = (char*)strstr(formula.Data()+offset, "++");   
 	 nf++;
       }
    } else {
       //if there are no ++, create a new string with ++ instead of +[i]*
       formula2=formula2(4, formula2.Length()-4);
-      pch=strchr(formula2.Data(), '[');
+      pch= (char*)strchr(formula2.Data(), '[');
       char repl[]="++";
       nf = 1;
       while (pch){
 	 Int_t offset = pch-formula2.Data()-1;
 	 formula2.Replace(pch-formula2.Data()-1, (nf)/10+5, repl, 2);
-	 pch = strchr(formula2.Data()+offset, '[');
+	 pch = (char*)strchr(formula2.Data()+offset, '[');
 	 nf++;
       }
    }
