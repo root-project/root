@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.2 2004/01/27 19:50:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.3 2004/02/18 07:28:02 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -318,7 +318,7 @@ void    TEmulatedVectorProxy::Resize(UInt_t n, Bool_t forceDelete)
             break;
 
          default:
-            // for the other cases we don't have to initialized anything!
+            // for the other cases we don't have to initialize anything!
             return;
       }//end switch
 
@@ -385,7 +385,7 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
       Int_t R__n=0;   
       R__b >> R__n;
       Assert(R__n>=0 && R__n < 1000000);
-      Resize(R__n, true);
+      Resize(R__n, false);
       
       switch (fCase) {
          
@@ -424,7 +424,11 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
             break;
             
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:;
-            DOLOOP { *((void**)arr) = (void*)R__b.ReadObject(fValueClass);} break;
+            DOLOOP { 
+               if ( *(void**)arr ) fValueClass->Destructor(*((void**)arr),0);
+               *((void**)arr) = (void*)R__b.ReadObjectAny(fValueClass);
+            } 
+            break;
             
          case G__BIT_ISCLASS:;
             DOLOOP {
@@ -443,6 +447,7 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
             DOLOOP {
                TString R__str;
                R__str.Streamer(R__b);;
+               if ( *(void**)arr ) delete *(string**)arr;
                *((void**)arr) = new string(R__str.Data());
             }  
             break;
@@ -450,6 +455,7 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
          case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:;
             DOLOOP {
                TString **ptr = (TString**)arr;
+               if (*ptr) delete *ptr;
                *ptr = new TString;
                (**ptr).Streamer(R__b);
             }  break;

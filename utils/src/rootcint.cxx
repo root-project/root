@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.154 2004/02/11 17:00:07 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.155 2004/02/19 00:17:51 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -981,6 +981,7 @@ bool NeedDestructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
 {
+   if (strncmp(cl.Name(),"pair<",strlen("pair<"))==0) return true;
 
    if (TClassEdit::IsSTLCont(cl.Name()) != 0 ) return false;
    if (strcmp(cl.Name(),"string") == 0 ) return false;
@@ -4251,6 +4252,7 @@ int main(int argc, char **argv)
       bool skip = true;
       bool force = false;
       strcpy(cline,line);
+      int len = strlen(line);
 
       // Check if the line contains a "#pragma link C++ class" specification,
       // if so, process the class (STK)
@@ -4276,6 +4278,30 @@ int main(int argc, char **argv)
          // Create G__ClassInfo object for this class and process. Be
          // careful with the hardcoded string of trailing options in case
          // these change (STK)
+
+         int extraRootflag = 0;
+         if (force && len>2) {
+            char *endreq = line+len-2;
+            bool ending = false;
+            while (!ending) {
+               switch ( (*endreq) ) {
+                  case ';': break;
+                  case '+': extraRootflag |= G__USEBYTECOUNT; break;
+                  case '!': extraRootflag |= G__NOINPUTOPERATOR; break;
+                  case '-': extraRootflag |= G__NOSTREAMER; break;
+                  case ' ':
+                  case '\t': break;
+                  default:
+                     ending = true;
+               }
+               --endreq;
+            }
+            if ( extraRootflag & (G__USEBYTECOUNT | G__NOSTREAMER) ) {
+               Warning(line,"option + mutual exclusive with -, + prevails\n");
+               extraRootflag &= ~G__NOSTREAMER;
+            }
+         }
+
          char *request = strtok(0, "-!+;");
          // just in case remove trailing space and tab
          while (*request == ' ') request++;
@@ -4283,16 +4309,40 @@ int main(int argc, char **argv)
          while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
          request = Compress(request); //no space between tmpl arguments allowed
          G__ClassInfo cl(request);
+
+         string fullname;
          if (cl.IsValid())
-            clProcessed.push_back(cl.Fullname()); // [ncls] = StrDup
-         else
-            clProcessed.push_back(request); // [ncls] = StrDup
-//fprintf(stderr,"DEBUG: request==%s processed==%s\n",request,clProcessed[ncls].c_str());
-         ncls++;
+            fullname = cl.Fullname();
+         else {
+            fullname = request;
+         }
+         // In order to upgrade the pragma create TClass we would need a new function in
+         // CINT's G__ClassInfo.
+         // if (force && extraRootflag) cl.SetRootFlag(extraRootflag);
+//          fprintf(stderr,"DEBUG: request==%s processed==%s rootflag==%d\n",request,fullname.c_str(),extraRootflag);
          delete [] request;
+
+         // Avoid requesting the creation of a class infrastructure twice.
+         // This could happen if one of the request link C++ class XXX is actually a typedef.
+         int nxt = 0;
+         for (i = 0; i < ncls; i++) {
+            if ( clProcessed[i] == fullname ) {
+               nxt++;
+               break;
+            }
+         }
+         if (nxt) continue;
+
+         clProcessed.push_back( fullname );
+         ncls++;
 
          if (force) {
             if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() != G__CPPLINK) {
+               if (NeedShadowClass(cl)) {
+                  fprintf(fp, "namespace ROOT {\n   namespace Shadow {\n");
+                  WriteShadowClass(cl);
+                  fprintf(fp, "   } // Of namespace ROOT::Shadow\n} // Of namespace ROOT\n\n");
+               }
                WriteClassInit(cl);
             }
          }

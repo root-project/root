@@ -60,8 +60,13 @@ $(BASEDO1):     $(BASEDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 $(BASEDO2):     $(BASEDS2)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+ifeq ($(ARCH),linuxicc)
+$(BASEDO3):     $(BASEDS3)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -wd191 -I. -o $@ -c $<
+else
 $(BASEDO3):     $(BASEDS3)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+endif
 
 all-base:       $(BASEO) $(BASEDO)
 
