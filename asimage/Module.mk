@@ -157,10 +157,19 @@ map::           map-asimage
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
+ifeq ($(PLATFORM),win32)
+		-@(if [ -d $(ASTEPDIRS) ]; then \
+			cd $(ASTEPDIRS); \
+			unset MAKEFLAGS; \
+			nmake -nologo -f libAfterImage.mak clean \
+			CFG="libAfterImage - Win32 Release"; \
+		fi)
+else
 		-@(if [ -d $(ASTEPDIRS) ]; then \
 			cd $(ASTEPDIRS); \
 			$(MAKE) clean; \
 		fi)
+endif
 
 clean::         clean-asimage
 
