@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.86 2002/07/05 12:31:38 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.88 2002/07/10 11:28:20 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -79,11 +79,6 @@ THistPainter::THistPainter()
    fYbuf  = new Double_t[kNMAX];
    fNcuts = 0;
    fStack = 0;
-   fStats = 0;
-
-   //add this THistPainter to the list of cleanups such that in case
-   //the stats object is deleted, its pointer be reset
-   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -92,7 +87,6 @@ THistPainter::~THistPainter()
 //    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
-   gROOT->GetListOfCleanups()->Remove(this);
    delete [] fXbuf;
    delete [] fYbuf;
 }
@@ -123,7 +117,11 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-
+   Int_t curdist = big;
+   Int_t yxaxis, dyaxis,xyaxis, dxaxis;
+   Bool_t dsame;
+   TString doption = gPad->GetPadPointer()->GetDrawOption();
+   
 //     return if point is not in the histogram area
 
 //     If a 3-D view exists, check distance to axis
@@ -137,16 +135,15 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (d1 <= kMaxDiff) {gPad->SetSelected(fXaxis); return 0;}
       d2 = view->GetDistancetoAxis(2, px, py, ratio);
       if (d2 <= kMaxDiff) {gPad->SetSelected(fYaxis); return 0;}
-      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) return 1;
-      return big;
+      if ( px > puxmin && px < puxmax && py > puymax && py < puymin) curdist = 1;
+      goto FUNCTIONS;
    }
 //     check if point is close to an axis
-   TString doption = gPad->GetPadPointer()->GetDrawOption();
    doption.ToLower();
-   Bool_t dsame = kFALSE;
+   dsame = kFALSE;
    if (doption.Contains("same")) dsame = kTRUE;
-   Int_t xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
-   Int_t dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
+   xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
+   dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
    if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
       if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
@@ -154,9 +151,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          return 0;
       }
    }
-   Int_t yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
+   yxaxis = puymin + Int_t((puymin-puymax)*fXaxis->GetLabelOffset());
    if (yxaxis < puymin) yxaxis = puymin;
-   Int_t dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
+   dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
    if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
       if (!dsame) {
          if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
@@ -188,7 +185,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if ( px > puxmin + delta2
         && px < puxmax - delta2
         && py > puymax + delta2
-        && py < puymin - delta2) return 1;
+        && py < puymin - delta2) {curdist =1; goto FUNCTIONS;}
    }
 
 //     point is inside histogram area. Find channel number
@@ -236,13 +233,14 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if (TMath::Abs(px - pxbin) <= kMaxDiff) return TMath::Abs(px - pxbin);
    }
    //     Loop on the list of associated functions and user objects
+FUNCTIONS:
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
       Int_t dist = f->DistancetoPrimitive(px,py);
       if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
    }
-   return big;
+   return curdist;
 }
 
 //______________________________________________________________________________
@@ -938,21 +936,19 @@ void THistPainter::Paint(Option_t *option)
 // For example: gStyle->SetOptStat(11);
 // displays only the name of histogram and the number of entries.
 //
-//When the option "same", the statistic box is not redrawn, and hence
-// the statistics from the previously drawn hostgram will still show.
-// With the option "sames", you can rename a previous "stats" box
-// and/or change its position with these lines:
+// With the option "same", the statistic box is not redrawn.
+// With the option "sames", the statistic box is drawn. If it hiddes
+// the previous statistics box, you can change its position
+// with these lines (if h is the pointer to the histogram):
 //
-//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
-//  Root > st->SetName(newname)
+//  Root > TPaveStats *st = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
-//  Root > newhist->Draw("sames")
 //
 // Fit Statistics
 // ==============
-// You can change the statistics box to display the fit paramters with
-// the TH1::SetOptFit(mode) method. This mode has four digits.
+// You can change the statistics box to display the fit parameters with
+// the TStyle::SetOptFit(mode) method. This mode has four digits.
 // mode = pcev  (default = 0111)
 //    v = 1;  print name/values of parameters
 //    e = 1;  print errors (if e=1, v must be 1)
@@ -3974,19 +3970,27 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //  When option "same" is specified, the statistic box is not drawn.
 //  Specify option "sames" to force painting statistics with option "same"
 //  When option "sames" is given, one can use the following technique
-//  to rename a previous "stats" box and/or change its position
-//  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
-//  Root > st->SetName(newname)
+//  to move a previous "stats" box to a new position
+//  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
 //  Root > st->SetX1NDC(newx1); //new x start position
 //  Root > st->SetX2NDC(newx2); //new x end position
 //  Root > newhist->Draw("sames")
 
    static char t[64];
    Int_t dofit;
-   //   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
-   if (fStats) {
-      dofit  = fStats->GetOptFit();
-      dostat = fStats->GetOptStat();
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
+
+   if (stats) {
+      dofit  = stats->GetOptFit();
+      dostat = stats->GetOptStat();
    } else {
       dofit  = gStyle->GetOptFit();
    }
@@ -4011,100 +4015,102 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 //     Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
-      if (fStats) { delete fStats; fStats = 0; }
+      if (stats) { delete stats; fFunctions->Remove(stats); }
       return;
    }
    Double_t  statw  = gStyle->GetStatW();
    if (fit) statw   = 1.8*gStyle->GetStatW();
    Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
-   if (fStats) {
-      fStats->Clear();
+   if (stats) {
+      stats->Clear();
       done = kTRUE;
    } else {
-      fStats  = new TPaveStats(
+      stats  = new TPaveStats(
                gStyle->GetStatX()-statw,
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
 
-      fStats->SetOptFit(dofit);
-      fStats->SetOptStat(dostat);
-      fStats->SetFillColor(gStyle->GetStatColor());
-      fStats->SetFillStyle(gStyle->GetStatStyle());
-      fStats->SetBorderSize(gStyle->GetStatBorderSize());
-      fStats->SetTextFont(gStyle->GetStatFont());
+      stats->SetParent(fFunctions);
+      stats->SetOptFit(dofit);
+      stats->SetOptStat(dostat);
+      stats->SetFillColor(gStyle->GetStatColor());
+      stats->SetFillStyle(gStyle->GetStatStyle());
+      stats->SetBorderSize(gStyle->GetStatBorderSize());
+      stats->SetTextFont(gStyle->GetStatFont());
       if (gStyle->GetStatFont()%10 > 2)
-         fStats->SetTextSize(gStyle->GetStatFontSize());
-      fStats->SetFitFormat(gStyle->GetFitFormat());
-      fStats->SetStatFormat(gStyle->GetStatFormat());
-      fStats->SetName("stats");
+         stats->SetTextSize(gStyle->GetStatFontSize());
+      stats->SetFitFormat(gStyle->GetFitFormat());
+      stats->SetStatFormat(gStyle->GetStatFormat());
+      stats->SetName("stats");
 
-      fStats->SetTextColor(gStyle->GetStatTextColor());
-      fStats->SetTextAlign(12);
-      fStats->SetBit(kCanDelete);
+      stats->SetTextColor(gStyle->GetStatTextColor());
+      stats->SetTextAlign(12);
+      stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
    }
-   if (print_name)  fStats->AddText(fH->GetName());
+   if (print_name)  stats->AddText(fH->GetName());
    if (print_entries) {
       if (fH->GetEntries() < 1e7) sprintf(t,"Entries = %-7d",Int_t(fH->GetEntries()));
       else                        sprintf(t,"Entries = %14.7g",Float_t(fH->GetEntries()));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    char textstats[50];
    if (print_mean) {
-      sprintf(textstats,"Mean  = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Mean  = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetMean(1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_rms) {
-      sprintf(textstats,"RMS   = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"RMS   = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetRMS(1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_under) {
-      sprintf(textstats,"Underflow = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Underflow = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(0));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_over) {
-      sprintf(textstats,"Overflow  = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Overflow  = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->GetBinContent(fXaxis->GetNbins()+1));
-      fStats->AddText(t);
+      stats->AddText(t);
    }
    if (print_integral) {
-      sprintf(textstats,"Integral = %s%s","%",fStats->GetStatFormat());
+      sprintf(textstats,"Integral = %s%s","%",stats->GetStatFormat());
       sprintf(t,textstats,fH->Integral());
-      fStats->AddText(t);
+      stats->AddText(t);
    }
 
 //     Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",fStats->GetFitFormat(),ndf);
+      sprintf(textstats,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
       sprintf(t,textstats,(Float_t)fit->GetChisquare());
-      if (print_fchi2) fStats->AddText(t);
+      if (print_fchi2) stats->AddText(t);
       if (print_fprob) {
-         sprintf(textstats,"Prob  = %s%s","%",fStats->GetFitFormat());
+         sprintf(textstats,"Prob  = %s%s","%",stats->GetFitFormat());
          sprintf(t,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
-         fStats->AddText(t);
+         stats->AddText(t);
       }
       if (print_fval || print_ferrors) {
          for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
             if (print_ferrors) {
-               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat(),"%",fStats->GetFitFormat());
+               sprintf(textstats,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
                sprintf(t,textstats,(Float_t)fit->GetParameter(ipar)
                                ,(Float_t)fit->GetParError(ipar));
             } else {
-               sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",fStats->GetFitFormat());
+               sprintf(textstats,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
                sprintf(t,textstats,(Float_t)fit->GetParameter(ipar));
             }
             t[63] = 0;
-            fStats->AddText(t);
+            stats->AddText(t);
          }
       }
    }
 
-   if (!done) fStats->Draw();
-   fStats->Paint();
+   if (!done) fFunctions->Add(stats);
+   stats->Paint();
 }
 
 //______________________________________________________________________________
@@ -4129,7 +4135,15 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 
    static char t[64];
    Int_t dofit;
-   TPaveStats *stats  = (TPaveStats*)gPad->FindObject("stats");
+   TPaveStats *stats  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TPaveStats::Class())) {
+         stats = (TPaveStats*)obj;
+         break;
+      }
+   }
    if (stats) {
       dofit  = stats->GetOptFit();
       dostat = stats->GetOptStat();
@@ -4167,6 +4181,8 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
+      
+      stats->SetParent(fFunctions);
       stats->SetOptFit(dofit);
       stats->SetOptStat(dostat);
       stats->SetFillColor(gStyle->GetStatColor());
@@ -4180,6 +4196,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       stats->SetFitFormat(gStyle->GetFitFormat());
       stats->SetStatFormat(gStyle->GetStatFormat());
       stats->SetBit(kCanDelete);
+      stats->SetBit(kMustCleanup);
    }
    if (print_name)  stats->AddText(h2->GetName());
    if (print_entries) {
@@ -4242,7 +4259,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       }
    }
 
-   if (!done) stats->Draw();
+   if (!done) fFunctions->Add(stats);
    stats->Paint();
 }
 
@@ -4765,15 +4782,6 @@ void THistPainter::RecalculateRange()
                       xmax + dxr*gPad->GetRightMargin(),
                       ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
-}
-
-//______________________________________________________________________________
-void THistPainter::RecursiveRemove(TObject *obj)
-{
-   // Recursively remove this object from a list. Typically implemented
-   // by classes that can contain multiple references to a same object.
-  if (obj == fStats) fStats = 0;
-
 }
 
 //______________________________________________________________________________
