@@ -144,7 +144,7 @@ ifeq ($(ARCH),sgikcc)
 # SGI with KCC
 CXX           = KCC -n32 --no_exceptions
 CXXFLAGS      = -O
-LD            = KCC -n32
+LD            = KCC -n32 --no_exceptions
 LDFLAGS       = -O
 SOFLAGS       =
 endif
