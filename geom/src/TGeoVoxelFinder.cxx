@@ -402,7 +402,6 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
          return GetNextIndices(point, dir);
       }
    }
-   return kFALSE;  // never happens
 }
 
 //-----------------------------------------------------------------------------

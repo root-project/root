@@ -150,7 +150,6 @@ Bool_t TGeoNode::IsOnScreen()
       default:
          return kFALSE;
    }
-   return kFALSE;  
 }
 //-----------------------------------------------------------------------------
 void TGeoNode::InspectNode()

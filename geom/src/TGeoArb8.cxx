@@ -285,7 +285,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl)
    Double_t c=dxs*point[1]-dys*point[0]+xs1*ys2-xs2*ys1;
    Double_t zi;
    Double_t s=kBig;
-   Double_t x1,x2,y1,y2,xp,yp;
+   //Double_t x1,x2,y1,y2,xp,yp;
    if (a==0) {           
       if (b==0) return kBig;
       s=-c/b;

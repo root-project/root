@@ -80,7 +80,6 @@ Bool_t TGeoCompositeShape::Contains(Double_t *point)
       return fCombinator->Contains(point);
    else
       return kFALSE;
-   return kFALSE;
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoCompositeShape::DistToSurf(Double_t *point, Double_t *dir)
