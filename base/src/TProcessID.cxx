@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.7 2001/09/28 11:10:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.1 2001/10/01 10:29:08 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -150,10 +150,8 @@ TProcessID  *TProcessID::ReadProcessID(Int_t pidf, TFile *file)
       //check that a similar pid is not already registered in gROOT
    TIter next(gROOT->GetListOfProcessIDs());
    TProcessID *apid;
-   Bool_t isNew = kFALSE;
    while ((apid=(TProcessID *)next())) {
       if (strcmp(apid->GetTitle(),pid->GetTitle())) continue;
-      isNew = kTRUE;
       gROOT->GetListOfProcessIDs()->Add(pid);
       break;
    }
