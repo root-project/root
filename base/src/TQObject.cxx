@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.19 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.21 2002/05/09 20:21:59 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -500,6 +500,8 @@ TQObject::~TQObject()
    // TQObject Destructor.
    //    - delete all connections and signal list
 
+   if (!gROOT) return;
+   
    Destroyed();   // emit "Destroyed()" signal
 
    TQConnectionList *list = 0;
