@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.4 2000/06/13 10:39:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.5 2000/07/15 05:16:34 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -22,7 +22,6 @@
 #endif
 
 static Int_t MAXOP,MAXPAR,MAXCONST;
-const Int_t kMAXFOUND = 200;
 const Int_t kMAXSTRINGFOUND = 10;
 static Int_t already_found[kMAXFOUND];
 

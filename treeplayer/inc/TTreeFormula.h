@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.3 2000/06/14 09:06:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.4 2000/06/15 06:46:22 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 #include "TObjArray.h"
 #endif
 
-const Int_t kMAXCODES = 100;
+const Int_t kMAXCODES = kMAXFOUND; // must be the same as kMAXFOUND in TFormula
 const Int_t kMAXFORMDIM = 5; // Maximum number of array dimensions support in TTreeFormula
 
 class TTree;

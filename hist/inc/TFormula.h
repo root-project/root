@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.2 2000/07/15 05:16:34 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+
+const Int_t kMAXFOUND = 200;
 
 class TFormula : public TNamed {
 

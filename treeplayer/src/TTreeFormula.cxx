@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.13 2000/06/15 16:57:55 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.14 2000/06/16 07:36:27 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <math.h>
 
-const Int_t kMETHOD = 1000;
+const Int_t kMETHOD   = 1000;
 
 ClassImp(TTreeFormula)
 
@@ -59,7 +59,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 //
 
    fTree         = tree;
-   fNindex       = 100;
+   fNindex       = kMAXFOUND;
    fIndex        = new Int_t[fNindex];
    fNcodes       = 0;
    fMultiplicity = 0;
@@ -77,6 +77,10 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    }
 
    if (Compile(expression)) {fTree = 0; return; }
+   if (fNcodes >= kMAXFOUND) {
+      Warning("TTreeFormula","Too many items in expression:%s",expression);
+      fNcodes = kMAXFOUND;
+   }
    SetName(name);
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
@@ -465,7 +469,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 //*-*                  =========================
 //
 
-  const Int_t kMAXFOUND = 200;      //must be the same as values defined in TFormula
   const Int_t kMAXSTRINGFOUND = 10;
   Int_t i,pos,pos2,int1,int2,real_instance,virt_dim;
   Float_t aresult;
