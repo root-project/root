@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.8 2001/06/22 16:10:16 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.9 2002/04/04 10:11:13 rdm Exp $ */
 /* Author: */
 
 /*
@@ -1619,6 +1619,7 @@ search_forw(int new_search)
     }
 }
 
+#if 0
 /***********************************************************************
  *                                                                     *
  *   Strip blanks from both sides of a string. Space for the new       *
@@ -1655,6 +1656,7 @@ static char *strip(char *s)
 
    return r;
 }
+#endif
 
 /*****************************************************************************/
 /* Extra routine provided by Christian Lacunza <lacunza@cdfsg5.lbl.gov>      */
