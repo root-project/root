@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.7 2004/05/12 11:08:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.8 2004/05/12 16:19:04 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -172,11 +172,11 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       //Clicked on APPLY button?
       if (!strcasecmp(GetName(),"APPLY")) {
+         canvas = (TDialogCanvas*)GetMother();
          if (!strcasecmp(GetTitle(),"CLOSE")) {
-            TTimer::SingleShot(50, "TCanvasImp", gPad->GetCanvas()->GetCanvasImp(), "ReallyDelete()");
+            canvas->Close();
             return;
          }
-         canvas = (TDialogCanvas*)GetMother();
          pad = canvas->GetRefPad();
          if (pad) pad->GetCanvas()->FeedbackMode(kFALSE);
          canvas->Apply(GetTitle());   //just in case the apply button executes some code
