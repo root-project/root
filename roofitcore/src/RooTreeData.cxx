@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.65 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.66 2005/02/25 14:23:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1350,7 +1350,7 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
 
     //cout << "hdim = " << hdim << " bin = " << bin << endl ;
 
-    Double_t error2 = pow(hist->GetBinError(bin),2) ;
+    Double_t error2 = pow(hist->GetBinError(bin),2)-pow(weight(),2)  ;
     Double_t we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
     error2 += pow(we,2) ;

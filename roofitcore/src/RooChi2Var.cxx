@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.14 2005/02/24 22:36:06 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.15 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
   RooAbsOptGoodnessOfFit(name,title,pdf,data,
 			 *(const RooArgSet*)RooCmdConfig::decodeObjOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet
 									    ,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeStringOnTheFly("RooChi2Var::RooChi2Var","RangeWithName",0,"",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooNLLVar::RooNLLVar","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
@@ -68,14 +68,13 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
   _extended = pc.getInt("extended") ;
   _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
-
 }
 
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 		     Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptGoodnessOfFit(name,title,pdf,data,RooArgSet(),cutRange,nCPU,verbose,splitCutRange),
-  _extended(extended)
+   _etype(RooAbsData::Poisson), _extended(extended)
 {
   
 }
@@ -84,7 +83,7 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 		     const RooArgSet& projDeps, Bool_t extended, const char* cutRange, Int_t nCPU, Bool_t verbose, Bool_t splitCutRange) : 
   RooAbsOptGoodnessOfFit(name,title,pdf,data,projDeps,cutRange,nCPU,verbose,splitCutRange),
-  _extended(extended)
+  _etype(RooAbsData::Poisson), _extended(extended)
 {
   
 }
@@ -92,6 +91,7 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) : 
   RooAbsOptGoodnessOfFit(other,name),
+  _etype(other._etype),
   _extended(other._extended)
 {
 }
