@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.51 2004/05/30 16:13:05 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.52 2004/06/25 16:49:09 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -4502,12 +4502,13 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
 
          // Now set the key locally in BF form
          BF_set_key(&gBFKey, gPubKeyLen, (const unsigned char *)theKey);
-      }
 #else
-      if (gDebug > 0) {
-         ErrorInfo("RpdGetRSAKeys: not compiled with SSL support:"
+         if (gDebug > 0) {
+            ErrorInfo("RpdGetRSAKeys: not compiled with SSL support:"
                    " you should not have got here!");
+         }
 #endif
+      }
    }
 
    if (fKey)
