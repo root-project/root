@@ -79,6 +79,8 @@
 #include "TGFileDialog.h"
 #include "TGMsgBox.h"
 #include "TSystem.h"
+#include "TContextMenu.h"
+
 
 Bool_t      TGFrame::fgInit = kFALSE;
 Pixel_t     TGFrame::fgDefaultFrameBackground = 0;
@@ -100,6 +102,7 @@ UInt_t      TGFrame::fgUserColor = 0;
 const TGFont *TGGroupFrame::fgDefaultFont = 0;
 const TGGC   *TGGroupFrame::fgDefaultGC = 0;
 
+TContextMenu *TGCompositeFrame::fgContextMenu = 0;
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
 
 static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
@@ -348,6 +351,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    // Handle all frame events. Events are dispatched to the specific
    // event handlers.
 
+   if (IsEditEvent(event)) return HandleEditEvent(event);
+
    switch (event->fType) {
 
       case kExpose:
@@ -386,12 +391,18 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
              fgDby = event->fYRoot;
              fgDbw = event->fWindow;
 
-             if (dbl_clk) {
-                if (!HandleDoubleClick(event))
-                   HandleButton(event);
-             } else {
-                HandleButton(event);
-             }
+            if (!dbl_clk && IsEditEvent(event) && 
+                (event->fCode == kButton3)) {
+               OnContextMenu(event);
+            }
+
+            if (dbl_clk) {
+               if (!HandleDoubleClick(event)) {
+                  HandleButton(event);
+               }
+            } else {
+               HandleButton(event);
+            }
          }
          break;
 
@@ -656,6 +667,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
 
    fLayoutManager = 0;
    fList          = new TList;
+   fLayoutBroken  = kFALSE;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -673,6 +685,7 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
 
    fLayoutManager = 0;
    fList          = new TList;
+   fLayoutBroken  = kFALSE;
 
    SetLayoutManager(new TGVerticalLayout(this));
 }
@@ -685,6 +698,65 @@ TGCompositeFrame::~TGCompositeFrame()
    if (fList) fList->Delete();
    delete fList;
    delete fLayoutManager;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::IsEditable() const
+{
+   // return kTRUE if frame is being eddited
+
+   return (fClient->GetRoot() == (TGWindow*)this);
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::SetEditable(Bool_t on)
+{
+   // Switch ON/OFF edit mode.
+   // If edit mode is ON it is possible: 
+   //    
+   //  1. embed other ROOT GUI application (a la ActiveX)
+   //
+   //  For example:
+   //    TGMainFrame *m = new TGMainFrame(gClient->GetRoot(), 500, 500); 
+   //    m->SetEditable();
+   //    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
+   //    Aclock a;
+   //    gROOT->Macro("$ROOTSYS/tutorials/guitest.C");
+   //    m->SetEditable(0);
+   //    m->MapWindow();
+   //
+   //  2. ... to be continued   
+
+   if (on) {
+      fClient->SetRoot(this);
+   } else {
+      fClient->SetRoot(0);
+      Resize();
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::HandleEditEvent(Event_t *)
+{
+   // Edit events allow to move, resize, remove frames
+   // from the composite frame.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::OnContextMenu(Event_t *event)
+{
+   // Handle context menu
+
+   if (!fgContextMenu) fgContextMenu = new TContextMenu("GUI context menu");
+
+   TGFrame *f = GetFrameFromPoint(event->fX, event->fY);
+
+   if (f) fgContextMenu->Popup(event->fXRoot, event->fYRoot, f, (TBrowser*)NULL);
+   else return kFALSE;
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -720,6 +792,15 @@ void TGCompositeFrame::SetLayoutManager(TGLayoutManager *l)
       fLayoutManager = l;
    } else
       Error("SetLayoutManager", "no layout manager specified");
+}
+
+//______________________________________________________________________________
+void TGCompositeFrame::SetLayoutBroken(Bool_t on)
+{
+   //  set broken layout. No Layout method is called
+
+   fLayoutBroken = on;
+   if (!fLayoutBroken) Resize();
 }
 
 //______________________________________________________________________________
@@ -883,6 +964,7 @@ void TGCompositeFrame::Layout()
 {
    // Layout the elements of the composite frame.
 
+   if (IsLayoutBroken()) return;
    fLayoutManager->Layout();
 }
 
@@ -970,6 +1052,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    // WMDeleteNotify causes the system to send a kClientMessage to the
    // window with fFormat=32 and fUser[0]=gWM_DELETE_WINDOW when window
    // closed via WM
+
    gVirtualX->WMDeleteNotify(fId);
 
    fBindList = new TList;
@@ -992,6 +1075,15 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->GrabKey(fId, kKey_s, kKeyControlMask, kTRUE);
 
    AddInput(kKeyPressMask | kKeyReleaseMask);
+
+   // if parent is editting/embedable add this frame to the parent
+   if (fClient->IsEditable() && (p==fClient->GetRoot())) {
+      TGCompositeFrame *frame;
+      if (p->InheritsFrom(TGCompositeFrame::Class())) {
+         frame = (TGCompositeFrame*)p;
+         frame->AddFrame(this);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -1200,6 +1292,8 @@ void TGMainFrame::SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input)
 {
    // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
 
+   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+
    fMWMValue = value;
    fMWMFuncs = funcs;
    fMWMInput = input;
@@ -1211,6 +1305,8 @@ void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
 {
    // Give the window manager a window position hint.
 
+   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+
    fWMX = x;
    fWMY = y;
    gVirtualX->SetWMPosition(fId, x, y);
@@ -1220,6 +1316,8 @@ void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
 void TGMainFrame::SetWMSize(UInt_t w, UInt_t h)
 {
    // Give the window manager a window size hint.
+
+   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
 
    fWMWidth  = w;
    fWMHeight = h;
@@ -1233,6 +1331,8 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
 {
    // Give the window manager minimum and maximum size hints. Also
    // specify via winc and hinc the resize increments.
+
+   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
 
    fWMMinWidth  = wmin;
    fWMMinHeight = hmin;
@@ -1248,6 +1348,8 @@ void TGMainFrame::SetWMState(EInitialState state)
 {
    // Set the initial state of the window. Either kNormalState or kIconicState.
 
+   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+
    fWMInitState = state;
    gVirtualX->SetWMState(fId, state);
 }
@@ -1262,8 +1364,9 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
 
    fMain = main;
 
-   if (fMain)
+   if (fMain) {
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());
+   }
 }
 
 //______________________________________________________________________________
@@ -1278,7 +1381,6 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
    fText       = title;
    fFontStruct = font;
    fNormGC     = norm;
-   fTitlePos   = kLeft;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -1477,7 +1579,7 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
           << ",ucolor);" << endl;
       fgUserColor = ucolor;
-   }
+   } 
 }
 
 //______________________________________________________________________________
@@ -1685,7 +1787,7 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       GetLayoutManager()->SavePrimitive(out, option);
       out << ");" << endl;
    }
-
+   
 }
 
 //______________________________________________________________________________
@@ -2045,19 +2147,19 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-
+   
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      }
+      } 
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      }
+      } 
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

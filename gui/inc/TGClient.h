@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.7 2003/08/06 23:42:39 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    Pixel_t         fWhite;            // white color index
    Pixel_t         fBlack;            // black color index
    TGWindow       *fRoot;             // root (base) window
+   static TGWindow *fgRoot;           // default root window
    Int_t           fXfd;              // file descriptor of connection to server
    TGResourcePool *fResourcePool;     // global GUI resource pool
    TGGCPool       *fGCPool;           // graphics context pool
@@ -83,6 +84,9 @@ public:
    virtual ~TGClient();
 
    const TGWindow *GetRoot() const { return fRoot; }
+   const TGWindow *GetDefaultRoot() const { return fgRoot; }
+   void  SetRoot(TGWindow *root=0) { fRoot = root ? root : fgRoot; }
+   Bool_t IsEditable() const { return fRoot!=fgRoot; }
    TGWindow *GetWindowById(Window_t sw) const;
 
    FontStruct_t GetFontByName(const char *name) const;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.31 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.32 2003/12/03 00:25:19 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@
 
 class TList;
 class TGResourcePool;
-
+class TContextMenu;
 
 //---- frame states
 
@@ -159,6 +159,10 @@ protected:
 
    TString GetOptionString() const;                //used in SavePrimitive()
 
+   virtual Bool_t HandleEditEvent(Event_t *)  { return kFALSE; }
+   virtual Bool_t OnContextMenu(Event_t *) { return kFALSE; }
+   virtual Bool_t IsEditEvent(Event_t *) const { return kFALSE; }
+
 public:
    // Default colors and graphics contexts
    static Pixel_t     GetDefaultFrameBackground();
@@ -221,6 +225,8 @@ public:
    virtual void    Activate(Bool_t) { }
    virtual Bool_t  IsActive() const { return kFALSE; }
    virtual Bool_t  IsComposite() const { return kFALSE; }
+   virtual Bool_t  IsEditable() const { return kFALSE; }
+   virtual void    SetEditable(Bool_t) {}
 
    virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
 
@@ -267,7 +273,13 @@ protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
 
+   Bool_t   fLayoutBroken;            // no layout manager is used
+
+   static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes 
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
+
+   virtual Bool_t HandleEditEvent(Event_t *);
+   virtual Bool_t OnContextMenu(Event_t *);
 
 public:
    TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -311,6 +323,11 @@ public:
    Bool_t IsArranged(TGFrame *f) const;
    Bool_t IsArranged(TGFrameElement *ptr) const { return (ptr->fState & kIsArranged); }
    Bool_t IsComposite() const { return kTRUE; }
+   virtual Bool_t IsEditable() const;
+   virtual void   SetEditable(Bool_t on = kTRUE);
+   virtual void   SetLayoutBroken(Bool_t on = kTRUE);
+   virtual Bool_t IsLayoutBroken() const { return fLayoutBroken || !fLayoutManager || IsEditable(); }
+
    TList *GetList() { return fList; }
    virtual void Print(Option_t *option="") const;
    virtual void SavePrimitive(ofstream &out, Option_t *option);
