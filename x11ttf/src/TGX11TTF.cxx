@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.10 2003/01/22 17:53:20 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.11 2003/04/03 14:51:47 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -44,7 +44,7 @@ public:
 
 TTFX11Init::TTFX11Init()
 {
-   if (gVirtualX->IsA() == TGX11::Class()) {
+   if (gVirtualX && gVirtualX->IsA() == TGX11::Class()) {
       TGX11 *oldg = (TGX11 *) gVirtualX;
       gVirtualX = new TGX11TTF(*oldg);
       delete oldg;
