@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.26 2003/03/05 11:04:27 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.27 2003/05/09 11:16:17 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -283,6 +283,7 @@ some variables.
 #include "TMath.h"
 #include "TError.h"
 #include "TPluginManager.h"
+#include "TClass.h"
 #include "Api.h"
 
 TMinuit *gMinuit;
@@ -297,16 +298,83 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 //*-*-*-*-*-*-*-*-*-*-*Minuit normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
 
-   BuildArrays(25);
+   if (TMinuit::Class()->IsCallingNew()) {
+      //preset all pointers to null
+      fCpnam     = 0;
+      fU         = 0;
+      fAlim      = 0; 
+      fBlim      = 0; 
+      fPstar     = 0;
+      fGin       = 0;
+      fNvarl     = 0; 
+      fNiofex    = 0; 
+   
+      fNexofi    = 0; 
+      fIpfix     = 0; 
+      fErp       = 0; 
+      fErn       = 0; 
+      fWerr      = 0; 
+      fGlobcc    = 0; 
+      fX         = 0;
+      fXt        = 0; 
+      fDirin     = 0; 
+      fXs        = 0; 
+      fXts       = 0; 
+      fDirins    = 0; 
+      fGrd       = 0; 
+      fG2        = 0; 
+      fGstep     = 0; 
+      fDgrd      = 0; 
+      fGrds      = 0;
+      fG2s       = 0; 
+      fGsteps    = 0; 
+      fPstst     = 0; 
+      fPbar      = 0; 
+      fPrho      = 0; 
+      fWord7     = 0; 
+      fVhmat     = 0; 
+      fVthmat    = 0; 
+      fP         = 0; 
+      fXpt       = 0; 
+      fYpt       = 0; 
+      fChpt      = 0; 
+      fCONTgcc   = 0; 
+      fCONTw     = 0; 
+      fFIXPyy    = 0; 
+      fGRADgf    = 0; 
+      fHESSyy    = 0; 
+      fIMPRdsav  = 0; 
+      fIMPRy     = 0; 
+      fMATUvline = 0; 
+      fMIGRflnu  = 0; 
+      fMIGRstep  = 0; 
+      fMIGRgs    = 0; 
+      fMIGRvg    = 0; 
+      fMIGRxxs   = 0; 
+      fMNOTxdev  = 0; 
+      fMNOTw     = 0; 
+      fMNOTgcc   = 0; 
+      fPSDFs     = 0; 
+      fSEEKxmid  = 0; 
+      fSEEKxbest = 0; 
+      fSIMPy     = 0; 
+      fVERTq     = 0; 
+      fVERTs     = 0; 
+      fVERTpp    = 0; 
+      fCOMDplist = 0; 
+      fPARSplist = 0;   
+   } else {
+      BuildArrays(25);
 
-   fStatus     = 0;
-   fEmpty      = 0;
-   fMethodCall = 0;
-   fGraphicsMode = kTRUE;
-   fPlot       = 0;
-   SetMaxIterations();
-
-   mninit(5,6,7);
+      fStatus     = 0;
+      fEmpty      = 0;
+      fMethodCall = 0;
+      fGraphicsMode = kTRUE;
+      fPlot       = 0;
+      SetMaxIterations();
+      mninit(5,6,7);
+   }
+   
    gMinuit = this;
    gROOT->GetListOfSpecials()->Add(gMinuit);
 
@@ -361,84 +429,95 @@ void TMinuit::BuildArrays(Int_t maxpar)
 //*-*-*-*-*-*-*Create internal Minuit arrays for the maxpar parameters*-*-*-*
 //*-*          =======================================================
 
-   Int_t mni = 25;
-   if (maxpar > 10) mni = maxpar;
-   fMaxpar      = mni;
-   Int_t mnihl  = mni*(mni+1)/2;
-   Int_t maxcpt = 101;
-   Int_t mne    = 2*mni;
-   fCpnam  = new TString[mne];
-   fU      = new Double_t[mne];
-   fAlim   = new Double_t[mne];
-   fBlim   = new Double_t[mne];
-   fErp    = new Double_t[mni];
-   fErn    = new Double_t[mni];
-   fWerr   = new Double_t[mni];
-   fGlobcc = new Double_t[mni];
-   fNvarl  = new Int_t[mne];
-   fNiofex = new Int_t[mne];
-   fNexofi = new Int_t[mni];
-   fX      = new Double_t[mni];
-   fXt     = new Double_t[mni];
-   fDirin  = new Double_t[mni];
-   fXs     = new Double_t[mni];
-   fXts    = new Double_t[mni];
-   fDirins = new Double_t[mni];
-   fGrd    = new Double_t[mni];
-   fG2     = new Double_t[mni];
-   fGstep  = new Double_t[mni];
-   fGin    = new Double_t[mne];
-   fDgrd   = new Double_t[mni];
-   fGrds   = new Double_t[mni];
-   fG2s    = new Double_t[mni];
-   fGsteps = new Double_t[mni];
-   fIpfix  = new Int_t[mni];
-   fVhmat  = new Double_t[mnihl];
-   fVthmat = new Double_t[mnihl];
-   fP      = new Double_t[mni*(mni+1)];
-   fPstar  = new Double_t[2*mni];
-   fPstst  = new Double_t[mni];
-   fPbar   = new Double_t[mni];
-   fPrho   = new Double_t[mni];
-   fWord7  = new Double_t[mni];
-   fXpt    = new Double_t[maxcpt];
-   fYpt    = new Double_t[maxcpt];
-   fChpt   = new char[maxcpt+1];
-   fOrigin = new TString[100];
-   fWarmes = new TString[100];
+   fMaxpar = 25;
+   if (maxpar > 10) fMaxpar = maxpar;
+   fMaxpar1= fMaxpar*(fMaxpar+1);
+   fMaxpar2= 2*fMaxpar;
+   fMaxpar5= fMaxpar1/2;
+   fMaxcpt = 101;
+   fCpnam  = new TString[fMaxpar2];
+   fU      = new Double_t[fMaxpar2];
+   fAlim   = new Double_t[fMaxpar2];
+   fBlim   = new Double_t[fMaxpar2];
+   fPstar  = new Double_t[fMaxpar2];
+   fGin    = new Double_t[fMaxpar2];
+   fNvarl  = new Int_t[fMaxpar2];
+   fNiofex = new Int_t[fMaxpar2];
+   
+   fNexofi = new Int_t[fMaxpar];
+   fIpfix  = new Int_t[fMaxpar];
+   fErp    = new Double_t[fMaxpar];
+   fErn    = new Double_t[fMaxpar];
+   fWerr   = new Double_t[fMaxpar];
+   fGlobcc = new Double_t[fMaxpar];
+   fX      = new Double_t[fMaxpar];
+   fXt     = new Double_t[fMaxpar];
+   fDirin  = new Double_t[fMaxpar];
+   fXs     = new Double_t[fMaxpar];
+   fXts    = new Double_t[fMaxpar];
+   fDirins = new Double_t[fMaxpar];
+   fGrd    = new Double_t[fMaxpar];
+   fG2     = new Double_t[fMaxpar];
+   fGstep  = new Double_t[fMaxpar];
+   fDgrd   = new Double_t[fMaxpar];
+   fGrds   = new Double_t[fMaxpar];
+   fG2s    = new Double_t[fMaxpar];
+   fGsteps = new Double_t[fMaxpar];
+   fPstst  = new Double_t[fMaxpar];
+   fPbar   = new Double_t[fMaxpar];
+   fPrho   = new Double_t[fMaxpar];
+   fWord7  = new Double_t[fMaxpar];
+   fVhmat  = new Double_t[fMaxpar5];
+   fVthmat = new Double_t[fMaxpar5];
+   fP      = new Double_t[fMaxpar1];
+   fXpt    = new Double_t[fMaxcpt];
+   fYpt    = new Double_t[fMaxcpt];
+   fChpt   = new char[fMaxcpt+1];
    // initialisation of dynamic arrays used internally in some functions
    // these arrays had a fix dimension in Minuit
-   fCONTgcc   = new Double_t[mni];
-   fCONTw     = new Double_t[mni];
-   fFIXPyy    = new Double_t[mni];
-   fGRADgf    = new Double_t[mni];
-   fHESSyy    = new Double_t[mni];
-   fIMPRdsav  = new Double_t[mni];
-   fIMPRy     = new Double_t[mni];
-   fMATUvline = new Double_t[mni];
-   fMIGRflnu  = new Double_t[mni];
-   fMIGRstep  = new Double_t[mni];
-   fMIGRgs    = new Double_t[mni];
-   fMIGRvg    = new Double_t[mni];
-   fMIGRxxs   = new Double_t[mni];
-   fMNOTxdev  = new Double_t[mni];
-   fMNOTw     = new Double_t[mni];
-   fMNOTgcc   = new Double_t[mni];
-   fPSDFs     = new Double_t[mni];
-   fSEEKxmid  = new Double_t[mni];
-   fSEEKxbest = new Double_t[mni];
-   fSIMPy     = new Double_t[mni];
-   fVERTq     = new Double_t[mni];
-   fVERTs     = new Double_t[mni];
-   fVERTpp    = new Double_t[mni];
-   fCOMDplist = new Double_t[mni];
-   fPARSplist = new Double_t[mni];
+   fCONTgcc   = new Double_t[fMaxpar];
+   fCONTw     = new Double_t[fMaxpar];
+   fFIXPyy    = new Double_t[fMaxpar];
+   fGRADgf    = new Double_t[fMaxpar];
+   fHESSyy    = new Double_t[fMaxpar];
+   fIMPRdsav  = new Double_t[fMaxpar];
+   fIMPRy     = new Double_t[fMaxpar];
+   fMATUvline = new Double_t[fMaxpar];
+   fMIGRflnu  = new Double_t[fMaxpar];
+   fMIGRstep  = new Double_t[fMaxpar];
+   fMIGRgs    = new Double_t[fMaxpar];
+   fMIGRvg    = new Double_t[fMaxpar];
+   fMIGRxxs   = new Double_t[fMaxpar];
+   fMNOTxdev  = new Double_t[fMaxpar];
+   fMNOTw     = new Double_t[fMaxpar];
+   fMNOTgcc   = new Double_t[fMaxpar];
+   fPSDFs     = new Double_t[fMaxpar];
+   fSEEKxmid  = new Double_t[fMaxpar];
+   fSEEKxbest = new Double_t[fMaxpar];
+   fSIMPy     = new Double_t[fMaxpar];
+   fVERTq     = new Double_t[fMaxpar];
+   fVERTs     = new Double_t[fMaxpar];
+   fVERTpp    = new Double_t[fMaxpar];
+   fCOMDplist = new Double_t[fMaxpar];
+   fPARSplist = new Double_t[fMaxpar];
 
    for (int i = 0; i < fMaxpar; i++) {
       fErp[i] = 0;
       fErn[i] = 0;
    }
 }
+
+
+//______________________________________________________________________________
+TObject *TMinuit::Clone(const char *newname) const
+{
+   // Make a clone of an object using the Streamer facility.
+   // Function pointer is copied to Clone
+   TMinuit *named = (TMinuit*)TNamed::Clone(newname);
+   named->fFCN=fFCN;
+   return named;
+}
+
 
 //______________________________________________________________________________
 Int_t TMinuit::Command(const char *command)
@@ -578,8 +657,6 @@ void TMinuit::DeleteArrays()
    delete [] fXpt;
    delete [] fYpt;
    delete [] fChpt;
-   delete [] fOrigin;
-   delete [] fWarmes;
    
    delete [] fCONTgcc;
    delete [] fCONTw;

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.5 2002/11/05 09:54:27 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.6 2002/11/05 10:38:02 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -38,6 +38,20 @@ private:
 
 // should become private....
 public:
+        enum{kMAXWARN=100};
+          
+        Int_t        fNpfix;            //Number of fixed parameters
+        Int_t        fEmpty;            //Initialization flag (1 = Minuit initialized)
+        Int_t        fMaxpar;           //Maximum number of parameters
+        Int_t        fMaxint;           //Maximum number of internal parameters
+        Int_t        fNpar;             //Number of free parameters (total number of pars = fNpar + fNfix)
+        Int_t        fMaxext;           //Maximum number of external parameters
+        Int_t        fMaxIterations;    //Maximum number of iterations
+        Int_t        fMaxpar5;          // fMaxpar*(fMaxpar+1)/2
+        Int_t        fMaxcpt;
+        Int_t        fMaxpar2;          // fMaxpar*fMaxpar
+        Int_t        fMaxpar1;          // fMaxpar*(fMaxpar+1)
+        
         Double_t     fAmin;             //Minimum value found for FCN
         Double_t     fUp;               //FCN+-UP defines errors (for chisquare fits UP=1)
         Double_t     fEDM;              //Estimated vertical distance to the minimum
@@ -60,72 +74,65 @@ public:
         Double_t     *fU;               //External (visible to user in FCN) value of parameters
         Double_t     *fAlim;            //Lower limits for parameters. If zero no limits
         Double_t     *fBlim;            //Upper limits for parameters
-        Double_t     *fErp;             //Positive Minos errors if calculated
-        Double_t     *fErn;             //Negative Minos errors if calculated
-        Double_t     *fWerr;            //External parameters error (standard deviation, defined by UP)
-        Double_t     *fGlobcc;          //Global Correlation Coefficients
-        Double_t     *fX;               //Internal parameters values
-        Double_t     *fXt;              //Internal parameters values X saved as Xt
-        Double_t     *fDirin;           //(Internal) step sizes for current step
-        Double_t     *fXs;              //Internal parameters values saved for fixed params
-        Double_t     *fXts;             //Internal parameters values X saved as Xt for fixed params
-        Double_t     *fDirins;          //(Internal) step sizes for current step for fixed params
-        Double_t     *fGrd;             //First derivatives
-        Double_t     *fG2;              //
-        Double_t     *fGstep;           //Step sizes
-        Double_t     *fGin;             //
-        Double_t     *fDgrd;            //Uncertainties
-        Double_t     *fGrds;            //
-        Double_t     *fG2s;             //
-        Double_t     *fGsteps;          //
-        Double_t     *fVhmat;           //(Internal) error matrix stored as Half MATrix, since it is symmetric
-        Double_t     *fVthmat;          //VHMAT is sometimes saved in VTHMAT, especially in MNMNOT
-        Double_t     *fP;               //
-        Double_t     *fPstar;           //
-        Double_t     *fPstst;           //
-        Double_t     *fPbar;            //
-        Double_t     *fPrho;            //Minimum point of parabola
-        Double_t     *fWord7;           //
-        Double_t     *fXpt;             //X array of points for contours
-        Double_t     *fYpt;             //Y array of points for contours
+        Double_t     *fErp;             //[fMaxpar] Positive Minos errors if calculated
+        Double_t     *fErn;             //[fMaxpar] Negative Minos errors if calculated
+        Double_t     *fWerr;            //[fMaxpar] External parameters error (standard deviation, defined by UP)
+        Double_t     *fGlobcc;          //[fMaxpar] Global Correlation Coefficients
+        Double_t     *fX;               //[fMaxpar] Internal parameters values
+        Double_t     *fXt;              //[fMaxpar] Internal parameters values X saved as Xt
+        Double_t     *fDirin;           //[fMaxpar] (Internal) step sizes for current step
+        Double_t     *fXs;              //[fMaxpar] Internal parameters values saved for fixed params
+        Double_t     *fXts;             //[fMaxpar] Internal parameters values X saved as Xt for fixed params
+        Double_t     *fDirins;          //[fMaxpar] (Internal) step sizes for current step for fixed params
+        Double_t     *fGrd;             //[fMaxpar] First derivatives
+        Double_t     *fG2;              //[fMaxpar] 
+        Double_t     *fGstep;           //[fMaxpar] Step sizes
+        Double_t     *fGin;             //[fMaxpar2] 
+        Double_t     *fDgrd;            //[fMaxpar] Uncertainties
+        Double_t     *fGrds;            //[fMaxpar] 
+        Double_t     *fG2s;             //[fMaxpar] 
+        Double_t     *fGsteps;          //[fMaxpar] 
+        Double_t     *fVhmat;           //[fMaxpar5] (Internal) error matrix stored as Half MATrix, since it is symmetric
+        Double_t     *fVthmat;          //[fMaxpar5] VHMAT is sometimes saved in VTHMAT, especially in MNMNOT
+        Double_t     *fP;               //[fMaxpar1] 
+        Double_t     *fPstar;           //[fMaxpar2] 
+        Double_t     *fPstst;           //[fMaxpar] 
+        Double_t     *fPbar;            //[fMaxpar] 
+        Double_t     *fPrho;            //[fMaxpar] Minimum point of parabola
+        Double_t     *fWord7;           //[fMaxpar] 
+        Double_t     *fXpt;             //[fMaxcpt] X array of points for contours
+        Double_t     *fYpt;             //[fMaxcpt] Y array of points for contours
         
-        Double_t     *fCONTgcc;         //[kMAXDIM] array used in mncont
-        Double_t     *fCONTw;           //[kMAXDIM] array used in mncont
-        Double_t     *fFIXPyy;          //[kMAXDIM] array used in mnfixp
-        Double_t     *fGRADgf;          //[kMAXDIM] array used in mngrad
-        Double_t     *fHESSyy;          //[kMAXDIM] array used in mnhess
-        Double_t     *fIMPRdsav;        //[kMAXDIM] array used in mnimpr
-        Double_t     *fIMPRy;           //[kMAXDIM] array used in mnimpr
-        Double_t     *fMATUvline;       //[kMAXDIM] array used in mnmatu
-        Double_t     *fMIGRflnu;        //[kMAXDIM] array used in mnmigr
-        Double_t     *fMIGRstep;        //[kMAXDIM] array used in mnmigr
-        Double_t     *fMIGRgs;          //[kMAXDIM] array used in mnmigr
-        Double_t     *fMIGRvg;          //[kMAXDIM] array used in mnmigr
-        Double_t     *fMIGRxxs;         //[kMAXDIM] array used in mnmigr
-        Double_t     *fMNOTxdev;        //[kMAXDIM] array used in mnmnot
-        Double_t     *fMNOTw;           //[kMAXDIM] array used in mnmnot
-        Double_t     *fMNOTgcc;         //[kMAXDIM] array used in mnmnot
-        Double_t     *fPSDFs;           //[kMAXDIM] array used in mnpsdf
-        Double_t     *fSEEKxmid;        //[kMAXDIM] array used in mnseek
-        Double_t     *fSEEKxbest;       //[kMAXDIM] array used in mnseek
-        Double_t     *fSIMPy;           //[kMAXDIM] array used in mnsimp
-        Double_t     *fVERTq;           //[kMAXDIM] array used in mnvert
-        Double_t     *fVERTs;           //[kMAXDIM] array used in mnvert
-        Double_t     *fVERTpp;          //[kMAXDIM] array used in mnvert
-        Double_t     *fCOMDplist;       //[kMAXP]   array used in mncomd
-        Double_t     *fPARSplist;       //[kMAXP]   array used in mnpars
+        Double_t     *fCONTgcc;         //[fMaxpar] array used in mncont
+        Double_t     *fCONTw;           //[fMaxpar] array used in mncont
+        Double_t     *fFIXPyy;          //[fMaxpar] array used in mnfixp
+        Double_t     *fGRADgf;          //[fMaxpar] array used in mngrad
+        Double_t     *fHESSyy;          //[fMaxpar] array used in mnhess
+        Double_t     *fIMPRdsav;        //[fMaxpar] array used in mnimpr
+        Double_t     *fIMPRy;           //[fMaxpar] array used in mnimpr
+        Double_t     *fMATUvline;       //[fMaxpar] array used in mnmatu
+        Double_t     *fMIGRflnu;        //[fMaxpar] array used in mnmigr
+        Double_t     *fMIGRstep;        //[fMaxpar] array used in mnmigr
+        Double_t     *fMIGRgs;          //[fMaxpar] array used in mnmigr
+        Double_t     *fMIGRvg;          //[fMaxpar] array used in mnmigr
+        Double_t     *fMIGRxxs;         //[fMaxpar] array used in mnmigr
+        Double_t     *fMNOTxdev;        //[fMaxpar] array used in mnmnot
+        Double_t     *fMNOTw;           //[fMaxpar] array used in mnmnot
+        Double_t     *fMNOTgcc;         //[fMaxpar] array used in mnmnot
+        Double_t     *fPSDFs;           //[fMaxpar] array used in mnpsdf
+        Double_t     *fSEEKxmid;        //[fMaxpar] array used in mnseek
+        Double_t     *fSEEKxbest;       //[fMaxpar] array used in mnseek
+        Double_t     *fSIMPy;           //[fMaxpar] array used in mnsimp
+        Double_t     *fVERTq;           //[fMaxpar] array used in mnvert
+        Double_t     *fVERTs;           //[fMaxpar] array used in mnvert
+        Double_t     *fVERTpp;          //[fMaxpar] array used in mnvert
+        Double_t     *fCOMDplist;       //[fMaxpar] array used in mncomd
+        Double_t     *fPARSplist;       //[fMaxpar] array used in mnpars
         
-        Int_t        *fNvarl;           //parameters flag (-1=undefined, 0=constant..)
-        Int_t        *fNiofex;          //Internal parameters number, or zero if not currently variable
-        Int_t        *fNexofi;          //External parameters number for currently variable parameters
-        Int_t        *fIpfix;           //List of fixed parameters
-        Int_t        fNpfix;            //Number of fixed parameters
-        Int_t        fEmpty;            //Initialization flag (1 = Minuit initialized)
-        Int_t        fMaxpar;           //Maximum number of parameters
-        Int_t        fMaxint;           //Maximum number of internal parameters
-        Int_t        fNpar;             //Number of free parameters (total number of pars = fNpar + fNfix)
-        Int_t        fMaxext;           //Maximum number of external parameters
-        Int_t        fMaxIterations;    //Maximum number of iterations
+        Int_t        *fNvarl;           //[fMaxpar2] parameters flag (-1=undefined, 0=constant..)
+        Int_t        *fNiofex;          //[fMaxpar2] Internal parameters number, or zero if not currently variable
+        Int_t        *fNexofi;          //[fMaxpar] External parameters number for currently variable parameters
+        Int_t        *fIpfix;           //[fMaxpar] List of fixed parameters
         Int_t        fNu;               //
         Int_t        fIsysrd;           //standardInput unit
         Int_t        fIsyswr;           //standard output unit
@@ -161,7 +168,7 @@ public:
         Bool_t       fLphead;           //true if a heading should be put out for the next parameter definition
         Bool_t       fGraphicsMode;     //true if graphics mode on (default)
         char         *fChpt;            //Character to be plotted at the X,Y contour positions
-        TString      *fCpnam;           //Array of parameters names
+        TString      *fCpnam;           //[fMaxpar2] Array of parameters names
         TString      fCfrom;            //
         TString      fCstatu;           //
         TString      fCtitl;            //
@@ -169,8 +176,8 @@ public:
         TString      fCundef;           //
         TString      fCvrsn;            //
         TString      fCovmes[4];        //
-        TString      *fOrigin;          //
-        TString      *fWarmes;          //
+        TString      fOrigin[kMAXWARN]; //
+        TString      fWarmes[kMAXWARN]; //
         TObject      *fObjectFit;       //Pointer to object being fitted
         TObject      *fPlot;            //Pointer to TGraph object created by mncont
         TMethodCall  *fMethodCall;      //Pointer to MethodCall in case of interpreted function
@@ -182,6 +189,7 @@ public:
                 TMinuit(Int_t maxpar);
  virtual       ~TMinuit();
  virtual void   BuildArrays(Int_t maxpar=15);
+ virtual TObject *Clone(const char *newname="") const;   //Clone-Method to copy the function-pointer fFCN
  virtual Int_t  Command(const char *command);
  virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
  virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );
@@ -264,7 +272,7 @@ public:
  virtual void   SetObjectFit(TObject *obj) {fObjectFit=obj;}
  virtual Int_t  SetPrintLevel( Int_t printLevel=0 );
 
- ClassDef(TMinuit,0)  //The MINUIT minimisation package
+ ClassDef(TMinuit,1)  //The MINUIT minimisation package
 };
 
 R__EXTERN TMinuit  *gMinuit;
