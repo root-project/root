@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.64 2004/12/08 14:52:26 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.65 2004/12/16 19:39:11 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3855,25 +3855,9 @@ int RpdGlobusAuth(const char *sstr)
       ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
                 client_issuer_name);
 
-   // Inquire Globus credentials:
-   // This is looking to file X509_USER_CERT for valid a X509 cert (default
-   // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
-   // (default /etc/grid-security/certificates).
-   if ((MajStat =
-        globus_gss_assist_acquire_cred(&MinStat, GSS_C_ACCEPT,
-                                       &GlbCredHandle)) !=
-       GSS_S_COMPLETE) {
-      GlbsToolError("RpdGlobusAuth: gss_assist_acquire_cred", MajStat,
-                    MinStat, 0);
-      if (getuid() > 0)
-         ErrorInfo("RpdGlobusAuth: non-root: make sure you have"
-                   " initialized (manually) your proxies");
-      return auth;
-   }
-
    // Now we open the certificates and we check if we are able to
-   // autheticate the client. In the affirmative case we send our
-   // subject name to the client ...
+   // autheticate the client. In the affirmative case we initialize
+   // our credentials and we send our subject name to the client ...
    // NB: we try first the user proxies; if it does not work we
    // try using the local host certificates; but only if we have
    // the rigth privileges
@@ -3891,8 +3875,24 @@ int RpdGlobusAuth(const char *sstr)
       if (client_issuer_name) delete[] client_issuer_name;
       return auth;
    } else {
+
+      // Inquire Globus credentials:
+      // This is looking to file X509_USER_CERT for valid a X509 cert (default
+      // /etc/grid-security/hostcert.pem) and to dir X509_CERT_DIR for trusted CAs
+      // (default /etc/grid-security/certificates).
+      if ((MajStat =
+           globus_gss_assist_acquire_cred(&MinStat, GSS_C_ACCEPT,
+                                          &GlbCredHandle)) !=
+          GSS_S_COMPLETE) {
+         GlbsToolError("RpdGlobusAuth: gss_assist_acquire_cred", MajStat,
+                       MinStat, 0);
+         if (getuid() > 0)
+            ErrorInfo("RpdGlobusAuth: non-root: make sure you have"
+                      " initialized (manually) your proxies");
+         return auth;
+      }
+
       int sjlen = strlen(subject_name) + 1;
-      //      subject_name[sjlen] = '\0';
 
       int bsnd = NetSend(sjlen, kROOTD_GLOBUS);
       if (gDebug > 2)
