@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.3 2000/07/04 11:35:36 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -54,11 +54,11 @@ void TGTextView::Init(ULong_t /*back*/)
    fText = new TGText();
    TGView::Clear();
 
-   fClipboard = new TGText();
+   fClipText = new TGText();
 
    gVirtualX->GetFontProperties(fFont, fMaxAscent, fMaxDescent);
    fScrollVal.fY = fMaxAscent + fMaxDescent;
-   fScrollVal.fX = gVirtualX->TextWidth(fFont, "w", 1);
+   fScrollVal.fX = fMaxWidth = gVirtualX->TextWidth(fFont, "W", 1);
 
    gVirtualX->ClearWindow(fCanvas->GetId());
    Layout();
@@ -114,7 +114,7 @@ TGTextView::~TGTextView()
       gVirtualX->DeleteGC(fSelGC);
    }
    delete fText;
-   delete fClipboard;
+   delete fClipText;
 }
 
 //______________________________________________________________________________
@@ -253,10 +253,10 @@ Long_t TGTextView::ToScrXCoord(Long_t xCoord, Long_t line)
    pos.fX = 0;
    pos.fY = line;
    Long_t width = fText->GetLineLength(line);
-   if ((xCoord <= 0) || (pos.fY < 0) || (width <= 0))
+   if (xCoord <= 0 || pos.fY < 0 || width <= 0)
       return 0;
-   if (width+1 < xCoord)
-      return width;
+   if (xCoord > width)
+      xCoord = width;
    buffer = fText->GetLine(pos, xCoord);
    width = gVirtualX->TextWidth(fFont, buffer, xCoord) - fVisible.fX;
    delete [] buffer;
@@ -305,7 +305,7 @@ Long_t TGTextView::ToObjXCoord(Long_t xCoord, Long_t line)
 }
 
 //______________________________________________________________________________
-void TGTextView::Clear()
+void TGTextView::Clear(Option_t *)
 {
    // Clear text view widget.
 
@@ -361,14 +361,14 @@ Bool_t TGTextView::Copy()
 
    if (!fIsMarked)
       return kFALSE;
-   delete fClipboard;
-   fClipboard = new TGText();
+   delete fClipText;
+   fClipText = new TGText();
    insPos.fY = insPos.fX = 0;
    startPos.fX = fMarkedStart.fX;
    startPos.fY = fMarkedStart.fY;
    endPos.fX   = fMarkedEnd.fX;
    endPos.fY   = fMarkedEnd.fY;
-   fClipboard->InsText(insPos, fText, startPos, endPos);
+   fClipText->InsText(insPos, fText, startPos, endPos);
    gVirtualX->SetPrimarySelectionOwner(fId);
    return kTRUE;
 }
@@ -404,9 +404,9 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    rect.fX = x;
    rect.fY = y;
    pos.fY = ToObjYCoord(fVisible.fY + h);
-   rect.fHeight = h + ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY);
+   rect.fHeight = UShort_t(h + ToScrYCoord(pos.fY+1) - ToScrYCoord(pos.fY));
    pos.fX = ToObjXCoord(fVisible.fX+w, pos.fY);
-   rect.fWidth = w + ToScrXCoord(pos.fX+1,pos.fY) - ToScrXCoord(pos.fX, pos.fY);
+   rect.fWidth = UShort_t(w + ToScrXCoord(pos.fX+1,pos.fY) - ToScrXCoord(pos.fX, pos.fY));
    Int_t yloc = rect.fY + fScrollVal.fY;
    pos.fY = ToObjYCoord(fVisible.fY + rect.fY);
    while (pos.fY < line_count &&
@@ -415,8 +415,8 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
       pos.fX = ToObjXCoord(fVisible.fX + rect.fX, pos.fY);
       xoffset = ToScrXCoord(pos.fX, pos.fY);
       len = fText->GetLineLength(pos.fY) - pos.fX;
-      gVirtualX->ClearArea(fCanvas->GetId(), x, ToScrYCoord(pos.fY),
-                           rect.fWidth, ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY));
+      gVirtualX->ClearArea(fCanvas->GetId(), x, Int_t(ToScrYCoord(pos.fY)),
+                           rect.fWidth, UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
       if (len > 0) {
          if (len > ToObjXCoord(fVisible.fX + rect.fX + rect.fWidth, pos.fY) - pos.fX)
             len = ToObjXCoord(fVisible.fX + rect.fX + rect.fWidth, pos.fY) - pos.fX + 1;
@@ -435,8 +435,9 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                (fMarkedStart.fY == fMarkedEnd.fY &&
                 (fMarkedEnd.fX < pos.fX ||
                  fMarkedStart.fX > pos.fX+len))) {
-               gVirtualX->DrawString(fCanvas->GetId(), fNormGC, xoffset,
-                              ToScrYCoord(pos.fY+1) - fMaxDescent, buffer, len);
+               gVirtualX->DrawString(fCanvas->GetId(), fNormGC, Int_t(xoffset),
+                                     Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
+                                     buffer, Int_t(len));
             } else {
                if (pos.fY > fMarkedStart.fY && pos.fY < fMarkedEnd.fY) {
                   len1 = 0;
@@ -474,33 +475,33 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
                   }
                }
                gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
-                                     ToScrXCoord(pos.fX, pos.fY),
-                                     ToScrYCoord(pos.fY+1) - fMaxDescent,
-                                     buffer, len1);
+                                     Int_t(ToScrXCoord(pos.fX, pos.fY)),
+                                     Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
+                                     buffer, Int_t(len1));
                gVirtualX->FillRectangle(fCanvas->GetId(), fSelbackGC,
-                                     ToScrXCoord(pos.fX+len1, pos.fY),
-                                     ToScrYCoord(pos.fY),
-                                     ToScrXCoord(pos.fX+len1+len2, pos.fY) -
-                                     ToScrXCoord(pos.fX+len1, pos.fY),
+                                     Int_t(ToScrXCoord(pos.fX+len1, pos.fY)),
+                                     Int_t(ToScrYCoord(pos.fY)),
+                                     UInt_t(ToScrXCoord(pos.fX+len1+len2, pos.fY) -
+                                     ToScrXCoord(pos.fX+len1, pos.fY)),
 //                                     len-(len1+len2) ?
 //                                     ToScrXCoord(pos.fX+len1+len2, pos.fY) -
 //                                     ToScrXCoord(pos.fX+len1, pos.fY) :
 //                                     fCanvas->GetWidth(),
-                                     ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY));
+                                     UInt_t(ToScrYCoord(pos.fY+1)-ToScrYCoord(pos.fY)));
                gVirtualX->DrawString(fCanvas->GetId(), fSelGC,
-                                     ToScrXCoord(pos.fX+len1, pos.fY),
-                                     ToScrYCoord(pos.fY+1) - fMaxDescent,
-                                     buffer+len1, len2);
+                                     Int_t(ToScrXCoord(pos.fX+len1, pos.fY)),
+                                     Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
+                                     buffer+len1, Int_t(len2));
                gVirtualX->DrawString(fCanvas->GetId(), fNormGC,
-                                     ToScrXCoord(pos.fX+len1+len2, pos.fY),
-                                     ToScrYCoord(pos.fY+1) - fMaxDescent,
-                                     buffer+len1+len2, len-(len1+len2));
+                                     Int_t(ToScrXCoord(pos.fX+len1+len2, pos.fY)),
+                                     Int_t(ToScrYCoord(pos.fY+1) - fMaxDescent),
+                                     buffer+len1+len2, Int_t(len-(len1+len2)));
             }
             delete [] buffer;
          }
       }
       pos.fY++;
-      yloc += ToScrYCoord(pos.fY) - ToScrYCoord(pos.fY-1);
+      yloc += Int_t(ToScrYCoord(pos.fY) - ToScrYCoord(pos.fY-1));
    }
 }
 
@@ -522,16 +523,16 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    reply.fUser[3] = event->fUser[3];     // property
 
    len = 0;
-   for (count = 0; count < fClipboard->RowCount(); count++)
-      len += fClipboard->GetLineLength(count)+1;
+   for (count = 0; count < fClipText->RowCount(); count++)
+      len += fClipText->GetLineLength(count)+1;
 
    pos.fY = pos.fX = 0;
-   buffer = new char[len];
+   buffer = new char[len+1];
    prev_len = temp_len = 0;
-   for (pos.fY = 0; pos.fY < fClipboard->RowCount(); pos.fY++) {
-      temp_len = fClipboard->GetLineLength(pos.fY);
-      temp_buffer = fClipboard->GetLine(pos, temp_len);
-      strncpy(buffer+prev_len, temp_buffer, temp_len);
+   for (pos.fY = 0; pos.fY < fClipText->RowCount(); pos.fY++) {
+      temp_len = fClipText->GetLineLength(pos.fY);
+      temp_buffer = fClipText->GetLine(pos, temp_len);
+      strncpy(buffer+prev_len, temp_buffer, (UInt_t)temp_len);
       buffer[prev_len+temp_len] = 10;   // \n
       delete [] temp_buffer;
       prev_len += temp_len+1;
@@ -539,7 +540,8 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    buffer[len] = '\0';
 
    gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
-                             (Atom_t) event->fUser[2], (UChar_t*) buffer, len-1);
+                             (Atom_t) event->fUser[2], (UChar_t*) buffer,
+                             (Int_t) len-1);
 
    delete [] buffer;
 

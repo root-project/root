@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.2 2000/07/03 18:50:57 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -128,7 +128,7 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
    // Insert text in line starting at position pos.
 
    char *newstring;
-   if (pos > fLength)
+   if (pos > fLength || !text)
       return;
    newstring = new char[strlen(text)+fLength+1];
    if (fString != 0)
@@ -447,7 +447,7 @@ next:
    ++i;
    delete [] buf2;
 
-   if (!finished)
+   if (!finished && tbuf && strlen(tbuf))
       goto next;
 
    // Remember the number of lines
@@ -545,8 +545,7 @@ Bool_t TGText::DelChar(TGLongPosition pos)
    if ((pos.fY >= fRowCount) || (pos.fY < 0))
       return kFALSE;
 
-   SetCurrentRow(pos.fY);
-   if (!fCurrent) return kFALSE;
+   if (!SetCurrentRow(pos.fY)) return kFALSE;
    fCurrent->DelChar(pos.fX);
 
    fIsSaved = kFALSE;
@@ -562,8 +561,7 @@ Bool_t TGText::InsChar(TGLongPosition pos, char c)
    if ((pos.fY >= fRowCount) || (pos.fY < 0) || (pos.fX < 0))
       return kFALSE;
 
-   SetCurrentRow(pos.fY);
-   if (!fCurrent) return kFALSE;
+   if (!SetCurrentRow(pos.fY)) return kFALSE;
    fCurrent->InsChar(pos.fX, c);
 
    fIsSaved = kFALSE;
@@ -579,8 +577,7 @@ char TGText::GetChar(TGLongPosition pos)
    if (pos.fY >= fRowCount)
       return -1;
 
-   SetCurrentRow(pos.fY);
-   if (!fCurrent) return -1;
+   if (!SetCurrentRow(pos.fY)) return -1;
    return fCurrent->GetChar(pos.fX);
 }
 
@@ -598,8 +595,7 @@ Bool_t TGText::DelText(TGLongPosition start, TGLongPosition end)
 
    char *tempbuffer;
 
-   SetCurrentRow(start.fY);
-   if (!fCurrent) return kFALSE;
+   if (!SetCurrentRow(start.fY)) return kFALSE;
 
    if (start.fY == end.fY) {
       fCurrent->DelText(start.fX, end.fX-start.fX+1);
@@ -638,12 +634,12 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
    if ((start_src.fY < 0) || (start_src.fY >= src->RowCount()) ||
        (end_src.fY < 0)   || (end_src.fY >= src->RowCount()))
       return kFALSE;
-   if ((start_src.fX < 0) || (start_src.fX >= src->GetLineLength(start_src.fY)) ||
-       (end_src.fX < 0)   || (end_src.fX >= src->GetLineLength(end_src.fY)))
+   if ((start_src.fX < 0) || (start_src.fX > src->GetLineLength(start_src.fY)) ||
+       (end_src.fX < 0)   || (end_src.fX > src->GetLineLength(end_src.fY)))
       return kFALSE;
-   if ((ins_pos.fY < 0) || (ins_pos.fY >= fRowCount))
+   if ((ins_pos.fY < 0) || (ins_pos.fY > fRowCount))
       return kFALSE;
-   if ((ins_pos.fX < 0) || (ins_pos.fX >= GetLineLength(ins_pos.fY)))
+   if ((ins_pos.fX < 0) || (ins_pos.fX > GetLineLength(ins_pos.fY)))
       return kFALSE;
 
    TGLongPosition pos;
@@ -657,8 +653,8 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
       pos.fX = GetLineLength(pos.fY);
       BreakLine(pos);  // current row is set by this
    } else {
-      SetCurrentRow(ins_pos.fY);  // otherwise going to the desired row
-      if (!fCurrent) return kFALSE;
+      // otherwise going to the desired row
+      if (!SetCurrentRow(ins_pos.fY)) return kFALSE;
    }
 
    // preparing first line to be inserted
@@ -674,8 +670,8 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
       lineString = src->GetLine(start_src, len);
       fCurrent->InsText(ins_pos.fX, lineString);
       delete [] lineString;
-   } else
-      BreakLine(ins_pos);
+   } //else
+      //BreakLine(ins_pos);
    // [...] inserting possible lines
    pos.fY = start_src.fY+1;
    pos.fX = 0;
@@ -693,18 +689,18 @@ Bool_t TGText::InsText(TGLongPosition ins_pos, TGText *src,
       pos.fY = end_src.fY;
       pos.fX = 0;
       lineString = src->GetLine(pos, end_src.fX+1);
-      if (lineString) {
+//      if (lineString) {
          fCurrent->fNext = new TGTextLine(lineString);
          fCurrent->fNext->fPrev = fCurrent;
          fCurrent = fCurrent->fNext;
          fRowCount++;
          fCurrentRow++;
          delete [] lineString;
-      } else {
-         pos.fY = fCurrentRow;
-         pos.fX = 0;
-         BreakLine(pos);
-      }
+//      } else {
+//         pos.fY = fCurrentRow;
+//         pos.fX = 0;
+//         BreakLine(pos);
+//      }
    }
    // ok, now we have to add the rest of the first destination line
    if (restString) {
@@ -734,9 +730,9 @@ Bool_t TGText::InsText(TGLongPosition pos, const char *buffer)
    // Insert single line at specified position. Return false in case position
    // is out of bounds.
 
-   if ((pos.fY < 0) || (pos.fY >= fRowCount))
+   if ((pos.fY < 0) || (pos.fY > fRowCount))
       return kFALSE;
-   if ((pos.fX < 0) || (pos.fX >= GetLineLength(pos.fY)))
+   if ((pos.fX < 0) || (pos.fX > GetLineLength(pos.fY)))
       return kFALSE;
 
    if (pos.fY == fRowCount) {
@@ -848,8 +844,7 @@ Bool_t TGText::BreakLine(TGLongPosition pos)
 {
    // Break line at position pos. Returns false if pos is not valid.
 
-   SetCurrentRow(pos.fY);
-   if (!fCurrent)
+   if (!SetCurrentRow(pos.fY))
       return kFALSE;
    if ((pos.fX < 0) || (pos.fX > (Long_t)fCurrent->fLength))
       return kFALSE;
@@ -881,8 +876,7 @@ Long_t TGText::GetLineLength(Long_t row)
 {
    // Get length of specified line. Returns -1 if row does not exist.
 
-   SetCurrentRow(row);
-   if (!fCurrent)
+   if (!SetCurrentRow(row))
       return -1;
    else
       return (Long_t)fCurrent->GetLineLength();
@@ -892,6 +886,7 @@ Long_t TGText::GetLineLength(Long_t row)
 Bool_t TGText::SetCurrentRow(Long_t row)
 {
    // Make specified row the current row. Returns false if row does not exist.
+   // In which case fCurrent is not changed or set to the last valid line.
 
    Long_t count;
    if ((row < 0) || (row >= fRowCount))

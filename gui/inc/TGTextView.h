@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.2 2000/07/03 18:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.3 2000/07/04 11:35:36 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -39,10 +39,11 @@ friend class TGClient;
 
 protected:
    TGText         *fText;         // text buffer
-   TGText         *fClipboard;    // clipboard text buffer
+   TGText         *fClipText;     // clipboard text buffer
    FontStruct_t    fFont;         // text font
    Int_t           fMaxAscent;    // maximum ascent in font
    Int_t           fMaxDescent;   // maximum descent in font
+   Int_t           fMaxWidth;     // maximum width of character in font
    GContext_t      fNormGC;       // graphics context for drawing text
    GContext_t      fSelGC;        // graphics context for drawing marked text
    GContext_t      fSelbackGC;    // graphics context for drawing marked background
@@ -58,6 +59,7 @@ protected:
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Mark(Long_t xPos, Long_t yPos);
    virtual void UnMark();
+   virtual void Copy(TObject &) { MayNotUse("Copy(TObject &)"); }
 
 public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
@@ -77,7 +79,7 @@ public:
    virtual void   AdjustWidth();
    virtual Bool_t LoadFile(const char *fname, long startpos = 0, long length = -1);
    virtual Bool_t LoadBuffer(const char *txtbuf);
-   virtual void   Clear();
+   virtual void   Clear(Option_t * = "");
    virtual Bool_t Copy();
    virtual Bool_t SelectAll();
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);

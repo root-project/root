@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@
 #include "TGFSComboBox.h"
 #include "TGStatusBar.h"
 #include "TGListTree.h"
-#include "TGTextView.h"
+#include "TGTextEdit.h"
 #include "TGToolTip.h"
 
 
@@ -171,11 +171,15 @@ GContext_t TGTextEntry::fgDefaultSelectedGC;
 GContext_t TGTextEntry::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGTextEntry::fgDefaultFontStruct;
 Cursor_t TGTextEntry::fgDefaultCursor;
+Atom_t TGTextEntry::fgClipboard;
 
+Atom_t TGView::fgClipboard;
 GContext_t TGTextView::fgDefaultGC;
 GContext_t TGTextView::fgDefaultSelectedGC;
 GContext_t TGTextView::fgDefaultSelectedBackgroundGC;
 FontStruct_t TGTextView::fgDefaultFontStruct;
+
+Cursor_t TGTextEdit::fgDefaultCursor;
 
 GContext_t TGGroupFrame::fgDefaultGC;
 FontStruct_t TGGroupFrame::fgDefaultFontStruct;
@@ -319,6 +323,9 @@ TGClient::TGClient(const char *dpyName)
    gMOTIF_WM_HINTS   = gVirtualX->InternAtom("_MOTIF_WM_HINTS", kFALSE);
    gROOT_MESSAGE     = gVirtualX->InternAtom("_ROOT_MESSAGE", kFALSE);
 
+   TGTextEntry::fgClipboard =
+   TGView::fgClipboard = gVirtualX->InternAtom("_ROOT_CLIPBOARD", kFALSE);
+
    // Create an object for the root window, create picture pool, etc...
 
    fGlobalNeedRedraw = kFALSE;
@@ -423,7 +430,8 @@ TGClient::TGClient(const char *dpyName)
    TGComboBoxPopup::fgDefaultCursor =
    TGMenuBar::fgDefaultCursor =
    TGPopupMenu::fgDefaultCursor = gVirtualX->CreateCursor(kArrowRight);
-   TGTextEntry::fgDefaultCursor = gVirtualX->CreateCursor(kCaret);
+   TGTextEntry::fgDefaultCursor =
+   TGTextEdit::fgDefaultCursor = gVirtualX->CreateCursor(kCaret);
 
    gVirtualX->GetWindowAttributes(fRoot->GetId(), root_attr);
    TGPicturePool::fgDefaultColormap = root_attr.fColormap;
@@ -441,6 +449,7 @@ TGClient::TGClient(const char *dpyName)
    gval.fBackground = fBackColor;
    gval.fFillStyle  = kFillTiled;
    gval.fTile       = checkered;
+   gval.fGraphicsExposures = kFALSE;
    TGButton::fgHibckgndGC = gVirtualX->CreateGC(fRoot->GetId(), &gval);
 
    TGRadioButton::fgR1 = gVirtualX->CreateBitmap(fRoot->GetId(),

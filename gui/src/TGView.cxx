@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.1 2000/07/03 18:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.2 2000/07/04 11:34:55 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fScrollVal.fX = 1;
    fScrollVal.fY = 1;
 
-   fSelProperty = gVirtualX->InternAtom("clipboard", kFALSE);
+   fClipboard = fgClipboard;
 
    fCanvas = new TGViewFrame(this, 10, 10, kChildFrame, back);
    AddFrame(fCanvas);
@@ -118,6 +118,14 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    } else
       fVsb = 0;
 
+   GCValues_t gval;
+   fWhiteGC = gVirtualX->CreateGC(fCanvas->GetId(), 0);
+   gVirtualX->CopyGC(fgWhiteGC, fWhiteGC, 0);
+
+   gval.fMask = kGCGraphicsExposures;
+   gval.fGraphicsExposures = kTRUE;
+   gVirtualX->ChangeGC(fWhiteGC, &gval);
+
    Clear();
    Layout();
 
@@ -134,10 +142,11 @@ TGView::~TGView()
    delete fCanvas;
    delete fHsb;
    delete fVsb;
+   gVirtualX->DeleteGC(fWhiteGC);
 }
 
 //______________________________________________________________________________
-void TGView::Clear()
+void TGView::Clear(Option_t *)
 {
    // Clear view.
 
@@ -225,7 +234,7 @@ Bool_t TGView::HandleCrossing(Event_t *event)
 }
 
 //______________________________________________________________________________
-Bool_t TGView::HandleTimer(TTimer *)
+Bool_t TGView::HandleTimer(TViewTimer *)
 {
    // Handle scroll timer.
 
@@ -261,7 +270,7 @@ Bool_t TGView::HandleTimer(TTimer *)
                break;
             } else {
                SetVsbPosition(fVisible.fY / fScrollVal.fY - 1);
-               Mark(fMousePos.fX, fMarkedStart.fY-1);
+               Mark(fMousePos.fX, fMarkedStart.fY - 1);
             }
             break;
          case 3:
@@ -313,11 +322,25 @@ Bool_t TGView::HandleButton(Event_t *event)
          }
          fIsMarking = kFALSE;
       }
+   } else if (event->fCode == kButton4) {
+      // move three lines up
+      if (fVisible.fY > 0) {
+         SetVsbPosition(fVisible.fY / fScrollVal.fY - 3);
+         Mark(fMousePos.fX, fMarkedStart.fY - 3);
+      }
+   } else if (event->fCode == kButton5) {
+      // move three lines down
+      if ((Int_t)fCanvas->GetHeight() < ToScrYCoord(ReturnLineCount())) {
+         TGPosition size;
+         size.fY = ToObjYCoord(fVisible.fY + fCanvas->GetHeight()) - 1;
+         SetVsbPosition(fVisible.fY / fScrollVal.fY + 3);
+         Mark(fMousePos.fX, size.fY + 3);
+      }
    } else if (event->fType == kButtonPress) {
       if (event->fCode == kButton2) {
          SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLICK2),
                      fWidgetId, (event->fYRoot << 16) | event->fXRoot);
-      } else {
+      } else if (event->fCode == kButton3) {
          SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_CLICK3),
                      fWidgetId, (event->fYRoot << 16) | event->fXRoot);
       }
@@ -614,7 +637,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
          fVisible.fX = 0;
    }
    // Copy the scrolled region to its new position
-   gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fgWhiteGC,
+   gVirtualX->CopyArea(fCanvas->GetId(), fCanvas->GetId(), fWhiteGC,
                        xsrc, ysrc, fCanvas->GetWidth()-cpywidth,
                        fCanvas->GetHeight()-cpyheight, xdest, ydest);
    // Clear the remaining area of any old text

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.1 2000/07/03 18:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.2 2000/07/04 11:34:55 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -50,27 +50,33 @@ class TViewTimer;
 
 class TGView : public TGCompositeFrame, public TGWidget {
 
+friend class TGClient;
+
 public:
    enum { kNoHSB = BIT(0), kNoVSB = BIT(1) };
    enum { kHorizontal = 0, kVertical = 1 };
 
 protected:
-   TGPosition        fMarkedStart;  // start position of marked text
-   TGPosition        fMarkedEnd;    // end position of marked text
-   TGPosition        fVisible;      // position of visible region
-   TGPosition        fMousePos;     // position of mouse
-   TGPosition        fScrollVal;    // position of scrollbar
+   TGLongPosition    fMarkedStart;  // start position of marked text
+   TGLongPosition    fMarkedEnd;    // end position of marked text
+   TGLongPosition    fVisible;      // position of visible region
+   TGLongPosition    fMousePos;     // position of mouse
+   TGLongPosition    fScrollVal;    // position of scrollbar
    Bool_t            fIsMarked;     // true if text is marked/selected
    Bool_t            fIsMarking;    // true if in marking mode
    Bool_t            fIsSaved;      // true is content is saved
    Int_t             fScrolling;    // scrolling direction
-   Atom_t            fSelProperty;  // selection atom (interface to WM)
+   Atom_t            fClipboard;    // clipboard property
    UInt_t            fXMargin;      // x margin
    UInt_t            fYMargin;      // y margin
    TGViewFrame      *fCanvas;       // frame containing the text
    TGHScrollBar     *fHsb;          // horizontal scrollbar
    TGVScrollBar     *fVsb;          // vertical scrollbar
    TViewTimer       *fScrollTimer;  // scrollbar timer
+   GContext_t        fWhiteGC;      // graphics context used for scrolling
+                                    // generates GraphicsExposure events
+
+   static Atom_t     fgClipboard;
 
 public:
    TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id = -1,
@@ -81,8 +87,8 @@ public:
 
    virtual ~TGView();
 
-   virtual void   Clear();
-   virtual void   SetVisibleStart (Int_t newTop, Int_t direction);
+   virtual void   Clear(Option_t * = "");
+   virtual void   SetVisibleStart(Int_t newTop, Int_t direction);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   DrawBorder();
@@ -115,7 +121,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleTimer(TTimer *t);
+   virtual Bool_t HandleTimer(TViewTimer *t);
 
    ClassDef(TGView,0)  // Text view widget base class
 };

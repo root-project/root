@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.2 2000/07/03 18:55:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -59,5 +59,6 @@
 #pragma link C++ class TGView;
 #pragma link C++ class TGViewFrame;
 #pragma link C++ class TGTextView;
+#pragma link C++ class TGTextEdit;
 
 #endif

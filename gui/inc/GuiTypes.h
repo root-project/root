@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name$:$Id$ */
+/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -196,11 +196,14 @@ const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
 const Mask_t kButton1Mask    = BIT(8);
 const Mask_t kButton2Mask    = BIT(9);
 const Mask_t kButton3Mask    = BIT(10);
+const Mask_t kButton4Mask    = BIT(11);
+const Mask_t kButton5Mask    = BIT(12);
 const Mask_t kAnyModifier    = BIT(15);
 
 // Button names. Used as arguments to GrabButton and as Event_t::fCode
 // for button events. Maps to the X11 values.
-enum EMouseButton { kAnyButton, kButton1, kButton2, kButton3 };
+enum EMouseButton { kAnyButton, kButton1, kButton2, kButton3,
+                    kButton4, kButton5 };
 
 // Some magic X notify modes used in TGTextEntry widget.
 // Values must match the ones in /usr/include/X11/X.h Check when porting.
