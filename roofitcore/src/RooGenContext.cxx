@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.29 2002/05/15 01:40:16 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.30 2002/05/31 01:05:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.29 2002/05/15 01:40:16 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.30 2002/05/31 01:05:35 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose,
@@ -58,6 +58,13 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // Find the clone in the snapshot list
   _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());
 
+  // Optionally fix RooAddPdf normalizations
+  if (prototype&&_pdfClone->dependsOn(*prototype->get())) {
+    RooArgSet fullNormSet(vars) ;
+    fullNormSet.add(*prototype->get()) ;
+    _pdfClone->fixAddCoefNormalization(fullNormSet) ;
+  }
+      
   // Analyze the list of variables to generate...
   _isValid= kTRUE;
   TIterator *iterator= vars.createIterator();
