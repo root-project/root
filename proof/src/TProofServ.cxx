@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.5 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.6 2000/11/27 10:51:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -889,8 +889,8 @@ void TProofServ::SendStatus()
 
    if (!IsMaster()) {
       TMessage mess(kPROOF_STATUS);
-      mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime
-           << gSystem->WorkingDirectory();
+      TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
+      mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime << workdir;
       fSocket->Send(mess);
    } else {
       fSocket->Send(gProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.4 2000/11/24 18:11:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.5 2000/11/27 10:51:46 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -255,10 +255,27 @@ Int_t TProof::ConnectFile(const TFile *file)
    // Send message to all slaves to connect "file". This method is
    // called by the TFile ctor (no user method).
 
-   if (!IsValid()) return 0;
+   if (!IsValid() || !file) return 0;
 
-   return SendCommand(Form("new TFile(\"%s\", \"%s\");", file->GetName(),
-                      file->GetOption()), kAll);
+   TString clsnam  = file->IsA()->GetName();
+   TString filenam = file->GetName();
+
+   // A TFile can only be opened on all machines if the master and slaves
+   // share the same file system image.
+   if (clsnam == "TFile") {
+      if (GetNumberOfUniqueSlaves() != 0)
+         return 0;
+      else {
+         if (!gSystem->IsAbsoluteFileName(filenam)) {
+            filenam = gSystem->WorkingDirectory();
+            filenam += "/";
+            filenam += file->GetName();
+         }
+      }
+   }
+
+   return SendCommand(Form("new %s(\"%s\", \"%s\");", clsnam.Data(),
+                      filenam.Data(), file->GetOption()), kAll);
 }
 
 //______________________________________________________________________________
@@ -1385,7 +1402,7 @@ Bool_t TProof::IsActive()
    // with more than 1 active slave. When only one active slave we run in
    // sequential mode.
 
-   return (gProof && gProof->GetNumberOfActiveSlaves() > 1) ? kTRUE : kFALSE;
+   return gProof ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
