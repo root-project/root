@@ -11,8 +11,6 @@ NOOPT         =
 endif
 
 # Compiler:
-# used in gui/Module.mk
-SUNCC         = true
 CXX           = /opt/SUNWspro/bin/CC
 CC            = /opt/SUNWspro/bin/cc
 CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 $(EXTRA_CXXFLAGS)

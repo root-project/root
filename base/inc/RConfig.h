@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.3 2000/06/16 15:23:00 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.4 2000/06/16 17:05:19 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -75,6 +75,9 @@
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
+#   endif
+#   if __SUNPRO_CC == 0x420
+#      define R__SUNCCBUG     /* to work around a compiler bug */
 #   endif
 #endif
 
