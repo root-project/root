@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.14 2003/08/13 11:38:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.15 2003/09/26 09:23:29 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -434,16 +434,22 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
 
    Bool_t click = kFALSE;
 
+   if (event->fType == kGKeyPress) 
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   else 
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+  
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will
-   // only allow fHotchar events
-   if (event->fType == kGKeyPress) {
+   // We don't need to check the key number as GrabKey will only 
+   // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
+
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       if (fState == kButtonEngaged) return kTRUE;
       SetState(kButtonDown);
-   } else { // KeyRelease
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
       if (fState == kButtonEngaged /*&& !allowRelease*/) return kTRUE;
       click = (fState == kButtonDown);
       if (click && fStayDown)
@@ -786,15 +792,21 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
 
    Bool_t click = kFALSE;
 
+   if (event->fType == kGKeyPress) 
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   else 
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+  
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will
-   // only allow fHotchar events
-   if (event->fType == kGKeyPress) {
+   // We don't need to check the key number as GrabKey will only 
+   // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
+
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp);
-   } else { // KeyRelease
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
       click = (fState != fPrevState);
       fPrevState = fState;
    }
@@ -1041,19 +1053,25 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
 {
    // Handle key event. This function will be called when the hotkey is hit.
 
+   if (event->fType == kGKeyPress) 
+      gVirtualX->SetKeyAutoRepeat(kFALSE);
+   else 
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
+  
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the key number as GrabKey will
-   // only allow fHotchar events
-   if (event->fType == kGKeyPress) {
+   // We don't need to check the key number as GrabKey will only 
+   // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
+
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       PSetState(kButtonDown);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                            fWidgetId, (Long_t) fUserData);
-   } else { // KeyRelease
+   } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) { 
       fPrevState = fState;
    }
 
