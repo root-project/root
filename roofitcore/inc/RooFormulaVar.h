@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFormulaVar.rdl,v 1.1 2001/05/11 21:11:37 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,7 +56,7 @@ protected:
 
   mutable RooFormula _formula ; // Formula engine 
 
-  ClassDef(RooFormulaVar,1) // a real-valued variable and its value
+  ClassDef(RooFormulaVar,1) // Real-valued variable, calculated from a string expression formula 
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.rdl,v 1.2 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooPrintable.rdl,v 1.3 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ public:
   PrintOption lessVerbose(PrintOption opt) const;
   static void oneLinePrint(ostream& os, const TNamed &named);
   static ostream& defaultStream(ostream *os= 0);
-  ClassDef(RooPrintable,1) // A utility class for printing object info
+  ClassDef(RooPrintable,1) // Interface for printable objects
 };
 
 #endif

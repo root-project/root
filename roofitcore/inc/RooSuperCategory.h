@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.rdl,v 1.2 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooSuperCategory.rdl,v 1.3 2001/05/11 06:30:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -51,7 +51,7 @@ protected:
   
   virtual RooCatType evaluate() const ; 
 
-  ClassDef(RooSuperCategory,1) // a integer-valued category variable
+  ClassDef(RooSuperCategory,1) // Derived index variable represening the maximal permutation of a list of indeces
 };
 
 #endif

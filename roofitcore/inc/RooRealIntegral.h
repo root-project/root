@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.5 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.6 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,7 +59,7 @@ protected:
 
   mutable RooAbsIntegrator* _numIntEngine ;
 
-  ClassDef(RooRealIntegral,1) // a real-valued variable and its value
+  ClassDef(RooRealIntegral,1) // Real-valued variable representing an integral over a RooAbsReal object
 };
 
 #endif

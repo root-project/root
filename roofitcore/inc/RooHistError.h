@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.rdl,v 1.3 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooHistError.rdl,v 1.1 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -34,7 +34,7 @@ protected:
   };
 private:
   RooHistError();
-  ClassDef(RooHistError,1) // a utility class for calculating histogram errors
+  ClassDef(RooHistError,1) // Utility class for calculating histogram errors
 };
 
 #endif

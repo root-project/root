@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.rdl,v 1.1 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooCurve.rdl,v 1.2 2001/05/09 00:51:10 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -37,7 +37,7 @@ protected:
 		 Int_t minPoints, Double_t prec);
   void addRange(const RooAbsFunc1D& func, Double_t x1, Double_t x2, Double_t y1,
 		Double_t y2, Double_t prec);
-  ClassDef(RooCurve,1) // a 1-dim smooth curve
+  ClassDef(RooCurve,1) // 1-dimensional smooth curve
 };
 
 #endif

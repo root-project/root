@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.rdl,v 1.2 2001/03/22 15:31:25 verkerke Exp $
+ *    File: $Id: RooStreamParser.rdl,v 1.3 2001/03/27 01:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,7 +52,7 @@ protected:
   TString _punct ;
 
   
-  ClassDef(RooStreamParser,0) // not persistable 
+  ClassDef(RooStreamParser,0) // Utility class that parses istream data into tokens
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooGenCategory.rdl,v 1.1 2001/05/11 06:30:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -48,7 +48,7 @@ protected:
   Long_t _userArgs[1];         // 
                                  
   virtual RooCatType evaluate() const ; 
-  ClassDef(RooGenCategory,1) // a integer-valued category variable
+  ClassDef(RooGenCategory,1) // Index variable derived from other indeces, via an external global function
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.2 2001/04/21 02:42:43 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.3 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,7 +59,7 @@ private:
   RooIntegrator1D& operator=(const RooIntegrator1D& other) ;
 
 protected:
-  ClassDef(RooIntegrator1D,1) // a real-valued variable and its value
+  ClassDef(RooIntegrator1D,1) // 1-dimensional numerical integration engine
 };
 
 #endif

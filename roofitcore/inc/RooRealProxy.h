@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.rdl,v 1.4 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.5 2001/05/11 06:30:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,7 +37,7 @@ public:
 
 protected:
 
-  ClassDef(RooRealProxy,0) // not persistable 
+  ClassDef(RooRealProxy,0) // Proxy for a RooAbsReal object
 };
 
 #endif

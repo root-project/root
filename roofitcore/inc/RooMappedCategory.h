@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.10 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.11 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -44,7 +44,7 @@ protected:
 
   virtual RooCatType evaluate() const ; 
 
-  ClassDef(RooMappedCategory,1) // a integer-valued category variable
+  ClassDef(RooMappedCategory,1) // Index varibiable, derived from another index using pattern-matching based mapping
 };
 
 #endif

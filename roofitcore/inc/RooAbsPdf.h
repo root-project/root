@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.7 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.8 2001/05/14 05:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -83,7 +83,7 @@ protected:
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
 
-  ClassDef(RooAbsPdf,1) // a real-valued variable and its value
+  ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTable.rdl,v 1.2 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooTable.rdl,v 1.3 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,7 +38,7 @@ public:
 protected:
   virtual RooTable& operator=(const RooTable& other) { return *this ; } ; 
 
-  ClassDef(RooTable,1) // a real-valued variable and its value
+  ClassDef(RooTable,1) // Abstract interface for tables
 };
 
 #endif

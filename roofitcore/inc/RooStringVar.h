@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.rdl,v 1.5 2001/05/03 02:15:56 verkerke Exp $
+ *    File: $Id: RooStringVar.rdl,v 1.6 2001/05/10 18:58:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,7 @@ protected:
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(TString value, Bool_t verbose=kFALSE) const ;
 
-  ClassDef(RooStringVar,1) // a real-valued variable and its value
+  ClassDef(RooStringVar,1) // String-valued variable 
 };
 
 #endif

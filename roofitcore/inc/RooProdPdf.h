@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.rdl,v 1.1 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.2 2001/05/14 05:22:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,7 +45,7 @@ protected:
 
 private:
 
-  ClassDef(RooProdPdf,0) // a non-persistent sum of PDFs
+  ClassDef(RooProdPdf,0) // PDF representing a product of PDFs
 };
 
 #endif

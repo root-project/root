@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooGenericPdf.rdl,v 1.1 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -55,7 +55,7 @@ protected:
 
   mutable RooFormula _formula ; // Formula engine 
 
-  ClassDef(RooGenericPdf,1) // a real-valued variable and its value
+  ClassDef(RooGenericPdf,1) // PDF defined by string expression
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.8 2001/05/09 00:51:10 david Exp $
+ *    File: $Id: RooPlot.rdl,v 1.9 2001/05/11 00:45:49 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -78,7 +78,7 @@ protected:
   RooArgSet *_plotVarSet; // A list owning the cloned tree nodes of the plotVarClone ;
   TIterator *_iterator;  //! non-persistent
   RooPlot(const RooPlot& other); // object cannot be copied
-  ClassDef(RooPlot,1) // A plot frame and container for graphics objects
+  ClassDef(RooPlot,1) // Plot frame and container for graphics objects
 };
 
 #endif

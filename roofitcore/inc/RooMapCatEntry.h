@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMapCatEntry.rdl,v 1.1 2001/05/10 00:16:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ protected:
   TRegexp _regexp ;
   RooCatType* _cat ;
 	
-  ClassDef(RooMapCatEntry,1) // a mapping from a index name regexp to a RooCatType
+  ClassDef(RooMapCatEntry,1) // Utility class, holding a map expression from a index label regexp to a RooCatType
 } ;
 
 

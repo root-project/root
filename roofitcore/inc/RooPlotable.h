@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlotable.rdl,v 1.1 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.2 2001/05/09 00:51:10 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,7 +36,7 @@ public:
 protected:
   TString _yAxisLabel;
   Double_t _ymin, _ymax;
-  ClassDef(RooPlotable,1) // An abstract interface for plotable objects
+  ClassDef(RooPlotable,1) // Abstract interface for plotable objects
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.2 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.3 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,7 +38,7 @@ protected:
 
   void copyCache(const RooAbsArg* source) ;
 
-  ClassDef(RooAbsCategoryLValue,1) // a real-valued variable and its value
+  ClassDef(RooAbsCategoryLValue,1) // Abstract modifiable index variable 
 };
 
 #endif

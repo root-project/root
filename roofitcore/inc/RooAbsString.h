@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.4 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.5 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -55,7 +55,7 @@ protected:
 
   mutable char _value[1024] ;
 
-  ClassDef(RooAbsString,1) // a real-valued variable and its value
+  ClassDef(RooAbsString,1) // Abstract string-valued variable
 };
 
 #endif

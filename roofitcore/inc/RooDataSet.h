@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.15 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.16 2001/05/11 00:45:49 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -113,7 +113,7 @@ private:
   TBranch *_branch; //! don't make this data member persistent
 
   enum { bufSize = 8192 };
-  ClassDef(RooDataSet,1) // a data set for fitting
+  ClassDef(RooDataSet,1) // Data set for fitting
 };
 
 #endif

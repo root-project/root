@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.10 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.11 2001/05/14 05:22:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -76,7 +76,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // Add server (directly or indirectly) to integration list
     if (expandArg && arg->isDerived()) {
       // Add final dependents of this direct server to integration list
-      RooArgSet *argDeps = arg->getDependents(depList) ;
+      RooArgSet *argDeps = arg->getDependents(&depList) ;
       intDepList.add(*argDeps) ;
       argDeps->Print() ;
       delete argDeps ;

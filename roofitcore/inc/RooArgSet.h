@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.11 2001/05/10 21:26:08 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.12 2001/05/11 06:30:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -99,7 +99,7 @@ protected:
   // Support for snapshot method 
   void addServerClonesToList(const RooAbsArg& var) ;
 
-  ClassDef(RooArgSet,1) // a list of real-valued variables
+  ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };
 
 #endif
