@@ -139,9 +139,14 @@ check_library() {
     # Loop over the list of possible directories, and see if we can
     # find any of the library files as determind above.
     for i in $libdirs ; do
+        # look first in the lib32 directories
+        if test "x$checklib32" = "xyes" ; then
+            i32=`echo $i | sed 's|lib*|lib32|'`
+            i="$i32 $i"
+        fi
         # look first in the lib64 directories
         if test "x$checklib64" = "xyes" ; then
-            i64=`echo $i | sed 's|lib[32]*|lib64|'`
+            i64=`echo $i | sed 's|lib*|lib64|'`
             i="$i64 $i"
         fi
         for l in $i ; do
@@ -189,7 +194,9 @@ check_library() {
 	    found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
 	    found_dir=-L${found_dir}
             # Avoid inclusion of /usr/lib, which is always included anyway
-            if test "x$found_dir" = "x-L/usr/lib" ; then
+            if test "x$found_dir" = "x-L/usr/lib"   || \
+               test "x$found_dir" = "x-L/usr/lib32" || \
+               test "x$found_dir" = "x-L/usr/lib64" ; then
 		found_dir=""
 	    fi
 	fi
@@ -471,6 +478,9 @@ else
       else
          platform=$arch
       fi
+      if test "x$arch" = "xsgicc" ; then
+         checklib32="yes"
+      fi
       if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
          checklib64="yes"
       fi
@@ -643,7 +653,7 @@ fi
 #
 if test ! "$platform" = "win32"; then
     check_library "libX11" "yes" "$x11libdir" \
-	/usr/lib32 /usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
+	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
 	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
 	/usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
@@ -654,7 +664,7 @@ if test ! "$platform" = "win32"; then
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
-	$XPM $XPM/lib /usr/lib32 /usr/lib /usr/local/lib /usr/lib/X11 \
+	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /use/local/X11R6/lib \
 	/usr/X11/lib
     xpmlib=$found_lib
@@ -709,7 +719,7 @@ linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc)
 esac
 if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
-	$THREAD $THREAD/lib /usr/lib32 /usr/lib /usr/local/lib /usr/lib/X11 \
+	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
 	/usr/X11/lib /usr/shlib
     threadlib=$found_lib
