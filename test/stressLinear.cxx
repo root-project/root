@@ -65,7 +65,8 @@
 // Test  6 : Matrix Norms...........................................OK  //
 // Test  7 : General Matrix Multiplications.........................OK  //
 // Test  8 : Matrix Vector Multiplications..........................OK  //
-// Test  9 : Matrix Persistence.....................................OK  //
+// Test  9 : Matrix Slices to Vectors...............................OK  //
+// Test 10 : Matrix Persistence.....................................OK  //
 // *******************************************************************  //
 // *  Starting  Vector - S T R E S S                                 *  //
 // *******************************************************************  //
@@ -130,6 +131,7 @@ void spstress_transposition        (Int_t msize);
 void spstress_norms                (Int_t rsize,Int_t csize);
 void spstress_mm_multiplications   (); 
 void spstress_vm_multiplications   ();
+void spstress_matrix_slices        (Int_t vsize);
 void spstress_matrix_io            ();
 
 void vstress_allocation            (Int_t msize);
@@ -229,6 +231,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     spstress_norms(maxSize,maxSize/2);
     spstress_mm_multiplications();
     spstress_vm_multiplications();
+    spstress_matrix_slices(maxSize);
     spstress_matrix_io();
     cout << "******************************************************************" <<endl;
   }
@@ -2035,7 +2038,7 @@ void spstress_allocation(Int_t msize)
   Int_t i,j;
   Bool_t ok = kTRUE;
 
-  TMatrixDSparse m1(0,3,0,msize-1,4*msize);
+  TMatrixDSparse m1(0,3,0,msize-1);
   {
     Int_t nr = 4*msize;
     Int_t    *irow = new Int_t[nr];
@@ -2051,14 +2054,14 @@ void spstress_allocation(Int_t msize)
         n++;
       }
     }
-    m1.SetMatrixArray(irow,icol,val);
+    m1.SetMatrixArray(nr,irow,icol,val);
     delete [] irow;
     delete [] icol;
     delete [] val;
   }
 
-  TMatrixDSparse m2(0,3,0,msize-1,4*msize);
-  TMatrixDSparse m3(1,4,0,msize-1,4*msize);
+  TMatrixDSparse m2(0,3,0,msize-1);
+  TMatrixDSparse m3(1,4,0,msize-1);
   TMatrixDSparse m4(m1);
 
   if (gVerbose) {
@@ -2137,8 +2140,19 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 
   {
     if (gVerbose)
+      cout << "Check filling through operator(i,j) without setting sparse index" << endl;
+    TMatrixDSparse m1(-1,rsize-2,1,csize);
+
+    for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
+      for (Int_t j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
+        m1(i,j) = TMath::Pi()*i+TMath::E()*j;
+    ok &= VerifyMatrixIdentity(m1,m,gVerbose,EPSILON);
+  }
+
+  {
+    if (gVerbose)
       cout << "Check filling through operator(i,j)" << endl;
-    TMatrixDSparse m2(-1,rsize-2,1,csize,rsize*csize);
+    TMatrixDSparse m2(-1,rsize-2,1,csize);
     m2.SetSparseIndex(m);
 
     for (Int_t i = m2.GetRowLwb(); i <= m2.GetRowUpb(); i++)
@@ -2158,29 +2172,50 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
     }
 
     {
-      TMatrixDSparse m2(-1,rsize-2,1,csize,rsize*csize);
+      TMatrixDSparse m3(-1,rsize-2,1,csize);
+      TMatrixDSparse m_part1 = m.GetSub(-1,rsize-2,1,csize,"");
+      m3.SetSub(-1,1,m_part1);
+      ok &= VerifyMatrixIdentity(m,m3,gVerbose,EPSILON);
+    }
+
+    {
+      TMatrixDSparse m4(-1,rsize-2,1,csize);
       TMatrixDSparse m_part1 = m.GetSub(0,rsize-2,2,csize,"");
       TMatrixDSparse m_part2 = m.GetSub(0,rsize-2,1,1,"");
       TMatrixDSparse m_part3 = m.GetSub(-1,-1,2,csize,"");
       TMatrixDSparse m_part4 = m.GetSub(-1,-1,1,1,"");
-      m2.SetSub(0,2,m_part1);
-      m2.SetSub(0,1,m_part2);
-      m2.SetSub(-1,2,m_part3);
-      m2.SetSub(-1,1,m_part4);
-      ok &= VerifyMatrixIdentity(m,m2,gVerbose,EPSILON);
+      m4.SetSub(0,2,m_part1);
+      m4.SetSub(0,1,m_part2);
+      m4.SetSub(-1,2,m_part3);
+      m4.SetSub(-1,1,m_part4);
+      ok &= VerifyMatrixIdentity(m,m4,gVerbose,EPSILON);
     }
 
     {
-      TMatrixDSparse m2(-1,rsize-2,1,csize,rsize*csize);
+      // change the insertion order
+      TMatrixDSparse m5(-1,rsize-2,1,csize);
+      TMatrixDSparse m_part1 = m.GetSub(0,rsize-2,2,csize,"");
+      TMatrixDSparse m_part2 = m.GetSub(0,rsize-2,1,1,"");
+      TMatrixDSparse m_part3 = m.GetSub(-1,-1,2,csize,"");
+      TMatrixDSparse m_part4 = m.GetSub(-1,-1,1,1,"");
+      m5.SetSub(-1,1,m_part4);
+      m5.SetSub(-1,2,m_part3);
+      m5.SetSub(0,1,m_part2);
+      m5.SetSub(0,2,m_part1);
+      ok &= VerifyMatrixIdentity(m,m5,gVerbose,EPSILON);
+    }
+
+    {
+      TMatrixDSparse m6(-1,rsize-2,1,csize);
       TMatrixDSparse m_part1 = m.GetSub(0,rsize-2,2,csize,"S");
       TMatrixDSparse m_part2 = m.GetSub(0,rsize-2,1,1,"S");
       TMatrixDSparse m_part3 = m.GetSub(-1,-1,2,csize,"S");
       TMatrixDSparse m_part4 = m.GetSub(-1,-1,1,1,"S");
-      m2.SetSub(0,2,m_part1);
-      m2.SetSub(0,1,m_part2);
-      m2.SetSub(-1,2,m_part3);
-      m2.SetSub(-1,1,m_part4);
-      ok &= VerifyMatrixIdentity(m,m2,gVerbose,EPSILON);
+      m6.SetSub(0,2,m_part1);
+      m6.SetSub(0,1,m_part2);
+      m6.SetSub(-1,2,m_part3);
+      m6.SetSub(-1,1,m_part4);
+      ok &= VerifyMatrixIdentity(m,m6,gVerbose,EPSILON);
     }
   }
 
@@ -2192,8 +2227,8 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
       TMatrixDSparse *m2a = new TMatrixDSparse();
       m2a->Use(*m1a);
       m2a->Sqr();
-      TMatrixDSparse m3 = m; m3.Sqr();
-      ok &= VerifyMatrixIdentity(m3,*m1a,gVerbose,EPSILON);
+      TMatrixDSparse m7 = m; m7.Sqr();
+      ok &= VerifyMatrixIdentity(m7,*m1a,gVerbose,EPSILON);
       delete m1a;
       delete m2a;
     }
@@ -2214,7 +2249,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   Bool_t ok = kTRUE;
   const Double_t pattern = 8.625;
 
-  TMatrixDSparse m(-1,rsize-2,1,csize,rsize*csize);
+  TMatrixDSparse m(-1,rsize-2,1,csize);
 
   if (gVerbose)
     cout << "Creating zero m1 ..." << endl;
@@ -2229,26 +2264,24 @@ void spstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     cout << "Writing a pattern " << pattern << " by assigning through SetMatrixArray..." << endl;
   {
-    {
-      Int_t nr = rsize*csize;
-      Int_t    *irow = new Int_t[nr];
-      Int_t    *icol = new Int_t[nr];
-      Double_t *val  = new Double_t[nr];
+    const Int_t nr = rsize*csize;
+    Int_t    *irow = new Int_t[nr];
+    Int_t    *icol = new Int_t[nr];
+    Double_t *val  = new Double_t[nr];
 
-      Int_t n = 0;
-      for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
-        for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++) {
-          irow[n] = i;
-          icol[n] = j;
-          val[n] = pattern;
-          n++;
-        }
+    Int_t n = 0;
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++) {
+        irow[n] = i;
+        icol[n] = j;
+        val[n] = pattern;
+        n++;
       }
-      m.SetMatrixArray(irow,icol,val);
-      delete [] irow;
-      delete [] icol;
-      delete [] val;
     }
+    m.SetMatrixArray(nr,irow,icol,val);
+    delete [] irow;
+    delete [] icol;
+    delete [] val;
     ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
   }
 
@@ -2312,7 +2345,7 @@ void spstress_element_op(Int_t rsize,Int_t csize)
       }
     }
     val[n-1] = pattern-1;
-    m.SetMatrixArray(irow,icol,val);
+    m.SetMatrixArray(nr,irow,icol,val);
     delete [] irow;
     delete [] icol;
     delete [] val;
@@ -2461,7 +2494,7 @@ void spstress_transposition(Int_t msize)
   {
     if (gVerbose)
       cout << "\nCheck to see that a square UnitMatrix stays the same";
-    TMatrixDSparse m(msize,msize,msize*msize);
+    TMatrixDSparse m(msize,msize);
     m.UnitMatrix();
     TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     ok &= ( m == mt ) ? kTRUE : kFALSE;
@@ -2470,7 +2503,7 @@ void spstress_transposition(Int_t msize)
   {
     if (gVerbose)
       cout << "\nTest a non-square UnitMatrix";
-    TMatrixDSparse m(msize,msize+1,1);
+    TMatrixDSparse m(msize,msize+1);
     m.UnitMatrix();
     TMatrixDSparse mt(TMatrixDBase::kTransposed,m);
     Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
@@ -2535,7 +2568,7 @@ void spstress_norms(Int_t rsize_req,Int_t csize_req)
   }
 
   TMatrixD m_d(rsize,csize); m_d = 1;
-  TMatrixDSparse m(rsize,csize,rsize*csize); m.SetSparseIndex(m_d);
+  TMatrixDSparse m(rsize,csize); m.SetSparseIndex(m_d);
 
   if (gVerbose)
     cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
@@ -2619,7 +2652,7 @@ void spstress_mm_multiplications()
       TMatrixDSparse m = TMatrixD(THilbertMatrixD(msize-1,msize));
       m(2,3) = TMath::Pi();
       TMatrixDSparse eth = m;
-      TMatrixDSparse p(msize,msize,msize);
+      TMatrixDSparse p(msize,msize);
       {
         Int_t    *irow = new Int_t[msize];
         Int_t    *icol = new Int_t[msize];
@@ -2632,7 +2665,7 @@ void spstress_mm_multiplications()
           val[n] = 1;
           n++;
         }
-        p.SetMatrixArray(irow,icol,val);
+        p.SetMatrixArray(msize,irow,icol,val);
         delete [] irow;
         delete [] icol;
         delete [] val;
@@ -2767,7 +2800,7 @@ void spstress_vm_multiplications()
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()-i;
       ok &= ( vb != 0 ) ? kTRUE : kFALSE;
-      TMatrixDSparse mc(1,msize-2,-2,msize,1);       // contracting matrix
+      TMatrixDSparse mc(1,msize-2,-2,msize);       // contracting matrix
       mc.UnitMatrix();
       TVectorD v1 = vb;
       TVectorD v2 = vb;
@@ -2784,7 +2817,7 @@ void spstress_vm_multiplications()
       for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
         vb(i) = TMath::Pi()+i;
       ok &= ( vb != 0 ) ? kTRUE : kFALSE;
-      TMatrixDSparse me(2,msize+5,0,msize-1,1);    // expanding matrix
+      TMatrixDSparse me(2,msize+5,0,msize-1);    // expanding matrix
       me.UnitMatrix();
       TVectorD v1 = vb;
       TVectorD v2 = vb;
@@ -2832,6 +2865,89 @@ void spstress_vm_multiplications()
     cout << "\nDone\n" << endl;
 
   StatusPrint(8,"Matrix Vector Multiplications",ok);
+}
+
+//
+//------------------------------------------------------------------------
+//           Test operations with vectors and sparse matrix slices
+//
+void spstress_matrix_slices(Int_t vsize)
+{
+  if (gVerbose)
+    cout << "\n---> Test operations with vectors and sparse matrix slices" << endl;
+
+  Bool_t ok = kTRUE;
+  const Double_t pattern = 8.625;
+
+  TVectorD vc(0,vsize);
+  TVectorD vr(0,vsize+1);
+  TMatrixD       m_d(0,vsize,0,vsize+1); m_d = pattern;
+  TMatrixDSparse m(m_d);
+
+  Int_t i,j;
+  if (gVerbose)
+    cout << "\nCheck modifying the matrix row-by-row" << endl;
+  m = pattern;
+  ok &= ( m == pattern ) ? kTRUE : kFALSE;
+  for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
+    TMatrixDSparseRow(m,i) = pattern+2;
+    ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
+    vr = TMatrixDSparseRow(m,i);
+    ok &= VerifyVectorValue(vr,pattern+2,gVerbose,EPSILON);
+    vr = TMatrixDSparseRow(m,i+1 > m.GetRowUpb() ? m.GetRowLwb() : i+1);
+    ok &= VerifyVectorValue(vr,pattern,gVerbose,EPSILON);
+    TMatrixDSparseRow(m,i) += -2;
+    ok &= ( m == pattern ) ? kTRUE : kFALSE;
+  }
+
+  ok &= ( m == pattern ) ? kTRUE : kFALSE;
+  for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
+    vr = pattern-2;
+    TMatrixDSparseRow(m,i) = vr;
+    ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
+    {
+      TMatrixDSparseRow mr(m,i);
+      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        mr(j) *= 8;
+    }
+    vr = TMatrixDSparseRow(m,i);
+    ok &= VerifyVectorValue(vr,8*(pattern-2),gVerbose,EPSILON);
+    TMatrixDSparseRow(m,i) *= 1./8;
+    TMatrixDSparseRow(m,i) += 2;
+    vr = TMatrixDSparseRow(m,i);
+    ok &= VerifyVectorValue(vr,pattern,gVerbose,EPSILON);
+    ok &= ( m == pattern ) ? kTRUE : kFALSE;
+  }
+
+  if (gVerbose)
+    cout << "\nCheck modifying the matrix diagonal" << endl;
+  m = pattern;
+  TMatrixDSparseDiag td = m;
+  td = pattern-3;
+  ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
+  vc = TMatrixDSparseDiag(m);
+  ok &= VerifyVectorValue(vc,pattern-3,gVerbose,EPSILON);
+  td += 3;
+  ok &= ( m == pattern ) ? kTRUE : kFALSE;
+  vc = pattern+3;
+  td = vc;
+  ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
+  {
+    TMatrixDSparseDiag md(m);
+    for (j = 0; j < md.GetNdiags(); j++)
+      md(j) /= 1.5;
+  }
+  vc = TMatrixDSparseDiag(m);
+  ok &= VerifyVectorValue(vc,(pattern+3)/1.5,gVerbose,EPSILON);
+  TMatrixDSparseDiag(m) *= 1.5;
+  TMatrixDSparseDiag(m) += -3;
+  vc = TMatrixDSparseDiag(m);
+  ok &= VerifyVectorValue(vc,pattern,gVerbose,EPSILON);
+  ok &= ( m == pattern ) ? kTRUE : kFALSE;
+
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+  StatusPrint(9,"Matrix Slices to Vectors",ok);
 }
 
 //
@@ -2908,7 +3024,7 @@ void spstress_matrix_io()
   if (gVerbose)
     cout << "\nDone\n" << endl;
 
-  StatusPrint(9,"Matrix Persistence",ok);
+  StatusPrint(10,"Matrix Persistence",ok);
 }
 
 //------------------------------------------------------------------------
