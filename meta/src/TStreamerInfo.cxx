@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.67 2001/05/08 20:28:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.68 2001/05/11 08:28:36 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2128,10 +2128,39 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      Streamer_t pstreamer = element->GetStreamer();
                      if (pstreamer == 0) {
                         if (gDebug > 0) printf("Warning, Streamer is null\n");
-                        //if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
-                        for (Int_t kk=0;kk<nc;kk++) {
+                        TClass *cle = element->GetClassPointer();
+                        Int_t kk;
+                        if (cle->InheritsFrom(TArray::Class())) {
+                           //special case (frequent) with TArray classes
+                           //The TArray Streamers not compatible with ReadBuffer
+                           // (no byte count)
+                           if (strchr(element->GetTypeName(),'*')) {
+                              for (kk=0;kk<nc;kk++) {
+                                 pointer = (char*)clones->UncheckedAt(kk);
+                                 if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+offset); b >> *ar;}
+                                 if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+offset); b >> *ar;}
+                                 if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+offset); b >> *ar;}
+                                 if (cle == TArrayD::Class()) {TArrayD **ar = (TArrayD**)(pointer+offset); b >> *ar;}
+                                 if (cle == TArrayS::Class()) {TArrayS **ar = (TArrayS**)(pointer+offset); b >> *ar;}
+                                 if (cle == TArrayL::Class()) {TArrayL **ar = (TArrayL**)(pointer+offset); b >> *ar;}
+                              }
+                              break;
+                           } else {
+                              for (kk=0;kk<nc;kk++) {
+                                 pointer = (char*)clones->UncheckedAt(kk);
+                                 if (cle == TArrayI::Class()) {TArrayI *ar = (TArrayI*)(pointer+offset); ar->Streamer(b);}
+                                 if (cle == TArrayF::Class()) {TArrayF *ar = (TArrayF*)(pointer+offset); ar->Streamer(b);}
+                                 if (cle == TArrayC::Class()) {TArrayC *ar = (TArrayC*)(pointer+offset); ar->Streamer(b);}
+                                 if (cle == TArrayD::Class()) {TArrayD *ar = (TArrayD*)(pointer+offset); ar->Streamer(b);}
+                                 if (cle == TArrayS::Class()) {TArrayS *ar = (TArrayS*)(pointer+offset); ar->Streamer(b);}
+                                 if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+offset); ar->Streamer(b);}
+                              }
+                              break;
+                           }
+                        }
+                        for (kk=0;kk<nc;kk++) {
                            pointer = (char*)clones->UncheckedAt(kk);
-                           element->GetClassPointer()->ReadBuffer(b,pointer+offset);
+                           cle->ReadBuffer(b,pointer+offset);
                         }
                         break;
                      }
