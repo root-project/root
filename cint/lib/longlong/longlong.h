@@ -109,8 +109,8 @@ class G__longlong {
 #if 0
   G__longlong& operator/=(const G__longlong& x) { dat/=x.dat; return(*this); }
   G__longlong& operator%=(const G__longlong& x) { dat%=x.dat; return(*this); }
-#endif
   G__longlong& operator&=(const G__longlong& x) { dat&=x.dat; return(*this); }
+#endif
   G__longlong& operator|=(const G__longlong& x) { dat|=x.dat; return(*this); }
   G__longlong& operator<<=(const G__longlong& x) { dat<<=x.dat; return(*this);}
   G__longlong& operator>>=(const G__longlong& x) { dat>>=x.dat; return(*this);}
