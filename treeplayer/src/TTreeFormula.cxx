@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.113 2003/03/06 23:07:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.114 2003/04/18 19:27:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3995,7 +3995,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
          if (fIndexes[i][0]==-1) {
             // Case where the index is not specified AND the 1st dimension has a variable
             // size.
-            if (fManager->fUsedSizes[0]==1 || (size!=1 && size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
+            if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
             if (info && fIndexes[i][info->GetVarDim()]>=0) {
                for(Int_t j=0; j<size; j++) {
                   if (fIndexes[i][info->GetVarDim()] >= info->GetSize(j)) {
@@ -4029,7 +4029,7 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             if (fIndexes[i][0]==-1) {
                // Case where the index is not specified AND the 1st dimension has a variable
                // size.
-               if (fManager->fUsedSizes[0]==1 || (size!=1 && size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
+               if (fManager->fUsedSizes[0]==1 || (size<fManager->fUsedSizes[0]) ) fManager->fUsedSizes[0] = size;
             } else if (fIndexes[i][0] >= size) {
                // unreacheable element requested:
                fManager->fUsedSizes[0] = 0;
