@@ -141,7 +141,7 @@ check_library() {
     for i in $libdirs ; do
         # look first in the lib64 directories
         if test "x$checklib64" = "xyes" ; then
-            i64=`echo $i | sed 's|lib|lib64|'`
+            i64=`echo $i | sed 's|lib[32]*|lib64|'`
             i="$i64 $i"
         fi
         for l in $i ; do
@@ -654,7 +654,7 @@ if test ! "$platform" = "win32"; then
     fi
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
-	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+	$XPM $XPM/lib /usr/lib32 /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /use/local/X11R6/lib \
 	/usr/X11/lib
     xpmlib=$found_lib
