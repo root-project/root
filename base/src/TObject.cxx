@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.54 2003/05/19 13:40:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.55 2003/10/02 17:20:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -553,7 +553,7 @@ char *TObject::GetObjectInfo(Int_t px, Int_t py) const
    static char info[64];
    Float_t x = gPad->AbsPixeltoX(px);
    Float_t y = gPad->AbsPixeltoY(py);
-   sprintf(info,"x=%.3g, y=%.3g",gPad->PadtoX(x),gPad->PadtoY(y));
+   sprintf(info,"x=%g, y=%g",gPad->PadtoX(x),gPad->PadtoY(y));
    return info;
 }
 
