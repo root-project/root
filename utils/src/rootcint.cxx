@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.100 2002/09/16 16:19:41 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.101 2002/09/17 14:38:20 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2246,7 +2246,7 @@ void WriteShowMembers(G__ClassInfo &cl, bool outside = false)
 //______________________________________________________________________________
 void WriteClassCode(G__ClassInfo &cl)
 {
-   if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+   if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
 
       if (cl.HasMethod("Streamer")) {
          //WriteStreamerBases(cl);
@@ -3093,7 +3093,7 @@ int main(int argc, char **argv)
    fprintf(fp, "namespace ROOT {\n   namespace Shadow {\n");
    cl.Init();
    while (cl.Next()) {
-      if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          // Write Code for initialization object
          WriteShadowClass(cl);
       }
@@ -3102,7 +3102,7 @@ int main(int argc, char **argv)
 
    cl.Init();
    while (cl.Next()) {
-      if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          // Write Code for initialization object
          WriteClassInit(cl);
       }
@@ -3132,7 +3132,7 @@ int main(int argc, char **argv)
    cl.Init();
    bool has_input_error = false;
    while (cl.Next()) {
-      if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          if (cl.HasMethod("Streamer")) {
             if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
                // We do not write out the input operator anymore, it is a template
@@ -3162,7 +3162,7 @@ int main(int argc, char **argv)
    // instantiation (STK)
    cl.Init();
    while (cl.Next()) {
-      if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+      if ((cl.Property() & (G__BIT_ISCLASS|G__BIT_ISSTRUCT)) && cl.Linkage() == G__CPPLINK) {
          // Write Code for Class_Name() and static variable
          if (cl.HasMethod("Class_Name")) {
             WriteClassFunctions(cl,cl.IsTmplt());
