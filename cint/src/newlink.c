@@ -202,9 +202,6 @@ void G__check_setup_version(version, func)
 int version;
 char *func;
 {
-#ifndef G__OLDIMPLEMENTATION1599
-   G__init_globals();
-#endif
 #ifndef G__OLDIMPLEMENTATION1169
    if (version > G__ACCEPTDLLREV_UPTO || version < G__ACCEPTDLLREV_FROM) {
 #else
@@ -695,18 +692,18 @@ void G__gen_cpplink()
 	 strcmp(fname,"multimap")==0 || strcmp(fname,"set")==0 || 
 	 strcmp(fname,"multiset")==0 || strcmp(fname,"stack")==0 || 
 	 strcmp(fname,"queue")==0) {
-	algoflag |= 1;
+	algoflag = 1;
       }
       if(strcmp(fname,"vector.h")==0 || strcmp(fname,"list.h")==0 || 
 	 strcmp(fname,"deque.h")==0 || strcmp(fname,"map.h")==0 || 
 	 strcmp(fname,"multimap.h")==0 || strcmp(fname,"set.h")==0 || 
 	 strcmp(fname,"multiset.h")==0 || strcmp(fname,"stack.h")==0 || 
 	 strcmp(fname,"queue.h")==0) {
-	algoflag |= 2;
+	algoflag = 2;
       }
     }
     if(algoflag&1) fprintf(hfp,"#include <algorithm>\n");
-    else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
+    if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
 #endif
 
@@ -3526,9 +3523,6 @@ int isnonpublicnew;
 	    ,G__map_cpp_funcname(tagnum ,funcname ,ifn,page));
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
-#ifndef G__OLDIMPLEMENTATION1602
-    fprintf(fp,"   if(0==G__getstructoffset()) return(1);\n");
-#endif
     fprintf(fp,"   if(G__getaryconstruct())\n");
     fprintf(fp,"     if(G__PVOID==G__getgvp())\n");
     fprintf(fp,"       delete[] (%s *)(G__getstructoffset());\n" ,G__fulltagname(tagnum,1));
@@ -3987,9 +3981,6 @@ char *endoffunc;
   case 'r':
   case 'h':
   case 'k':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
     fprintf(fp,"      G__letint(result7,%d,(long)",type);
     sprintf(endoffunc,");");
     return(0);
@@ -4231,12 +4222,6 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-        case 'g':
-	  fprintf(fp,"*(%s*)G__Intref(&libp->para[%d])"
-		  ,G__type2string(type,tagnum,typenum,0,0),k);
-	  break;
-#endif
         case 'f':
 	  fprintf(fp,"*(%s*)G__Floatref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
@@ -4282,12 +4267,6 @@ int k;
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulong(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-        case 'g':
-	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mint(libp->para[%d])"
-		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
-	  break;
-#endif
         case 'f':
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mfloat(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
@@ -4404,9 +4383,6 @@ int k;
   case 'h':
   case 'l':
   case 'k':
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-#endif
   case 'F':
   case 'D':
   case 'E':
@@ -5090,13 +5066,11 @@ FILE *fp;
 #endif
 	     ) {
 #ifndef G__OLDIMPLEMENTATION1029
-#if 0
 	    G__fprinterr(G__serr,
 		    "class %s in %s line %d original base of virtual func\n"
 		    ,G__fulltagname(i,1)
 		    ,G__srcfile[G__struct.filenum[i]].filename
 		    ,G__struct.line_number[i]);
-#endif
 #endif
 	  }
 	  if(((G__PUBLIC==var->access[j]
@@ -7814,13 +7788,6 @@ int link_stub;
 	    for(i=0;i<G__struct.alltag;i++) {
 	      if(G__struct.filenum[i]==ifile) {
 		G__struct.globalcomp[i]=globalcomp;
-#ifndef G__OLDIMPLEMENTATION1597
-                /* Note this make the equivalent of '+' the
-		   default for defined_in type of linking */
-                if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
-                  G__struct.rootflag[i] |= G__USEBYTECOUNT;
-                }
-#endif
 	      }
 	    }
 	    /* link global function */
@@ -7874,18 +7841,7 @@ int link_stub;
 	    if(G__struct.parent_tagnum[j]==parent_tagnum) flag=1;
 	    j = G__struct.parent_tagnum[j];
 	  }
-#ifndef G__OLDIMPLEMENTATION1597
-	  if(flag) {
-	    G__struct.globalcomp[i]=globalcomp;
-	    /* Note this make the equivalent of '+' the
-	       default for defined_in type of linking */
-	    if ( (G__struct.rootflag[i] & G__NOSTREAMER) == 0 ) {
-	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
-	    }
-          }
-#else
 	  if(flag) G__struct.globalcomp[i]=globalcomp;
-#endif
 	}
 #ifndef G__OLDIMPLEMENTATION1537
 	for(i=0;i<G__newtype.alltype;i++) {
@@ -7895,18 +7851,7 @@ int link_stub;
 	    if(j == parent_tagnum) flag = 1;
 	    j = G__struct.parent_tagnum[j];
 	  } while(-1 != j);
-#ifndef G__OLDIMPLEMENTATION1597
-	  if(flag) {
-	    G__struct.globalcomp[i]=globalcomp;
-	    /* Note this make the equivalent of '+' the
-	       default for defined_in type of linking */
-	    if ( 0 == (G__struct.rootflag[i] & G__NOSTREAMER) ) {
-	      G__struct.rootflag[i] |= G__USEBYTECOUNT;
-	    }
-          }
-#else
 	  if(flag) G__newtype.globalcomp[i] = globalcomp;
-#endif
 	}
 #endif
       }

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.22 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.18 2001/04/06 07:27:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -160,7 +160,9 @@
 //End_Html
 //
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TTreeViewer.h"
 #include "HelpTextTV.h"
 #include "TTVLVContainer.h"
@@ -702,7 +704,7 @@ void TTreeViewer::BuildInterface()
    fTreeView = new TGCanvas(fV1, 10, 10, kSunkenFrame | kDoubleBorder);
    //--- container frame
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
-                        GetWhitePixel());
+                        fgWhitePixel);
    fLt->Associate(this);
    fTreeView->SetContainer(fLt);
 
@@ -716,8 +718,8 @@ void TTreeViewer::BuildInterface()
    fLVContainer->Associate(this);
    fLVContainer->SetListView(fListView);
    fLVContainer->SetViewer(this);
-   fLVContainer->SetBackgroundColor(GetWhitePixel());
-   fListView->GetViewPort()->SetBackgroundColor(GetWhitePixel());
+   fLVContainer->SetBackgroundColor(fgWhitePixel);
+   fListView->GetViewPort()->SetBackgroundColor(fgWhitePixel);
    fListView->SetContainer(fLVContainer);
    fListView->SetViewMode(kLVList);
 
@@ -1243,10 +1245,10 @@ void TTreeViewer::ExecuteDraw()
    // send draw command
    fLastOption = fBarOption->GetText();
    if (!strlen(gopt) && dimension!=3)
-   //{
-   //   gopt = "hist";
-   //   fLastOption = "hist";
-   //}
+   {
+      gopt = "hist";
+      fLastOption = "hist";
+   }
    if (dimension == 3 && strlen(gopt)) {
       cout << "Graphics option " << gopt << " not valid for 3D histograms" << endl;
       gopt = "";

@@ -59,9 +59,6 @@ void G__ary_power(double *c,double *a,double *b,int n)
   int flag=0;
   double r;
   for(i=0;i<n;i++) {
-#ifndef G__OLDIMPLEMENTATION1622
-    c[i] = pow(a[i],b[i]);
-#else
     if(a[i]>0) c[i] = exp(b[i]*log(a[i]));
     else if(a[i]==0) c[i]=0;
     else { 
@@ -75,7 +72,6 @@ void G__ary_power(double *c,double *a,double *b,int n)
 	flag++;
       }
     }
-#endif
   }
 }
 
@@ -281,3 +277,6 @@ void G__ary_min(double *c,double *a,double *b,int n)
     else          c[i] = a[i];
   }
 }
+
+
+

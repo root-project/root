@@ -616,18 +616,6 @@ array min(array& a,array& b) // a : x , b : y
   return(c);
 }
 
-/***********************************************
-* pow
-***********************************************/
-array pow(array& a,array& b)
-{
-  array c=array(0.0 , 0.0 , a.n);
-  int i;
-  G__ary_power(c.dat,a.dat,b.dat,a.n);
-  c.n=a.n;
-  return(c);
-}
-
 
 #ifndef G__ARRAY_H
 #include <array.h>

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.9 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"
@@ -29,7 +31,6 @@ TPolyMarker::TPolyMarker(): TObject()
 {
    fN = 0;
    fX = fY = 0;
-   fLastPoint = -1;
 }
 
 //______________________________________________________________________________
@@ -37,7 +38,6 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
       :TObject(), TAttMarker()
 {
 
-   fLastPoint = -1;
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
@@ -50,13 +50,11 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
 
-   fLastPoint = -1;
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
-   fLastPoint = fN-1;
    fOption = option;
    SetBit(kCanDelete);
 }
@@ -66,13 +64,11 @@ TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       :TObject(), TAttMarker()
 {
 
-   fLastPoint = -1;
    fN = n;
    fX = new Double_t [fN];
    fY = new Double_t [fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
-   fLastPoint = fN-1;
    fOption = option;
    SetBit(kCanDelete);
 }
@@ -82,7 +78,7 @@ TPolyMarker::~TPolyMarker()
 {
    if (fX) delete [] fX;
    if (fY) delete [] fY;
-   fLastPoint = -1;
+
 }
 
 //______________________________________________________________________________
@@ -102,7 +98,6 @@ void TPolyMarker::Copy(TObject &obj)
    ((TPolyMarker&)obj).fY = new Double_t [fN];
    for (Int_t i=0; i<fN;i++) { ((TPolyMarker&)obj).fX[i] = fX[i], ((TPolyMarker&)obj).fY[i] = fY[i]; }
    ((TPolyMarker&)obj).fOption = fOption;
-   ((TPolyMarker&)obj).fLastPoint = fLastPoint;
 }
 
 //______________________________________________________________________________
@@ -116,7 +111,11 @@ void TPolyMarker::Draw(Option_t *option)
 //______________________________________________________________________________
 void TPolyMarker::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
-   TPolyMarker *newpolymarker = new TPolyMarker(n,x,y);
+   TPolyMarker *newpolymarker = new TPolyMarker();
+   newpolymarker->fN =n;
+   newpolymarker->fX = new Double_t [fN];
+   newpolymarker->fY = new Double_t [fN];
+   for (Int_t i=0; i<fN;i++) { newpolymarker->fX[i] = x[i], newpolymarker->fY[i] = y[i]; }
    TAttMarker::Copy(*newpolymarker);
    newpolymarker->fOption = fOption;
    newpolymarker->SetBit(kCanDelete);
@@ -141,45 +140,9 @@ void TPolyMarker::ls(Option_t *) const
 }
 
 //______________________________________________________________________________
-Int_t TPolyMarker::Merge(TCollection *list)
-{
-// Merge polymarkers in the collection in this polymarker
-
-   if (!list) return 0;
-   TIter next(list);
-
-   //first loop to count the number of entries
-   TPolyMarker *pm;
-   Int_t npoints = 0;
-   while ((pm = (TPolyMarker*)next())) {
-      if (!pm->InheritsFrom(TPolyMarker::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",pm->ClassName(),this->ClassName());
-         return -1;
-      }
-      npoints += pm->Size();
-   }
-
-   //extend this polymarker to hold npoints
-   pm->SetPoint(npoints-1,0,0);
-
-   //merge all polymarkers
-   next.Reset();
-   while ((pm = (TPolyMarker*)next())) {
-      Int_t np = pm->Size();
-      Double_t *x = pm->GetX();
-      Double_t *y = pm->GetY();
-      for (Int_t i=0;i<np;i++) {
-         SetPoint(i,x[i],y[i]);
-      }
-   }
-
-   return npoints;
-}
-
-//______________________________________________________________________________
 void TPolyMarker::Paint(Option_t *option)
 {
-   PaintPolyMarker(fLastPoint+1, fX, fY, option);
+   PaintPolyMarker(fN, fX, fY, option);
 }
 
 //______________________________________________________________________________
@@ -199,7 +162,7 @@ void TPolyMarker::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
+void TPolyMarker::SavePrimitive(ofstream &out, Option_t *)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -215,60 +178,28 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
 
    SaveMarkerAttributes(out,"pmarker",1,1,1);
 
-   for (Int_t i=0;i<Size();i++) {
+   for (Int_t i=0;i<fN;i++) {
       out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
    }
-   out<<"   pmarker->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+   out<<"   pmarker->Draw();"<<endl;
 }
 
 //______________________________________________________________________________
-Int_t TPolyMarker::SetNextPoint(Double_t x, Double_t y)
+void TPolyMarker::SetPoint(Int_t point, Double_t x, Double_t y)
 {
-   // Set point following LastPoint to x, y.
-   // Returns index of the point (new last point).
-
-   fLastPoint++;
-   SetPoint(fLastPoint, x, y);
-   return fLastPoint;
-}
-
-//______________________________________________________________________________
-void TPolyMarker::SetPoint(Int_t n, Double_t x, Double_t y)
-{
-   // set point number n
-   // if n is greater than the current size, the arrays are automatically
-   // extended
-
-   if (n < 0) return;
-   if (!fX || !fY || n >= fN) {
-      // re-allocate the object
-      Int_t newN = TMath::Max(2*fN,n+1);
-      Double_t *savex = new Double_t [newN];
-      Double_t *savey = new Double_t [newN];
-      if (fX && fN){
-         memcpy(savex,fX,fN*sizeof(Double_t));
-         memset(&savex[fN],0,(newN-fN)*sizeof(Double_t));
-         delete [] fX;
-      }
-      if (fY && fN){
-         memcpy(savey,fY,fN*sizeof(Double_t));
-         memset(&savey[fN],0,(newN-fN)*sizeof(Double_t));
-         delete [] fY;
-      }
-      fX = savex;
-      fY = savey;
-      fN = newN;
-   }
-   fX[n] = x;
-   fY[n] = y;
-   fLastPoint = TMath::Max(fLastPoint,n);
+   if (point < 0 || point >= fN) return;
+   fX[point] = x;
+   fY[point] = y;
 }
 
 //______________________________________________________________________________
 void TPolyMarker::SetPolyMarker(Int_t n)
 {
-   SetPoint(n-1,0,0);
+   fN =n;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
 }
 
 //______________________________________________________________________________
@@ -280,11 +211,10 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++) {
-     if (x) fX[i] = (Double_t)x[i];
-     if (y) fY[i] = (Double_t)y[i];
+     if (x) fX[i] = x[i];
+     if (y) fY[i] = y[i];
    }
    fOption = option;
-   fLastPoint = fN-1;
 }
 
 //______________________________________________________________________________
@@ -300,7 +230,6 @@ void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *opt
      if (y) fY[i] = y[i];
    }
    fOption = option;
-   fLastPoint = fN-1;
 }
 
 //_______________________________________________________________________
@@ -328,7 +257,7 @@ void TPolyMarker::Streamer(TBuffer &R__b)
       fOption.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPolyMarker::IsA());
       //====end of old versions
-
+      
    } else {
       TPolyMarker::Class()->WriteBuffer(R__b,this);
    }

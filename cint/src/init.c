@@ -7,7 +7,7 @@
  * Description:
  *  Entry functions
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1531,10 +1531,6 @@ char *argv[] ;
 int G__init_globals()
 {
   int i;
-#ifndef G__OLDIMPLEMENTATION1599
-  if (G__init) return(1);
-  G__init = 1;
-#endif
   /* G__p_ifunc = &G__ifunc ; */
 
   G__exec_memberfunc = 0;
@@ -1989,136 +1985,133 @@ void G__platformMacro()
   /***********************************************************************
    * operating system
    ***********************************************************************/
-#if defined(__linux__)  /* Linux */
+#if defined(__linux__)
   sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
 #elif defined(__linux) 
   sprintf(temp,"G__LINUX=%ld",(long)__linux); G__add_macro(temp);
 #elif defined(linux)
   sprintf(temp,"G__LINUX=%ld",(long)linux); G__add_macro(temp);
 #endif
-#ifdef __FreeBSD__   /* FreeBSD */
+#ifdef __FreeBSD__
   sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
 #endif
-#ifdef __hpux        /* HP-UX */
+#ifdef __hpux
   sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
 #endif
-#ifdef __sun         /* SunOS and Solaris */
+#ifdef __sun
   sprintf(temp,"G__SUN=%ld",(long)__sun); G__add_macro(temp);
 #endif
-#ifdef _WIN32        /* Windows 32bit */
+#ifdef _WIN32
   sprintf(temp,"G__WIN32=%ld",(long)_WIN32); G__add_macro(temp);
 #endif
-#ifdef _WINDOWS_     /* Windows */
+#ifdef _WINDOWS_
   sprintf(temp,"G__WINDOWS=%ld",(long)_WINDOWS_); G__add_macro(temp);
 #endif
-#ifdef __VMS         /* DEC/Compac VMS */
+#ifdef __VMS
   sprintf(temp,"G__VMS=%ld",(long)__VMS); G__add_macro(temp);
 #endif
-#ifdef _AIX          /* IBM AIX */
+#ifdef _AIX
   sprintf(temp,"G__AIX=%ld",(long)_AIX); G__add_macro(temp);
 #endif
-#ifdef __sgi         /* SGI IRIX */
+#ifdef __sgi
   sprintf(temp,"G__SGI=%ld",(long)__sgi); G__add_macro(temp);
 #endif
-#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux) /* DEC/Compac Alpha-OSF operating system */
+#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
 #endif
   /***********************************************************************
    * compiler and library
    ***********************************************************************/
-#ifdef G__CYGWIN /* Cygwin */
-  sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
-#endif
-#ifdef __GNUC__  /* gcc/g++  GNU C/C++ compiler major version */
+#ifdef __GNUC__
   sprintf(temp,"G__GNUC=%ld",(long)__GNUC__); G__add_macro(temp);
 #endif
-#ifdef __GNUC_MINOR__  /* gcc/g++ minor version */
+#ifdef G__CYGWIN
+  sprintf(temp,"G__CYGWIN=%ld",(long)G__CYGWIN); G__add_macro(temp);
+#endif
+#ifdef __GNUC_MINOR__
   sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__add_macro(temp);
 #endif
-#ifdef __GLIBC__   /* GNU C library major version */
+#ifdef __GLIBC__
   sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__add_macro(temp);
 #endif
-#ifdef __GLIBC_MINOR__  /* GNU C library minor version */
+#ifdef __GLIBC_MINOR__
   sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__add_macro(temp);
 #endif
-#ifdef __HP_aCC     /* HP aCC C++ compiler */
+#ifdef __HP_aCC
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
 #endif
-#ifdef __SUNPRO_CC  /* Sun C++ compiler */
+#ifdef __SUNPRO_CC
   sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
 #endif
-#ifdef __SUNPRO_C   /* Sun C compiler */
+#ifdef __SUNPRO_C
   sprintf(temp,"G__SUNPRO_C=%ld",(long)__SUNPRO_C); G__add_macro(temp);
 #endif
-#ifdef G__VISUAL    /* Microsoft Visual C++ compiler */
+#ifdef G__VISUAL
   sprintf(temp,"G__VISUAL=%ld",(long)G__VISUAL); G__add_macro(temp);
 #endif
-#ifdef _MSC_VER     /* Microsoft Visual C++ version */
+#ifdef _MSC_VER
   sprintf(temp,"G__MSC_VER=%ld",(long)_MSC_VER); G__add_macro(temp);
 #endif
-#ifdef __SC__       /* Symantec C/C++ compiler */
+#ifdef __SC__
   sprintf(temp,"G__SYMANTEC=%ld",(long)__SC__); G__add_macro(temp);
 #endif
-#ifdef __BORLANDC__ /* Borland C/C++ compiler */
+#ifdef __BORLANDC__
   sprintf(temp,"G__BORLAND=%ld",(long)__BORLANDC__); G__add_macro(temp);
 #endif
-#ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
+#ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
-#ifdef __KCC        /* KCC  C++ compiler */
+#ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
   /***********************************************************************
    * micro processor
    ***********************************************************************/
-#ifdef __hppa__ /* HP-PA , Hewlett Packard Precision Architecture */
+#ifdef __hppa__
   sprintf(temp,"G__hppa=%ld",(long)__hppa__); G__add_macro(temp);
 #endif
-#ifdef __i386__ /* Intel 386,486,586 */
+#ifdef __i386__
   sprintf(temp,"G__i386=%ld",(long)__i386__); G__add_macro(temp);
 #endif
-#ifdef __i860__ /* Intel 860 */
+#ifdef __i860__
   sprintf(temp,"G__i860=%ld",(long)__i860__); G__add_macro(temp);
 #endif
-#ifdef __i960__ /* Intel 960 */
+#ifdef __i960__
   sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
 #endif
-#ifdef __m88k__ /* Motorola 88000 */
+#ifdef __m88k__
   sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);
 #endif
-#ifdef __m68k__ /* Motorola 68000 */
+#ifdef __m68k__
   sprintf(temp,"G__m68k=%ld",(long)__m68k__); G__add_macro(temp);
 #endif
-#ifdef __ppc__  /* Motorola Power-PC */
-  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
-#endif
-#ifdef __mips__ /* MIPS architecture */
+#ifdef __mips__
   sprintf(temp,"G__mips=%ld",(long)__mips__); G__add_macro(temp);
 #endif
-#ifdef __alpha__ /* DEC/Compac Alpha */
+#ifdef __alpha__
   sprintf(temp,"G__alpha=%ld",(long)__alpha__); G__add_macro(temp);
 #endif
-#if defined(__sparc) /* Sun Microsystems SPARC architecture */
+#if defined(__sparc)
   sprintf(temp,"G__SPARC=%ld",(long)__sparc); G__add_macro(temp);
   sprintf(temp,"G__sparc=%ld",(long)__sparc); G__add_macro(temp);
 #elif  defined(__sparc__)
   sprintf(temp,"G__SPARC=%ld",(long)__sparc__); G__add_macro(temp);
   sprintf(temp,"G__sparc=%ld",(long)__sparc__); G__add_macro(temp);
 #endif
-#ifdef __arc__  /* ARC architecture */
+#ifdef __ppc__
+  sprintf(temp,"G__ppc=%ld",(long)__ppc__); G__add_macro(temp);
+#endif
+#ifdef __arc__
   sprintf(temp,"G__arc=%ld",(long)__arc__); G__add_macro(temp);
 #endif
 #ifdef __M32R__
   sprintf(temp,"G__m32r=%ld",(long)__M32R__); G__add_macro(temp);
 #endif
-#ifdef __sh__   /* Hitachi SH micro-controller */
+#ifdef __sh__
   sprintf(temp,"G__sh=%ld",(long)__SH__); G__add_macro(temp);
 #endif
-#ifdef __arm__  /* ARM , Advanced Risk Machines */
+#ifdef __arm__
   sprintf(temp,"G__arm=%ld",(long)__arm__); G__add_macro(temp);
-#endif
-#ifdef __s390__ /* IBM S390 */
-  sprintf(temp,"G__s390=%ld",(long)__s390__); G__add_macro(temp);
 #endif
   /***********************************************************************
    * application environment
@@ -2189,21 +2182,13 @@ void G__set_stdio()
 #endif
   G__definemacro=0;
 
-#ifndef G__OLDIMPLEMENTATION1604
-  /* G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("TRUE=1"); */
-  /* G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("FALSE=0"); */
-  G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("true=1");
-  G__constvar=G__CONSTVAR; G__var_type='g'; G__getexpr("false=0");
-  G__constvar = 0;
-#endif
-
 #ifdef G__DUMPFILE
   G__globalvarpointer = (long)(&G__dumpfile);
   G__var_type='E';
   G__getexpr("G__dumpfile=0");
 #endif
-  G__globalvarpointer = G__PVOID;
 
+  G__globalvarpointer = G__PVOID;
   G__var_type = 'p';
   G__tagnum = -1;
   G__typenum = -1;
@@ -2255,8 +2240,8 @@ int G__cintrevision(fp)
 FILE *fp;
 {
   fprintf(fp,"\n");
-  fprintf(fp,"cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
-  fprintf(fp,"   Copyright(c) : 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
+  fprintf(fp,"cint : C/C++ interpreter\n");
+  fprintf(fp,"   Copyright(c) : 1995~2001 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   fprintf(fp,"   revision     : %s by M.Goto\n\n",G__cint_version());
 
 #ifdef G__DEBUG

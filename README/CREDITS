@@ -14,17 +14,9 @@ N: Maarten Ballintijn
 E: maartenb@xs4all.nl
 D: initial linux port
 
-N: Paul Balm
-E: p.balm@nikhef.nl
-D: implemented TDatabasePDG::ConvertGeant3ToPDG
-
 N: Guy Barrand
 E: barrand@lal.in2p3.fr
 D: contribution to GUI classes
-
-N: Bertrand Bellenot
-E: Bertrand.Bellenot@alcan.com
-D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB.
 
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
@@ -57,10 +49,6 @@ N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
 
-N: Olivier Couet
-E: Olivier.Couet@cern.ch
-D: Implement support for CellArrays in TPostScript
-
 N: Ben Cowan
 E: benc@SLAC.Stanford.EDU
 D: port to MacOS X
@@ -91,8 +79,7 @@ D: CINT C/C++ interpreter
 
 N: Robert Hatcher
 E: rhatcher@slac.stanford.edu
-D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
-D: class TTimeStamp
+D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
 N: Miroslav Helbich
 E: helbich@mail.desy.de
@@ -105,13 +92,14 @@ D: contributions to the thread classes, SapDB interface
 N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
-D: generator, many comments on the Users Guide
+D: generator
+D: many comments on the Users Guide
 
 N: Christian Holm Christensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
-D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
+D: debian and redhat packaging scripts
 
 N: Marian Ivanov
 E: m.ivanov@gsi.de
@@ -124,10 +112,6 @@ D: changes in rootcint to handle templates
 N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
-
-N: Grzegorz Mazur
-E: mazur@mail.desy.de
-D: class TDCacheFile, interface to DESY's dCache system
 
 N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
@@ -144,7 +128,6 @@ D: Lorentz vector classes, PDG interface
 N: Axel Naumann
 E: axel@fnal.gov
 D: THtml improvements (namespace, header/footer)
-D: many suggestions for Trees
 
 N: John Odonnell
 E: odonnell@lanl.gov
@@ -185,10 +168,6 @@ D: various contributions to GUI classes
 N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
-
-N: Heiko Scheit
-E: Heiko.Scheit@mpi-hd.mpg.de
-D: Improvements in TTreePlayer::DrawSelect
 
 N: Daniel Sigg
 E: sigg_d@ligo.caltech.edu

@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.13 2001/12/05 10:59:57 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.9 2001/06/29 17:04:49 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -47,8 +47,6 @@ enum ETestCommandIdentifiers {
    M_FILE_OPEN,
    M_FILE_SAVE,
    M_FILE_SAVEAS,
-   M_FILE_PRINT,
-   M_FILE_PRINTSETUP,
    M_FILE_EXIT,
 
    M_TEST_DLG,
@@ -57,7 +55,6 @@ enum ETestCommandIdentifiers {
    M_TEST_SHUTTER,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
-   M_TEST_NEWMENU,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -66,8 +63,6 @@ enum ETestCommandIdentifiers {
    M_CASCADE_1,
    M_CASCADE_2,
    M_CASCADE_3,
-
-   M_NEW_REMOVEMENU,
 
    VId1,
    HId1,
@@ -207,7 +202,7 @@ class TileFrame;
 
 class TestMainFrame {
 
-RQ_OBJECT("TestMainFrame")
+RQ_OBJECT()
 
 private:
    TGMainFrame        *fMain;
@@ -220,7 +215,6 @@ private:
    TGMenuBar          *fMenuBar;
    TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuHelp;
    TGPopupMenu        *fCascadeMenu, *fCascade1Menu, *fCascade2Menu;
-   TGPopupMenu        *fMenuNew1, *fMenuNew2;
    TGLayoutHints      *fMenuBarLayout, *fMenuBarItemLayout, *fMenuBarHelpLayout;
 
 public:
@@ -231,14 +225,11 @@ public:
    void CloseWindow();
    void DoButton();
    void HandleMenu(Int_t id);
-
-   void Created() { Emit("Created()"); } //*SIGNAL*
-   void Welcome() { printf("TestMainFrame has been created. Welcome!\n"); }
 };
 
 class TestDialog {
 
-RQ_OBJECT("TestDialog")
+RQ_OBJECT()
 
 private:
    TGTransientFrame    *fMain;
@@ -280,7 +271,7 @@ public:
 
 class TestMsgBox {
 
-RQ_OBJECT("TestMsgBox")
+RQ_OBJECT()
 
 private:
    TGTransientFrame     *fMain;
@@ -311,7 +302,7 @@ public:
 
 class TestSliders {
 
-RQ_OBJECT("TestSliders")
+RQ_OBJECT()
 
 private:
    TGTransientFrame  *fMain;
@@ -336,7 +327,7 @@ public:
 
 class TestShutter {
 
-RQ_OBJECT("TestShutter")
+RQ_OBJECT()
 
 private:
    TGTransientFrame *fMain;
@@ -447,7 +438,7 @@ public:
 
 class TileFrame {
 
-RQ_OBJECT("TileFrame")
+RQ_OBJECT()
 
 private:
    TGCompositeFrame *fFrame;
@@ -529,13 +520,12 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuFile->AddEntry("S&ave as...", M_FILE_SAVEAS);
    fMenuFile->AddEntry("&Close", -1);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("&Print", M_FILE_PRINT);
-   fMenuFile->AddEntry("P&rint setup...", M_FILE_PRINTSETUP);
+   fMenuFile->AddEntry("&Print", -1);
+   fMenuFile->AddEntry("P&rint setup...", -1);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("E&xit", M_FILE_EXIT);
 
    fMenuFile->DisableEntry(M_FILE_SAVEAS);
-   fMenuFile->HideEntry(M_FILE_PRINT);
 
    fCascade2Menu = new TGPopupMenu(gClient->GetRoot());
    fCascade2Menu->AddEntry("ID = 2&1", M_CASCADE_1);
@@ -567,8 +557,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
-   fMenuTest->AddEntry("Add New Menus", M_TEST_NEWMENU);
-   fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
    fMenuHelp = new TGPopupMenu(gClient->GetRoot());
@@ -576,12 +564,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuHelp->AddEntry("&Search...", M_HELP_SEARCH);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry("&About", M_HELP_ABOUT);
-
-   fMenuNew1 = new TGPopupMenu();
-   fMenuNew1->AddEntry("Remove New Menus", M_NEW_REMOVEMENU);
-
-   fMenuNew2 = new TGPopupMenu();
-   fMenuNew2->AddEntry("Remove New Menus", M_NEW_REMOVEMENU);
 
    // Menu button messages are handled by the main frame (i.e. "this")
    // HandleMenu() method.
@@ -597,10 +579,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
                           "HandleMenu(Int_t)");
    fCascade2Menu->Connect("Activated(Int_t)", "TestMainFrame", this,
                           "HandleMenu(Int_t)");
-   fMenuNew1->Connect("Activated(Int_t)", "TestMainFrame", this,
-                      "HandleMenu(Int_t)");
-   fMenuNew2->Connect("Activated(Int_t)", "TestMainFrame", this,
-                      "HandleMenu(Int_t)");
 
    fMenuBar = new TGMenuBar(fMain, 1, 1, kHorizontalFrame);
    fMenuBar->AddPopup("&File", fMenuFile, fMenuBarItemLayout);
@@ -654,9 +632,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    //Resize(400, 200);
 
    fMain->MapWindow();
-
-   Connect("Created()", "TestMainFrame", this, "Welcome()");
-   Created();
 }
 
 TestMainFrame::~TestMainFrame()
@@ -681,8 +656,6 @@ TestMainFrame::~TestMainFrame()
    delete fCascadeMenu;
    delete fCascade1Menu;
    delete fCascade2Menu;
-   delete fMenuNew1;
-   delete fMenuNew2;
 
    delete fMain;
 }
@@ -727,28 +700,16 @@ void TestMainFrame::HandleMenu(Int_t id)
          }
          break;
 
+      case M_TEST_DLG:
+         new TestDialog(gClient->GetRoot(), fMain, 400, 200);
+         break;
+
       case M_FILE_SAVE:
          printf("M_FILE_SAVE\n");
          break;
 
-      case M_FILE_PRINT:
-         printf("M_FILE_PRINT\n");
-         printf("Hiding itself, select \"Print Setup...\" to enable again\n");
-         fMenuFile->HideEntry(M_FILE_PRINT);
-         break;
-
-      case M_FILE_PRINTSETUP:
-         printf("M_FILE_PRINTSETUP\n");
-         printf("Enabling \"Print\"\n");
-         fMenuFile->EnableEntry(M_FILE_PRINT);
-         break;
-
       case M_FILE_EXIT:
          CloseWindow();   // terminate theApp no need to use SendCloseMessage()
-         break;
-
-      case M_TEST_DLG:
-         new TestDialog(gClient->GetRoot(), fMain, 400, 200);
          break;
 
       case M_TEST_MSGBOX:
@@ -769,35 +730,6 @@ void TestMainFrame::HandleMenu(Int_t id)
 
       case M_TEST_NUMBERENTRY:
          new EntryTestDlg(gClient->GetRoot(), fMain);
-         break;
-
-      case M_TEST_NEWMENU:
-         {
-            if (fMenuTest->IsEntryChecked(M_TEST_NEWMENU)) {
-               HandleMenu(M_NEW_REMOVEMENU);
-               return;
-            }
-            fMenuTest->CheckEntry(M_TEST_NEWMENU);
-            TGPopupMenu *p = fMenuBar->GetPopup("Test");
-            fMenuBar->AddPopup("New 1", fMenuNew1, fMenuBarItemLayout, p);
-            p = fMenuBar->GetPopup("Help");
-            fMenuBar->AddPopup("New 2", fMenuNew2, fMenuBarItemLayout, p);
-            fMenuBar->MapSubwindows();
-            fMenuBar->Layout();
-
-            TGMenuEntry *e = fMenuTest->GetEntry("Add New Menus");
-            fMenuTest->AddEntry("Remove New Menus", M_NEW_REMOVEMENU, 0, 0, e);
-         }
-         break;
-
-      case M_NEW_REMOVEMENU:
-         {
-            fMenuBar->RemovePopup("New 1");
-            fMenuBar->RemovePopup("New 2");
-            fMenuBar->Layout();
-            fMenuTest->DeleteEntry(M_NEW_REMOVEMENU);
-            fMenuTest->UnCheckEntry(M_TEST_NEWMENU);
-         }
          break;
 
       default:
@@ -1010,9 +942,9 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
+                     (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+                     (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+                     ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Dialog");
@@ -1350,9 +1282,9 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    // position relative to the parent's window
    Window_t wdum;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
+                          (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+                          ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Message Box Test");
@@ -1516,9 +1448,9 @@ TestSliders::TestSliders(const TGWindow *p, const TGWindow *main,
    Window_t wdummy;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                   ax, ay, wdummy);
+                          (((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
+                          (((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
+                          ax, ay, wdummy);
    fMain->Move(ax, ay);
 
    fMain->MapSubwindows();
@@ -1645,9 +1577,9 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
+                          (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+                          ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Shutter Test");
@@ -1775,9 +1707,9 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    Window_t wdummy;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                   ax, ay, wdummy);
+                          (((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
+                          (((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
+                          ax, ay, wdummy);
    fMain->Move(ax, ay);
 
    fMain->MapSubwindows();
@@ -1946,16 +1878,16 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    if (main) {
       Window_t wdum;
       gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                                      (Int_t)(((TGFrame *) main)->GetWidth() -
+                                      (((TGFrame *) main)->GetWidth() -
                                        fMain->GetWidth()) >> 1,
-                                      (Int_t)(((TGFrame *) main)->GetHeight() -
+                                      (((TGFrame *) main)->GetHeight() -
                                        fMain->GetHeight()) >> 1, ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
       gVirtualX->GetWindowSize(gClient->GetRoot()->GetId(), ax, ay,
                                root_w, root_h);
-      ax = (Int_t)(root_w - fMain->GetWidth()) >> 1;
-      ay = (Int_t)(root_h - fMain->GetHeight()) >> 1;
+      ax = (root_w - fMain->GetWidth()) >> 1;
+      ay = (root_h - fMain->GetHeight()) >> 1;
    }
    fMain->Move(ax, ay);
    fMain->SetWMPosition(ax, ay);
@@ -2067,13 +1999,12 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
    // position relative to the parent's window
    Window_t wdum;
    int ax, ay;
-   // editor covers right half of parent window
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             0,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
-   fMain->SetWMPosition((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
+                          ((TGFrame *) main)->GetWidth() - (fMain->GetWidth() >> 1),
+                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+                          ax, ay, wdum);
+   fMain->Move(ax, ay);
+   fMain->SetWMPosition(ax, ay);
 }
 
 Editor::~Editor()

@@ -6,11 +6,7 @@
 ClassImp(TDecayChannel)
 
 //_____________________________________________________________________________
-TDecayChannel::TDecayChannel() 
-{
-  fNumber            = 0;
-  fMatrixElementCode = 0;
-  fBranchingRatio    = 0;
+TDecayChannel::TDecayChannel() {
 }
 
 //_____________________________________________________________________________

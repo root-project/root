@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.10 2001/10/30 17:22:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.9 2001/10/29 19:47:53 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -147,7 +147,6 @@ public:
    virtual Bool_t   IsEditable() const = 0;
    virtual Bool_t   IsModified() const = 0;
    virtual Bool_t   IsRetained() const = 0;
-   virtual Bool_t   IsVertical() const = 0;
    virtual void     ls(Option_t *option="") const = 0;
    virtual void     Modified(Bool_t flag=1) = 0;
    virtual Bool_t   OpaqueMoving() const = 0;
@@ -219,7 +218,6 @@ public:
    virtual void     SetTheta(Double_t theta=30) = 0;
    virtual void     SetPhi(Double_t phi=30) = 0;
    virtual void     SetToolTipText(const char *text, Long_t delayms = 1000) = 0;
-   virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
    virtual void     SetView(TView *view) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.23 2002/01/20 10:21:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.19 2001/08/08 07:17:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -17,7 +17,6 @@
 #include "TRandom.h"
 #include "TMatrix.h"
 #include "TMatrixD.h"
-#include "THLimitsFinder.h"
 
 ClassImp(TH2)
 
@@ -113,63 +112,6 @@ TH2::~TH2()
 }
 
 //______________________________________________________________________________
-Int_t TH2::BufferEmpty(Bool_t deleteBuffer)
-{
-// Fill histogram with all entries in the buffer.
-// The buffer is deleted if deleteBuffer is true.
-
-   // do we need to compute the bin size?
-   Int_t nbentries = (Int_t)fBuffer[0];
-   if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
-      //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      Double_t ymin = fBuffer[3];
-      Double_t ymax = ymin;
-      for (Int_t i=1;i<nbentries;i++) {
-         Double_t x = fBuffer[3*i+2];
-         if (x < xmin) xmin = x;
-         if (x > xmax) xmax = x;
-         Double_t y = fBuffer[3*i+3];
-         if (y < ymin) ymin = y;
-         if (y > ymax) ymax = y;
-      }
-      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
-   }
-   Double_t *buffer = fBuffer; fBuffer = 0;
-   
-   for (Int_t i=0;i<nbentries;i++) {
-      Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
-   }
-   
-   if (deleteBuffer) { delete buffer;    fBufferSize = 0;}
-   else              { fBuffer = buffer; fBuffer[0] = 0;}
-   return nbentries;
-}
- 
-//______________________________________________________________________________
-Int_t TH2::BufferFill(Axis_t x, Axis_t y, Stat_t w)
-{
-// accumulate arguments in buffer. When buffer is full, empty the buffer
-// fBuffer[0] = number of entries in buffer
-// fBuffer[1] = w of first entry
-// fBuffer[2] = x of first entry
-// fBuffer[3] = y of first entry
-
-   Int_t nbentries = (Int_t)fBuffer[0];
-   if (3*nbentries+3 >= fBufferSize) {
-      BufferEmpty(kTRUE);
-      return Fill(x,y,w);
-   }
-   fBuffer[3*nbentries+1] = w;
-   fBuffer[3*nbentries+2] = x;
-   fBuffer[3*nbentries+3] = y;
-   fBuffer[0] += 1;
-   return -3;
-}
-
-//______________________________________________________________________________
 void TH2::Copy(TObject &obj)
 {
    TH1::Copy(obj);
@@ -195,9 +137,6 @@ Int_t TH2::Fill(Axis_t x,Axis_t y)
 //*-* by 1in the cell corresponding to x,y.
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-   if (fBuffer) BufferFill(x,y,1);
-   
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(x);
@@ -234,8 +173,6 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   if (fBuffer) BufferFill(x,y,w);
-
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(x);
@@ -245,115 +182,6 @@ Int_t TH2::Fill(Axis_t x, Axis_t y, Stat_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Stat_t z= (w > 0 ? w : -w);
-   fTsumw   += z;
-   fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
-   return bin;
-}
-
-//______________________________________________________________________________
-Int_t TH2::Fill(const char *namex, const char *namey, Stat_t w)
-{
-// Increment cell defined by namex,namey by a weight w
-//
-// if x or/and y is less than the low-edge of the corresponding axis first bin,
-//   the Underflow cell is incremented.
-// if x or/and y is greater than the upper edge of corresponding axis last bin,
-//   the Overflow cell is incremented.
-//
-// If the storage of the sum of squares of weights has been triggered,
-// via the function Sumw2, then the sum of the squares of weights is incremented
-// by w^2 in the cell corresponding to x,y.
-//
-
-   Int_t binx, biny, bin;
-   fEntries++;
-   binx = fXaxis.FindBin(namex);
-   biny = fYaxis.FindBin(namey);
-   bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
-   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Axis_t x = fXaxis.GetBinCenter(binx);
-   Axis_t y = fYaxis.GetBinCenter(biny);
-   Stat_t z= (w > 0 ? w : -w);
-   fTsumw   += z;
-   fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
-   return bin;
-}
-
-//______________________________________________________________________________
-Int_t TH2::Fill(const char *namex, Axis_t y, Stat_t w)
-{
-// Increment cell defined by namex,y by a weight w
-//
-// if x or/and y is less than the low-edge of the corresponding axis first bin,
-//   the Underflow cell is incremented.
-// if x or/and y is greater than the upper edge of corresponding axis last bin,
-//   the Overflow cell is incremented.
-//
-// If the storage of the sum of squares of weights has been triggered,
-// via the function Sumw2, then the sum of the squares of weights is incremented
-// by w^2 in the cell corresponding to x,y.
-//
-
-   Int_t binx, biny, bin;
-   fEntries++;
-   binx = fXaxis.FindBin(namex);
-   biny = fYaxis.FindBin(y);
-   bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
-   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Axis_t x = fXaxis.GetBinCenter(binx);
-   Stat_t z= (w > 0 ? w : -w);
-   fTsumw   += z;
-   fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
-   return bin;
-}
-
-//______________________________________________________________________________
-Int_t TH2::Fill(Axis_t x, const char *namey, Stat_t w)
-{
-// Increment cell defined by x,namey by a weight w
-//
-// if x or/and y is less than the low-edge of the corresponding axis first bin,
-//   the Underflow cell is incremented.
-// if x or/and y is greater than the upper edge of corresponding axis last bin,
-//   the Overflow cell is incremented.
-//
-// If the storage of the sum of squares of weights has been triggered,
-// via the function Sumw2, then the sum of the squares of weights is incremented
-// by w^2 in the cell corresponding to x,y.
-//
-
-   Int_t binx, biny, bin;
-   fEntries++;
-   binx = fXaxis.FindBin(x);
-   biny = fYaxis.FindBin(namey);
-   bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   AddBinContent(bin,w);
-   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
-   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
-   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Axis_t y = fYaxis.GetBinCenter(biny);
    Stat_t z= (w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
@@ -782,8 +610,6 @@ void TH2::GetStats(Stat_t *stats) const
    // stats[5] = sumwy2
    // stats[6] = sumwxy
 
-   if (fBuffer) ((TH2*)this)->BufferEmpty();
-   
    Int_t bin, binx, biny;
    Stat_t w;
    Float_t x,y;
@@ -835,8 +661,6 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 // By default the integral is computed as the sum of bin contents in the range.
 // if option "width" is specified, the integral is the sum of
 // the bin contents multiplied by the bin width in x and in y.
-
-   if (fBuffer) BufferEmpty();
    
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -991,20 +815,20 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    }
 
    //   Find second Kolmogorov distance 
-   Double_t dfmax2 = 0;
+   Double_t dfmax2 = dfmax = 0;
    rsum1=0, rsum2=0;
    for (j=jbeg;j<=jend;j++) {
       for (i=ibeg;i<=iend;i++) {
          rsum1 += s1*h1->GetCellContent(i,j);
          rsum2 += s2*h2->GetCellContent(i,j);
-         dfmax2 = TMath::Max(dfmax2, TMath::Abs(rsum1-rsum2));
+         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
       }
    }
 
    //    Get Kolmogorov probability
    Double_t factnm;
-   if (afunc1)      factnm = TMath::Sqrt(sum2);
-   else if (afunc2) factnm = TMath::Sqrt(sum1);
+   if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
+   else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
    else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
    Double_t z  = dfmax*factnm;
    Double_t z2 = dfmax2*factnm;
@@ -1038,105 +862,6 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
    return prb;
-}   
-   
-//______________________________________________________________________________
-Int_t TH2::Merge(TCollection *list)
-{
-   //Merge all histograms in the collection in this histogram.
-   //This function computes the min/max for the axes,
-   //compute a new number of bins, if necessary,
-   //add bin contents, errors and statistics.
-   //The function returns the merged number of entries if the merge is 
-   //successfull, -1 otherwise.
-   //
-   //IMPORTANT remark. The 2 axis x and y may have different number
-   //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width.
-   
-   if (!list) return 0;
-   TIter next(list);
-   Double_t umin,umax,vmin,vmax;
-   Int_t nx,ny;
-   Double_t xmin  = fXaxis.GetXmin();
-   Double_t xmax  = fXaxis.GetXmax();
-   Double_t ymin  = fYaxis.GetXmin();
-   Double_t ymax  = fYaxis.GetXmax();
-   Double_t bwix  = fXaxis.GetBinWidth(1);
-   Double_t bwiy  = fYaxis.GetBinWidth(1);
-   Int_t    nbix  = fXaxis.GetNbins();
-   Int_t    nbiy  = fYaxis.GetNbins();
-
-   const Int_t kNstat = 7;
-   Stat_t stats[kNstat], totstats[kNstat];
-   TH2 *h;
-   Int_t i, nentries=0;
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   Bool_t same = kTRUE;
-   while ((h=(TH2*)next())) {     
-      if (!h->InheritsFrom(TH2::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
-         return -1;
-      }
-      //import statistics
-      h->GetStats(stats);
-      for (i=0;i<kNstat;i++) totstats[i] += stats[i];
-      nentries += (Int_t)h->GetEntries();
-      
-      // find min/max of the axes
-      umin = h->GetXaxis()->GetXmin();
-      umax = h->GetXaxis()->GetXmax();
-      vmin = h->GetYaxis()->GetXmin();
-      vmax = h->GetYaxis()->GetXmax();
-      nx   = h->GetXaxis()->GetNbins();
-      ny   = h->GetYaxis()->GetNbins();
-      if (nx != nbix || ny != nbiy ||
-              umin != xmin || umax != xmax || vmin != ymin || vmax != ymax) {
-         same = kFALSE;
-         if (umin < xmin) xmin = umin;  
-         if (umax > xmax) xmax = umax;  
-         if (vmin < ymin) ymin = vmin;  
-         if (vmax > ymax) ymax = vmax;  
-         if (h->GetXaxis()->GetBinWidth(1) > bwix) bwix = h->GetXaxis()->GetBinWidth(1);     
-         if (h->GetYaxis()->GetBinWidth(1) > bwiy) bwiy = h->GetYaxis()->GetBinWidth(1);     
-      }
-   }
-   
-   //  if different binning compute best binning
-   if (!same) {
-      nbix = (Int_t) ((xmax-xmin)/bwix +0.1); while(nbix > 100) nbix /= 2;
-      nbiy = (Int_t) ((ymax-ymin)/bwiy +0.1); while(nbiy > 100) nbiy /= 2;
-      SetBins(nbix,xmin,xmax,nbiy,ymin,ymax);
-   }
-   
-   //merge bin contents and errors
-   next.Reset();
-   Int_t ibin, bin, binx, biny, ix, iy;
-   Double_t cu;
-   while ((h=(TH2*)next())) {     
-      nx   = h->GetXaxis()->GetNbins();
-      ny   = h->GetYaxis()->GetNbins();
-      for (biny=0;biny<=ny+1;biny++) {
-         iy = fYaxis.FindBin(h->GetBinCenter(biny));
-         for (binx=0;binx<=nx+1;binx++) {
-            ix = fXaxis.FindBin(h->GetBinCenter(binx));
-            bin = binx +(nx+2)*biny;
-            ibin = ix +(nbix+2)*iy;
-            cu  = h->GetBinContent(bin);
-            AddBinContent(ibin,cu);
-            if (fSumw2.fN) {
-               Double_t error1 = h->GetBinError(bin);
-               fSumw2.fArray[ibin] += error1*error1;
-            }
-         }
-      }
-   }
-   
-   //copy merged stats
-   PutStats(totstats);
-   SetEntries(nentries);
-   
-   return nentries;
 }   
    
 //______________________________________________________________________________
@@ -1513,7 +1238,6 @@ TH1 *TH2C::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2C::GetBinContent(Int_t bin) const
 {
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -1721,7 +1445,6 @@ TH1 *TH2S::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2S::GetBinContent(Int_t bin) const
 {
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -1925,7 +1648,6 @@ TH1 *TH2F::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2F::GetBinContent(Int_t bin) const
 {
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);
@@ -2137,7 +1859,6 @@ TH1 *TH2D::DrawCopy(Option_t *option)
 //______________________________________________________________________________
 Stat_t TH2D::GetBinContent(Int_t bin) const
 {
-   if (fBuffer) ((TH2C*)this)->BufferEmpty();
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    return Stat_t (fArray[bin]);

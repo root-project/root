@@ -42,7 +42,7 @@ class multiset {
   typedef Compare                               key_compare;
   typedef Compare                               value_compare;
   typedef Allocator                             allocator_type;
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__HPUX)
+#if defined(G__GNUC) || defined(G__HPUX)
   typedef Key*                                  pointer;
   typedef const Key*                            const_pointer;
   typedef Key&                                  reference;
@@ -71,7 +71,7 @@ class multiset {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     iterator& operator=(const iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined (G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -88,7 +88,7 @@ class multiset {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if (defined(G__GNUC) && !defined (G__KCC))
+#ifdef G__GNUC
   friend bool operator==(const multiset::iterator& x ,const multiset::iterator& y) const;
   friend bool operator!=(const multiset::iterator& x ,const multiset::iterator& y) const;
 #endif
@@ -108,7 +108,7 @@ class multiset {
 #if !defined(G__BORLAND) && !defined(G__KCC)
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
-#if defined(G__VISUAL) || (defined(G__GNUC) && !defined (G__KCC))
+#if defined(G__VISUAL) || defined(G__GNUC)
     value_type operator*() const;
 #else
     value_type& operator*() const;
@@ -199,7 +199,7 @@ class multiset {
 
 #ifndef G__NOALGORITHM
   // Generic algorithm
-#if (defined(G__GNUC) && !defined (G__KCC)) || defined(G__BORLAND)
+#if defined(G__GNUC) || defined(G__BORLAND)
 
   friend multiset::iterator 
     find(multiset::iterator first,multiset::iterator last,const Key& value);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.3 2001/05/29 16:21:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -121,10 +121,9 @@ const char *TDatime::AsSQLString() const
 }
 
 //______________________________________________________________________________
-UInt_t TDatime::Convert(Bool_t toGMT) const
+UInt_t TDatime::Convert() const
 {
    // Convert fDatime from TDatime format to the standard time_t format.
-   // If toGMT is true the returned time_t is converted to GMT.
 
    UInt_t year  = fDatime>>26;
    UInt_t month = (fDatime<<6)>>28;
@@ -146,11 +145,6 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
    if ((int)t == -1) {
       Error("TDatime::Convert", "error converting fDatime to time_t");
       return 0;
-   }
-   if (toGMT) {
-      struct tm *tg;
-      tg = gmtime(&t);
-      t  = mktime(tg);
    }
    return (UInt_t)t;
 }

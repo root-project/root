@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.19 2001/12/10 21:10:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.16 2001/10/16 09:18:38 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -102,11 +102,10 @@ public:
           Int_t     GetNumberFitPoints() const {return fNpfits;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
-       Double_t     GetParError(Int_t ipar) const;
+       Double_t     GetParError(Int_t ipar) const {return fParErrors[ipar];}
        Double_t    *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
    virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
    virtual Double_t GetRandom();
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
@@ -133,13 +132,12 @@ public:
    virtual void     SetNDF(Int_t ndf);
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
    virtual void     SetNpx(Int_t npx=100); // *MENU*
-   virtual void     SetParError(Int_t ipar, Double_t error);
+   virtual void     SetParError(Int_t ipar, Double_t error) {fParErrors[ipar] = error;}
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
    virtual void     SetParent(TObject *p=0) {fParent = p;}
    virtual void     SetRange(Double_t xmin, Double_t xmax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
-   virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     Update();
 
    static  void     RejectPoint(Bool_t reject=kTRUE);

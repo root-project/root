@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.4 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPavesText.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   19/11/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TPavesText.h"
 #include "TVirtualPad.h"
@@ -133,15 +134,6 @@ void TPavesText::SavePrimitive(ofstream &out, Option_t *)
    out<<"pst = new TPavesText("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<endl;
 
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pst->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   }
-   if (fLabel.Length() > 0) {
-      out<<"   pst->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;
-   }
-   if (fBorderSize != 4) {
-      out<<"   pst->SetBorderSize("<<fBorderSize<<");"<<endl;
-   }
    SaveFillAttributes(out,"pst",0,1001);
    SaveLineAttributes(out,"pst",1,1,1);
    SaveTextAttributes(out,"pst",22,0,1,62,0);

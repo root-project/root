@@ -57,7 +57,7 @@ particle at say 8 fixed planes, the trajectory is described by an
 
 <!-- MATH
  \begin{displaymath}
-\mathbf{x} = \left(x_0, x_1, \ldots, x_7\right)
+\mathbf{x} = \left(x_1, x_2, \ldots, x_8\right)
 \end{displaymath}
  -->
 
@@ -66,7 +66,7 @@ particle at say 8 fixed planes, the trajectory is described by an
  WIDTH="145" HEIGHT="31" BORDER="0"
  SRC="gif/principal_img1.gif"
  ALT="\begin{displaymath}
-\mathbf{x} = \left(x_0, x_1, \ldots, x_7\right)
+\mathbf{x} = \left(x_1, x_2, \ldots, x_8\right)
 \end{displaymath}">
 </DIV>
 <BR CLEAR="ALL">
@@ -87,7 +87,7 @@ prototypes,
 
 <!-- MATH
  \begin{displaymath}
-\mathbf{x}_m = \sum^7_{i=0} a_{m_i} \mathbf{e}_i
+\mathbf{x}_m = \sum^8_{i=1} a_{m_i} \mathbf{e}_i
 \quad
 \mbox{where}
 \quad
@@ -100,7 +100,7 @@ a_{m_i} = \mathbf{x}^T\bullet\mathbf{e}_i
  WIDTH="295" HEIGHT="58" BORDER="0"
  SRC="gif/principal_img3.gif"
  ALT="\begin{displaymath}
-\mathbf{x}_m = \sum^7_{i=0} a_{m_i} \mathbf{e}_i
+\mathbf{x}_m = \sum^8_{i=1} a_{m_i} \mathbf{e}_i
 \quad
 \mbox{where}
 \quad
@@ -166,12 +166,12 @@ Let's consider a sample of <IMG
  SRC="gif/principal_img6.gif"
  ALT="$P$"> variables
 <!-- MATH
- $x_0, x_1, \ldots, x_{P-1}$
+ $x_1, x_2, \ldots, x_P$
  -->
 <IMG
  WIDTH="107" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img7.gif"
- ALT="$x_0, x_1, \ldots, x_{P-1}$">. Each prototype is a point, or a
+ ALT="$x_1, x_2, \ldots, x_P$">. Each prototype is a point, or a
 column vector, in a <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/principal_img6.gif"
@@ -183,7 +183,7 @@ column vector, in a <IMG
 <!-- MATH
  \begin{equation}
 \mathbf{x} = \left[\begin{array}{c}
-    x_0\\x_1\\\vdots\\x_{P-1}\end{array}\right]\,,
+    x_1\\x_2\\\vdots\\x_P\end{array}\right]\,,
 \end{equation}
  -->
 
@@ -193,7 +193,7 @@ column vector, in a <IMG
  SRC="gif/principal_img8.gif"
  ALT="\begin{displaymath}
 \mathbf{x} = \left[\begin{array}{c}
-x_0\\ x_1\\ \vdots\\ x_{P-1}\end{array}\right]\,,
+x_1\\ x_2\\ \vdots\\ x_P\end{array}\right]\,,
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (1)</TD></TR>
@@ -274,23 +274,23 @@ let the prototypes be expanded on into a set of <IMG
  ALT="$N$"> basis vectors
 
 <!-- MATH
- $\mathbf{e}_n, n=0,\ldots,N,N+1, \ldots, P-1$
+ $\mathbf{e}_n, n=1,\ldots,N,N+1, \ldots, P$
  -->
 <IMG
  WIDTH="233" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img13.gif"
- ALT="$\mathbf{e}_n, n=0,\ldots,N,N+1, \ldots, P-1$">,
+ ALT="$\mathbf{e}_n, n=1,\ldots,N,N+1, \ldots, P$">,
 <BR>
 <DIV ALIGN="RIGHT">
 
 
 <!-- MATH
  \begin{equation}
-\mathbf{y}_i = \sum^N_{i=0} a_{i_n} \mathbf{e}_n,
+\mathbf{y}_i = \sum^N_{i=1} a_{i_n} \mathbf{e}_n,
   \quad
   i = 1, \ldots, M,
   \quad
-  N < P-1
+  N < P
 \end{equation}
  -->
 
@@ -299,11 +299,11 @@ let the prototypes be expanded on into a set of <IMG
  WIDTH="303" HEIGHT="58" BORDER="0"
  SRC="gif/principal_img14.gif"
  ALT="\begin{displaymath}
-\mathbf{y}_i = \sum^N_{i=0} a_{i_n} \mathbf{e}_n,
+\mathbf{y}_i = \sum^N_{i=1} a_{i_n} \mathbf{e}_n,
 \quad
-i = 0, \ldots, M,
+i = 1, \ldots, M,
 \quad
-N &lt; P-1
+N &lt; P
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (3)</TD></TR>
@@ -324,7 +324,7 @@ truncated expansion, i.e.,
 <!-- MATH
  \begin{equation}
 \min\left(E_N\right) =
-  \min\left[\left\langle\left(\mathbf{y}_i - \sum^N_{i=0} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
+  \min\left[\left\langle\left(\mathbf{y}_i - \sum^N_{i=1} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
 \end{equation}
  -->
 
@@ -335,7 +335,7 @@ truncated expansion, i.e.,
  ALT="\begin{displaymath}
 \min\left(E_N\right) =
 \min\left[\left\langle\left(\mathb...
-...\sum^N_{i=0} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
+...\sum^N_{i=1} a_{i_n} \mathbf{e}_n\right)^2\right\rangle\right]
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (4)</TD></TR>
@@ -410,13 +410,13 @@ so the error becomes
 <!-- MATH
  \begin{eqnarray}
 E_N &=&
-  \left\langle\left[\sum_{n=N+1}^{P-1}  a_{i_n}\mathbf{e}_n\right]^2\right\rangle\nonumber\\
+  \left\langle\left[\sum_{n=N+1}^P  a_{i_n}\mathbf{e}_n\right]^2\right\rangle\nonumber\\
   &=&
-  \left\langle\left[\sum_{n=N+1}^{P-1}  \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle\nonumber\\
+  \left\langle\left[\sum_{n=N+1}^P  \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle\nonumber\\
   &=&
-  \left\langle\sum_{n=N+1}^{P-1}  \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle\nonumber\\
+  \left\langle\sum_{n=N+1}^P  \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle\nonumber\\
   &=&
-  \sum_{n=N+1}^{P-1}  \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n
+  \sum_{n=N+1}^P  \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n
 \end{eqnarray}
  -->
 
@@ -432,7 +432,7 @@ E_N &=&
 <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="151" HEIGHT="80" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img22.gif"
- ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^{P-1} a_{i_n}\mathbf{e}_n\right]^2\right\rangle$"></TD>
+ ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^P a_{i_n}\mathbf{e}_n\right]^2\right\rangle$"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 &nbsp;</TD></TR>
 <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
@@ -443,7 +443,7 @@ E_N &=&
 <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="184" HEIGHT="80" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img23.gif"
- ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^{P-1} \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle$"></TD>
+ ALT="$\displaystyle \left\langle\left[\sum_{n=N+1}^P \mathbf{y}_i^T\bullet\mathbf{e}_n\mathbf{e}_n\right]^2\right\rangle$"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 &nbsp;</TD></TR>
 <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
@@ -454,7 +454,7 @@ E_N &=&
 <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="156" HEIGHT="69" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img24.gif"
- ALT="$\displaystyle \left\langle\sum_{n=N+1}^{P-1} \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle$"></TD>
+ ALT="$\displaystyle \left\langle\sum_{n=N+1}^P \mathbf{e}_n^T\mathbf{y}_i\mathbf{y}_i^T\mathbf{e}_n\right\rangle$"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 &nbsp;</TD></TR>
 <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
@@ -465,7 +465,7 @@ E_N &=&
 <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="104" HEIGHT="69" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img25.gif"
- ALT="$\displaystyle \sum_{n=N+1}^{P-1} \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n$"></TD>
+ ALT="$\displaystyle \sum_{n=N+1}^P \mathbf{e}_n^T\mathsf{C}\mathbf{e}_n$"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (7)</TD></TR>
 </TABLE></DIV>
@@ -495,7 +495,7 @@ condition&nbsp;(<A HREF="prin_node1.html#eq:ortocond">5</A>), we get
 
 <!-- MATH
  \begin{equation}
-E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
+E_N = \sum^P_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
     l_n\mathbf{e}_n^T\bullet\mathbf{e}_n + l_n\right)
 \end{equation}
  -->
@@ -505,7 +505,7 @@ E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
  WIDTH="291" HEIGHT="60" BORDER="0"
  SRC="gif/principal_img27.gif"
  ALT="\begin{displaymath}
-E_N = \sum^{P-1}_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
+E_N = \sum^P_{n=N+1} \left(\mathbf{e}_n^T\mathsf{C}\mathbf{e}_n -
 l_n\mathbf{e}_n^T\bullet\mathbf{e}_n + l_n\right)
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
@@ -560,8 +560,8 @@ then given by
 
 <!-- MATH
  \begin{equation}
-E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
-      = \sum^{P-1}_{n=N+1}  l_n\,,
+E_N \sim \sum^P_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
+      = \sum^P_{n=N+1}  l_n\,,
 \end{equation}
  -->
 
@@ -570,8 +570,8 @@ E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
  WIDTH="264" HEIGHT="60" BORDER="0"
  SRC="gif/principal_img31.gif"
  ALT="\begin{displaymath}
-E_N \sim \sum^{P-1}_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
-= \sum^{P-1}_{n=N+1} l_n\,,
+E_N \sim \sum^P_{n=N+1} \mathbf{e}_n^T\bullet l_n\mathbf{e}_n
+= \sum^P_{n=N+1} l_n\,,
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
 (10)</TD></TR>
@@ -584,7 +584,7 @@ where
 <IMG
  WIDTH="161" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img32.gif"
- ALT="$l_n,\,n=N+1,\ldots,P-1$"> are the eigenvalues associated with the
+ ALT="$l_n,\,n=N+1,\ldots,P$"> are the eigenvalues associated with the
 omitted eigenvectors in the expansion&nbsp;(<A HREF="prin_node1.html#eq:yi">3</A>). Thus, by choosing
 the <IMG
  WIDTH="20" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
@@ -605,7 +605,7 @@ space consists of the ordered eigenvectors
 <IMG
  WIDTH="80" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img34.gif"
- ALT="$\mathbf{e}_0,\ldots,\mathbf{e}_{P-1}$"> for its columns
+ ALT="$\mathbf{e}_1,\ldots,\mathbf{e}_P$"> for its columns
 <BR>
 <DIV ALIGN="RIGHT">
 
@@ -614,17 +614,17 @@ space consists of the ordered eigenvectors
  \begin{equation}
 \mathsf{T} = \left[
     \begin{array}{cccc}
-      \mathbf{e}_0 &
       \mathbf{e}_1 &
+      \mathbf{e}_2 &
       \vdots &
-      \mathbf{e}_{P-1}
+      \mathbf{e}_P
     \end{array}\right]
   = \left[
     \begin{array}{cccc}
-      \mathbf{e}_{0_0} &  \mathbf{e}_{1_0} & \cdots &  \mathbf{e}_{{P-1}_0}\\
-      \mathbf{e}_{0_1} &  \mathbf{e}_{1_1} & \cdots &  \mathbf{e}_{{P-1}_1}\\
+      \mathbf{e}_{1_1} &  \mathbf{e}_{2_1} & \cdots &  \mathbf{e}_{P_1}\\
+      \mathbf{e}_{1_2} &  \mathbf{e}_{2_2} & \cdots &  \mathbf{e}_{P_2}\\
       \vdots        &  \vdots        & \ddots &  \vdots \\
-      \mathbf{e}_{0_{P-1}} &  \mathbf{e}_{1_{P-1}} & \cdots &  \mathbf{e}_{{P-1}_{P-1}}\\
+      \mathbf{e}_{1_P} &  \mathbf{e}_{2_P} & \cdots &  \mathbf{e}_{P_P}\\
     \end{array}\right]
 \end{equation}
  -->
@@ -636,9 +636,9 @@ space consists of the ordered eigenvectors
  ALT="\begin{displaymath}
 \mathsf{T} = \left[
 \begin{array}{cccc}
-\mathbf{e}_0 &amp;
+\mathbf{e}_1 &amp;
 \...
-...bf{e}_{1_{P-1}} &amp; \cdots &amp; \mathbf{e}_{{P-1}_{P-1}}\\
+...bf{e}_{2_P} &amp; \cdots &amp; \mathbf{e}_{P_P}\\
 \end{array}\right]
 \end{displaymath}"></TD>
 <TD WIDTH=10 ALIGN="RIGHT">
@@ -657,9 +657,9 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.20 2002/01/23 17:52:50 rdm Exp $
-// $Date: 2002/01/23 17:52:50 $
-// $Author: rdm $
+// $Id: TPrincipal.cxx,v 1.16 2001/10/12 06:46:56 brun Exp $
+// $Date: 2001/10/12 06:46:56 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
@@ -670,7 +670,10 @@ in the transformed space.
 #include "TDatime.h"
 #include "TBrowser.h"
 #include "TROOT.h"
-#include "Riostream.h"
+
+#include <fstream.h>
+#include <iostream.h>
+#include <iomanip.h>
 
 
 ClassImp(TPrincipal);
@@ -685,18 +688,18 @@ TPrincipal::TPrincipal()
 
 //____________________________________________________________________
 TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
-  : fMeanValues(nVariables),
-    fSigmas(nVariables),
-    fCovarianceMatrix(nVariables,nVariables),
-    fEigenVectors(nVariables,nVariables),
-    fEigenValues(nVariables),
-    fOffDiagonal(nVariables),
-    fStoreData(kFALSE)
+  : fMeanValues(1,nVariables),
+    fSigmas(1,nVariables),
+    fCovarianceMatrix(1,nVariables, 1,nVariables),
+    fEigenVectors(1,nVariables,1,nVariables),
+    fEigenValues(1,nVariables),
+    fOffDiagonal(1,nVariables),
+    fUserData(nVariables*1000)
 {
   // Ctor. Argument is number of variables in the sample of data
   // Options are:
   //   N       Normalize the covariance matrix (default)
-  //   D       Store input data (default)
+  //   <empty> Do not Normalize the covariance matrix
   //
   // The created object is  named "principal" by default.
    if (nVariables <= 1) {
@@ -713,12 +716,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   while (strlen(opt) > 0) {
     switch(*opt++) {
     case 'N':
-    case 'n':
       fIsNormalised = kTRUE;
-      break;
-    case 'D':
-    case 'd':
-      fStoreData    = kTRUE;
       break;
     default:
       break;
@@ -737,12 +735,8 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     Error("TPrincipal","Couldn't create eigenvalue vector");
   if (!fOffDiagonal.IsValid())
     Error("TPrincipal","Couldn't create offdiagonal vector");
-  if (fStoreData) {
-    fUserData.ResizeTo(nVariables*1000);
-    fUserData.Zero();
-    if (!fUserData.IsValid())
-      Error("TPrincipal","Couldn't create user data vector");
-  }
+  if (!fUserData.IsValid())
+    Error("TPrincipal","Couldn't create user data vector");
 }
 
 //____________________________________________________________________
@@ -773,7 +767,7 @@ on the fly by the following equations:
 
 <!-- MATH
  \begin{displaymath}
-\left<x_i\right>^{(0)}  = x_{i0}
+\left<x_i\right>^{(1)}  = x_{i1}
 \end{displaymath}
  -->
 
@@ -782,7 +776,7 @@ on the fly by the following equations:
  WIDTH="90" HEIGHT="31" BORDER="0"
  SRC="gif/principal_img36.gif"
  ALT="\begin{displaymath}
-\left&lt;x_i\right&gt;^{(0)} = x_{i0}
+\left&lt;x_i\right&gt;^{(1)} = x_{i1}
 \end{displaymath}">
 </DIV>
 <BR CLEAR="ALL">
@@ -813,7 +807,7 @@ on the fly by the following equations:
 
 <!-- MATH
  \begin{displaymath}
-C_{ij}^{(0)} = 0
+C_{ij}^{(1)} = 0
 \end{displaymath}
  -->
 
@@ -822,7 +816,7 @@ C_{ij}^{(0)} = 0
  WIDTH="62" HEIGHT="34" BORDER="0"
  SRC="gif/principal_img38.gif"
  ALT="\begin{displaymath}
-C_{ij}^{(0)} = 0
+C_{ij}^{(1)} = 0
 \end{displaymath}">
 </DIV>
 <BR CLEAR="ALL">
@@ -863,8 +857,8 @@ way:
 
 <!-- MATH
  \begin{displaymath}
-\mathbf{x} = \left[\left(x_{0_0},\ldots,x_{{P-1}_0}\right),\ldots,
-    \left(x_{0_i},\ldots,x_{{P-1}_i}\right), \ldots\right]
+\mathbf{x} = \left[\left(x_{11},\ldots,x_{P1}\right),\ldots,
+    \left(x_{1i},\ldots,x_{Pi}\right), \ldots\right]
 \end{displaymath}
  -->
 
@@ -873,8 +867,8 @@ way:
  WIDTH="319" HEIGHT="31" BORDER="0"
  SRC="gif/principal_img40.gif"
  ALT="\begin{displaymath}
-\mathbf{x} = \left[\left(x_{0_0},\ldots,x_{{P-1}_0}\right),\ldots,
-\left(x_{0_i},\ldots,x_{{P-1}_i}\right), \ldots\right]
+\mathbf{x} = \left[\left(x_{11},\ldots,x_{P1}\right),\ldots,
+\left(x_{1i},\ldots,x_{Pi}\right), \ldots\right]
 \end{displaymath}">
 </DIV>
 <BR CLEAR="ALL">
@@ -893,21 +887,21 @@ With <IMG
   Int_t i,j;
   if (++fNumberOfDataPoints == 1) {
     for (Int_t i = 0; i < fNumberOfVariables; i++)
-      fMeanValues(i) = p[i];
+      fMeanValues(i+1) = p[i];
   }
   else {
 
     Double_t cor = 1 - 1./Double_t(fNumberOfDataPoints);
     for (i = 0; i < fNumberOfVariables; i++) {
 
-      fMeanValues(i) *= cor;
-      fMeanValues(i) += p[i] / Double_t(fNumberOfDataPoints);
-      Double_t t1 = (p[i] - fMeanValues(i)) / (fNumberOfDataPoints - 1);
+      fMeanValues(i + 1) *= cor;
+      fMeanValues(i + 1) += p[i] / Double_t(fNumberOfDataPoints);
+      Double_t t1 = (p[i] - fMeanValues(i+1)) / (fNumberOfDataPoints - 1);
 
       // Setting Matrix (lower triangle) elements
       for (j = 0; j < i + 1; j++) {
-	fCovarianceMatrix(i,j) *= cor;
-	fCovarianceMatrix(i,j) += t1 * (p[j] - fMeanValues(j));
+	fCovarianceMatrix(i+1,j+1) *= cor;
+	fCovarianceMatrix(i+1,j+1) += t1 * (p[j] - fMeanValues(j+1));
       }
     }
   }
@@ -915,8 +909,6 @@ With <IMG
   // Store data point in internal vector
   // If the vector isn't big enough to hold the new data, then
   // expand the vector by half it's size.
-  if (!fStoreData)
-    return;
   Int_t size = fUserData.GetNrows();
   if (fNumberOfDataPoints * fNumberOfVariables > size)
     fUserData.ResizeTo(size + size/2);
@@ -939,8 +931,7 @@ void TPrincipal::Browse(TBrowser *b)
       b->Add(h,h->GetName());
   }
 
-  if (fStoreData)
-    b->Add(&fUserData,"User Data");
+  b->Add(&fUserData,"User Data");
   b->Add(&fCovarianceMatrix,"Covariance Matrix");
   b->Add(&fMeanValues,"Mean value vector");
   b->Add(&fSigmas,"Sigma value vector");
@@ -967,10 +958,8 @@ void TPrincipal::Clear(Option_t *opt)
   fSigmas.Zero();
   fOffDiagonal.Zero();
 
-  if (fStoreData) {
-    fUserData.ResizeTo(fNumberOfVariables * 1000);
-    fUserData.Zero();
-  }
+  fUserData.ResizeTo(fNumberOfVariables * 1000);
+  fUserData.Zero();
 }
 
 //____________________________________________________________________
@@ -981,9 +970,6 @@ const Double_t *TPrincipal::GetRow(Int_t row)
   // It's up to the user to delete the returned array.
   // Row 0 is the first row;
   if (row >= fNumberOfDataPoints)
-    return 0;
-
-  if (!fStoreData)
     return 0;
 
   Int_t index   = row  * fNumberOfVariables;
@@ -1025,6 +1011,231 @@ void TPrincipal::MakeCode(const char *filename, Option_t *opt)
 }
 
 //____________________________________________________________________
+void TPrincipal::MakeEigenVectors()
+{
+  // Begin_Html
+  /*
+    </PRE>
+    PRIVATE METHOD:
+    <BR>
+    Find eigenvalues and vectors of tridiagonalised covariance matrix
+    according to the <I>QL with implicit shift</I> algorithm from
+    <A NAME="tex2html1"
+    HREF="http://www.nr.com">Numerical Recipes in C</A>
+    section&nbsp;11.3.
+    <P>
+    The basic idea is to find matrices <IMG
+    WIDTH="17" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img41.gif"
+    ALT="$\mathsf{Q}$"> and <IMG
+    WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img42.gif"
+    ALT="$\mathsf{L}$"> so that
+    <!-- MATH
+    $\mathsf{C} = \mathsf{Q} \cdot \mathsf{L}$
+    -->
+    <IMG
+    WIDTH="74" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img43.gif"
+    ALT="$\mathsf{C} = \mathsf{Q} \cdot \mathsf{L}$">, where  <IMG
+    WIDTH="17" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img41.gif"
+    ALT="$\mathsf{Q}$"> is orthogonal and
+    <IMG
+    WIDTH="14" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img42.gif"
+    ALT="$\mathsf{L}$"> is lower triangular. The <I>QL</I> algorithm
+    consist of a
+    sequence of orthogonal transformations
+    <BR><P></P>
+    <DIV ALIGN="CENTER">
+
+    <!-- MATH
+    \begin{displaymath}
+    \mathsf{C}_s = \mathsf{Q}_s \cdot \mathsf{L}_s
+    \end{displaymath}
+    -->
+
+
+    <IMG
+    WIDTH="89" HEIGHT="29" BORDER="0"
+    SRC="gif/principal_img44.gif"
+    ALT="\begin{displaymath}
+    \mathsf{C}_s = \mathsf{Q}_s \cdot \mathsf{L}_s
+    \end{displaymath}">
+    </DIV>
+    <BR CLEAR="ALL">
+    <P></P>
+    <BR><P></P>
+    <DIV ALIGN="CENTER">
+
+    <!-- MATH
+    \begin{displaymath}
+    \mathsf{C}_{s+1} = \mathsf{L}_s   \cdot \mathsf{Q}_s
+    = \mathsf{Q}_s^T \cdot \mathsf{C}_s \cdot \mathsf{Q}_s
+    \end{displaymath}
+    -->
+
+
+    <IMG
+    WIDTH="215" HEIGHT="31" BORDER="0"
+    SRC="gif/principal_img45.gif"
+    ALT="\begin{displaymath}
+    \mathsf{C}_{s+1} = \mathsf{L}_s \cdot \mathsf{Q}_s
+    = \mathsf{Q}_s^T \cdot \mathsf{C}_s \cdot \mathsf{Q}_s
+    \end{displaymath}">
+    </DIV>
+    <BR CLEAR="ALL">
+    <P></P>
+    (1) If <IMG
+    WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img2.gif"
+    ALT="$\mathsf{C}$"> have eigenvalues with different absolute value
+    <IMG
+    WIDTH="25" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img46.gif"
+    ALT="$\vert l_i\vert$">,  then
+    <!-- MATH
+    $\mathsf{C}_s \rightarrow$
+    -->
+    <IMG
+    WIDTH="45" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img47.gif"
+    ALT="$\mathsf{C}_s \rightarrow$">&nbsp;[lower triangular form] as
+
+    <!-- MATH
+    $s\rightarrow\infty$
+    -->
+    <IMG
+    WIDTH="57" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img48.gif"
+    ALT="$s\rightarrow\infty$">. The eigenvalues appear on the diagonal in
+    increasing order of absolute magnitude. (2) If If <IMG
+    WIDTH="16" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img2.gif"
+    ALT="$\mathsf{C}$"> has an
+    eigenvalue <IMG
+    WIDTH="25" HEIGHT="34" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img46.gif"
+    ALT="$\vert l_i\vert$"> of multiplicty of order <IMG
+    WIDTH="13" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img49.gif"
+    ALT="$p$">,
+
+    <!-- MATH
+    $\mathsf{C}_s \rightarrow$
+    -->
+    <IMG
+    WIDTH="45" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img47.gif"
+    ALT="$\mathsf{C}_s \rightarrow$">&nbsp;[lower triangular form] as
+
+    <!-- MATH
+    $s\rightarrow\infty$
+    -->
+    <IMG
+    WIDTH="57" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
+    SRC="gif/principal_img48.gif"
+    ALT="$s\rightarrow\infty$">, except for a diagona block matrix of order <IMG
+    WIDTH="13" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img49.gif"
+    ALT="$p$">,
+    whose eigenvalues
+    <!-- MATH
+    $\rightarrow l_i$
+    -->
+    <IMG
+    WIDTH="37" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img50.gif"
+    ALT="$\rightarrow l_i$">.
+    <PRE>
+  */
+  // End_Html
+
+  // See comments above on TPrincipal::MakeTridiagonal for more on
+  // local changes.
+
+  TVectorD& d = fEigenValues;
+  TVectorD& e = fOffDiagonal;
+  TMatrixD& z = fEigenVectors;
+  Int_t&    n = fNumberOfVariables;
+
+  // It's convenient to renumber the e vector elements
+  for (Int_t i = 2; i <= n; i++)
+    e(i-1) = e(i);
+  e(n) = 0;
+
+  for (Int_t l = 1; l <= n; l++) {
+    Int_t iter = 0;
+    Int_t m    = 0;
+
+    do {
+      for (m = l; m <= n-1; m++) {
+	// Look for a single small sub-diagonal element  to split the
+	// matrix
+	Double_t dd = TMath::Abs(d(m)) + TMath::Abs(d(m+1));
+	if ((Double_t)(TMath::Abs(e(m)) + dd) == dd)
+	  break;
+      }
+
+      if (m != l) {
+	if (iter++ == 30) {
+	  Error("MakeEigenVectors","too many iterations\n");
+	  return;
+	}
+
+	// Form shift
+	Double_t g = (d(l+1) - d(l)) / (2 * e(l));
+	Double_t r = TMath::Sqrt(g * g + 1);
+	// This is d_m - k_s
+	g          = d(m) - d(l) + e(l) / (g + TMath::Sign(r,g));
+	Double_t s = 1;
+	Double_t c = 1;
+	Double_t p = 0;
+	Int_t i    = 0;
+	for (i = m-1; i >= l; i--) {
+	  // A plane rotation as in the original QL, followed by
+	  // Givens rotations to restore tridiagonal form
+          Double_t f = s * e(i);
+	  Double_t b = c * e(i);
+	  r          = TMath::Sqrt(f*f + g*g);
+	  e(i+1)     = r;
+
+	  if (r == 0) {
+	    // Recover from underflow
+	    d(i + 1) -= p;
+	    e(m)     =  0;
+	    break;
+	  }
+	  s      = f / r;
+	  c      = g / r;
+	  g      = d(i+1) - p;
+	  r      = (d(i) - g) * s + 2 * c * b;
+	  p      = s * r;
+	  d(i+1) = g + p;
+	  g      = c * r - b;
+
+	  for (Int_t k = 1; k <= n; k++) {
+	    // Form Eigenvectors
+	    f        = z(k,i+1);
+	    z(k,i+1) = s * z(k,i) + c * f;
+	    z(k,i)   = c * z(k,i) - s * f;
+	  }
+	}  // for (i = m)
+
+	if (r == 0 && i >= l)
+	  continue;
+
+	d(l) -= p;
+	e(l)  = g;
+	e(m)  = 0;
+
+      } // if (m != l)
+    } while (m != l);
+  } // for (l = 0)
+}
+
+//____________________________________________________________________
 void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 {
   // Make histograms of the result of the analysis.
@@ -1053,18 +1264,15 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     switch (opt[i]) {
     case 'X':
     case 'x':
-      if (fStoreData)
-	makeX = kTRUE;
+      makeX = kTRUE;
       break;
     case 'd':
     case 'D':
-      if (fStoreData)
-	makeD = kTRUE;
+      makeD = kTRUE;
       break;
     case 'P':
     case 'p':
-      if (fStoreData)
-	makeP = kTRUE;
+      makeP = kTRUE;
       break;
     case 'E':
     case 'e':
@@ -1072,8 +1280,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       break;
     case 's':
     case 'S':
-      if (fStoreData)
-	makeS = kTRUE;
+      makeS = kTRUE;
       break;
     default:
       Warning("MakeHistograms","Unknown option: %c",opt[i]);
@@ -1089,11 +1296,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     fHistograms = new TList;
 
   // Don't create the histograms if they are already in the TList.
-  if (makeX && fHistograms->FindObject(Form("%s_x000",name)))
+  if (makeX && fHistograms->FindObject(Form("%s_x0",name)))
     makeX = kFALSE;
-  if (makeD && fHistograms->FindObject(Form("%s_d000",name)))
+  if (makeD && fHistograms->FindObject(Form("%s_d0",name)))
     makeD = kFALSE;
-  if (makeP && fHistograms->FindObject(Form("%s_p000",name)))
+  if (makeP && fHistograms->FindObject(Form("%s_p0",name)))
     makeP = kFALSE;
   if (makeE && fHistograms->FindObject(Form("%s_e",name)))
     makeE = kFALSE;
@@ -1136,10 +1343,10 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     if (makeX) {
       // We allow 4 sigma spread in the original data in our
       // histogram.
-      Double_t xlowb  = fMeanValues(i) - 4 * fSigmas(i);
-      Double_t xhighb = fMeanValues(i) + 4 * fSigmas(i);
+      Double_t xlowb  = fMeanValues(i+1) - 4 * fSigmas(i+1);
+      Double_t xhighb = fMeanValues(i+1) + 4 * fSigmas(i+1);
       Int_t    xbins  = fNumberOfDataPoints/100;
-      hX[i]           = new TH1F(Form("%s_x%03d", name, i),
+      hX[i]           = new TH1F(Form("%s_x%d", name, i),
 				 Form("Pattern space, variable %d", i),
 				 xbins,xlowb,xhighb);
       hX[i]->SetXTitle(Form("x_{%d}",i));
@@ -1151,7 +1358,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t dlowb  = 0;
       Double_t dhighb = 20;
       Int_t    dbins  = fNumberOfDataPoints/100;
-      hD[i]           = new TH2F(Form("%s_d%03d", name, i),
+      hD[i]           = new TH2F(Form("%s_d%d", name, i),
 				 Form("Distance from pattern to "
 				      "feature space, variable %d", i),
 				 dbins,dlowb,dhighb,
@@ -1167,10 +1374,10 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       // For some reason, the trace of the none-scaled matrix
       // (see TPrincipal::MakeNormalised) should enter here. Taken
       // from LINTRA code.
-      Double_t plowb   = -10 * TMath::Sqrt(fEigenValues(i) * fTrace);
+      Double_t plowb   = -10 * TMath::Sqrt(fEigenValues(i+1) * fTrace);
       Double_t phighb  = -plowb;
       Int_t    pbins   = 100;
-      hP[i]            = new TH1F(Form("%s_p%03d", name, i),
+      hP[i]            = new TH1F(Form("%s_p%d", name, i),
 				  Form("Feature space, variable %d", i),
 				  pbins,plowb,phighb);
       hX[i]->SetXTitle(Form("p_{%d}",i));
@@ -1179,23 +1386,17 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 
     if (makeE)
       // The Eigenvector histogram is easy
-      hE->Fill(i,fEigenValues(i));
+      hE->Fill(i,fEigenValues(i+1));
 
   }
-  if (!makeX && !makeP && !makeD && !makeS)
-    return;
-
-  Double_t *x = 0;
-  Double_t *p = new Double_t[fNumberOfVariables];
-  Double_t *d = new Double_t[fNumberOfVariables];
   for (i = 0; i < fNumberOfDataPoints; i++) {
+    Double_t *x = 0;
+    Double_t *p = new Double_t[fNumberOfVariables];
+    Double_t *d = new Double_t[fNumberOfVariables];
 
-    // Zero arrays
-    for (j = 0; j < fNumberOfVariables; j++)
-      p[j] = d[j] = 0;
-
-    // update the original data histogram
-    x  = (Double_t*)(GetRow(i));
+    if (makeX||makeP||makeD||makeS)
+      // update the original data histogram
+      x  = (Double_t*)(GetRow(i));
 
     if (makeP||makeD||makeS)
       // calculate the corresponding principal component
@@ -1216,7 +1417,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 	    hS->Fill(j,d[k]*d[k]);
 
 	  if (makeD) {
-	    d[k] = TMath::Abs(d[k]) / (fIsNormalised ? fSigmas(k) : 1);
+	    d[k] = TMath::Abs(d[k]) / (fIsNormalised ? fSigmas(k+1) : 1);
 	    (hD[k])->Fill(d[k],j);
 	  }
 	}
@@ -1234,12 +1435,13 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 	  (hP[j])->Fill(p[j]);
       }
     }
+
+    // Clean up
+    if (d)
+      delete [] d;
+    if (p)
+      delete [] p;
   }
-  // Clean up
-  if (d)
-    delete [] d;
-  if (p)
-    delete [] p;
 
   // Normalize the residues
   if (makeS)
@@ -1252,18 +1454,18 @@ void TPrincipal::MakeNormalised()
   // PRIVATE METHOD: Normalize the covariance matrix
 
   Int_t i,j;
-  for (i = 0; i < fNumberOfVariables; i++) {
+  for (i = 1; i <= fNumberOfVariables; i++) {
     fSigmas(i) = TMath::Sqrt(fCovarianceMatrix(i,i));
     if (fIsNormalised)
-      for (j = 0; j <= i; j++)
+      for (j = 1; j <= i; j++)
 	fCovarianceMatrix(i,j) /= (fSigmas(i) * fSigmas(j));
 
     fTrace += fCovarianceMatrix(i,i);
   }
 
   // Fill remaining parts of matrix, and scale.
-  for (i = 0; i < fNumberOfVariables; i++)
-    for (j = 0; j <= i; j++) {
+  for (i = 1; i <= fNumberOfVariables; i++)
+    for (j = 1; j <= i; j++) {
       fCovarianceMatrix(i,j) /= fTrace;
       fCovarianceMatrix(j,i) = fCovarianceMatrix(i,j);
     }
@@ -1322,14 +1524,64 @@ void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
 void TPrincipal::MakePrincipals()
 {
   // Perform the principal components analysis.
-  // This is done in several stages in the TMatrix::EigenVectors method:
-  // * Transform the covariance matrix into a tridiagonal matrix.
-  // * Find the eigenvalues and vectors of the tridiagonal matrix.
+  // This is done is several stages:
+  // * Transform the covariance matrix into a tridiagonal matrix, using
+  //   method Principal::MakeTridiagonal();
+  // * Find the eigenvalues and vectors of the tridiagonal matrix,
+  //   using the method Principal::MakeEigenVectors();
 
-  // Normalize matrix covariance matrix
+  // Normalize matrix
   MakeNormalised();
 
-  fEigenVectors= fCovarianceMatrix.EigenVectors(fEigenValues);
+  // Tridiagonalize matrix
+  MakeTridiagonal();
+
+  // Make eigenvectors and -values
+  MakeEigenVectors();
+
+  // Order eigenvalues and -vectors
+  MakeOrdered();
+}
+
+//____________________________________________________________________
+void TPrincipal::MakeOrdered()
+{
+  // Begin_Html
+  /*
+    </PRE>
+    PRIVATE METHOD:
+    <BR>
+    Order the eigenvalues and vectors by ascending eigenvalue. The
+    algorithm is a straight insertion. It's taken from
+    <A NAME="tex2html2"
+    HREF="http://www.nr.com">Numerical Recipes in C</A>
+    section 11.1.
+    <PRE>
+  */
+  // End_Html
+
+    Int_t i,j,k;
+    for (i = 1; i <= fNumberOfVariables; i++) {
+       k = i;
+    Double_t p = fEigenValues(i);
+
+    for (j = i + 1; j <= fNumberOfVariables; j++)
+      if (fEigenValues(j) >= p) {
+	k = j;
+	p = fEigenValues(j);
+      }
+
+    if (k != i) {
+      fEigenValues(k) = fEigenValues(i);
+      fEigenValues(i) = p;
+
+      for (j = 1; j <= fNumberOfVariables; j++) {
+	p                  = fEigenVectors(j,i);
+	fEigenVectors(j,i) = fEigenVectors(j,k);
+	fEigenVectors(j,k) = p;
+      }
+    }
+  }
 }
 
 //____________________________________________________________________
@@ -1423,7 +1675,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
     for (j = 0; j < fNumberOfVariables; j++) {
       Int_t index = i * fNumberOfVariables + j;
       outFile << (index != 0 ? "," : "" ) << endl
-	      << "  "  << fEigenVectors(i,j) << flush;
+	      << "  "  << fEigenVectors(i+1,j+1) << flush;
     }
   }
   outFile << "};" << endl << endl;
@@ -1434,7 +1686,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "gEigenValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
-	    << "  " << fEigenValues(i) << flush;
+	    << "  " << fEigenValues(i+1) << flush;
   outFile << endl << "};" << endl << endl;
 
   // Assignment to mean Values vector. Zero-based.
@@ -1443,7 +1695,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "gMeanValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
-	    << "  " << fMeanValues(i) << flush;
+	    << "  " << fMeanValues(i+1) << flush;
   outFile << endl << "};" << endl << endl;
 
   // Assignment to mean Values vector. Zero-based.
@@ -1452,8 +1704,8 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "gSigmaValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++)
     outFile << (i != 0 ? "," : "") << endl
-            << "  " << (fIsNormalised ? fSigmas(i) : 1) << flush;
-  //    << "  " << fSigmas(i) << flush;
+            << "  " << (fIsNormalised ? fSigmas(i+1) : 1) << flush;
+  //    << "  " << fSigmas(i+1) << flush;
   outFile << endl << "};" << endl << endl;
 
   //
@@ -1503,6 +1755,147 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 }
 
 //____________________________________________________________________
+void TPrincipal::MakeTridiagonal()
+{
+  // Begin_Html
+  /*
+    </PRE>
+    PRIVATE METHOD:
+    <BR>
+    Tridiagonalise the covariance matrix according to the Householder
+    method as described in
+    <A NAME="tex2html3"
+    HREF="http://www.nr.com">Numerical Recipes in C</A>
+    section&nbsp;11.2.
+
+    <P>
+    The basic idea is to perform <IMG
+    WIDTH="48" HEIGHT="32" ALIGN="MIDDLE" BORDER="0"
+    SRC="gif/principal_img51.gif"
+    ALT="$P-2$"> orthogonal transformation, where
+    each transformation eat away the off-diagonal elements, except the
+    inner most.
+    <PRE>
+   */
+  // End_Html
+
+  // The comments in this algorithm are modified version of those in
+  // "Numerical ...". Please refer to that book (web-page) for more on
+  // the algorithm.
+  // Notice that we store the diagonal elements of the tridiagonal
+  // matrix directly in fEigenVectors, hence no vector d is declared,
+  // only a reference. Also, we may use the fEigenValues vector as
+  // temporary storage space for the off-diagonal elements.
+
+  // Copy covariance matrix to temporary matrix, so that we leave
+  // the covariance matrix intact;
+  fEigenVectors = fCovarianceMatrix;
+  TMatrixD& a   = fEigenVectors;
+  TVectorD& d   = fEigenValues;
+  TVectorD& e   = fOffDiagonal;
+  Int_t&    n   = fNumberOfVariables;
+
+  Double_t hh, g, f;
+  Int_t i,j,k;
+
+  for (i = n; i >= 2; i--) {
+    Int_t    l     = i - 1;
+    Double_t h     = 0;
+    Double_t scale = 0;
+
+    if (l > 1) {
+      for (k = 1; k <= l; k++)
+	scale += TMath::Abs(a(i,k));
+
+      if (scale == 0)
+	// Skip transformation
+	e(i) = a(i,l);
+
+      else {
+	for (k = 1; k <= l; k++) {
+	  // Use scaled elements of a for transformation
+	  a(i,k) /= scale;
+	  // Calculate sigma in h
+	  h += a(i,k) * a(i,k);
+	}
+
+	f      =  a(i,l);
+	g      =  (f >= 0. ? -TMath::Sqrt(h) : TMath::Sqrt(h));
+	e(i)   =  scale * g;
+	h      -= f * g; // Now h is eq. (11.2.4) in "Numerical ..."
+	a(i,l) =  f - g;
+	f      = 0;
+
+	for (j = 1; j <= l; j++) {
+	  // Store the u/H in ith column of a;
+	  a(j,i) = a(i,j) / h;
+	  // Form element A dot u in g;
+	  g = 0;
+
+	  for (k = 1; k <= j; k++)
+	    g += a(j,k) * a(i, k);
+
+	  for (k = j + 1; k <= l; k++)
+	    g += a(k,j) * a(i, k);
+
+	  // Form element of vector p in temporarily unused element of
+	  // e
+	  e(j) =  g / h;
+	  f    += e(j) * a(i,j);
+	}
+
+	// Form K eq (11.2.11)
+	hh = f / (h + h);
+
+	// Form vector q and store in e overwriting p
+	for (j = 1; j <= l; j++) {
+	  f    = a(i,j);
+	  e(j) = g = e(j) - hh * f;
+
+	  for (k = 1; k <= j; k++)
+	    // Reduce a, eq (11.2.13)
+	    a(j,k) -= (f * e(k) + g * a(i,k));
+	}
+      }
+    }
+    else
+      e(i) = a(i,l);
+
+    d(i) = h;
+  }
+
+  d(1) = 0;
+  e(1) = 0;
+
+  for (i = 1; i <= n; i++) {
+    // Begin accumulation of transformation matrix
+    Int_t l = i - 1;
+
+    if (d(i)) {
+      // This block is skipped if i = 1;
+      for (j = 1; j <= l; j++) {
+	g = 0;
+
+	for (k = 1; k <= l; k++)
+	  // Use vector u/H stored in a to form P dot Q
+	  g += a(i,k) * a(k,j);
+
+	for (k = 1; k <= l; k++)
+	  a(k,j) -= g * a(k,i);
+      }
+    }
+
+    d(i)   = a(i,i);
+    a(i,i) = 1;
+
+    for (j = 1; j <= l; j++) {
+      a(j,i) = a(i,j) = 0;
+    }
+  }
+
+}
+
+//____________________________________________________________________
 void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
 {
   // Calculate x as a function of nTest of the most significant
@@ -1510,10 +1903,10 @@ void TPrincipal::P2X(const Double_t *p, Double_t *x, Int_t nTest)
   // It's the users responsibility to make sure that both x and p are
   // of the right size (i.e., memory must be allocated for x).
 
-  for (Int_t i = 0; i < fNumberOfVariables; i++){
-    x[i] = fMeanValues(i);
-    for (Int_t j = 0; j < nTest; j++)
-      x[i] += p[j] * (fIsNormalised ? fSigmas(i) : 1)
+  for (Int_t i = 1; i <= fNumberOfVariables; i++){
+    x[i-1] = fMeanValues(i);
+    for (Int_t j = 1; j <= nTest; j++)
+      x[i-1] += p[j-1] * (fIsNormalised ? fSigmas(i) : 1)
 	* fEigenVectors(i,j);
   }
 
@@ -1579,7 +1972,7 @@ void TPrincipal::Print(Option_t *opt) const
       cout << "+------------" << flush;
     cout << endl;
 
-    for (Int_t i = 0; i < fNumberOfVariables; i++) {
+    for (Int_t i = 1; i <= fNumberOfVariables; i++) {
 #ifndef R__MACOSX
       cout << setw(12) << i << " " << flush;
       if (printM)
@@ -1613,9 +2006,9 @@ void TPrincipal::Print(Option_t *opt) const
   }
 
   if(printV) {
-    for (Int_t i = 0; i < fNumberOfVariables; i++) {
+    for (Int_t i = 1; i <= fNumberOfVariables; i++) {
       cout << "Eigenvector # " << i << flush;
-      TVectorD v(fNumberOfVariables);
+      TVectorD v(1,fNumberOfVariables);
       v = TMatrixDColumn(fEigenVectors,i);
       v.Print();
     }
@@ -1635,7 +2028,7 @@ void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
 
     <!-- MATH
     \begin{displaymath}
-    E_N = \sum_{i=0}^{P-1} \left(x_i - x^\prime_i\right)^2
+    E_N = \sum_{i=1}^P \left(x_i - x^\prime_i\right)^2
     \end{displaymath}
     -->
 
@@ -1644,7 +2037,7 @@ void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
     WIDTH="147" HEIGHT="58" BORDER="0"
     SRC="gif/principal_img52.gif"
     ALT="\begin{displaymath}
-    E_N = \sum_{i=0}^{P-1} \left(x_i - x^\prime_i\right)^2
+    E_N = \sum_{i=1}^P \left(x_i - x^\prime_i\right)^2
     \end{displaymath}">
     </DIV>
     <BR CLEAR="ALL">
@@ -1683,7 +2076,7 @@ void TPrincipal::SumOfSquareResiduals(const Double_t *x, Double_t *s)
   Double_t xp[100];
 
   X2P(x,p);
-  for (Int_t i = fNumberOfVariables-1; i >= 0; i--) {
+  for (Int_t i = fNumberOfVariables; i > 0; i--) {
     P2X(p,xp,i);
     for (Int_t j = 0; j < fNumberOfVariables; j++) {
       s[i] += (x[j] - xp[j])*(x[j] - xp[j]);
@@ -1697,9 +2090,6 @@ void TPrincipal::Test(Option_t *opt)
   // Test the PCA, bye calculating the sum square of residuals
   // (see method SumOfSquareResiduals), and display the histogram
   MakeHistograms("pca","S");
-
-  if (!fStoreData)
-    return;
 
   TH1 *pca_s = 0;
   if (fHistograms) pca_s = (TH1*)fHistograms->FindObject("pca_s");
@@ -1718,10 +2108,10 @@ void TPrincipal::X2P(const Double_t *x, Double_t *p)
   // x, and return it in p.
   // It's the users responsibility to make sure that both x and p are
   // of the right size (i.e., memory must be allocated for p).
-  for (Int_t i = 0; i < fNumberOfVariables; i++){
-    p[i] = 0;
-    for (Int_t j = 0; j < fNumberOfVariables; j++)
-      p[i] += (x[j] - fMeanValues(j)) * fEigenVectors(j,i) /
+  for (Int_t i = 1; i <= fNumberOfVariables; i++){
+    p[i-1] = 0;
+    for (Int_t j = 1; j <= fNumberOfVariables; j++)
+      p[i-1] += (x[j-1] - fMeanValues(j)) * fEigenVectors(j,i) /
 	(fIsNormalised ? fSigmas(j) : 1);
   }
 

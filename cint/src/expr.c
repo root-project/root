@@ -7,7 +7,7 @@
  * Description:
  *  Parse C/C++ expression
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -24,11 +24,6 @@
 #define G__OLDIMPLEMENTATION918
 #endif
 
-#ifndef G__ROOT
-#ifndef G__OLDIMPLEMENTATION1620
-#define G__NOPOWEROPR
-#endif
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_noerror;
@@ -37,22 +32,6 @@ extern int G__const_noerror;
 extern int G__initval_eval;
 extern int G__dynconst;
 #endif
-
-/******************************************************************
-* G__get_last_error
-******************************************************************/
-int G__lasterror() 
-{
-  return(G__last_error);
-}
-
-/******************************************************************
-* G__reset_last_error
-******************************************************************/
-void G__reset_lasterror()
-{
-  G__last_error = G__NOERROR;
-}
 
 /******************************************************************
 * G__value G__calc_internal(exprwithspace)
@@ -169,9 +148,6 @@ char *exprwithspace;
 #endif
 
   result=G__getexpr(exprnospace);
-#ifndef G__OLDIMPLEMENTATION1600
-  G__last_error = G__security_error;
-#endif
 
 #ifdef G__EH_SIGNAL
   signal(SIGFPE,fpe);
@@ -1097,11 +1073,7 @@ char *expression;
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1560
-	else if(G__defined_templatefunc(ebuf)
-#ifndef G__OLDIMPLEMENTATION1611
-		|| G__defined_templatememfunc(ebuf)
-#endif
-		) {
+	else if(G__defined_templatefunc(ebuf)) {
 	  ++ig1;
 	  ebuf[lenbuf++] = c;
 	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
@@ -1228,18 +1200,11 @@ char *expression;
 	  /* *a */
 	  /* it is questionable whether to change following to 
 	   * G__exec_unaopr(c); */
-#define G__OLDIMPLEMENTATION1619
-#ifndef G__OLDIMPLEMENTATION1619
-	  /* This doesn't work for '*first++' */
-	  if('('==expression[ig1+1]) G__exec_unaopr(c);
-	  else ebuf[lenbuf++]=c;
-#else
 #ifndef G__OLDIMPLEMENTATION747
 	   G__exec_unaopr(c);
 #else
 	  if('('==expression[ig1+1]) G__exec_unaopr(c);
-	  else G__var_type = 'v';
-#endif
+	  else                       G__var_type = 'v';
 #endif
 	}
       }

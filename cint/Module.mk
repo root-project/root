@@ -14,8 +14,8 @@ CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
 
-##### check for g++ v3 #####
-ifneq ($(findstring g++,$(CXX)),)
+##### check for gcc v3 #####
+ifeq ($(CXX),g++)
 GCCVERS      := $(shell $(CXX) -v 2>&1 | \
                         awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
 endif
@@ -52,18 +52,11 @@ else
 ifeq ($(PLATFORM),linux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
-ifeq ($(PLATFORM),hurd)
-CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 ifeq ($(PLATFORM),fbsd)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),hpux)
-ifeq ($(ARCH),hpuxia64acc)
-CINTS2       += $(MODDIRS)/fakestrm.cxx
-else
 CINTS2       += $(MODDIRS)/libstrm.cxx
-endif
 endif
 ifeq ($(PLATFORM),solaris)
 ifeq ($(SUNCC5),true)

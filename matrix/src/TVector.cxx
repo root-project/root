@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.8 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.7 2001/03/12 11:35:16 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -64,8 +64,7 @@ void TVector::Allocate(Int_t nrows, Int_t row_lwb)
    fNmem   = nrows;
    fRowLwb = row_lwb;
 
-   //fElements = new Real_t[fNrows];  because of use of ReAlloc()
-   fElements = (Real_t*) ::operator new(fNrows*sizeof(Real_t));
+   fElements = new Real_t[fNrows];
    if (fElements)
       memset(fElements, 0, fNrows*sizeof(Real_t));
 }
@@ -101,7 +100,7 @@ TVector::~TVector()
    // TVector destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      delete [] fElements;
 
    Invalidate();
 }
@@ -275,8 +274,7 @@ TVector &TVector::operator*=(const TMatrix &a)
    fRowLwb = a.fRowLwb;
    Assert((fNrows = a.fNrows) > 0);
 
-   //Assert((fElements = new Real_t[fNrows]) != 0);
-   Assert((fElements = (Real_t*) ::operator new(fNrows*sizeof(Real_t))) != 0);
+   Assert((fElements = new Real_t[fNrows]) != 0);
    fNmem = fNrows;
 
    Real_t *tp = fElements;                     // Target vector ptr
@@ -290,7 +288,7 @@ TVector &TVector::operator*=(const TMatrix &a)
    }
    Assert(mp == a.fElements + a.fNrows);
 
-   ::operator delete(old_vector);
+   delete [] old_vector;
    return *this;
 }
 

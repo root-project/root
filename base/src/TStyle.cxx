@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.14 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.10 2001/10/02 08:03:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 // The following names are reserved to create special styles
 //   -Default: the default style set in TStyle::Reset
 //   -Plain: a black&white oriented style
-//   -Bold:
+//   -Bold: 
 //   -Video;
 //   -Pub:
 //     (see the definition of these styles below).
@@ -67,7 +67,6 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //  - TStyle::SetNdivisions
 //  - TStyle::SetAxisColor
 //  - TStyle::SetHeaderPS
-//  - TStyle::SetTitlePS
 //  - TStyle::SetLabelColor
 //  - TStyle::SetLabelFont
 //  - TStyle::SetLabelOffset
@@ -82,16 +81,15 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //  - TStyle::SetTitleSize
 //  - TStyle::SetPalette
 //  - TStyle::SetTimeOffset
-//  - TStyle::SetStripDecimals
 //
 //  The current style is pointed by gStyle.
 //  When calling myStyle->cd(), gStyle is set to myStyle.
 //  One can also use gROOT to change the current style, eg
 //    gROOT->SetStyle("Plain") will change the current style gStyle to the "Plain" style
-//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
-
+//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle     
+          
    Reset();
-
+   
    gROOT->GetListOfStyles()->Add(this);
 
    //may be a standard style to be initialyzed
@@ -327,10 +325,8 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fDateX          = fDateX;
    ((TStyle&)obj).fDateY          = fDateY;
    ((TStyle&)obj).fFitFormat      = fFitFormat;
-   ((TStyle&)obj).fPaintTextFormat= fPaintTextFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
-   ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -341,7 +337,6 @@ void TStyle::Copy(TObject &obj)
       ((TStyle&)obj).fPalette.fArray[i] = fPalette.fArray[i];
    }
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
-   ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
@@ -421,7 +416,6 @@ void TStyle::Reset(Option_t *)
    fStatY          = 0.98;
    SetStatFormat();
    SetFitFormat();
-   SetPaintTextFormat();
    fTitleColor     = fCanvasColor;
    fTitleTextColor = 1;
    fTitleFont      = 62;
@@ -435,8 +429,6 @@ void TStyle::Reset(Option_t *)
    fShowEventStatus= 0;
    fLegoInnerR     = 0.5;
    fHeaderPS       = "";
-   fTitlePS        = "";
-   fStripDecimals  = kTRUE;
 
    SetDateX();
    SetDateY();
@@ -636,15 +628,6 @@ void TStyle::SetHeaderPS(const char *header)
 // This information is used in TPostScript::Initialize
 
    fHeaderPS = header;
-}
-
-//______________________________________________________________________________
-void TStyle::SetTitlePS(const char *pstitle)
-{
-// Define a string to be used in the %%Title of the Postscript files.
-// If this string is not defined, ROOT will use the canvas title.
-
-   fTitlePS = pstitle;
 }
 
 //______________________________________________________________________________
@@ -1079,26 +1062,14 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //______________________________________________________________________________
 void TStyle::SetTimeOffset(Double_t toffset)
 {
-// Change the time offset for time plotting.
-// Times are expressed in seconds. The corresponding numbers usually have 9
-// digits (or more if one takes into account fractions of seconds).
-// Thus, since it is very inconvenient to plot very large numbers on a scale,
-// one has to set an offset time that will be added to the axis begining,
-// in order to plot times correctly and conveniently. A convenient way to
-// set the time offset is to use TDatime::Convert().
+//*-*-*-*-*-*-*-*-*-*-*Change the time offset for time plotting *-*-*-*-*-*-*-*
+//*-*                  ========================================
+//   Times are expressed in UTC (Coordinated Universal Time), in seconds
+//   The corresponding numbers usually have 9 digits (or more if one
+//   takes into account fractions of seconds).
+//   Thus, since it is very inconvenient to plot very large numbers on a scale,
+//   one has to set an offset (UTC) time that will be added to the axis begining,
+//   in order to plot times correctly and conveniently
 
    fTimeOffset = toffset;
-}
-
-//______________________________________________________________________________
-void TStyle::SetStripDecimals(Bool_t strip)
-{
-//  Set option to strip decimals when drawing axis labels.
-//  By default, TGaxis::PaintAxis removes trailing 0s after a dot
-//  in the axis labels. Ex: {0,0.5,1,1.5,2,2.5, etc}
-//  If this function is called with strip=kFALSE, TGAxis::PaintAxis will
-//  draw labels with the same number of digits after the dot
-//  Ex: (0.0,0.5,1.0,1.5,2.0,2.5,etc}
-
-   fStripDecimals = strip;
 }
