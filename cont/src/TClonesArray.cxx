@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.23 2001/12/02 22:19:24 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.20 2001/10/22 08:46:49 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -99,10 +99,9 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
    }
-   char *name = new char[strlen(classname)+2];
-   sprintf(name, "%ss", classname);
+   char name[100];
+   sprintf(name,"%ss",classname);
    SetName(name);
-   delete [] name;
 
    fKeep = new TObjArray(s);
 
@@ -151,10 +150,10 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
    //     the TClonesArray in T1. The result will be Bar objects with
    //     data member values not in the right sequence.
    // The solution to this problem is to call BypassStreamer(kFALSE)
-   // for the TClonesArray. In this case, the normal Bar::Streamer function
+   // for the TClonesArray. In this case, the normal Bar::Streamer function 
    // will be called. The BAR::Streamer function works OK independently
    // if the Bar StreamerInfo had been generated in optimized mode or not.
-
+   
    if (bypass)
       SetBit(kBypassStreamer);
    else
@@ -223,7 +222,7 @@ void TClonesArray::Delete(Option_t *)
          delete fCont[i];
       }
 
-   // Protect against erroneously setting of owner bit.
+   // Protect against erroneously setting of owne bit.
    SetOwner(kFALSE);
 
    TObjArray::Clear();
@@ -380,8 +379,7 @@ void TClonesArray::Sort(Int_t upto)
    // If objects in array are sortable (i.e. IsSortable() returns true
    // for all objects) then sort array.
 
-   Int_t nentries = GetAbsLast()+1;
-   if (nentries <= 0 || fSorted) return;
+   if (GetAbsLast() == -1 || fSorted) return;
    for (Int_t i = 0; i < fSize; i++)
       if (fCont[i]) {
          if (!fCont[i]->IsSortable()) {
@@ -390,7 +388,7 @@ void TClonesArray::Sort(Int_t upto)
          }
       }
 
-   QSort(fCont, fKeep->fCont, 0, TMath::Min(nentries, upto-fLowerBound));
+   QSort(fCont, fKeep->fCont, 0, TMath::Min(fSize, upto-fLowerBound));
 
    fLast   = -2;
    fSorted = kTRUE;
@@ -487,17 +485,6 @@ void TClonesArray::Streamer(TBuffer &b)
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
-      //Make sure TStreamerInfo is not optimized, otherwise it will not be
-      //possible to support schema evolution in read mode.
-      //In case the StreamerInfo has already been computed and optimized,
-      //one must disable the option BypassStreamer
-      Bool_t optim = TStreamerInfo::CanOptimize();
-      if (optim) TStreamerInfo::Optimize(kFALSE);
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
-      sinfo->ForceWriteInfo();
-      if (optim) TStreamerInfo::Optimize(kTRUE);
-      if (sinfo->IsOptimized()) BypassStreamer(kFALSE);
-
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
@@ -507,6 +494,8 @@ void TClonesArray::Streamer(TBuffer &b)
       nobjects = GetEntriesFast();
       b << nobjects;
       b << fLowerBound;
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      sinfo->ForceWriteInfo();
       if (CanBypassStreamer()) {
          sinfo->WriteBufferClones(b,this,nobjects,-1,0);
       } else {

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for FreeBSD 4.x
 
 PLATFORM      = fbsd

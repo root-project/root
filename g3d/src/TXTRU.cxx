@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.9 2002/01/23 17:52:47 rdm Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.5 2001/06/22 16:10:17 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -9,8 +9,8 @@
 #include "TVirtualGL.h"
 #include "GLConstants.h"
 
-#include "Riostream.h"
-
+#include <iostream.h>
+#include <iomanip.h>
 
 ClassImp(TXTRU)
 
@@ -618,11 +618,16 @@ void TXTRU::Print(Option_t *option) const
    printf("  XY shape '%s', '%s'\n",shape,zorder);
 
    Int_t       nxy, nz;
+   const char *status;
+   const char *used  = " ";
+   const char *alloc = "  allocated";
 
    if (opt.Contains("alloc")) {
+      status = used;
       nxy    = fNxy;
       nz     = fNz;
    } else {
+      status = alloc;
       nxy    = fNxyAlloc;
       nz    = fNzAlloc;
    }

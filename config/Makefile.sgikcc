@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for SGI IRIX 6.x with KCC compiler
 
 # You can steer the build with the variable ROOTBUILD

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.57 2002/01/24 07:47:05 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.52 2001/11/04 11:04:21 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -428,19 +428,12 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
          fprintf(fp, "         for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
          const char *s = TemplateArg(m).Name();
          if (!strncmp(s, "const ", 6)) s += 6;
+         if (m.Property() & G__BIT_ISPOINTER)
+            fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
+         else
+            fprintf(fp, "            %s[R__l].clear();\n", m.Name());
          fprintf(fp, "            int R__i, R__n;\n");
          fprintf(fp, "            R__b >> R__n;\n");
-         if (m.Property() & G__BIT_ISPOINTER) {
-            fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
-            if (!strcmp(stlc, "vector")) {
-               fprintf(fp, "            %s[R__l]->reserve(R__n);\n", m.Name());
-            }
-         } else {
-            fprintf(fp, "            %s[R__l].clear();\n", m.Name());
-            if (!strcmp(stlc, "vector")) {
-               fprintf(fp, "            %s[R__l].reserve(R__n);\n", m.Name());
-            }
-         }
          fprintf(fp, "            for (R__i = 0; R__i < R__n; R__i++) {\n");
          fprintf(fp, "               %s R__t;\n", s);
          if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
@@ -1329,7 +1322,7 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    G__BaseClassInfo bw(cl);
    while (bw.Next())
       if (IsSTLContainer(bw)) {
-         STLBaseStreamer(bw,1);
+         STLBaseStreamer(br,1);
       }
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
@@ -1535,23 +1528,10 @@ void WriteShowMembers(G__ClassInfo &cl)
    fprintf(fp, "_______________________________________\n");
    fprintf(fp, "void %s::ShowMembers(TMemberInspector &R__insp, char *R__parent)\n{\n", cl.Fullname());
    fprintf(fp, "   // Inspect the data members of an object of class %s.\n\n", cl.Fullname());
-#ifdef  WIN32
-   // This is to work around a bad msvc C++ bug.
-   // This code would work in the general case, but why bother....and
-   // we want to remember to eventually remove it ...
-
-   if (strstr(cl.Fullname(),"::")) {
-       // there is a namespace involved, trigger MS VC bug workaround
-       fprintf(fp, "   typedef %s msvc_bug_workaround;\n", cl.Fullname());
-       fprintf(fp, "   TClass *R__cl  = msvc_bug_workaround::IsA();\n");
-    } else
-       fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
-#else   
    fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
-#endif
    fprintf(fp, "   Int_t   R__ncp = strlen(R__parent);\n");
    fprintf(fp, "   if (R__ncp || R__cl || R__insp.IsA()) { }\n");
-
+   
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[12], cvar[64];

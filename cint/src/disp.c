@@ -1878,12 +1878,6 @@ long offset;
 	  sprintf(msg,"=%g",*(double*)addr); 
 	  if(G__more(fout,msg)) return(1);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-	case 'g': 
-	  sprintf(msg,"=%d",(*(int*)addr)?1:0); 
-	  if(G__more(fout,msg)) return(1);
-	  break;
-#endif
 #ifndef G__FONS31
 	default: 
 	  sprintf(msg,"=0x%lx",*(long*)addr); 

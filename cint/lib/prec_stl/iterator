@@ -135,20 +135,18 @@ struct iterator {
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
 class reverse_iterator 
-#if defined(G__KCC)
-  : public iterator<iterator_traits<Iterator>::iterator_category,
-                    iterator_traits<Iterator>::value_type,
-                    iterator_traits<Iterator>::difference_type,
-                    iterator_traits<Iterator>::pointer,
-                    iterator_traits<Iterator>::reference> 
-#endif
+  //: public iterator<iterator_traits<Iterator>::iterator_category,
+  //                  iterator_traits<Iterator>::value_type,
+  //                  iterator_traits<Iterator>::difference_type,
+  //                  iterator_traits<Iterator>::pointer,
+  //                  iterator_traits<Iterator>::reference> 
 {
 #if 0
  protected:
   Iterator current;
 #endif
  public:
-#if defined(G__KCC)
+#if 0
    typedef Iterator iterator_type;
    typedef typename iterator_traits<Iterator>::difference_type difference_type;
    typedef typename iterator_traits<Iterator>::reference reference;
@@ -240,7 +238,7 @@ _Iter_cat(const T*) {
 }
 #endif
 
-#if (G__GNUC>=3) && !defined(G__KCC)
+#if (G__GNUC>=3)
 // for g++ 3.00
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator

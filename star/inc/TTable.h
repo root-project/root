@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.13 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.11 2001/05/13 11:10:06 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -28,17 +28,13 @@
 #include "Ttypes.h"
 #include "TDataSet.h"
 #include "tableDescriptor.h"
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 #ifndef __CINT__
 #  include <string.h>
-#  include <assert.h>
+#include <fstream.h>
+#include <assert.h>
 #endif
 
 enum ETableBits {
@@ -83,7 +79,7 @@ public:
 
    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
                           ,kULong, kUShort, kUChar, kChar };
-   static const char *fgTypeName[kChar+1];
+   static const char *fgTypeName[kChar+1]; 
    TTable(const Text_t *name=0, Int_t size=0);
    TTable(const Text_t *name, Int_t n,Int_t size);
    TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);

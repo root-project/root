@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.22 2002/01/22 10:53:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.19 2000/12/19 18:04:37 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -104,9 +104,6 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
 #if defined(__FreeBSD__) && (__FreeBSD__ < 4)
 #include <sys/file.h>
@@ -116,7 +113,7 @@
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__MACH__)
+    defined(_AIX) || defined(__FreeBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -142,7 +139,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   //int initgroups(const char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
@@ -307,11 +304,7 @@ void ProofdSRPUser(const char *user)
       return;
    }
 
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
    if (!ts)
       ErrorFatal("ProofdSRPUser: user %s not found SRP password file", gUser);
 

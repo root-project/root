@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.10 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.7 2001/07/17 09:06:55 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TColor.h"
 #include "TObjArray.h"
@@ -274,8 +275,8 @@ Int_t TColor::GetColor(const char *hexcolor)
    // Static method returning color number for color specified by
    // hex color string of form: #rrggbb, where rr, gg and bb are in
    // hex between [0,FF], e.g. "#c0c0c0".
-   // If specified color does not exist it will be created with as
-   // name "#rrggbb" with rr, gg and bb in hex between [0,FF].
+   // If color specified color does not exist it will be created
+   // with as name "#rrggbb".
 
    if (hexcolor && *hexcolor == '#') {
       Int_t r, g, b;
@@ -291,9 +292,9 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 {
    // Static method returning color number for color specified by
    // r, g and b. The r,g,b should be in the range [0,1].
-   // If specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
+   // If color specified color does not exist it will be created
+   // with as name "#rrggbb" with rr, gg and bb are in hex between
+   // [0,255].
 
    Int_t rr, gg, bb;
    rr = Int_t(r * 255);
@@ -308,9 +309,8 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 {
    // Static method returning color number for color specified by
    // r, g and b. The r,g,b should be in the range [0,255].
-   // If the specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
+   // If color specified color does not exist it will be created
+   // with as name "#rrggbb" with rr, gg and bb are in hex between.
 
    if (r < 0) r = 0;
    if (g < 0) g = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.6 2002/01/16 18:10:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.4 2000/12/20 15:45:37 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -53,7 +53,6 @@ public:
     virtual ~TBasket();
 
     virtual void    AdjustSize(Int_t newsize);
-    virtual void    DeleteEntryOffset();
     virtual Int_t   DropBuffers();
     TBranch        *GetBranch() const {return fBranch;}
             Int_t   GetBufferSize() const {return fBufferSize;}
@@ -66,7 +65,6 @@ public:
             Int_t   ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
             Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
 
-            void    SetBranch(TBranch *branch) {fBranch = branch;}
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
     virtual void    SetReadMode();
     virtual void    SetWriteMode();

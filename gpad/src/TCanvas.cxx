@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.33 2001/10/30 17:22:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
@@ -25,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -41,6 +43,9 @@ public:
 };
 
 static TInitMakeDefCanvas makedefcanvas_init;
+
+
+
 
 //*-*x16 macros/layout_canvas
 
@@ -423,12 +428,8 @@ void TCanvas::Build()
 #ifndef WIN32
    if (fCanvasID < 0) return;
 #else
-#ifndef GDK_WIN32
    // fCanvasID is in fact a pointer to the TGWin32 class
    if (fCanvasID  == -1) return;
-#else
-   if (fCanvasID < 0) return;
-#endif
 #endif
 
    if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
@@ -491,9 +492,7 @@ void TCanvas::Build()
    }
 
 #ifdef WIN32
-#ifndef GDK_WIN32
    gVirtualX->UpdateWindow(1);
-#endif
 #endif
 }
 
@@ -741,6 +740,22 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
 
    if (!fShowEventStatus || !selected) return;
 
+//#ifndef WIN32
+#if 0
+   static Int_t pxt, pyt;
+   gPad->SetDoubleBuffer(0);           // Turn off double buffer mode
+   gVirtualX->SetTextColor(1);
+   gVirtualX->SetTextAlign(11);
+
+   pxt = gPad->GetCanvas()->XtoAbsPixel(gPad->GetCanvas()->GetX1()) + 5;
+   pyt = gPad->GetCanvas()->YtoAbsPixel(gPad->GetCanvas()->GetY1()) - 5;
+
+   sprintf(atext,"%s / %s ", selected->GetName()
+                           , selected->GetObjectInfo(px,py));
+   for (Int_t i=strlen(atext);i<kTMAX-1;i++) atext[i] = ' ';
+   atext[kTMAX-1] = 0;
+   gVirtualX->DrawText(pxt, pyt, 0, 1, atext, TVirtualX::kOpaque);
+#else
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
 
    TVirtualPad* savepad;
@@ -756,6 +771,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    fCanvasImp->SetStatusText(atext,2);
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
    gPad = savepad;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1353,24 +1369,15 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
-   char lcname[10];
-   const char *cname = GetName();
-   Bool_t invalid = kFALSE;
 //    if filename is given, open this file, otherwise create a file
 //    with a name equal to the canvasname.C
    if (lenfile) {
        fname = (char*)filename;
        out.open(fname, ios::out);
    } else {
-       Int_t nch = strlen(cname);
-       if (nch < 10) {
-          strcpy(lcname,cname);
-          for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-          if (lcname[0] == 0) {invalid = kTRUE; strcpy(lcname,"c1"); nch = 2;}
-          cname = lcname;
-       }
+       Int_t nch = strlen(GetName());
        fname = new char[nch+3];
-       strcpy(fname,cname);
+       strcpy(fname,GetName());
        strcat(fname,".C");
        out.open(fname, ios::out);
    }
@@ -1393,11 +1400,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   "<<ClassName()<<" *"<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TCanvas *"<<GetName()<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
@@ -1420,9 +1427,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
 
    out <<"}"<<endl;
    out.close();
@@ -1485,12 +1490,6 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    if (fDoubleBuffer)
       gVirtualX->SelectWindow(fPixmapID);
    else
-#else
-#ifdef GDK_WIN32
-   if (fDoubleBuffer)
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-#endif
 #endif
       gVirtualX->SelectWindow(fCanvasID);
 }

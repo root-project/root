@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.3 2000/11/21 20:16:33 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -10,7 +10,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TView.h"
 #include "TMarker3DBox.h"
@@ -511,9 +513,8 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (gFile) {
+         if (gFile->GetVersion() > 22300) TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
        }
@@ -528,7 +529,7 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       R__b >> fRefObject;
       R__b.CheckByteCount(R__s, R__c, TMarker3DBox::IsA());
       //====end of old versions
-
+      
    } else {
       TMarker3DBox::Class()->WriteBuffer(R__b,this);
    }

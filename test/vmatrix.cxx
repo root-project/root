@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.5 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,13 +9,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
-#include <float.h>
-
-#include "Riostream.h"
 #include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
+#include <iostream.h>
+#include <math.h>
+#include <float.h>
 
 
 //

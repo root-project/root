@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.65 2002/01/27 16:49:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.50 2001/10/02 08:03:50 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 //       gROOT->GetListOfBrowsers
 //       gROOT->GetListOfCleanups
 //       gROOT->GetListOfMessageHandlers
+//       gROOT->GetListOfProcessIDs
 //
 //   The TROOT class provides also many useful services:
 //     - Get pointer to an object in any of the lists above
@@ -65,8 +66,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -96,7 +97,6 @@
 #include "TFolder.h"
 #include "TQObject.h"
 #include "TProcessID.h"
-#include "TPluginManager.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -155,6 +155,9 @@ static Int_t ITIMQQ()
 }
 //------------------------------------------------------------------------------
 
+extern "C" {
+   static void CleanUpROOTAtExit();
+}
 
 //______________________________________________________________________________
 static void CleanUpROOTAtExit()
@@ -244,7 +247,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
 
-   // Add the root include directory to list searched by default by
+   // Add the root include directory to list search by default by
    // the interpreter (should this be here or somewhere else?)
 #ifndef ROOTINCDIR
    TString include = gSystem->Getenv("ROOTSYS");
@@ -267,7 +270,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
-   fList        = new THashList(1000,3);
+   fList        = new TList;
    fFiles       = new TList;
    fMappedFiles = new TList;
    fSockets     = new TList;
@@ -281,13 +284,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBrowsables  = new TList;
    fCleanups    = new TList;
    fStreamerInfo= new TObjArray(100);
+   fProcessIDs  = new TList;
    fMessageHandlers = new TList;
-
-   fPluginManager = new TPluginManager;
-   fPluginManager->LoadHandlersFromEnv(gEnv);
-
-   TProcessID::AddProcessID();
-
+   TProcessID *pid1 = new TProcessID(1);
+   pid1->IncrementCount(); //this object should not be deleted
+   fProcessIDs->Add(pid1);
+   
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
@@ -323,7 +325,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fEditorMode    = 0;
    fDefCanvasName = "c1";
    fEditHistograms= kFALSE;
-   fLineIsProcessing = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
+   fLineIsProcessing  = 1;   // This prevents WIN32 "Windows" thread to pick ROOT objects with mouse
    gDirectory     = this;
    gPad           = 0;
    gRandom        = new TRandom;
@@ -340,7 +342,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gStyle = 0;
    TStyle::BuildStyles();
    SetStyle("Default");
-
+   
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
    gGuiFactory      = gBatchGuiFactory;
@@ -404,7 +406,7 @@ TROOT::~TROOT()
       fFiles->Delete("slow"); SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
-      TProcessID::Cleanup();                            // and list of ProcessIDs
+      fProcessIDs->Delete();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
@@ -668,7 +670,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
    if (cl) {
-      if (cl->IsLoaded()) return cl;
+      if (cl->GetImplFileLine() >= 0) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
    } else {
@@ -751,11 +753,7 @@ TDataType *TROOT::GetType(const char *name, Bool_t load)
    size_t nch = strlen(tname);
    while (tname[nch-1] == ' ') nch--;
 
-   // First try without loading.  We can do that because nothing is
-   // ever removed from the list of types. (See TCint::UpdateListOfTypes).
-   TDataType* type = (TDataType*)GetListOfTypes(kFALSE)->FindObject(name);
-   if (type || !load) { return type; }
-   else { return (TDataType*)GetListOfTypes(load)->FindObject(name); }
+   return (TDataType*)GetListOfTypes(load)->FindObject(name);
 }
 
 //______________________________________________________________________________
@@ -1079,52 +1077,35 @@ void TROOT::InitThreads()
 }
 
 //______________________________________________________________________________
-Int_t TROOT::LoadClass(const char *classname, const char *libname,
-                       Bool_t check)
+Int_t TROOT::LoadClass(const char *classname, const char *libname)
 {
    // Check if class "classname" is known to the interpreter. If
-   // not it will load library "libname". If the library name does
-   // not start with "lib", "lib" will be prepended and a search will
-   // be made in the DynamicPath (see .rootrc). If not found a search
-   // will be made on libname (without "lib" prepended) and if not found
-   // a direct try of libname will be made (in case it contained an
-   // absolute path.
-   // If check is true it will only check if libname exists and is
-   // readable.
-   // Returns 0 on successful loading and -1 in case libname does not
-   // exist or in case of error.
+   // not it will load library "libname". Returns 0 on successful loading
+   // and -1 in case libname does not exist or in case of error.
 
    if (TClassTable::GetDict(classname)) return 0;
 
-   Int_t err = -1;
+   Int_t err;
 
-   char *path;
-   char *lib = 0;
-   if (strncmp(libname, "lib", 3))
+   if (classname[0] != 'T')
+      err = gSystem->Load(libname, 0, kTRUE);
+   else {
+      // special case for ROOT classes Txxx
+      char *lib, *path;
       lib = Form("lib%s", libname);
-   if (lib && (path = gSystem->DynamicPathName(lib, kTRUE))) {
-      if (check)
-         err = 0;
-      else
+      if ((path = gSystem->DynamicPathName(lib, kTRUE))) {
          err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else if ((path = gSystem->DynamicPathName(libname, kTRUE))) {
-      if (check)
-         err = 0;
-      else
-         err = gSystem->Load(path, 0, kTRUE);
-      delete [] path;
-   } else {
-      if (check) {
-         if (!gSystem->AccessPathName(libname, kReadPermission))
-            err = 0;
-         else
-            err = -1;
-      } else
+         delete [] path;
+      } else {
+#ifdef WIN32
+         err = gSystem->Load(lib, 0, kTRUE);
+#else
          err = gSystem->Load(libname, 0, kTRUE);
+#endif
+      }
    }
 
-   if (err == 0 && !check)
+   if (err == 0)
       GetListOfTypes(kTRUE);
 
    if (err == -1)
@@ -1155,82 +1136,39 @@ void TROOT::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TROOT::LoadMacro(const char *filename, int *error)
+void TROOT::LoadMacro(const char *filename)
 {
    // Load a macro in the interpreter's memory. Equivalent to the command line
-   // command ".L filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
+   // command ".L filename".
 
    if (fInterpreter) {
-      char *fn1 = Strip(filename);
-      // remove the possible ACLiC + or ++
-      char *fn2 = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
-      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
-      if (!mac) {
-         Error("LoadMacro", "macro %s not found in path %s", fn1, GetMacroPath());
-         if (error)
-            *error = TInterpreter::kFatal;
-      } else {
-         if (fn2) {
-            *fn2 = '+';
-            char *mac1 = new char [strlen(mac) + 3];
-            strcpy(mac1, mac);
-            strcat(mac1, fn2);
-            delete [] mac;
-            mac = mac1;
-         }
-         fInterpreter->LoadMacro(mac, (TInterpreter::EErrorCode*)error);
-      }
-      delete [] fn1;
+      char *fn  = Strip(filename);
+      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      if (!mac)
+         Error("LoadMacro", "macro %s not found in path %s", fn, GetMacroPath());
+      else
+         fInterpreter->LoadMacro(mac);
+      delete [] fn;
       delete [] mac;
    }
 }
 
 //______________________________________________________________________________
-Int_t TROOT::Macro(const char *filename, int *error)
+Int_t TROOT::Macro(const char *filename)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
-   // command ".x filename". If the filename has "+" or "++" appended
-   // the macro will be compiled by ACLiC. The filename must have the format:
-   // [path/]macro.C[+|++][(args)].
-   // The possible error codes are defined by TInterpreter::EErrorCode.
+   // command ".x filename".
 
    Int_t result = 0;
 
    if (fInterpreter) {
-      char *fn1 = Strip(filename);
-      // remove the possible arguments
-      char *arg = strchr(fn1, '(');
-      if (arg) *arg = '\0';
-      // and the possible ACLiC + or ++
-      char *fn2  = strchr(fn1, '+');
-      if (fn2) *fn2 = '\0';
-      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
-      if (!mac) {
-         Error("Macro", "macro %s not found in path %s", fn1, GetMacroPath());
-         if (error)
-            *error = TInterpreter::kFatal;
-      } else {
-         if (fn2) *fn2 = '+';
-         if (arg) {
-            *arg = '(';
-            if (!fn2)
-               fn2 = arg;
-         }
-         if (fn2) {
-            char *mac1 = new char [strlen(mac) + strlen(fn2) + 1];
-            strcpy(mac1, mac);
-            strcat(mac1, fn2);
-            delete [] mac;
-            mac = mac1;
-         }
-         result = fInterpreter->ExecuteMacro(mac,
-                                             (TInterpreter::EErrorCode*)error);
-      }
-      delete [] fn1;
+      char *fn  = Strip(filename);
+      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      if (!mac)
+         Error("Macro", "macro %s not found in path %s", fn, GetMacroPath());
+      else
+         result = fInterpreter->ExecuteMacro(mac);
+      delete [] fn;
       delete [] mac;
 
       if (gPad) gPad->Update();
@@ -1252,16 +1190,13 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, Int_t *error)
+void TROOT::ProcessLine(const char *line)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
    // it to the CINT interpreter thread. For explicit synchrounous processing
    // use ProcessLineSync(). On non-Win32 platforms there is not difference
    // between ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.  In
-   // particular, error will equal to TInterpreter::kProcessing until the
-   // CINT interpreted thread has finished executing the line.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1272,18 +1207,17 @@ void TROOT::ProcessLine(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kFALSE, error);
+   fApplication->ProcessLine(line);
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, Int_t *error)
+void TROOT::ProcessLineSync(const char *line)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
    // only return when the CINT interpreter thread has finished executing
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1294,16 +1228,15 @@ void TROOT::ProcessLineSync(const char *line, Int_t *error)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kTRUE, error);
+   fApplication->ProcessLine(line, kTRUE);
 }
 
 //______________________________________________________________________________
-Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
+Long_t TROOT::ProcessLineFast(const char *line)
 {
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
    // In all other cases use TROOT::ProcessLine().
-   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1316,10 +1249,8 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
    Long_t result = 0;
 
-   if (fInterpreter) {
-      TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
-      result = fInterpreter->Calc(line, code);
-   }
+   if (fInterpreter)
+      result = fInterpreter->Calc(line);
 
    return result;
 }
@@ -1329,8 +1260,8 @@ void TROOT::Proof(const char *cluster)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
-   // the gProof global. Creating a new TProof object will reset
-   // the gProof global. For more on PROOF see the TProof ctor.
+   // the gProof global. Creating a new TProof object will delete
+   // the current one. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
    if (gROOT->LoadClass("TProof","Proof")) return;

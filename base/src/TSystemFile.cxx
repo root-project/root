@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.2 2001/03/08 20:16:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -59,12 +59,7 @@ void TSystemFile::Browse(TBrowser *b)
    if (b)
       b->ExecuteDefaultAction(this);
 #else
-#ifndef GDK_WIN32
    Edit();  // Temporary unless the "default action" will be done
-#else
-   if (b)
-      b->ExecuteDefaultAction(this);
-#endif
 #endif
 }
 

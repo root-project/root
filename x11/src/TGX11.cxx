@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.17 2002/01/08 08:34:22 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.14 2001/10/25 19:18:40 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1848,7 +1848,7 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
    else if (chupx == 0  && chupy == -1) fTextAngle = 180;
    else if (chupx == 1  && chupy ==  0) fTextAngle = 270;
    else {
-      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/TMath::Pi())-90;
+      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/3.14159)-90;
       if (chupy < 0) fTextAngle = 180 - fTextAngle;
       if (TMath::Abs(fTextAngle) <= 0.01) fTextAngle = 0;
    }
@@ -2927,6 +2927,8 @@ extern "C" {
                   void (*get_scline) (int, int, Byte_t *), void (*pb)(Byte_t));
    int GIFdecode(Byte_t *GIFarr, Byte_t *PIXarr, int *Width, int *Height, int *Ncols, Byte_t *R, Byte_t *G, Byte_t *B);
    int GIFinfo(Byte_t *GIFarr, int *Width, int *Height, int *Ncols);
+   static void GetPixel(int y, int width, Byte_t *scline);
+   static void PutByte(Byte_t b);
 }
 
 //______________________________________________________________________________
@@ -3008,7 +3010,7 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 }
 
 //______________________________________________________________________________
-Int_t TGX11::WriteGIF(char *name)
+void TGX11::WriteGIF(char *name)
 {
    // Writes the current window into GIF file.
 
@@ -3051,19 +3053,14 @@ Int_t TGX11::WriteGIF(char *name)
 
    out = fopen(name, "w+");
 
-   if (out) {
-      GIFencode(gCws->width, gCws->height,
+   GIFencode(gCws->width, gCws->height,
              ncol, r, g, b, scline, GetPixel, PutByte);
-      fclose(out);
-      i = 1;
-   } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
-   }
+
+   fclose(out);
+
    delete [] R;
    delete [] G;
    delete [] B;
-   return i;
 }
 
 //______________________________________________________________________________

@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for AIX 5.x with xlC
 
 PLATFORM      = aix5

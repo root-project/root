@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.32 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.25 2001/10/27 10:38:12 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TMath.h"
 #include "TF1.h"
@@ -262,7 +263,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
 
    SetTitle(name);
    if (name) {
-      if (*name == '*') return; //case happens via SavePrimitive
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
       fNumber = -1;
@@ -388,7 +388,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
       fType       = 1;
       fMethodCall = 0;
       fFunction   = fcn;
-   }
+   }   
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
@@ -521,7 +521,7 @@ void TF1::Copy(TObject &obj)
       ((TF1&)obj).fParErrors = new Double_t[fNpar];
       ((TF1&)obj).fParMin    = new Double_t[fNpar];
       ((TF1&)obj).fParMax    = new Double_t[fNpar];
-      Int_t i;
+      Int_t i; 
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParErrors[i] = fParErrors[i];
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMin[i]    = fParMin[i];
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
@@ -574,7 +574,7 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
 
    if (!fHistogram) return 9999;
    Int_t distance = fHistogram->DistancetoPrimitive(px,py);
-   if (distance <= 1) return distance;
+   if (distance <= 0) return distance;
 
    Double_t xx[1];
    Double_t x    = gPad->AbsPixeltoX(px);
@@ -789,10 +789,10 @@ Int_t TF1::GetNDF() const
 
    if (fNDF == 0) return fNpfits-fNpar;
    return fNDF;
-}
+}   
 
 //______________________________________________________________________________
-char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
+char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const 
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the function info (x, function value
@@ -802,15 +802,6 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
-}
-
-//______________________________________________________________________________
-Double_t TF1::GetParError(Int_t ipar) const
-{
-   //return value of parameter number ipar
-
-   if (ipar < 0 || ipar > fNpar-1) return 0;
-   return fParErrors[ipar];
 }
 
 //______________________________________________________________________________
@@ -824,111 +815,6 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax)
    if (ipar < 0 || ipar > fNpar-1) return;
    if (fParMin) parmin = fParMin[ipar];
    if (fParMax) parmax = fParMax[ipar];
-}
-
-//______________________________________________________________________________
-Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
-{
-//  Compute Quantiles for density distribution of this function
-//     Quantile x_q of a probability distribution Function F is defined as
-//
-//        F(x_q) = Integral_{xmin}^(x_q) f dx = q with 0 <= q <= 1.
-//
-//     For instance the median x_0.5 of a distribution is defined as that value
-//     of the random variable for which the distribution function equals 0.5:
-//
-//        F(x_0.5) = Probability(x < x_0.5) = 0.5
-//
-//  code from Eddy Offermann, Renaissance
-//
-// input parameters
-//   - this TF1 function
-//   - nprobSum maximum size of array q and size of array probSum
-//   - probSum array of positions where quantiles will be computed.
-//     It is assumed to contain at least nprobSum values.
-//  output
-//   - return value nq (<=nprobSum) with the number of quantiles computed
-//   - array q filled with nq quantiles
-//
-//  Getting quantiles from two histograms and storing results in a TGraph,
-//   a so-called QQ-plot
-//
-//     TGraph *gr = new TGraph(nprob);
-//     f1->GetQuantiles(nprob,gr->GetX());
-//     f2->GetQuantiles(nprob,gr->GetY());
-//     gr->Draw("alp");
-
-  if (nprobSum < 2) {
-     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
-     return 0;
-  }
-  const Int_t npx     = TMath::Min(50,2*nprobSum);
-  const Double_t xMin = GetXmin();
-  const Double_t xMax = GetXmax();
-  const Double_t dx   = (xMax-xMin)/npx;
-
-  TArrayD integral(npx+1);
-  TArrayD alpha(npx);
-  TArrayD beta(npx);
-  TArrayD gamma(npx);
-
-  integral[0] = 0;
-  Int_t intNegative = 0;
-  Int_t i;
-  for (i = 0; i < npx; i++) {
-    const Double_t *params = 0;
-    Double_t integ = Integral(Double_t(xMin+i*dx),Double_t(xMin+i*dx+dx),params);
-    if (integ < 0) {intNegative++; integ = -integ;}
-    integral[i+1] = integral[i] + integ;
-  }
-  if (intNegative > 0)
-    Warning("GetQuantiles","function:%s has %d negative values: abs assumed",
-            GetName(),intNegative);
-  if (integral[npx] == 0) {
-    Error("GetQuantiles","Integral of function is zero");
-    return 0;
-  }
-
-  const Double_t total = integral[npx];
-  for (i = 1; i <= npx; i++) integral[i] /= total;
-  //the integral r for each bin is approximated by a parabola
-  //  x = alpha + beta*r +gamma*r**2
-  // compute the coefficients alpha, beta, gamma for each bin
-  for (i = 0; i < npx; i++) {
-     const Double_t x0 = xMin+dx*i;
-     const Double_t r2 = integral[i+1]-integral[i];
-     const Double_t r1 = Integral(x0,x0+0.5*dx)/total;
-     gamma[i] = (2*r2-4*r1)/(dx*dx);
-     beta[i]  = r2/dx-gamma[i]*dx;
-     alpha[i] = x0;
-     gamma[i] *= 2;
-  }
-
-  // Be careful because of finite precision in the integral; Use the fact that the integral
-  // is monotone increasing
-  for (i = 0; i < nprobSum; i++) {
-     const Double_t r = probSum[i];
-     Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r)-1,0);
-     while (bin < npx-1 && integral[bin+1] == r) {
-        if (integral[bin+2] == r) bin++;
-        else break;
-     }
-
-    const Double_t rr = r-integral[bin];
-    if (rr != 0.0) {
-       Double_t xx;
-       if (gamma[bin] && beta[bin]*beta[bin]+2*gamma[bin]*rr >= 0.0)
-          xx = (-beta[bin]+TMath::Sqrt(beta[bin]*beta[bin]+2*gamma[bin]*rr))/gamma[bin];
-       else
-          xx = rr/beta[bin];
-       q[i] = alpha[bin]+xx;
-    } else {
-       q[i] = alpha[bin];
-       if (integral[bin+1] == r) q[i] += dx;
-    }
-  }
-
-  return nprobSum;
 }
 
 //______________________________________________________________________________
@@ -1533,7 +1419,7 @@ L160:
 Bool_t TF1::IsInside(const Double_t *x) const
 {
 // Return kTRUE is the point is inside the function range
-
+   
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    return kTRUE;
 }
@@ -1669,39 +1555,19 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
-   Int_t i;
    char quote = '"';
    out<<"   "<<endl;
-   if (!fMethodCall) {
-      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
-      if (fNpx != 100) {
-         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
-      }
+   if (gROOT->ClassSaved(TF1::Class())) {
+       out<<"   ";
    } else {
-      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<"*"<<GetName()<<quote<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
-      out<<"    //The original function : "<<GetTitle()<<" had originally been created created by:" <<endl;
-      out<<"    //TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetRange("<<fXmin<<","<<fXmax<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
-      if (fNpx != 100) {
-         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
-      }
-      Double_t dx = (fXmax-fXmin)/fNpx;
-      Double_t xv[1];
-      InitArgs(xv,fParams);
-      for (i=0;i<=fNpx;i++) {
-         xv[0]    = fXmin + dx*i;
-         Double_t save = EvalPar(xv,fParams);
-         out<<"   "<<GetName()<<"->SetSavedPoint("<<i<<","<<save<<");"<<endl;
-      }
-      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+1<<","<<fXmin<<");"<<endl;
-      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+2<<","<<fXmax<<");"<<endl;
+       out<<"   TF1 *";
+   }
+   if (!fMethodCall) {
+      out<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
+   } else {
+      out<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
    }
 
-   if (TestBit(kNotDraw)) {
-      out<<"   "<<GetName()<<"->SetBit(TF1::kNotDraw);"<<endl;
-   }
    if (GetFillColor() != 0) {
       out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
@@ -1726,20 +1592,21 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
    if (GetLineStyle() != 1) {
       out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<endl;
    }
+   if (GetNpx() != 100) {
+      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<endl;
+   }
    if (GetChisquare() != 0) {
       out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
    }
    Double_t parmin, parmax;
-   for (i=0;i<fNpar;i++) {
+   for (Int_t i=0;i<fNpar;i++) {
       out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
       out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
       GetParLimits(i,parmin,parmax);
       out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
    }
-   if (!strstr(option,"nodraw")) {
-      out<<"   "<<GetName()<<"->Draw("
-         <<quote<<option<<quote<<");"<<endl;
-   }
+   out<<"   "<<GetName()<<"->Draw("
+      <<quote<<option<<quote<<");"<<endl;
 }
 
 //______________________________________________________________________________
@@ -1762,15 +1629,6 @@ void TF1::SetNpx(Int_t npx)
 }
 
 //______________________________________________________________________________
-void TF1::SetParError(Int_t ipar, Double_t error)
-{
-// set error for parameter number ipar
-
-   if (ipar < 0 || ipar > fNpar-1) return;
-   fParErrors[ipar] = error;
-}
-
-//______________________________________________________________________________
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 {
 //*-*-*-*-*-*Set limits for parameter ipar*-*-*-*
@@ -1778,7 +1636,7 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 //     The specified limits will be used in a fit operation
 //     when the option "B" is specified (Bounds).
 //  To fix a parameter, use TF1::FixParameter
-
+   
    if (ipar < 0 || ipar > fNpar-1) return;
    Int_t i;
    if (!fParMin) {fParMin = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMin[i]=0;}
@@ -1798,19 +1656,6 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
    fXmin = xmin;
    fXmax = xmax;
    Update();
-}
-
-//______________________________________________________________________________
-void TF1::SetSavedPoint(Int_t point, Double_t value)
-{
-    // Restore value of function saved at point
-
-   if (!fSave) {
-      fNsave = fNpx+3;
-      fSave  = new Double_t[fNsave];
-   }
-   if (point < 0 || point >= fNsave) return;
-   fSave[point] = value;
 }
 
 //_______________________________________________________________________
@@ -1885,13 +1730,13 @@ void TF1::Streamer(TBuffer &b)
       }
       b.CheckByteCount(R__s, R__c, TF1::IsA());
       //====end of old versions
-
+      
    } else {
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
-
+      
       TF1::Class()->WriteBuffer(b,this);
-
+      
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }
@@ -1920,7 +1765,7 @@ void TF1::RejectPoint(Bool_t reject)
 // if TRUE the point is not included in the fit.
 // This flag can be set by a user in a fitting function.
 // The fgRejectPoint flag is reset by the TH1 and TGraph fitting functions.
-
+   
    fgRejectPoint = reject;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -54,8 +54,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
 #include "TVirtualPad.h"

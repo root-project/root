@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux with libc5 (<= RH4.2)
 
 PLATFORM      = linux

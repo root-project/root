@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.15 2001/11/28 15:00:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.12 2001/10/07 20:03:29 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,6 @@
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
 //        TRefArray     *fMuons;             //array of Muon tracks only
 //        TRef           fLastTrack;         //pointer to last track
-//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
 //
 //   The EventHeader class has 3 data members (integers):
@@ -69,7 +68,6 @@
 
 #include "TRandom.h"
 #include "TDirectory.h"
-#include "TProcessID.h"
 
 #include "Event.h"
 
@@ -103,8 +101,6 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
-   fEventName = 0;
-   fWebHistogram.SetAction(this);
 }
 
 //______________________________________________________________________________
@@ -116,7 +112,6 @@ Event::~Event()
    delete fHighPt; fHighPt = 0;
    delete fMuons;  fMuons = 0;
    delete [] fClosestDistance;
-   if (fEventName) delete [] fEventName;
 }
 
 //______________________________________________________________________________
@@ -127,18 +122,10 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
   Float_t random = gRandom->Rndm(1);
 
-  //Save current Object count
-  Int_t ObjectNumber = TProcessID::GetObjectCount();
   Clear();
   fHighPt->Delete();
   fMuons->Delete();
   
-  Int_t nch = 15;
-  if (ev > 100)   nch += 3;
-  if (ev > 10000) nch += 3;
-  if (fEventName) delete [] fEventName;
-  fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
   sprintf(etype,"type%d",ev%5);
   SetType(etype);
   SetHeader(ev, 200, 960312, random);
@@ -158,12 +145,6 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
 
    //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
-  //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
-  //object count to what it was at the beginning of the event.
-  TProcessID::SetObjectCount(ObjectNumber);
 }  
 
 //______________________________________________________________________________

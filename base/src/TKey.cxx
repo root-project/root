@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.18 2002/01/25 18:24:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.13 2001/04/18 10:20:19 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -42,7 +42,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDirectory.h"
@@ -51,8 +52,6 @@
 #include "TFree.h"
 #include "TBrowser.h"
 #include "Bytes.h"
-#include "TInterpreter.h"
-#include "Api.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -136,7 +135,6 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fNbytes    = 0;
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
-   fBufferRef->SetParent(gFile);
    fCycle = gDirectory->AppendKey(this);
    fObjlen    = 0 ; // RDK: Must initialize before calling Streamer()
    fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
@@ -407,22 +405,8 @@ TObject *TKey::ReadObj()
 //  object of the class type it describes. This new object now calls its
 //  Streamer function to rebuilt itself.
 //
-//  NOTE:
-//  In case the class of this object derives from TObject but not
-//  as a first inheritance, one must cast the return value twice.
-//  Example1: Normal case:
-//      class MyClass : public TObject, public AnotherClass
-//   then on return, one can do:
-//    MyClass *obj = (MyClass*)key->ReadObj();
-//
-//  Example2: Special case:
-//      class MyClass : public AnotherClass, public TObject
-//   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)key->ReadObj());
-//
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -451,6 +435,7 @@ TObject *TKey::ReadObj()
    // Create an instance of this class
 
    obj = (TObject*)cl->New();
+
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
@@ -458,9 +443,6 @@ TObject *TKey::ReadObj()
    if (kvers > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
-   char cmd[2048];
-   sprintf(cmd,"((%s*)0x%lx)->Streamer((TBuffer&)0x%lx);",cl->GetName(),(Long_t)obj,(Long_t)fBufferRef);
-   
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
@@ -477,8 +459,7 @@ TObject *TKey::ReadObj()
          objbuf += nout;
       }
       if (nout) {
-         //obj->Streamer(*fBufferRef); //does not work with example 2 above
-         gInterpreter->Calc(cmd); //also works if TObject is not the first base class
+         obj->Streamer(*fBufferRef);
          delete [] fBuffer;
       } else {
          delete [] fBuffer;
@@ -487,13 +468,12 @@ TObject *TKey::ReadObj()
          goto CLEAR;
       }
    } else {
-      //obj->Streamer(*fBufferRef);
-      gInterpreter->Calc(cmd);
+      obj->Streamer(*fBufferRef);
    }
 
    if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
 
-   if (cl == TDirectory::Class()) {
+   if (obj->IsA() == TDirectory::Class()) {
       TDirectory *dir = (TDirectory*)obj;
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
@@ -521,8 +501,7 @@ Int_t TKey::Read(TObject *obj)
    if (!obj) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(gFile);
-   
+
    if (fVersion > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
@@ -607,13 +586,6 @@ void TKey::ReadFile()
   }
 }
 
-//______________________________________________________________________________
-void TKey::SetParent(TObject *parent)
-{
-//  Set parent in key buffer
-   
-   if (fBufferRef) fBufferRef->SetParent(parent);
-}
 
 //______________________________________________________________________________
 Int_t TKey::Sizeof() const

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.3 2001/05/28 06:21:47 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
 #include "TROOT.h"
 #include "TButton.h"
 #include "TCanvas.h"
@@ -202,18 +202,12 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //      GetCanvas()->Modified();
       Update();
 #else
-#ifndef GDK_WIN32
       // The following instructions must be executed via the interpreter
       // Otherwise, we get a Thread problem under WindowsNT
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->SetBorderMode(1);",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->Modified();",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->GetCanvas()->Modified();",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->Update();",(Long_t)this));
-#else
-      SetBorderMode(1);
-      Modified();
-      Update();
-#endif
 #endif
       SetCursor(kCross);
       break;
@@ -292,7 +286,7 @@ void TButton::SavePrimitive(ofstream &out, Option_t *)
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
    delete [] cmethod;
-
+   
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,61,.65);
