@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.32 2004/04/07 14:11:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.33 2004/04/08 10:53:31 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -510,7 +510,11 @@ inline Double_t TMath::ATan(Double_t x)
    { return atan(x); }
 
 inline Double_t TMath::ATan2(Double_t y, Double_t x)
-   { return x != 0 ? atan2(y, x) : (y > 0 ? Pi()/2 : -Pi()/2); }
+   { if (x != 0) return  atan2(y, x);
+     if (y == 0) return  0;
+     if (y >  0) return  Pi()/2;
+     else        return -Pi()/2; 
+   }
 
 inline Double_t TMath::Sqrt(Double_t x)
    { return sqrt(x); }
