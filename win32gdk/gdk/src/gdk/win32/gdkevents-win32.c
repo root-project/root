@@ -5203,7 +5203,9 @@ gdk_event_translate(GdkEvent * event,
       if (!k_grab_window &&
           is_grabbed_key(&window, event->key.keyval, event->key.state)) {
          gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
-      } else if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
+      }
+
+      if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
                   GDK_ALL_EVENTS_MASK, doesnt_want_key)) {
          event->key.state = 0;
          break;
@@ -5260,11 +5262,7 @@ gdk_event_translate(GdkEvent * event,
       if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
          event->key.state |= GDK_MOD1_MASK;
 
-      //vo check if key is grabbed 
-      if (!k_grab_window &&
-          is_grabbed_key(&window, get_key_value(xevent), event->key.state)) {
-         gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
-      } else if (!propagate(&window, xevent, 
+      if (!propagate(&window, xevent, 
                   k_grab_window, k_grab_owner_events,
                   GDK_ALL_EVENTS_MASK, doesnt_want_char)) {
          break;
@@ -5291,10 +5289,12 @@ gdk_event_translate(GdkEvent * event,
          }
          /* Return the key release event.  */
          build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
+         k_grab_window = 0;
       } else if (window == k_grab_window
              || (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_RELEASE_MASK)) {
          /* Return just the key press event. */
          build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
+         k_grab_window = 0;
       } else if (return_val
                  && (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_PRESS_MASK)) {
          /* Return just the key press event. */
