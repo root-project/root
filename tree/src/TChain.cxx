@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.17 2001/04/09 08:35:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.18 2001/04/10 16:31:18 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -572,6 +572,7 @@ Int_t TChain::LoadTree(Int_t entry)
    fDirectory = fFile;
 
    //Set the branches status and address for the newly connected file
+   fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
    SetChainOffset(fTreeOffset[t]);
    TIter next(fStatus);
