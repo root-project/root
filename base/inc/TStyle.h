@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.3 2001/01/30 11:29:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -337,10 +337,10 @@ public:
         void             SetTitleXSize(Float_t size=0.02)   {SetTitleSize(size,"X");}
         void             SetTitleYOffset(Float_t offset=1)  {SetTitleOffset(offset,"Y");}
         void             SetTitleYSize(Float_t size=0.02)   {SetTitleSize(size,"Y");}
-        void             SetTitleX(Float_t x=0) {fTitleX=x;}
-        void             SetTitleY(Float_t y=1) {fTitleY=y;}
-        void             SetTitleW(Float_t w=0) {fTitleW=w;}
-        void             SetTitleH(Float_t h=0) {fTitleH=h;}
+        void             SetTitleX(Float_t x=0)     {fTitleX=x;}
+        void             SetTitleY(Float_t y=0.985) {fTitleY=y;}
+        void             SetTitleW(Float_t w=0)     {fTitleW=w;}
+        void             SetTitleH(Float_t h=0)     {fTitleH=h;}
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
