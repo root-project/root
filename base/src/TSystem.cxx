@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.15 2001/03/14 07:11:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.16 2001/04/23 08:04:48 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -43,7 +43,6 @@
 #include "compiledata.h"
 
 
-const char *gSystemName;
 const char *gRootDir;
 const char *gProgName;
 const char *gProgPath;
@@ -134,8 +133,7 @@ TSystem::~TSystem()
 //______________________________________________________________________________
 Bool_t TSystem::Init()
 {
-   // Initialize the OS interface. Copy the OS name (i.e. Unix) and the
-   // ROOT name to gSystemName.
+   // Initialize the OS interface.
 
    fNfd    = 0;
    fMaxrfd = 0;
@@ -157,8 +155,6 @@ Bool_t TSystem::Init()
    fMakeSharedLib = MAKESHAREDLIB;
    fMakeExe       = MAKEEXE;
    fCompiled      = new TOrdCollection;
-
-   gSystemName = StrDup(fName.Data());
 
    if (!fName.CompareTo("Generic")) return kTRUE;
    return kFALSE;
@@ -1460,7 +1456,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       sub.Append(" ");
       includes.Replace(pos,len,sub);
       pos = rel_inc.Index(includes,&len);
-    } 
+    }
   }
   includes += " -I" + build_loc;
   includes += " -I";
@@ -1694,7 +1690,7 @@ void TSystem::SetSoExt(const char *SoExt)
 {
    // Set shared library extension, should be either .so, .sl, .a, .dll, etc.
 
-   fSoExt = SoExt; 
+   fSoExt = SoExt;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.10 2001/02/26 02:46:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.11 2001/04/23 08:04:48 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -89,7 +89,6 @@ enum ESysConstants {
 
 typedef void* Func_t;
 
-R__EXTERN const char  *gSystemName;
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
 R__EXTERN const char  *gProgPath;
