@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.145 2003/05/08 09:09:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.146 2003/05/13 11:51:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1429,7 +1429,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
             if (stat) fu = gRandom->PoissonD(fu);
             if (fSumw2.fN) e = fSumw2.fArray[bin];
             AddBinContent(bin,fu);
-            if (fSumw2.fN) fSumw2.fArray[bin] = e+ fu*fu;
+            if (fSumw2.fN) fSumw2.fArray[bin] = e+ TMath::Abs(fu);
          }
       }
    }
