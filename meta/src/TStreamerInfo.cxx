@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.137 2002/07/18 11:10:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.138 2002/08/06 21:46:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -494,12 +494,12 @@ void TStreamerInfo::BuildOld()
             if (dt) {
                if (element->GetType() != dt->GetType()) {
                   element->SetNewType(dt->GetType());
-                  printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+                  printf("element: %s::%s %s has new type: %s\n",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
                }
             } else {
                element->SetNewType(-2);
-               printf("Cannot convert %s from type:%s to type:%s, skip element\n",
-                  element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
+               printf("Cannot convert %s::%s from type:%s to type:%s, skip element\n",
+                  GetName(),element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
             }
          }
       } else {
