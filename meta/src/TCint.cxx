@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.92 2004/08/04 20:23:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.93 2004/08/13 17:00:29 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -987,17 +987,46 @@ Int_t TCint::LoadLibraryMap()
    TIter next(fMapfile->GetTable());
 
    while ((rec = (TEnvRec*) next())) {
-      const char *cls = rec->GetName();
-      if (!strncmp(cls, "Library.", 8) && strlen(cls) > 8) {
+      TString cls = rec->GetName();
+      if (!strncmp(cls.Data(), "Library.", 8) && cls.Length() > 8) {
+
+
          // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
          TString delim(" ");
          TObjArray *tokens = libs.Tokenize(delim);
          char *lib = (char *)((TObjString*)tokens->At(0))->GetName();
-         G__set_class_autoloading_table((char*)(cls+8), lib);
+         // convert "@@" to "::", we used "@@" because TEnv
+         // considers "::" a terminator
+         cls.Remove(0,8);
+         cls.ReplaceAll("@@", "::");
+         
+         if ( strchr(cls.Data(),':')!=0 ) {
+            // We have a namespace and we have to check it first
+
+            int slen = cls.Length();
+            for(int k=0;k<slen;++k) {
+               if (cls[k]==':') {
+                  if (k+1>=slen || cls[k+1]!=':') {
+                     // we expected another ':'
+                     break;
+                  }
+                  if (k) {
+                     string base(cls.Data(), 0, k);
+                     if (base=="std") {
+                        // std is not declared but is also ignored by CINT!
+                        break;
+                     } else {
+                        G__set_class_autoloading_table((char*)base.c_str(), lib);                        
+                     }
+                  }
+               }
+            }
+         }
+         G__set_class_autoloading_table((char*)(cls.Data()), lib);
          if (gDebug > 0)
             printf("<TCint::LoadLibraryMap>: adding class %s in lib %s\n",
-                   cls+8, lib);
+                   cls.Data(), lib);
          delete tokens;
       }
    }

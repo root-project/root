@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.105 2004/09/16 18:59:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.106 2004/10/15 16:55:06 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1885,6 +1885,9 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString libname ( BaseName( libname_noext ) );
    libname.Append("_").Append(extension);
 
+   TString libname_ext ( libname );
+   libname_ext +=  "." + fSoExt;
+
    if (library_specified && strlen(library_specified) ) {
       // Use the specified name instead of the default
       libname = BaseName( library_specified );
@@ -2324,7 +2327,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       ifstream liblist(mapfileout);
       string libtoload;
       while ( liblist >> libtoload ) {
-         gROOT->LoadClass("",libtoload.c_str());
+         // Load the needed library except for the library we are currently building!
+         if (libtoload != library && libtoload != libname_ext) {
+            gROOT->LoadClass("",libtoload.c_str());
+         }
       }
    }
 

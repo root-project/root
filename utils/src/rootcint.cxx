@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.193 2004/11/05 17:03:01 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.194 2004/11/08 20:06:36 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -530,8 +530,30 @@ void LoadLibraryMap() {
 
             while( line[0]==' ' ) line.replace(0,1,"");
 
-            // Note: we could add some code to pre-declare potential
-            // namespaces
+            if ( strchr(classname.c_str(),':')!=0 ) {
+               // We have a namespace and we have to check it first
+               
+               int slen = classname.size();
+               for(int k=0;k<slen;++k) {
+                  if (classname[k]==':') {
+                     if (k+1>=slen || classname[k+1]!=':') {
+                        // we expected another ':'
+                        break;
+                     }
+                     if (k) {
+                        string base = classname.substr(0,k); 
+                        if (base=="std") {
+                           // std is not declared but is also ignored by CINT!
+                           break;
+                        } else {
+                           gAutoloads[base] = line;
+                           G__set_class_autoloading_table((char*)base.c_str(),
+                                                          (char*)line.c_str());
+                        }
+                     }
+                  }
+               }
+            }
 
             gAutoloads[classname] = line;
             G__set_class_autoloading_table((char*)classname.c_str(),
