@@ -5740,6 +5740,7 @@ int memfunc_flag;
   store_asm_noverflow = G__asm_noverflow;
 #endif
   
+  memset(&G_local,0,sizeof(struct G__var_array));    
 #ifdef G__ASM_IFUNC
   if(G__asm_exec) {
     ifn = G__asm_index;
