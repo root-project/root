@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:$:$Id:$
+// @(#)root/xmlparser:$Name:  $:$Id: TXMLParser.h,v 1.1 2005/03/14 15:33:43 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -40,10 +40,7 @@
 #include "TString.h"
 #endif
 
-extern "C" {
-  struct   _xmlParserCtxt;
-  struct   exception;
-}
+struct   _xmlParserCtxt;
 
 
 class TXMLParser : public TObject, public TQObject {
