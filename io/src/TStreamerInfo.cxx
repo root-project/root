@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.76 2001/05/31 10:01:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.77 2001/06/04 06:40:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -637,10 +637,10 @@ void TStreamerInfo::Compile()
    fOptimized = kFALSE;
    fNdata = 0;
    Int_t ndata = fElements->GetEntries();
+   fOffset = new Int_t[ndata+1];
    fType   = new Int_t[ndata+1];
-   if (ndata == 0) return;
+   if (ndata == 0) return;  //this may be the case for empty classes(eg TAtt3D)
    fNewType= new Int_t[ndata];
-   fOffset = new Int_t[ndata];
    fLength = new Int_t[ndata];
    fElem   = new ULong_t[ndata];
    fMethod = new ULong_t[ndata];
