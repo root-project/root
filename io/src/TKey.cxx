@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.18 2002/01/25 18:24:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.19 2002/02/02 11:54:34 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -346,6 +346,13 @@ void TKey::FillBuffer(char *&buffer)
   fClassName.FillBuffer(buffer);
   fName.FillBuffer(buffer);
   fTitle.FillBuffer(buffer);
+}
+
+//______________________________________________________________________________
+ULong_t TKey::Hash() const
+{
+// This Hash function redefines the default from TNamed
+   return TObject::Hash();
 }
 
 //______________________________________________________________________________
