@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.5 2003/06/27 11:02:34 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.6 2003/10/07 21:12:12 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -304,8 +304,11 @@ void TDSet::Add(TDSet *set)
 
    TDSetElement *el;
    TIter next(set->fElements);
-   while ((el = (TDSetElement*) next()))
+   TObject *last = set == this ? fElements->Last() : 0;
+   while ((el = (TDSetElement*) next())) {
       Add(el->GetFileName(), el->GetObjName(), el->GetDirectory());
+      if (el == last) break;
+   }
 }
 
 //______________________________________________________________________________
