@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.69 2002/08/06 21:29:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.70 2002/08/23 08:50:37 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1102,6 +1102,7 @@ Int_t TFile::Recover()
          key->ReadBuffer(bufread);
          AppendKey(key);
          nrecov++;
+         SetBit(kRecovered);
          Info("Recover", "recovered key %s:%s at address %d",key->GetClassName(),key->GetName(),idcur);
       }
       delete [] classname;

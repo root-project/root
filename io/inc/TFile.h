@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.21 2002/08/06 20:50:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.22 2002/08/08 14:41:18 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -80,6 +80,7 @@ private:
 public:
    // TFile status bits
    enum {
+      kRecovered       = BIT(10),
       kHasReferences   = BIT(11),
       kDevNull         = BIT(12),
       kWriteError      = BIT(14) // BIT(13) is taken up by TObject
