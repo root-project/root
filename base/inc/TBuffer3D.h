@@ -37,7 +37,7 @@ public:
    enum EBuffer3DOption {kPAD, kRANGE, kSIZE, kX3D, kOGL};
     // TBuffer3D status bits
    enum {
-      kIsReflexion   = BIT(9)  // object has a reflexion matrix
+      kIsReflection   = BIT(9)  // object has a reflection matrix
    };
 
    TBuffer3D();
