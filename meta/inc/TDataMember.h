@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.3 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.4 2001/04/27 19:06:27 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -60,6 +60,7 @@ public:
    TDataType     *GetDataType() const { return fDataType; } //only for basic type
    const char    *GetName() const;
    Int_t          GetOffset() const;
+   Int_t          GetOffsetCint() const;
    const char    *GetTitle() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.6 2001/10/29 16:23:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.7 2002/02/05 08:31:09 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -491,6 +491,14 @@ Int_t TDataMember::GetOffset() const
       if (rdm->GetDataMember() == this) return rdm->GetThisOffset();
    }
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TDataMember::GetOffsetCint() const
+{
+   // Get offset from "this" using the information in CINT only.
+
+   return fInfo->Offset();
 }
 
 //______________________________________________________________________________
