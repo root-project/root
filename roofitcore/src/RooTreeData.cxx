@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.51 2002/09/06 00:27:53 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.52 2002/09/17 06:39:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1068,6 +1068,9 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
     delete hist2;
     return 0;
   }
+
+  // initialize the frame's normalization setup, if necessary
+  frame->updateNormVars(_vars);
 
   // add the RooHist to the specified plot
   frame->addPlotable(graph,drawOptions);

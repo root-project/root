@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.65 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.66 2002/11/04 22:35:34 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,7 +57,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config),
   _facListIter(_facList.createIterator()),
   _jacListIter(_jacList.createIterator()),
-  _restartNumIntEngine(kFALSE)
+  _restartNumIntEngine(kFALSE),
+  _funcACleanBranchIter(_funcACleanBranchList.createIterator())
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -520,7 +521,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _iconfig(other._iconfig),
   _facListIter(_facList.createIterator()),
   _jacListIter(_jacList.createIterator()),
-  _restartNumIntEngine(kFALSE)
+  _restartNumIntEngine(kFALSE),
+  _funcACleanBranchIter(_funcACleanBranchList.createIterator())
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
@@ -533,6 +535,7 @@ RooRealIntegral::~RooRealIntegral()
   if (_numIntEngine) delete _numIntEngine ;
   if (_numIntegrand) delete _numIntegrand ;
   if (_funcNormSet) delete _funcNormSet ;
+  delete _funcACleanBranchIter ;
   delete _facListIter ;
   delete _jacListIter ;
 }
@@ -619,23 +622,25 @@ Double_t RooRealIntegral::evaluate() const
 
 void RooRealIntegral::prepareACleanFunc() const
 {
+  // Make function branch list, if not cached
+  if (_funcBranchList.getSize()==0) {
+    _function.arg().branchNodeServerList(&_funcBranchList) ;
+  }
+
   // Clear previous list contents
   _funcACleanBranchList.removeAll() ;
-
-  // Get all function branch nodes
-  _function.arg().branchNodeServerList(&_funcACleanBranchList) ;
+  _funcACleanBranchList.add(_funcBranchList) ;
 
   // Remove non-AClean branches from list 
-  TIterator* iter = _funcACleanBranchList.createIterator() ;
+  _funcACleanBranchIter->Reset() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
+  while(arg=(RooAbsArg*)_funcACleanBranchIter->Next()) {
     if (arg->operMode()!=RooAbsArg::AClean) {
       _funcACleanBranchList.remove(*arg) ;
     } else {
       arg->setOperMode(RooAbsArg::ADirty) ;
     }
   }
-  delete iter ;
 }
 
 
@@ -643,12 +648,11 @@ void RooRealIntegral::prepareACleanFunc() const
 void RooRealIntegral::restoreACleanFunc() const
 {
   // Restore formerly AClean branches to their AClean state
-  TIterator* iter = _funcACleanBranchList.createIterator() ;
+  _funcACleanBranchIter->Reset() ;
   RooAbsArg* arg ;
-  while(arg=(RooAbsArg*)iter->Next()) {
-      arg->setOperMode(RooAbsArg::AClean) ;
+  while(arg=(RooAbsArg*)_funcACleanBranchIter->Next()) {
+    arg->setOperMode(RooAbsArg::AClean) ;
   }
-  delete iter ;
 }
 
 
@@ -720,6 +724,8 @@ Double_t RooRealIntegral::integrate() const
 Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList, 
 					    Bool_t mustReplaceAll, Bool_t nameChange) 
 {
+  _funcBranchList.removeAll() ;
+
   _restartNumIntEngine = kTRUE ;
   return kFALSE ;
 }

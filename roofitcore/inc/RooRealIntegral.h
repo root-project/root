@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.32 2002/09/05 04:33:53 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.33 2002/09/30 00:57:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -81,7 +81,9 @@ protected:
   
   void prepareACleanFunc() const ;
   void restoreACleanFunc() const ;
+  mutable RooArgSet _funcBranchList ;
   mutable RooArgSet _funcACleanBranchList ;
+  TIterator*        _funcACleanBranchIter ; //!
 
   Int_t _mode ;
   OperMode _operMode ;

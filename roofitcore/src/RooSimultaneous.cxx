@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.46 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.47 2002/10/26 01:18:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -333,6 +333,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // Make list of variables to be projected
   RooArgSet projectedVars ;
   if (sliceSet) {
+    //cout << "frame->getNormVars() = " ; frame->getNormVars()->Print("1") ;
+
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
     
     // Take out the sliced variables
@@ -406,7 +408,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
       return frame ;
     }
 
-    if (anyServers) projIndex = kTRUE ;
+    if (anyServers) {
+      projIndex = kTRUE ;
+    }
   } 
   
   // Calculate relative weight fractions of components
@@ -459,7 +463,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     RooLinkedList cmdList2(cmdList) ;
     RooCmdArg tmp1 = Normalization(scaleFactor*wTable->getFrac(_indexCat.arg().getLabel()),stype) ;
     RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
-    cmdList2.Add(&tmp1) ;
+
+    // WVE -- do not adjust normalization for asymmetry plots
+    if (!cmdList.find("Asymmetry")) {
+      cmdList2.Add(&tmp1) ;
+    }
     cmdList2.Add(&tmp2) ;
 
     // Plot single component
@@ -589,7 +597,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   RooCmdArg tmp1 = Normalization(scaleFactor*sumWeight,stype) ;
   RooCmdArg tmp2 = ProjWData(*projDataSet,*projDataTmp) ;
-  cmdList2.Add(&tmp1) ;
+  // WVE -- do not adjust normalization for asymmetry plots
+  if (!cmdList.find("Asymmetry")) {
+    cmdList2.Add(&tmp1) ;
+  }
   cmdList2.Add(&tmp2) ;
 
   RooPlot* frame2 ;
