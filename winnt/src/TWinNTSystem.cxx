@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.112 2005/01/06 21:27:46 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.113 2005/02/05 17:04:39 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -648,31 +648,8 @@ Bool_t TWinNTSystem::Init()
    fhTermInputEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
-   if (::GetVersion() < 0x80000000) { // Windows NT/2000/XP
-      fActUser = -1;
-      fNbGroups = fNbUsers = 0;
-      HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
-      if (!netapi) return kFALSE;
+   fGroupsInitDone = kFALSE;
 
-      p2NetApiBufferFree  = (pfn1)::GetProcAddress(netapi, "NetApiBufferFree");
-      p2NetUserGetInfo  = (pfn2)::GetProcAddress(netapi, "NetUserGetInfo");
-      p2NetLocalGroupGetMembers  = (pfn3)::GetProcAddress(netapi, "NetLocalGroupGetMembers");
-      p2NetLocalGroupEnum = (pfn4)::GetProcAddress(netapi, "NetLocalGroupEnum");
-
-      if (!p2NetApiBufferFree || !p2NetUserGetInfo ||
-          !p2NetLocalGroupGetMembers || !p2NetLocalGroupEnum) return kFALSE;
-
-      GetNbGroups();
-
-      fGroups = (struct group *)calloc(fNbGroups, sizeof(struct group));
-      for(int i=0;i<fNbGroups;i++) {
-        fGroups[i].gr_mem = (char **)calloc(fNbUsers, sizeof (char*));
-      }
-      fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
-
-      CollectGroups();
-      ::FreeLibrary(netapi);
-   }
    return kFALSE;
 }
 
@@ -2147,6 +2124,41 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
 
 //---- Users & Groups ----------------------------------------------------------
 
+//______________________________________________________________________________
+Bool_t TWinNTSystem::InitUsersGroups()
+{
+   // Collect local users and groups accounts informations
+
+   // Net* API functions allowed and OS is Windows NT/2000/XP
+   if ((gEnv->GetValue("WinNT.UseNetAPI", 0)) && (::GetVersion() < 0x80000000)) { 
+      fActUser = -1;
+      fNbGroups = fNbUsers = 0;
+      HINSTANCE netapi = ::LoadLibrary("netapi32.DLL");
+      if (!netapi) return kFALSE;
+
+      p2NetApiBufferFree  = (pfn1)::GetProcAddress(netapi, "NetApiBufferFree");
+      p2NetUserGetInfo  = (pfn2)::GetProcAddress(netapi, "NetUserGetInfo");
+      p2NetLocalGroupGetMembers  = (pfn3)::GetProcAddress(netapi, "NetLocalGroupGetMembers");
+      p2NetLocalGroupEnum = (pfn4)::GetProcAddress(netapi, "NetLocalGroupEnum");
+
+      if (!p2NetApiBufferFree || !p2NetUserGetInfo ||
+          !p2NetLocalGroupGetMembers || !p2NetLocalGroupEnum) return kFALSE;
+
+      GetNbGroups();
+
+      fGroups = (struct group *)calloc(fNbGroups, sizeof(struct group));
+      for(int i=0;i<fNbGroups;i++) {
+        fGroups[i].gr_mem = (char **)calloc(fNbUsers, sizeof (char*));
+      }
+      fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
+
+      CollectGroups();
+      ::FreeLibrary(netapi);
+   }
+   fGroupsInitDone = kTRUE;
+   return kTRUE;
+}
+
 //________________________________________________________________________________
 Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
 {
@@ -2157,9 +2169,6 @@ Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
    WCHAR wszGroupName[256];
    int iRetOp = 0;
    DWORD dwLastError = 0;
-
-   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
-       return kFALSE;
 
    iRetOp = MultiByteToWideChar (
             (UINT)CP_ACP,                // code page
@@ -2219,9 +2228,6 @@ Bool_t TWinNTSystem::GetNbGroups()
    DWORD dwLastError = 0;
    int  iRetOp = 0;
 
-   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
-       return kFALSE;
-
    NetStatus = p2NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
                                     &Total, &ResumeHandle );
 
@@ -2280,9 +2286,6 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what,
    int i;
    unsigned char j = 0;
    DWORD dwLastError = 0;
-
-   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
-       return 0;
 
    pSid = (PSID)bySidBuffer;
    dwSidSize = sizeof(bySidBuffer);
@@ -2361,9 +2364,6 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx,
    DWORD dwLastError = 0;
    LPUSER_INFO_11  pUI11Buf = NULL;
    NET_API_STATUS  nStatus;
-
-   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
-       return kFALSE;
 
    iRetOp = MultiByteToWideChar (
             (UINT)CP_ACP,                // code page
@@ -2491,9 +2491,6 @@ Bool_t TWinNTSystem::CollectGroups()
    DWORD dwLastError = 0;
    int  iRetOp = 0, iGroupIdx = 0, iMemberIdx = 0;
 
-   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
-       return kFALSE;
-
    NetStatus = p2NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index,
                                     &Total, &ResumeHandle );
 
@@ -2541,7 +2538,11 @@ Int_t TWinNTSystem::GetUid(const char *user)
 {
    // Returns the user's id. If user = 0, returns current user's id.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       int   uid;
       char  name[256];
       DWORD length = sizeof (name);
@@ -2578,7 +2579,11 @@ Int_t TWinNTSystem::GetEffectiveUid()
    // Returns the effective user id. The effective id corresponds to the
    // set id bit on the file being executed.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       int   uid;
       char  name[256];
       DWORD length = sizeof (name);
@@ -2601,7 +2606,11 @@ Int_t TWinNTSystem::GetGid(const char *group)
 {
    // Returns the group's id. If group = 0, returns current user's group.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       int   gid;
       char  name[256];
       DWORD length = sizeof (name);
@@ -2638,7 +2647,11 @@ Int_t TWinNTSystem::GetEffectiveGid()
    // Returns the effective group id. The effective group id corresponds
    // to the set id bit on the file being executed.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       int   gid;
       char  name[256];
       DWORD length = sizeof (name);
@@ -2662,7 +2675,11 @@ UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
    // Returns all user info in the UserGroup_t structure. The returned
    // structure must be deleted by the user. In case of error 0 is returned.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       char  name[256];
       DWORD length = sizeof (name);
       UserGroup_t *ug = new UserGroup_t;
@@ -2732,7 +2749,11 @@ UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
    // The returned structure must be deleted by the user. In case of
    // error 0 is returned.
 
-   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+   if(!fGroupsInitDone)
+      InitUsersGroups();
+
+   // Net* API functions not allowed or OS not Windows NT/2000/XP
+   if ((!gEnv->GetValue("WinNT.UseNetAPI", 0)) || (::GetVersion() >= 0x80000000)) {
       char  name[256];
       DWORD length = sizeof (name);
       UserGroup_t *gr = new UserGroup_t;

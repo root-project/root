@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.34 2004/12/15 16:04:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.35 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -76,6 +76,7 @@ private:
    int               fNbUsers;          // Number of users on local computer
    int               fNbGroups;         // Number of groups on local computer
    int               fActUser;          // Index of actual user in User list
+   Bool_t            fGroupsInitDone;   // Flag used for Users and Groups initialization
 
    HANDLE            fhProcess;         // Handle of the current process
    HANDLE            fhTermInputEvent;  // Handle of "event" to suspend "dummy" terminal loop
@@ -97,6 +98,7 @@ private:
    Long_t            LookupSID (const char *lpszAccountName, int what, int &groupIdx, int &memberIdx);
    Bool_t            CollectMembers(const char *lpszGroupName, int &groupIdx, int &memberIdx);
    Bool_t            CollectGroups();
+   Bool_t            InitUsersGroups();
 
 public:
    TWinNTSystem();
