@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.16 2001/06/27 16:13:22 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.17 2001/06/27 16:54:25 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -371,9 +371,13 @@ TileFrame::TileFrame(const TGWindow *p) :
    fCanvas = 0;
    SetLayoutManager(new TGTileLayout(this, 8));
 
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kPointerMotionMask, kNone, kNone);
+   // Handle only buttons 4 and 5 used by the wheel mouse to scroll
+   gVirtualX->GrabButton(fId, kButton4, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
+   gVirtualX->GrabButton(fId, kButton5, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask,
+                         kNone, kNone);
 }
 
 Bool_t TileFrame::HandleButton(Event_t *event)
@@ -382,11 +386,11 @@ Bool_t TileFrame::HandleButton(Event_t *event)
 
    Int_t page = 0;
    if (event->fCode == kButton4 || event->fCode == kButton5) {
-   if (!fCanvas) return kTRUE;
-   if (fCanvas->GetContainer()->GetHeight())
-      page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
-                           fCanvas->GetViewPort()->GetHeight()) /
-                           fCanvas->GetContainer()->GetHeight());
+      if (!fCanvas) return kTRUE;
+      if (fCanvas->GetContainer()->GetHeight())
+         page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
+                              fCanvas->GetViewPort()->GetHeight()) /
+                              fCanvas->GetContainer()->GetHeight());
    }
 
    if (event->fCode == kButton4) {
