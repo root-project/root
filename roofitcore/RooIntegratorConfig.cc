@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.cc,v 1.5 2002/09/05 04:33:35 verkerke Exp $
+ *    File: $Id: RooIntegratorConfig.cc,v 1.6 2003/05/07 21:06:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@ RooIntegratorConfig::RooIntegratorConfig()
   _epsAbs = 1e-6 ;
 
   // 2D integrator
-  _useMCFor2D = kFALSE ;
+  _useMCFor2D = kTRUE ;
 
   // MC Integrator
   _mode = RooMCIntegrator::Importance ;
