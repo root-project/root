@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.5 2000/08/15 10:55:51 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.6 2000/08/18 21:51:10 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -747,7 +747,8 @@ const char* TCint::GetSharedLibs()
            strstr(filename,".dl")  != 0 ||
            strstr(filename,".so")  != 0 ||
            strstr(filename,".dll") != 0 ||
-           strstr(filename,".DLL") != 0)) {
+           strstr(filename,".DLL") != 0 ||
+           strstr(filename,".a")   != 0)) {
          if (!fSharedLibs.IsNull())
             fSharedLibs.Append(" ");
          fSharedLibs.Append(filename);
