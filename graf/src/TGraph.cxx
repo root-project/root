@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.74 2002/07/16 08:04:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.75 2002/07/16 21:59:46 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2501,7 +2501,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gxwork[npt-1] = gxwork[npt-2];
               gywork[npt-1] = ywmin;
               ComputeLogs(npt, OptionZ);
-              gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+              //gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+              //do not draw the two vertical lines on the edges
+              gPad->PaintPolyLine(npt-2,&gxworkl[1],&gyworkl[1]);
               continue;
            }
         }  //endfor (i=first; i<=last;i++)
