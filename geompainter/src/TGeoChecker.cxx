@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.5 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -125,15 +125,23 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    TH2F *hist = new TH2F("lego", option, nphi, phimin, phimax, ntheta, themin, themax);
    
    Double_t degrad = TMath::Pi()/180.;
-   Double_t theta, phi, step, matprop, x;
+   Double_t theta, phi, step, matprop, x, dstep;
    Double_t start[3];
    Double_t dir[3];
    TGeoNode *startnode, *endnode;
    Bool_t is_entering, is_null;
    Int_t i;  // loop index for phi
    Int_t j;  // loop index for theta
+   Int_t ntot = ntheta * nphi;
+   Int_t n10 = ntot/10;
+   Int_t igen = 0;
+   printf("=== Lego plot sph. => nrays=%i\n", ntot);
    for (i=1; i<=nphi; i++) {
       for (j=1; j<=ntheta; j++) {
+         igen++;
+         if (n10) {
+            if ((igen%n10) == 0) printf("%i percent\n", Int_t(100*igen/ntot));
+         }  
          x = 0;
          theta = hist->GetYaxis()->GetBinCenter(j);
          phi   = hist->GetXaxis()->GetBinCenter(i);
@@ -159,8 +167,19 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          is_null = fGeom->IsNullStep();
          while (step<1E10) {
             // now see if we can make an other step
-            if (is_entering && !is_null && matprop > 0) x += step/matprop;
-            if (endnode==0 || is_null) break;
+            dstep = 0.;
+            if (!is_null) {
+               dstep = 0.1;
+               fGeom->SetStep(dstep);
+               endnode = fGeom->Step();
+               is_entering = fGeom->IsEntering();   
+            }
+            step += dstep;   
+               
+            if (is_entering && matprop>0) {
+               x += step/matprop;
+            }   
+            if (endnode==0) break;
          //printf("x=%f, step==%g, matprop=%g\n", x,step,matprop);
             // generate an extra step to cross boundary
             startnode = endnode;    
@@ -300,7 +319,8 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       if (fGeom->IsOutside()) startnode=0;
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
       if (vis1) {
-//         printf(" visible, create segment\n");
+//         printf(" >>>starting first segment\n");
+//         if (startnode) printf( ">>>start = %s\n", startnode->GetName());
          line = new TPolyLine3D(2);
          line->SetLineColor(startnode->GetVolume()->GetLineColor());
          line->SetPoint(ipoint++, startx, starty, startz);
@@ -317,6 +337,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 //      else printf("---end : NULL\n");
       step = fGeom->GetStep();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
+//      if (endnode) printf(">>>endnode : %s\n", endnode->GetName());
 //      if (vis2) printf(" end visible\n");
 //      else printf(" end invisible\n");
       is_entering = fGeom->IsEntering();
@@ -325,7 +346,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 //         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2], step);
 //      printf("propagating...\n");
       while (step<1E10) {
-         if (ipoint>0) {
+         if (is_entering && ipoint>0) {
 //            printf("  ending segment\n");
          // old visible node had an entry point -> finish segment
             line->SetPoint(ipoint, point[0], point[1], point[2]);
@@ -334,7 +355,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          }
          if (is_entering && vis2) {
             // create new segment
-//            printf("creating new segment for : %s\n", endnode->GetName());
+//            printf(" >>>new segment for : %s\n", endnode->GetName());
             line = new TPolyLine3D(2);   
             line->SetLineColor(endnode->GetVolume()->GetLineColor());
             line->SetPoint(ipoint++, point[0], point[1], point[2]);
@@ -342,10 +363,14 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             pm->Add(line);
          } // else printf("   entering=%i vis2=%i - no segment\n", (Int_t)is_entering, (Int_t)vis2);
          // now see if we can make an other step
-         if (endnode==0 || is_null) {
+         if (endnode==0) {
 //            printf("NULL. End track.\n");
             break;
-         }   
+         }
+         if (!is_entering) {
+            fGeom->SetStep(1E-3);
+            fGeom->Step();
+         }      
 //         if (is_null) printf("null step, start:%f %f %f\n", fGeom->GetCurrentPoint()[0],
 //         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
          // generate an extra step to cross boundary
@@ -354,6 +379,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 //         fGeom->IsStepEntering();
          endnode = fGeom->Step();
          if (fGeom->IsOutside()) endnode=0;
+//         if (endnode) printf(">>>new node: %s\n", endnode->GetName());
          step = fGeom->GetStep();
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
          is_entering = fGeom->IsEntering();

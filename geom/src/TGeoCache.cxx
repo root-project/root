@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.6 2002/07/15 15:42:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.7 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -391,9 +391,10 @@ void TGeoNodeCache::Refresh()
 Bool_t TGeoNodeCache::PopState(Double_t *point) 
 {
    if (!fStackLevel) return 0;
-   ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
+   Bool_t ovlp = ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
    Refresh(); 
-   return (fStackLevel+1);
+//   return (fStackLevel+1);
+   return ovlp;
 }
 //-----------------------------------------------------------------------------
 Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point) 

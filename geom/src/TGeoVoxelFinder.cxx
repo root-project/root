@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.7 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.8 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -237,6 +237,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    Int_t *otmp = new Int_t[nd-1]; 
    Int_t novlp = 0;
    TGeoNode *node = fVolume->GetNode(inode);
+//   printf("Finding overlaps for %s\n", node->GetName());
    xmin = fBoxes[6*inode+3] - fBoxes[6*inode];
    xmax = fBoxes[6*inode+3] + fBoxes[6*inode];
    ymin = fBoxes[6*inode+4] - fBoxes[6*inode+1];
@@ -270,7 +271,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
       ddx1 = TMath::Abs(xmin1-xmax);
       ddx2 = TMath::Abs(xmax1-xmin);
          if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-//         if ((xmin1==xmin)||(xmax1==xmax)) in = kTRUE;
+         if ((xmin1==xmin)||(xmax1==xmax)) in = kTRUE;
          if (((xmin1>xmin)&&(xmin1<xmax))||((xmax1>xmin)&&(xmax1<xmax)) ||
              ((xmin>xmin1)&&(xmin<xmax1))||((xmax>xmin1)&&(xmax<xmax1)))
                 in = kTRUE;
@@ -281,18 +282,18 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
       ddx1 = TMath::Abs(ymin1-ymax);
       ddx2 = TMath::Abs(ymax1-ymin);
          if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-//         if ((ymin1==ymin)||(ymax1==ymax)) in = kTRUE;
+         if ((ymin1==ymin)||(ymax1==ymax)) in = kTRUE;
          if (((ymin1>ymin)&&(ymin1<ymax))||((ymax1>ymin)&&(ymax1<ymax)) ||
              ((ymin>ymin1)&&(ymin<ymax1))||((ymax>ymin1)&&(ymax<ymax1)))
                 in = kTRUE;
-//      if (!in) continue;
+      if (!in) continue;
 //      printf("y overlap...\n");
       in = kFALSE;
 
       ddx1 = TMath::Abs(zmin1-zmax);
       ddx2 = TMath::Abs(zmax1-zmin);
          if ((ddx1<1E-12)||(ddx2<1E-12)) continue;
-//         if ((zmin1==zmin)||(zmax1==zmax)) in = kTRUE;
+         if ((zmin1==zmin)||(zmax1==zmax)) in = kTRUE;
          if (((zmin1>zmin)&&(zmin1<zmax))||((zmax1>zmin)&&(zmax1<zmax)) ||
              ((zmin>zmin1)&&(zmin<zmax1))||((zmax>zmin1)&&(zmax<zmax1)))
                 in = kTRUE;

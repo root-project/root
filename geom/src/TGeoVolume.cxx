@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.8 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.9 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -439,7 +439,7 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    TVirtualGeoPainter *p = gGeoManager->GetGeomPainter();
    if (!p) return 0;
    TH2F *hist = p->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
-   hist->Draw("lego1cyl");
+   hist->Draw("lego1sph");
    return hist;
 }
 //-----------------------------------------------------------------------------

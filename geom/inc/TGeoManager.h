@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.8 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.9 2002/10/09 14:03:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -319,15 +319,15 @@ public:
 
    //--- stack manipulation
    Int_t                  PushPath() {return fCache->PushState(fCurrentOverlapping);}
-   Bool_t                 PopPath() {Bool_t ret=fCache->PopState(); fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel();return ret;}
-   Bool_t                 PopPath(Int_t index) {Bool_t ret=fCache->PopState(index);
-                                     fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return ret;}
+   Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(); fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel();return fCurrentOverlapping;}
+   Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(index);
+                                     fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
    Int_t                  PushPoint() {return fCache->PushState(fCurrentOverlapping, fPoint);}
-   Bool_t                 PopPoint() {fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel();return fCache->PopState(fPoint);}
-   Bool_t                 PopPoint(Int_t index) {fCurrentNode=fCache->GetNode();
-                                     fLevel=fCache->GetLevel(); return fCache->PopState(index, fPoint);}
+   Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fPoint); fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
+   Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(index, fPoint); fCurrentNode=fCache->GetNode();
+                                     fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
   ClassDef(TGeoManager, 1)          // geometry manager

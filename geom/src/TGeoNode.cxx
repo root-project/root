@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.8 2002/09/30 20:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.9 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -332,7 +332,7 @@ void TGeoNode::PrintCandidates() const
 void TGeoNode::PrintOverlaps() const
 {
 // print possible overlapping nodes
-   if (!fNovlp) {printf("node %s is ONLY\n", GetName()); return;}
+   if (!IsOverlapping()) {printf("node %s is ONLY\n", GetName()); return;}
    if (!fOverlaps) {printf("node %s no overlaps\n", GetName()); return;}
    printf("Overlaps for node %s :\n", GetName());
    TGeoNode *node;

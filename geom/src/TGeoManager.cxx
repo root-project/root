@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.17 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.18 2002/10/09 14:03:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1398,6 +1398,9 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
 // or exit next node.
 
    // convert current point and direction to local reference
+//   printf("-------- currently : %s\n", fCurrentNode->GetName());
+//   printf("--- alpha=%g\n", 180.*TMath::ATan2(fDirection[1], fDirection[0])/TMath::Pi());
+//   printf("--- point : %g, %g, %g\n", fPoint[0], fPoint[1], fPoint[2]);
    fStep = TGeoShape::kBig;
    Double_t point[3];
    Double_t dir[3];
@@ -1440,18 +1443,59 @@ TGeoNode *TGeoManager::FindNextBoundary(const char *path)
    fIsStepExiting=kTRUE;
    Double_t snext  = TGeoShape::kBig;
    fStep = vol->GetShape()->DistToOut(&point[0], &dir[0], 2, TGeoShape::kBig, &fSafety);
-   if (fIsOnBoundary && fIsExiting) return fCurrentNode;
+//   printf("to exiting : %g\n", fStep);
+//   if (fIsOnBoundary && fIsExiting) return fCurrentNode;
+   TGeoNode *clnode = fCurrentNode;
+   TGeoNode *current = 0;
+   TGeoVolume *mother = 0;
    // if we are in an overlapping node, check also the mother
    if (fCurrentOverlapping) {
+//      printf("overlapping node -> go to safe level\n");
       Double_t mothpt[3];
-      fCurrentNode->LocalToMaster(&point[0], &mothpt[0]);
-      fStep = TMath::Min(fStep, fCurrentNode->GetMotherVolume()->GetShape()->DistToOut(&mothpt[0], &dir[0], 2, TGeoShape::kBig, &fSafety));
+      Double_t vecpt[3];
+      Double_t dpt[3], dvec[3];
+      PushPath();
+      Int_t novlps;
+      while (fCurrentOverlapping) {
+         Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
+         CdUp();
+         mother = fCurrentNode->GetVolume();
+//         printf("-> up in %s\n", fCurrentNode->GetName());
+         MasterToLocal(fPoint, &mothpt[0]);
+         MasterToLocalVect(fDirection, &vecpt[0]);
+         // check distance to out
+         snext = mother->GetShape()->DistToOut(&mothpt[0], &vecpt[0], 2, TGeoShape::kBig, &fSafety);
+//         printf("-> to out : %g\n", snext);
+         if (snext<fStep) {
+//            printf(" this is closer...\n");
+            fStep = snext;
+            clnode = fCurrentNode;
+         }   
+         // check overlapping nodes
+//         printf("-> now check overlaps...\n");
+         for (Int_t i=0; i<novlps; i++) {
+            current = mother->GetNode(ovlps[i]);
+            if (!current->IsOverlapping()) {
+//               printf("checking overlapping %s\n", current->GetName());
+               current->cd();
+               current->GetMatrix()->MasterToLocal(&mothpt[0], &dpt[0]);
+               current->GetMatrix()->MasterToLocalVect(&vecpt[0], &dvec[0]);
+               snext = current->GetVolume()->GetShape()->DistToIn(&dpt[0], &dvec[0], 2, TGeoShape::kBig, &fSafety);    
+//               printf("-> to in : %g\n", snext);
+               if (snext<fStep) {
+//                  printf(" this is closer\n");
+                  fStep = snext;
+                  clnode = current;
+               }   
+            }
+         }   
+      }
+      PopPath();
+//      printf("back in %s\n", fCurrentNode->GetName());
    }
    // get number of daughters. If no daughters we are done.
    Int_t nd = vol->GetNdaughters();
    if (!nd) return fCurrentNode;
-   TGeoNode *current = 0;
-   TGeoNode *clnode = fCurrentNode;
    Double_t lpoint[3];
    Double_t ldir[3];
    Double_t safety = TGeoShape::kBig;
@@ -2046,9 +2090,13 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
 // crossed in case of a geometry step (default true). Returns new node after step.
 // Set also on boundary condition.
    Double_t epsil = 0;
-   if (fStep<1E-9) fIsNullStep=kTRUE;
-   else fIsNullStep=kFALSE; 
-   if (is_geom) epsil=(cross)?1E-9:-1E-9;
+   if (fStep<1E-6) {
+      fIsNullStep=kTRUE;
+      fStep = 0.;
+   } else {
+      fIsNullStep=kFALSE; 
+   }   
+   if (is_geom) epsil=(cross)?1E-6:-1E-6;
    TGeoNode *old = fCurrentNode;
    if (fIsOutside) old = 0;
    fStep += epsil;
