@@ -3,4 +3,7 @@ long:
 This package provides two utilities for converting old ZEBRA files
 into ROOT structures in ROOT files. h2root converts an HBOOK
 file, containing histograms and/or NTuples, into ROOT files with
-histograms and/or trees (TNtuple). 
+histograms and/or trees (TNtuple). g2root converts GEANT3 geometries
+into ROOT TGeometry geometries. This package also contains the
+libHbook library that allows the reading of HBOOK file and on the
+fly conversion of HBOOK histograms and ntuples (RWN and CWN).
