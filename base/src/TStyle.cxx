@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.17 2002/03/14 17:32:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.18 2002/04/20 08:06:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -215,7 +215,7 @@ TStyle::~TStyle()
 }
 
 //______________________________________________________________________________
-TStyle::TStyle(const TStyle &style)
+TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
    ((TStyle&)style).Copy(*this);
 }

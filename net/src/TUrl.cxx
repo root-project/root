@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.5 2000/12/13 15:13:53 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.6 2002/03/20 18:54:57 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -191,7 +191,7 @@ cleanup:
 }
 
 //______________________________________________________________________________
-TUrl::TUrl(const TUrl &url)
+TUrl::TUrl(const TUrl &url) : TObject(url)
 {
    // TUrl copt ctor.
 

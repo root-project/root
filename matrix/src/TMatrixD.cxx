@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.18 2002/05/10 07:19:00 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.19 2002/05/10 08:46:51 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2250,7 +2250,7 @@ TMatrixD &TMatrixD::operator=(const TMatrixD &source)
    return *this;
 }
 
-TMatrixD::TMatrixD(const TMatrixD &another)
+TMatrixD::TMatrixD(const TMatrixD &another) : TObject(another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);

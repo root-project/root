@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.12 2002/04/01 17:19:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.13 2002/05/09 08:09:35 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TProcessID::~TProcessID()
 }
 
 //______________________________________________________________________________
-TProcessID::TProcessID(const TProcessID &ref)
+TProcessID::TProcessID(const TProcessID &ref) : TNamed(ref)
 {
    // TProcessID copy ctor.
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.2 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t po
 }
 
 //______________________________________________________________________________
-TInetAddress::TInetAddress(const TInetAddress &adr)
+TInetAddress::TInetAddress(const TInetAddress &adr) : TObject(adr)
 {
    // TInetAddress copy ctor.
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.10 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.11 2001/08/17 18:44:57 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -740,7 +740,7 @@ TListIter::TListIter(const TList *l, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TListIter::TListIter(const TListIter &iter)
+TListIter::TListIter(const TListIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

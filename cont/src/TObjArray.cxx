@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.13 2001/11/16 02:47:36 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.14 2002/03/05 17:08:13 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -596,7 +596,7 @@ TObjArrayIter::TObjArrayIter(const TObjArray *arr, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter)
+TObjArrayIter::TObjArrayIter(const TObjArrayIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

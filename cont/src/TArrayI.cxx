@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.6 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.8 2002/05/09 20:22:00 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TArrayI::TArrayI(Int_t n, const Int_t *array)
 }
 
 //______________________________________________________________________________
-TArrayI::TArrayI(const TArrayI &array)
+TArrayI::TArrayI(const TArrayI &array) : TArray(array)
 {
    // Copy constructor.
 
