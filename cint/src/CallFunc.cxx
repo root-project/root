@@ -404,7 +404,8 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
   if(method.IsValid()) {
 #ifndef G__OLDIMPLEMENTATION1840
     G__ClassInfo *pcls=method.MemberOf();
-    if(pcls && strcmp(pcls->Name(),method.Name())==0) {
+    if(pcls && pcls->Name() && method.Name() &&
+       strcmp(pcls->Name(),method.Name())==0) {
 #ifdef G__ROOT
       G__store_struct_offset = (long)(new char[pcls->Size()]);
 #else
