@@ -1,7 +1,5 @@
 {
-  gROOT->ProcessLine(".L func.C");
   bool result = true;
-
 
   TChain *chain = new TChain("ntuple");
   chain->Add("hsimple1.root");
