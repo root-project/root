@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.180 2005/01/27 20:43:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.181 2005/02/08 14:34:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -422,6 +422,14 @@ Long64_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    // branch names can be used as C++ variables. This is
    // accomplished by generating a TTreeProxy (see MakeProxy)
    // and including the files in the proper location.
+   //
+   // If the branch name can not be used a proper C++ symbol name,
+   // it will be modified as follow:
+   //    - white spaces are removed
+   //    - if the leadind character is not a letter, an underscore is inserted
+   //    - < and > are replace by underscores
+   //    - * is replaced by st
+   //    - & is replaced by rf
    //
    // If a cutfilename is specified, for each entry, we execute
    //   if (cutfilename()) htemp->Fill(macrofilename());
