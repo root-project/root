@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.9 2004/05/14 14:49:12 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rlibmap.cxx,v 1.10 2004/05/14 16:34:10 rdm Exp $
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 // This program generates a map between class name and shared library.
 // Its output is in TEnv format.
-// Usage: rlibmap [-f] [-o <mapfile>] -l <sofile> -d <depsofiles> \
+// Usage: rlibmap [-f] [-o <mapfile>] -l <sofile> -d <depsofiles>
 //                 -c <linkdeffiles>
 // -f: output full library path name (not needed when ROOT library
 //     search path is used)
@@ -304,12 +304,23 @@ int main(int argc, char **argv)
       if (!strcmp(argv[ic], "-l")) {
          ic++;
          solib = argv[ic];
+#ifdef __APPLE__
+         string::size_type i = solib.find(".dylib");
+         if (i != string::npos)
+            solib.replace(i, 6, ".so");
+#endif
          ic++;
       }
       if (!strcmp(argv[ic], "-d")) {
          ic++;
          for (int i = ic; i < argc && argv[i][0] != '-'; i++) {
-            solibdeps.push_back(argv[i]);
+            string dl = argv[i];
+#ifdef __APPLE__
+            string::size_type i = dl.find(".dylib");
+            if (i != string::npos)
+               dl.replace(i, 6, ".so");
+#endif
+            solibdeps.push_back(dl);
             ic++;
          }
       }
