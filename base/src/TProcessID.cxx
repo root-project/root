@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.19 2002/11/05 09:37:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.20 2002/12/18 08:07:29 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -234,7 +234,10 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    //The TProcessID with number pidf is read from file.
    //If the object is not already entered in the gROOT list, it is added.
 
-   if (!file) return 0;
+   if (!file) {
+      if (!pidf) return fgPID; //may happen when cloning an object
+      return 0;
+   }
    TObjArray *pids = file->GetListOfProcessIDs();
    TProcessID *pid = 0;
    if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
