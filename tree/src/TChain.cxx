@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.30 2001/12/05 21:07:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.31 2001/12/06 13:37:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TSystem.h"
 #include "TRegexp.h"
 
-Int_t TChain::fgMaxMergeSize = 1900000;
+Int_t TChain::fgMaxMergeSize = 1900000000;
 
 ClassImp(TChain)
 
