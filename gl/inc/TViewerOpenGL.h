@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h
+// @(#)root/gl:$Name:  $:$Id:$
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 #ifndef ROOT_TViewerOpenGL
 #define ROOT_TViewerOpenGL
 
@@ -31,7 +32,7 @@ public:
    //final overriders for TVirtualViewer3D
    void UpdateScene(Option_t *);
    void CreateScene(Option_t *);
-        
+
    Bool_t HandleContainerButton(Event_t *ev);
    Bool_t HandleContainerConfigure(Event_t *ev);
    Bool_t HandleContainerKey(Event_t *ev);
@@ -39,11 +40,11 @@ public:
    Bool_t HandleContainerExpose(Event_t *ev);
    void HandleInput(int, int, int){}
 private:
-   class TGCanvas * fCanvasWindow;       
-   TPGL::TGLWidget * fCanvasContainer;   
-   class TGLayoutHints * fCanvasLayout;   
+   class TGCanvas * fCanvasWindow;
+   TPGL::TGLWidget * fCanvasContainer;
+   class TGLayoutHints * fCanvasLayout;
    TList fGLObjects;
-    
+
    Double_t fXc;
    Double_t fYc;
    Double_t fZc;
@@ -82,4 +83,4 @@ private:
    ClassDef(TViewerOpenGL, 0)
 };
 
-#endif //!ROOT_TViewerOpenGL
+#endif

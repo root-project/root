@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.5 2004/08/03 16:01:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.5 2004/08/09 15:35:51 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 // TGLKernel                                                            //
 //                                                                      //
-// The TGLKernel  implementation of TVirtualGL class                    //
+// The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ protected:
    EG3D2GLmode  fFaceFlag;      // The current "face" definiton - clockwise/counterclockwise
 
 public:
-   TGLKernel(TVirtualGLimp *imp = 0);
+   TGLKernel(TVirtualGLImp *imp = 0);
    TGLKernel(const char *name);
    virtual ~TGLKernel();
 
@@ -122,7 +122,7 @@ public:
    void GLUNextContour(GLUtesselator *);
    void GLUBeginPolygon(GLUtesselator *);
    void GLUEndPolygon(GLUtesselator *);
-   void GLUTessVertex(GLUtesselator *, const Double_t *);      
+   void GLUTessVertex(GLUtesselator *, const Double_t *);
    void SetTrueColorMode(Bool_t flag=kTRUE) { fTrueColorMode = flag; }
    Bool_t GetRootLight() {return fRootLight;}
    Bool_t GetTrueColorMode() {return fTrueColorMode;}

@@ -1,3 +1,14 @@
+// @(#)root/gl:$Name:  $:$Id:$
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <vector>
 #include <memory>
 
@@ -21,24 +32,24 @@ namespace TPGL{
    {
    public:
       FaceSet(const TBuffer3D & buf_initializer);
-		
+
       std::vector<Double_t> fPnts;
       std::vector<Double_t> fNormals;
       std::vector<Int_t> fPols;
-	
+
       Int_t fNbPols;
       Int_t fColorInd;
    private:
       //non copyable class
       FaceSet(const FaceSet &);
       FaceSet & operator = (const FaceSet &);
-	
+
       Int_t CheckPoints(const Int_t * source, Int_t * dest)const;
       static Bool_t Eq(const Double_t * p1, const Double_t * p2);
    };
 
    FaceSet::FaceSet(const TBuffer3D & init_buf)
-               :fPnts(init_buf.fPnts, init_buf.fPnts + init_buf.fNbPnts * 3), 
+               :fPnts(init_buf.fPnts, init_buf.fPnts + init_buf.fNbPnts * 3),
                 fNormals(init_buf.fNbPols * 3), fNbPols(init_buf.fNbPols), fColorInd(init_buf.fSegs[0])
    {
       Int_t * segs = init_buf.fSegs;
@@ -57,23 +68,23 @@ namespace TPGL{
 	 Int_t normp[] = {0, 0, 0};
 
 	 np[0] != np[2] ?
-		        (np[0] != np[3] ? 
-					 (*n = *np, n[1] = np[1] == np[2] ? 
-									   n[2] = np[3], np[2] 
+		        (np[0] != np[3] ?
+					 (*n = *np, n[1] = np[1] == np[2] ?
+									   n[2] = np[3], np[2]
 									  :(n[2] = np[2], np[3]))
 					:(*n = np[1], n[1] = *np, n[2] = np[2] ))
 			  :(*n = np[1], n[1] = *np, n[2] = np[3]);
          fPols.push_back(3);
 
 	 Int_t pol_size_ind = fPols.size() - 1;
-		
+
 	 fPols.insert(fPols.end(), n, n + 3);
-	    
+
 	 Int_t check = CheckPoints(n, normp), ngood = check;
-	    
+
 	 if(check == 3)
             TMath::Normal2Plane(pnts + n[0] * 3, pnts + n[1] * 3, pnts + n[2] * 3, &fNormals[num_pol * 3]);
-	
+
          while(segment_ind > j + 1)
          {
             seg2 = pols[segment_ind];
@@ -93,10 +104,10 @@ namespace TPGL{
             if(check != 3 && ngood == 3)
             {
                check = CheckPoints(normp, normp);
-		    
+
                if(check == 3)
                   TMath::Normal2Plane(
-                                       pnts + normp[0] * 3, pnts + normp[1] * 3, 
+                                       pnts + normp[0] * 3, pnts + normp[1] * 3,
                                        pnts + normp[2] * 3, &fNormals[num_pol * 3]
                                      );
 	       ngood = check;
@@ -114,14 +125,14 @@ namespace TPGL{
       const Double_t * p2 = &fPnts[source[1] * 3];
       const Double_t * p3 = &fPnts[source[2] * 3];
       Int_t ret_val = 1;
-	    
-      !Eq(p1, p2) ? 
+
+      !Eq(p1, p2) ?
                    !Eq(p1, p3) ?
-			    	!Eq(p2, p3) ? 
+			    	!Eq(p2, p3) ?
 					     ret_val = 3
 					    :
 					     (ret_val = 2, *dest = *source, dest[1] = source[1])
-				: 
+				:
 				 (ret_val = 2, *dest = *source, dest[1] = source[1])
 		    :
 		    !Eq(p2, p3) ?
@@ -131,30 +142,30 @@ namespace TPGL{
 
       return ret_val;
    }
-	
+
    inline Bool_t FaceSet::Eq(const Double_t * p1, const Double_t * p2)
    {
       return *p1 == *p2 && p1[1] == p2[1] && p1[2] == p2[2];
    }
-   
-   class TGLWidget : public TGCompositeFrame 
+
+   class TGLWidget : public TGCompositeFrame
    {
    public:
       TGLWidget(TViewerOpenGL * c, Window_t id, const TGWindow * parent);
-    
+
       Bool_t  HandleButton(Event_t * event)
-      { 
-         return fViewer->HandleContainerButton(event); 
+      {
+         return fViewer->HandleContainerButton(event);
       }
       Bool_t  HandleConfigureNotify(Event_t * event)
-      { 
+      {
          TGFrame::HandleConfigureNotify(event);
-	    
-	 return fViewer->HandleContainerConfigure(event); 
+
+	 return fViewer->HandleContainerConfigure(event);
       }
       Bool_t  HandleKey(Event_t * event)
       {
-         return fViewer->HandleContainerKey(event); 
+         return fViewer->HandleContainerKey(event);
       }
       Bool_t  HandleMotion(Event_t * event)
       {
@@ -167,27 +178,27 @@ namespace TPGL{
    private:
       TViewerOpenGL  * fViewer;
    };
-    
+
    TGLWidget::TGLWidget(TViewerOpenGL * c, Window_t id, const TGWindow *p)
                   :TGCompositeFrame(gClient, id, p)
    {
       fViewer = c;
       gVirtualX->GrabButton(
-                            fId, kAnyButton, kAnyModifier, 
-                            kButtonPressMask | kButtonReleaseMask, 
+                            fId, kAnyButton, kAnyModifier,
+                            kButtonPressMask | kButtonReleaseMask,
                             kNone, kNone
                            );
       gVirtualX->SelectInput(
-				fId, 
+				fId,
 				kKeyPressMask | kExposureMask | kPointerMotionMask | kStructureNotifyMask
-#ifndef GDK_WIN32				
+#ifndef GDK_WIN32
 				);
 #else
 				| kKeyReleaseMask);
 #endif
 	gVirtualX->SetInputFocus(fId);
     }
-    
+
     extern Float_t colors[];
 }
 
@@ -197,7 +208,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
 		: TVirtualViewer3D(vp), TGMainFrame(gClient->GetRoot(), 600, 600),
 		  fCanvasWindow(0), fCanvasContainer(0), fCanvasLayout(0),
 		  fXc(0.), fYc(0.), fZc(0.), fRad(0.),
-		  fCtx(0), fGLWin(0), fPressed(kFALSE), 
+		  fCtx(0), fGLWin(0), fPressed(kFALSE),
 		  fDList(1), fArcBall(0)
 {
    fGLObjects.SetOwner(kTRUE);
@@ -220,7 +231,7 @@ void TViewerOpenGL::CreateViewer()
    fCanvasWindow->SetContainer(fCanvasContainer);
 
    std::auto_ptr<TGLayoutHints> safe_ptr3(new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-    
+
    fCanvasLayout = safe_ptr3.get();
    AddFrame(fCanvasWindow, fCanvasLayout);
    SetWindowName("OpenGL experimental viewer");
@@ -246,9 +257,9 @@ TViewerOpenGL::~TViewerOpenGL()
 void TViewerOpenGL::InitGLWindow()
 {
 #ifdef GDK_WIN32
-   new TGLKernel((TVirtualGLimp *)gROOT->ProcessLineFast("new TGWin32GL"));
+   new TGLKernel((TVirtualGLImp *)gROOT->ProcessLineFast("new TGWin32GL"));
 #else
-   new TGLKernel((TVirtualGLimp *)gROOT->ProcessLineFast("new TX11GL"));
+   new TGLKernel((TVirtualGLImp *)gROOT->ProcessLineFast("new TX11GL"));
 #endif
    gVirtualGL->SetTrueColorMode();
 
@@ -284,7 +295,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t * event)
    if(event->fType == kButtonPress && event->fCode == kButton1)
    {
       TPoint pnt(event->fX, event->fY);
-      
+
       fArcBall->Click(pnt);
       fPressed = kTRUE;
    }
@@ -314,9 +325,9 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t * event)
 {
    if(fPressed){
       TPoint pnt(event->fX, event->fY);
-      
+
       fArcBall->Drag(pnt);
-      DrawObjects();	
+      DrawObjects();
    }
    return kTRUE;
 }
@@ -332,7 +343,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    fGLObjects.Delete();
 
    TView * v = fPad->GetView();
-	
+
    if(!v){
       Error("CreateScene", "view not set");
       return;
@@ -376,7 +387,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    gVirtualGL->EnableGL(kCULL_FACE);
    gVirtualGL->CullFaceGL(kBACK);
    BuildGLList();
-   DrawObjects();	
+   DrawObjects();
 }
 
 void TViewerOpenGL::UpdateScene(Option_t *)
@@ -385,9 +396,9 @@ void TViewerOpenGL::UpdateScene(Option_t *)
 
    if(buff->fOption == buff->kOGL){
       UpdateRange(buff);
-      
+
       std::auto_ptr<TPGL::FaceSet>safe_ptr(new TPGL::FaceSet(*buff));
-      
+
       fGLObjects.AddLast(safe_ptr.get());
       safe_ptr.release();
    }
@@ -411,10 +422,10 @@ void TViewerOpenGL::DrawObjects()const
 
    MakeCurrent();
    gVirtualGL->ClearGL(0);
-   
+
    Int_t cx = GetWidth() / 2, cy = GetHeight() / 2;
    Int_t d = TMath::Min(cx, cy);
-   
+
    gVirtualGL->ViewportGL(cx - d, cy - d, d * 2, d * 2);
    gVirtualGL->NewMVGL();
    gVirtualGL->PushGLMatrix();
@@ -424,7 +435,7 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->TranslateGL(-fXc, -fYc, -fZc);
    gVirtualGL->RunGLList(fDList);
    gVirtualGL->PopGLMatrix();
-    
+
    Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
 
    gVirtualGL->GLLight(kLIGHT0, pos);
@@ -435,11 +446,11 @@ void TViewerOpenGL::UpdateRange(const TBuffer3D * buffer)
 {
    Double_t xmin = buffer->fPnts[0], xmax = xmin, ymin = buffer->fPnts[1], ymax = ymin, zmin = buffer->fPnts[2], zmax = zmin;
    //calculate range
-   for(Int_t i = 3, e = buffer->fNbPnts * 3; i < e; i += 3)		
+   for(Int_t i = 3, e = buffer->fNbPnts * 3; i < e; i += 3)
       xmin = TMath::Min(xmin, buffer->fPnts[i]), xmax = TMath::Max(xmax, buffer->fPnts[i]),
       ymin = TMath::Min(ymin, buffer->fPnts[i + 1]), ymax = TMath::Max(ymax, buffer->fPnts[i + 1]),
       zmin = TMath::Min(zmin, buffer->fPnts[i + 2]), zmax = TMath::Max(zmax, buffer->fPnts[i + 2]);
-		
+
    if(!fGLObjects.GetSize()){
       fRangeX.first = xmin, fRangeX.second = xmax;
       fRangeY.first = ymin, fRangeY.second = ymax;
@@ -483,8 +494,8 @@ void TViewerOpenGL::BuildGLList()const
       Float_t rgb[] = {colors[ind * 3], colors[ind * 3 + 1], colors[ind * 3 + 2]};
 
       gVirtualGL->MaterialGL(kFRONT, rgb);
-      gVirtualGL->MaterialGL(kFRONT, 60.);    
-	
+      gVirtualGL->MaterialGL(kFRONT, 60.);
+
       for(Int_t i = 0, npols = pobj->fNbPols, j = 0; i < npols; ++i){
          Int_t npoints = pols[j++];
          if(t_obj && npoints > 4){
@@ -492,7 +503,7 @@ void TViewerOpenGL::BuildGLList()const
             gVirtualGL->GLUBeginPolygon(t_obj);
             gVirtualGL->GLUNextContour(t_obj);
             gVirtualGL->SetGLNormal(normalvector + i * 3);
-				
+
             for(Int_t k = 0; k < npoints; ++k, ++j)
 	       gVirtualGL->GLUTessVertex(t_obj, pnts + pols[j] * 3);
 
@@ -501,7 +512,7 @@ void TViewerOpenGL::BuildGLList()const
          else{
             gVirtualGL->BeginGL();
             gVirtualGL->SetGLNormal(normalvector + i * 3);
-		
+
             for(Int_t k = 0; k < npoints; ++k, ++j)
                gVirtualGL->SetGLVertex(pnts + pols[j] * 3);
             gVirtualGL->EndGL();
@@ -544,6 +555,6 @@ namespace TPGL{
 		    20.f / 255, 184.f / 255, 184.f / 255,
 		    71.f / 255, 235.f / 255, 235.f / 255,
 		    117.f / 255, 240.f / 255, 240.f / 255
-		    
+
 		};
 }

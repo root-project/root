@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.25 2004/08/03 16:01:17 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.26 2004/08/09 15:35:51 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -46,7 +46,7 @@
 #pragma link C++ global gErrorAbortLevel;
 #pragma link C++ global gStyle;
 #pragma link C++ global gVirtualGL;
-#pragma link C++ global gVirtualGLimp;
+#pragma link C++ global gVirtualGLImp;
 #pragma link C++ global gVirtualPS;
 #pragma link C++ global gRootDir;
 #pragma link C++ global gProgName;
@@ -145,7 +145,7 @@
 #pragma link C++ class TBuffer3D;
 #pragma link C++ class TPadView3D;
 #pragma link C++ class TVirtualGL;
-#pragma link C++ class TVirtualGLimp;
+#pragma link C++ class TVirtualGLImp;
 #pragma link C++ class TVirtualPS;
 #pragma link C++ class TVirtualUtil3D;
 #pragma link C++ class TVirtualUtilHist;

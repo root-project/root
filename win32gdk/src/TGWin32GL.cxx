@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.83 2004/08/03 16:01:18 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32GL.cxx,v 1.1 2004/08/09 15:46:53 brun Exp $
 // Author: Valeriy Onuchin  05/08/04
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TGWin32GL                                                            //
 //                                                                      //
-// The TGWin32GL is win32gdk implementation of TVirtualGLimp class      //
+// The TGWin32GL is win32gdk implementation of TVirtualGLImp class.     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

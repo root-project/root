@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.8 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.10 2004/08/09 15:35:51 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -13,7 +13,7 @@
 //                                                                      //
 // TGLKernel                                                            //
 //                                                                      //
-// The TGLKernel  implementation of TVirtualGL class                    //
+// The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,7 @@ GLenum GLCommand[] = { GLConstants(GL_)  };
 
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(TVirtualGLimp *imp) : TVirtualGL(imp) 
+TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp)
 {
    // Ctor.
 
@@ -51,7 +51,7 @@ TGLKernel::TGLKernel(TVirtualGLimp *imp) : TVirtualGL(imp)
 }
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(const char *name) : TVirtualGL(name) 
+TGLKernel::TGLKernel(const char *name) : TVirtualGL(name)
 {
    // Ctor.
 
@@ -91,7 +91,7 @@ void TGLKernel::ClearColor(Int_t color)
 void TGLKernel::ClearGLColor(Float_t red, Float_t green, Float_t blue, Float_t alpha)
 {
    //
-  
+
    ::glClearColor(red, green, blue, alpha);
 }
 
@@ -99,7 +99,7 @@ void TGLKernel::ClearGLColor(Float_t red, Float_t green, Float_t blue, Float_t a
 void TGLKernel::ClearGLColor(Float_t *colors)
 {
    //
-  
+
    GLclampf red   = colors[0];
    GLclampf green = colors[1];
    GLclampf blue  = colors[2];
@@ -151,7 +151,7 @@ void TGLKernel::FlushGL()
 void TGLKernel::FrontGLFace(EG3D2GLmode faceflag)
 {
    //
-    
+
    fFaceFlag = faceflag;
    ::glFrontFace(GLCommand[faceflag]);
 }
@@ -161,14 +161,14 @@ void TGLKernel::NewGLList(UInt_t ilist, EG3D2GLmode mode)
 {
    //
 
-   ::glNewList(ilist, GLCommand[mode]); 
+   ::glNewList(ilist, GLCommand[mode]);
 }
 
 //______________________________________________________________________________
 void TGLKernel::NewGLModelView(Int_t ilist)
 {
    //
-    
+
    ::glNewList(ilist, GL_COMPILE);
 //--    glMatrixMode(GL_MODELVIEW);
 //--    glLoadIdentity();
@@ -208,7 +208,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, Int_t *params)
 
 //______________________________________________________________________________
 Int_t TGLKernel::GetGLError()
-{ 
+{
    //
 
    return ::glGetError();
@@ -216,7 +216,7 @@ Int_t TGLKernel::GetGLError()
 
 //______________________________________________________________________________
 void TGLKernel::EndGLList()
-{ 
+{
    //
 
    ::glEndList();
@@ -258,7 +258,7 @@ void TGLKernel::PopGLMatrix()
 void TGLKernel::RotateGL(Double_t *direction, Int_t mode)
 {
    //
- 
+
    if (mode) {
       Double_t angle = direction[0];
       Double_t x     = direction[1];
@@ -284,7 +284,7 @@ void TGLKernel::RotateGL(Double_t angle, Double_t x,Double_t y,Double_t z)
    //*-* rotation of angle degrees about the vector from the origin through
    //*-* the point (x, y, z).
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-  
+
    ::glRotated(angle,x,y,z);
 }
 
@@ -371,7 +371,7 @@ void TGLKernel::SetCurrentColor(Int_t color)
       Float_t red;
       Float_t green;
       Float_t blue;
-      
+
       TColor *c = gROOT->GetColor(color);
       if (!c) c = gROOT->GetColor(17);
       c->GetRGB(red,green,blue);
@@ -423,7 +423,7 @@ void TGLKernel::SetRootLight(Bool_t flag)
          ::glEnable(GL_STEREO);
       #endif
       //            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
-      //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);  
+      //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);
       //          glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
       }
    }
@@ -474,10 +474,10 @@ void TGLKernel::NewProjectionView(Double_t min[], Double_t max[], Bool_t perspec
 
    ::glMatrixMode(GL_PROJECTION);
    ::glLoadIdentity();
-   
+
    Double_t dnear = TMath::Abs(max[0]-min[0]);
    Double_t dfar = 3*(dnear + TMath::Abs(max[2]-min[2]));
-   
+
    if (perspective)
       ::glFrustum(min[0],max[0],min[1],max[1],dnear,dfar);
    else
@@ -591,11 +591,11 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
    //          "P"        - draw the 3d points at each coordinate (by default)
    //          "LP"       - draw the 3D points and connect them with
    //                       straight lines
-    
+
 
    if (!points) return;
    Int_t n = points->Size();
-    
+
    if (n <=0) return;
 
 //    if (fRootLight)
@@ -605,7 +605,7 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
    Int_t pass = 0;
    if (option && strchr(option,'P')) { pass++;}
    if (option && strchr(option,'L')) { mode = GL_LINE_STRIP; pass++;}
-    
+
 
    while (pass >= 0) {
       pass--;
@@ -669,7 +669,7 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
 //*-* The counterclockwise polygons are taken to be front-facing by default
 
       if (fRootLight) LightIndex(0);
-     
+
       ::glBegin(GL_QUADS);
       //*-*  "Top"  of TBRIK
       if (!fRootLight)
@@ -742,11 +742,11 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
 
    ::glBegin(GL_POLYGON);
    p  = vertex+3*(nz-1)*nxy;
-  
+
    start = p;
-  
+
    for (ixy=0; ixy<nxy; ::glVertex3fv(p), ixy++,p+=3);
-  
+
    ::glVertex3fv(start);
    ::glEnd();
 
@@ -758,9 +758,9 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
    ::glBegin(GL_POLYGON);
    p     = vertex+3*(nxy-1);
    start = p;
-  
+
    for (ixy=0; ixy<nxy; glVertex3fv(p), ixy++,  p-=3);
-  
+
    ::glVertex3fv(start);
    ::glEnd();
 
@@ -779,7 +779,7 @@ void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
    Float_t *key = vertex;
    for (Int_t iz=0; iz<nz-1; iz++) {
       ::glBegin(GL_QUAD_STRIP);
-      
+
       for (Int_t ixy=nxy; ixy > -1; ixy--) {
 
          Float_t *p1 = key + 3*(ixy%nxy); // reconnect back to first
@@ -828,7 +828,7 @@ Float_t *Normal2Line(Float_t *p1, Float_t *p2, Float_t *normal)
 
    Float_t Z = 0;
    Int_t i;
-  
+
    for(i=0;i<3;i++) {
       normal[i] = p2[i];
       Z += p2[i]*(p2[i]-p1[i]);
@@ -1079,7 +1079,7 @@ void TGLKernel::SetLineAttr(Color_t color, Int_t width)
    //
 
    Color_t c = color;
-    
+
    if (GetRootLight()) {
       c = ((c % 8) - 1) * 4;
       if (c<0) c = 0;
@@ -1124,7 +1124,7 @@ void TGLKernel::MatrixModeGL(EG3D2GLmode mode)
 }
 
 //______________________________________________________________________________
-void TGLKernel::FrustumGL( Double_t xmin, Double_t xmax, Double_t ymin, 
+void TGLKernel::FrustumGL( Double_t xmin, Double_t xmax, Double_t ymin,
                                  Double_t ymax, Double_t znear, Double_t zfar)
 {
    //
@@ -1160,7 +1160,7 @@ void TGLKernel::LightModel(EG3D2GLmode name, Int_t prop)
 void TGLKernel::CullFaceGL(EG3D2GLmode face)
 {
    //
-    
+
    ::glCullFace(GLCommand[face]);
 }
 
@@ -1200,7 +1200,7 @@ void TGLKernel::BeginGL()
 //______________________________________________________________________________
 void TGLKernel::EndGL()
 {
-   // 
+   //
 
    ::glEnd();
 }

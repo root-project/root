@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.5 2004/08/03 16:01:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.6 2004/08/09 15:35:51 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -45,36 +45,36 @@ class TPoints3DABC;
 struct GLUtesselator;
 
 
-class TVirtualGLimp {
+class TVirtualGLImp {
 
 public:
    virtual Window_t CreateGLWindow(Window_t wind) = 0;
-   virtual ULong_t CreateContext(Window_t wind) = 0;
-   virtual void DeleteContext(ULong_t ctx) = 0;
-   virtual void MakeCurrent(Window_t wind, ULong_t ctx) = 0;
-   virtual void SwapLayerBuffers(Window_t wind) = 0;
+   virtual ULong_t  CreateContext(Window_t wind) = 0;
+   virtual void     DeleteContext(ULong_t ctx) = 0;
+   virtual void     MakeCurrent(Window_t wind, ULong_t ctx) = 0;
+   virtual void     SwapLayerBuffers(Window_t wind) = 0;
 
-   ClassDef(TVirtualGLimp,0);
-}; 
+   ClassDef(TVirtualGLImp,0);
+};
 
 
 
 class TVirtualGL : public TNamed {
 
 protected:
-   TVirtualGLimp *fImp;
+   TVirtualGLImp *fImp;
 
 public:
-   TVirtualGL(TVirtualGLimp *imp = 0);
+   TVirtualGL(TVirtualGLImp *imp = 0);
    TVirtualGL(const char *name);
    virtual ~TVirtualGL() { delete fImp; }
 
    // system specific GL methods
    virtual Window_t CreateGLWindow(Window_t wind) { return fImp ? fImp->CreateGLWindow(wind) : 0; }
-   virtual ULong_t CreateContext(Window_t wind) { return fImp ? fImp->CreateContext(wind) : 0; }
-   virtual void DeleteContext(ULong_t ctx) {  if (fImp) fImp->DeleteContext(ctx); }
-   virtual void MakeCurrent(Window_t wind, ULong_t ctx) { if (fImp) fImp->MakeCurrent(wind, ctx); }
-   virtual void SwapLayerBuffers(Window_t wind) { if (fImp) fImp->SwapLayerBuffers(wind); }
+   virtual ULong_t  CreateContext(Window_t wind) { return fImp ? fImp->CreateContext(wind) : 0; }
+   virtual void     DeleteContext(ULong_t ctx) { if (fImp) fImp->DeleteContext(ctx); }
+   virtual void     MakeCurrent(Window_t wind, ULong_t ctx) { if (fImp) fImp->MakeCurrent(wind, ctx); }
+   virtual void     SwapLayerBuffers(Window_t wind) { if (fImp) fImp->SwapLayerBuffers(wind); }
 
    // common/kernel GL methods
    virtual void AddRotation(Double_t *rotmatrix, Double_t *extraangles) = 0;
