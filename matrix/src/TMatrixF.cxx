@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.28 2005/03/28 20:38:35 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.29 2005/03/29 20:44:52 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -2975,7 +2975,7 @@ void TMatrix::Streamer(TBuffer &R__b)
     if (R__v <= 2) {
       for (Int_t i = 0; i < fNrows; i++) {
         const Int_t off_i = i*fNcols;
-        for (Int_t j = i+1; j < fNcols; j++) {
+        for (Int_t j = i; j < fNcols; j++) {
           const Int_t off_j = j*fNrows;
           const Float_t tmp = fElements[off_i+j];
           fElements[off_i+j] = fElements[off_j+i];
