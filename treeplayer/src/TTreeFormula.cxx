@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.74 2001/12/04 21:52:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.75 2001/12/18 18:02:35 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TBranchElement.h"
 #include "TLeafElement.h"
 #include "TArrayI.h"
+#include "TError.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -1645,6 +1646,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
 
    if (leaf) { // We found a Leaf.
+
+      if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
+         ::Error("TTreeFormula","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
+         return -1;
+      }
 
       // Save the information
 
