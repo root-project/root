@@ -93,6 +93,10 @@ public:
    std::TEST_SET<TNamed>   fTNamed;    //||
    std::TEST_SET<TNamed*, PtrCmp<TNamed> >  fPtrTNamed; //||
    std::TEST_SET<const TNamed*, PtrCmp<const TNamed> >  fPtrConstTNamed; //||
+#else
+   std::TEST_SET<TNamed>   fTNamed;    //
+   std::TEST_SET<TNamed*, PtrCmp<TNamed> >  fPtrTNamed; //
+   std::TEST_SET<const TNamed*, PtrCmp<const TNamed> >  fPtrConstTNamed; //
 #endif
 
 

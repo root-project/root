@@ -85,7 +85,7 @@ public:
 #if defined(R__NO_NESTED_CONST_STRING)
    std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //!  this version of ROOT does not support nested const string
 #else
-   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString;
+   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //!
 #endif
 
    std::TEST_MAP<TString, std::string>  fTString;
@@ -95,6 +95,10 @@ public:
    std::TEST_MAP<TNamed, Helper>   fTNamed;    //||
    std::TEST_MAP<TNamed*, Helper, PtrCmp<TNamed> >  fPtrTNamed; //||
    //std::TEST_MAP<const TNamed*, Helper, PtrCmp<const TNamed> >  fPtrConstTNamed; //||
+#else
+   std::TEST_MAP<TNamed, Helper>   fTNamed;    //
+   std::TEST_MAP<TNamed*, Helper, PtrCmp<TNamed> >  fPtrTNamed; //
+   //std::TEST_MAP<const TNamed*, Helper, PtrCmp<const TNamed> >  fPtrConstTNamed; //
 #endif
 
 
@@ -103,7 +107,7 @@ public:
    std::TEST_MAP<std::string, std::vector<Helper> > fNestedV; //!
    std::TEST_MAP<std::string, std::deque<Helper > > fNestedD; //!
 #else
-   std::TEST_MAP<std::string, std::TEST_MAP<Helper> > fNested;  //
+   std::TEST_MAP<std::string, std::TEST_MAP<Helper,float> > fNested;  //
    std::TEST_MAP<std::string, std::vector<Helper> >   fNestedV; //
    std::TEST_MAP<std::string, std::deque<Helper > >   fNestedD; //
 #endif

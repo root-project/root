@@ -1,4 +1,3 @@
-# This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log
@@ -7,12 +6,29 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log
 TEST_TARGETS += stlIoTest
 
 # adjust the location of Rules.mk as needed.
-include ../../Rules.mk
+ifeq "x$(wildcard CVS)" "xCVS"
+PACKAGEABLE=yes
+RULES_DIR=../..
+else
+RULES_DIR=.
+endif
 
+include $(RULES_DIR)/Rules.mk
+
+VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
 LPWD := $(shell echo `pwd -P`)
 #debug := $(shell echo $(LPWD) 1>&2 )
-LIBDIR := $(subst .,-,$(subst /,-,$(shell root-config --version))).libs$(LPWD)/
+LIBDIR := $(VERSION).libs$(LPWD)/
+FILEDIR := $(VERSION)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
+
+$(FILEDIR):
+	@mkdir -p $(FILEDIR)
+
+$(LIBDIR):
+	@mkdir -p $(LIBDIR)
+
+directories: $(FILEDIR) $(LIBDIR)
 
 FTEST = $(wildcard ?test.C)
 FTEST_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(FTEST)) )
@@ -30,28 +46,28 @@ DEPENDENCY_FILES = $(TEST_DLL:.so=.df)
 
 #.PRECIOUS :  $(addprefix $(LIBDIR),$(subst .C,o.$(DllSuf),$(HOLDER) $(FTEST) $(LIBDIR)TestHelpers_C))
 
-deque: $(addprefix $(LIBDIR),dtest_C.$(DllSuf) dequeHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+deque: directories $(addprefix $(LIBDIR),dtest_C.$(DllSuf) dequeHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo deque up to date
 
-list: $(addprefix $(LIBDIR),ltest_C.$(DllSuf) listHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+list: directories $(addprefix $(LIBDIR),ltest_C.$(DllSuf) listHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo list up to date
 
-set: $(addprefix $(LIBDIR),stest_C.$(DllSuf) setHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+set: directories $(addprefix $(LIBDIR),stest_C.$(DllSuf) setHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo set up to date
 
-map: $(addprefix $(LIBDIR),mtest_C.$(DllSuf) mapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+map: directories $(addprefix $(LIBDIR),mtest_C.$(DllSuf) mapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo map up to date
 
-multimap: $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multimapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+multimap: directories $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multimapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo multimap up to date
 
-multiset: $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multisetHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+multiset: directories $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multisetHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo multiset up to date
 
-vector: $(addprefix $(LIBDIR),vtest_C.$(DllSuf) vectorHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+vector: directories $(addprefix $(LIBDIR),vtest_C.$(DllSuf) vectorHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo vector up to date
 
-stllibs: $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf) 
+stllibs: directories $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf) 
 
 # debug := $(shell echo $(FTEST_DLL) 1>&2 ) 
 
@@ -65,11 +81,11 @@ $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.so/ > $@
 
 $(LIBDIR)%_C.$(DllSuf) : %.C 
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
+	$(CMDECHO) root.exe -q -l -b $(RULES_DIR)/build.C\(\"$<\"\)
 	@touch $@
-#	$(CMDECHO) echo '.x ../../build.C("$<")' | root.exe -l -b -n
+#	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
-stlIoTest.log: $(TEST_DLL)
+stlIoTest.log: directories $(TEST_DLL)
 #	$(CMDECHO) root.exe -q -l -b brun.C > stlIoTest.log 2>&1 
 	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' > stlIoTest.log && ( cat full.log | grep 'does not support'; echo )
 
@@ -79,6 +95,24 @@ stlIoTest: stlIoTest.log
 testWithFailure:
 ifeq ($(FAIL),)
 	$(WarnFailTest)
+endif
+
+ifneq "x$(PACKAGEABLE)" "x"
+package:
+	rm -rf stltest
+	mkdir -p stltest
+	cp *.C *.h Makefile *.ref ../../Rules.mk ../../build.C stltest
+	( \
+	   tar_name=stlioTest; \
+	   inc=0; \
+	   tar_file=$$tar_name.$$inc.tar.gz; \
+	   while test -e $$tar_file; do \
+		   inc=$$(($$inc+1)); \
+		   tar_file=~/Transfer/$$tar_name.$$inc.tar.gz; \
+	   done; \
+	   tar cfz $$tar_file stltest; \
+      echo generated $$tar_file; \
+   )
 endif
 
 

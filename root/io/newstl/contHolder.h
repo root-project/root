@@ -98,6 +98,10 @@ public:
    std::TEST_CONT<TNamed>   fTNamed;    //||
    std::TEST_CONT<TNamed*>  fPtrTNamed; //||
    std::TEST_CONT<const TNamed*>  fPtrConstTNamed; //||
+#else
+   std::TEST_CONT<TNamed>   fTNamed;    //
+   std::TEST_CONT<TNamed*>  fPtrTNamed; //
+   std::TEST_CONT<const TNamed*>  fPtrConstTNamed; //
 #endif
 
 #if defined(R__NO_NESTED_CONTAINER)
