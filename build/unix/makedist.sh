@@ -15,7 +15,7 @@ rm -f ../${TARFILE}.gz
 
 if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]
 then
-   TAR=$TAR" zcvf"
+   TAR="gtar zcvf"
    TARFILE=$TARFILE".gz"
    EXCLUDE="--exclude CVS"
 else
