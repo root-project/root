@@ -1,20 +1,19 @@
-/*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
+/***************************************************************************** * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.5 2001/11/19 19:54:18 verkerke Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.6 2002/02/26 03:39:43 verkerke Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
  * History:
  *   08-Aug-2001 AB Created Roo2DHistPdf
  *   25-Aug-2001 AB Ported to RooFitCore/RooFitModels
+ *   11-Apr-2002 AB Some ctor bug fixes.
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
 
-//#include "BaBar/BaBar.hh"
 #include "RooFitModels/Roo2DHistPdf.hh"
 
 #include "RooFitCore/RooDataSet.hh"
@@ -32,6 +31,9 @@ Roo2DHistPdf::Roo2DHistPdf(const char * name, const char *title,
   x("x", "x dimension",this, xx),
   y("y", "y dimension",this, yy)
 {
+  // instigate a memory leak by only opening the file the once and never closing it.
+  // this seems to allow toy MCs to continue to work ok.  I am confused and suspect a 
+  // wider ramfication to this
   _file = new TFile(rootFile);
   if(!_file)
   {
@@ -47,6 +49,7 @@ Roo2DHistPdf::Roo2DHistPdf(const char * name, const char *title,
   }
 
   loadNewHist(_hist, opt);
+  //  _file->Close();
 }
 
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
@@ -56,7 +59,7 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   y("y", "y dimension",this, yy)
 {
   TH2F * hist = (TH2F*)data.createHistogram(xx,yy);
-  loadNewHist(_hist, opt);
+  loadNewHist(hist, opt);
 }
 
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
@@ -65,7 +68,7 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   x("x", "x dimension",this, xx),
   y("y", "y dimension",this, yy)
 {
-  loadNewHist(_hist, opt);
+  loadNewHist(hist, opt);
 }
 
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
@@ -75,12 +78,9 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   y("y", "y dimension",this, yy)
 {
   _iWantToExtrapolate = 0;
-  loadNewHist( (TH2F*)_hist, opt);
+  loadNewHist( (TH2F*)hist, opt);
 }
 
-// dont take on the file and histogram source from the original
-// PDF in case the clone goes out of scope at a different time
-// to the original
 Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
   RooAbsPdf(other,name),
   x("x", this, other.x),
@@ -101,6 +101,9 @@ Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
   _hiy = y.max();
   _ybinWidth = (_hiy-_loy)/(_nPointsy);
 
+  //  _hist = (TH2F*)other._hist->Clone();
+  _hist = other._hist;
+
   //read in the table of values
   for(Int_t i = 0; i < _nPointsx; i++)
   {
@@ -113,7 +116,8 @@ Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
 
 Roo2DHistPdf::~Roo2DHistPdf() 
 {
-  if(_file) _file->Close();
+  //  delete _hist;
+  //  if(_file) _file->Close();
 }
 
 Int_t Roo2DHistPdf::loadNewHist(TH2F * aNewHist, TString options)
@@ -165,11 +169,11 @@ Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
   //set boundary values
   _lox = x.min();
   _hix = x.max();
-  _xbinWidth = (_hix-_lox)/(_nPointsx);
+  _xbinWidth = (_hix-_lox)/(Double_t)(_nPointsx);
 
   _loy = y.min();
   _hiy = y.max();
-  _ybinWidth = (_hiy-_loy)/(_nPointsy);
+  _ybinWidth = (_hiy-_loy)/(Double_t)(_nPointsy);
 
   if( (_xbinWidth == 0.0) || (_ybinWidth == 0.0))
   {
@@ -181,7 +185,7 @@ Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
   {
     for(Int_t j = 1; j <= ny; j++)
     {
-      _p[i-1][j-1] = theHist->GetBinContent(i, j);
+      _p[i-1][j-1] = (Double_t)theHist->GetBinContent(i, j);
       if(_p[i-1][j-1] < 0.0)
       {
         cout << "Roo2DHistPdf::GetProbability histogram bin content: "<< _p[i-1][j-1] <<" < 0; setting to probability to 0.0"<<endl;
@@ -198,12 +202,9 @@ Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
 //=======================================================================================//
 Double_t Roo2DHistPdf::evaluate() const
 {
-  Int_t    ix =  (Int_t)( (x - _lox) / _xbinWidth);
-  Int_t    iy =  (Int_t)( (y - _loy) / _ybinWidth);
-  Double_t signX = 1.0;
-  Double_t signY = 1.0;
+  Int_t    ix =  (Int_t)( (x - x.min()) / _xbinWidth);
+  Int_t    iy =  (Int_t)( (y - y.min()) / _ybinWidth);
 
-  //check x,y is in the valid domain
   if (ix<0) 
   {
     cerr << "got point below lower bound:" << x << " < " << _lox << endl;
@@ -213,7 +214,6 @@ Double_t Roo2DHistPdf::evaluate() const
   {
     cerr << "got point above upper bound:" << x << " > " << _hix << " ix = "<<ix<<endl;
     ix=_nPointsx-1;
-    signX = -1;
   }
   if (iy<0) 
   {
@@ -224,20 +224,38 @@ Double_t Roo2DHistPdf::evaluate() const
   {
     cerr << "got point above upper bound:"  << y << " > " << _hiy << " iy = "<<iy<< endl;
     iy=_nPointsy-1;
-    signX = -1;
   }
 
   //give the choice of extrapolation between bins and using the bin content
   if(_iWantToExtrapolate)
   {
-    Double_t dfdx = (_p[ix+1][iy] - _p[ix][iy])/_xbinWidth;
-    Double_t dfdy = (_p[ix][iy+1] - _p[ix][iy])/_ybinWidth;
+    Double_t dfdx = 0.0;
+    Double_t dfdy = 0.0;
 
-    Double_t dx = (x-( _lox + (Double_t)ix * _xbinWidth));
-    Double_t dy = (y-( _loy + (Double_t)iy * _ybinWidth));
+    if(ix != (_nPointsx-1))
+    {
+      dfdx = (_p[ix+1][iy] - _p[ix][iy])/_xbinWidth;
+    }
+    else
+    {
+      dfdx = (-_p[ix-1][iy] + _p[ix][iy])/_xbinWidth;
+    }
+    if(iy != (_nPointsy-1)) 
+    {
+      dfdy = (_p[ix][iy+1] - _p[ix][iy])/_ybinWidth;
+    }
+    else
+    {
+      dfdy = (-_p[ix][iy-1] + _p[ix][iy])/_ybinWidth;
+    }
+    Double_t dx = (x-( x.min() + (Double_t)ix * _xbinWidth));
+    Double_t dy = (y-( y.min() + (Double_t)iy * _ybinWidth));
 
     return( _p[ix][iy] + dx*dfdx + dy * dfdy );
   }
-  else return (_p[ix][iy]);
+  else
+  {
+    return (_p[ix][iy]);
+  }
 }
 
