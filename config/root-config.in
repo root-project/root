@@ -253,7 +253,7 @@ freebsd4)
 macosx)
    # MacOS X with cc (GNU cc v2.95.2.)
    auxcflags=
-   auxlibs="-lm -ldl"
+   auxlibs="-lm $([ -d /sw/lib ] && echo -L/sw/lib) -ldl"
    auxglibs=${auxlibs}
    ;;
 hiux)

@@ -4,7 +4,7 @@
 
 PLATFORM      = macosx
 
-DEBUGFLAGS    = -g
+DEBUGFLAGS    = -g -O
 OPTFLAGS      = -O
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
@@ -35,8 +35,8 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load -flat_namespace
-SOFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -dynamiclib -flat_namespace -undefined suppress \
+LDFLAGS       = $(OPT) -Xlinker -bind_at_load -flat_namespace
+SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
                 -install_name
 SOEXT         = dylib
 

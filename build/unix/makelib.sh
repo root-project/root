@@ -61,16 +61,19 @@ elif [ $PLATFORM = "fbsd" ]; then
 elif [ $PLATFORM = "macosx" ]; then
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
-   echo $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
-   $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
+   echo $LD $SOFLAGS $SONAME -o $LIB $OBJS \
+	$([ -d /sw/lib ] && echo -L/sw/lib) -ldl $EXTRA
+   $LD $SOFLAGS $SONAME -o $LIB $OBJS \
+	$([ -d /sw/lib ] && echo -L/sw/lib) -ldl $EXTRA
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
    else
       opt=-O
    fi
-   echo $LD $LDFLAGS $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE -ldl $OBJS $EXTRA
-   $LD $LDFLAGS $opt -bundle -flat_namespace -undefined suppress \
-      -o $BUNDLE -ldl $OBJS $EXTRA
+   echo $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	$OBJS $([ -d /sw/lib ] && echo -L/sw/lib) -ldl $EXTRA
+   $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
+	$OBJS $([ -d /sw/lib ] && echo -L/sw/lib) -ldl $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA

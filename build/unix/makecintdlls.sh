@@ -22,6 +22,10 @@ if [ $PLATFORM != "clean" ]; then
    shift
    SOEXT=$9
 fi
+if [ $PLATFORM = "macosx" ]; then
+   SOEXT=so
+fi
+
 
 CINTDIRL=cint/lib
 CINTDIRI=cint/include
