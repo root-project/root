@@ -96,10 +96,10 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   switch(var->reftype[ig15]) {                                               \
   case G__PARANORMAL:                                                        \
     if(INT_MAX!=var->varlabel[ig15][1]) {   /* below line 1068 */            \
-  result.ref=(*(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));   \
-  *(CASTTYPE *)result.ref = (CASTTYPE)CONVFUNC(result);                      \
-      result.type=tolower(var->type[ig15]); /*1669*/ \
-      X = *(CASTTYPE*)result.ref; /*1669*/ \
+    result.ref=(*(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)); \
+      *(CASTTYPE *)result.ref = (CASTTYPE)CONVFUNC(result);                  \
+      result.type=tolower(var->type[ig15]); /*1669*/                         \
+      X = *(CASTTYPE*)result.ref; /*1669*/                                   \
     }                                                                        \
     else {                                                                   \
       result.ref=G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;/*1068*/   \
@@ -111,10 +111,10 @@ case 'v': /* *var = expr ;  assign to contents of pointer */                 \
   case G__PARAP2P:                                                           \
     if(var->paran[ig15]<paran) {                                             \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;            \
-      result.ref= (*(((long*)(*(long *)address))+pp_inc));  /*1068*/         \
+      result.ref=(*(((long*)(*(long *)address))+pp_inc));  /*1068*/          \
       *(CASTTYPE*)result.ref = (CASTTYPE)CONVFUNC(result);                   \
-      result.type=tolower(var->type[ig15]); /*1669*/ \
-      X = *(CASTTYPE*)result.ref; /*1669*/ \
+      result.type=tolower(var->type[ig15]); /*1669*/                         \
+      X = *(CASTTYPE*)result.ref; /*1669*/                                   \
     }                                                                        \
     else { /* below line 1068*/                                              \
    result.ref=(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)); \
@@ -129,10 +129,11 @@ case 'p': /* var = expr; assign to pointer variable  */                      \
     if(var->paran[ig15]<paran) {                                             \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;            \
       if(G__PARANORMAL==var->reftype[ig15]) {                                \
-        result.ref= (long) (((CASTTYPE *)(*(long *)address))+pp_inc);        \
+        /* result.ref=(((long)(*(long *)address))+pp_inc);1757*/ /*1068*/    \
+        result.ref= (long) (((CASTTYPE *)(*(long *)address))+pp_inc);/*1757*/\
         *(CASTTYPE*)result.ref = (CASTTYPE)CONVFUNC(result);                 \
-        result.type=tolower(var->type[ig15]); /*1669*/ \
-        X = *(CASTTYPE*)result.ref; /*1669*/ \
+        result.type=tolower(var->type[ig15]); /*1669*/                       \
+        X = *(CASTTYPE*)result.ref; /*1669*/                                 \
       }                                                                      \
       else if(var->paran[ig15]==paran-1) {                                   \
         result.ref=(long)(((long*)(*(long *)address))+pp_inc);/*1068*/       \
@@ -431,7 +432,8 @@ case 'v': /* *var; get value */                                               \
   case G__PARAP2P:                                                            \
     if(var->paran[ig15]<paran) {                                              \
       address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;             \
-      result.ref=(*(((CASTTYPE*)(*(long *)address))+pp_inc));                 \
+      /*result.ref=(*(((long*)(*(long *)address))+pp_inc)); 1757*/            \
+      result.ref=(*(((CASTTYPE*)(*(long *)address))+pp_inc));/*1757*/         \
       if(result.ref)                                                          \
         CONVFUNC(&result,TYPE,(CONVTYPE)(*(CASTTYPE *)(result.ref)));         \
     }                                                                         \

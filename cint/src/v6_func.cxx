@@ -2537,6 +2537,11 @@ G__value ap;
   va->libp = local->libp;
   va->ip = ifunc->para_nu[local->ifn];
 }
+
+#if defined(_MSC_VER) && (_MSC_VER>1200)
+#pragma optimize("g",off)
+#endif
+
 /******************************************************************
  * G__va_arg
  *****************************************************************/

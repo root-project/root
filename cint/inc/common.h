@@ -857,6 +857,9 @@ struct G__filetable {
   char *str;
   int vindex;
 #endif
+#ifndef G__OLDIMPLEMENTATION1756
+  int parent_tagnum;
+#endif
 };
 
 /**************************************************************************

@@ -738,7 +738,11 @@ char *filename;
   flag=0;
   while(i1<G__nfile) {
 #ifndef G__OLDIMPLEMENTATION1196
-    if(G__matchfilename(i1,filename)){
+    if(G__matchfilename(i1,filename)
+#ifdef G__OLDIMPLEMENTATION1756_YET
+       &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
+#endif
+       ){
 #else
     if((G__srcfile[i1].hash==hash&&strcmp(G__srcfile[i1].filename,filename)==0)
        ){
@@ -1187,9 +1191,13 @@ char *filenamein;
      * check if alreay loaded
      ***************************************************/
 #ifndef G__OLDIMPLEMENTATION1196
-    if(G__matchfilename(i1,filename)){
+    if(G__matchfilename(i1,filename)
+#ifndef G__OLDIMPLEMENTATION1756
+       &&G__get_envtagnum()==G__srcfile[i1].parent_tagnum
+#endif
+       ){
 #else
-    if((hash==G__srcfile[i1].hash&&strcmp(G__srcfile[i1].filename,filename)==0)
+    if(hash==G__srcfile[i1].hash&&strcmp(G__srcfile[i1].filename,filename)==0
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
@@ -1768,6 +1776,9 @@ char *filenamein;
 #endif
 #ifndef G__OLDIMPLEMENTATION1273
     G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
+#endif
+#ifndef G__OLDIMPLEMENTATION1756
+    G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
 #endif
   }
 

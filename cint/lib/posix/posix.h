@@ -173,12 +173,14 @@ extern long int sysconf(int name);
 #define G__GLIBC_ (__GLIBC__*100+__GLIBC_MINOR__)
 #endif
 
+#ifdef __MAKECINT__
 #if defined(__SUNPRO_C) || defined(G__SUNPRO_C) 
 extern int putenv(char *string);
 #elif defined(G__GLIBC_) && (G__GLIBC_<=202)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);
+#endif
 #endif
 
 extern pid_t getpid(void);

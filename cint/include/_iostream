@@ -112,6 +112,7 @@ int G__ateval(const unsigned long x) {return(0);}
 
 #if defined(G__ROOT) && !defined(__MAKECINT__)
 int G__ateval(const TString& x) {
+  //std::cout << "(class TString " << &x << ")\"" << x << "\"" << std::endl;
   std::cout << "(class TString)" << "\"" << x << "\"" << std::endl;
   return(1);
 }
