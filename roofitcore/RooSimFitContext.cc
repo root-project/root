@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.7 2001/08/18 02:13:11 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.8 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,9 +50,7 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
       //Refine a dataset containing only events for this simCat state
       char cutSpec[1024] ;
       sprintf(cutSpec,"%s==%d",simCatName.Data(),simCat.getIndex()) ;
-      RooFormulaVar simCatCut("simCatCut",cutSpec,simCat) ;
-      RooAbsData* dset = _dataClone->reduceEng(*_dataClone->get(),&simCatCut,kFALSE) ;
-
+      RooAbsData* dset = _dataClone->reduce(RooFormulaVar("simCatCut",cutSpec,simCat)) ;
 //       new RooDataSet("dset_simcat","dset_simcat",
 // 		     _dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
       _dsetArray[n] = dset ;

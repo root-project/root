@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.3 2001/08/23 01:21:45 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.4 2001/09/11 00:30:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -39,8 +39,8 @@ public:
     RooFormulaVar cutVar(cut,cut,*get()) ;
     return reduceEng(*get(),&cutVar,kFALSE) ;
   }
-  inline RooAbsData* reduce(const RooFormulaVar* cutVar) {
-    return reduceEng(*get(),cutVar,kFALSE) ;
+  inline RooAbsData* reduce(const RooFormulaVar& cutVar) {
+    return reduceEng(*get(),&cutVar,kFALSE) ;
   }
   inline RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=0) {
     if (cut) {
@@ -49,8 +49,8 @@ public:
     } 
     return reduceEng(varSubset,0,kFALSE) ;
   }
-  inline RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar* cutVar) {
-    return reduceEng(varSubset,cutVar,kFALSE) ;
+  inline RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) {
+    return reduceEng(varSubset,&cutVar,kFALSE) ;
   }
 
   // Add one ore more rows of data

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooTreeData.cc,v 1.1 2001/09/11 00:30:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -296,7 +296,15 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   // Redirect formula servers to sourceArgSet
   if (select) {
     select->recursiveRedirectServers(*sourceArgSet) ;
-    select->setOperMode(RooAbsArg::ADirty) ;
+
+    RooArgSet branchList ;
+    select->branchNodeServerList(&branchList) ;
+    TIterator* iter = branchList.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      arg->setOperMode(RooAbsArg::ADirty) ;
+    }
+    delete iter ;
   }
 
   // Loop over events in source tree   
