@@ -288,6 +288,10 @@ Long64_t TPacketizer::GetEntriesProcessed(TSlave *sl) const
 //______________________________________________________________________________
 TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
 {
+   if ( !fValid ) {
+      return 0;
+   }
+   
    // find slave
 
    TSlaveStat *slave = (TSlaveStat*) fSlaves->FindObject( sl->GetName() );

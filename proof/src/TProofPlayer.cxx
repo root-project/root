@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.6 2002/06/13 15:13:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.7 2002/06/14 10:29:06 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -230,6 +230,9 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
 Info("Process","---- Start ----");
 
+   delete fOutput;
+   fOutput = new TList;
+
    TString filename = selector_file;
    filename = filename.Strip(TString::kTrailing,'+');
 Info("Process", "Sendfile: %s", filename.Data() );
@@ -288,6 +291,10 @@ Info("Process","Create Proxy DSet");
       delete fPacketizer;
       fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
                                  first, nentries);
+      
+      if ( !fPacketizer->IsValid() ) {
+         return -1;
+      }
    }
 
    mesg << set << fn << fInput << nentries << first; // no evl yet
@@ -311,8 +318,6 @@ Info("Process","Calling Merge Output");
 void TProofPlayerRemote::MergeOutput()
 {
 Info("MergeOutput","Enter");
-   delete fOutput;
-   fOutput = new THashList;
 
    if ( fOutputLists == 0 ) {
       Info("MergeOutput","Leave (empty)");

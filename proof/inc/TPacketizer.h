@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.1 2002/03/21 16:11:02 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.2 2002/04/19 18:23:59 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -62,6 +62,7 @@ public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
    virtual ~TPacketizer();
 
+   Bool_t        IsValid() const { return fValid; }
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
    TDSetElement  *GetNextPacket(TSlave *sl);
