@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.13 2000/12/26 14:22:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.14 2001/01/23 12:28:38 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -475,8 +475,13 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Find in which tree this entry belongs to
    Int_t t;
-   for (t=0;t<fNtrees;t++) {
-      if (entry < fTreeOffset[t+1]) break;
+   if (entry >= fTreeOffset[fTreeNumber] && entry < fTreeOffset[fTreeNumber+1]){
+     t = fTreeNumber;
+   }
+   else {
+     for (t=0;t<fNtrees;t++) {
+       if (entry < fTreeOffset[t+1]) break;
+     }
    }
 
    fReadEntry = entry - fTreeOffset[t];
