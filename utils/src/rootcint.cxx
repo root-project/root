@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.44 2001/06/22 16:10:23 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.45 2001/06/23 08:41:28 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -235,7 +235,7 @@ int GetClassVersion(G__ClassInfo &cl)
    char *name = new char[strlen(classname)+strlen(function)+1];
    sprintf(name, "%s%s", classname, function);
    int version = (int)G__int(G__calc(name));
-   delete name;
+   delete [] name;
    return version;
 }
 
