@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -32,7 +32,7 @@ TGeoAtt::TGeoAtt()
    SetVisTouched(kFALSE);
 }
 //-----------------------------------------------------------------------------
-TGeoAtt::TGeoAtt(Option_t *vis_opt, Option_t *activity_opt, Option_t *optimization_opt)
+TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t * /*optimization_opt*/)
 {
 // constructor
    fGeoAtt = 0;
@@ -77,12 +77,12 @@ void TGeoAtt::SetVisTouched(Bool_t vis)
    else      ResetBit(kVisTouched);
 }
 //-----------------------------------------------------------------------------
-void TGeoAtt::SetActivity(Option_t *option)
+void TGeoAtt::SetActivity(Option_t * /*option*/)
 {
 // set activity flags 
 }
 //-----------------------------------------------------------------------------
-void TGeoAtt::SetOptimization(Option_t *option)
+void TGeoAtt::SetOptimization(Option_t * /*option*/)
 {
 // set optimization flags 
 }

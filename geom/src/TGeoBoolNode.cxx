@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.1 2002/09/28 06:39:05 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.2 2002/10/22 07:43:12 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -208,7 +208,7 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
    return inside;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoUnion::DistanceToPrimitive(Int_t px, Int_t py)
+Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 // Compute minimum distance to shape vertices
    return 9999;
@@ -285,12 +285,12 @@ Int_t TGeoUnion::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-void TGeoUnion::SetPoints(Double_t *buff) const
+void TGeoUnion::SetPoints(Double_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
 //-----------------------------------------------------------------------------
-void TGeoUnion::SetPoints(Float_t *buff) const
+void TGeoUnion::SetPoints(Float_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
@@ -363,7 +363,7 @@ Bool_t TGeoSubtraction::Contains(Double_t *point) const
    return inside;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoSubtraction::DistanceToPrimitive(Int_t px, Int_t py)
+Int_t TGeoSubtraction::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 // Compute minimum distance to shape vertices
    return 9999;
@@ -442,12 +442,12 @@ Int_t TGeoSubtraction::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-void TGeoSubtraction::SetPoints(Double_t *buff) const
+void TGeoSubtraction::SetPoints(Double_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
 //-----------------------------------------------------------------------------
-void TGeoSubtraction::SetPoints(Float_t *buff) const
+void TGeoSubtraction::SetPoints(Float_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
@@ -567,7 +567,7 @@ Bool_t TGeoIntersection::Contains(Double_t *point) const
    return inside;
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoIntersection::DistanceToPrimitive(Int_t px, Int_t py)
+Int_t TGeoIntersection::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 // Compute minimum distance to shape vertices
    return 9999;
@@ -636,12 +636,12 @@ Int_t TGeoIntersection::GetNpoints() const
    return 0;
 }
 //-----------------------------------------------------------------------------
-void TGeoIntersection::SetPoints(Double_t *buff) const
+void TGeoIntersection::SetPoints(Double_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }
 //-----------------------------------------------------------------------------
-void TGeoIntersection::SetPoints(Float_t *buff) const
+void TGeoIntersection::SetPoints(Float_t * /*buff*/) const
 {
 // Fill buffer with shape vertices.
 }

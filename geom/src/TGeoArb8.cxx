@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.9 2002/10/08 16:17:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.10 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -358,7 +358,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 }      
       
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from outside point to surface of the arb8
    Double_t snxt=kBig;
@@ -395,7 +395,7 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return dist[TMath::LocMin(5, &dist[0])];
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from outside point to surface of the arb8
    Double_t dist[6];
@@ -412,21 +412,21 @@ Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return dist[TMath::LocMin(6, &dist[0])];   
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoArb8::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+                             Double_t /*start*/, Double_t /*step*/) 
 {
    Error("Divide", "Division of an arbitrary trapezoid not implemented");
    return voldiv;
 }      
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoArb8::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -462,12 +462,12 @@ void TGeoArb8::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoArb8::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoArb8::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoArb8::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoArb8::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -689,7 +689,7 @@ TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return voldiv;
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoTrap::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");

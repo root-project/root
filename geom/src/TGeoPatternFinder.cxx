@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.4 2002/10/03 13:19:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -745,7 +745,7 @@ TGeoPatternSphR::~TGeoPatternSphR()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoPatternSphR::FindNode(Double_t *point)
+TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
@@ -794,7 +794,7 @@ TGeoPatternSphTheta::~TGeoPatternSphTheta()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoPatternSphTheta::FindNode(Double_t *point)
+TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
@@ -843,7 +843,7 @@ TGeoPatternSphPhi::~TGeoPatternSphPhi()
 // Destructor
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoPatternSphPhi::FindNode(Double_t *point)
+TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;
@@ -879,7 +879,7 @@ TGeoPatternHoneycomb::~TGeoPatternHoneycomb()
 // destructor
 }
 //-----------------------------------------------------------------------------
-TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t *point)
+TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/)
 {
 // find the node containing the query point
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.6 2002/10/13 15:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.7 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -102,14 +102,14 @@ Double_t TGeoCompositeShape::DistToOut(Double_t *point, Double_t *dir, Int_t iac
    return kBig;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoCompositeShape::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Composite shapes cannot be divided");
@@ -156,7 +156,7 @@ void TGeoCompositeShape::MakeNode(const char *expression)
    }
 }               
 //-----------------------------------------------------------------------------
-void TGeoCompositeShape::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoCompositeShape::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
@@ -176,7 +176,7 @@ void TGeoCompositeShape::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (fNode) fNode->PaintNext(glmat, option);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCompositeShape::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoCompositeShape::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

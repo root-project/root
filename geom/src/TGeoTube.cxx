@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.6 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -321,11 +321,11 @@ Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return DistToInS(point, dir, fRmin, fRmax, fDz);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoTube::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
@@ -495,12 +495,12 @@ void TGeoTube::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintTube(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-void TGeoTube::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoTube::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTube::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoTube::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1073,7 +1073,7 @@ Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
    return TGeoTubeSeg::DistToInS(point, dir, fRmin, fRmax, fDz, c1, s1, c2, s2, cfio, sfio, cdfi);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoTubeSeg::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -1254,12 +1254,12 @@ void TGeoTubeSeg::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintTubs(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-void TGeoTubeSeg::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoTubeSeg::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTubeSeg::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoTubeSeg::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1855,21 +1855,21 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    return TMath::Min(TMath::Min(sz,sr), sfmin);      
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoCtub::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
    return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+                             Double_t /*start*/, Double_t /*step*/) 
 {
    Warning("Divide", "Division of a cut tube not implemented");
    return voldiv;
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoCtub::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -1912,12 +1912,12 @@ void TGeoCtub::InspectShape() const
    TGeoTubeSeg::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoCtub::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoCtub::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoCtub::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoCtub::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.6 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -215,11 +215,7 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    saf[0] = TMath::Min(safz1, safz2);
    // determine which z segment contains the point
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if (ipl==(fNz-1)) {
-      // point on end z plane
-      if (safe) *safe=0;
-      return 0;
-   }
+   if (ipl==(fNz-1)) ipl--;
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
    // determine if the current segment is a tube or a cone
    Bool_t intub = kTRUE;
@@ -234,16 +230,17 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    point_new[2] = point[2]-0.5*(fZ[ipl]+fZ[ipl+1]);
    
    Double_t phi1 = fPhi1;
-   Double_t phi2 = fPhi1+fDphi;
+   if (phi1<0) phi1+=360.;
+   Double_t phi2 = phi1+fDphi;
    if (intub) {
       if (inphi) snxt=TGeoTubeSeg::DistToOutS(&point_new[0], dir, iact, step, &saf[1], 
                                               fRmin[ipl], fRmax[ipl],dz, phi1, phi2); 
       else snxt=TGeoTube::DistToOutS(&point_new[0], dir, iact, step, &saf[1], fRmin[ipl], fRmax[ipl],dz);
    } else {
       if (inphi) snxt=TGeoConeSeg::DistToOutS(&point_new[0], dir, iact, step, &saf[1],
-                                 dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1], phi1,phi2);
+                                 fRmin[ipl], fRmax[ipl], -dz, fRmin[ipl+1], fRmax[ipl+1], dz, phi1,phi2);
       else snxt=TGeoCone::DistToOutS(&point_new[0], dir, iact, step, &saf[1],
-                                 dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1]);
+                                 fRmin[ipl], fRmax[ipl], -dz, fRmin[ipl+1], fRmax[ipl+1], dz);
    }                              
 
    if (iact<3 && safe) {
@@ -281,29 +278,17 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t rmin2=fRmin[iz+1];
    Double_t rmax2=fRmax[iz+1];
    Bool_t is_seg=(fDphi==360)?kFALSE:kTRUE;
-   Double_t r2=point[0]*point[0]+point[1]*point[1];
    
+   Double_t phi1 = fPhi1;
+   if (phi1<0) phi1+=360.;
+   Double_t phi2 = phi1+fDphi;
+
    if ((rmin1==rmin2) && (rmax1==rmax2)) {
       if (!is_seg) snxt=TGeoTube::DistToInS(&local[0], dir, rmin1, rmax1, dz);
       else snxt=TGeoTubeSeg::DistToInS(&local[0], dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
    } else {  
-      Double_t ro1=0.5*(rmin1+rmin2);
-      Double_t tg1=0.5*(rmin2-rmin1)/dz;
-      Double_t cr1=1./TMath::Sqrt(1.0+tg1*tg1);
-      Double_t zv1=kBig;
-      if (rmin1!=rmin2) zv1=-ro1/tg1;
-      Double_t ro2=0.5*(rmax1+rmax2);
-      Double_t tg2=0.5*(rmax2-rmax1)/dz;
-      Double_t cr2=1./TMath::Sqrt(1.0+tg2*tg2);
-      Double_t zv2=kBig;
-      if (rmax1!=rmax2) zv2=-ro2/tg2;
-      Double_t rin=TMath::Abs(tg1*local[2]+ro1);
-      Double_t rout=TMath::Abs(tg2*local[2]+ro2);
-   
-      if (!is_seg) snxt=TGeoCone::DistToInS(&local[0],dir,rmin1, rmax1, rmin2, rmax2, dz,
-                                              ro1,tg1,cr1,zv1,ro2,tg2,cr2,zv2,r2,rin,rout);
-      else snxt=TGeoConeSeg::DistToInS(&local[0],dir,rmin1, rmax1, rmin2, rmax2, dz,
-                           ro1,tg1,cr1,zv1,ro2,tg2,cr2,zv2,r2,rin,rout,c1, s1, c2, s2, cfio,sfio,cdfi);
+      if (!is_seg) snxt=TGeoCone::DistToInS(&local[0],dir,rmin1, rmax1, -dz, rmin2, rmax2, dz);
+      else snxt=TGeoConeSeg::DistToInS(&local[0],dir,rmin1, rmax1, -dz, rmin2, rmax2, dz, phi1, phi2);
    }
    if (snxt<1E20) return snxt;
    // check next segment
@@ -424,7 +409,7 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return DistToSegZ(point,dir,ifirst, c1,s1,c2,s2,cfio,sfio,cdfi);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoPcon::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -522,7 +507,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -580,12 +565,12 @@ void TGeoPcon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintPcon(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-void TGeoPcon::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoPcon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoPcon::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

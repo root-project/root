@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.5 2002/10/05 09:28:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.6 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -51,7 +51,7 @@ public:
    // destructor
    virtual ~TGeoPatternFinder();
    // methods
-   virtual void        cd(Int_t idiv) {}
+   virtual void        cd(Int_t /*idiv*/) {}
    TGeoVolume         *GetBasicVolume() const;
    virtual Int_t       GetByteCount() const {return 36;}
    Int_t               GetCurrent()  {return fCurrent;}
@@ -60,7 +60,7 @@ public:
    Int_t               GetNdiv()     {return fNdivisions;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
    TGeoVolume         *GetVolume() const {return fVolume;}
-   virtual TGeoNode   *FindNode(Double_t *point) {return 0;} 
+   virtual TGeoNode   *FindNode(Double_t * /*point*/) {return 0;} 
    virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
    void                SetVolume(TGeoVolume *vol) {fVolume = vol;}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
 
@@ -71,7 +71,7 @@ TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t 
    SetNumberOfDivisions(20);
 }
 //-----------------------------------------------------------------------------
-TGeoSphere::TGeoSphere(Double_t *param, Int_t nparam)
+TGeoSphere::TGeoSphere(Double_t *param, Int_t /*nparam*/)
            :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
@@ -186,11 +186,11 @@ Bool_t TGeoSphere::Contains(Double_t *point) const
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoSphere::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
-   return kBig;;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
@@ -328,7 +328,7 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    return kBig;            
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoSphere::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -391,12 +391,12 @@ void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintSphere(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-void TGeoSphere::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoSphere::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoSphere::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

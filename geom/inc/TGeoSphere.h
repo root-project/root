@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -58,12 +58,12 @@ public:
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                                Double_t start, Double_t step) {return voldiv;}
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+                                Double_t /*start*/, Double_t /*step*/) {return voldiv;}
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 42;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
    Int_t                 GetNumberOfDivisions() const {return fNseg;}
    Int_t                 GetNz() const   {return fNz;}
    virtual Double_t      GetRmin() const {return fRmin;}

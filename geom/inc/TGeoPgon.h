@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 64+12*fNz;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
    Int_t                 GetNedges() const   {return fNedges;}
    virtual Int_t         GetNsegments() const {return fNedges;}     
    virtual void          InspectShape() const;

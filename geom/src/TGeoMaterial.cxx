@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.3 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.4 2002/10/09 14:03:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -121,7 +121,7 @@ Bool_t TGeoMaterial::IsEq(TGeoMaterial *other)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-void TGeoMaterial::Print(const Option_t *option) const
+void TGeoMaterial::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
    printf("%s   %s   Media=%d A=%6.2f Z=%6.0f rho=%6.2f\n", GetName(), GetTitle(),
@@ -224,7 +224,7 @@ Bool_t TGeoMixture::IsEq(TGeoMaterial *other)
    return kTRUE;
 }
 //-----------------------------------------------------------------------------
-void TGeoMixture::Print(const Option_t *option) const
+void TGeoMixture::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
    printf("%s   %s   Media=%d\n", GetName(), GetTitle(), fId);

@@ -236,7 +236,7 @@ void TGeoTrd1::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
    SetVertex(vertex);
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd1::GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const
+void TGeoTrd1::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
 {
 // get the opposite corner of the intersected face
    TGeoTrd1 *trd1 = (TGeoTrd1*)this;
@@ -417,7 +417,7 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return kBig;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd1::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoTrd1::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -487,7 +487,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -534,16 +534,16 @@ void TGeoTrd1::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoTrd1::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoTrd1::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd1::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoTrd1::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoTrd1::SetDimensions(Double_t *param)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.4 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.5 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual Int_t         GetByteCount() const {return 100;}
    Double_t              GetDz() const {return fDz;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
    Double_t             *GetVertices() {return &fXY[0][0];}
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual void          InspectShape() const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.7 2002/10/22 08:32:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.8 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -312,11 +312,11 @@ Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return kBig;       
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoBBox::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the box along a ray
 // starting from given point to the given direction.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoBBox::GetBoundingCylinder(Double_t *param) const
@@ -358,7 +358,7 @@ void TGeoBBox::InspectShape() const
    printf("    origin: x=%11.5f y=%11.5f z=%11.5f\n", fOrigin[0], fOrigin[1], fOrigin[2]);
 }
 //-----------------------------------------------------------------------------
-void TGeoBBox::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoBBox::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
@@ -381,7 +381,7 @@ void TGeoBBox::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintBox(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoBBox::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoBBox::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

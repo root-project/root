@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.10 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.11 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -290,7 +290,7 @@ void TGeoNode::LocalToMasterVect(const Double_t *local, Double_t *master) const
    GetMatrix()->LocalToMasterVect(local, master);
 }
 //-----------------------------------------------------------------------------
-void TGeoNode::ls(Option_t *option) const
+void TGeoNode::ls(Option_t * /*option*/) const
 {
 // Print the path (A/B/C/...) to this node on stdout
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.22 2002/10/22 07:43:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.23 2002/11/15 14:41:19 rdm Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1649,7 +1649,7 @@ const char *TGeoManager::GetPath() const
    return fCache->GetPath();
 }
 //-----------------------------------------------------------------------------
-Int_t TGeoManager::GetByteCount(Option_t *option)
+Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 {
 // Get total size of geometry in bytes.
    Int_t count = 0;
@@ -2141,7 +2141,7 @@ TGeoNode *TGeoManager::Step(Bool_t is_geom, Bool_t cross)
    Double_t epsil = 0;
    if (fStep<1E-6) {
       fIsNullStep=kTRUE;
-      fStep = 0.;
+      if (fStep<0) fStep = 0.;
    } else {
       fIsNullStep=kFALSE;
    }
@@ -2245,7 +2245,7 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 }
 
 //-----------------------------------------------------------------------------
-void TGeoManager::CheckGeometry(Option_t *option)
+void TGeoManager::CheckGeometry(Option_t * /*option*/)
 {
 // Instanciate a TGeoChecker object and investigates the geometry according to
 // option. Not implemented yet.
@@ -2254,14 +2254,14 @@ void TGeoManager::CheckGeometry(Option_t *option)
 }
 
 //-----------------------------------------------------------------------------
-void TGeoManager::UpdateCurrentPosition(Double_t *nextpoint)
+void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 {
 // Computes and changes the current node according to the new position.
 // Not implemented.
 }
 
 //-----------------------------------------------------------------------------
-ULong_t TGeoManager::SizeOf(TGeoNode *node, Option_t *option)
+ULong_t TGeoManager::SizeOf(TGeoNode * /*node*/, Option_t * /*option*/)
 {
 // computes the total size in bytes of the branch starting with node.
 // The option can specify if all the branch has to be parsed or only the node
@@ -2306,7 +2306,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 
 
 //______________________________________________________________________________
-TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t *option)
+TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
    //static function
    //Import in memory from filename the geometry with key=name.

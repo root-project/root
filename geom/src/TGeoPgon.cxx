@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.6 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.7 2002/10/13 15:45:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -446,7 +446,7 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
 //   if (imin==0)
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from inside point to surface of the polygone
    // first find out in which Z section the point is in
@@ -659,7 +659,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t &ipsec, 
+Double_t TGeoPgon::DistToInSect(Double_t *point, Double_t *dir, Int_t &iz, Int_t & /*ipsec*/, 
                                 UChar_t &bits, Double_t *saf) const 
 {
    // propagate to next Z plane
@@ -799,7 +799,7 @@ Int_t TGeoPgon::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoPgon::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
@@ -886,7 +886,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    }
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -941,16 +941,16 @@ void TGeoPgon::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    painter->PaintPcon(this, option, glmat);
 }
 //-----------------------------------------------------------------------------
-void TGeoPgon::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoPgon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoPgon::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
 void TGeoPgon::SetDimensions(Double_t *param)

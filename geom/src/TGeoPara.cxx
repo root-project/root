@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.5 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -280,11 +280,11 @@ Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return smin;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoPara::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
-   return 0.0;
+   return 0;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
@@ -345,7 +345,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return vol;
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -391,12 +391,12 @@ void TGeoPara::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoPara::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoPara::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoPara::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.4 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
    Double_t             *GetRmin() const {return fRmin;}
    Double_t             *GetRmax() const {return fRmax;}
    Double_t             *GetZ() const    {return fZ;}
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/) const {return 0;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;

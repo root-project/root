@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -238,21 +238,21 @@ Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    return snxt;   
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::DistToSurf(Double_t *point, Double_t *dir) const
+Double_t TGeoEltu::DistToSurf(Double_t * /*point*/, Double_t * /*dir*/) const
 {
 // computes the distance to next surface of the sphere along a ray
 // starting from given point to the given direction.
-   return 0.0;
+   return kBig;
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
+                             Double_t /*start*/, Double_t /*step*/) 
 {
    Error("Divide", "Elliptical tubes divisions not implemenetd");
    return voldiv;
 }   
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step) 
+TGeoVolume *TGeoEltu::Divide(TGeoVolume *voldiv, const char * /*divname*/, Int_t /*iaxis*/, Double_t /*step*/) 
 {
 // Divide all range of iaxis in range/step cells 
    Error("Divide", "Division in all range not implemented");
@@ -302,12 +302,12 @@ void TGeoEltu::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
-void TGeoEltu::NextCrossing(TGeoParamCurve *c, Double_t *point) const
+void TGeoEltu::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoEltu::Safety(Double_t *point, Double_t *spoint, Option_t *option) const
+Double_t TGeoEltu::Safety(Double_t * /*point*/, Double_t * /*spoint*/, Option_t * /*option*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

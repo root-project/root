@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.7 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.8 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TGeoNodeCache::TGeoNodeCache()
    fMatrixPool  = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoNodeCache::TGeoNodeCache(Int_t size)
+TGeoNodeCache::TGeoNodeCache(Int_t /*size*/)
 {
 // constructor
    fGeoCacheMaxDaughters = 128;
@@ -467,7 +467,7 @@ TGeoCacheDummy::~TGeoCacheDummy()
    }   
 }   
 //-----------------------------------------------------------------------------
-Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t make)
+Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
 {
    TGeoNode *newnode = fNode->GetDaughter(index);
    if (!newnode) return kFALSE;
@@ -1224,7 +1224,7 @@ TGeoCacheState::TGeoCacheState()
    fPoint = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoCacheState::TGeoCacheState(Int_t capacity)
+TGeoCacheState::TGeoCacheState(Int_t /*capacity*/)
 {
 //--- ctor
    fLevel = 0;
@@ -1279,7 +1279,7 @@ TGeoCacheStateDummy::TGeoCacheStateDummy()
    fMatrixBranch = 0;
 }
 //-----------------------------------------------------------------------------
-TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t capacity)
+TGeoCacheStateDummy::TGeoCacheStateDummy(Int_t /*capacity*/)
 {
 //--- ctor
    fNodeBranch = new TGeoNode *[30];

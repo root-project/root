@@ -350,7 +350,7 @@ void TGeoPainter::DrawPath(const char *path)
    fGeom->GetTopVolume()->Draw();   
 }
 //______________________________________________________________________________
-void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py)
+void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t /*px*/, Int_t /*py*/)
 {
 // Execute mouse actions on a given volume.
    if (!gPad) return;
@@ -376,7 +376,7 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, 
    }
 }
 //______________________________________________________________________________
-char *TGeoPainter::GetVolumeInfo(TGeoVolume *volume, Int_t px, Int_t py) const
+char *TGeoPainter::GetVolumeInfo(TGeoVolume *volume, Int_t /*px*/, Int_t /*py*/) const
 {
    const char *snull = "";
    if (!gPad) return (char*)snull;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.5 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.6 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -203,8 +203,8 @@ public:
    virtual void         CdTop() {fLevel=0; fNode=fTop; fMatrix=fMatrixBranch[0];}
    virtual void         CdUp();
    virtual void         CleanCache() {;}
-   virtual void         ClearDaughter(Int_t index) {;}
-   virtual void         ClearNode(Int_t nindex) {;}
+   virtual void         ClearDaughter(Int_t /*index*/) {;}
+   virtual void         ClearNode(Int_t /*nindex*/) {;}
    virtual void         Compact() {;}
    virtual void         DeleteCaches() {;}
    virtual Bool_t       DumpNodes() {return kFALSE;}
@@ -220,7 +220,7 @@ public:
    virtual Int_t        GetNused() const       {return 0;}
    virtual const char  *GetPath(); 
    virtual Int_t        GetUsageCount() const {return 0;}
-   virtual void         IncreasePool(Int_t size) {;}
+   virtual void         IncreasePool(Int_t /*size*/) {;}
    virtual void         IncrementUsageCount() {;}
    virtual void         LocalToMaster(Double_t *local, Double_t *master) const;
    virtual void         MasterToLocal(Double_t *master, Double_t *local) const;
@@ -473,8 +473,8 @@ public:
    TGeoMatHandlerId() {}
    virtual ~TGeoMatHandlerId() {}
    
-   virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix) {;}
-   virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix) {;}
+   virtual void         AddMatrix(Double_t * /*to*/, TGeoMatrix * /*matrix*/) {;}
+   virtual void         GetMatrix(Double_t * /*from*/, TGeoHMatrix * /*matrix*/) {;}
    virtual void         LocalToMaster(Double_t *local, Double_t *master) const 
                            {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const 
@@ -740,12 +740,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;}   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMaster(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         LocalToMasterVect(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocal(Double_t * /*master*/, Double_t * /*local*/) const {;}   
+   virtual void         MasterToLocalVect(Double_t * /*master*/, Double_t * /*local*/) const {;}   
+   virtual void         LocalToMasterBomb(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocalBomb(Double_t * /*master*/, Double_t * /*local*/) const {;}   
    
   ClassDef(TGeoMatHandlerScl,0)      // global matrix cache handler scale
 };
@@ -764,12 +764,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;}   
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMaster(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         LocalToMasterVect(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocal(Double_t * /*master*/, Double_t * /*local*/) const {;}   
+   virtual void         MasterToLocalVect(Double_t * /*master*/, Double_t * /*local*/) const {;}   
+   virtual void         LocalToMasterBomb(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocalBomb(Double_t * /*master*/, Double_t * /*local*/) const {;}   
    
   ClassDef(TGeoMatHandlerTrScl,0)      // global matrix cache handler tr-scale
 };
@@ -812,12 +812,12 @@ public:
    
    virtual void         AddMatrix(Double_t *to, TGeoMatrix *matrix);
    virtual void         GetMatrix(Double_t *from, TGeoHMatrix *matrix);
-   virtual void         LocalToMaster(Double_t *local, Double_t *master) const {;}
-   virtual void         LocalToMasterVect(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocal(Double_t *master, Double_t *local) const {;} 
-   virtual void         MasterToLocalVect(Double_t *master, Double_t *local) const {;}   
-   virtual void         LocalToMasterBomb(Double_t *local, Double_t *master) const {;}
-   virtual void         MasterToLocalBomb(Double_t *master, Double_t *local) const {;}   
+   virtual void         LocalToMaster(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         LocalToMasterVect(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocal(Double_t * /*master*/, Double_t * /*local*/) const {;} 
+   virtual void         MasterToLocalVect(Double_t * /*master*/, Double_t * /*local*/) const {;}   
+   virtual void         LocalToMasterBomb(Double_t * /*local*/, Double_t * /*master*/) const {;}
+   virtual void         MasterToLocalBomb(Double_t * /*master*/, Double_t * /*local*/) const {;}   
    
   ClassDef(TGeoMatHandlerRotTrScl,0)      // global matrix cache handler rot-tr-scale
 };

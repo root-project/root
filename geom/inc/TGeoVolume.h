@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.10 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.11 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -144,7 +144,7 @@ public:
    Option_t       *GetOption() const { return fOption.Data(); }
    TGeoShape      *GetShape() const                  {return fShape;}
    void            GrabFocus(); // *MENU*
-   void            Gsord(Int_t iaxis)                {;}
+   void            Gsord(Int_t /*iaxis*/)                {;}
    Bool_t          IsStyleDefault() const;
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
@@ -199,12 +199,12 @@ public:
    TGeoVolume     *GetVolume(Int_t id) const {return (TGeoVolume*)fVolumes->At(id);}
    virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
-   virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Option_t *option="") { return 0;}
-   virtual TGeoVolume *Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option="") {return 0;}
-   virtual TGeoVolume *Divide(const char *divname, Double_t start, Double_t end, Double_t step, Option_t *option="") {return 0;}
+   virtual TGeoVolume *Divide(const char *, Int_t, Option_t *) { return 0;}
+   virtual TGeoVolume *Divide(const char *, Int_t ndiv, Double_t, Double_t, Option_t *) {return 0;}
+   virtual TGeoVolume *Divide(const char *, Double_t, Double_t, Double_t, Option_t *) {return 0;}
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step);
-   virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Double_t step) {return 0;}
-   virtual TGeoVolume *Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *option="") {return 0;}
+   virtual TGeoVolume *Divide(const char *, Int_t, Double_t) {return 0;}
+   virtual TGeoVolume *Divide(const char *, TObject *, Double_t *, Option_t *) {return 0;}
    TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();} 
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);

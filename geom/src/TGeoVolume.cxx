@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.11 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.12 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -161,7 +161,7 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
    TGeoVolume *old_vol = gGeoManager->GetTopVolume();
    if (old_vol!=this) gGeoManager->SetTopVolume((TGeoVolume*)this);
    else old_vol=0;
-   gGeoManager->GetTopVolume()->DrawOnly();
+   gGeoManager->GetTopVolume()->Draw();
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) {
       Error("CheckGeometry", "Could not instanciate painter");
@@ -294,7 +294,7 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
    node->SetName(name);
 }
 //-----------------------------------------------------------------------------
-void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t *option)
+void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
 {
 // Add a division node to the list of nodes. The method is called by
 // TGeoVolume::Divide() for creating the division nodes.
@@ -333,27 +333,27 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
    }        
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t ndiv, Option_t *option)
+TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Int_t /*ndiv*/, Option_t * /*option*/)
 {
    Error("Divide", "This type of division not implemenetd");
    return this; 
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t ndiv, Double_t start, Double_t step, Option_t *option)
+TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/, Option_t * /*option*/)
 {
 // divide this volume in ndiv pieces from start, with given step
    Error("Divide", "This type of division not implemenetd");
    return this; 
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, Double_t start, Double_t end, Double_t step, Option_t *option)
+TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, Double_t /*start*/, Double_t /*end*/, Double_t /*step*/, Option_t * /*option*/)
 {
 // divide this volume from start to end in pieces of length step
    Error("Divide", "This type of division not implemenetd");
    return this; 
 }
 //-----------------------------------------------------------------------------
-TGeoVolume *TGeoVolume::Divide(const char *divname, TObject *userdiv, Double_t *params, Option_t *)
+TGeoVolume *TGeoVolume::Divide(const char * /*divname*/, TObject * /*userdiv*/, Double_t * /*params*/, Option_t *)
 {
 // divide this volume according to userdiv
    Error("Divide", "This type of division not implemenetd");
@@ -722,7 +722,7 @@ void TGeoVolume::Streamer(TBuffer &R__b)
 }
 
 //-----------------------------------------------------------------------------
-void TGeoVolume::SetOption(const char *option)
+void TGeoVolume::SetOption(const char * /*option*/)
 {
 // set the current options  
 }

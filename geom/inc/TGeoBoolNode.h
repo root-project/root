@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.1 2002/09/28 06:39:05 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
    virtual Int_t     GetNpoints() const = 0;
-   virtual void      Paint(Option_t *option) {;}
+   virtual void      Paint(Option_t * /*option*/) {;}
    virtual void      PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual void      SetPoints(Double_t *buff) const = 0;
    virtual void      SetPoints(Float_t *buff)  const = 0;

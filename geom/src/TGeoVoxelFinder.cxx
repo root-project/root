@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.9 2002/10/11 16:41:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.10 2002/10/22 07:43:12 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -490,7 +490,7 @@ Bool_t TGeoVoxelFinder::GetNextIndices(Double_t *point, Double_t *dir)
 }
 
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir)
+void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t * /*dir*/)
 {
 // get the list in the next voxel crossed by a ray
    fCurrentVoxel = 0;
@@ -1526,7 +1526,7 @@ void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoVoxelFinder::Voxelize(Option_t *option)
+void TGeoVoxelFinder::Voxelize(Option_t * /*option*/)
 {
 // Voxelize attached volume according to option
    BuildVoxelLimits();
@@ -1908,7 +1908,7 @@ Int_t *TGeoCylVoxels::GetCheckList(Double_t *point, Int_t &nelem)
    return TGeoVoxelFinder::GetCheckList(&ptcyl[0], nelem);
 }
 //-----------------------------------------------------------------------------
-Bool_t TGeoCylVoxels::GetNextIndices(Double_t *point, Double_t *dir)
+Bool_t TGeoCylVoxels::GetNextIndices(Double_t * /*point*/, Double_t * /*dir*/)
 {
 // Get indices for next voxel
    return kFALSE;
@@ -2071,7 +2071,7 @@ Bool_t TGeoCylVoxels::GetNextIndices(Double_t *point, Double_t *dir)
 }
 
 //-----------------------------------------------------------------------------
-Int_t *TGeoCylVoxels::GetNextVoxel(Double_t *point, Double_t *dir, Int_t &ncheck)
+Int_t *TGeoCylVoxels::GetNextVoxel(Double_t * /*point*/, Double_t * /*dir*/, Int_t & /*ncheck*/)
 {
 //--- Get the list of nodes possibly crossed by a given ray.
    return 0;
