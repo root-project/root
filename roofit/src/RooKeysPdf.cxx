@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.7 2002/04/04 00:18:00 verkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.8 2002/05/24 14:58:45 giraudpf Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -109,19 +109,17 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
     if (_mirrorLeft) {
       _dataPts[idata]= 2*_lo - real.getVal();
-      x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
       idata++;
     }
 
     if (_mirrorRight) {
       _dataPts[idata]= 2*_hi - real.getVal();
-      x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
       idata++;
     }
   }
 
   Double_t mean=x1/x0;
-  Double_t sigma=sqrt(x2/_nEvents-mean*mean);
+  Double_t sigma=sqrt(x2/x0-mean*mean);
   Double_t h=pow(Double_t(4)/Double_t(3),0.2)*pow(_nEvents,-0.2)*_rho;
   Double_t hmin=h*sigma*sqrt(2)/10;
   Double_t norm=h*sqrt(sigma)/(2.0*sqrt(3.0));
