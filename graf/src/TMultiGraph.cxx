@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.7 2002/01/28 11:51:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.8 2002/02/19 17:43:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -159,7 +159,9 @@ TAxis *TMultiGraph::GetXaxis() const
    // Get x axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetXaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetXaxis();
 }
 
 //______________________________________________________________________________
@@ -168,7 +170,9 @@ TAxis *TMultiGraph::GetYaxis() const
    // Get y axis of the graph.
 
    if (!gPad) return 0;
-   return GetHistogram()->GetYaxis();
+   TH1 *h = GetHistogram();
+   if (!h) return 0;
+   return h->GetYaxis();
 }
 
 //______________________________________________________________________________
