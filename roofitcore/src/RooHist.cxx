@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.16 2001/11/29 07:24:11 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.17 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.16 2001/11/29 07:24:11 verkerke Exp $";
+"$Id: RooHist.cc,v 1.17 2002/03/07 06:22:21 verkerke Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
@@ -194,7 +194,7 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
   }
   Double_t a= (Double_t)(n1-n2)/(n1+n2);
   SetPoint(index,binCenter,a);
-  SetPointError(index,dx,dx,scale*(a-ym),scale*(yp-a));
+  SetPointError(index,dx,dx,(a-ym),(yp-a));
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
