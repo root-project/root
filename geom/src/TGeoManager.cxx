@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.90 2004/09/20 14:32:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.91 2004/09/21 05:22:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -991,7 +991,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       TGeoMatrix *mat;
       TIter next(fMatrices);
       while ((mat=(TGeoMatrix*)next())) {
-         if (mat->IsRotation() && mat->GetUniqueID()==UInt_t(irot)) {
+         if (mat->GetUniqueID()==UInt_t(irot)) {
             matrix = (TGeoRotation*)mat;
             break;
          }
@@ -1120,7 +1120,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
       TGeoMatrix *mat;
       TIter next(fMatrices);
       while ((mat=(TGeoMatrix*)next())) {
-         if (mat->IsRotation() && mat->GetUniqueID()==UInt_t(irot)) {
+         if (mat->GetUniqueID()==UInt_t(irot)) {
             matrix = (TGeoRotation*)mat;
             break;
          }
