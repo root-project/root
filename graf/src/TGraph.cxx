@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.104 2003/07/12 13:38:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.105 2003/07/17 07:38:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2187,7 +2187,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            if (gyworkl[1] > gPad->GetUymax()) gyworkl[1] = gPad->GetUymax();
            if (gyworkl[0] > gPad->GetUymax()) continue;
 
-           gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1], "B");
+           gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
         }
      }
      else {
@@ -2201,7 +2201,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
            gxwork[1] = xhigh;
            gywork[1] = yhigh;
            ComputeLogs(2, OptionZ);
-           gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1], "B");
+           gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
         }
      }
   }
