@@ -224,7 +224,7 @@ if [ -z $ttflibdir ]; then
 fi
 echo $ttflibdir
 
-echo $ac_n "Checking for ttf fonts... $ac_c"
+echo $ac_n "Checking for ttf fonts (arial.ttf)... $ac_c"
 ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts /usr/lib/X11/fonts/ttf \
               /usr/share /usr/share/fonts /usr/share/fonts/ttf \
               /usr/share/ttf /usr/local/share /usr/local/share/fonts \
