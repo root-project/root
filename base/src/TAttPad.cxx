@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.4 2001/03/04 08:50:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.5 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -86,7 +86,7 @@ void TAttPad::ResetAttPad(Option_t *)
 //______________________________________________________________________________
 void TAttPad::SetBottomMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad bottom margin in per cent of the pad height*-*-*-*
+//*-*-*-*-*-*-*-*-*Set Pad bottom margin in fraction of the pad height*-*-*-*
 //*-*              ===================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fTopMargin >= 1) return;
@@ -96,7 +96,7 @@ void TAttPad::SetBottomMargin(Float_t margin)
 //______________________________________________________________________________
 void TAttPad::SetLeftMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad left margin in per cent of the pad width*-*-*-*-*
+//*-*-*-*-*-*-*-*-*Set Pad left margin in fraction of the pad width*-*-*-*-*
 //*-*              ================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fRightMargin >= 1) return;
@@ -106,7 +106,7 @@ void TAttPad::SetLeftMargin(Float_t margin)
 //______________________________________________________________________________
 void TAttPad::SetRightMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad right margin in per cent of the pad width*-*-*-*-*
+//*-*-*-*-*-*-*-*-*Set Pad right margin in fraction of the pad width*-*-*-*-*
 //*-*              =================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fLeftMargin >= 1) return;
@@ -116,7 +116,7 @@ void TAttPad::SetRightMargin(Float_t margin)
 //______________________________________________________________________________
 void TAttPad::SetTopMargin(Float_t margin)
 {
-//*-*-*-*-*-*-*-*-*Set Pad top margin in per cent of the pad height*-*-*-*-*
+//*-*-*-*-*-*-*-*-*Set Pad top margin in fraction of the pad height*-*-*-*-*
 //*-*              ================================================
    if (margin < 0 || margin >=1) margin = 0.1;
    if (margin + fBottomMargin >= 1) return;
