@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.25 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.26 2004/06/14 10:28:51 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1101,7 +1101,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kM_FILE_PRINT:
                      {
-                        Int_t ret;
+                        Int_t ret = 0;
                         if (!gPrinter) {
                            gPrinter = StrDup("892_2_cor"); // use gEnv
                            gPrintCommand = StrDup("xprint");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.64 2004/12/07 01:38:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.65 2004/12/10 12:54:17 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TGWidget.h"
 #include "TGFileDialog.h"
 #include "TGStatusBar.h"
+#include "TGTextEditDialogs.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -165,6 +166,7 @@ static ToolBarData_t gToolBarData[] = {
   { "newcanvas.xpm",  "New",              kFALSE,    kFileNewCanvas,  NULL },
   { "open.xpm",       "Open",             kFALSE,    kFileOpen,       NULL },
   { "save.xpm",       "Save As",          kFALSE,    kFileSaveAs,     NULL },
+  { "printer.xpm",    "Print",            kFALSE,    kFilePrint,      NULL },
   { "",               "",                 kFALSE,    -1,              NULL },
   { "interrupt.xpm",  "Interrupt",        kFALSE,    kOptionInterrupt,NULL },
   { "refresh2.xpm",   "Refresh",          kFALSE,    kOptionRefresh,  NULL },
@@ -826,7 +828,7 @@ again:
                      fCanvas->SaveAs(".jpg");
                      break;
                   case kFilePrint:
-                     fCanvas->Print();
+                     PrintCanvas();
                      break;
                   case kFileCloseCanvas:
                      if (!fEditor && (TVirtualPadEditor::GetPadEditor(kFALSE) != 0))
@@ -1177,6 +1179,62 @@ void TRootCanvas::FitCanvas()
       fCanvas->Update();
       fCanvasContainer->ChangeOptions(oopt);
    }
+}
+
+
+ //______________________________________________________________________________
+void TRootCanvas::PrintCanvas()
+{
+   // Print the canvas.
+
+   Int_t ret = 0;
+   Bool_t pname = kTRUE;
+   char *printer, *printCmd;
+   static TString sprinter, sprintCmd;
+
+   if (sprinter == "")
+      printer = StrDup(gEnv->GetValue("Print.Printer", ""));
+   else
+      printer = StrDup(sprinter);
+   if (sprintCmd == "")
+#ifndef WIN32
+      printCmd = StrDup(gEnv->GetValue("Print.Command", ""));
+#else
+      printCmd = StrDup(gEnv->GetValue("Print.Command", "start AcroRd32.exe /p"));
+#endif
+   else
+      printCmd = StrDup(sprintCmd);
+
+   new TGPrintDialog(fClient->GetDefaultRoot(), this, 400, 150,
+                     &printer, &printCmd, &ret);
+   if (ret) {
+      sprinter  = printer;
+      sprintCmd = printCmd;
+
+      if (sprinter == "")
+         pname = kFALSE;
+
+      TString fn = gSystem->ConcatFileName(gSystem->TempDirectory(), "rootprintFile01.pdf");
+      fCanvas->Print(fn);
+
+      TString cmd = sprintCmd;
+      if (cmd.Contains("%p"))
+         cmd.ReplaceAll("%p", sprinter);
+      else if (pname) {
+         cmd += " "; cmd += sprinter; cmd += " ";
+      }
+
+      if (cmd.Contains("%f"))
+         cmd.ReplaceAll("%f", fn);
+      else {
+         cmd += " "; cmd += fn; cmd += " ";
+      }
+
+      gSystem->Exec(cmd);
+      gSystem->Unlink(fn);
+   }
+   delete [] printer;
+   delete [] printCmd;
 }
 
 //______________________________________________________________________________

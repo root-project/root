@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.6 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.7 2004/09/13 09:10:56 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TGLabel.h"
 #include "TGTextEntry.h"
 #include "TGIcon.h"
+#include "TGMsgBox.h"
 
 #include <stdlib.h>
 
@@ -295,8 +296,8 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    AddFrame(fF1, fL21);
 
 
-   fLPrintCommand = new TGLabel(fF3, new TGHotString("Print &command:"));
-   fBPrintCommand = new TGTextBuffer(20);
+   fLPrintCommand = new TGLabel(fF3, new TGHotString("Print command:"));
+   fBPrintCommand = new TGTextBuffer(50);
    fBPrintCommand->AddText(0, *printProg);
    fPrintCommandEntry = new TGTextEntry(fF3, fBPrintCommand);
    fPrintCommandEntry->Associate(this);
@@ -307,7 +308,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fF3->AddFrame(fLPrintCommand, fL5);
    fF3->AddFrame(fPrintCommandEntry, fL6);
 
-   fLPrinter = new TGLabel(fF4, new TGHotString("&Printer:"));
+   fLPrinter = new TGLabel(fF4, new TGHotString("Printer:"));
    fBPrinter = new TGTextBuffer(20);
    fBPrinter->AddText(0, *printerName);
    fPrinterEntry = new TGTextEntry(fF4, fBPrinter);
@@ -379,7 +380,7 @@ Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    // Process print dialog widget messages.
 
-   const char *string;
+   const char *string, *txt;
 
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -389,14 +390,22 @@ Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case 1:
                      *fRetCode = kTRUE;
                      string = fBPrinter->GetString();
-                     delete *fPrinter;
+                     delete [] *fPrinter;
                      *fPrinter = new char[strlen(string)+1];
                      strcpy(*fPrinter, string);
 
                      string = fBPrintCommand->GetString();
-                     delete *fPrintCommand;
+                     delete [] *fPrintCommand;
                      *fPrintCommand = new char[strlen(string)+1];
                      strcpy(*fPrintCommand, string);
+
+                     if (fBPrintCommand->GetTextLength() == 0) {
+                        txt = "Please provide print command or use \"Cancel\"";
+                        new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+                                     "Missing Print Parameters", txt, kMBIconExclamation,
+                                      kMBOk);
+                        return kTRUE;
+                     }
                      CloseWindow();
                      break;
                   case 2:
