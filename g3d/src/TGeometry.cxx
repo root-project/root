@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.4 2000/11/21 20:15:52 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.5 2000/12/13 15:13:47 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -526,7 +526,6 @@ void TGeometry::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TGeometry::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         return;
       } else {
          //====process old versions before automatic schema evolution
          TNamed::Streamer(b);
@@ -569,10 +568,6 @@ void TGeometry::Streamer(TBuffer &b)
          fShapePointer[i] = oneshape;
          i++;
       }
-
-//*-*- If geometry already exists, delete old version
-      TGeometry *oldgeom = (TGeometry*)gROOT->GetGeometry(GetName());
-      delete oldgeom;
 
       gROOT->GetListOfGeometries()->Add(this);
 
