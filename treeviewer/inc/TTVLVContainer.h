@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.2 2001/02/22 15:15:52 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.h,v 1.3 2001/02/26 10:28:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -85,6 +85,7 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    Bool_t         HasAlias();
    Bool_t         IsCut() {return fIsCut;}
+   void           PrependTilde();
    void           SetCutType(Bool_t type=kFALSE);
    void           SetItemName(const char* name);
    void           SetAlias(const char* alias) {fAlias = alias;}
@@ -185,6 +186,7 @@ public:
    void          SaveText();
    void          InsertText(const char* text);
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t        ValidateAlias();
 
    static TGSelectBox *GetInstance();
 

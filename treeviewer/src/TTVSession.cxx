@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.12 2000/12/14 15:23:47 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.1 2001/02/22 14:45:18 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TTreeViewer.h"
 #include "TTVLVContainer.h"
 #include "TClonesArray.h"
+#include "TInterpreter.h"
 
 
 ClassImp(TTVRecord)
@@ -27,6 +28,19 @@ TTVRecord::TTVRecord()
    fName = "";
    fScanRedirected = kFALSE;
    fCutEnabled     = kTRUE;
+   fUserCode = "";
+   fAutoexec = kFALSE;
+}
+//______________________________________________________________________________
+void TTVRecord::ExecuteUserCode()
+{
+// Execute user-defined code
+   if (fUserCode.Length()) {
+      char code[250];
+      code[0] = 0;
+      sprintf(code, "%s", fUserCode.Data());
+      gInterpreter->ProcessLine(code);
+   }
 }
 //______________________________________________________________________________
 void TTVRecord::FormFrom(TTreeViewer *tv)
@@ -90,6 +104,12 @@ void TTVRecord::SaveSource(ofstream &out)
       out <<"   tv_record->fCutEnabled = kTRUE;"<<endl;
    else
       out <<"   tv_record->fCutEnabled = kFALSE;"<<endl;
+   if (fUserCode.Length()) {
+      out <<"   tv_record->SetUserCode(\""<<fUserCode.Data()<<"\");"<<endl;
+      if (fAutoexec) {
+         out <<"   tv_record->SetAutoexec();"<<endl;
+      }
+   }
 }
 
 ClassImp(TTVSession)
@@ -174,6 +194,7 @@ void TTVSession::Show(TTVRecord *rec)
 {
    rec->PlugIn(fViewer);
    fViewer->ExecuteDraw();
+   if (rec->HasUserCode() && rec->MustExecuteCode()) rec->ExecuteUserCode();
    fViewer->SetHistogramTitle(rec->GetName());
 }
 //______________________________________________________________________________
@@ -187,8 +208,8 @@ void TTVSession::SaveSource(ofstream &out)
       record = GetRecord(i);
       record->SaveSource(out);
    }
-   out<<"//--- Show first record"<<endl;
-   out<<"   tv_session->Show(tv_session->First());"<<endl;
+   out<<"//--- Connect first record"<<endl;
+   out<<"   tv_session->First();"<<endl;
 }
 //______________________________________________________________________________
 void TTVSession::UpdateRecord(const char *name)

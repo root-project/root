@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.7 2001/02/22 14:45:17 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.8 2001/02/26 10:28:53 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -75,7 +75,7 @@ private:
    TTVSession           *fSession;              // current tree-viewer session
    const char           *fFilename;             // name of the file containing the tree
    const char           *fSourceFile;           // name of the C++ source file - default treeviewer.C
-   const char           *fLastOption;           // last graphic option
+   TString              fLastOption;            // last graphic option
    TTree                *fMappedTree;           // listed tree
    TBranch              *fMappedBranch;         // listed branch
    Int_t                fDimension;             // histogram dimension
@@ -170,7 +170,6 @@ private:
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
-   void          Warning(const char* msg);
 
 public:
    TTreeViewer(const char* treeName = 0);
@@ -211,10 +210,12 @@ public:
    void          SetScanMode(Bool_t mode=kTRUE) {fScanMode = mode;}
    void          SetScanRedirect(Bool_t mode);
    void          SetSession(TTVSession *session);
+   void          SetUserCode(const char *code, Bool_t autoexec=kTRUE); // *MENU*
    void          SetTreeName(const char* treeName);              // *MENU*
    Bool_t        SwitchTree(Int_t index);
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
+   void          Warning(const char* msg);
 
    ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
 };
