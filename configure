@@ -1120,9 +1120,9 @@ if [ "x$enable_rfio" != "xno" ]; then
                     /usr/local/lib/shift /usr/lib /usr/local/lib"
     fi
     if [ "x$enable_shared" != "xno" ]; then
-        libs="libshift.so libshift.sl libshift.a"
+        libs="libshift.so libshift.sl libshift.a shift.lib"
     else
-        libs="libshift.a"
+        libs="libshift.a shift.lib"
     fi
     shiftlibdir="no"
     shiftlib="no"
@@ -1144,7 +1144,10 @@ if [ "x$enable_rfio" != "xno" ]; then
         unset shiftlibdir
         unset shiftlib
     else
-        if [ "x$enable_shared" = "xno" ]; then
+        if [ "$arch" = "win32" ]; then
+            shiftlib=${shiftlibdir}/${shiftlib}
+            unset shiftlibdir
+        elif [ "x$enable_shared" = "xno" ]; then
             shiftlib=${shiftlibdir}/${shiftlib}
             unset shiftlibdir
         else
