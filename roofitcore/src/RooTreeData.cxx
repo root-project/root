@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.31 2001/12/13 23:08:44 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.32 2002/01/08 02:18:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TFile.h"
+#include "TChain.h"
 #include "TROOT.h"
 
 #include "RooFitCore/RooTreeData.hh"
@@ -373,8 +374,14 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
   // structure when retrieving information from it.
 
   // Clone source tree
-  TTree* tClone = (TTree*) t->Clone() ; //((TTree*)t)->CloneTree() ;
-  
+  // WVE Clone() crashes on trees, CloneTree() crashes on tchains :-(
+  TTree* tClone ;
+  if (dynamic_cast<const TChain*>(t)) {
+    tClone = (TTree*) t->Clone() ; 
+  } else {
+    tClone = ((TTree*)t)->CloneTree() ;
+  }
+    
   // Clone list of variables  
   RooArgSet *sourceArgSet = (RooArgSet*) _vars.snapshot(kFALSE) ;
   
