@@ -1,15 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooArgusBG.cc,v 1.6 2002/02/07 23:16:18 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- * History:
- *   05-Jan-2000 DK Created initial version from RooArgusBGProb
- *   02-May-2001 WV Port to RooFitModels/RooFitCore
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --

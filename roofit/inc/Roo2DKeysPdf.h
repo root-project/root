@@ -1,23 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.rdl,v 1.5 2002/01/30 09:08:51 bevan Exp $
- * Authors:
- *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
- *
- * History:
- *   25-Jul-2001 AB Created 2D KEYS version based on the 1D template of RooKeysPdf
- *                  by Gerhard Raven.
- *   Wed Aug 15  AB changed grid to 100*100 instead of 50*50
- *   25-Aug-2001 AB Ported to RooFitCore/RooFitModels
- *   08-Dec-2001 AB added a bandwidth scale factor to allow fine tuning of the PDF
- *   29-Jan-2002 AB Altered evaluation to relu on RFC's internal cacheing.  This
- *                  gives the same numerical result withing a fraction of the errors 
- *                  as using the LUT; but gives an exact result for f(x,y) at any 
- *                  point in the fit domain and is comparable speed to fit [~10% 
- *                  slower than with a LUT].
- *
- * Copyright (C) 2001, Liverpool University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu         *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California,         *
+ *                          Liverpool University,                            *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_2DKEYS
 #define ROO_2DKEYS
@@ -29,25 +23,6 @@
 #include <iostream.h>
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Use of the PDF:
-//  If you generate the PDF using the same domain as you fit to, for data populated
-//  near the edges, there will be no compensating 'feed through from the other side 
-//  of the boundary'.  There are the following options available to you to avoid or
-//  reduce edge effects in your fits:
-//	1) enlarge your fit domain to avoid having significant data at the boundaries
-//         of your fit.
-//	2) try using the 'm' option.  This mirrors all gaussuans within the domain at 
-//         the domain boundary.  This will lead to an overestimate of the PDF near the
-//         boundary instead of the previously observed deficit.
-//      3) define the fit domain [the RooRealVars in the ctor] to be smaller than the 
-//         domain which the data set ctor used.  This PDF is construced using the events
-//         in the data set, so if the boundaries are really giving you a problem and 
-//         mirroring is not satisfactory solution to the problem, you have to take a hit 
-//         in using a reduced data set to construct the PDF from.  Recall that you will 
-//         be fitting to data in a different domain [and hence dataset] so there are no 
-//         inconsistencies as a result [unless you are really limited by MC stats and 
-//         use the same MC to generate the PDF and test the PDF's systematics].
-///////////////////////////////////////////////////////////////////////////////////////
 class Roo2DKeysPdf : public RooAbsPdf 
 {
 public:

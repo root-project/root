@@ -1,16 +1,18 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooNovosibirsk.rdl,v 1.1 2001/02/06 22:01:53 htanaka Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   29-Feb-2000 DK Created initial version
- *
- * Copyright (C) 2000 Stanford University
-* 20 Jan 2001: Hirohisa A. Tanaka Novosibirsk PDF for RooFitTools
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
+ *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-
 #ifndef ROO_NOVOSIBIRSK
 #define ROO_NOVOSIBIRSK
 

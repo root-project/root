@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooBifurGauss.cc,v 1.8 2001/10/08 05:21:15 verkerke Exp $
- * Authors:
- *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
- * History:
- *   5-Dec-2000 Abi, Created.
- *  19-Jun-2001 JB, Ported to RooFitModels.
- *
- * Copyright (C) 2000 Coloraro State University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California,         *
+ *                          Colorado State University                        *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #include <iostream.h>
 #include <math.h>
@@ -19,7 +22,7 @@
 ClassImp(RooBifurGauss)
 
 static const char rcsid[] =
-"$Id: RooBifurGauss.cc,v 1.8 2001/10/08 05:21:15 verkerke Exp $";
+"$Id: RooBifurGauss.cc,v 1.10 2002/08/27 01:51:31 bevan Exp $";
 
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,
 			     RooAbsReal& _x, RooAbsReal& _mean,

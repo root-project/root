@@ -1,15 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooPolynomial.cc,v 1.5 2002/05/10 20:25:44 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   05-Jan-2000 DK Created initial version from RooPolynomialProb
- *   02-Jul-2000 DK Add analytic optimizations for generating toy MC
- *                  at low orders
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --

@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooCBShape.rdl,v 1.3 2001/08/02 21:40:04 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   07-Feb-2000 DK Created initial version from RooGaussianProb
- *   19-Jun-2001 JB Ported to RooFitModels
- *
- * Copyright (C) 2000 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_CB_SHAPE
 #define ROO_CB_SHAPE

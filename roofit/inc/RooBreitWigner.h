@@ -1,15 +1,18 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooBreitWigner.rdl,v 1.2 2001/09/20 01:41:48 verkerke Exp $
- * Authors:
- *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu
- *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
- * History:
- *   13-Mar-2001 AS Created.
- *   14-Sep-2001 TS Port to RooFitModels/RooFitCore
- *
- * Copyright (C) 2001 Colorado State University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu        *
+ *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          Colorado State University                        *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_BREITWIGNER
 #define ROO_BREITWIGNER

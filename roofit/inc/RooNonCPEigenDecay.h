@@ -1,18 +1,27 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.5 2002/05/31 01:07:41 verkerke Exp $
- * Authors:
- *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
- *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
- *   JS, Jan Stark, Paris, stark@slac.stanford.edu
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- * History:
- *   Nov-2001   WV Created initial version
- *   Mar-2002   JS Commit improved version to CVS
- *   May-2002   JS Changed the set of CP parameters (mathematically equivalent)
- *
- * Copyright (C) 2002 University of California, IN2P3
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   AH, Andreas Hoecker,  Orsay,            hoecker@slac.stanford.edu       *
+ *   SL, Sandrine Laplace, Orsay,            laplace@slac.stanford.edu       *
+ *   JS, Jan Stark,        Paris,            stark@slac.stanford.edu         *
+ *   WV, Wouter Verkerke,  UC Santa Barbara, verkerke@slac.stanford.edu      *
+ *                                                                           *                  
+ * Copyright (c) 2000-2002, Regents of the University of California,         *
+ *                          IN2P3. All rights reserved.                      *
+ *                                                                           *
+ * History                                                                   *
+ *   Nov-2001   WV Created initial version                                   *
+ *   Dec-2001   SL mischarge correction, direct CPV                          *
+ *   Jan-2002   AH built dedicated generator + code cleaning                 *
+ *   Mar-2002   JS committed debugged version to CVS                         *
+ *   Apr-2002   AH allow prompt (ie, non-Pdf) mischarge treatment            *
+ *   May-2002   JS Changed the set of CP parameters (mathematically equiv.)  *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_NONCPEIGEN_DECAY
 #define ROO_NONCPEIGEN_DECAY

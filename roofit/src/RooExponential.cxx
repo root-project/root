@@ -1,15 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooExponential.cc,v 1.5 2001/10/08 05:21:17 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
- * History:
- *   14-Feb-2000 DK Created initial version from RooLifetime
- *   21-Aug-2001 AB Ported to RooFitModels/RooFitCore
- *
- * Copyright (C) 1999 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
@@ -60,32 +62,3 @@ Double_t RooExponential::analyticalIntegral(Int_t code) const
   return 0 ;
 }
 
-/*
-void  RooExponential::useParametersImpl() {
-  RooPdf::useParametersImpl();
-  if(c != 0) {
-    _exp1= exp(_xptr->GetMin()*c);
-    _exp2= exp(_xptr->GetMax()*c);
-    _norm= (_exp2 - _exp1)/c;
-  }
-  else {
-    _exp1= _xptr->GetMin();
-    _exp2= _xptr->GetMax();
-    _norm= _exp2 - _exp1;
-  }
-}
-
-Double_t RooExponential::evaluate() {
-  return exp(c*x)/_norm;
-}
-
-void RooExponential::initGenerator() {
-}
-
-Int_t RooExponential::generateDependents() {
-  Double_t r= RooRandom::instance().Rndm();
-  x= r*_exp1 + (1-r)*_exp2;
-  if(c != 0) x= log(x)/c;
-  *_xptr= x;
-  return 1;
-  }*/

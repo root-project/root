@@ -1,21 +1,19 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooDstD0BG.cc,v 1.7 2001/10/17 05:15:06 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- *   UE, Ulrik Egede, RAL, U.Egede@rl.ac.uk
- *   MT, Max Turri, UC Santa Cruz
- *   CC, Chih-hsiang Cheng, Stanford University
- * History:
- *   07-Feb-2000 DK Created initial version from RooGaussianProb
- *   29-Feb-2000 UE Created as copy of RooArgusBG.rdl
- *   12-Jul-2000 MT Implement alpha parameter
- *   21-Aug-2001 CC Migrate from RooFitTool  
- *
- * Description : Background shape for D*-D0 mass difference
- *
- * Copyright (C) 2000 RAL
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   UE, Ulrik Egede,     RAL,               U.Egede@rl.ac.uk                *
+ *   MT, Max Turri,       UC Santa Cruz      turri@slac.stanford.edu         *
+ *   CC, Chih-hsiang Cheng, Stanford         chcheng@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          RAL and Stanford University. All rights reserved.*
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --
@@ -33,7 +31,7 @@
 ClassImp(RooDstD0BG) 
 
 static const char rcsid[] =
-"$Id: RooDstD0BG.cc,v 1.7 2001/10/17 05:15:06 verkerke Exp $";
+"$Id: RooDstD0BG.cc,v 1.8 2002/02/26 03:39:44 verkerke Exp $";
 
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 		       RooAbsReal& _dm, RooAbsReal& _dm0,

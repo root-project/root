@@ -1,13 +1,16 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooChebychev.cc,v 1.1 2001/10/26 16:59:42 raven Exp $
- * Authors:
- *   GR, Gerhard Raven, UC, San Diego, Gerhard.Raven@slac.stanford.edu
- * History:
- *   20-Oct-2001 GR Created initial version from RooPolynomial
- *
- * Copyright (C) 2001 University of California
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   GR, Gerhard Raven,   UC San Diego, Gerhard.Raven@slac.stanford.edu
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [PDF] --

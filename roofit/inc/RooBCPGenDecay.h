@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File:
- * Authors:
- * Authors:
- *   Jim Smith, jgsmith@pizero.colorado.edu
- * History:
- *   08-Jul-2002 JGS Created initial version
- *
- * Copyright (C) 2001 University of California
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   JS, Jim Smith    , University of Colorado, jgsmith@pizero.colorado.edu  *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California,         *
+ *                          University of Colorado                           *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_BCPGEN_DECAY
 #define ROO_BCPGEN_DECAY

@@ -1,19 +1,18 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooKeysPdf.rdl,v 1.4 2002/02/07 17:06:16 giraudpf Exp $
- * Authors:
- *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- * History:
- *   04-Jul-2000 GR Created initial version from the original Fortran version
- *                  by Kyle Cranmer, see:
- *                    http://www-wisconsin.cern.ch/~cranmer/keys.html
- *                  Some functionality is still missing (like dealing with
- *                  boundaries)
- *   01-Sep-2000 DK Override useParameters() method to fix the normalization
- *
- * Copyright (C) 2000 UC, San Diego
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_KEYS
 #define ROO_KEYS

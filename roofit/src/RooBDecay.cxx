@@ -1,12 +1,19 @@
-/* *********************************************************************************************************
-   PDF for equation exp(-abs(t)/tau)*(cosh(dg*t/2)+f1*sinh(dg*t/2)+f2*cos(dm*t)+f3sin(dm*t))
-   Written by Parker C. Lund
-   Univeristy of California, Irvine
-   08-01-02
-   PDF is Convolutable with updated RooGaussModel and RooGExpModel that accepts new basis functions: _basisCosh and _basisSinh
-   
-   **********************************************************************************************************
-*/
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   PL, Parker C Lund,   UC Irvine                                          *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
 
 
 #include <iostream.h>

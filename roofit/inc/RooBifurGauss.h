@@ -1,14 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitModels
- *    File: $Id: RooBifurGauss.rdl,v 1.5 2001/09/20 01:41:48 verkerke Exp $
- * Authors:
- *   Abi Soffer, Coloraro State University, abi@slac.stanford.edu
- * History:
- *   5-Dec-2000 Abi, Created.
- *  19-Jun-2001 JB, Ported to RooFitModels
- *
- * Copyright (C) 2000 Coloraro State University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   Abi Soffer, Colorado State University, abi@slac.stanford.edu            *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California,         *
+ *                          Colorado State University                        *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_BIFUR_GAUSS
 #define ROO_BIFUR_GAUSS

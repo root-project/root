@@ -1,17 +1,18 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooVoigtian.rdl,v 1.1 2001/08/29 20:33:44 schieti Exp $
- * Authors:
- *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
- * History:
- *   09-Aug-2001 TS Created initial version from RooGaussian
- *   27-Aug-2001 TS Port to RooFitModels/RooFitCore
- *   06-Sep-2001 TS Added class description and fast-algorithm
- *                  option in constructor
- *
- * Copyright (C) 2001 Stanford Linear Accelerator Center
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   TS, Thomas Schietinger, SLAC,          schieti@slac.stanford.edu        *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
 #ifndef ROO_VOIGTIAN
 #define ROO_VOIGTIAN
 

@@ -1,15 +1,17 @@
 /*****************************************************************************
- * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
- *    File: $Id: RooExponential.rdl,v 1.3 2001/09/20 01:41:48 verkerke Exp $
- * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
- *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
- * History:
- *   05-Jan-2000 DK Created initial version from RooLifetimeProb
- *   21-Aug-2001 AB Portto RooFitCore/RooFitModels
- *
- * Copyright (C) 2000 Stanford University
+ * Project: RooFit                                                           *
+ * Package: RooFitModels                                                     *
+ *    File: $Id$
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2002, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_EXPONENTIAL
 #define ROO_EXPONENTIAL
@@ -36,12 +38,6 @@ protected:
   RooRealProxy c;
 
   Double_t evaluate() const;
-
-//  void useParametersImpl();
-//  void initGenerator();
-//  Int_t generateDependents();
-//  Double_t  _exp1, _exp2;
-//  RooRealVar *_xptr;
 
 private:
   ClassDef(RooExponential,0) // Exponential PDF
