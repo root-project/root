@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name$:$Id$ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -41,6 +41,7 @@
 #pragma link C++ class TGPicturePool;
 #pragma link C++ class TGDimension;
 #pragma link C++ class TGPosition;
+#pragma link C++ class TGLongPosition;
 #pragma link C++ class TGFrame;
 #pragma link C++ class TGCompositeFrame;
 #pragma link C++ class TGVerticalFrame;
