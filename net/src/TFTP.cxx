@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.3 2001/02/22 13:38:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.4 2001/02/22 14:07:20 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -285,7 +285,7 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 #endif
 
    while (pos < size) {
-      Seek_t left = size - pos;
+      Seek_t left = Seek_t(size - pos);
       if (left > fBlockSize)
          left = fBlockSize;
 #ifdef HAVE_MMAP

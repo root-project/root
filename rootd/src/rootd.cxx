@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.24 2001/02/22 14:37:46 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.25 2001/02/22 14:44:53 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1171,9 +1171,13 @@ void RootdPut(const char *msg)
    // Receive a buffer and write it at the specified offset in the currently
    // open file.
 
-   int offset, len;
+   long  offsetl;
+   int   len;
+   off_t offset;
 
-   sscanf(msg, "%d %d", &offset, &len);
+   sscanf(msg, "%ld %d", &offsetl, &len);
+
+   offset = (off_t) offsetl;
 
    char *buf = new char[len];
    NetRecvRaw(buf, len);
@@ -1212,9 +1216,13 @@ void RootdGet(const char *msg)
    // Get a buffer from the specified offset from the currently open file
    // and send it to the client.
 
-   int offset, len;
+   long  offsetl;
+   int   len;
+   off_t offset;
 
-   sscanf(msg, "%d %d", &offset, &len);
+   sscanf(msg, "%ld %d", &offsetl, &len);
+
+   offset = (off_t) offsetl;
 
    char *buf = new char[len];
 
@@ -1253,11 +1261,14 @@ void RootdPutFile(const char *msg)
 {
    // Receive a file from the remote client.
 
-   char file[kMAXPATHLEN];
-   long size, restartat;
-   int  blocksize;
+   char  file[kMAXPATHLEN];
+   long  size, restartatl;
+   int   blocksize;
+   off_t restartat;
 
-   sscanf(msg, "%s %d %ld %ld", file, &blocksize, &size, &restartat);
+   sscanf(msg, "%s %d %ld %ld", file, &blocksize, &size, &restartatl);
+
+   restartat = (off_t) restartatl;
 
    // anon user may not overwrite existing file...
    // add check here...
@@ -1315,20 +1326,20 @@ void RootdPutFile(const char *msg)
    char *buf = new char[blocksize];
 
    long pos  = restartat & ~(blocksize-1);
-   int  skip = restartat - pos;
+   int  skip = int(restartat - pos);
 
    while (pos < size) {
       long left = size - pos;
       if (left > blocksize)
          left = blocksize;
 
-      NetRecvRaw(buf, left-skip);
+      NetRecvRaw(buf, int(left-skip));
 
       // in case of ascii file, loop here over buffer and remove \r's
       // if (gType == kASCII) { } else { current write }
 
       ssize_t siz;
-      while ((siz = write(fd, buf, left-skip)) < 0 && GetErrno() == EINTR)
+      while ((siz = write(fd, buf, int(left-skip))) < 0 && GetErrno() == EINTR)
          ResetErrno();
 
       if (siz < 0)

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.18 2001/02/13 17:20:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.19 2001/02/22 09:44:41 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -354,7 +354,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
-   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_GET) < 0) {
+   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_GET) < 0) {
       Error("ReadBuffer", "error sending kROOTD_GET command");
       result = kTRUE;
       goto end;
@@ -422,7 +422,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    gSystem->IgnoreInterrupt();
 
-   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_PUT) < 0) {
+   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_PUT) < 0) {
       Error("WriteBuffer", "error sending kROOTD_PUT command");
       result = kTRUE;
       goto end;
