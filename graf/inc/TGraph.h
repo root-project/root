@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.43 2005/02/21 16:57:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.44 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -104,8 +104,6 @@ public:
         virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
         virtual void     FitPanel(); // *MENU*
                 Bool_t   GetEditable() const;
-        virtual Double_t GetErrorX(Int_t bin) const;
-        virtual Double_t GetErrorY(Int_t bin) const;
         TF1             *GetFunction(const char *name) const;
         TH1F            *GetHistogram() const;
         TList           *GetListOfFunctions() const { return fFunctions; }
@@ -115,14 +113,20 @@ public:
         virtual Double_t GetRMS(Int_t axis=1) const;
         Int_t            GetMaxSize() const {return fMaxSize;}
         Int_t            GetN() const {return fNpoints;}
-        Double_t         *GetX() const {return fX;}
-        Double_t         *GetY() const {return fY;}
+        virtual Double_t GetErrorX(Int_t bin) const;
+        virtual Double_t GetErrorY(Int_t bin) const;
+	virtual Double_t GetErrorXhigh(Int_t bin) const;
+	virtual Double_t GetErrorXlow(Int_t bin)  const;
+	virtual Double_t GetErrorYhigh(Int_t bin) const;
+	virtual Double_t GetErrorYlow(Int_t bin)  const;
+        Double_t         *GetX()  const {return fX;}
+        Double_t         *GetY()  const {return fY;}
         virtual Double_t *GetEX() const {return 0;}
         virtual Double_t *GetEY() const {return 0;}
-	virtual Double_t GetEXhigh(Int_t bin) const;
-	virtual Double_t GetEXlow(Int_t bin) const;
-	virtual Double_t GetEYhigh(Int_t bin) const;
-	virtual Double_t GetEYlow(Int_t bin) const;
+	virtual Double_t *GetEXhigh() const {return 0;}
+	virtual Double_t *GetEXlow()  const {return 0;}
+	virtual Double_t *GetEYhigh() const {return 0;}
+	virtual Double_t *GetEYlow()  const {return 0;}
         TAxis            *GetXaxis() const ;
         TAxis            *GetYaxis() const ;
         virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y) const;

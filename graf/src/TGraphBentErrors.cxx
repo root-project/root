@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.12 2005/03/01 09:33:46 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.13 2005/03/04 09:06:37 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -205,10 +205,10 @@ void TGraphBentErrors::Apply(TF1 *f)
 
   for (Int_t i=0;i<GetN();i++) {
      GetPoint(i,x,y);
-     exl=GetEXlow(i);
-     exh=GetEXhigh(i);
-     eyl=GetEYlow(i);
-     eyh=GetEYhigh(i);
+     exl=GetErrorXlow(i);
+     exh=GetErrorXhigh(i);
+     eyl=GetErrorYlow(i);
+     eyh=GetErrorYhigh(i);
 
      fxy = f->Eval(x,y);
      SetPoint(i,x,fxy);
@@ -365,7 +365,7 @@ Double_t TGraphBentErrors::GetErrorY(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphBentErrors::GetEXhigh(Int_t i) const
+Double_t TGraphBentErrors::GetErrorXhigh(Int_t i) const
 {
    if (i<0 || i>fNpoints) return -1;
    if (fEXhigh) return fEXhigh[i];
@@ -373,7 +373,7 @@ Double_t TGraphBentErrors::GetEXhigh(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphBentErrors::GetEXlow(Int_t i) const
+Double_t TGraphBentErrors::GetErrorXlow(Int_t i) const
 {
    if (i<0 || i>fNpoints) return -1;
    if (fEXlow) return fEXlow[i];
@@ -381,7 +381,7 @@ Double_t TGraphBentErrors::GetEXlow(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphBentErrors::GetEYhigh(Int_t i) const
+Double_t TGraphBentErrors::GetErrorYhigh(Int_t i) const
 {
    if (i<0 || i>fNpoints) return -1;
    if (fEYhigh) return fEYhigh[i];
@@ -389,7 +389,7 @@ Double_t TGraphBentErrors::GetEYhigh(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphBentErrors::GetEYlow(Int_t i) const
+Double_t TGraphBentErrors::GetErrorYlow(Int_t i) const
 {
    if (i<0 || i>fNpoints) return -1;
    if (fEYlow) return fEYlow[i];

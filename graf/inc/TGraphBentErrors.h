@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.5 2004/09/14 06:38:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.h,v 1.6 2005/03/04 09:06:37 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -68,16 +68,16 @@ public:
         virtual void    Apply(TF1 *f);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin,
 				     Double_t &xmax, Double_t &ymax) const;
-        Double_t        GetErrorX(Int_t bin) const;
-        Double_t        GetErrorY(Int_t bin) const;
-        //Double_t       *GetEXlow()  const {return fEXlow;}
-        //Double_t       *GetEXhigh() const {return fEXhigh;}
-        //Double_t       *GetEYlow()  const {return fEYlow;}
-        //Double_t       *GetEYhigh() const {return fEYhigh;}
-	Double_t        GetEXlow(Int_t bin) const;
-	Double_t        GetEXhigh(Int_t bin) const;
-	Double_t        GetEYlow(Int_t bin) const;
-	Double_t        GetEYhigh(Int_t bin) const;
+        Double_t        GetErrorX(Int_t bin)     const;
+        Double_t        GetErrorY(Int_t bin)     const;
+	Double_t        GetErrorXlow(Int_t bin)  const;
+	Double_t        GetErrorXhigh(Int_t bin) const;
+	Double_t        GetErrorYlow(Int_t bin)  const;
+	Double_t        GetErrorYhigh(Int_t bin) const;
+        Double_t       *GetEXlow()  const {return fEXlow;}
+        Double_t       *GetEXhigh() const {return fEXhigh;}
+        Double_t       *GetEYlow()  const {return fEYlow;}
+        Double_t       *GetEYhigh() const {return fEYhigh;}
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.20 2004/10/22 21:18:23 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.21 2005/03/04 09:06:37 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -1939,8 +1939,6 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t Foption = grFitter->GetFitOption();
-   TGraphAsymmErrors *gra = 0;
-   if (gr->InheritsFrom(TGraphAsymmErrors::Class())) gra = (TGraphAsymmErrors*)gr;
    
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
@@ -1974,16 +1972,9 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 	//         continue;
 	eu = 1.;
       } else {
-        if (gra) {
-           exh  = gra->GetEXhigh(bin);
-           exl  = gra->GetEXlow(bin);
-           if (cu < fu) ey = gra->GetEYhigh(bin);
-           else         ey = gra->GetEYlow(bin);
-        } else {
-           exh = gr->GetErrorX(bin);
-           exl = exh;
-           ey  = gr->GetErrorY(bin);
-        }
+        exh  = gr->GetErrorXhigh(bin);
+        exl  = gr->GetErrorXlow(bin);
+        ey  = gr->GetErrorY(bin);
         if (exl < 0) exl = 0;
         if (exh < 0) exh = 0;
 	if (ey < 0)  ey  = 0;

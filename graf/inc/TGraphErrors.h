@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.19 2004/10/20 12:00:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.20 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -56,14 +56,14 @@ public:
         virtual void    Apply(TF1 *f);
         static Int_t    CalculateScanfFields(const char *fmt);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
-        Double_t        GetErrorX(Int_t bin) const;
-        Double_t        GetErrorY(Int_t bin) const;
+        Double_t        GetErrorX(Int_t bin)     const;
+        Double_t        GetErrorY(Int_t bin)     const;
+	Double_t        GetErrorXhigh(Int_t bin) const;
+	Double_t        GetErrorXlow(Int_t bin)  const;
+	Double_t        GetErrorYhigh(Int_t bin) const;
+	Double_t        GetErrorYlow(Int_t bin)  const;
         Double_t       *GetEX() const {return fEX;}
         Double_t       *GetEY() const {return fEY;}
-	Double_t        GetEXhigh(Int_t bin) const;
-	Double_t        GetEXlow(Int_t bin) const;
-	Double_t        GetEYhigh(Int_t bin) const;
-	Double_t        GetEYlow(Int_t bin) const;
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
         virtual void    SavePrimitive(ofstream &out, Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.151 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.152 2005/03/04 09:29:59 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1479,7 +1479,7 @@ Double_t TGraph::GetErrorY(Int_t) const
 }
 
 //______________________________________________________________________________
-Double_t TGraph::GetEXhigh(Int_t) const
+Double_t TGraph::GetErrorXhigh(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -1490,7 +1490,7 @@ Double_t TGraph::GetEXhigh(Int_t) const
 }
 
 //______________________________________________________________________________
-Double_t TGraph::GetEXlow(Int_t) const
+Double_t TGraph::GetErrorXlow(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -1500,7 +1500,7 @@ Double_t TGraph::GetEXlow(Int_t) const
 
 }
 //______________________________________________________________________________
-Double_t TGraph::GetEYhigh(Int_t) const
+Double_t TGraph::GetErrorYhigh(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors
@@ -1511,7 +1511,7 @@ Double_t TGraph::GetEYhigh(Int_t) const
 }
 
 //______________________________________________________________________________
-Double_t TGraph::GetEYlow(Int_t) const
+Double_t TGraph::GetErrorYlow(Int_t) const
 {
 //    This function is called by GraphFitChisquare.
 //    It always returns a negative value. Real implementation in TGraphErrors

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.45 2005/02/07 14:34:47 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.46 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -417,7 +417,7 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphErrors::GetEXhigh(Int_t i) const
+Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the error along X at point i.
@@ -428,7 +428,7 @@ Double_t TGraphErrors::GetEXhigh(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphErrors::GetEXlow(Int_t i) const
+Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the error along X at point i.
@@ -439,7 +439,7 @@ Double_t TGraphErrors::GetEXlow(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphErrors::GetEYhigh(Int_t i) const
+Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the error along X at point i.
@@ -450,7 +450,7 @@ Double_t TGraphErrors::GetEYhigh(Int_t i) const
 }
 
 //______________________________________________________________________________
-Double_t TGraphErrors::GetEYlow(Int_t i) const
+Double_t TGraphErrors::GetErrorYlow(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
 //    It returns the error along X at point i.

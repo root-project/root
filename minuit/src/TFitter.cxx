@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.27 2005/02/03 08:46:53 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.28 2005/03/04 09:06:37 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -541,8 +541,8 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
          continue;
       }
 
-      exh = gr->GetEXhigh(bin);
-      exl = gr->GetEXlow(bin);
+      exh = gr->GetErrorXhigh(bin);
+      exl = gr->GetErrorXlow(bin);
       ey  = gr->GetErrorY(bin);
       if (exl < 0) exl = 0;
       if (exh < 0) exh = 0;
@@ -685,8 +685,8 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 	    f += fsum*fsum;
 	    continue;
 	 }
-	 exh = gr->GetEXhigh(bin);
-	 exl = gr->GetEXlow(bin);
+	 exh = gr->GetErrorXhigh(bin);
+	 exl = gr->GetErrorXlow(bin);
 	 ey  = gr->GetErrorY(bin);
 	 if (exl < 0) exl = 0;
 	 if (exh < 0) exh = 0;
