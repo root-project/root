@@ -14,16 +14,21 @@ cd $2
 
 sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1 /g" Makefile > Makefile1
 rm Makefile
-#mv Makefile1 Makefile
+mv Makefile1 Makefile
 
-sed -e "s/mytest/$1/g" Makefile1 > Makefile
-rm Makefile1
+#sed -e "s/mytest/$1/g" Makefile1 > Makefile
+#rm Makefile1
 #mv Makefile1 Makefile
 
 #sed -e "s/testWithDiff/$1/g" Makefile1 > Makefile
 #rm Makefile1
 
+echo >> Makefile
 echo "$1 : $1.log" >> Makefile
 echo "	\$(TestDiff)" >> Makefile
 
 touch $1.ref
+
+echo "{"  > run$1.C
+echo "// Fill out the code of the actual test" >> run$1.C 
+echo "}" >> run$1.C 
