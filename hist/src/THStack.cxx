@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.32 2004/08/05 08:01:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.33 2004/09/01 17:44:00 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -402,7 +402,11 @@ TH1 *THStack::GetHistogram() const
 //    Takes into account the two following cases.
 //       1- option 'A' was specified in THStack::Draw. Return fHistogram
 //       2- user had called TPad::DrawFrame. return pointer to hframe histogram
-
+//
+// IMPORTANT NOTE
+//  You must call Draw before calling this function. The returned histogram
+//  depends on the selected Draw options.
+   
    if (fHistogram) return fHistogram;
    if (!gPad) return 0;
    gPad->Modified();
@@ -477,6 +481,11 @@ TObjArray *THStack::GetStack()
 //______________________________________________________________________________
 TAxis *THStack::GetXaxis() const
 {
+// Get x axis of the histogram used to draw the stack.
+//
+// IMPORTANT NOTE
+//  You must call Draw before calling this function. The returned histogram
+//  depends on the selected Draw options.
 
    if (!gPad) return 0;
    return GetHistogram()->GetXaxis();
@@ -485,7 +494,11 @@ TAxis *THStack::GetXaxis() const
 //______________________________________________________________________________
 TAxis *THStack::GetYaxis() const
 {
-   // Get y axis of the graph.
+// Get x axis of the histogram used to draw the stack.
+//
+// IMPORTANT NOTE
+//  You must call Draw before calling this function. The returned histogram
+//  depends on the selected Draw options.
 
    if (!gPad) return 0;
    return GetHistogram()->GetYaxis();
