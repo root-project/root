@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.14 2002/03/20 20:47:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.15 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -422,7 +422,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
             if (w > longest) longest = w;
          }
       }
-      if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
+      if (longest > 0.96*dx) textsize *= 0.96*dx/longest;
       if (mode == kDiamond) textsize *= 0.66;
       SetTextSize(textsize);
    }
