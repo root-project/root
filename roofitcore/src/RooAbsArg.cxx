@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.66 2002/03/22 22:43:51 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.67 2002/04/03 23:37:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -321,7 +321,12 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
   // Fill supplied list with nodes of the arg tree, following all server links, 
   // starting with ourself as top node.
 
-  if (!arg) arg=this ;
+  if (!arg) {
+    if (list->getHashTableSize()==0) {
+      list->setHashTableSize(1000) ;
+    }
+    arg=this ;
+  }
 
   // Decide if to add current node
   if ((doBranch&&doLeaf) ||
@@ -771,7 +776,6 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
-
   Bool_t ret(kFALSE) ;
   
   // Do redirect on self

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.52 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.53 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,7 +51,7 @@ static TVirtualFitter *_theFitter = 0;
 
 
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
-			     Bool_t cloneData, Bool_t clonePdf, const RooArgSet* projDeps) :
+			     Bool_t cloneData, Bool_t clonePdf, Bool_t attachData, const RooArgSet* projDeps) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
   _ownData(cloneData), _zombie(kFALSE), _projDeps(0)
 {
@@ -111,7 +111,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
 
   // Clone all PDF compents by copying all branch nodes
   RooArgSet tmp("PdfBranchNodeList") ;
-  pdf->branchNodeServerList(&tmp) ;
+  if (attachData) pdf->branchNodeServerList(&tmp) ;
 
   if (clonePdf) {
     _pdfCompList = (RooArgSet*) tmp.snapshot(kFALSE) ;
@@ -125,7 +125,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
   }
 
   // Attach PDF to data set
-  _pdfClone->attachDataSet(*_dataClone) ;
+  if (attachData) _pdfClone->attachDataSet(*_dataClone) ;
   _pdfClone->resetErrorCounters() ;
 
   // Cache parameter list  
@@ -160,7 +160,7 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
   delete pIter ;
 
   // Store the original leaf node list
-  pdf->leafNodeServerList(&_origLeafNodeList) ;  
+  if (attachData) pdf->leafNodeServerList(&_origLeafNodeList) ;  
 
   // Store normalization set
   _normSet = (RooArgSet*) data->get()->snapshot(kFALSE) ;

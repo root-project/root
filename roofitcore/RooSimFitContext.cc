@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.19 2002/04/03 23:37:26 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.20 2002/04/08 21:06:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ ClassImp(RooSimFitContext)
 ;
 
 RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf, const RooArgSet* projDeps) : 
-  RooFitContext(data,simpdf,kFALSE,kFALSE,projDeps), _nGlobEvents(-1)
+  RooFitContext(data,simpdf,kFALSE,kFALSE,kFALSE,projDeps), _nGlobEvents(-1)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 
@@ -62,7 +62,7 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
       cout << "RooSimFitContext::RooSimFitContext: creating fit sub-context for state " << type->GetName() 
 	   << " (" << dset->numEntries() << " dataset entries)" << endl ;
       _dsetArray[n] = dset ;
-      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE,projDeps) ;
+      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE,kTRUE,projDeps) ;
       _dirtyArray[n] = kTRUE ;
       _nCtxFilled++ ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.18 2002/02/26 01:32:38 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.19 2002/03/07 06:22:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,7 +33,7 @@ public:
   // Constructors, assignment etc
   RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
 		Bool_t cloneData=kTRUE, Bool_t clonePdf=kTRUE,
-		const RooArgSet* projDeps=0) ;
+		Bool_t attachData=kTRUE, const RooArgSet* projDeps=0) ;
   virtual ~RooFitContext() ;
 
   virtual RooFitResult* fit(Option_t *fitOpt="", Option_t *optOpt="") ;
