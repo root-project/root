@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.9 2003/10/07 14:03:02 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.10 2003/10/07 21:09:55 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -133,7 +133,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
             gSystem->IgnoreSignal(kSigPipe, kFALSE);
             return -1;
-	 }
+         }
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
@@ -155,7 +155,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
             gSystem->IgnoreSignal(kSigPipe, kFALSE);
             return -1;
-	 }
+         }
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
@@ -196,12 +196,14 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       int Opt = ReUse * kAUTH_REUSE_MSK;
       sprintf(Options,"%d %ld %s", Opt, (Long_t)strlen(User), User);
 
-      // Now we are ready to send a request to the rootd/proofd daemons to check if we have already
-      // a valid security context and eventually to start a negotiation to get one ...
+      // Now we are ready to send a request to the rootd/proofd daemons
+      // to check if we have already a valid security context and
+      // eventually to start a negotiation to get one ...
       kind = kROOTD_KRB5;
       retval = ReUse;
       int rc = 0;
-      if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kKrb5,Details,Options,&kind,&retval)) == 1) {
+      if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kKrb5,
+                Details,Options,&kind,&retval)) == 1) {
          // A valid authentication exists: we are done ...
          if (Options) delete[] Options;
          return 1;
@@ -248,13 +250,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       service = "rootd";
    else
       service = sock->GetService();
+
    const char *serv_host = sock->GetInetAddress().GetHostName();
    krb5_principal server;
 
    if (gDebug > 3)
       Info("Krb5Authenticate","serv_host: %s service: %s",serv_host,service);
 
-   if ((retval = krb5_sname_to_principal(context, serv_host, service,KRB5_NT_SRV_HST, &server))) {
+   if ((retval = krb5_sname_to_principal(context, serv_host, service,
+                                         KRB5_NT_SRV_HST, &server))) {
       com_err("<Krb5Authenticate>", retval, "while generating service "
               "principal %s/%s", serv_host, service);
       gSystem->IgnoreSignal(kSigPipe, kFALSE);
@@ -331,7 +335,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       if (ReUse == 1) {
 
          if (type != kROOTD_RSAKEY)
-            Warning("Krb5Auth", "problems recvn RSA key flag: got message %d, flag: %d",type,gRSAKey);
+            Warning("Krb5Auth",
+                    "problems recvn RSA key flag: got message %d, flag: %d",
+                     type,gRSAKey);
          gRSAKey = 1;
 
          // Send the key securely
@@ -342,7 +348,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       }
 
       if (type != kROOTD_KRB5 || retval < 1)
-         Warning("Krb5Auth", "problems recvn (user,offset) length (%d:%d bytes:%d)",type,retval,nrec);
+         Warning("Krb5Auth",
+                 "problems recvn (user,offset) length (%d:%d bytes:%d)",
+                  type,retval,nrec);
       char *rfrm = new char[retval+1];
       nrec = sock->Recv(rfrm,retval+1, type);  // receive user,offset) info
 
@@ -357,7 +365,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       char *Token = 0;
       if (ReUse == 1 && OffSet > -1) {
          if (TAuthenticate::SecureRecv(sock,gRSAKey,&Token) == -1) {
-            Warning("Krb5Auth","problems secure-receiving Token - may result in corrupted Token");
+            Warning("Krb5Auth",
+                    "problems secure-receiving Token - may result in corrupted Token");
          }
          if (gDebug > 3)
             Info("Krb5Auth","received from server: token: '%s' ",Token);
@@ -455,3 +464,4 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal
    }
    return Valid;
 }
+

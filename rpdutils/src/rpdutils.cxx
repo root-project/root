@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.16 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.17 2003/10/07 21:09:55 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -583,8 +583,6 @@ int RpdCheckAuthTab(int Sec, char *User, char *Host, int RemId, int *OffSet)
                 Host, RemId, *OffSet);
 
    // First check if file exists and can be read
-   if (access(gRpdAuthTab, F_OK))
-      return retval;
    if (access(gRpdAuthTab, R_OK)) {
       ErrorInfo("RpdCheckAuthTab: can't read file %s (errno: %d)",
                 gRpdAuthTab, GetErrno());
@@ -965,7 +963,8 @@ int RpdCheckAuthAllow(int Sec, char *Host)
    // Check if info already loaded (not first call ...)
    if (gMethInit == 1) {
 
-      // Look for the method in the allowed list and flag this method as tried, if found ...
+      // Look for the method in the allowed list and flag this method
+      // as tried, if found ...
       int newtry = 0, i;
       for (i = 0; i < gNumAllow; i++) {
          if (gTriedMeth[i] == 0 && gAllowMeth[i] == Sec) {
@@ -976,7 +975,8 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       }
       if (newtry == 0) {
          ErrorInfo
-             ("RpdCheckAuthAllow: new auth method proposed by client not in the list or already attempted");
+             ("RpdCheckAuthAllow: new auth method proposed by %s",
+              " client not in the list or already attempted");
          return retval;
       }
       retval = 0;
@@ -986,8 +986,6 @@ int RpdCheckAuthAllow(int Sec, char *Host)
       gMethInit = 1;
 
       // First check if file exists and can be read
-      if (access(gAuthAllow, F_OK))
-         return retval;
       if (access(gAuthAllow, R_OK)) {
          ErrorInfo("RpdCheckAuthAllow: can't read file %s (errno: %d)",
                    gAuthAllow, GetErrno());
@@ -1081,7 +1079,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                      if (nd > 0) {
                         if (nd > 1 || nnmi > 0) {
                            char *sp = strstr(Host, host);
-			   if (sp == 0 || (sp != Host &&
+                           if (sp == 0 || (sp != Host &&
                                sp != (Host+strlen(Host)-strlen(host))))
                               goto next;
                         }
@@ -2251,7 +2249,7 @@ void RpdGlobusAuth(const char *sstr)
    if (gDebug > 2)
       ErrorInfo("RpdGlobusAuth: gRemPid: %d, Subj: %s (%d %d)", gRemPid,
                 Subj, lSubj, strlen(Subj));
-   if (Subj) delete[] Subj;            // GlbClientName will be determined from the security context ...
+   if (Subj) delete[] Subj;   // GlbClientName will be determined from the security context ...
 
    // Now wait for client to communicate the issuer name of the certificate ...
    char *answer = new char[20];
@@ -2276,13 +2274,22 @@ void RpdGlobusAuth(const char *sstr)
       ErrorInfo("RpdGlobusAuth: client issuer name is: %s",
                 client_issuer_name);
 
-   // Now we open the certificates and we check if we are able to autheticate the client
+   // Now we open the certificates and we check if we are able to
+   // autheticate the client
    // In the affirmative case we sen our subject name to the client ...
+   // NB: if we don't have su privileges we cannot make use of the
+   // local host certificates, so we have to rely on the user proxies
    char *subject_name;
-   if (GlbsToolCheckCert(client_issuer_name, &subject_name)) {
-      ErrorInfo
-          ("RpdGlobusAuth: host does not seem to have certificate for the requested CA (%s)",
-           client_issuer_name);
+   int CertRc = 0;
+   if (getuid() == 0)
+     CertRc = GlbsToolCheckCert(client_issuer_name, &subject_name);
+   else
+     CertRc = GlbsToolCheckProxy(client_issuer_name, &subject_name);
+
+   if (CertRc) {
+      ErrorInfo("RpdGlobusAuth: %s (%s)",
+                "host does not seem to have certificate for the requested CA",
+                 client_issuer_name);
       NetSend(0, kROOTD_GLOBUS);   // Notify that we did not find it
       return;
    } else {
@@ -2657,12 +2664,12 @@ void RpdDefaultAuthAllow()
 
    // Kerberos
 #ifdef R__KRB5
-   if (getuid() == 0) {
+//   if (getuid() == 0) {
       gAllowMeth[gNumAllow] = 2;
       gNumAllow++;
       gNumLeft++;
-   } else
-      gHaveMeth[2] = 0;
+//   } else
+//      gHaveMeth[2] = 0;
 #else
    // Don't have this method
    gHaveMeth[2] = 0;
@@ -3265,15 +3272,15 @@ void RpdSavePubKey(char *PubKey, int OffSet, char *user)
       chmod(PubKeyFile, 0600);
 
       if (getuid() == 0) {
-	// Set ownership of the pub key to the user
+         // Set ownership of the pub key to the user
 
-        struct passwd *pw = getpwnam(user);
+         struct passwd *pw = getpwnam(user);
 
-        if (chown(PubKeyFile,pw->pw_uid,pw->pw_gid) == -1) {
-           ErrorInfo
-               ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
-                 PubKeyFile,GetErrno());
-        }
+         if (chown(PubKeyFile,pw->pw_uid,pw->pw_gid) == -1) {
+            ErrorInfo
+                ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
+                  PubKeyFile,GetErrno());
+         }
       }
    }
 }

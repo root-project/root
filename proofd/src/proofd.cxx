@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.47 2003/09/27 19:50:09 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.48 2003/10/07 14:03:03 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -492,11 +492,11 @@ void CheckGlobus(char *rcfile)
    sprintf(etc, "%s/etc", gConfDir);
    sprintf(s, "%s/%s", etc, sname);
    // Check file existence and readibility
-   if (access(s, F_OK) || access(s, R_OK)) {
+   if (access(s, R_OK)) {
       // for backward compatibility check also $ROOTSYS/system<name> if
       // $ROOTSYS/etc/system<name> does not exist
       sprintf(s, "%s/%s", gConfDir, sname);
-      if (access(s, F_OK) || access(s, R_OK)) {
+      if (access(s, R_OK)) {
          // for backward compatibility check also $ROOTSYS/<name> if
          // $ROOTSYS/system<name> does not exist
          sprintf(s, "%s/%s", gConfDir, rcfile);
@@ -505,7 +505,7 @@ void CheckGlobus(char *rcfile)
 #endif
    // Check in the system environment ...
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking system: %s", s);
-   if (!access(s, F_OK) && !access(s, R_OK)) {
+   if (!access(s, R_OK)) {
       FILE *fs = fopen(s, "r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -525,7 +525,7 @@ void CheckGlobus(char *rcfile)
    if (getenv("HOME")) {
       sprintf(s, "%s/%s", getenv("HOME"), rcfile);
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user: %s", s);
-      if (!access(s, F_OK) && !access(s, R_OK)) {
+      if (!access(s, R_OK)) {
          FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {
             if (line[0] == '#') continue;   // skip comment lines
@@ -546,7 +546,7 @@ void CheckGlobus(char *rcfile)
    sprintf(s,"%s",rcfile);
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking local: %s", s);
 
-   if (!access(s, F_OK) && !access(s, R_OK)) {
+   if (!access(s, R_OK)) {
       FILE *fs = fopen(s, "r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -567,7 +567,7 @@ void CheckGlobus(char *rcfile)
    sprintf(s, "%s/proof/etc/proof.conf", gConfDir);
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking system proof.conf: %s", s);
 
-   if (!access(s, F_OK) && !access(s, R_OK)) {
+   if (!access(s, R_OK)) {
       FILE *fs = fopen(s,"r");
       while (fgets(line, sizeof(line), fs)) {
          if (line[0] == '#') continue;   // skip comment lines
@@ -593,7 +593,7 @@ void CheckGlobus(char *rcfile)
       sprintf(s, "%s/.proof.conf", getenv("HOME"));
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user proof.conf: %s", s);
 
-      if (!access(s, F_OK) && !access(s, R_OK)) {
+      if (!access(s, R_OK)) {
          pGlobus = -1;
          FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {

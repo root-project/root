@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.23 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.24 2003/10/09 01:17:00 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1465,6 +1465,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
    if (*User[0] == 0)
       *User[0] = StrDup("");
 
+#if 0
    // If 'host' is ourselves, then use rfio (to setup things correctly)
    // Check and save the host FQDN ...
    static TString LocalFQDN;
@@ -1478,7 +1479,14 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
          }
       }
 
-      if (LocalFQDN == Host) {
+
+      Bool_t SameUser = kFALSE;
+      UserGroup_t *u = gSystem->GetUserInfo();
+      if (u)
+         if (!strcmp(u->fUser,*User[0])) SameUser = kTRUE;
+      delete u;
+
+      if (LocalFQDN == Host && SameUser) {
          if (gDebug > 3)
             ::Info("GetAuthMeth", "remote host is the local one (%s)",
                    LocalFQDN.Data());
@@ -1491,6 +1499,8 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
          return 1;
       }
    }
+#endif
+
    // If specific protocol was specified then it has absolute priority ...
    if (!strcmp(Proto, "roots") || !strcmp(Proto, "proofs")) {
       *NumMeth = new int[1];
@@ -1571,7 +1581,9 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
               auth,(*User)[0]);
    nh = new int;
    nh[0] = 0;
-   am[0] = new int[kMAXSEC];
+   for (i = 0; i < kMAXSEC; i++) {
+      am[i] = new int[1];
+   }
    if (strlen(auth) > 0) {
       nh[0] =
           sscanf(auth, "%d %d %d %d %d %d", &am[0][0], &am[1][0],
@@ -1666,6 +1678,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       }
    }
    // If empty user you need first to count how many entries are to be read
+   char host[kMAXPATHLEN], info[kMAXPATHLEN];
    if ((*user)[0] == 0 || strlen((*user)[0]) == 0) {
       char usrtmp[256];
       unsigned int tlen = kMAXPATHLEN;
@@ -1675,9 +1688,11 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
          // Skip comment lines
          if (line[0] == '#')
             continue;
-         char *pstr = strstr(line, Host);
+         char *pstr = 0;
          char *pdef = strstr(line, "default");
-         if ((pstr != 0 && pstr == line) || (pdef != 0 && pdef == line)) {
+         sscanf(line,"%s %s",host,info);
+         if (CheckHost(Host, host) || (pdef != 0 && pdef == line)) {
+
             unsigned int hlen = strlen(Host);
             if (strstr(Temp, Host) == 0) {
                if ((strlen(Temp) + hlen + 2) > tlen) {
@@ -1754,7 +1769,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       rewind(fd);
 
    // Scan it ...
-   char host[kMAXPATHLEN], info[kMAXPATHLEN];
    char opt[20];
    int mth[6] = { 0 }, meth;
    int ju = 0, nu = 0;
@@ -3213,9 +3227,6 @@ void TAuthenticate::ReadAuthRc(const char *host, const char *user)
       while ((ai = (THostAuth *) next())) {
          if (gDebug > 3)
             ai->Print();
-
-         ::Info("ReadAuthRc", "got %d '%s' '%s'",ju,usr[ju], ai->GetUser() );
-
          if (fqdn == ai->GetHost() && !strcmp(usr[ju], ai->GetUser())) {
             hostAuth = ai;
             break;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.51 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.52 2003/10/07 21:09:55 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1909,7 +1909,8 @@ void TProofServ::CollectAuthInfo()
          while (fgets(line, sizeof(line), pconf)) {
             char word[12][64];
             if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s",
+                   word[0], word[1],
                    word[2], word[3], word[4], word[5], word[6],
                    word[7], word[8], word[9], word[10], word[11]);
 
@@ -1944,25 +1945,6 @@ void TProofServ::CollectAuthInfo()
 
                if (nSecs == 0) continue;
 
-               // Make sure that UidGid is always in the list
-               if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
-                  int newu = 1, i = 0;
-                  for (i = 0; i < nSecs; i++) {
-                     if (fSecs[i] == (int)TAuthenticate::kRfio) {
-                        newu = 0;
-                        break;
-                     }
-                  }
-                  if (newu == 1) {
-                     fSecs[nSecs] = (int)TAuthenticate::kRfio;
-                     fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
-                     nSecs++;
-                     PDB(kGlobal,3)
-                        Info("CollectAuthInfo","added UidGid ... sec:%d det:%s",
-                                     fSecs[nSecs-1],fDets[nSecs-1]);
-                  }
-               }
-
                // Add also default ... if available and not there ...
                if (security > -1 && AuthAvailable[security] == 1) {
                   int newu = 1, i = 0;
@@ -1982,6 +1964,25 @@ void TProofServ::CollectAuthInfo()
                   }
                }
 
+               // Make sure that UidGid is always in the list
+               if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
+                  int newu = 1, i = 0;
+                  for (i = 0; i < nSecs; i++) {
+                     if (fSecs[i] == (int)TAuthenticate::kRfio) {
+                        newu = 0;
+                        break;
+                     }
+                  }
+                  if (newu == 1) {
+                     fSecs[nSecs] = (int)TAuthenticate::kRfio;
+                     fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
+                     nSecs++;
+                     PDB(kGlobal,3)
+                        Info("CollectAuthInfo","added UidGid ... sec:%d det:%s",
+                                     fSecs[nSecs-1],fDets[nSecs-1]);
+                  }
+               }
+
                // Get slave FQDN ...
                TString SlaveFqdn;
                TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
@@ -1997,7 +1998,8 @@ void TProofServ::CollectAuthInfo()
 
                if (hostAuth == 0) {
                   // Create HostAuth object ...
-                  hostAuth = new THostAuth(SlaveFqdn.Data(),fUser.Data(),nSecs,fSecs,(char **)fDets);
+                  hostAuth = new THostAuth(SlaveFqdn.Data(),fUser.Data(),
+                                           nSecs,fSecs,(char **)fDets);
                   // ... and add it to the list (static in TAuthenticate)
                   PDB(kGlobal,3) hostAuth->Print();
                   authInfo->Add(hostAuth);
@@ -2025,6 +2027,7 @@ void TProofServ::CollectAuthInfo()
                   PDB(kGlobal,3) hostAuth->Print();
                }
 
+#if 0
                // If 'host' is ourselves, then use rfio (to setup things correctly)
                // Check and save the host FQDN ...
                static TString LocalFqdn;
@@ -2038,6 +2041,7 @@ void TProofServ::CollectAuthInfo()
 	       }
                if (SlaveFqdn == LocalFqdn || SlaveFqdn.Contains("localhost"))
                   hostAuth->SetFirst((int)TAuthenticate::kRfio);
+#endif
 
                // CleanUp memory
                int ks;
@@ -2059,16 +2063,6 @@ void TProofServ::CollectAuthInfo()
    int fSecs[2]   ={0};
    char *fDets[2] ={0};
 
-   // Make sure that UidGid is always in the list
-   if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
-      fSecs[nSecs] = (int)TAuthenticate::kRfio;
-      fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
-      nSecs++;
-      PDB(kGlobal,3)
-         Info("CollectAuthInfo","added UidGid to default THostAuth ... sec:%d det:%s",
-                      fSecs[nSecs-1],fDets[nSecs-1]);
-   }
-
    // Add also default ... if available and not there ...
    if (security > -1 && AuthAvailable[security] == 1) {
       fSecs[nSecs] = security;
@@ -2076,6 +2070,16 @@ void TProofServ::CollectAuthInfo()
       nSecs++;
       PDB(kGlobal,3)
          Info("CollectAuthInfo","Added 'default' to default THostAuth ... sec:%d det:%s",
+                      fSecs[nSecs-1],fDets[nSecs-1]);
+   }
+
+   // Make sure that UidGid is always in the list
+   if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
+      fSecs[nSecs] = (int)TAuthenticate::kRfio;
+      fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
+      nSecs++;
+      PDB(kGlobal,3)
+         Info("CollectAuthInfo","added UidGid to default THostAuth ... sec:%d det:%s",
                       fSecs[nSecs-1],fDets[nSecs-1]);
    }
 

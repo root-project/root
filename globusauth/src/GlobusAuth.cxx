@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.3 2003/10/07 14:03:02 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.4 2003/10/07 21:09:55 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -26,6 +26,7 @@ extern "C" {
 #include <sys/ipc.h>
 #include <sys/shm.h>
 }
+
 #include "TSocket.h"
 #include "TAuthenticate.h"
 #include "THostAuth.h"
@@ -36,6 +37,7 @@ extern "C" {
 #include "TEnv.h"
 #include "Getline.h"
 #include "rpderr.h"
+
 static gss_cred_id_t GlbDelCredHandle = GSS_C_NO_CREDENTIAL;
 int gShmIdCred = -1;
 char gConfDir[kMAXPATHLEN] = { 0 };
@@ -120,6 +122,8 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    Int_t ReUse = TAuthenticate::GetAuthReUse();
    gPrompt     = TAuthenticate::GetPromptUser();
    sprintf(gPromptReUse, "pt:%d ru:%d", gPrompt, ReUse);
+   if (gDebug > 2)
+      Info("GlobusAuthenticate", "gPrompt: %d, ReUse: %d", gPrompt, ReUse);
 
    // The host FQDN ... for debugging
    const char *hostFQDN = sock->GetInetAddress().GetHostName();
@@ -127,7 +131,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Determine local calling environment ...
    if ((rc = GlobusGetLocalEnv(&gLocalCallEnv, protocol))) {
       Error("GlobusAuthenticate",
-            "PROOF Master: unable to set relevant environment variables (rc=%d)",
+            "unable to set relevant environment variables (rc=%d)",
             rc);
       return -1;
    }
@@ -648,16 +652,9 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
    }
 
    // Test the existence of the certificate file //
-   if (access(cert_file, F_OK)) {
-      Error("GlobusGetNames", "requested file %s does not exist",
+   if (gSystem->AccessPathName(cert_file, kReadPermission)) {
+      Error("GlobusGetNames", "cannot read requested file %s",
             cert_file);
-      //     retval= 2;
-      if (cert_file) delete[] cert_file;
-      return 2;
-   } else if (access(cert_file, R_OK)) {
-      Error("GlobusGetNames", "no permission to read requested file %s",
-            cert_file);
-      //     retval= 4;
       if (cert_file) delete[] cert_file;
       return 4;
    } else if (gDebug > 3) {
@@ -696,7 +693,7 @@ int GlobusGetNames(int LocalEnv, char **IssuerName, char **SubjectName)
    if (gDebug > 3)
       Info("GlobusGetNames", "Testing Proxy file: %s", proxy_file);
 
-   if (!access(proxy_file, F_OK) && !access(proxy_file, R_OK)) {
+   if (!gSystem->AccessPathName(proxy_file, kReadPermission)) {
       // Second: load the proxy certificate ...
       fcert = fopen(proxy_file, "r");
       if (fcert == 0 || !PEM_read_X509(fcert, &xcert, 0, 0)) {
@@ -1028,9 +1025,7 @@ void GlobusSetCertificates(int LocalEnv)
       char tmpvar[4][kMAXPATHLEN];
       char *ddir = 0, *dcer = 0, *dkey = 0, *dadi = 0;
       if (strlen(TAuthenticate::GetDefaultUser()) > 0) {
-
-	 details = StrDup(TAuthenticate::GetDefaultUser());
-
+         details = StrDup(TAuthenticate::GetDefaultUser());
       } else {
          details =
          StrDup("cd:~/.globus cf:usercert.pem kf:userkey.pem ad:/etc/grid-security/certificates");
@@ -1075,7 +1070,7 @@ void GlobusSetCertificates(int LocalEnv)
          if (!gROOT->IsProofServ()) {
             dets =
                 Getline(Form
-                        (" Local Globus Certificates (%s)\n Enter <key>:<new value> to change: ",
+                       (" Local Globus Certificates (%s)\n Enter <key>:<new value> to change: ",
                          details));
          } else {
             Warning("GlobusSetCertificate",

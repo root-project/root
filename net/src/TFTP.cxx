@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.14 2003/08/23 00:08:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.15 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -91,7 +91,6 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
 
    TAuthenticate *auth;
    EMessageTypes kind;
-   Int_t sec;
 
    TUrl url(surl);
 
@@ -124,22 +123,24 @@ again:
    }
 
    // Get rootd protocol level
+   EMessageTypes tmpkind;
    fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, kind);
+   Recv(fProtocol, tmpkind);
+   kind = tmpkind;
+   if (fProtocol > 6) {
+      fSocket->Send(Form("%d", TNetFile::GetClientProtocol()), 
+                    kROOTD_PROTOCOL2);
+      Recv(fProtocol, tmpkind);
+      kind = tmpkind;
+   }
 
    // Authenticate to remote rootd server
-
-   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
    auth = new TAuthenticate(fSocket, url.GetHost(),
                             Form("%s:%d", url.GetProtocol(), fProtocol),
                             url.GetUser());
    if (!auth->Authenticate()) {
-      if (sec == TAuthenticate::kSRP)
-         Error("TFTP", "SRP authentication failed for host %s", url.GetHost());
-      else if (sec == TAuthenticate::kKrb5)
-         Error("TFTP", "Krb5 authentication failed for host %s", url.GetHost());
-      else
-         Error("TFTP", "authentication failed for host %s", url.GetHost());
+      Error("TFTP", "%s authentication failed for host %s",
+            TAuthenticate::GetAuthMethod(auth->GetSecurity()), url.GetHost());
       delete auth;
       goto zombie;
    }

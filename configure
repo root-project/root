@@ -509,7 +509,8 @@ with options, prefix with --with-, enables corresponding support
    krb5-incdir     Kerberos5 support, location of krb5.h
    krb5-libdir     Kerberos5 support, location of libkrb5
    globus          Globus support, path to what should be GLOBUS_LOCATION
-   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.globus)
+   globus-patch    Globus support, source dir for patch to versions 2.2.x (experimental, see README.GLOBUS)
+   globus-version  Version of the Globus Tool Kit used for patching (in the form 2.4.3)
    ldap-incdir     LDAP support, location of ldap.h
    ldap-libdir     LDAP support, location of libldap
    mysql-incdir    MySQL support, location of mysql.h
@@ -630,6 +631,7 @@ if test $# -gt 0 ; then
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-globus=*)         globusdir=$optarg     ; enable_globus="yes"  ;;
       --with-globus-patch=*)   globuspatchdir=$optarg ; enable_globus="yes" ;;
+      --with-globus-version=*) globusversion=$optarg ; enable_globus="yes"  ;;
       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
@@ -1471,6 +1473,25 @@ if test ! "x$enable_globus" = "xno"; then
         fi
     done
 
+    # With more recent versions we need an additional header
+    check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
+    gsiversion="no"
+    if test ! "x$found_hdr" = "x" ; then
+       gsiversion="yes"
+       globusinc="$globusinc $found_hdr"
+       if test "x$globusincdir" = "x" ; then
+           globusincdir=$found_dir
+       else
+           for k in $globusincdir ; do
+               if test "x$k" != "x$found_dir" ; then
+                   if test "x$k" != "x-I$found_dir" ; then
+                       globusincdir="$found_dir -I$globusincdir"
+                   fi
+                fi
+           done
+       fi
+    fi
+
     globuslib=""
     if test ! "x$globusdir" = "x" ; then
         searchlibdir=$globusdir/lib
@@ -1498,6 +1519,24 @@ if test ! "x$enable_globus" = "xno"; then
           fi
     done
 
+    # In more recent versions some functions are found in a separated library
+    # so, if it exists, add it to the list
+    check_library libglobus_gsi_credential_$flavour "$enable_shared" "$searchlibdir" \
+           /usr/lib /usr/local/lib
+    if test ! "x$found_lib" = "x" ; then
+       globuslib="$globuslib $found_lib"
+       if test "x$globuslibdir" = "x" ; then
+          globuslibdir=$found_dir
+       else
+          for k in $globuslibdir ; do
+              if test "x$k" != "x$found_dir" ; then
+                 globuslibdir="$found_dir $globuslibdir"
+              fi
+          done
+       fi
+    fi
+
+    # Need to source this before init proxies
     sourcepath=""
     if test -s $globusdir/etc/globus-user-env.sh ; then
         sourcepath="$globusdir/etc"
@@ -1508,6 +1547,7 @@ if test ! "x$enable_globus" = "xno"; then
         echo "Checking for globus-user-env.sh ... $sourcepath"
     fi
 
+    # Need this to init proxies
     initpath=""
     if test -s $globusdir/bin/grid-proxy-init ; then
         initpath="$globusdir/bin"
@@ -1525,14 +1565,125 @@ if test ! "x$enable_globus" = "xno"; then
 
     if test "x$enable_globus" = "xyes"; then
         glbextracflags="-DR__GLBS"
-        if test ! "x$globuspatchdir" = "x" ; then
-            glbpatchcflags="-DR__GLBCPATCH -I$globusincdir \
-                          -I$globuspatchdir/globus_gsi_credential-0.5/library/ \
-                          -I$globuspatchdir/globus_gssapi_gsi-3.6/library/ \
-                          -I$globuspatchdir/globus_gsi_credential-0.5/ \
-                          -I$globuspatchdir/globus_openssl-0.10/crypto/ \
-                          -I$globuspatchdir/globus_gsi_sysconfig-0.3/library/"
-            echo "Applying experimental patch to globus_gsi_system_config.c"
+        if test "x$gsiversion" = "xyes" ; then
+           glbextracflags="$glbextracflags -DR__GLBS22"
+        fi
+
+        # Everything seems ok: now check if there is the need for a patch
+        patchneeded="no"
+        tobepatched="globus_gsi_system_config"
+        package="globus_gsi_sysconfig"
+        packdir="$globusdir/etc/globus_packages/$package"
+        if test -d $packdir ; then
+           patchneeded="yes"
+           echo "Checking need for globus patch ... yes"
+           for i in pkg_data_${flavour}_rtl.gpt pkg_data_${flavour}_dev.gpt ; do
+              if test -r $packdir/$i ; then
+                 packfileinfo=$packdir/$i
+                 break
+              fi
+           done
+           version=""
+           if test ! "x$packfileinfo" = "x" ; then
+              packfiletmp=`basename $packfileinfo`
+              echo "Checking $packfiletmp ... $packdir"
+              versionstring=`grep Minor $packfileinfo`
+              for i in $versionstring ; do
+                 for k in 1 3 4 6 7 9 11 ; do
+                    if test "Minor=\"$k\"" = "$i" ; then
+                       version="0.$k"
+                       break 2
+                    fi
+                 done
+              done
+           fi
+           if test ! "x$version" = "x" ; then
+              echo "Checking $package version ... $version"
+           fi
+           if test "x$version" = "x" || test "x$version" = "x0.1" ; then
+              mapversion=""
+              if test ! "x$globusversion" = "x" ; then
+                 mapfile="$globusauth/src/patches/$tobepatched/map"
+                 if test -r $mapfile ; then
+                    versionstring=`grep $globusversion $mapfile`
+                 fi
+                 for i in $versionstring ; do
+                    if test ! "$globusversion" = "$i" ; then
+                       mapversion="$i"
+                       break
+                    fi
+                 done
+              fi
+              if test "x$version" = "x0.1" ; then
+                 if test "x$mapversion" = "x" ; then
+                    echo "Unable to find exact version of patch for $package ... using 0.1.2"
+                    echo "(if not ok, run again with -with-globus-version=<your_exact_version>)"
+                    version="0.1.2"
+                 else
+                    version="$mapversion"
+                 fi
+              else
+                 if test "x$mapversion" = "x" ; then
+                    echo "Unable to find exact version of patch for $package ... using 0.11.0"
+                    echo "(if not ok, run again with -with-globus-version=<your_exact_version>)"
+                    version="0.11.0"
+                 else
+                    version="$mapversion"
+                 fi
+              fi
+           else
+              version="$version.0"
+           fi
+
+           # copy patched file in the globusauth/src directory
+           cp -rp globusauth/src/patches/$tobepatched/$version/$tobepatched.c \
+                  globusauth/src/$tobepatched.c
+        else
+           echo "Checking globus patch need ... no"
+        fi
+
+        # Now find includes needed for patch, if the case
+        if test ! "x$globuspatchdir" = "x" && test "x$patchneeded" = "xyes" ; then
+
+            glbpatchcflags="-DR__GLBCPATCH -I$globusincdir"
+            dirtmp=`find $globuspatchdir -name globus_gsi_system_config.h -exec dirname {} \;`
+            if test ! "x$dirtmp" = "x" ; then
+               echo "Checking for globus_gsi_system_config.h ... $dirtmp"
+               glbpatchcflags="$glbpatchcflags -I$dirtmp"
+               dirtmp=`dirname $dirtmp`
+               if test -r $dirtmp/version.h ; then
+                  echo "Checking for version.h ... $dirtmp"
+                  glbpatchcflags="$glbpatchcflags -I$dirtmp"
+                  for i in globus_common.h globus_i_gsi_system_config.h ; do
+                     dirtmp=`find $globuspatchdir -name $i -exec dirname {} \;`
+                     if test ! "x$dirtmp" = "x" ; then
+                        echo "Checking for $i ... $dirtmp"
+                        add="yes"
+                        for k in $glbpatchcflags ; do
+                           if test "x$k" = "x-I$dirtmp" ; then
+                              add="no"
+                           fi
+                        done
+                        if test "x$add" == "xyes" ; then
+                           glbpatchcflags="$glbpatchcflags -I$dirtmp"
+                        fi
+                     else
+                        echo "Checking for $i ... no (globus patch not applied)"
+                        break
+                     fi
+                  done
+               else
+                  echo "Checking for version.h ... no (globus patch not applied)"
+                  glbpatchcflags=""
+               fi
+            else
+               echo "Checking for globus_gsi_system_config.h ... no (globus patch not applied)"
+               glbpatchcflags=""
+            fi
+
+            if test ! "x$glbpatchcflags" = "x" ; then
+               echo "Applying experimental patch to $tobepatched.c"
+            fi
         fi
     fi
 fi

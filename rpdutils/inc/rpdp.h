@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.5 2003/09/24 13:24:31 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.6 2003/10/07 14:03:03 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -184,6 +184,11 @@ int  RpdSecureRecv(char **Str);
 // Globus stuff ...
 #ifdef R__GLBS
 extern "C" {
+#ifdef R__GLBS22
+   #include <globus_gsi_credential.h>
+#else
+   #include <sslutils.h>
+#endif
    #include <globus_gss_assist.h>
    #include <openssl/x509.h>
    #include <openssl/pem.h>
@@ -196,6 +201,7 @@ namespace ROOT {
 void  GlbsToolError(char *, int, int, int);
 int   GlbsToolCheckCert(char *, char **);
 int   GlbsToolCheckContext(int);
+int   GlbsToolCheckProxy(char *, char **);
 int   GlbsToolStoreContext(gss_ctx_id_t, char *);
 int   GlbsToolStoreToShm(gss_buffer_t, int *);
 char *GlbsToolExpand(char *);
