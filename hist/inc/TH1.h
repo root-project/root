@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.44 2003/04/17 07:55:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.45 2003/05/05 16:38:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -99,6 +99,10 @@ private:
     TH1(const TH1&); // Intentionally not implemented
 
 protected:
+    TH1();
+    TH1(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
+    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     virtual void     Copy(TObject &hnew) const;
     virtual Int_t    BufferFill(Axis_t x, Stat_t w);
 
@@ -113,10 +117,6 @@ public:
        kNoTitle     = BIT(17)  // don't draw the histogram title
     };
 
-    TH1();
-    TH1(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
-    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     virtual ~TH1();
 
     virtual void     Add(TF1 *h1, Double_t c1=1);
