@@ -61,6 +61,9 @@
 
 #include <stdio.h>
 
+#ifdef const
+#undef const
+#endif
 #define const /**/
 typedef int Bool;
 #define False 0
