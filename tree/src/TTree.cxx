@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.125 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.126 2002/07/02 07:10:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2761,7 +2761,7 @@ void TTree::Print(Option_t *option) const
      if (key) s = key->GetNbytes();
   }
   //Double_t total = fTotBytes;
-  Double_t total = TTree::Class()->GetStreamerInfo()->GetSize();
+  Double_t total = TTree::Class()->GetStreamerInfo()->GetSizeElements();
   Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
   Int_t l;
   TBranch *br;
