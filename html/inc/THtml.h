@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.6 2003/01/30 11:33:48 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.7 2003/01/30 11:59:39 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -539,7 +539,7 @@ public:
 
    const char* GetDoc(TDictionary* dict) const {
       TDocElement* de=GetDocElement(dict);
-      return de ? de->GetDoc() : 0;
+      return de ? de->GetDoc().Data() : 0;
    }
    TMap* MakeHelp(TClass* cl);
    TPaveText* GetDocPave(TDictionary* dict);

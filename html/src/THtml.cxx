@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.32 2003/01/30 11:33:48 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.33 2003/01/30 11:59:40 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -4629,7 +4629,7 @@ Bool_t THtml::FindMethodImpl(TString strMethFullName, TList& listMethSameName,
 // remove those from the list that don't fit
 // Return kFALSE if error
 
-   TString strArg(listArgs.GetSize() ? ((TObjString*)listArgs.Last())->String() : "");
+   TString strArg(listArgs.GetSize() ? ((TObjString*)listArgs.Last())->String().Data() : "");
    TString strArgPart;
    Int_t iArgSize=listArgs.GetSize();
 #ifdef DEBUG_METH_PARSE
