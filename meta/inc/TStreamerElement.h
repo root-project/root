@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.13 2001/01/27 20:43:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.14 2001/02/06 10:50:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -51,6 +51,7 @@ public:
    TStreamerElement();
    TStreamerElement(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual         ~TStreamerElement();
+   virtual Bool_t   CannotSplit() const;
    Int_t            GetArrayDim() const {return fArrayDim;}
    Int_t            GetArrayLength() const {return fArrayLength;}
    virtual TClass  *GetClassPointer() const;
