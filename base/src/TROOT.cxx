@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.8 2000/08/18 15:45:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.9 2000/08/18 21:51:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -268,10 +268,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gRandom        = new TRandom;
 
    //set name of graphical cut class for the graphics editor
-   //cannot call SetCutClassName at this point because the TClass of TCutG 
+   //cannot call SetCutClassName at this point because the TClass of TCutG
    //is not yet build
    fCutClassName = "TCutG";
-   
+
    // Create a default MessageHandler
    new TMessageHandler((TClass*)0);
 
@@ -336,7 +336,7 @@ TROOT::~TROOT()
       if (!fVersionInt) return;
 
       // ATTENTION!!! Order is important!
-      
+
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #ifdef WIN32
 //  Under Windows, one has to restore the color palettes created by individual canvases
@@ -385,11 +385,18 @@ TROOT::~TROOT()
 //______________________________________________________________________________
 void TROOT::Browse(TBrowser *b)
 {
+   // Add browsable objects to TBrowser.
+
    TObject *obj;
    TIter next(fBrowsables);
 
-   while ((obj = (TObject *) next()))
-      b->Add( obj, (char *) next.GetOption() );
+   while ((obj = (TObject *) next())) {
+      const char *opt = next.GetOption();
+      if (opt && strlen(opt))
+         b->Add(obj, opt);
+      else
+         b->Add(obj, obj->GetName());
+   }
 }
 
 //______________________________________________________________________________
@@ -1129,7 +1136,7 @@ void TROOT::SetCutClassName(const char *name)
    // By default the graphics editor creates an instance of a class TCutG.
    // This function may be called to specify a different class that MUST
    // derive from TCutG
-   
+
    if (!name) {
       Error("SetCutClassName","Invalid class name");
       return;
