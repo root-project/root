@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.7 2001/03/29 10:51:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.8 2001/03/29 11:25:00 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -69,7 +69,6 @@ public:
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
-   Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    void               Browse(TBrowser *b);
    Int_t              Capacity() const { return fSize; }
    virtual void       Clear(Option_t *option="") = 0;
@@ -88,6 +87,7 @@ public:
    Bool_t             IsArgNull(const char *where, const TObject *obj) const;
    virtual Bool_t     IsEmpty() const { return GetSize() <= 0; }
    Bool_t             IsFolder() const { return kTRUE; }
+   Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    virtual void       ls(Option_t *option="") const ;
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
