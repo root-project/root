@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.23 2003/07/29 19:27:09 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.24 2005/01/28 05:45:41 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -253,7 +253,12 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // more space in fUniqueID
       if (fgObjPIDs==0) fgObjPIDs = new TExMap;
       ULong_t hash = Void_Hash(obj);
-      fgObjPIDs->Add(hash, (Long_t)obj, GetUniqueID());
+
+      // We use operator() rather than Add() because
+      // if the address has already been registered, we want to 
+      // update it's uniqueID (this can easily happen when the
+      // referenced obejct have been stored in a TClonesArray.
+      (*fgObjPIDs)(hash, (Long_t)obj) = GetUniqueID();
    }
 }
 
