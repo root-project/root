@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.13 2002/07/15 10:45:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.14 2002/09/06 09:03:59 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -51,6 +51,8 @@ ClassImp(TPaveStats)
 //           print fit probability, parameter names/values and errors.
 //
 
+const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
+
 //______________________________________________________________________________
 TPaveStats::TPaveStats(): TPaveText()
 {
@@ -80,6 +82,22 @@ TPaveStats::~TPaveStats()
 }
 
 //______________________________________________________________________________
+Int_t TPaveStats::GetOptFit() const 
+{
+   // return the fit option
+   if (TestBit(kTakeStyle)) return gStyle->GetOptFit();
+   return fOptFit;
+}
+
+//______________________________________________________________________________
+Int_t TPaveStats::GetOptStat() const 
+{
+   // return the stat option
+   if (TestBit(kTakeStyle)) return gStyle->GetOptStat();
+   return fOptStat;
+}
+
+//______________________________________________________________________________
 void TPaveStats::SaveStyle()
 {
    //  Save This TPaveStats options in current style
@@ -96,6 +114,24 @@ void TPaveStats::SetFitFormat(const char *form)
    // Change (i.e. set) the format for printing fit parameters in statistics box
 
    fFitFormat = form;
+}
+
+//______________________________________________________________________________
+void TPaveStats::SetOptFit(Int_t fit)
+{
+   // set the fit option
+
+   fOptFit = fit;
+   ResetBit(kTakeStyle);
+}
+
+//______________________________________________________________________________
+void TPaveStats::SetOptStat(Int_t stat)
+{
+   // set the stat option
+
+   fOptStat = stat;
+   ResetBit(kTakeStyle);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.8 2002/07/15 10:44:04 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.9 2002/12/02 18:50:02 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -44,8 +44,8 @@ public:
    virtual void     EditText() { }
    virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
    virtual const char  *GetStatFormat() const {return fStatFormat.Data();}
-   Int_t            GetOptFit() const {return fOptFit;}
-   Int_t            GetOptStat() const {return fOptStat;}
+   Int_t            GetOptFit() const;
+   Int_t            GetOptStat() const;
    TObject         *GetParent() const {return fParent;}
    virtual void     Paint(Option_t *option="");
    virtual void     InsertText(const char *) { }
@@ -58,8 +58,8 @@ public:
    virtual void     SetMargin(Float_t) { }
    virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
    virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
-   void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
-   void             SetOptStat(Int_t stat=1) {fOptStat = stat;} // *MENU*
+   void             SetOptFit(Int_t fit=1);                     // *MENU*
+   void             SetOptStat(Int_t stat=1);                   // *MENU*
    void             SetParent(TObject*obj) {fParent = obj;}
 
    ClassDef(TPaveStats,4)  //A special TPaveText to draw histogram statistics.

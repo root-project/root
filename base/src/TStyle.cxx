@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.26 2003/02/21 15:07:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.27 2003/02/21 17:26:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -17,8 +17,10 @@
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TColor.h"
+#include "TVirtualPad.h"
 
 TStyle  *gStyle;
+const UInt_t kTakeStyle = BIT(17); 
 
 ClassImp(TStyle)
 
@@ -868,6 +870,15 @@ void TStyle::SetOptFit(Int_t mode)
 // see also SetOptStat below.
    
    fOptFit = mode;
+   if (gPad) {
+      TObject *obj;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((obj = next())) {
+         TObject *stats = obj->FindObject("stats");
+         if (stats) stats->SetBit(kTakeStyle);
+      }
+      gPad->Modified(); gPad->Update();
+   }
 }
 
 //______________________________________________________________________________
@@ -890,6 +901,15 @@ void TStyle::SetOptStat(Int_t mode)
 //          be taken as an octal number !!
 //
    fOptStat = mode;
+   if (gPad) {
+      TObject *obj;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((obj = next())) {
+         TObject *stats = obj->FindObject("stats");
+         if (stats) stats->SetBit(kTakeStyle);
+      }
+      gPad->Modified(); gPad->Update();
+   }
 }
 
   //______________________________________________________________________________
