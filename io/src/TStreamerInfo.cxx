@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.111 2001/12/21 14:52:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.112 2002/01/07 16:00:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -215,7 +215,8 @@ void TStreamerInfo::Build()
       if (dt) {  // found a basic type
          Int_t dtype = dt->GetType();
          Int_t dsize = dt->Size();
-         if (!refcount && strstr(dm->GetFullTypeName(),"char*")) {
+         if (!refcount && (strstr(dm->GetFullTypeName(),"char*")
+                        || strstr(dm->GetFullTypeName(),"Char_t*"))) {
             dtype = kCharStar;
             dsize = sizeof(char*);
          }
