@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -64,6 +64,8 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
 
    const char *type = 0;
 
+   if (level >= kInfo)
+      type = "Info";
    if (level >= kWarning)
       type = "Warning";
    if (level >= kError)
@@ -149,6 +151,17 @@ void SysError(const char *location, const char *va_(fmt), ...)
    va_list ap;
    va_start(ap, va_(fmt));
    ErrorHandler(kSysError, location, va_(fmt), ap);
+   va_end(ap);
+}
+
+//______________________________________________________________________________
+void Info(const char *location, const char *va_(fmt), ...)
+{
+   // Use this function for informational messages.
+
+   va_list ap;
+   va_start(ap,va_(fmt));
+   ErrorHandler(kInfo, location, va_(fmt), ap);
    va_end(ap);
 }
 
