@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.10 2001/03/08 13:47:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.11 2001/04/11 07:21:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -50,6 +50,7 @@ protected:
    Int_t       fNpx;         //Number of points used for the graphical representation
    Int_t       fType;        //(=0 for standard functions, 1 if pointer to function)
    Int_t       fNpfits;      //Number of points used in the fit
+   Int_t       fNDF;         //Number of degrees of freedom in the fit
    Int_t       fNsave;       //Number of points used to fill array fSave
    Double_t    fChisquare;   //Function fit chisquare
    Double_t    *fIntegral;   //![fNpx] Integral of function binned on fNpx bins
@@ -92,7 +93,7 @@ public:
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
-          Int_t     GetNDF() const {return fNpfits-fNpar;}
+          Int_t     GetNDF() const;
           Int_t     GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
           Int_t     GetNumberFitPoints() const {return fNpfits;}
@@ -122,6 +123,7 @@ public:
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
    virtual void     SetMaximum(Double_t maximum=-1111) {fMaximum=maximum;} // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111) {fMinimum=minimum;} // *MENU*
+   virtual void     SetNDF(Int_t ndf);
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
    virtual void     SetNpx(Int_t npx=100); // *MENU*
    virtual void     SetParError(Int_t ipar, Double_t error) {fParErrors[ipar] = error;}
@@ -132,7 +134,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     Update();
 
-   ClassDef(TF1,6)  //The Parametric 1-D function
+   ClassDef(TF1,7)  //The Parametric 1-D function
 };
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)

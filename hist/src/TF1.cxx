@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.18 2001/05/17 07:39:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.19 2001/05/21 12:52:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -115,6 +115,7 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fNpx       = 100;
    fType      = 0;
    fNpfits    = 0;
+   fNDF       = 0;
    fNsave     = 0;
    fChisquare = 0;
    fIntegral  = 0;
@@ -176,6 +177,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fGamma      = 0;
    fParent     = 0;
    fNpfits     = 0;
+   fNDF        = 0;
    fNsave      = 0;
    fSave       = 0;
    fHistogram  = 0;
@@ -237,6 +239,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fGamma      = 0;
    fParent     = 0;
    fNpfits     = 0;
+   fNDF        = 0;
    fNsave      = 0;
    fSave       = 0;
    fHistogram  = 0;
@@ -318,6 +321,7 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
    fGamma      = 0;
    fParent     = 0;
    fNpfits     = 0;
+   fNDF        = 0;
    fNsave      = 0;
    fSave       = 0;
    fHistogram  = 0;
@@ -410,6 +414,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fSave       = 0;
    fParent     = 0;
    fNpfits     = 0;
+   fNDF        = 0;
    fHistogram  = 0;
    fMinimum    = -1111;
    fMaximum    = -1111;
@@ -489,7 +494,8 @@ void TF1::Copy(TObject &obj)
    ((TF1&)obj).fType = fType;
    ((TF1&)obj).fFunction  = fFunction;
    ((TF1&)obj).fChisquare = fChisquare;
-   ((TF1&)obj).fNpfits = fNpfits;
+   ((TF1&)obj).fNpfits  = fNpfits;
+   ((TF1&)obj).fNDF     = fNDF;
    ((TF1&)obj).fMinimum = fMinimum;
    ((TF1&)obj).fMaximum = fMaximum;
 
@@ -757,6 +763,17 @@ TH1 *TF1::GetHistogram() const
    gPad->Update();
    return fHistogram;
 }
+//______________________________________________________________________________
+Int_t TF1::GetNDF() const
+{
+// return the number of degrees of freedom in the fit
+// the fNDF parameter has been previously computed during a fit.
+// The number of degrees of freedom corresponds to the number of points
+// used in the fit minus the number of free parameters.
+
+   if (fNDF == 0) return fNpfits-fNpar;
+   return fNDF;
+}   
 
 //______________________________________________________________________________
 char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const 
@@ -1555,6 +1572,15 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   "<<GetName()<<"->Draw("
       <<quote<<option<<quote<<");"<<endl;
+}
+
+//______________________________________________________________________________
+void TF1::SetNDF(Int_t ndf)
+{
+// Set the number of degrees of freedom
+// ndf should be the number of points used in a fit - the number of free parameters
+
+   fNDF = ndf;
 }
 
 //______________________________________________________________________________
