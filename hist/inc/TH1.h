@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.53 2004/02/16 09:24:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.54 2004/02/27 04:59:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -111,6 +111,7 @@ protected:
     TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     virtual void     Copy(TObject &hnew) const;
     virtual Int_t    BufferFill(Axis_t x, Stat_t w);
+    virtual void     SavePrimitiveHelp(ofstream &out, Option_t *option);
 
 public:
     // TH1 status bits

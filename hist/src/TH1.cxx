@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.181 2004/05/21 16:03:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.182 2004/05/24 15:39:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4509,33 +4509,6 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
 	     << "," << GetZaxis()->GetXmax();
    }
    out << ");" << endl;
-   if (TMath::Abs(GetBarOffset()) > 1e-5) {
-      out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
-   }
-   if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
-      out<<"   "<<GetName()<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
-   }
-    if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
-   }
-  if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
-   }
-   if (fNormFactor != 0) {
-      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
-   }
-   if (fEntries != 0) {
-      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
-   }
-   if (fDirectory == 0) {
-      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
-   }
-   if (TestBit(kNoStats)) {
-      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
-   }
-   if (fOption.Length() != 0) {
-      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
-   }
 
    // save bin contents
    Int_t bin;
@@ -4555,12 +4528,50 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
+   
+   TH1::SavePrimitiveHelp(out, option);
+}
+
+//______________________________________________________________________________
+void TH1::SavePrimitiveHelp(ofstream &out, Option_t *option)
+{
+    // helper function for the SavePrimitive functions from TH1
+    // or classes derived from TH1, eg TProfile, TProfile2D.
+
+   char quote = '"';
+   if (TMath::Abs(GetBarOffset()) > 1e-5) {
+      out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
+   }
+   if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
+      out<<"   "<<GetName()<<"->SetBarWidth("<<GetBarWidth()<<");"<<endl;
+   }
+    if (fMinimum != -1111) {
+      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+   }
+   if (fMaximum != -1111) {
+      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+   }
+   if (fNormFactor != 0) {
+      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
+   }
+   if (fEntries != 0) {
+      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
+   }
+   if (fDirectory == 0) {
+      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+   }
+   if (TestBit(kNoStats)) {
+      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
+   }
+   if (fOption.Length() != 0) {
+      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+   }
 
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
       out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
-      for (bin=0;bin<ncontours;bin++) {
+      for (Int_t bin=0;bin<ncontours;bin++) {
          out<<"   "<<GetName()<<"->SetContourLevel("<<bin<<","<<GetContourLevel(bin)<<");"<<endl;
       }
    }
