@@ -625,7 +625,7 @@ gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window)
    g_return_val_if_fail(GDK_IS_WINDOW(window), 0);
 
    return_val = GrabSuccess;
-   GDK_WINDOW_WIN32DATA(window)->grab_keycode = keycode < 0 ? 0 : keycode;
+   GDK_WINDOW_WIN32DATA(window)->grab_keycode = keycode;
    GDK_WINDOW_WIN32DATA(window)->grab_key_mod |= mod;
 
    return return_val;
@@ -736,9 +736,10 @@ gint gdk_keyboard_grab(GdkWindow * window, gint owner_events, guint32 time)
    } else
       return_val = AlreadyGrabbed;
 
-   if (return_val == GrabSuccess)
+   if (return_val == GrabSuccess) {
       k_grab_window = window;
-
+      SetFocus((HWND)GDK_DRAWABLE_XID(k_grab_window));
+   }
    return return_val;
 }
 
@@ -4497,7 +4498,9 @@ is_grabbed_key(GdkWindow **window, gint keycode, gint mod)
    GdkWindow *sav = *window;
 
    while (1) {
-      if (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod == mod) {
+      if (((GDK_WINDOW_WIN32DATA(*window)->grab_keycode == 0) || //AnyKey
+          (GDK_WINDOW_WIN32DATA(*window)->grab_keycode == keycode)) &&
+          (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod & mod)) {
          found = *window;
       }
       if (((GdkWindowPrivate *) *window)->parent == gdk_parent_root) break;
@@ -4867,8 +4870,9 @@ gdk_event_translate(GdkEvent * event,
       break;
 
    case WM_SYSKEYUP:
-      k_grab_window = 0;   //vo terminate active grab
    case WM_SYSKEYDOWN:
+      //k_grab_window = 0;   //vo terminate active grab
+
       GDK_NOTE(EVENTS,
                g_print("WM_SYSKEY%s: %#x  %s %#x %s\n",
                        (xevent->message == WM_SYSKEYUP ? "UP" : "DOWN"),
@@ -4885,7 +4889,7 @@ gdk_event_translate(GdkEvent * event,
       /* If posted without us having keyboard focus, ignore */
       if (!(xevent->lParam & 0x20000000))
          break;
-#if 1
+#if 0
       /* don't generate events for just the Alt key */
       if (xevent->wParam == VK_MENU)
          break;
@@ -4894,10 +4898,11 @@ gdk_event_translate(GdkEvent * event,
       goto keyup_or_down;
 
    case WM_KEYUP:
-      k_grab_window = 0;   //vo terminate active grab
    case WM_KEYDOWN:
+      //k_grab_window = 0;   //vo terminate active grab
+
       GDK_NOTE(EVENTS,
-               g_print("WM_KEY%s: %#x  %s %#x %s\n",
+               printf("WM_KEY%s: %#x  %s %#x %s\n",
                        (xevent->message == WM_KEYUP ? "UP" : "DOWN"),
                        xevent->hwnd,
                        (GetKeyNameText(xevent->lParam, buf,
@@ -5203,9 +5208,7 @@ gdk_event_translate(GdkEvent * event,
       if (!k_grab_window &&
           is_grabbed_key(&window, event->key.keyval, event->key.state)) {
          gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
-      }
-
-      if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
+      } else if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
                   GDK_ALL_EVENTS_MASK, doesnt_want_key)) {
          event->key.state = 0;
          break;
@@ -5262,12 +5265,15 @@ gdk_event_translate(GdkEvent * event,
       if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
          event->key.state |= GDK_MOD1_MASK;
 
-      if (!propagate(&window, xevent, 
+      //vo check if key is grabbed 
+      if (!k_grab_window &&
+          is_grabbed_key(&window, event->key.keyval, event->key.state)) {
+         gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
+      } else if (!propagate(&window, xevent, 
                   k_grab_window, k_grab_owner_events,
                   GDK_ALL_EVENTS_MASK, doesnt_want_char)) {
          break;
       }
-
       event->key.window = window;
       return_val = !GDK_DRAWABLE_DESTROYED(window);
 
@@ -5279,7 +5285,6 @@ gdk_event_translate(GdkEvent * event,
              * (from which it will be fetched before the release
              * event).
              */
-
             GdkEvent *event2 = gdk_event_new();
             build_keypress_event(GDK_WINDOW_WIN32DATA(window), event2, xevent);
             event2->key.window = window;
@@ -5289,12 +5294,10 @@ gdk_event_translate(GdkEvent * event,
          }
          /* Return the key release event.  */
          build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
-         k_grab_window = 0;
       } else if (window == k_grab_window
              || (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_RELEASE_MASK)) {
          /* Return just the key press event. */
          build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
-         k_grab_window = 0;
       } else if (return_val
                  && (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_PRESS_MASK)) {
          /* Return just the key press event. */

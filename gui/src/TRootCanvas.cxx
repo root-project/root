@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.33 2004/02/23 23:52:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.34 2004/02/27 01:03:58 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -203,6 +203,8 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    Int_t y = vp->GetVPos();
    UInt_t page = vp->GetHeight()/4;
    Int_t newpos;
+
+   gVirtualX->SetInputFocus(GetMainFrame()->GetId());
 
    if (event->fCode == kButton4) {
       //scroll up
