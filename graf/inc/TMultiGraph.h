@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.1 2000/10/12 13:27:23 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.h,v 1.2 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -44,7 +44,7 @@ public:
         TMultiGraph();
         TMultiGraph(const char *name, const char *title);
         virtual ~TMultiGraph();
-        virtual void     Add(TGraph *graph);
+        virtual void     Add(TGraph *graph, Option_t *chopt="");
         virtual void     Browse(TBrowser *b);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *chopt="");
