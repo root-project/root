@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -745,7 +745,7 @@ void TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_
          gProof->SendObject(h1);
          if (!hkeep) delete h1;
          char *mess = new char[strlen(varexp0)+strlen(selection)+strlen(option)+128];
-         sprintf(mess, "%s %d %d", GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
+         sprintf(mess, "%s %d %d", fTree->GetName(), fTree->GetMaxVirtualSize(), fTree->GetEstimate());
          gProof->Broadcast(mess, kPROOF_TREEDRAW);
          sprintf(mess,"%s->Draw(\"%s\",\"%s\",\"%s\",%d,%d)", fTree->GetName(), varexp0,
                  selection, option, nentries, firstentry);
