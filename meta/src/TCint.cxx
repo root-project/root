@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.78 2004/01/31 08:59:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.79 2004/02/25 08:45:30 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -969,7 +969,8 @@ int TCint::AutoLoadClass(const char *cls)
       const char *lib = mapfile->GetValue(key, "");
       if (lib && strlen(lib)) {
          ::Info("TCint::AutoLoadClass", "loading library %s for class %s", lib, classname);
-         G__security_recover(G__sout);
+         //G__security_recover(G__sout);
+         G__security_recover(0);
          if (gSystem->Load(lib) == 0)
             return 1;
       }
