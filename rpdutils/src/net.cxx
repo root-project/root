@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.4 2004/04/20 15:21:50 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.5 2004/04/21 08:51:45 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -465,15 +465,22 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
       if (service.length()) {
          struct servent *sp = getservbyname(service.data(), "tcp");
          if (!sp) {
-            fprintf(stderr,"NetInit: unknown service: %s/tcp\n", service.data());
-            Error(gErrFatal, kErrFatal, 
-                           "NetInit: unknown service: %s/tcp", service.data());
+            if (servtype == kROOTD) {
+               port1 = 1094;
+            } else if (servtype == kPROOFD) {
+               port1 = 1093;
+            } else {
+               fprintf(stderr,"NetInit: unknown service: %s/tcp\n", service.data());
+               Error(gErrFatal, kErrFatal,
+                     "NetInit: unknown service: %s/tcp", service.data());
+            }
+         } else {
+            port1 = ntohs(sp->s_port);
          }
-         port1 = ntohs(sp->s_port);
          port2 += port1;   // in this case, port2 is relative to service port
       } else {
          fprintf(stderr, "NetInit: must specify either service or port\n");
-         Error(gErrFatal,kErrFatal, 
+         Error(gErrFatal,kErrFatal,
                          "NetInit: must specify either service or port");
       }
    }
@@ -539,22 +546,22 @@ void NetSetOptions(EService serv, int sock, int tcpwindowsize)
 
    if (serv == kROOTD) {
       if (!setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,(char *)&val,sizeof(val)))
-         if (gDebug > 0) 
+         if (gDebug > 0)
             ErrorInfo("NetSetOptions: set TCP_NODELAY");
       if (!setsockopt(sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&val,sizeof(val))) {
-         if (gDebug > 0) 
+         if (gDebug > 0)
             ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
-         if (gSigPipeHook != 0) 
+         if (gSigPipeHook != 0)
             signal(SIGPIPE, (*gSigPipeHook));   // handle SO_KEEPALIVE failure
       }
    }
 
    val = tcpwindowsize;
    if (!setsockopt(sock,SOL_SOCKET,SO_SNDBUF,(char *)&val,sizeof(val)))
-      if (gDebug > 0) 
+      if (gDebug > 0)
          ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
    if (!setsockopt(sock,SOL_SOCKET,SO_RCVBUF,(char *)&val,sizeof(val)))
-      if (gDebug > 0) 
+      if (gDebug > 0)
          ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
 
    if (gDebug > 0) {
