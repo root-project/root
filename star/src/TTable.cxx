@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2001/04/04 21:23:24 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.13 2001/04/05 06:40:07 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -665,7 +665,6 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
 //*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
 //*-*
 
-   static TGaxis gaxis_tree;
    Double_t binlow,binhigh,binwidth;
    Int_t n;
    Double_t dx = 0.1*(xmax-xmin);
@@ -674,7 +673,7 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
-   gaxis_tree.Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth);
+   TGaxis::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
 
    if (binwidth <= 0 || binwidth > 1.e+39) {
       xmin = -1;
