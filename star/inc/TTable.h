@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.4 2000/09/05 09:21:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.5 2000/09/29 07:15:30 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.4 2000/09/05 09:21:24 brun Exp $
+// $Id: TTable.h,v 1.5 2000/09/29 07:15:30 brun Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -114,8 +114,8 @@ public:
 
    virtual     Long_t     HasData() const { return 1; }
    virtual     Bool_t     IsFolder() const;
-   virtual     void       ls(Option_t *option="");
-   virtual     void       ls(Int_t deep);
+   virtual     void       ls(Option_t *option="") const;
+   virtual     void       ls(Int_t deep) const;
                Int_t      NaN();
    static      TTable    *New(const Char_t *name, const Char_t *type, void *array, UInt_t size);
    virtual     Char_t    *MakeExpression(const Char_t *expressions[],Int_t nExpressions);

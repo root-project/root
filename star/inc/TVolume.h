@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolume.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   10/12/98
 
 /*************************************************************************
@@ -90,7 +90,7 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         virtual TList      *GetListOfPositions()  { return (TList *)(GetObject());}
         virtual ULong_t     Hash() { return TObject::Hash();}
         virtual void        ImportShapeAttributes();
-        virtual Bool_t      IsMarked();
+        virtual Bool_t      IsMarked() const;
         virtual Bool_t      Is3D()  {return kTRUE;}
         virtual TList      *Nodes() const { return GetList(); }
         virtual void        Paint(Option_t *option="");
@@ -101,6 +101,6 @@ class TVolume  : public TObjectSet, public TAttLine, public TAttFill, public TAt
         ClassDef(TVolume,1)  //Description of parameters to position a 3-D geometry object
 };
 
-inline Bool_t TVolume::IsMarked(){ return TestBit(kMark); }
+inline Bool_t TVolume::IsMarked() const { return TestBit(kMark); }
 
 #endif

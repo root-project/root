@@ -1,6 +1,6 @@
-// $Id: TTable.cxx,v 1.5 2000/09/08 07:41:00 brun Exp $
+// $Id: TTable.cxx,v 1.6 2000/09/29 07:15:30 brun Exp $
 //
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.5 2000/09/08 07:41:00 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2000/09/29 07:15:30 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -1209,7 +1209,7 @@ Bool_t TTable::IsFolder() const {
 }
 
 //______________________________________________________________________________
-void TTable::ls(Option_t *option)
+void TTable::ls(Option_t *option) const
 {
   TDataSet::ls(option);
   TROOT::IncreaseDirLevel();
@@ -1224,7 +1224,7 @@ void TTable::ls(Option_t *option)
 }
 
 //_____________________________________________________________________________
-void TTable::ls(Int_t deep)
+void TTable::ls(Int_t deep) const
 {
    TDataSet::ls(deep);
    TROOT::IncreaseDirLevel();
