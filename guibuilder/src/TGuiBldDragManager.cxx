@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.14 2004/09/22 10:29:35 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.15 2004/09/22 12:34:10 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -9,11 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldDragManager                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBldDragManager.h"
 #include "TGuiBldEditor.h"
@@ -34,6 +29,14 @@
 #include "TRandom.h"
 #include "TGButton.h"
 #include "TGMdi.h"
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGuiBldDragManager                                                   //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 
 ClassImp(TGuiBldDragManager)
 

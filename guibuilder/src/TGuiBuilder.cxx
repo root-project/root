@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.15 2004/09/22 10:13:36 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.16 2004/09/22 12:34:10 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -9,11 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBuilder                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGuiBuilder.h"
 #include "TGuiBldDragManager.h"
@@ -40,6 +35,18 @@
 #include "TApplication.h"
 #include "TRootHelpDialog.h"
 #include "TGToolTip.h"
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      
+// TGuiBuilder                                                          
+//                                                                      
+//
+//Begin_Html
+/*
+<img src="gif/RootGuiBuilder.gif">
+*/
+//End_Html
+
 
 
 enum EMenuIds {
