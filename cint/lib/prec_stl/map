@@ -31,7 +31,6 @@ template<class Key,class T,class Compare=std::less<Key>
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key, T> > >
 
-
 #elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key, T> > >
@@ -59,8 +58,14 @@ class map {
  public:
   typedef Key                                       key_type;
   typedef T                                         mapped_type;
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+  // this should be the following but due to a bug in cint
+  // handling of pair<const Key,T> when Key is char*, we can't use it.
+  // typedef pair<const Key,T>                         value_type;
   typedef pair<Key,T>                               value_type;
-  //typedef pair<const Key,T>                         value_type;
+#else
+  typedef pair<Key,T>                               value_type;
+#endif
   typedef Compare                                   key_compare;
   typedef Allocator                                 allocator_type;
 #if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
@@ -85,9 +90,10 @@ class map {
 	{	// iterator for nonmutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef map::difference_type difference_type;
-		typedef map::const_pointer pointer;
-		typedef map::const_reference reference;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::const_pointer pointer;
+		typedef Allocator::const_reference reference;
+                typedef pair<Key,T> value_type;
 
 		const_iterator();
 		const_reference operator*() const;
@@ -107,9 +113,11 @@ class map {
 	{	// iterator for mutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef map::difference_type difference_type;
-		typedef map::pointer pointer;
-		typedef map::reference reference;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::pointer pointer;
+		typedef Allocator::reference reference;
+		typedef Allocator::const_reference const_reference;
+                typedef pair<Key,T> value_type;
 
 		iterator();
 		reference operator*() const;
@@ -166,7 +174,7 @@ class map {
 
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)
    typedef std::reverse_iterator<iterator> reverse_iterator;
-	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 #else
   class reverse_iterator 
 #if defined(G__VISUAL) && (G__MSC_VER>=1300)

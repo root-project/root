@@ -23,14 +23,17 @@ using namespace std;
 
 #pragma link C++ class string;
 #pragma link C++ typedef string::value_type;
-
-#pragma if ((G__GNUC>=3 && G__GNUC_MINOR>=1) && !defined(G__INTEL_COMPILER)) || (defined (G__VISUAL) && (G__MSC_VER>=1310))
+#pragma if  (defined (G__VISUAL) && (G__MSC_VER>=1310))
+#pragma link C++ class string::iterator;
+#pragma link C++ class string::const_iterator;
+#pragma else
+#pragma if ((G__GNUC>=3 && G__GNUC_MINOR>=1) && !defined(G__INTEL_COMPILER)) 
 #pragma link C++ class string::iterator;
 #pragma else
 #pragma link C++ typedef string::iterator;
 #pragma endif
-
 #pragma link C++ typedef string::const_iterator;
+#pragma endif
 #pragma link C++ typedef string::pointer;
 #pragma link C++ typedef string::const_pointer;
 #pragma link C++ typedef string::reference;

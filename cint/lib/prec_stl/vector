@@ -90,12 +90,17 @@ class vector {
 	public:
 		typedef random_access_iterator_tag iterator_category;
 		typedef T value_type;
-		typedef Allocator::difference_type difference_type;
-		typedef const_pointer pointer;
-		typedef const_reference reference;
+		typedef vector::difference_type difference_type;
+#if (G__MSC_VER>=1310)
+		typedef Allocator::const_pointer pointer;
+		typedef Allocator::const_reference reference;
+#else
+		typedef const_reference *pointer;
+		typedef const_reference reference;        
+#endif
 
 		const_iterator();
-		const_iterator(pointer _Ptr);
+		const_iterator(vector::pointer _Ptr);
 
 		const_reference operator*() const;
 
@@ -117,7 +122,6 @@ class vector {
 		bool operator>(const const_iterator& _Right) const;
 		bool operator<=(const const_iterator& _Right) const;
 		bool operator>=(const const_iterator& _Right) const;
-		pointer _Myptr;	// offset of element in vector
         };
 
 	// CLASS iterator
@@ -130,9 +134,14 @@ class vector {
 	public:
 		typedef random_access_iterator_tag iterator_category;
 		typedef T value_type;
-		typedef Allocator::diffrence_type difference_type;
+		typedef vector::difference_type difference_type;
+#if (G__MSC_VER>=1310)
 		typedef Allocator::pointer pointer;
 		typedef Allocator::reference reference;
+#else
+		typedef Allocator::reference *pointer;
+		typedef Allocator::reference reference;
+#endif
 
 		iterator();
 		iterator(pointer _Ptr);

@@ -27,6 +27,11 @@
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
 
+#elif defined (G__VISUAL) && (G__MSC_VER>=1300)
+
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<pair<const Key, T> > >
+
 #elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
@@ -80,9 +85,10 @@ class multimap {
 	{	// iterator for nonmutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef multimap::difference_type difference_type;
-		typedef multimap::const_pointer pointer;
-		typedef multimap::const_reference reference;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::const_pointer pointer;
+		typedef Allocator::const_reference reference;
+                typedef pair<Key,T> value_type;
 
 		const_iterator();
 		const_reference operator*() const;
@@ -102,9 +108,12 @@ class multimap {
 	{	// iterator for mutable _Tree
 	public:
 		typedef bidirectional_iterator_tag iterator_category;
-		typedef multimap::difference_type difference_type;
-		typedef multimap::pointer pointer;
-		typedef multimap::reference reference;
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::pointer pointer;
+		typedef Allocator::reference reference;
+		typedef Allocator::const_reference const_reference;
+                typedef pair<Key,T> value_type;
 
 		iterator();
 		reference operator*() const;
@@ -117,9 +126,7 @@ class multimap {
 
 #else
   class iterator 
-#if defined(G__VISUAL) && (G__MSC_VER>=1300)
-	: public _Bidit<T, difference_type, const_pointer, const_reference>
-#elif defined(G__VISUAL)
+#if defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
