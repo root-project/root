@@ -362,7 +362,7 @@ public:
    }
    VERIFY(PtrConstTNamed);
 
-   bool SetOrVerifyPtrTHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+   bool SetOrVerifyPtrTHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       if (!reset && gFile && !HasPolymorphClassDefNonTObject(gFile)) {
          return true;
       }
@@ -371,7 +371,7 @@ public:
    }
    VERIFY(PtrTHelperDerived);
 
-   bool SetOrVerifyPtrHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
+   bool SetOrVerifyPtrHelperDerived(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       if (!reset && gFile && !HasPolymorphClassDefNonTObject(gFile)) {
          return true;
       }

@@ -11,6 +11,8 @@
 #include <map>
 #include <string>
 
+#include "TClass.h"
+
 namespace TestDebug {
    enum { kValues    = 1<<0, 
           kAddresses = 1<<1 };

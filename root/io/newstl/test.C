@@ -206,7 +206,7 @@ template <class HolderClass> bool read(const char *testname, int nEntry = 0, boo
       TIter next(&listOfDirs);
       while (TObjString *dir = (TObjString*)next()) {
          if (dirname != dir->GetName()) {
-            std::cout << "Testing older file format from: " << dir->GetName() << endl;
+            std::cout << "Testing older file format from: " << dir->GetName() << std::endl;
             result &= read<HolderClass>(dir->GetName(),testname, nEntry);         
          }
       }
