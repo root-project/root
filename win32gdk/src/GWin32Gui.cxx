@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.5 2002/07/23 12:23:46 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.6 2002/09/13 01:36:21 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -2753,7 +2753,7 @@ void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
 //______________________________________________________________________________
 char **TGWin32::ListFonts(char *fontname, Int_t /*max*/, Int_t &count)
 {
-    car **fontlist;
+    char **fontlist;
     Int_t fontcount = 0;
     fontlist = gdk_font_list_new(fontname, &fontcount);
     count = fontcount;
@@ -2772,7 +2772,7 @@ void TGWin32::FreeFontNames(char **fontlist)
 Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height, Int_t /*bitmap_pad*/)
 {
     return (Drawable_t) gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(),
-                                      &width, &height);
+                                      width, height);
 }
 
 //______________________________________________________________________________
