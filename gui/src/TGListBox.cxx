@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.12 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.13 2003/11/25 08:44:53 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -475,6 +475,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
             if (f->GetId() == (Window_t)event->fUser[0]) {    // fUser[0] == child window
+               fLastActive = f;
                f->Toggle();
                fChangeStatus = f->IsActive() ? 1 : 0;
                SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
