@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.71 2002/07/12 10:22:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.72 2002/07/15 11:01:19 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -452,7 +452,10 @@ Int_t TGraph::DistancetoPrimitive(Int_t px, Int_t py)
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
       Int_t dist = f->DistancetoPrimitive(px,py);
-      if (dist < kMaxDiff) {gPad->SetSelected(f); return dist;}
+      if (dist < kMaxDiff) {
+         gPad->SetSelected(f);
+         return 0; //must be o and not dist in case of TMultiGraph
+      }
    }
    return distance;
 }
@@ -713,6 +716,24 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    }
 
+}
+
+//______________________________________________________________________________
+TObject *TGraph::FindObject(const char *name) const
+{
+// search object named name in the list of functions
+
+   if (fFunctions) return fFunctions->FindObject(name);
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TGraph::FindObject(const TObject *obj) const
+{
+// search object obj in the list of functions
+
+   if (fFunctions) return fFunctions->FindObject(obj);
+   return 0;
 }
 
 //______________________________________________________________________________
