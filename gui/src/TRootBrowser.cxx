@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.53 2004/06/22 15:36:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.54 2004/07/06 10:55:57 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -816,15 +816,16 @@ void TRootBrowser::CreateBrowser(const char *name)
    fDrawOption->GetTextEntry()->SetToolTipText("Object Draw Option", 300);
    fDrawOption->Resize(80, 10);
    Int_t dropt = 1;
+   fDrawOption->AddEntry("", dropt++);
    fDrawOption->AddEntry("same", dropt++);
    fDrawOption->AddEntry("box", dropt++);
    fDrawOption->AddEntry("lego", dropt++);
-   fDrawOption->AddEntry("hcol", dropt++);
+   fDrawOption->AddEntry("colz", dropt++);
    fDrawOption->AddEntry("alp", dropt++);
 
-   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsTop | kLHintsRight | kLHintsExpandY,2,2,2,2));
+   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandY,2,2,2,0));
    fToolBar->AddFrame(new TGLabel(fToolBar,"Option"), 
-                      new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,2,2));
+                      new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2,2,2,0));
 
    fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    AddFrame(fToolBarSep, fBarLayout);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.10 2004/07/06 10:55:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.11 2004/07/07 09:23:21 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -46,6 +46,8 @@ public:
    TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetWhitePixel());
+
+   virtual Bool_t HandleButton(Event_t *);
 
    void PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void EndPopup();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.19 2004/07/06 10:55:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.20 2004/07/07 09:23:21 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -75,6 +75,16 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 }
 
 //______________________________________________________________________________
+Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
+{
+   // Handle mouse button event in combo box popup.
+
+   if (event->fType == kButtonPress && event->fCode == kButton1)
+      EndPopup();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TGComboBoxPopup::EndPopup()
 {
    // Ungrab pointer and unmap popup window.
@@ -109,6 +119,7 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fClient->WaitForUnmap(this);
+   EndPopup();
 }
 
 
@@ -284,6 +295,7 @@ Bool_t TGComboBox::HandleButton(Event_t *event)
                                          0, fHeight, ax, ay, wdummy);
    
          fComboFrame->PlacePopup(ax, ay, fWidth-2, fComboFrame->GetDefaultHeight());
+         fDDButton->SetState(kButtonUp);
 
       } else if (fTextEntry) {
          return fTextEntry->HandleButton(event);
