@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.76 2001/12/21 21:19:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.77 2002/01/02 21:47:40 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1067,14 +1067,24 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       //if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       //if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       //      if (IsString(i)) SetBit(kIsCharacter);
-      if (fNcodes == 1 && fOper[i] >= 105000) {
+      if (fOper[i] >= 105000) {
          // We have a string used as a string
-         if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
-         if (leaf->InheritsFrom("TLeafElement")) SetBit(kIsCharacter);
+        
+        // This dormant portion of code would be used if (when?) we allow the histogramming
+        // of the integral content (as opposed to the string content) of strings 
+        // held in a variable size container delimited by a null (as opposed to 
+        // a fixed size container or variable size container whose size is controlled
+        // by a variable).  In GetNdata, we will then use strlen to grab the current length.
         //fCumulSizes[i][fNdimensions[i]-1] = 1;
         //fUsedSizes[fNdimensions[i]-1] = -TMath::Abs(fUsedSizes[fNdimensions[i]-1]);
         //fUsedSizes[0] = - TMath::Abs( fUsedSizes[0]);
 
+        if (fNcodes == 1) {
+           // If the string is by itself, then it can safely be histogrammed as
+           // in a string based axis.  To histogram the number inside the string
+           // just make part of a useless expression (for example: mystring+0)
+           SetBit(kIsCharacter);
+        }
       }      
 
       // Reminder of the meaning of fMultiplicity:
@@ -2574,7 +2584,6 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
    Int_t i,pos,pos2,int1,int2,real_instance;
    Float_t aresult;
    Double_t tab[kMAXFOUND];
-   Double_t param[kMAXFOUND];
    Double_t dexp;
    char *tab2[kMAXSTRINGFOUND];
 
@@ -2594,7 +2603,15 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
       if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
       if (fAxis) {
-         Int_t bin = fAxis->FindBin((char*)leaf->GetValuePointer());
+         char * label;
+         // This portion is a duplicate (for speed reason) of the code 
+         // located  in the main for loop at "a tree string".
+         if (fLookupType[0]==kDirect) {
+            label = (char*)leaf->GetValuePointer();
+         } else {
+            label = (char*)GetLeafInfo(0)->GetValuePointer(leaf,0);
+         }
+         Int_t bin = fAxis->FindBin(label);
          return bin-0.5;
       }
       switch(fLookupType[0]) {
@@ -2604,37 +2621,12 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          default: return 0;
       }
    }
-   for(i=0;i<fNval;i++) {
-      if (fCodes[i] < 0) {
-         TCutG *gcut = (TCutG*)fMethods.At(i);
-         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-         Double_t xcut = fx->EvalInstance(instance);
-         Double_t ycut = fy->EvalInstance(instance);
-         param[i] = gcut->IsInside(xcut,ycut);
-      } else {
-         TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
 
-         // Now let calculate what physical instance we really need.
-         // Some redundant code is used to speed up the cases where
-         // they are no dimensions.
-         real_instance = GetRealInstance(instance,i);
-
-         if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-         else if (real_instance>fNdata[i]) return 0;
-         switch(fLookupType[i]) {
-            case kDirect: param[i] = leaf->GetValue(real_instance); break;
-            case kMethod: param[i] = GetValueFromMethod(i,leaf); break;
-            case kDataMember: param[i] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(i))->
-                                GetValue(leaf,real_instance); break;
-            default: param[i] = 0;
-         }
-      }
-   }
    pos  = 0;
    pos2 = 0;
    for (i=0; i<fNoper; i++) {
       Int_t action = fOper[i];
+
 //*-*- a tree string
       if (action >= 105000) {
          Int_t string_code = action-105000;
@@ -2642,15 +2634,42 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
          leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
          pos2++;
          if (fLookupType[string_code]==kDirect) {
-           tab2[pos2-1] = (char*)leafc->GetValuePointer();
+            tab2[pos2-1] = (char*)leafc->GetValuePointer();
          } else {
-           tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,0);
+            tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,0);
          }
          continue;
       }
 //*-*- a tree variable
       if (action >= 100000) {
-         pos++; tab[pos-1] = param[action-100000];
+         Int_t code = action-100000;
+         Double_t param;
+
+         if (fCodes[code] < 0) {
+            TCutG *gcut = (TCutG*)fMethods.At(code);
+            TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+            Double_t xcut = fx->EvalInstance(instance);
+            Double_t ycut = fy->EvalInstance(instance);
+            param = gcut->IsInside(xcut,ycut);
+         } else {
+            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(code);
+
+            // Now let calculate what physical instance we really need.
+            real_instance = GetRealInstance(instance,code);
+
+            if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+            else if (real_instance>fNdata[code]) return 0;
+
+            switch(fLookupType[code]) {
+               case kDirect: param = leaf->GetValue(real_instance); break;
+               case kMethod: param = GetValueFromMethod(code,leaf); break;
+               case kDataMember: param = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
+                                                   GetValue(leaf,real_instance); break;
+               default: param = 0;
+            }
+         }
+         tab[pos] = param; pos++;
          continue;
       }
 //*-*- String
@@ -3064,7 +3083,7 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
 
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;
-   if (fAxis)                                   return kTRUE;
+   if (fAxis) return kTRUE;
    TFormLeafInfo * info;
    if (fLookupType[code]!=kDirect) {
       info = GetLeafInfo(code);
