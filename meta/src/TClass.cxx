@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.155 2005/01/04 19:54:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.156 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -100,6 +100,10 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    if (strcmp(member->GetName(),"fDatime") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
       isdate = kTRUE;
    }
+   Bool_t isbits = kFALSE;
+   if (strcmp(member->GetName(),"fBits") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
+      isbits = kTRUE;
+   }
 
    Int_t i;
    for (i = 0;i < kline; i++) line[i] = ' ';
@@ -140,6 +144,8 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
           cdatime = (UInt_t*)pointer;
           TDatime::GetDateTime(cdatime[0],cdate,ctime);
           sprintf(&line[kvalue],"%d/%d",cdate,ctime);
+       } else if (isbits) {
+         sprintf(&line[kvalue],"%lx ", (Long_t)pointer);
        } else {
          strcpy(&line[kvalue], membertype->AsString(pointer));
        }
