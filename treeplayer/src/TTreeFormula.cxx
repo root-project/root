@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.35 2001/04/27 17:29:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.36 2001/04/28 11:42:05 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1345,9 +1345,7 @@ Int_t TTreeFormula::GetNdata()
             // read branchcount value
             if (!branch->GetAddress()) branch->GetEntry(fTree->GetReadEntry());
             else branch->TBranch::GetEntry(fTree->GetReadEntry());
-            //read this branch
-            leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-            size = leaf->GetNdata();
+            size = ((TBranchElement*)branch)->GetNdata();
          } else {
             branch->GetEntry(fTree->GetReadEntry());
             size = leaf->GetLen() / leaf->GetLenStatic();
