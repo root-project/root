@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.2 2001/03/12 22:48:45 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// $Id: TFileSet.cxx,v 1.2 2001/03/12 22:48:45 fine Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -37,7 +37,7 @@ ClassImp(TFileSet)
 }
 
 //______________________________________________________________________________
-TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand)
+TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, Int_t maxDeep)
            : TDataSet()
 {
   //
@@ -52,7 +52,12 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand)
   //                                 of the "dirname" by default)
   //  expand   - flag whether the "dirname" must be "expanded
   //             (kTRUE by default)
+  //  maxDeep  - the max number of the levels of the directory to read in
+  //             (=10 by default)
   //
+
+  if (!maxDeep) return;
+
   Long_t id, size, flags, modtime;
   TString dirbuf = dirname;
 
@@ -60,7 +65,10 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand)
   const char *name= dirbuf;
   if (gSystem->GetPathInfo(name, &id, &size, &flags, &modtime)==0) {
 
-    if (!setname) {setname = strrchr(name,'/')+1;}
+    if (!setname) {
+      setname = strrchr(name,'/');
+      if (setname) setname++;      
+    }
     if (setname) SetName(setname);
     else SetName(name);
 
@@ -83,7 +91,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand)
          Char_t *file = gSystem->ConcatFileName(dirbuf,name);
          TString nextdir = file;
          delete [] file;
-         Add(new TFileSet(nextdir,name,kFALSE));
+         Add(new TFileSet(nextdir,name,kFALSE,maxDeep-1));
 
       }
       gSystem->FreeDirectory(dir);

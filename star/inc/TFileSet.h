@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.h,v 1.2 2001/03/12 22:48:44 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -29,7 +29,7 @@ class TFileSet : public TDataSet
 {
  public:
     TFileSet();
-    TFileSet(const TString &dirname, const Char_t *filename=0,Bool_t expand=kTRUE);
+    TFileSet(const TString &dirname, const Char_t *filename=0,Bool_t expand=kTRUE,Int_t maxDeep=10);
     virtual ~TFileSet();
     virtual Long_t HasData() const;
     virtual Bool_t IsEmpty() const;
