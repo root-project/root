@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.15 2001/02/02 11:16:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.16 2001/02/06 10:52:34 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -61,7 +61,6 @@ private:
 public:
 
    //status bits
-   enum {kBypassStreamer = BIT(14)};
 
    enum EReadWrite {
       kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
@@ -79,7 +78,6 @@ public:
    void                Build();
    void                BuildCheck();
    void                BuildOld();
-   Bool_t              CanBypassStreamer() { return TestBit(kBypassStreamer);}
    void                ForceWriteInfo();
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
