@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.19 2000/12/02 16:28:09 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.20 2000/12/05 10:53:55 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -952,11 +952,26 @@ void WritePointersSTL(G__ClassInfo &cl)
 
    while (m.Next()) {
       if ((m.Property() & G__BIT_ISSTATIC)) continue;
+      int pCounter = 0;
+      if (m.Property() & G__BIT_ISPOINTER) {
+         const char *leftb = strchr(m.Title(),'[');
+         if (leftb) {
+            const char *rightb = strchr(leftb,']');
+            if (rightb) {
+               pCounter++;
+               sprintf(a,m.Type()->Name());
+               char *astar = (char*)strchr(a,'*');
+               *astar = 0;
+               if (strstr(m.Type()->Name(),"**")) pCounter++;
+            }
+         }
+      }
+            
       //member is a string
       if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",clName,m.Name());
+         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int)\n",clName,m.Name());
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISPOINTER) {
             fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
@@ -975,7 +990,11 @@ void WritePointersSTL(G__ClassInfo &cl)
       if (!IsStreamable(m)) continue;
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
-         fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p)\n",clName,m.Name());
+         if (pCounter) {
+            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int n)\n",clName,m.Name());
+         } else {
+            fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *p, int)\n",clName,m.Name());
+         }
          fprintf(fp, "{\n");
          if (m.Property() & G__BIT_ISARRAY) {
             fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
@@ -1002,8 +1021,25 @@ void WritePointersSTL(G__ClassInfo &cl)
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
-                  if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                  else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
+                  if (pCounter == 2) {
+                     fprintf(fp, "      delete [] %s;\n",m.Name());
+                     fprintf(fp, "      if (!n) return;\n");
+                     fprintf(fp, "      %s = new %s*[n];\n",m.Name(),a);
+                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
+                     fprintf(fp, "         %s[l] = new %s();\n",m.Name(),a);
+                     fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "      }\n");
+                  } else if(pCounter == 1) {
+                     fprintf(fp, "      delete [] %s;\n",m.Name());
+                     fprintf(fp, "      if (!n) return;\n");
+                     fprintf(fp, "      %s = new %s[n];\n",m.Name(),a);
+                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
+                     fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "      }\n");
+                  } else {
+                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
+                  }
                } else {
                   fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
                }
@@ -1025,8 +1061,18 @@ void WritePointersSTL(G__ClassInfo &cl)
                fprintf(fp, "      }\n");
             } else {
                if (m.Property() & G__BIT_ISPOINTER) {
-                  if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                  else                                fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                  if (pCounter == 2) {
+                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
+                     fprintf(fp, "         %s[l]->Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "      }\n");
+                  } else if(pCounter == 1) {
+                     fprintf(fp, "      for (Int_t l=0;l<n;l++) {\n");
+                     fprintf(fp, "         %s[l].Streamer(R__b);\n",m.Name());
+                     fprintf(fp, "      }\n");
+                  } else {
+                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     else                                fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                  }
                } else {
                   fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
                }
