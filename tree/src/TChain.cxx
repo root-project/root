@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.59 2002/12/02 18:50:08 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.60 2002/12/02 22:07:07 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -870,7 +870,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //     if (basketsize > 1000, the basket size for all branches of the
 //     new Tree will be set to basketsize.
 //
-// IMPORTANT: Before invoking this function, the branch addresses
+// IMPORTANT Note 1: Before invoking this function, the branch addresses
 //            of the TTree must have been set.
 //  example using the file generated in $ROOTSYS/test/Event
 //  merge two copies of Event.root
@@ -885,17 +885,20 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //
 //  The SetBranchAddress statement is not necessary if the Tree
 //  contains only basic types (case of files converted from hbook)
-//
 //  NOTE that the merged Tree contains only the active branches.
 //
-//  AUTOMATIC FILE OVERFLOW
-//  -----------------------
+// IMPORTANT Note 2: AUTOMATIC FILE OVERFLOW
+// -----------------------------------------
 // When merging many files, it may happen that the resulting file
 // reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes). In this case
 // the current file is automatically closed and a new file started.
 // If the name of the merged file was "merged.root", the subsequent files
 // will be named "merged_1.root", "merged_2.root", etc.
 // fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
+//
+// IMPORTANT Note 3: The input file is automatically closed and deleted.
+// This is required because in general the automatic file overflow described 
+// above may happen during the merge.
 //
 // The function returns the total number of files produced.
 
