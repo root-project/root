@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.137 2003/09/23 17:20:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.138 2003/10/07 11:10:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -391,13 +391,26 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
 //
-//  varexp is an expression of the general form e1:e2:e3
-//    where e1,etc is a formula referencing a combination of the columns
+//  varexp is an expression of the general form 
+//   - "e1"           produces a 1-d histogram of expression "e1"
+//   - "e1:e2"        produces a 2-d histogram (or profile) of "e1" versus "e2"
+//   - "e1:e2:e3"     produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
+//   - "e1:e2:e3:e4"  produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
+//                    and "e4" mapped on the color number.
+//
 //  Example:
 //     varexp = x     simplest case: draw a 1-Dim distribution of column named x
 //            = sqrt(x)            : draw distribution of sqrt(x)
 //            = x*y/z
-//            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
+//            = y:sqrt(x) 2-Dim distribution of y versus sqrt(x)
+//            = px:py:pz:2.5*E  produces a 3-d scatter-plot of px vs py ps pz
+//              and the color number of each marker will be 2.5*E.
+//              If the color number is negative it is set to 0.
+//              If the color number is greater than the current number of colors
+//                 it is set to the highest color number.
+//              The default number of colors is 50.
+//              see TStyle::SetPalette for setting a new color palette.
+//
 //  Note that the variables e1, e2 or e3 may contain a selection.
 //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
 //  and will be 0 otherwise.
