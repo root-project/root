@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.h,v 1.2 2004/09/20 15:33:26 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -84,6 +84,8 @@ public:
    virtual void      HandleMenu(Int_t id);
    virtual void      CloseWindow();
    virtual void      HandleWindowClosed(Int_t id);
+   virtual void      UpdateStatusBar();
+   virtual void      EraseStatusBar();
 
    TGuiBldEditor    *GetEditor() const { return fEditor; }
 

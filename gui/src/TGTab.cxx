@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.14 2004/07/21 13:53:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.15 2004/08/26 17:03:17 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -48,7 +48,7 @@ const TGGC   *TGTab::fgDefaultGC = 0;
 
 ClassImp(TGTabElement)
 ClassImp(TGTabLayout)
-ClassImpQ(TGTab)
+ClassImp(TGTab)
 
 
 //______________________________________________________________________________
@@ -63,6 +63,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    fBorderWidth = 0;
    fNormGC      = norm;
    fFontStruct  = font;
+   fEditDisabled = kTRUE;
 
    int max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());

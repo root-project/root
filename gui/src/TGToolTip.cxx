@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.8 2004/04/20 14:48:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.9 2004/09/13 09:12:09 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -183,9 +183,14 @@ void TGToolTip::Show(Int_t x, Int_t y)
 {
    // Show tool tip window.
 
+   long args[2];
+   args[0] = x;
+   args[1] = y;
+
    Move(x, y);
    MapWindow();
    RaiseWindow();
+   Emit("Show(Int_t,Int_t)", args);
 }
 
 //______________________________________________________________________________
@@ -197,6 +202,7 @@ void TGToolTip::Hide()
    UnmapWindow();
 
    fDelay->Remove();
+   Emit("Hide()");
 }
 
 //______________________________________________________________________________
@@ -207,6 +213,7 @@ void TGToolTip::Reset()
 
    fDelay->Reset();
    gSystem->AddTimer(fDelay);
+   Emit("Reset()");
 }
 
 //______________________________________________________________________________

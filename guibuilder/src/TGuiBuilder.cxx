@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.2 2004/09/13 14:34:58 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.3 2004/09/20 15:33:26 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TRootHelpDialog.h"
-#include "HelpText.h"
+#include "TGToolTip.h"
 
 
 enum EMenuIds {
@@ -66,7 +66,7 @@ const char gHelpBuilder[] = "\
  o Use right mouse button to activate context menu\n\
  o Mutilple selection (grabbing):\n\
       - draw lasso and press Return key\n\
-      - press Shift key and draw lass\n\
+      - press Shift key and draw lasso\n\
  o Dropping:\n\
       - select frame and press Ctrl-Return key\n\
  o Changing layout order:\n\
@@ -180,6 +180,12 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
          continue;
       }
       TGPictureButton *pb = (TGPictureButton*)fToolBar->AddButton(this, &gToolBarData[i], spacing);
+      TGToolTip *tip = pb->GetToolTip();
+      if (tip) {
+         tip->Connect("Reset()", "TGuiBuilder", this, "UpdateStatusBar()");
+         tip->Connect("Hide()", "TGuiBuilder", this, "EraseStatusBar()");
+      }
+
       TString pname = gToolBarData[i].fPixmap;
       pname.ReplaceAll(".", "_d.");
       const TGPicture *dpic = fClient->GetPicture(pname.Data());
@@ -301,7 +307,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
 
    fShutter->Resize(140, fShutter->GetHeight());
 
-   TGStatusBar *fStatusBar = new TGStatusBar(this, 40, 10);
+   fStatusBar = new TGStatusBar(this, 40, 10);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
    MapSubwindows();
@@ -910,4 +916,32 @@ void TGuiBuilder::CloseWindow()
    //
 
    gApplication->Terminate(0);
+}
+
+//______________________________________________________________________________
+void TGuiBuilder::UpdateStatusBar()
+{
+   //
+
+   if (!fStatusBar) return;
+
+   TObject *o = (TObject *)gTQSender;
+   const char *text;
+
+   if (o && o->InheritsFrom(TGToolTip::Class())) {
+      TGToolTip *tip = (TGToolTip*)o;
+      text = tip->GetText()->Data(); 
+   }
+
+   fStatusBar->SetText(text);
+}
+
+//______________________________________________________________________________
+void TGuiBuilder::EraseStatusBar()
+{
+   //
+
+   if (!fStatusBar) return;
+
+   fStatusBar->SetText("");
 }

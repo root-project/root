@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.4 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.5 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -54,9 +54,9 @@ public:
    virtual void DrawBorder();
 
    Bool_t HandleTimer(TTimer *t);
-   void   Show(Int_t x, Int_t y);
-   void   Hide();
-   void   Reset();
+   void   Show(Int_t x, Int_t y);    //*SIGNAL*
+   void   Hide();                    //*SIGNAL*
+   void   Reset();                   //*SIGNAL*
    void   Reset(const TVirtualPad *parent);
    void   SetText(const char *new_text);
    void   SetPosition(Int_t x, Int_t y);
