@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.13 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.15 2002/05/09 20:21:59 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -232,8 +232,8 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 
 //---- Class Initialization Behavior --------------------------------------
 //
-// This Class and Function are automatically used for class inheriting from
-// TQObject.  They makes it possible to have a single connection from all
+// This Class and Function are automatically used for classes inheriting from
+// TQObject. They makes it possible to have a single connection from all
 // objects of the same class.
 namespace ROOT {
    class DefaultInitBehavior;
