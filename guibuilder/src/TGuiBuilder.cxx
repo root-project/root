@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.8 2004/09/21 11:18:19 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.9 2004/09/21 11:29:17 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -669,23 +669,20 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
 
    if (!fClient->IsEditable()) return kFALSE;
 
-   fEditable = FindEditableMdiFrame(fClient->GetRoot());
-
-   if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
+   if (event->fType == kGKeyPress) {
       UInt_t keysym;
       char str[2];
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
 
-      if ((str[0] == 19) && fEditable) {  // ctrl-s
-         SaveProject(event);
-      } else if (str[0] == 14) { //ctrl-n
-         NewProject(event);
-      } else if (str[0] == 15) { // ctrl-o
-         OpenProject(event);
-      } else {
-         fManager->HandleKey(event);
+      if (event->fState & kKeyControlMask) {
+         if (str[0] == 19) {  // ctrl-s
+            return SaveProject(event);
+         } else if (str[0] == 14) { //ctrl-n
+            return NewProject(event);
+         } else if (str[0] == 15) { // ctrl-o
+            return OpenProject(event);
+         }
       }
-   } else {
       fManager->HandleKey(event);
    }
    return kTRUE;
