@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.5 2000/09/14 17:41:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.6 2000/10/13 18:57:45 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 
 #include <stdlib.h>
 
+#include "TROOT.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TMath.h"
@@ -151,7 +152,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
 
-   if (fgReAllocHook && fgHasCustomNewDelete)
+   if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocHook)(ovp, size);
 
    static const char *where = "TStorage::ReAlloc";
@@ -178,7 +179,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
 
-   if (fgReAllocCHook && fgHasCustomNewDelete)
+   if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocCHook)(ovp, size, oldsize);
 
    static const char *where = "TStorage::ReAlloc";
