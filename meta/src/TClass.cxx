@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.78 2002/06/18 07:00:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.79 2002/06/18 10:23:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -224,7 +224,44 @@ TClass::TClass(const char *name) : TDictionary()
    // Normally you would use gROOT->GetClass("class") to get access to a
    // TClass object for a certain class.
 
-   Init(name,0, 0, 0, 0, "", "", -2, 0);
+   if (!gROOT)
+      ::Fatal("TClass::TClass", "ROOT system not initialized");
+
+   fName           = name;
+   fClassVersion   = 0;
+   fDeclFileName   = "";
+   fImplFileName   = "";
+   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
+   fImplFileLine   = 0;
+   fBase           = 0;
+   fData           = 0;
+   fMethod         = 0;
+   fRealData       = 0;
+   fClassInfo      = 0;
+   fAllPubData     = 0;
+   fAllPubMethod   = 0;
+   fCheckSum       = 0;
+   fTypeInfo       = 0;
+   fIsA            = 0;
+   fShowMembers    = 0;
+   fStreamerInfo   = 0;
+
+   ResetInstanceCount();
+
+   if (!fClassInfo) {
+      SetBit(kLoading);
+      if (!gInterpreter)
+         ::Fatal("TClass::TClass", "gInterpreter not initialized");
+
+      gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+      if (!fClassInfo) {
+         gInterpreter->InitializeDictionaries();
+         gInterpreter->SetClassInfo(this);
+      }
+      if (!fClassInfo)
+         ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
+      ResetBit(kLoading);
+   }
 }
 
 //______________________________________________________________________________
@@ -283,6 +320,8 @@ void TClass::Init(const char *name, Version_t cversion,
    fIsA            = isa;
    fShowMembers    = showmembers;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
+   fProperty       = -1;
+   fInterStreamer  = 0;
 
    ResetInstanceCount();
 
@@ -366,8 +405,6 @@ void TClass::Init(const char *name, Version_t cversion,
       }
       if (cursav) cursav->cd();
    }
-   fProperty = -1;
-   fInterStreamer = 0;
 
    ResetBit(kLoading);
 
