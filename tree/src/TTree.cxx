@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.66 2001/04/27 08:01:14 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.67 2001/04/28 07:47:31 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -610,7 +610,9 @@ Int_t TTree::Branch(const char *foldername, Int_t bufsize, Int_t splitlevel)
            sprintf(occur,"_%d",noccur);
            strcat(curname,occur);
         }
-        Bronch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
+        TBranchElement *br;
+        br = (TBranchElement*)Bronch(curname,obj->ClassName(), add, bufsize, splitlevel-1);
+        br->SetBranchFolder();
       }
    }
    delete [] curname;
@@ -2245,6 +2247,19 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 //*-*        ==================================================================
 
    if (fTotalBuffers + nbytes < fMaxVirtualSize) return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TTree::Notify()
+{
+// function called when loading a new class library
+
+   TIter next(GetListOfLeaves());
+   TLeaf *leaf;
+   while ((leaf = (TLeaf*)next())) {
+      leaf->Notify();
+   }
    return kTRUE;
 }
 

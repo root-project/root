@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.27 2001/04/23 14:05:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.28 2001/04/28 07:47:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -223,6 +223,7 @@ public:
     virtual Int_t     MakeCode(const char *filename=0);
     virtual Int_t     MakeSelector(const char *selector=0);
     Bool_t            MemoryFull(Int_t nbytes);
+    virtual Bool_t    Notify();
     TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      Print(Option_t *option="") const; // *MENU*
