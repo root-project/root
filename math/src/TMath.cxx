@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.10 2001/04/20 07:29:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.11 2001/06/25 09:16:30 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -204,7 +204,7 @@ Double_t TMath::Erf(Double_t x)
 Double_t TMath::Erfc(Double_t x)
 {
    // Computation of the complementary error function erfc(x).
-   // Erf(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between x and infinity
+   // Erfc(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between x and infinity
    //
    // The algorithm is based on a Chebyshev fit as denoted in
    // Numerical Recipes 2nd ed. on p. 214 (W.H.Press et al.).
