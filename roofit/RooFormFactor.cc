@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormFactor.cc,v 1.6 2001/08/03 18:13:02 verkerke Exp $
+ *    File: $Id: RooFormFactor.cc,v 1.1 2001/08/23 13:59:23 msgill Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,8 +23,6 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
 
-// #include "RooFitTools/RooRandom.hh"
-
 // Need these next includes if i want to do any couts inside this code
 // (but not for standalone macros in Root, because Root autoloads
 // these things)
@@ -33,9 +31,10 @@
 #include <iostream.h>
 
 ClassImp(RooFormFactor)
+  ;
 
 static const char rcsid[] =
-"$Id: RooFormFactor.cc,v 1.2 2001/05/23 22:10:04 msgill Exp $";
+"$Id: RooFormFactor.cc,v 1.1 2001/08/23 13:59:23 msgill Exp $";
 
 RooFormFactor::RooFormFactor(const char *name, const char *title,
 			     RooAbsReal& _w, RooAbsReal& _ctl, RooAbsReal& _ctv, 
@@ -116,7 +115,7 @@ Double_t RooFormFactor::analyticalIntegral(Int_t code) const
 }
 
 
-Double_t RooFormFactor::evaluate(const RooArgSet* nset) const {
+Double_t RooFormFactor::evaluate() const {
   
   // This is the 4-dim PDF depending on the wlvc vars, and with
   // R1,R2,rho2 as the independent params we'll want to fit for
