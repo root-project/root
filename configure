@@ -191,7 +191,7 @@ check_library() {
     # the .lib export library to link.
     libs=""
     for i in $lib ; do
-	for ext in .a .lib ; do
+	for ext in .a .lib "" ; do     # lib without extension for MacOS X
 	    libs="$libs $i$ext"
 	done
     done
@@ -254,7 +254,7 @@ check_library() {
     else
 	flib=""
 	for i in $lib ; do
-	    for ext in .a .lib ; do
+	    for ext in .a .lib "" ; do     # lib without extension for MacOS X
 		if test "x$found_lib" = "x$i$ext" ; then
 		    flib=$i$ext
 		fi
@@ -890,9 +890,6 @@ freebsd*|aix*|win32*)
     enable_explicitlink="yes"
     ;;
 esac
-if test "$platform" = "macosx" ; then
-    enable_explicitlink="no"
-fi
 if test "x$enable_explicitlink" = "xyes" && test ! "$platform" = "win32" ; then
     mkliboption=$mkliboption"-x "
 fi
@@ -904,7 +901,7 @@ fi
 # Check for posix thread library
 #
 case $platform in
-linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc|macosx)
+linux|linuxdeb|linuxicc|linuxia64*|linuxx8664*|win32gcc|macosx*)
     if test "x$enable_thread" = "x"; then
         enable_thread="yes"
     fi
@@ -1532,15 +1529,17 @@ if test ! "x$enable_python" = "xno" ; then
         check_header "Python.h" "$pythonincdir" \
            $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
            $PYTHONDIR/include /usr/include/python2.3 /usr/include/python2.2 \
-           /usr/local/include/python2.3 /usr/local/include/python2.2
+           /usr/local/include/python2.3 /usr/local/include/python2.2 \
+           /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3
         pythoninc=$found_hdr
         pythonincdir=$found_dir
 
-        check_library "libpython2.3 libpython2.2" "$enable_shared" \
+        check_library "libpython2.3 libpython2.2 Python" "$enable_shared" \
            "$pythonlibdir" $PYTHONDIR/lib/python2.3/config \
            $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib \
            /usr/lib/python2.3/config /usr/lib/python2.2/config \
-           /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config
+           /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config \
+           /System/Library/Frameworks/Python.framework/Versions/2.3
       pythonlib=$found_lib
       pythonlibdir=$found_dir
 
