@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSegmentedIntegrator1D.rdl,v 1.1 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,6 +40,7 @@ public:
 
   virtual Bool_t checkLimits() const;
   virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t setLimits(Double_t xmin, Double_t xmax);
 
 protected:
 

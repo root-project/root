@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooSegmentedIntegrator2D.rdl,v 1.1 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,8 @@ public:
   RooSegmentedIntegrator2D(const RooAbsFunc& function, Int_t nseg, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
 		  const RooIntegratorConfig& config) ;
   virtual ~RooSegmentedIntegrator2D() ;
+
+  virtual Bool_t checkLimits() const;
 
 protected:
 

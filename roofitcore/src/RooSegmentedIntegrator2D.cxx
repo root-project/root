@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.1 2003/05/07 21:06:25 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.1 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,4 +62,36 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
   delete _xint ;
   delete _xIntegrator ;
 }
+
+
+
+Bool_t RooSegmentedIntegrator2D::checkLimits() const {
+  // Check that our integration range is finite and otherwise return kFALSE.
+  // Update the limits from the integrand if requested.
+
+  if(_useIntegrandLimits) {
+    assert(0 != integrand() && integrand()->isValid());
+    _xmin= integrand()->getMinLimit(0);
+    _xmax= integrand()->getMaxLimit(0);
+  }
+  _range= _xmax - _xmin;
+  if(_range <= 0) {
+    cout << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    return kFALSE;
+  }
+  Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+
+  // Adjust component integrators, if already created
+  if (_array && ret) {
+    Double_t segSize = (_xmax - _xmin) / _nseg ;
+    Int_t i ;
+    for (i=0 ; i<_nseg ; i++) {
+      _array[i]->setLimits(_xmin+i*segSize,_xmin+(i+1)*segSize) ;
+    }
+  }
+
+  return ret ;
+}
+
+
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.2 2003/05/10 19:50:28 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.3 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -91,7 +91,7 @@ typedef RooIntegrator1D* pRooIntegrator1D ;
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
   _array = 0 ;
-
+  
   Bool_t limitsOK = checkLimits(); 
   if (!limitsOK) return kFALSE ;
 
@@ -119,10 +119,25 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 }
 
 
+Bool_t RooSegmentedIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+  // Change our integration limits. Return kTRUE if the new limits are
+  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+  // if this object was constructed to always use our integrand's limits.
+
+  if(_useIntegrandLimits) {
+    cout << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    return kFALSE;
+  }
+  _xmin= xmin;
+  _xmax= xmax;
+  return checkLimits();
+}
+
+
+
 Bool_t RooSegmentedIntegrator1D::checkLimits() const {
   // Check that our integration range is finite and otherwise return kFALSE.
   // Update the limits from the integrand if requested.
-
 
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -131,12 +146,21 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const {
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    cout << "RooSegmentedIntegrator1D::checkLimits: bad range with min >= max" << endl;
-    cout << "_xmax = " << _xmax << " _xmin = " << _xmin << endl ;
-    cout << "_useIL = " << (_useIntegrandLimits?"T":"F") << endl ;
+    cout << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
     return kFALSE;
   }
-  return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+  Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+
+  // Adjust component integrators, if already created
+  if (_array && ret) {
+    Double_t segSize = (_xmax - _xmin) / _nseg ;
+    Int_t i ;
+    for (i=0 ; i<_nseg ; i++) {
+      _array[i]->setLimits(_xmin+i*segSize,_xmin+(i+1)*segSize) ;
+    }
+  }
+
+  return ret ;
 }
 
 
