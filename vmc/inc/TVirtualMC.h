@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.3 2003/09/23 14:02:17 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.4 2003/09/27 09:28:45 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -157,8 +157,9 @@ class TVirtualMC : public TNamed {
     //
 
     // action methods
-    virtual void StopTrack() =0;
-    virtual void StopEvent() =0;   
+    virtual void StopTrack() = 0;
+    virtual void StopEvent() = 0;   
+    virtual void StopRun() = 0;   
 
     // set methods
     virtual void SetMaxStep(Double_t) = 0;
@@ -241,7 +242,7 @@ class TVirtualMC : public TNamed {
     virtual void Init() = 0;
     virtual void BuildPhysics() = 0;
     virtual void ProcessEvent() = 0;
-    virtual void ProcessRun(Int_t nevent) = 0;
+    virtual Bool_t ProcessRun(Int_t nevent) = 0;
     virtual void InitLego() = 0;
 
     //
