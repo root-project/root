@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.195 2004/07/30 08:28:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.196 2004/08/04 12:58:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -423,6 +423,7 @@
 
 
 TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
+const Int_t kNstat = 11;
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
@@ -766,12 +767,12 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 
 //   - Add statistics
    fEntries += c1*h1->GetEntries();
-   Stat_t s1[10], s2[10];
+   Stat_t s1[kNstat], s2[kNstat];
    Int_t i;
-   for (i=0;i<10;i++) {s1[i] = s2[i] = 0;}
+   for (i=0;i<kNstat;i++) {s1[i] = s2[i] = 0;}
    GetStats(s1);
    h1->GetStats(s2);
-   for (i=0;i<10;i++) {
+   for (i=0;i<kNstat;i++) {
       if (i == 1) s1[i] += c1*c1*s2[i];
       else        s1[i] += c1*s2[i];
    }
@@ -855,12 +856,12 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
 //   - Add statistics
    Double_t nEntries = c1*h1->GetEntries() + c2*h2->GetEntries();
-   Stat_t s1[10], s2[10], s3[10];
+   Stat_t s1[kNstat], s2[kNstat], s3[kNstat];
    Int_t i;
-   for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
+   for (i=0;i<kNstat;i++) {s1[i] = s2[i] = s3[i] = 0;}
    h1->GetStats(s1);
    h2->GetStats(s2);
-   for (i=0;i<10;i++) {
+   for (i=0;i<kNstat;i++) {
       if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
       else        s3[i] = c1*s1[i]    + c2*s2[i];
    }
@@ -1352,7 +1353,7 @@ void TH1::Divide(const TH1 *h1)
          }
       }
    }
-   Stat_t s[10];
+   Stat_t s[kNstat];
    GetStats(s);
    PutStats(s);
    SetEntries(nEntries);
@@ -1463,7 +1464,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
          }
       }
    }
-   Stat_t s[10];
+   Stat_t s[kNstat];
    GetStats(s);
    PutStats(s);
    if (nEntries == 0) nEntries = h1->GetEntries();
@@ -3473,7 +3474,6 @@ void atest() {
    Double_t bwix  = fXaxis.GetBinWidth(1);
    Int_t    nbix  = fXaxis.GetNbins();
 
-   const Int_t kNstat = 4;
    Stat_t stats[kNstat], totstats[kNstat];
    TH1 *h;
    Int_t i, nentries=(Int_t)fEntries;
@@ -3675,7 +3675,7 @@ void TH1::Multiply(const TH1 *h1)
          }
       }
    }
-   Stat_t s[10];
+   Stat_t s[kNstat];
    GetStats(s);
    PutStats(s);
    SetEntries(nEntries);
@@ -3771,7 +3771,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
          }
       }
    }
-   Stat_t s[10];
+   Stat_t s[kNstat];
    GetStats(s);
    PutStats(s);
    SetEntries(nEntries);
@@ -4731,8 +4731,8 @@ Stat_t TH1::GetMean(Int_t axis) const
 //  the histogram.
 
   if (axis <1 || axis > 3) return 0;
-  Stat_t stats[11];
-  for (Int_t i=4;i<11;i++) stats[i] = 0;
+  Stat_t stats[kNstat];
+  for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
@@ -4755,8 +4755,8 @@ Stat_t TH1::GetRMS(Int_t axis) const
 //  We kept the name for continuity.
 
   if (axis <1 || axis > 3) return 0;
-  Stat_t x, rms2, stats[11];
-  for (Int_t i=4;i<11;i++) stats[i] = 0;
+  Stat_t x, rms2, stats[kNstat];
+  for (Int_t i=4;i<kNstat;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
@@ -4792,15 +4792,16 @@ void TH1::GetStats(Stat_t *stats) const
 
    // Loop on bins (possibly including underflows/overflows)
    Int_t bin, binx;
-   Stat_t w;
+   Stat_t w,err;
    Axis_t x;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<4;bin++) stats[bin] = 0;
       for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
-         x = fXaxis.GetBinCenter(binx);
-         w = TMath::Abs(GetBinContent(binx));
+         x   = fXaxis.GetBinCenter(binx);
+         w   = TMath::Abs(GetBinContent(binx));
+         err = TMath::Abs(GetBinError(binx));
          stats[0] += w;
-         stats[1] += w*w;
+         stats[1] += err*err;
          stats[2] += w*x;
          stats[3] += w*x*x;
       }

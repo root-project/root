@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.47 2004/05/24 15:39:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.48 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -844,8 +844,8 @@ void TH3::GetStats(Stat_t *stats) const
    if (fBuffer) ((TH3*)this)->BufferEmpty();
    
    Int_t bin, binx, biny, binz;
-   Stat_t w;
-   Float_t x,y,z;
+   Stat_t w,err;
+   Double_t x,y,z;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) || fZaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<9;bin++) stats[bin] = 0;
       for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
@@ -854,10 +854,11 @@ void TH3::GetStats(Stat_t *stats) const
             y = fYaxis.GetBinCenter(biny);
             for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
                bin = GetBin(binx,biny,binz);
-               x = fXaxis.GetBinCenter(binx);
-               w = TMath::Abs(GetBinContent(bin));
+               x   = fXaxis.GetBinCenter(binx);
+               w   = TMath::Abs(GetBinContent(bin));
+               err = TMath::Abs(GetBinError(bin));
                stats[0] += w;
-               stats[1] += w*w;
+               stats[1] += err*err;
                stats[2] += w*x;
                stats[3] += w*x*x;
                stats[4] += w*y;

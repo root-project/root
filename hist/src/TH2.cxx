@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.52 2004/07/03 20:39:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.53 2004/07/08 14:45:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -976,18 +976,19 @@ void TH2::GetStats(Stat_t *stats) const
    if (fBuffer) ((TH2*)this)->BufferEmpty();
    
    Int_t bin, binx, biny;
-   Stat_t w;
-   Float_t x,y;
+   Stat_t w,err;
+   Double_t x,y;
    if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
       for (bin=0;bin<7;bin++) stats[bin] = 0;
       for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
          y = fYaxis.GetBinCenter(biny);
          for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
             bin = GetBin(binx,biny);
-            x = fXaxis.GetBinCenter(binx);
-            w = TMath::Abs(GetBinContent(bin));
+            x   = fXaxis.GetBinCenter(binx);
+            w   = TMath::Abs(GetBinContent(bin));
+            err = TMath::Abs(GetBinError(bin));
             stats[0] += w;
-            stats[1] += w*w;
+            stats[1] += err*err;
             stats[2] += w*x;
             stats[3] += w*x*x;
             stats[4] += w*y;
