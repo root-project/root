@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.34 2004/06/15 10:30:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.35 2004/06/16 08:16:30 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -489,6 +489,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   break;
                case kKey_Enter:
                case kKey_Return:
+                  gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   Event_t ev;
                   ev.fType = kButtonRelease;
                   ev.fWindow = menu->GetId();
