@@ -65,6 +65,57 @@ enable_soversion=no
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
 
+#
+# ./configure arguments and defaults set via supported env vars
+#
+envvars="
+THREAD           \
+OPENGL           \
+IVROOT           \
+MYSQL            \
+PGSQL            \
+QTDIR            \
+SAPDB            \
+RFIO             \
+CERNLIB          \
+PYTHIA           \
+PYTHIA6          \
+VENUS            \
+DCACHE           \
+CHIRP            \
+ALIEN            \
+ASIMAGE          \
+LDAP             \
+GLOBUS_LOCATION  \
+SRP              \
+AFS              \
+TABLE            \
+"
+configenvvars=
+for c in $envvars ; do
+   if test ! "x${!c}" = "x" ; then
+      if test ! "x$configenvvars" = "x" ; then
+         configenvvars="$configenvvars $c=${!c}"
+      else
+         configenvvars=$c=${!c}
+      fi
+   fi
+done
+
+configargs="$*"
+
+configoptions=
+if test ! "x$configenvvars" = "x" ; then
+   configoptions=$configenvvars
+fi
+if test ! "x$configargs" = "x" ; then
+   if test ! "x$configoptions" = "x" ; then
+      configoptions="$configoptions $configargs"
+   else
+      configoptions=$configargs
+   fi
+fi
+
 ######################################################################
 #
 ### echo %%% Some common functions
@@ -570,8 +621,6 @@ EOF
 ### echo %%% See if we got the architecture
 #
 if test $# -lt 1 ; then
-   #echo "You must give architecture as first argument - try $0 --help"
-   #exit 1
    guess_architecture
 else
    case $1 in
@@ -2376,6 +2425,7 @@ sed \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@setresuid@|$setresuid|"         \
     -e "s|@krb5init@|$krb5init|"           \
+    -e "s|@configoptions@|$configoptions|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 echo "done"

@@ -18,3 +18,5 @@
 #@setresuid@ HAS_SETRESUID  /**/
 
 #define R__KRB5INIT   "@krb5init@"
+
+#define R__CONFIGUREOPTIONS   "@configoptions@"

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.37 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.38 2004/01/27 19:52:47 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -67,6 +67,7 @@ private:
 protected:
    typedef ROOT::TMapTypeToTClass IdMap_t;
 
+   TString         fConfigOptions;        //ROOT ./configure build options
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
    Int_t           fVersionInt;           //ROOT version in integer format (501)
    Int_t           fVersionDate;          //Date of ROOT version (ex 951226)
@@ -147,6 +148,7 @@ public:
    TClass           *GetClass(const char *name, Bool_t load = kTRUE) const;
    TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE) const;
    TColor           *GetColor(Int_t color) const;
+   const char       *GetConfigOptions() const { return fConfigOptions; }
    const char       *GetCutClassName() const { return fCutClassName; }
    const char       *GetDefCanvasName() const { return fDefCanvasName; }
    Bool_t            GetEditHistograms() const { return fEditHistograms; }

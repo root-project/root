@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.113 2004/01/31 08:59:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.114 2004/02/13 07:12:57 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -59,9 +59,7 @@
 //-----------------------End of Main program--------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
 #include "config.h"
-#endif
 
 #include <string>
 #include <map>
@@ -261,9 +259,9 @@ VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
 // This local static object initializes the ROOT system
 namespace ROOT {
-   TROOT *GetROOT() { 
+   TROOT *GetROOT() {
       static TROOT root("root", "The ROOT of EVERYTHING");
-      return &root; 
+      return &root;
    }
    TString &GetMacroPath() {
       static TString macroPath;
@@ -334,18 +332,19 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    InitSystem();
 
    // Initialize interface to CINT C++ interpreter
-   fVersionInt  = 0;  // check in TROOT dtor in case TCint fails
-   fClasses     = 0;  // might be checked via TCint ctor
-   fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
+   fVersionInt      = 0;  // check in TROOT dtor in case TCint fails
+   fClasses         = 0;  // might be checked via TCint ctor
+   fInterpreter     = new TCint("C/C++", "CINT C/C++ Interpreter");
 
-   fVersion     = ROOT_RELEASE;
-   fVersionInt  = IVERSQ();
-   fVersionDate = IDATQQ();
-   fVersionTime = ITIMQQ();
+   fConfigOptions   = R__CONFIGUREOPTIONS;
+   fVersion         = ROOT_RELEASE;
+   fVersionInt      = IVERSQ();
+   fVersionDate     = IDATQQ();
+   fVersionTime     = ITIMQQ();
 
-   fClasses     = new THashList(800,3);
-   fIdMap       = new IdMap_t;
-   fStreamerInfo= new TObjArray(100);
+   fClasses         = new THashList(800,3);
+   fIdMap           = new IdMap_t;
+   fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
 
    // initialize plugin manager early
@@ -786,28 +785,28 @@ const char *TROOT::FindObjectPathName(const TObject *) const
    return "??";
 }
 
-TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const 
+TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
-   // In particular we looking for possible alternative name (default template 
+   // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
-   
+
    TClass *cl = 0;
-   
+
    // We have not found the STL container yet.
    // First we are going to look for a similar name but different 'default' template
    // parameter (differences due to different STL implementation)
-   
+
    string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault )) ;
 
    if (defaultname != name) {
       cl = (TClass*)gROOT->GetListOfClasses()->FindObject(defaultname.c_str());
       if (load && !cl) cl = gROOT->LoadClass(defaultname.c_str());
-   } 
-     
+   }
+
    if (cl==0) {
 
-      // now look for a typedef 
+      // now look for a typedef
       // well for now the typedefing in CINT has some issues
       // for examples if we generated the dictionary for
       //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
@@ -816,7 +815,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       if (objType) {
          const char *typedfName = objType->GetTypeName();
          string defaultTypedefName(  TClassEdit::ShortType( typedfName, TClassEdit::kDropStlDefault ) );
-         
+
          if (typedfName && strcmp(typedfName, name) && defaultTypedefName==name) {
             cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
             if (load && !cl) cl = gROOT->LoadClass(typedfName);
@@ -825,7 +824,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
    }
    if (cl==0) {
       // Try the alternate name where all the typedefs are resolved:
-      
+
       const char *altname = gInterpreter->GetInterpreterTypeName(name);
       if (altname && strcmp(altname,name)!=0) {
          cl = gROOT->GetClass(altname,load);
@@ -865,7 +864,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       load = kTRUE;
 
       if (TClassEdit::IsSTLCont(name)) {
- 
+
          const char *altname = gInterpreter->GetInterpreterTypeName(name);
          if (altname && strcmp(altname,name)!=0) {
 
@@ -876,7 +875,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
             assert(newcl!=cl);
             cl->ReplaceWith(newcl);
             delete cl;
-            return newcl;    
+            return newcl;
          }
       }
 
@@ -884,10 +883,10 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
       if (!TClassEdit::IsSTLCont(name)) {
 
-         // If the name is actually an STL container we prefer the 
-         // short name rather than the true name (at least) in 
+         // If the name is actually an STL container we prefer the
+         // short name rather than the true name (at least) in
          // a first try!
-         
+
          TDataType *objType = GetType(name, load);
          if (objType) {
             const char *typdfName = objType->GetTypeName();
@@ -898,7 +897,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
          }
 
       } else {
-            
+
          cl = FindSTLClass(name,kFALSE);
 
          if (cl) {
@@ -1811,7 +1810,7 @@ const char *TROOT::GetMacroPath()
    // Get macro search path. Static utility function.
 
    TString &macroPath = ROOT::GetMacroPath();
-   
+
    if (macroPath.Length() == 0) {
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)0);
       if (macroPath.Length() == 0)

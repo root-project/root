@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.11 2003/10/13 18:20:18 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.12 2004/01/08 23:06:52 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -198,7 +198,7 @@ static void SetLibraryPath()
    static char msg[512];
 
 #  if defined(__linux) || defined(__alpha) || defined(__sgi) || \
-      defined(__sun) || defined(__FreeBSD__)
+      defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__)
    if (getenv("LD_LIBRARY_PATH"))
       sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
                                                 getenv("LD_LIBRARY_PATH"));
@@ -277,6 +277,10 @@ static void PrintUsage(char *pname)
    fprintf(stderr, "  -l : do not show splash screen\n");
    fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
    fprintf(stderr, "\n");
+   fprintf(stderr, "  -?      : print usage\n");
+   fprintf(stderr, "  -h      : print usage\n");
+   fprintf(stderr, "  -config : print ./configure options\n");
+   fprintf(stderr, "\n");
 }
 
 int main(int argc, char **argv)
@@ -302,9 +306,10 @@ int main(int argc, char **argv)
          PrintUsage(argv[0]);
          return 1;
       }
-      if (!strcmp(argv[i], "-b")) batch   = true;
-      if (!strcmp(argv[i], "-l")) gNoLogo = true;
-      if (!strcmp(argv[i], "-a")) about   = true;
+      if (!strcmp(argv[i], "-b"))      batch   = true;
+      if (!strcmp(argv[i], "-l"))      gNoLogo = true;
+      if (!strcmp(argv[i], "-a"))      about   = true;
+      if (!strcmp(argv[i], "-config")) gNoLogo = true;
    }
    if (batch)
       gNoLogo = true;

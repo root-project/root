@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.52 2004/02/05 10:05:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.53 2004/02/09 09:50:17 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -242,13 +242,16 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 {
    // Get and handle command line options. Arguments handled are removed
    // from the argument array. The following arguments are handled:
-   //    -? : help
-   //    -h : help
    //    -b : run in batch mode without graphics
    //    -n : do not execute logon and logoff macros as specified in .rootrc
    //    -q : exit after processing command line macro files
    //    -l : do not show splash screen
    // The last three options are only relevant in conjunction with TRint.
+   // The following help and info arguments are supported:
+   //    -?      : print usage
+   //    -h      : print usage
+   //    -config : print ./configure options
+
 
    fNoLog = kFALSE;
    fQuit  = kFALSE;
@@ -269,6 +272,13 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "  -l : do not show splash screen\n");
          fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
          fprintf(stderr, "\n");
+         fprintf(stderr, "  -?      : print usage\n");
+         fprintf(stderr, "  -h      : print usage\n");
+         fprintf(stderr, "  -config : print ./configure options\n");
+         fprintf(stderr, "\n");
+         Terminate(0);
+      } else if (!strcmp(argv[i], "-config")) {
+         fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
