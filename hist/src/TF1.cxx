@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.75 2003/11/07 16:27:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.76 2003/11/18 08:01:46 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -514,7 +514,7 @@ TF1::~TF1()
 }
 
 //______________________________________________________________________________
-TF1::TF1(const TF1 &f1) : TFormula(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
+TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
 {
 
    fXmin      = 0;
