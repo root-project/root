@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.43 2003/10/23 09:38:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.44 2003/12/11 13:39:22 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2187,6 +2187,7 @@ Double_t TMath::BesselI(Int_t n,Double_t x)
    if (n==0) return TMath::BesselI0(x);
    if (n==1) return TMath::BesselI1(x);
 
+   if (x == 0) return 0;
    if (TMath::Abs(x) > kBigPositive) return 0;
 
    Double_t tox = 2/TMath::Abs(x);
