@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: $
+ *    File: $Id: RooDMixDecay_Hadronic.cc,v 1.1 2002/03/28 02:29:38 mwilson Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -248,6 +248,11 @@ void RooDMixDecay_Hadronic::initGenerator(Int_t code)
   genMaxLife = (t2-t1)/(log(y1/y2));
   genMaxCoeff = y1*exp(t1/genMaxLife);
   if(genMaxCoeff < 1.0) genMaxCoeff = 1.0;
+
+  // extra paranoia, just in case the exponential is very close (or identical)
+  // to the PDF
+
+  genMaxCoeff *= 1.1;
 
   genMaxArea = genMaxCoeff * genMaxLife * (1 - exp(-genMaxT/genMaxLife));
 

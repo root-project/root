@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooUnblindOffset.cc,v 1.1 2001/11/20 04:00:55 verkerke Exp $
+ *    File: $Id: RooUnblindOffset.cc,v 1.2 2002/03/27 08:07:06 mwilson Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,7 +73,14 @@ RooUnblindOffset::~RooUnblindOffset()
 Double_t RooUnblindOffset::evaluate() const
 {
   // Evaluate RooBlindTools unhide-offset method on blind value
-  return _blindEngine.UnHideOffset(_value);
+
+  if (isHidden()) {
+    // Blinding is active for this event
+    return _blindEngine.UnHideOffset(_value);
+  } else {
+    // Blinding is not active for this event
+    return _value ;
+  }
 }
 
 
