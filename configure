@@ -14,6 +14,8 @@ RCONFIN=config/root-config.in
 RCONFOUT=bin/root-config
 ROOTRCIN=config/rootrc.in
 ROOTRCOUT=etc/system.rootrc
+MEMPROBEIN=config/memprobe.in
+MEMPROBEOUT=bin/memprobe
 TMAKEIN=test/Makefile.in
 TMAKEOUT=test/Makefile
 
@@ -117,14 +119,15 @@ else
    esac
 fi
 
-trap "rm -f Makefile.tmp config.tmp root-config.tmp TMakefile.tmp rootrc.tmp; \
-      exit 1" 1 2 3 15
+trap "rm -f Makefile.tmp config.tmp root-config.tmp TMakefile.tmp rootrc.tmp \
+      memprobe.tmp; exit 1" 1 2 3 15
 
 cp -f $MAKEIN Makefile.tmp
 cp -f $CONFIN config.tmp
 cp -f $RCONFIN root-config.tmp
 cp -f $TMAKEIN TMakefile.tmp
 cp -f $ROOTRCIN rootrc.tmp
+cp -f $MEMPROBEIN memprobe.tmp
 
 if [ $# -gt 0 ]; then
    while [ "$1" != "" ]; do
@@ -1482,6 +1485,17 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@iconpath@|$iconpath|"           \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
+echo "done"
+
+#---------------------------------------------------------------------
+# bin/memprobe
+#
+echo $ac_n "Writing $MEMPROBEOUT ... $ac_c"
+perlexe=`which perl`
+sed -e "s|@perl@|$perlexe|"                \
+   < memprobe.tmp > $MEMPROBEOUT
+rm -f memprobe.tmp
+chmod 755 $MEMPROBEOUT
 echo "done"
 
 ######################################################################
