@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.142 2004/10/01 16:30:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.143 2004/10/20 12:00:04 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2074,7 +2074,11 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       rwxmax = uxmax;
       npt = 100;
       if (fNpoints > npt) npt = fNpoints;
-      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+      if (gDirectory->GetList()->FindObject(GetName())) {
+         fHistogram = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+      } else {
+         fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+      }
       if (!fHistogram) return;
       fHistogram->SetMinimum(rwymin);
       fHistogram->SetBit(TH1::kNoStats);
