@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.61 2001/10/18 10:03:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.62 2001/10/23 09:20:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3269,6 +3269,7 @@ void TH1::UseCurrentStyle()
 
    fXaxis.ResetAttAxis("X");
    fYaxis.ResetAttAxis("Y");
+   fZaxis.ResetAttAxis("Z");
    SetBarOffset(gStyle->GetBarOffset());
    SetBarWidth(gStyle->GetBarWidth());
    SetFillColor(gStyle->GetHistFillColor());
