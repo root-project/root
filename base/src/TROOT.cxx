@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.10 2000/09/04 17:47:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.11 2000/09/05 09:12:11 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -459,7 +459,7 @@ TObject *TROOT::FindObject(const char *name) const
    if (!temp) temp   = fStyles->FindObject(name);
    if (!temp) temp   = fSpecials->FindObject(name);
    if (!temp && TClassTable::GetDict("TGeometry")) {
-      TObjArray *loc = (TObjArray*)ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
+      TObjArray *loc = (TObjArray*)((TROOT*)this)->ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
       if (loc) temp   = loc->At(0);
    }
    if (!temp && gDirectory) temp   = gDirectory->Get(name);
