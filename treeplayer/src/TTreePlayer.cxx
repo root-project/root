@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.111 2002/11/27 21:54:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.112 2002/12/02 18:50:11 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2204,19 +2204,25 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//      Root > t.Show(16);     // Read and show values of entry 16\n");
       fprintf(fpc,"//      Root > t.Loop();       // Loop on all entries\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"\n//     This is the loop skeleton\n");
+      fprintf(fpc,"\n//     This is the loop skeleton where:\n");
+      fprintf(fpc,"//    jentry is the global entry number in the chain\n");
+      fprintf(fpc,"//    ientry is the entry number in the current Tree\n");
+      fprintf(fpc,"//  Note that the argument to GetEntry must be:\n");
+      fprintf(fpc,"//    jentry for TChain::GetEntry\n");
+      fprintf(fpc,"//    ientry for TTree::GetEntry and TBranch::GetEntry\n");
+      fprintf(fpc,"//\n");
       fprintf(fpc,"//       To read only selected branches, Insert statements like:\n");
       fprintf(fpc,"// METHOD1:\n");
       fprintf(fpc,"//    fChain->SetBranchStatus(\"*\",0);  // disable all branches\n");
       fprintf(fpc,"//    fChain->SetBranchStatus(\"branchname\",1);  // activate branchname\n");
       fprintf(fpc,"// METHOD2: replace line\n");
-      fprintf(fpc,"//    fChain->GetEntry(i);  // read all branches\n");
-      fprintf(fpc,"//by  b_branchname->GetEntry(i); //read only this branch\n");
+      fprintf(fpc,"//    fChain->GetEntry(jentry);       //read all branches\n");
+      fprintf(fpc,"//by  b_branchname->GetEntry(ientry); //read only this branch\n");
       fprintf(fpc,"   if (fChain == 0) return;\n");
       fprintf(fpc,"\n   Int_t nentries = Int_t(fChain->GetEntriesFast());\n");
       fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
       fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
-      fprintf(fpc,"      Int_t ientry = LoadTree(jentry); //in case of a TChain, ientry is the entry number in the current file\n");
+      fprintf(fpc,"      Int_t ientry = LoadTree(jentry);\n");
       fprintf(fpc,"      if (ientry < 0) break;\n");
       fprintf(fpc,"      nb = fChain->GetEntry(jentry);   nbytes += nb;\n");
       fprintf(fpc,"      // if (Cut(ientry) < 0) continue;\n");
