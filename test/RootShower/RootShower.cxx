@@ -1118,7 +1118,6 @@ void RootShower::OnOpenFile(const Char_t *filename)
     // Opens a root file into which a previous event
     // has been saved.
     char   strtmp[256];
-    char   geofilename[128];
     Int_t  i;
     TFile *f = new TFile(filename);
     TTree *tree;
@@ -1135,10 +1134,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     f->Close();
 
     // take back detector dimensions for selection geometry
-    strncpy(geofilename,filename, strlen(filename)-5);
-    geofilename[strlen(filename)-5] = '\0';
-    strcat(geofilename, ".geom");
-    gGeoManager->Import(geofilename, "detector");
+    gGeoManager->Import(filename, "detector");
     Initialize(1);
 
     for(i=0;i<=fEvent->GetTotal();i++) {
@@ -1224,21 +1220,15 @@ void RootShower::OnSaveFile(const Char_t *filename)
     // Saves current event into a Root file
     TFile *hfile;
     char  strtmp[256];
-    char  geofilename[128];
-
-    strncpy(geofilename,filename, strlen(filename)-5);
-    geofilename[strlen(filename)-5] = '\0';
-    strcat(geofilename, ".geom");
-    hfile = new TFile(filename,"RECREATE","Root Shower file");
+    gGeoManager->Export(filename, "detector");
+    hfile = new TFile(filename,"UPDATE","Root Shower file");
     hfile->SetCompressionLevel(9);
-
     TTree *hTree = new TTree("RootShower","Root Shower tree");
     hTree->Branch("Event", "MyEvent", &fEvent, 8000, 2);
     hTree->Fill();  //fill the tree
     hTree->Write();
     hTree->Print();
     hfile->Close();
-    gGeoManager->Export(geofilename, "detector");
     sprintf(strtmp,"Root Shower Event Display - %s",filename);
     SetWindowName(strtmp);
 }
