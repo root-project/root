@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.2 2000/11/21 16:06:09 brun Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
    virtual void SetCanvas(TVirtualPad *c) { fSelectedCanvas = c; }
    virtual void SetBrowser(TBrowser *b) { fBrowser = b; }
    virtual void SetMethod(TMethod *m) { fSelectedMethod = m; }
-   virtual void SetObject(const char *name, const char *title) { TNamed::SetObject(name, title); }
+   virtual void SetNameTitle(const char *name, const char *title) { TNamed::SetNameTitle(name, title); }
    virtual void SetObject(TObject *o) { fSelectedObject = o; }
    virtual void SetPad(TVirtualPad *p) { fSelectedPad = p; }
 
