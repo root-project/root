@@ -112,9 +112,7 @@ endif
 ifeq ($(PLATFORM),win32)
 CINTS1       += $(MODDIRS)/winnt.c
 ifeq ($(VC_MAJOR),13)
-CINTS2       += $(MODDIRS)/vc7strm.cxx
-CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/longif3.cxx
+CINTS2       += $(MODDIRS)/vcstrm.cxx
 else
 CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
