@@ -605,8 +605,10 @@ endif
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	@$(MAKECINTDLLS) clean
+	-@mv -f rootd/misc/rootd.rc.d rootd/misc/rootd.rc.dd
 	@(find . -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
+	-@mv -f rootd/misc/rootd.rc.dd rootd/misc/rootd.rc.d
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
