@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.30 2004/06/10 19:55:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.31 2004/06/15 15:53:26 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1221,7 +1221,9 @@ void TSelectorDraw::TakeEstimate()
       }
 
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         h2->Draw(fOption.Data());
+         // we must draw a copy before filling this histogram
+	 TH1 *h2c = h2->DrawCopy(fOption.Data());
+	 h2c->SetStats(kFALSE);
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill,fV2,fV1);
