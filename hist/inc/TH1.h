@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.4 2000/06/28 14:35:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.5 2000/07/11 10:35:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -108,6 +108,7 @@ public:
     TH1(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     virtual ~TH1();
 
+    virtual void     Add(TF1 *h1, Double_t c1=1);
     virtual void     Add(TH1 *h1, Double_t c1=1);
     virtual void     Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
     virtual void     AddBinContent(Int_t bin);
@@ -116,6 +117,7 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
+    virtual void     Divide(TF1 *h1, Double_t c1=1);
     virtual void     Divide(TH1 *h1);
     virtual void     Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Draw(Option_t *option="");
@@ -195,6 +197,7 @@ public:
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t) {return 0;}
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) {return 0;}
     virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
+    virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Paint(Option_t *option="");
