@@ -72,7 +72,7 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = f77
 F77FLAGS      = $(ABI)
-ifeq (n32,$(findstring n32,$(ROOTBUILD)))
+ifeq ($(O32),)
 F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
