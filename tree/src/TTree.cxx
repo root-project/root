@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.41 2001/01/13 12:01:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.42 2001/01/15 07:39:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -767,6 +767,7 @@ void TTree::BuildStreamerInfo(TClass *cl, void *pointer)
    
    cl->BuildRealData(pointer);
    TStreamerInfo *sinfo = cl->GetStreamerInfo(cl->GetClassVersion());
+   //if (!sinfo->GetTypes() || sinfo->IsOptimized()) sinfo->BuildOld();
    if (gFile) {
       TArrayC *cindex = gFile->GetClassIndex();
       Int_t number = sinfo->GetNumber();
@@ -2058,28 +2059,7 @@ void TTree::Show(Int_t entry)
       len = TMath::Min(len,10);
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
-         if (leaf->IsA() == TLeafC::Class()) {
-            char *value = (char*)leaf->GetValuePointer();
-            printf("%s\n",value); break;
-         } else if (leaf->IsA() == TLeafB::Class()) {
-            char *value = (char*)leaf->GetValuePointer();
-            printf("%d",(Int_t)value[l]);
-         } else if (leaf->IsA() == TLeafS::Class()) {
-            Short_t *value = (Short_t*)leaf->GetValuePointer();
-            printf("%d",value[l]);
-         } else if (leaf->IsA() == TLeafI::Class()) {
-            Int_t *value = (Int_t*)leaf->GetValuePointer();
-            printf("%d",value[l]);
-         } else if (leaf->IsA() == TLeafF::Class()) {
-            Float_t *value = (Float_t*)leaf->GetValuePointer();
-            printf("%f",value[l]);
-         } else if (leaf->IsA() == TLeafD::Class()) {
-            Double_t *value = (Double_t*)leaf->GetValuePointer();
-            printf("%g",value[l]);
-         } else if (leaf->IsA() == TLeafObject::Class()) {
-            TObject *obj = (TObject*)leaf->GetValuePointer();
-            printf("%lx", (Long_t)obj);
-         }
+         leaf->PrintValue(l);
          if (l == len-1) printf("\n");
          else            printf(", ");
       }
@@ -2205,11 +2185,13 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int
       delobj = kTRUE;
    }
    //build the StreamerInfo if first time for the class
+   TStreamerInfo::Optimize(kFALSE);
    BuildStreamerInfo(cl,obj);
 
    // create a dummy top level trunk branch
    TStreamerInfo *sinfo = cl->GetStreamerInfo();
-   branch = new TBranchElement(sinfo,0,-1,addobj,bufsize,0);
+   branch = new TBranchElement(name,sinfo,-1,addobj,bufsize,0);
+   branch->SetName(name);
    fBranches.Add(branch);
    TObjArray *blist = branch->GetListOfBranches();   
    
@@ -2218,11 +2200,10 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *addobj, Int
    TStreamerElement *element;
    Int_t id = 0;
    while ((element = (TStreamerElement*)next())) {
-      TBranch *branch = new TBranchElement(sinfo,element,id,addobj,bufsize);
+      TBranch *branch = new TBranchElement(element->GetName(),sinfo,id,addobj,bufsize);
       blist->Add(branch);
       id++;
    }
-   Print();
          
    if (delobj) delete obj;
    return branch;
