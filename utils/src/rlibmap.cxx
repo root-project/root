@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:$:$Id:
+// @(#)root/utils:$Name:  $:$Id:
 // Author: Fons Rademakers   05/12/2003
 
 /*************************************************************************
@@ -23,39 +23,37 @@
 
 const char *usage = "Usage: %s [-f] [-o <libmapfile>] <sofile> <sofile> ...\n";
 
-#ifdef __linux
+#if defined(__linux)
 #if defined(__INTEL_COMPILER) || (__GNUC__ >= 3)
 const char *kNM = "nm --demangle=gnu-v3";
 #else
 const char *kNM = "nm -C";
 #endif
 const char  kDefined = 'T';
-#endif
-
-#ifdef __sun
+#elif defined (__sun)
 const char *kNM = "nm -C -p";
 const char  kDefined = 'T';
-#endif
-
-#ifdef __alpha
+#elif defined(__alpha)
 const char *kNM = "nm -B";
 const char  kDefined = 'T';
-#endif
-
-#ifdef __hpux
+#elif defined(__hpux)
 namespace std { }
 const char *kNM = "nm++ -p";
 const char  kDefined = 'T';
-#endif
-
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 const char *kNM = "nm";
 const char  kDefined = 'T';
-#endif
-
-#ifdef __sgi
+#elif defined(__sgi)
 const char *kNM = "nm -C";
 const char  kDefined = 'T';
+#elif defined(_AIX)
+const char *kNM = "nm -C";
+const char  kDefined = 'T';
+#elif defined(_WIN32)
+const char *kMN = "nm -C";
+const char  kDefined = 'T';
+#else
+#warning Platform specific case missing
 #endif
 
 using namespace std;
@@ -63,6 +61,8 @@ using namespace std;
 
 int libmap(const char *lib, int fullpath, FILE *fp)
 {
+   // Write libmap. Returns -1 in case of error.
+
    char *nm = new char [strlen(lib)+50];
 
 #if defined(__APPLE__)
@@ -72,10 +72,16 @@ int libmap(const char *lib, int fullpath, FILE *fp)
 #endif
 
    FILE *pf;
-   if ((pf = ::popen(nm, "r")) == 0) {
+#ifndef _WIN32
+   if ((pf = popen(nm, "r")) == 0) {
       fprintf(stderr, "cannot execute: %s\n", nm);
       return 1;
    }
+#else
+   // excute nm and write to tmp file, open tmp file on pf
+   pf = 0;
+   if (!pf) return -1;
+#endif
 
    map<string,bool> unique;
    char line[4096];
@@ -114,7 +120,11 @@ int libmap(const char *lib, int fullpath, FILE *fp)
       }
    }
 
-   ::pclose(pf);
+#ifndef _WIN32
+   pclose(pf);
+#else
+   close(pf);
+#endif
 
    const char *libbase = strrchr(lib, '/');
    if (libbase && !fullpath)
