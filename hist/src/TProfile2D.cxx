@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.24 2004/05/26 11:32:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.25 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1448,7 +1448,7 @@ void TProfile2D::SavePrimitive(ofstream &out, Option_t *option)
 
    char quote = '"';
    out <<"   "<<endl;
-   out <<"   "<<"ClassName()"<<" *";
+   out <<"   "<<ClassName()<<" *";
 
    out << GetName() << " = new " << ClassName() << "(" << quote
        << GetName() << quote << "," << quote<< GetTitle() << quote
