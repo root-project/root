@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.8 2004/04/20 14:48:01 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -255,16 +255,13 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
          py2 = fPad->YtoAbsPixel(fPad->GetY2());
       }
       gVirtualX->TranslateCoordinates(gVirtualX->GetWindowID(fPad->GetCanvasID()),
-                                 GetParent()->GetId(),
-                                 px1 + ((px2-px1) >> 1), py1,
-                                 x, y, wtarget);
+                                      GetParent()->GetId(),
+                                      px1 + ((px2-px1) >> 1), py1,
+                                      x, y, wtarget);
    }
 
-   Int_t   screenX, screenY;
-   UInt_t  screenW, screenH;     // width and height of screen
-
-   gVirtualX->GetWindowSize(gClient->GetRoot()->GetId(), screenX, screenY,
-                            screenW, screenH);
+   UInt_t screenW = fClient->GetDisplayWidth();
+   UInt_t screenH = fClient->GetDisplayHeight();
 
    if (x + fWidth > screenW)
       x = screenW - fWidth;
@@ -318,7 +315,7 @@ void TGToolTip::SetPosition(Int_t x, Int_t y)
 const TGString *TGToolTip::GetText() const
 {
    // Get the tool tip text.
-   
+
    return fLabel->GetText();
-   
+
 }
