@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.12 2000/07/06 07:38:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.13 2000/07/11 13:47:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -590,7 +590,9 @@ void TH1::Divide(TH1 *h1)
 //   if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //   Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
-//
+//   The resulting errors are calculated assuming uncorrelated histograms.
+//   See the other TH1::Divide that gives the possibility to optionaly
+//   compute Binomial errors.
 
    if (!h1) {
       Error("Divide","Attempt to divide a non-existing histogram");
@@ -664,6 +666,8 @@ void TH1::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 //   if errors are defined (see TH1::Sumw2), errors are also recalculated
 //   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
+//   The resulting errors are calculated assuming uncorrelated histograms.
+//   However, if option ="B" is specified, Binomial errors are computed.
 //
 
    TString opt = option;
