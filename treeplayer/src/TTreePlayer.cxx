@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.151 2003/12/17 15:20:48 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.152 2003/12/18 13:21:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1635,7 +1635,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // to process an event. It is the user's responsability to read\n");
       fprintf(fpc,"   // the corresponding entry in memory (may be just a partial read).\n");
       fprintf(fpc,"   // Once the entry is in memory one can apply a selection and if the\n");
-      fprintf(fpc,"   // event is selected histograms can be filled.\n");
+      fprintf(fpc,"   // event is selected histograms can be filled.\n\n");
+      fprintf(fpc,"   // WARNING when a selector is used with a TChain, you must use\n");
+      fprintf(fpc,"   //  the pointer to the current Tree to call GetEntry(entry).\n");
+      fprintf(fpc,"   //  entry is always the local entry number in the current tree.\n");
+      fprintf(fpc,"   //  Assuming that fChain is the pointer to the TChain being processed,\n");
+      fprintf(fpc,"   //  use fChain->GetTree()->GetEntry(entry);\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
