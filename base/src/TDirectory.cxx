@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.25 2002/05/18 08:51:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.27 2002/06/30 13:43:16 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "Bytes.h"
 #include "TStreamerInfo.h"
 #include "TRegexp.h"
+#include "TProcessUUID.h"
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
 
@@ -115,6 +116,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    Int_t cycle = gDirectory->AppendKey(key);
    key->WriteFile(cycle);
    fModified = kFALSE;
+   gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
 //______________________________________________________________________________
@@ -681,6 +683,7 @@ void TDirectory::FillBuffer(char *&buffer)
    tobuf(buffer, fSeekDir);
    tobuf(buffer, fSeekParent);
    tobuf(buffer, fSeekKeys);
+   fUUID.FillBuffer(buffer);
 }
 
 //______________________________________________________________________________
@@ -1240,6 +1243,7 @@ Int_t TDirectory::Sizeof() const
    nbytes     += sizeof fSeekDir;
    nbytes     += sizeof fSeekParent;
    nbytes     += sizeof fSeekKeys;
+   nbytes     += fUUID.Sizeof();
    return nbytes;
 }
 
@@ -1252,7 +1256,7 @@ void TDirectory::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Build();
       if (fFile && fFile->IsWritable()) fWritable = kTRUE;
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      Version_t v = b.ReadVersion();
       fDatimeC.Streamer(b);
       fDatimeM.Streamer(b);
       b >> fNbytesKeys;
@@ -1260,6 +1264,10 @@ void TDirectory::Streamer(TBuffer &b)
       b >> fSeekDir;
       b >> fSeekParent;
       b >> fSeekKeys;
+      if (v > 1) {
+         fUUID.Streamer(b);
+      }
+      gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
    } else {
       b.WriteVersion(TDirectory::IsA());
@@ -1270,6 +1278,7 @@ void TDirectory::Streamer(TBuffer &b)
       b << fSeekDir;
       b << fSeekParent;
       b << fSeekKeys;
+      fUUID.Streamer(b);
    }
 }
 
