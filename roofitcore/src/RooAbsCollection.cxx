@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.24 2003/05/14 02:58:39 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.25 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -706,4 +706,15 @@ void RooAbsCollection::printToStream(ostream& os, PrintOption opt, TString inden
     // Reset name field length, if modified
     if (nameFieldLength==0) RooAbsArg::nameFieldLength(0) ;
   }
+}
+
+
+void RooAbsCollection::dump() const 
+{
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    cout << arg << " " << arg->IsA()->GetName() << "::" << arg->GetName() << " (" << arg->GetTitle() << ")" << endl ;
+  }
+  delete iter ;
 }

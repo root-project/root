@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.44 2004/04/01 22:00:57 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.45 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1202,12 +1202,16 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
 {
   Bool_t ret(kFALSE) ;  
 
-//     cout << "RooPrdoPdf::redirectServersHook(" << this << ") recursive = " << (isRecursive?"T":"F") << " newServerList = " ;
-//     newServerList.Print("1") ;
+//    cout << "RooProdPdf::redirectServersHook(" << this << ") recursive = " << (isRecursive?"T":"F") << " newServerList = " ;
+//    newServerList.dump() ;
+//    cout << endl ;
 
   Int_t i ;
   for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
     RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
+//      cout << "contents of plist[" << i << "]" << endl ;
+//      plist->dump() ;
+//      cout << endl ;
 
       // Update non-owning lists
       TIterator* iter = plist->createIterator() ;
@@ -1215,12 +1219,27 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
       while(arg=(RooAbsArg*)iter->Next()) {
 	RooAbsArg* newArg = arg->findNewServer(newServerList,nameChange) ;
 	if (newArg) {
-//   	  cout << "replacing server " << arg->GetName() << "(" << arg << ") with (" << newArg << ") in partList[" << i << "]" << endl ;
+//    	  cout << "replacing server " << arg->GetName() << "(" << arg << ") with (" << newArg << ") in partList[" << i << "]" << endl ;
 	  plist->replace(*arg,*newArg) ;
 	}
       }
       delete iter ;      
     }
+
+
+  // Split newServerList in new product PDFs and other servers
+  RooArgSet newPdfServerList,newOtherServerList ;
+  TIterator* iter = newServerList.createIterator() ;
+  RooAbsArg* server ;
+  while(server=(RooAbsArg*)iter->Next()) {
+    if (_pdfList.find(server->GetName())) {
+      newPdfServerList.add(*server) ;
+    } else {
+      newOtherServerList.add(*server) ;
+    }
+  }
+  delete iter ;
+
 
   for (i=0 ; i<_partOwnedListMgr.cacheSize() ; i++) {
     RooArgList* plist = _partOwnedListMgr.getNormListByIndex(i) ;    
@@ -1228,6 +1247,8 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
     // Forward recurive redirection calls for owning lists
     // Only redirect links to component PDFs, recursive link direction
     // of servers of PDF is handled via the regular channels
+//      cout << "contents of pOwnedlist[" << i << "]" << endl ;
+//      plist->dump() ;
     
     TIterator* iter = plist->createIterator() ;
     RooAbsArg* arg ;
@@ -1237,9 +1258,10 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
 
       if (isRecursive) {
 		
-// 	cout << "RPP:rSH(" << this << "): recursivedRed newServerList on " << arg ->GetName() 
-// 	     << "(" << arg << ") in partOwnedList[" << i << "]" << endl ;
-	ret |= arg->recursiveRedirectServers(newServerList,kFALSE,nameChange) ;
+//  	cout << "RPP:rSH(" << this << "): recursivedRed newServerList on " << arg ->GetName() 
+//  	     << "(" << arg << ") in partOwnedList[" << i << "]" << endl ;
+	ret |= arg->recursiveRedirectServers(newPdfServerList,kFALSE,nameChange) ;
+	ret |= arg->recursiveRedirectServers(newOtherServerList,kFALSE,nameChange) ;
 
       } else {
 	
@@ -1248,9 +1270,15 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
 	TIterator* biter = branchList.createIterator() ;
 	RooAbsArg* branch ;
 	while(branch=(RooAbsArg*)biter->Next()) {
-// 	  cout << "RPP:rsH(" << this << ") redirect newServerList on " << branch ->GetName() 
-// 	       << "(" << branch << ") in partOwnedList[" << i << "]" << endl ;
-	  ret |= branch->redirectServers(newServerList,kFALSE,nameChange) ;	
+	  if (!_pdfList.find(branch->GetName())) {
+//  	    cout << "RPP:rsH(" << this << ") branch redirect newServerList on " << branch ->GetName() 
+//  		 << "(" << branch << ") in partOwnedList[" << i << "]" << endl ;
+	    ret |= branch->redirectServers(newPdfServerList,kFALSE,nameChange) ;	
+	    ret |= branch->redirectServers(newOtherServerList,kFALSE,nameChange) ;	
+	  } else {
+//  	    cout << "RPP:rsH(" << this << ") branch redirect newServerList on PDF branch " << branch ->GetName() 
+//  		 << "(" << branch << ") skipped" << endl ;
+	  }
 	}
 	delete biter ;
       }

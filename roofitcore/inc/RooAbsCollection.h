@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.rdl,v 1.16 2002/09/05 04:33:03 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.17 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -91,6 +91,8 @@ public:
   void setName(const char *name) { _name= name; }
   const char* GetName() const { return _name.Data() ; }
   Bool_t isOwning() const { return _ownCont ; }
+
+  void dump() const ;
 
 protected:
 
