@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.102 2003/09/05 12:55:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.103 2003/09/10 15:14:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -252,9 +252,9 @@ namespace ROOT {
 TROOT      *gROOT;         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
 
-// Global debug flag (set to != 0 to get debug output).
+// Global debug flag (set to > 0 to get debug output).
 // Can be set either via interpreter (gDebug is exported to CINT),
-// or via debugger. If set to > 4 X11 graphics will be in synchronous mode.
+// via the environment variable ROOTDEBUG, or via the debugger.
 Int_t       gDebug;
 
 
@@ -1226,6 +1226,13 @@ void TROOT::InitSystem()
       gEnv = new TEnv(".rootrc");
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
+
+      const char *sdeb;
+      if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
+         gDebug = atoi(sdeb);
+
+      if (gDebug > 0)
+         fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
 
       if (gEnv->GetValue("Root.MemStat", 0))
          TStorage::EnableStatistics();
