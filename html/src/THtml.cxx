@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.67 2004/08/12 14:23:41 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.68 2004/12/09 10:12:53 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -368,6 +368,8 @@ THtml::~THtml()
       delete[]fLine;
    if (fCounter)
       delete[]fCounter;
+
+   gROOT->GetListOfSpecials()->Remove(gHtml);
 
    fSourceDir = 0;
    fLen = 0;
