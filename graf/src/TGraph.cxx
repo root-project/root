@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -487,6 +487,7 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 //
 //   The list of fit options is given in parameter option.
 //      option = "W"  Set all errors to 1
+//             = "U" Use a User specified fitting algorithm (via SetFCN)
 //             = "Q" Quiet mode (minimum printing)
 //             = "V" Verbose mode (default is between Q and V)
 //             = "R" Use the Range specified in the function range
@@ -519,6 +520,14 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 //   Parameter 4 has boundaries [-10,-4] with initial value -8
 //   Parameter 5 is fixed to 100.
 //
+//   Changing the fitting function
+//   =============================
+//  By default the fitting function GraphFitChisquare is used.
+//  To specify a User defined fitting function, specify option "U" and
+//  call the following functions:
+//    TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+//  where MyFittingFunction is of type:
+//  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
@@ -538,10 +547,12 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
    fitOption.Nograph = 0;
    fitOption.Nostore = 0;
    fitOption.Plus    = 0;
+   fitOption.User    = 0;
 
    TString opt = option;
    opt.ToUpper();
 
+   if (opt.Contains("U")) fitOption.User    = 1;
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("W")) fitOption.W1      = 1;
@@ -607,7 +618,7 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 
 //*-*- Set error criterion for chisquare
    arglist[0] = 1;
-   grFitter->SetFCN(GraphFitChisquare);
+   if (!fitOption.User) grFitter->SetFCN(GraphFitChisquare);
    grFitter->ExecuteCommand("SET ERR",arglist,1);
 
 //*-*- Some initialisations
