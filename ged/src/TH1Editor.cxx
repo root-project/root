@@ -1411,7 +1411,9 @@ void TH1Editor::DoBinReleased()
       if (fApply->GetState()==kButtonDisabled) fApply->SetState(kButtonUp);
       Update();
    }
-   fPad->GetCanvas()->Selected(fPad, fHist,  0);      
+//   fPad->GetCanvas()->Selected(fPad, fHist,  0);      
+      fModel = fHist;
+      Refresh();
 }
 
 //______________________________________________________________________________
@@ -1582,7 +1584,9 @@ void TH1Editor::DoBinLabel()
    fBinSlider->SetPosition(div[0] - c +1);
    if (fDelaydraw->GetState()==kButtonUp) DoBinMoved(div[0] - c +1);
    else DoBinReleased(); 
-   fPad->GetCanvas()->Selected(fPad, fHist,  0);
+//   fPad->GetCanvas()->Selected(fPad, fHist,  0);
+   fModel = fHist;
+   Refresh();
 }
 
 //______________________________________________________________________________
@@ -1816,8 +1820,10 @@ void TH1Editor::DoCancel()
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
       if (divx[0]!=2) fBinSlider->SetPosition(1);
       // Consigning the new Histogram to all other Editors
-      fPad->GetCanvas()->Selected(fPad, fHist,  0);
+//      fPad->GetCanvas()->Selected(fPad, fHist,  0);
       Update();    
+      fModel = fHist;
+      Refresh();
    }
 }
 
