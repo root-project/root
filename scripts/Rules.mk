@@ -66,7 +66,7 @@ else
 endif
 
 clean:  $(CLEAN_TARGETS_DIR)
-	$(CMDECHO) rm -f main *Dict\.* Event.root *~ $(CLEAN_TARGETS)
+	$(CMDECHO) rm -rf main *Dict\.* Event.root *~ $(CLEAN_TARGETS)
 
 
 # here we guess the platform
