@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.6 2001/01/04 13:24:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.7 2001/01/07 15:30:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -24,9 +24,13 @@
 #ifndef ROOT_TDirectory
 #include "TDirectory.h"
 #endif
+#ifndef ROOT_TCache
+#include "TCache.h"
+#endif
 
 class TFree;
 class TArrayC;
+
 
 class TFile : public TDirectory {
 
@@ -114,6 +118,7 @@ public:
    virtual void      ShowStreamerInfo();
    virtual Int_t     Sizeof() const;
    void              SumBuffer(Int_t bufsize);
+   virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
    virtual Bool_t    WriteBuffer(const char *buf, Int_t len);
    virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void      WriteFree();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.19 2001/01/07 15:30:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.20 2001/01/11 14:34:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1019,6 +1019,15 @@ void TFile::SumBuffer(Int_t bufsize)
    fWritten++;
    fSumBuffer  += bufsize;
    fSum2Buffer += bufsize*bufsize;
+}
+
+//_______________________________________________________________________
+void TFile::UseCache(Int_t, Int_t)
+{
+   // Handle for cache management. Not needed for normal disk files since
+   // the operating system will do proper caching (via the "buffer cache").
+   // Overridden in TNetFile, TWebFile and TRFIOFile.
+
 }
 
 //______________________________________________________________________________
