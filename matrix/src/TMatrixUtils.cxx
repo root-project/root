@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.7 2002/09/09 05:37:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.9 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -1010,7 +1010,7 @@ void TMatrixFlat::operator=(const TMatrixFlat &mf)
    if (fMatrix != mf.fMatrix && AreCompatible(*fMatrix,*mf.fMatrix)) {
       Real_t *fp1 = fPtr;
       Real_t *fp2 = mf.fPtr;
-      while (fp1 < fPtr+fMatrix->fNElems)
+      while (fp1 < fPtr+fMatrix->fNelems)
          *fp1++ = *fp2++;
    }
 }
@@ -1030,7 +1030,7 @@ const Real_t &TMatrixFlat::operator()(Int_t i) const
 
    if (i >= fMatrix->fNelems || i < 0) {
       Error("TMatrixFlat", "TMatrixFlat index %d is out of boundaries [0,%d]",
-            i, fNelems-1);
+            i, fMatrix->fNelems-1);
       return err;
    }
 

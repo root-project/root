@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.16 2002/09/15 10:16:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.18 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -1035,7 +1035,7 @@ void TVector::ResizeTo(const TVector &v)
    TVector::ResizeTo(v.GetLwb(), v.GetUpb());
 }
 
-Real_t &TVector::operator()(Int_t ind) const
+const Real_t &TVector::operator()(Int_t ind) const
 {
    static Real_t err;
    err = 0.0;

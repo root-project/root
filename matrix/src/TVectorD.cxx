@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.15 2002/09/15 10:16:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.17 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1030,7 +1030,7 @@ void TVectorD::ResizeTo(const TVectorD &v)
    TVectorD::ResizeTo(v.GetLwb(), v.GetUpb());
 }
 
-Double_t &TVectorD::operator()(Int_t ind) const
+const Double_t &TVectorD::operator()(Int_t ind) const
 {
    static Double_t err;
    err = 0.0;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.8 2002/09/13 08:52:13 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.10 2002/10/23 21:56:31 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -870,16 +870,6 @@ Double_t &TMatrixDRow::operator[](Int_t i)
    return (Double_t&)((*(const TMatrixDRow *)this)(i));
 }
 
-const Double_t &TMatrixDRow::operator[](Int_t i) const
-{
-   return (Double_t&)((*(const TMatrixDRow *)this)(i));
-}
-
-Double_t &TMatrixDRow::operator[](Int_t i)
-{
-   return (Double_t&)((*(const TMatrixDRow *)this)(i));
-}
-
 TMatrixDColumn::TMatrixDColumn(const TMatrixD &matrix, Int_t col)
        : fMatrix(&matrix)
 {
@@ -1020,7 +1010,7 @@ void TMatrixDFlat::operator=(const TMatrixDFlat &mf)
    if (fMatrix != mf.fMatrix && AreCompatible(*fMatrix,*mf.fMatrix)) {
       Double_t *fp1 = fPtr;
       Double_t *fp2 = mf.fPtr;
-      while (fp1 < fPtr+fMatrix->fNElems)
+      while (fp1 < fPtr+fMatrix->fNelems)
          *fp1++ = *fp2++;
    }
 }
@@ -1040,7 +1030,7 @@ const Double_t &TMatrixDFlat::operator()(Int_t i) const
 
    if (i >= fMatrix->fNelems || i < 0) {
       Error("TMatrixDFlat", "TMatrixDFlat index %d is out of boundaries [0,%d]",
-            i, fNelems-1);
+            i, fMatrix->fNelems-1);
       return err;
    }
 

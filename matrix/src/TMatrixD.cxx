@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.28 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.29 2002/10/24 19:45:12 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2737,7 +2737,7 @@ TMatrixD &TMatrixD::Zero()
    return *this;
 }
 
-TMatrixD &TMatrixD::Apply(TElementActionD &action)
+TMatrixD &TMatrixD::Apply(const TElementActionD &action)
 {
    if (!IsValid())
       Error("Apply(TElementActionD&)", "matrix not initialized");
