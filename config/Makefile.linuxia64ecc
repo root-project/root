@@ -54,13 +54,17 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = efc
 F77FLAGS      =
-# check path for g2c
+# check path for libg2c and libfrtbegin
+LIBG2C       := $(shell gcc -print-file-name=libg2c.a | \
+                  awk '{ if ($$1 != "libg2c.a") print $$1}')
+LIBFRTBEGIN  := $(shell gcc -print-file-name=libfrtbegin.a | \
+                  awk '{ if ($$1 != "libfrtbegin.a") print $$1}')
 ifeq ($(ICC_MAJOR),8)
-F77LIBS       = `gcc -print-file-name=libg2c.a` \
+F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which efc | sed -e 's|bin/efc|lib|') \
                 -lF90 -lifcore
 else
-F77LIBS       = `gcc -print-file-name=libg2c.a` \
+F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which efc | sed -e 's|bin/efc|lib|') \
                 -lF90 -lCEPCF90 -lintrins
 endif
