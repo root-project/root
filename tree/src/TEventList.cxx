@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.10 2004/06/17 09:20:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.11 2004/07/02 21:51:29 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -225,6 +225,33 @@ Int_t TEventList::GetIndex(Int_t entry) const
 }
 
 //______________________________________________________________________________
+void TEventList::Intersect(const TEventList *alist)
+{
+   // Remove elements from this list that are NOT present in alist.
+
+   if (!alist) return;
+   if (!fList) return;
+
+   Int_t *newlist = new Int_t[fN];
+   Int_t newpos = 0;
+   Int_t i;
+   for (i=0;i<fN;i++) {
+      if (alist->GetIndex(fList[i]) >= 0) {
+         newlist[newpos] = fList[i];
+         newpos++;
+      }
+   }
+   delete [] fList;
+   fN    = newpos;
+   fList = newlist;
+
+   TCut orig = GetTitle();
+   TCut removed = alist->GetTitle();
+   TCut updated = orig && removed;
+   SetTitle(updated.GetTitle());
+}
+
+//______________________________________________________________________________
 Int_t TEventList::Merge(TCollection *list)
 {
 // Merge entries in all the TEventList in the collection in this event list
@@ -432,6 +459,14 @@ TEventList operator-(const TEventList &list1, const TEventList &list2)
 {
    TEventList newlist = list1;
    newlist.Subtract(&list2);
+   return newlist;
+}
+
+//______________________________________________________________________________
+TEventList operator*(const TEventList &list1, const TEventList &list2)
+{
+   TEventList newlist = list1;
+   newlist.Intersect(&list2);
    return newlist;
 }
 

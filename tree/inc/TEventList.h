@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.7 2004/01/02 09:27:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.8 2004/03/22 15:57:56 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
         virtual Int_t    GetN() const { return fN; }
         virtual Bool_t   GetReapplyCut() const { return fReapply; };
         virtual Int_t    GetSize() const { return fSize; }
+        virtual void     Intersect(const TEventList *list);
         virtual Int_t    Merge(TCollection *list);
         virtual void     Print(Option_t *option="") const;
         virtual void     Reset(Option_t *option="");
@@ -70,6 +71,7 @@ public:
         TEventList& operator=(const TEventList &list);
  friend TEventList  operator+(const TEventList &list1, const TEventList &list2);
  friend TEventList  operator-(const TEventList &list1, const TEventList &list2);
+ friend TEventList  operator*(const TEventList &list1, const TEventList &list2);
 
         ClassDef(TEventList,3)  //A list of selected entries in a TTree.
 };

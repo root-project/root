@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.17 2004/07/08 08:07:56 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.18 2004/08/20 14:54:53 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -65,5 +65,6 @@
 #pragma link C++ function operator!(const TCut&);
 #pragma link C++ function operator+(const TEventList&, const TEventList&);
 #pragma link C++ function operator-(const TEventList&, const TEventList&);
+#pragma link C++ function operator*(const TEventList&, const TEventList&);
 
 #endif
