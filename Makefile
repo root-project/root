@@ -406,7 +406,7 @@ distclean:: clean
 	-@mv -f include/config.h include/config.hh
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	-@mv -f include/config.hh include/config.h
-	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
+	@rm -f bin/*.dll bin/*.exp bin/*.lib \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                .def
 	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
@@ -472,7 +472,8 @@ install:
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
-	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
+	   if [ x"$(ARCH)" = x"win32gcc" ] || \
+              [ x"$(PLATFORM)" = x"win32" ]; then \
 	      vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
 	      for lib in $(ALLLIBS) $(CINTLIB); do \
 		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
@@ -485,11 +486,6 @@ install:
 	      done; \
 	   else \
 	      $(INSTALLDATA) lib/*              $(DESTDIR)$(LIBDIR); \
-              if [ x"$(PLATFORM)" = x"win32" ]; then \
-		 $(INSTALLDATA) lib/*.dll       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLL)       $(DESTDIR)$(BINDIR); \
-		 $(INSTALLDATA) $(GDKDLLS)      $(DESTDIR)$(BINDIR); \
-	      fi; \
 	   fi; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
