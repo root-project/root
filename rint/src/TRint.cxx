@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.11 2001/06/30 13:18:14 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.12 2001/09/20 17:07:23 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -194,7 +194,7 @@ void TRint::Run(Bool_t retrn)
    // Main application eventloop. First process files given on the command
    // line and then go into the main application event loop, unless the -q
    // command line option was specfied in which case the program terminates.
-   // When retrn is true this method returns even when -q was specified.
+   // When retrun is true this method returns even when -q was specified.
 
    Getlinem(kInit, GetPrompt());
 
