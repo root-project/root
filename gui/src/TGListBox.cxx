@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.23 2004/07/07 15:02:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.24 2004/09/06 14:12:51 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -323,14 +323,7 @@ TGLBContainer::~TGLBContainer()
 {
    // Delete the listbox container.
 
-   TGFrameElement *el;
-
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      delete el->fFrame;
-      delete el->fLayout;
-   }
+   Cleanup();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.61 2004/09/23 10:02:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.62 2004/10/15 15:36:41 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -434,8 +434,9 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
       while ((el = (TGFrameElement *) nextl())) {
          el->fFrame->DestroyWindow();
          delete el->fFrame;
+         fList->Remove(el);
+         delete el;
       }
-      fList->Clear();
 
       fCurrentName = new TGString(fCurrentList->GetName());
       fi = new TRootObjItem(this, fCurrentList->GetPicture(), fCurrentList->GetPicture(),

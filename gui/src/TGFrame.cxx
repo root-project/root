@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.97 2004/10/13 12:24:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.98 2004/10/15 15:36:41 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -219,6 +219,7 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
 TGFrame::~TGFrame()
 {
    // Destructor.
+
 }
 
 //______________________________________________________________________________
@@ -795,11 +796,23 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
-   if (fMustCleanup != kNoCleanup)
+   if (fMustCleanup != kNoCleanup) {
       Cleanup();
+   } else {
+      TGFrameElement *el;
+      TIter next(fList);
 
-   if (fList)
-      fList->Delete();
+      while ((el = (TGFrameElement *) next())) {
+         if (el->fFrame) {
+            el->fFrame->SetFrameElement(0);
+         }
+
+         if (el->fLayout) {
+            el->fLayout->fFE = 0;
+         }
+         delete el;
+      }
+   }
 
    delete fList;
    delete fLayoutManager;
@@ -856,22 +869,18 @@ void TGCompositeFrame::Cleanup()
 
    while ((el = (TGFrameElement *) next())) {
       if (el->fFrame) {
-         el->fFrame->SetFrameElement(0);
          delete el->fFrame;
-         el->fFrame = 0;
       }
 
       if (el->fLayout && (el->fLayout != fgDefaultHints) &&
           (el->fLayout->References() > 0)) {
          el->fLayout->RemoveReference();
          if (!el->fLayout->References()) {
-            el->fLayout->fFE = 0;
             delete el->fLayout;
-            el->fLayout = 0;
          }
       }
+      delete el;
    }
-   fList->Delete();
 }
 
 //______________________________________________________________________________
@@ -1021,9 +1030,11 @@ void TGCompositeFrame::MapSubwindows()
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
-      el->fFrame->MapSubwindows();
-      TGFrameElement *fe = el->fFrame->GetFrameElement();
-      if (fe) fe->fState |= kIsVisible;
+      if (el->fFrame) {
+         el->fFrame->MapSubwindows();
+         TGFrameElement *fe = el->fFrame->GetFrameElement();
+         if (fe) fe->fState |= kIsVisible;
+      }
    }
 }
 

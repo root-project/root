@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.25 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.26 2004/10/13 12:24:08 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -557,8 +557,9 @@ void TGContainer::RemoveAll()
    while ((el = (TGFrameElement *) next())) {
       el->fFrame->DestroyWindow();
       delete el->fFrame;
+      fList->Remove(el);
+      delete el;
    }
-   fList->Clear();
    fLastActiveEl = 0;
    fSelected = fTotal = 0;
 }
