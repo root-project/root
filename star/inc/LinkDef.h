@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.4 2001/03/04 22:15:26 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: LinkDef.h,v 1.5 2001/07/11 06:46:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -31,7 +31,7 @@
 #pragma link C++ class TGenericTable-;
 #pragma link C++ class TGenericTable::iterator!-;
 #pragma link C++ class TChair+;
-#pragma link C++ class TTableSorter!;
+#pragma link C++ class TTableSorter;
 #pragma link C++ class TPointsArray3D-;
 #pragma link C++ class TTablePoints+;
 #pragma link C++ class TTable3Points+;

@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.8 2001/02/07 08:18:15 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.9 2002/01/10 14:19:40 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.8 2001/02/07 08:18:15 brun Exp $
+// $Id: TTableSorter.cxx,v 1.9 2002/01/10 14:19:40 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -908,11 +908,6 @@ void TTableSorter::LearnTable()
     }
     break;
   }
-}
-
-TBuffer &operator>>(TBuffer &buf, TTableSorter *&obj)
-{
-   return buf;
 }
 
 #undef COMPAREVALUES
