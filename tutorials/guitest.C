@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.13 2001/12/05 10:59:57 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.14 2001/12/28 12:54:17 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1895,17 +1895,21 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    fMain = new TGTransientFrame(p, main, 10, 10, kHorizontalFrame);
    fMain->Connect("CloseWindow()", "EntryTestDlg", this, "CloseWindow()");
 
+  FontStruct_t myfont = gClient->GetFontByName("-adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1");
+  TGGC *myGC = new TGGC(TGLabel::GetDefaultGC());  // should be deleted to prevent leak
+  myGC->SetFont(gVirtualX->GetFontHandle(myfont));
+
    fF1 = new TGVerticalFrame(fMain, 200, 300);
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2, 2, 2, 2);
    fMain->AddFrame(fF1, fL1);
-   fL2 = new TGLayoutHints(kLHintsCenterY | kLHintsRight, 2, 2, 2, 2);
+   fL2 = new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2);
    for (int i = 0; i < 13; i++) {
       fF[i] = new TGHorizontalFrame(fF1, 200, 30);
       fF1->AddFrame(fF[i], fL2);
       fNumericEntries[i] = new TGNumberEntry(fF[i], numinit[i], 12, i + 20,
                                              (TGNumberFormat::EStyle) i);
       fF[i]->AddFrame(fNumericEntries[i], fL2);
-      fLabel[i] = new TGLabel(fF[i], numlabel[i]);
+      fLabel[i] = new TGLabel(fF[i], numlabel[i], myGC->GetGC(), myfont);
       fF[i]->AddFrame(fLabel[i], fL2);
    }
    fF2 = new TGVerticalFrame(fMain, 200, 500);
