@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.24 2003/07/25 17:22:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.25 2003/10/24 16:27:27 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -101,15 +101,6 @@ enum EMWMHints {
    kMWMDecorMenu     = BIT(4),
    kMWMDecorMinimize = BIT(5),
    kMWMDecorMaximize = BIT(6)
-};
-
-//---- mapping between key and window, used in TGMainFrame
-
-class TGMapKey : public TObject {
-public:
-   UInt_t     fKeyCode;
-   TGWindow  *fWindow;
-   TGMapKey(UInt_t keycode, TGWindow *w) { fKeyCode = keycode; fWindow = w; }
 };
 
 
@@ -356,6 +347,14 @@ class TGMainFrame : public TGCompositeFrame {
 
 protected:
    enum { kDontCallClose = BIT(14) };
+
+   // mapping between key and window
+   class TGMapKey : public TObject {
+   public:
+      UInt_t     fKeyCode;
+      TGWindow  *fWindow;
+      TGMapKey(UInt_t keycode, TGWindow *w) { fKeyCode = keycode; fWindow = w; }
+   };
 
    TList        *fBindList;     // list with key bindings
    TString       fWindowName;   // window name
