@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
+ * Package: RooFitModels
  *    File: $Id: RooDircPdf.rdl,v 1.2 2001/05/17 00:48:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,7 @@
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooArgSet.hh"
 
 class RooRealVar;
 
@@ -24,6 +25,7 @@ public:
 	     RooAbsReal& _refraction,  RooAbsReal& _mass, 
 	     RooAbsReal& _otherMass,   RooAbsReal& _coreMean,  RooAbsReal& _coreSigma, 
 	     RooAbsReal& _tailMean,    RooAbsReal& _tailSigma, RooAbsReal& _relNorm,
+             Double_t minMtmVal = 0.0, Double_t minThetaCVal = 0.0,
 	     Bool_t milliRadians = kFALSE) ;
   RooDircPdf(const RooDircPdf& other, const char* name=0) ;
   virtual TObject* clone() const { return new RooDircPdf(*this); }
@@ -32,7 +34,7 @@ public:
   // WVE - This is cheating, this PDF is not normalized.
   //       Making it so, would require major work, and may not be necessary 
   //       for the current analysis.
-  virtual Bool_t isSelfNormalized() const { return kTRUE ; }
+  virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kTRUE ; }
 
 protected:
 
@@ -47,6 +49,7 @@ protected:
   RooRealProxy tailSigma ;
   RooRealProxy relNorm ; 
   Bool_t _milliRadians ;
+  Double_t _minMtmVal, _minThetaCVal;
   
   Double_t evaluate(const RooDataSet* dset) const ;
 

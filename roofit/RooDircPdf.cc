@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitTools
+ * Package: RooFitModels
  *    File: $Id: RooDircPdf.cc,v 1.2 2001/05/17 00:48:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,8 +24,9 @@ RooDircPdf::RooDircPdf(const char *name, const char *title,
 		       RooAbsReal& _refraction,  RooAbsReal& _mass, 
 		       RooAbsReal& _otherMass,   RooAbsReal& _coreMean,  RooAbsReal& _coreSigma, 
 		       RooAbsReal& _tailMean,    RooAbsReal& _tailSigma, RooAbsReal& _relNorm,
-		       Bool_t milliRadians) :
-  RooAbsPdf(name,title), _milliRadians(milliRadians),
+		       Double_t minMtmVal, Double_t minThetaCVal, Bool_t milliRadians) :
+  RooAbsPdf(name,title), _minMtmVal(minMtmVal), _minThetaCVal(minThetaCVal), 
+  _milliRadians(milliRadians),
   drcMtm    ("drcMtm"    , "DIRC momentum"         , this, _drcMtm),
   thetaC    ("thetaC"    , "DIRC thetaC"           , this, _thetaC),
   refraction("refraction", "Refraction"            , this, _refraction),
@@ -41,7 +42,8 @@ RooDircPdf::RooDircPdf(const char *name, const char *title,
 
 
 RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) : 
-  RooAbsPdf(other,name), _milliRadians(other._milliRadians),
+  RooAbsPdf(other,name), _minMtmVal(other._minMtmVal), 
+  _minThetaCVal(other._minThetaCVal), _milliRadians(other._milliRadians),
   drcMtm    ("drcMtm"    , this, other.drcMtm),
   thetaC    ("thetaC"    , this, other.thetaC),
   refraction("refraction", this, other.refraction),
@@ -69,6 +71,16 @@ RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) :
 
 Double_t RooDircPdf::evaluate(const RooDataSet* dset) const
 {
+ 
+  // First test if we have a valid mtm range and Cerenkov angle values...
+  if (drcMtm < _minMtmVal) {
+    return 1.0;
+  }
+
+  if (thetaC < _minThetaCVal) {
+    return 1.0;
+  }
+
   static Double_t root2 = sqrt(2);  
   static Double_t rootpiby2 = sqrt(atan2(0.0,-1.0)/2.0) ;
 
@@ -103,7 +115,6 @@ Double_t RooDircPdf::evaluate(const RooDataSet* dset) const
 
   Double_t coreScale = root2*coreSigma;
   Double_t coreNorm(0.0), corePart(0.0);
-  Double_t relNorm(0.0);
     
   if (coreSigma > 0.0) {
     Double_t erf1 = erf((thetaC.max() - coreMeanTmp)/coreScale);
@@ -135,6 +146,7 @@ Double_t RooDircPdf::evaluate(const RooDataSet* dset) const
   }
 
   Double_t result = corePart + tailPart;
+
   return result;
 
 
