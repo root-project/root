@@ -121,9 +121,13 @@ void rootgeom()
    //--- close the geometry
    geom->CloseGeometry();
    
-   //--- draw the ROOT box
+   //--- draw the ROOT box.
+   // by default the picture will appear in the standard ROOT TPad.
+   //if you have activated the following line in system.rootrc, 
+   //it will appear in the GL viewer
+   //#Viewer3D.DefaultDrawOption:   ogl
+   
    geom->SetVisLevel(4);
    top->Draw();
-   if (gPad && !gROOT->IsBatch()) gPad->x3d();
 }   
    
