@@ -112,7 +112,6 @@ class map {
 		typedef map::reference reference;
 
 		iterator();
-		iterator(_Nodeptr _Pnode);
 		reference operator*() const;
 		pointer operator->() const;
 		iterator& operator++();

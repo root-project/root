@@ -107,7 +107,6 @@ class multimap {
 		typedef multimap::reference reference;
 
 		iterator();
-		iterator(_Nodeptr _Pnode);
 		reference operator*() const;
 		pointer operator->() const;
 		iterator& operator++();
