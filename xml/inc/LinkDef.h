@@ -1,4 +1,4 @@
-/* @(#)root/xml:$Name:  $:$Id: LinkDef.h,v 1.2 2004/05/10 23:50:27 rdm Exp $ */
+/* @(#)root/xml:$Name:  $:$Id: LinkDef.h,v 1.3 2004/06/25 16:30:16 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,5 @@
 #pragma link C++ class TXMLFile;
 #pragma link C++ class TXMLKey;
 #pragma link C++ class TXMLDtdGenerator;
-#pragma link C++ class TXMLPlayer;
 
 #endif
