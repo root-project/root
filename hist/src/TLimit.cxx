@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.8 2004/03/12 17:01:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.9 2004/03/12 23:01:55 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -116,19 +116,17 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    // The random generator used...
    TRandom *myrandom = generator ? generator : new TRandom3;
    // Compute some total quantities on all the channels
-   Int_t nbins   = 0;
    Int_t maxbins = 0;
    Double_t nsig = 0;
    Double_t nbg  = 0;
    Int_t ncand   = 0;
    Int_t i;
    for (i = 0; i <= data->GetSignal()->GetLast(); i++) {
-      nbins  += ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX();
-      maxbins = ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() > maxbins ?
-	        ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 1 : maxbins;
-      nsig   += ((TH1D *) (data->GetSignal()->At(i)))->Integral();
-      nbg    += ((TH1D *) (data->GetBackground()->At(i)))->Integral();
-      ncand  += (Int_t) ((TH1D *) (data->GetCandidates()->At(i)))->Integral();
+      maxbins = (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) > maxbins ?
+	        (((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 2) : maxbins;
+      nsig   +=  ((TH1D *) (data->GetSignal()->At(i)))->Integral();
+      nbg    +=  ((TH1D *) (data->GetBackground()->At(i)))->Integral();
+      ncand  +=  (Int_t) ((TH1D *) (data->GetCandidates()->At(i)))->Integral();
    }
    result->SetBtot(nbg);
    result->SetStot(nsig);
@@ -137,7 +135,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    fgTable->Set(maxbins * (data->GetSignal()->GetLast() + 1));
    for (Int_t channel = 0; channel <= data->GetSignal()->GetLast(); channel++)
       for (Int_t bin = 0;
-           bin <= ((TH1D *) (data->GetSignal()->At(channel)))->GetNbinsX();
+           bin <= ((TH1D *) (data->GetSignal()->At(channel)))->GetNbinsX()+1;
            bin++) {
          Double_t s = (Double_t) ((TH1D *) (data->GetSignal()->At(channel)))->GetBinContent(bin);
          Double_t b = (Double_t) ((TH1D *) (data->GetBackground()->At(channel)))->GetBinContent(bin);
@@ -179,7 +177,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
-              bin <=((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX();
+              bin <=((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX()+1;
               bin++) {
             if ((Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
                // s+b hypothesis
