@@ -1,17 +1,17 @@
 
 Processing testBoolOpt.C...
                   for : left()||right() Ndim= 1, Npar= 0, Noper= 4
- fExpr[0] = bool left()  fOper = 200000
- fExpr[1] = || opt  fOper = 120022
- fExpr[2] = bool right()  fOper = 201000
- fExpr[3] = ||  fOper = 61
+ fExpr[0] = bool left()  fActions = 145 fActionParams = 0 
+ fExpr[1] = || checkpoint  fActions = 142 fActionParams = 22 
+ fExpr[2] = bool right()  fActions = 145 fActionParams = 1000 
+ fExpr[3] = ||  fActions = 61 fActionParams = 0 
                  fand : !left()&&!right() Ndim= 1, Npar= 0, Noper= 6
- fExpr[0] = bool left()  fOper = 200000
- fExpr[1] = !  fOper = 68
- fExpr[2] = && opt  fOper = 120031
- fExpr[3] = bool right()  fOper = 201000
- fExpr[4] = !  fOper = 68
- fExpr[5] = &&  fOper = 60
+ fExpr[0] = bool left()  fActions = 145 fActionParams = 0 
+ fExpr[1] = !  fActions = 68 fActionParams = 0 
+ fExpr[2] = && checkpoint  fActions = 142 fActionParams = 31 
+ fExpr[3] = bool right()  fActions = 145 fActionParams = 1000 
+ fExpr[4] = !  fActions = 68 fActionParams = 0 
+ fExpr[5] = &&  fActions = 60 fActionParams = 0 
 regular C++: left() || right()
 running left side
 TFormula: left() || right()
