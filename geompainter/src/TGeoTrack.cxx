@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.1 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrack.cxx,v 1.2 2003/06/17 09:13:56 brun Exp $
 // Author: Andrei Gheata  2003/04/10
 
 /*************************************************************************
@@ -576,7 +576,7 @@ void TGeoTrack::PaintTrack(Option_t *option)
 }
    
 //______________________________________________________________________________
-void TGeoTrack::Print(Option_t */*option*/) const
+void TGeoTrack::Print(Option_t * /*option*/) const
 {
    Int_t np = fNpoints>>2;
    printf(" TGeoTrack%6i : %s  ===============================\n", fId,GetName());
