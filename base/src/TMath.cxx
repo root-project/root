@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.29 2002/10/10 17:08:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.30 2002/10/22 08:19:29 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -239,7 +239,7 @@ Double_t TMath::Erfc(Double_t x)
 Double_t TMath::Factorial(Int_t n)
 {
    // Compute factorial(n)
-   
+
   if(n <= 0) return 1.;
   Double_t x=1;
   Int_t b=0;
@@ -750,31 +750,31 @@ Double_t TMath::KolmogorovProb(Double_t z)
 Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 {
    // Computation of Voigt function (normalised).
-   // Voigt is a convolution of 
+   // Voigt is a convolution of
    // gauss(x) = 1/(sqrt(2*pi)*sigma) * exp(x*x/(2*sigma*sigma)
    // and
    // lorentz(x) = (1/pi) * (lg/2) / (x*x + g*g/4)
    // functions.
    //
-   // The Voigt function is known to be the real part of Faddeeva function also 
+   // The Voigt function is known to be the real part of Faddeeva function also
    // called complex error function [2].
    //
    // The algoritm was developed by J. Humlicek [1].
-   // This code is based on fortran code presented by R. J. Wells [2]. 
+   // This code is based on fortran code presented by R. J. Wells [2].
    // Translated and adapted by Miha D. Puc
    //
-   // To calculate the Faddeeva function with relative error less than 10^(-R). 
-   // R can be set by the the user subject to the constraints 2 <= R <= 5. 
+   // To calculate the Faddeeva function with relative error less than 10^(-R).
+   // R can be set by the the user subject to the constraints 2 <= R <= 5.
    //
    // [1] J. Humlicek, JQSRT, 21, 437 (1982).
-   // [2] R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its 
+   // [2] R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its
    // Derivatives" JQSRT 62 (1999), pp 29-48.
    // http://www-atm.physics.ox.ac.uk/user/wells/voigt.html
 
    if ((sigma < 0 || lg < 0) || (sigma==0 && lg==0)) {
       return 0;  // Not meant to be for those who want to be thinner than 0
    }
-   
+
    if (sigma == 0) {
       return lg * 0.159154943  / (x*x + lg*lg /4); //pure Lorentz
    }
@@ -786,7 +786,7 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    Double_t X, Y, K;
    X = x / sigma / 1.41421356;
    Y = lg / 2 / sigma / 1.41421356;
-   
+
    Double_t R0, R1;
 
    if (R < 2) R = 2;
@@ -797,9 +797,9 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 
    // Constants
 
-   const Double_t RRTPI = 0.56418958;  // 1/SQRT(pi) 
- 
-   Double_t Y0, Y0PY0, Y0Q;                      // for CPF12 algorithm 
+   const Double_t RRTPI = 0.56418958;  // 1/SQRT(pi)
+
+   Double_t Y0, Y0PY0, Y0Q;                      // for CPF12 algorithm
    Y0 = 1.5;
    Y0PY0 = Y0 + Y0;
    Y0Q = Y0 * Y0;
@@ -810,133 +810,133 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
 
    // Local variables
 
-   int J;					 // Loop variables 
-   int RG1, RG2, RG3; 				 // y polynomial flags 
+   int J;					 // Loop variables
+   int RG1, RG2, RG3; 				 // y polynomial flags
    Double_t ABX, XQ, YQ, YRRTPI; 		 // --x--, x^2, y^2, y/SQRT(pi)
-   Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4; 	 // --x-- on region boundaries 
-   Double_t A0=0, D0=0, D2=0, E0=0, E2=0, E4=0, H0=0, H2=0, H4=0, H6=0;// W4 temporary variables 
-   Double_t P0=0, P2=0, P4=0, P6=0, P8=0, Z0=0, Z2=0, Z4=0, Z6=0, Z8=0; 
-   Double_t XP[6], XM[6], YP[6], YM[6];          // CPF12 temporary values 
-   Double_t MQ[6], PQ[6], MF[6], PF[6]; 
+   Double_t XLIM0, XLIM1, XLIM2, XLIM3, XLIM4; 	 // --x-- on region boundaries
+   Double_t A0=0, D0=0, D2=0, E0=0, E2=0, E4=0, H0=0, H2=0, H4=0, H6=0;// W4 temporary variables
+   Double_t P0=0, P2=0, P4=0, P6=0, P8=0, Z0=0, Z2=0, Z4=0, Z6=0, Z8=0;
+   Double_t XP[6], XM[6], YP[6], YM[6];          // CPF12 temporary values
+   Double_t MQ[6], PQ[6], MF[6], PF[6];
    Double_t D, YF, YPY0, YPY0Q;
 
    //***** Start of executable code *****************************************
 
-   RG1 = 1;  // Set flags 
-   RG2 = 1;  
-   RG3 = 1; 
-   YQ = Y * Y;  // y^2 
+   RG1 = 1;  // Set flags
+   RG2 = 1;
+   RG3 = 1;
+   YQ = Y * Y;  // y^2
    YRRTPI = Y * RRTPI;  // y/SQRT(pi)
 
    // Region boundaries when both K and L are required or when R<>4
 
    XLIM0 = R0 - Y;
-   XLIM1 = R1 - Y; 
-   XLIM3 = 3.097 * Y - 0.45; 
+   XLIM1 = R1 - Y;
+   XLIM3 = 3.097 * Y - 0.45;
    XLIM2 = 6.8 - Y;
-   XLIM4 = 18.1 * Y + 1.65; 
+   XLIM4 = 18.1 * Y + 1.65;
    if ( Y <= 1e-6 ) { 	                   // When y<10^-6 avoid W4 algorithm.
-      XLIM1 = XLIM0; 	
+      XLIM1 = XLIM0; 
       XLIM2 = XLIM0;
    }
 
-   ABX = fabs(X); 				 // |x| 
-   XQ = ABX * ABX;			         // x^2 
+   ABX = fabs(X); 				 // |x|
+   XQ = ABX * ABX;			         // x^2
    if ( ABX > XLIM0 ) { 			 // Region 0 algorithm
-      K = YRRTPI / (XQ + YQ); 
+      K = YRRTPI / (XQ + YQ);
    } else if ( ABX > XLIM1 ) { 			 // Humlicek W4 Region 1
       if ( RG1 != 0 ) { 			 // First point in Region 1
-	 RG1 = 0; 
-	 A0 = YQ + 0.5; 			 // Region 1 y-dependents 
-	 D0 = A0*A0; 
+	 RG1 = 0;
+	 A0 = YQ + 0.5; 			 // Region 1 y-dependents
+	 D0 = A0*A0;
 	 D2 = YQ + YQ - 1.0;
       }
-      D = RRTPI / (D0 + XQ*(D2 + XQ)); 
-      K = D * Y * (A0 + XQ); 
+      D = RRTPI / (D0 + XQ*(D2 + XQ));
+      K = D * Y * (A0 + XQ);
    } else if ( ABX > XLIM2 ) { 			 // Humlicek W4 Region 2
       if ( RG2 != 0 ) { 			 // First point in Region 2
-	 RG2 = 0; 
+	 RG2 = 0;
 	 H0 = 0.5625 + YQ * (4.5 + YQ * (10.5 + YQ * (6.0 + YQ)));
-	                                         // Region 2 y-dependents 
+	                                         // Region 2 y-dependents
 	 H2 = -4.5 + YQ * (9.0 + YQ * ( 6.0 + YQ * 4.0));
 	 H4 = 10.5 - YQ * (6.0 - YQ * 6.0);
-	 H6 = -6.0 + YQ * 4.0; 
+	 H6 = -6.0 + YQ * 4.0;
 	 E0 = 1.875 + YQ * (8.25 + YQ * (5.5 + YQ));
 	 E2 = 5.25 + YQ * (1.0 + YQ * 3.0);
 	 E4 = 0.75 * H6;
       }
-      D = RRTPI / (H0 + XQ * (H2 + XQ * (H4 + XQ * (H6 + XQ)))); 
+      D = RRTPI / (H0 + XQ * (H2 + XQ * (H4 + XQ * (H6 + XQ))));
       K = D * Y * (E0 + XQ * (E2 + XQ * (E4 + XQ)));
    } else if ( ABX < XLIM3 ) { 			 // Humlicek W4 Region 3
       if ( RG3 != 0 ) { 			 // First point in Region 3
-	 RG3 = 0; 
-	 Z0 = 272.1014 + Y * (1280.829 + Y * 
-			      (2802.870 + Y * 
-			       (3764.966 + Y * 
-				(3447.629 + Y * 
-				 (2256.981 + Y * 
-				  (1074.409 + Y * 
-				   (369.1989  + Y * 
-				    (88.26741 + Y * 
+	 RG3 = 0;
+	 Z0 = 272.1014 + Y * (1280.829 + Y *
+			      (2802.870 + Y *
+			       (3764.966 + Y *
+				(3447.629 + Y *
+				 (2256.981 + Y *
+				  (1074.409 + Y *
+				   (369.1989  + Y *
+				    (88.26741 + Y *
 				     (13.39880 + Y)
-				     ))))))));   // Region 3 y-dependents 
-	 Z2 = 211.678 + Y * (902.3066 + Y * 
-			     (1758.336 + Y * 
-			      (2037.310 + Y * 
-			       (1549.675 + Y * 
-				(793.4273 + Y * 
-				 (266.2987 + Y * 
+				     ))))))));   // Region 3 y-dependents
+	 Z2 = 211.678 + Y * (902.3066 + Y *
+			     (1758.336 + Y *
+			      (2037.310 + Y *
+			       (1549.675 + Y *
+				(793.4273 + Y *
+				 (266.2987 + Y *
 				  (53.59518 + Y * 5.0)
 				  ))))));
-	 Z4 = 78.86585 + Y * (308.1852 + Y * 
-			      (497.3014 + Y * 
-			       (479.2576 + Y * 
-				(269.2916 + Y * 
+	 Z4 = 78.86585 + Y * (308.1852 + Y *
+			      (497.3014 + Y *
+			       (479.2576 + Y *
+				(269.2916 + Y *
 				 (80.39278 + Y * 10.0)
 				 ))));
-	 Z6 = 22.03523 + Y * (55.02933 + Y * 
-			      (92.75679 + Y * 
+	 Z6 = 22.03523 + Y * (55.02933 + Y *
+			      (92.75679 + Y *
 			       (53.59518 + Y * 10.0)
 			       ));
 	 Z8 = 1.496460 + Y * (13.39880 + Y * 5.0);
-	 P0 = 153.5168 + Y * (549.3954 + Y * 
-			      (919.4955 + Y * 
-			       (946.8970 + Y * 
-				(662.8097 + Y * 
-				 (328.2151 + Y * 
-				  (115.3772 + Y * 
-				   (27.93941 + Y * 
+	 P0 = 153.5168 + Y * (549.3954 + Y *
+			      (919.4955 + Y *
+			       (946.8970 + Y *
+				(662.8097 + Y *
+				 (328.2151 + Y *
+				  (115.3772 + Y *
+				   (27.93941 + Y *
 				    (4.264678 + Y * 0.3183291)
 				    )))))));
-	 P2 = -34.16955 + Y * (-1.322256+ Y * 
-			       (124.5975 + Y * 
-				(189.7730 + Y * 
-				 (139.4665 + Y * 
-				  (56.81652 + Y * 
+	 P2 = -34.16955 + Y * (-1.322256+ Y *
+			       (124.5975 + Y *
+				(189.7730 + Y *
+				 (139.4665 + Y *
+				  (56.81652 + Y *
 				   (12.79458 + Y * 1.2733163)
 				   )))));
-	 P4 = 2.584042 + Y * (10.46332 + Y * 
-			      (24.01655 + Y * 
-			       (29.81482 + Y * 
+	 P4 = 2.584042 + Y * (10.46332 + Y *
+			      (24.01655 + Y *
+			       (29.81482 + Y *
 				(12.79568 + Y * 1.9099744)
 				)));
-	 P6 = -0.07272979 + Y * (0.9377051 + Y * 
+	 P6 = -0.07272979 + Y * (0.9377051 + Y *
 				 (4.266322 + Y * 1.273316));
-	 P8 = 0.0005480304 + Y * 0.3183291; 
+	 P8 = 0.0005480304 + Y * 0.3183291;
       }
-      D = 1.7724538 / (Z0 + XQ * (Z2 + XQ * (Z4 + XQ * (Z6 + XQ * (Z8 + XQ))))); 
+      D = 1.7724538 / (Z0 + XQ * (Z2 + XQ * (Z4 + XQ * (Z6 + XQ * (Z8 + XQ)))));
       K = D * (P0 + XQ * (P2 + XQ * (P4 + XQ * (P6 + XQ * P8))));
    } else { 					 // Humlicek CPF12 algorithm
-      YPY0 = Y + Y0; 
+      YPY0 = Y + Y0;
       YPY0Q = YPY0 * YPY0;
       K = 0.0;
       for (J = 0; J <= 5; J++) {
 	 D = X - T[J];
-	 MQ[J] = D * D; 
+	 MQ[J] = D * D;
 	 MF[J] = 1.0 / (MQ[J] + YPY0Q);
-	 XM[J] = MF[J] * D; 
-	 YM[J] = MF[J] * YPY0; 
-	 D = X + T[J]; 
+	 XM[J] = MF[J] * D;
+	 YM[J] = MF[J] * YPY0;
+	 D = X + T[J];
 	 PQ[J] = D * D;
 	 PF[J] = 1.0 / (PQ[J] + YPY0Q);
 	 XP[J] = PF[J] * D;
@@ -949,13 +949,13 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
       } else { 					 // Humlicek CPF12 Region II
 	 YF = Y + Y0PY0;
 	 for ( J = 0; J <= 5; J++) {
-	    K = K + (C[J] * 
+	    K = K + (C[J] *
 		     (MQ[J] * MF[J] - Y0 * YM[J])
-		     + S[J] * YF * XM[J]) / (MQ[J]+Y0Q) 
-	       + (C[J] * (PQ[J] * PF[J] - Y0 * YP[J]) 
+		     + S[J] * YF * XM[J]) / (MQ[J]+Y0Q)
+	       + (C[J] * (PQ[J] * PF[J] - Y0 * YP[J])
 		  - S[J] * YF * XP[J]) / (PQ[J]+Y0Q);
-	 } 
-	 K = Y * K + exp( -XQ ); 
+	 }
+	 K = Y * K + exp( -XQ );
       }
    }
    return K / 2.506628 / sigma; // Normalize by dividing by sqrt(2*pi)*sigma.
@@ -2401,7 +2401,7 @@ Double_t TMath::Struve(Int_t n, Double_t x)
    Double_t alfa, h, r, y, b0, b1, b2;
    Double_t v = TMath::Abs(x);
 
-   switch(n) {
+   switch (n) {
       //___________________________________________________________
       case 0: {
          v = TMath::Abs(x);
@@ -2409,6 +2409,7 @@ Double_t TMath::Struve(Int_t n, Double_t x)
             y = v/8;
             h = 2*y*y -1;
             alfa = h + h;
+            b0 = 0;
             b1 = 0;
             b2 = 0;
             for (i = n1; i >= 0; --i) {
@@ -2421,6 +2422,7 @@ Double_t TMath::Struve(Int_t n, Double_t x)
             r = 1/v;
             h = 128*r*r -1;
             alfa = h + h;
+            b0 = 0;
             b1 = 0;
             b2 = 0;
             for (i = n2; i >= 0; --i) {
@@ -2450,6 +2452,7 @@ Double_t TMath::Struve(Int_t n, Double_t x)
          } else if (v < 8) {
             h = v*v/32 -1;
             alfa = h + h;
+            b0 = 0;
             b1 = 0;
             b2 = 0;
             for (i = n3; i >= 0; --i) {
@@ -2461,6 +2464,7 @@ Double_t TMath::Struve(Int_t n, Double_t x)
          } else {
             h = 128/(v*v) -1;
             alfa = h + h;
+            b0 = 0;
             b1 = 0;
             b2 = 0;
             for (i = n4; i >= 0; --i) {
