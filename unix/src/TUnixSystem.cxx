@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.42 2002/10/25 00:44:54 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.43 2002/11/18 23:02:19 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -994,7 +994,7 @@ needshell:
    } else
       strcat(cmd, stuffedPat);
 
-   if ((pf = ::popen(&cmd[0], "r")) == NULL) {
+   if ((pf = ::popen(&cmd[0], "r")) == 0) {
       fLastErrorString = GetError();
       return kTRUE;
    }
