@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.3 2000/08/16 13:33:46 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.4 2001/04/21 20:30:26 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -20,7 +20,7 @@
 #include <ctype.h>
 #include <iostream.h>
 #include "TFile.h"
-#include "TDirectory.h"
+#include "TDirectory.h" 
 #include "TTree.h"
 #include "TLeafI.h"
 #include "TH1.h"
@@ -696,6 +696,7 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
      }
      TBranch *branch = tree->Branch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
      boolflag[i] = -10;
+     charflag[i] = 0;
      if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
      bufpos += isize*ielem;
      if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}
