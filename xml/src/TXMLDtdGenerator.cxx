@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.cxx,v 1.6 2004/05/14 14:30:46 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLDtdGenerator.cxx,v 1.7 2004/05/17 12:29:11 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -513,7 +513,8 @@ void TXMLDtdGenerator::ProduceGeneralDtd(ofstream& fs, TClass* onlyclass) {
 
 //______________________________________________________________________________
 void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
-   for (int n=0;n<MaxBaseTypeNum;n++)
+   int n;
+   for (n=0;n<MaxBaseTypeNum;n++)
      fUsedBaseTypes[n] = kFALSE;
 
    fClassSpace.Clear();
@@ -569,7 +570,6 @@ void TXMLDtdGenerator::ProduceSpecificDtd(ofstream& fs, TClass* onlyclass) {
    }
 */
 
-   int n;
    for (n=0;n<MaxBaseTypeNum;n++) {
       const char* iname = dtdBaseTypeName(n);
       if (strlen(iname)>0)
