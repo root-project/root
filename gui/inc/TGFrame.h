@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.6 2000/10/13 09:56:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.7 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -145,6 +145,7 @@ protected:
 
    virtual void DoRedraw();
    virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
+   virtual void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
    TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -169,18 +170,20 @@ public:
    virtual Bool_t HandleSelectionRequest(Event_t *) { return kFALSE; }
    virtual Bool_t HandleSelectionClear(Event_t *) { return kFALSE; }
    virtual Bool_t HandleColormapChange(Event_t *) { return kFALSE; }
+   virtual void   ProcessedEvent(Event_t *event)
+                 { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
 
-   virtual void SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
+   virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
-   virtual void Move(Int_t x, Int_t y);
-   virtual void Resize(UInt_t w, UInt_t h);
-   virtual void Resize(TGDimension size);
-   virtual void MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual void   Move(Int_t x, Int_t y);
+   virtual void   Resize(UInt_t w, UInt_t h);
+   virtual void   Resize(TGDimension size);
+   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual UInt_t GetDefaultWidth() const { return GetDefaultSize().fWidth; }
    virtual UInt_t GetDefaultHeight() const { return GetDefaultSize().fHeight; }
    virtual TGDimension GetDefaultSize() const
-      { return TGDimension(fWidth, fHeight); }
+                          { return TGDimension(fWidth, fHeight); }
 
    virtual ULong_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(ULong_t back);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.5 2000/10/13 09:56:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.6 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -348,6 +348,9 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
          //Warning("HandleEvent", "unknown event (%#x) for (%#x)", event->fType, fId);
          break;
    }
+
+   if (TestBit(kNotDeleted))
+      ProcessedEvent(event);  // emit signal
 
    return kTRUE;
 }
