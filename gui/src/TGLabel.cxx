@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.11 2004/08/21 07:05:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.12 2004/08/24 10:42:14 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -124,8 +124,9 @@ void TGLabel::DoRedraw()
 
    int x, y;
 
+   TGFrame::DoRedraw();
+
    if (fTextChanged) {
-      TGFrame::DoRedraw();
       fTextChanged = kFALSE;
    }
 
