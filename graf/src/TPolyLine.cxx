@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.6 2001/04/10 06:25:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.7 2001/05/31 21:36:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -409,7 +409,7 @@ void TPolyLine::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TPolyLine::SavePrimitive(ofstream &out, Option_t *)
+void TPolyLine::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -429,7 +429,8 @@ void TPolyLine::SavePrimitive(ofstream &out, Option_t *)
    for (Int_t i=0;i<fN;i++) {
       out<<"   pline->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
    }
-   out<<"   pline->Draw();"<<endl;
+   out<<"   pline->Draw("
+      <<quote<<option<<quote<<");"<<endl;
 }
 
 //______________________________________________________________________________

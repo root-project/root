@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.6 2001/09/19 20:05:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -162,7 +162,7 @@ void TPolyMarker::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TPolyMarker::SavePrimitive(ofstream &out, Option_t *)
+void TPolyMarker::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
@@ -181,7 +181,8 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *)
    for (Int_t i=0;i<fN;i++) {
       out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
    }
-   out<<"   pmarker->Draw();"<<endl;
+   out<<"   pmarker->Draw("
+      <<quote<<option<<quote<<");"<<endl;
 }
 
 //______________________________________________________________________________
