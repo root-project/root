@@ -170,10 +170,19 @@ char *string;
 	}
 	break;
       case '"':
-	if('"'==string[itemp+1]) itemp+=2;
+	if('"'==string[itemp+1]) {
+#ifndef G__OLDIMPLEMENTATION1416
+	  ++itemp;
+#else
+	  itemp+=2;
+#endif
+	}
 #ifndef G__OLDIMPLEMENTATION998
 	else if(G__NOLINK==G__globalcomp) 
 	  G__genericerror("Error: String literal syntax error");
+#endif
+#ifndef G__OLDIMPLEMENTATION1416
+	continue;
 #endif
       default:
 	temp[itemp2++] = string[itemp];

@@ -5,6 +5,11 @@
 #pragma link off global PREC_STL_SET;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
 
 // Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
@@ -165,18 +170,18 @@ class set {
   //key_compare   key_comp() const;
   //value_compare value_comp() const;
   // set operations:
-#ifndef G__HPUX
-  iterator  find(const Key& x) const;
-#else
+#if defined(G__HPUX) || defined(G__VISUAL)
   iterator  find(const Key& x) ;
+#else
+  iterator  find(const Key& x) const;
 #endif
   size_type count(const Key& x) const;
-#ifndef G__HPUX
-  iterator  lower_bound(const Key& x) const;
-  iterator  upper_bound(const Key& x) const;
-#else
+#if defined(G__HPUX) || defined(G__VISUAL)
   iterator  lower_bound(const Key& x) ;
   iterator  upper_bound(const Key& x) ;
+#else
+  iterator  lower_bound(const Key& x) const;
+  iterator  upper_bound(const Key& x) const;
 #endif
   //pair<iterator,iterator> equal_range(const Key& x) const;
 

@@ -63,7 +63,13 @@ char *buf;
      strcmp(buf,"signed")==0 ||
      strcmp(buf,"int")==0 ||
      strcmp(buf,"long")==0 ||
-     strcmp(buf,"short")==0) {
+     strcmp(buf,"short")==0
+#ifndef G__OLDIMPLEMENTATION1419
+     || strcmp(buf,"volatile")==0 
+     || strcmp(buf,"register")==0 
+     || strcmp(buf,"typename")==0 
+#endif
+     ) {
     return(1);
   }
   else {
@@ -140,8 +146,20 @@ char *string,*endmark;
 	string[i] = '\0';  /* temporarily close the string */
 	if(tmpltnest) {
 	  if(G__isstoragekeyword(pp)) {
+#ifndef G__OLDIMPLEMENTATION1419
+	    if(strcmp("typename",pp)==0) {
+	      i -= 8;
+	      c=' ';
+	      ignoreflag = 1;
+	    }
+	    else {
+	      pp=string+i+1;
+	      c=' ';
+	    }
+#else
 	    pp=string+i+1;
 	    c=' ';
+#endif
 	    break;
 	  }
 #ifndef G__OLDIMPLEMENTATION1317
@@ -620,8 +638,20 @@ char *string,*endmark;
 #ifndef G__OLDIMPLEMENTATION608
 	string[i] = '\0';
 	if(G__isstoragekeyword(pp)) {
+#ifndef G__OLDIMPLEMENTATION1419
+	  if(strcmp("typename",pp)==0) {
+	    i -= 8;
+	    c=' ';
+	    ignoreflag = 1;
+	  }
+	  else {
+	    pp=string+i+1;
+	    c=' ';
+	  }
+#else
 	  c=' ';
 	  pp=string+i+1;
+#endif
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1317
@@ -866,8 +896,20 @@ char *string,*endmark;
 #ifndef G__OLDIMPLEMENTATION608
 	string[i] = '\0';
 	if(G__isstoragekeyword(pp)) {
+#ifndef G__OLDIMPLEMENTATION1419
+	  if(strcmp("typename",pp)==0) {
+	    i -= 8;
+	    c=' ';
+	    ignoreflag = 1;
+	  }
+	  else {
+	    pp=string+i+1;
+	    c=' ';
+	  }
+#else
 	  c=' ';
 	  pp=string+i+1;
+#endif
 	  break;
 	}
 #ifndef G__OLDIMPLEMENTATION1317

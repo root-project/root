@@ -1802,6 +1802,8 @@ G__value *rslt;
 	    strncmp("pwd",com,3)==0 ||
 	    strncmp("cp",com,2)==0 ||
 	    strncmp("copy",com,4)==0 ||
+	    strncmp("gmake",com,5)==0 ||
+	    strncmp("make",com,4)==0 ||
 	    strncmp("mv",com,2)==0 ||
 	    strncmp("move",com,4)==0 ||
 	    strncmp("mkdir",com,5)==0 ||

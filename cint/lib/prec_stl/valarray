@@ -5,6 +5,11 @@
 #pragma link off global PREC_STL_VALARRAY;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
 
 // Imported from ANSI/ISO C++ 1997/Nov draft 
 // Got some ideas from Scott Snyder, Fermi-lab

@@ -148,6 +148,7 @@ struct G__dictposition *dictpos;
 #endif
   G__free_struct_upto(dictpos->tagnum);
 
+#ifdef G__OLDIMPLEMENTATION1418
   /*************************************************************
    * Free string constant
    *************************************************************/
@@ -155,6 +156,7 @@ struct G__dictposition *dictpos;
   fprintf(G__memhist,"Freeing string constants\n");
 #endif
   G__free_string_upto(dictpos->conststringpos);
+#endif
 
   /*************************************************************
    * Free typedef table

@@ -697,6 +697,9 @@ char *temp;
 #ifndef G__OLDIMPLEMENTATION1414
      strcmp(temp,"register")==0||
 #endif
+#ifndef G__OLDIMPLEMENTATION1419
+     strcmp(temp,"typename")==0||
+#endif
      -1!=G__defined_typename(temp)||
      -1!=G__defined_tagname(temp,2)||
      G__defined_templateclass(temp)) {
@@ -1818,7 +1821,11 @@ int func_now;
 #endif
     }
     while(strcmp(paraname,"const")==0 || strcmp(paraname,"register")==0 ||
-       strcmp(paraname,"auto")==0 || strcmp(paraname,"volatile")==0) {
+       strcmp(paraname,"auto")==0 || strcmp(paraname,"volatile")==0
+#ifndef G__OLDIMPLEMENTATION1419
+	  || strcmp(paraname,"typename")==0
+#endif
+	  ) {
       if(strcmp(paraname,"const")==0) 
 	ifunc->para_isconst[func_now][iin]|=G__CONSTVAR;
       c=G__fgetname_template(paraname,",)&*[(=");

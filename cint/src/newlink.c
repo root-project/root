@@ -6128,7 +6128,11 @@ int link_stub;
     if(strncmp(buf,"class+protected",6)==0) protectedaccess = 1;
 #endif
 #endif /* 1257 */
+#ifndef G__OLDIMPLEMENTATION1417
+    c = G__fgetstream_template(buf,";\n\r");
+#else
     c = G__fgetstream(buf,";\n\r");
+#endif
 #ifndef G__OLDIMPLEMENtATION1257
     for (iirf = 0; iirf < 3; iirf++) {
       if (buf[strlen(buf)-1] == '-') {

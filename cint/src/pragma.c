@@ -217,6 +217,11 @@ int G__pragma()
     G__specify_link(G__SPECIFYSTUB); /* look into newlink.c file for detail */
   }
 
+  else if(strcmp(command,"mask_newdelete")==0) {
+    c = G__fgetstream(command,";\n\r");
+    G__is_operator_newdelete |= G__int(G__calc_internal(command));
+  }
+
 #ifdef G__SECURITY
   else if(strcmp(command,"security")==0) {
     c = G__fgetstream(command,";\n\r");
