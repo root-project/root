@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.15 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.h,v 1.16 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -77,7 +77,6 @@ public:
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    Double_t             &Phi1()          {return fPhi1;}
    Double_t             &Dphi()          {return fDphi;}

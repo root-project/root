@@ -27,7 +27,7 @@ GEOMH1       := TGeoAtt.h TGeoBoolNode.h \
                 TGeoMatrix.h TGeoVolume.h TGeoNode.h \
                 TGeoVoxelFinder.h TGeoShape.h TGeoBBox.h \
                 TGeoPara.h TGeoTube.h TGeoTorus.h TGeoSphere.h \
-                TGeoEltu.h TGeoCone.h TGeoPcon.h \
+                TGeoEltu.h TGeoHype.h TGeoCone.h TGeoPcon.h \
                 TGeoPgon.h TGeoArb8.h TGeoTrd1.h TGeoTrd2.h \
                 TGeoManager.h TGeoCompositeShape.h \
                 TVirtualGeoPainter.h TVirtualGeoTrack.h \

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.14 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.15 2004/11/08 09:56:24 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -640,14 +640,6 @@ void TGeoXtru::InspectShape() const
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
-
-//_____________________________________________________________________________
-void *TGeoXtru::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeXtru3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 void TGeoXtru::Paint(Option_t *option)

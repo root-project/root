@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.44 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.45 2004/11/18 14:37:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -573,14 +573,6 @@ void TGeoTube::InspectShape() const
 }
 
 //_____________________________________________________________________________
-void *TGeoTube::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeTube3DBuffer(vol);
-}
-
-//_____________________________________________________________________________
 void TGeoTube::Paint(Option_t *option)
 {
    // Paint this shape according to option
@@ -593,7 +585,9 @@ void TGeoTube::Paint(Option_t *option)
    TBuffer3D *buff = gPad->AllocateBuffer3D(24, 0, 0);
    if (!buff) return;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
-   if (buff->fOption == TBuffer3D::kOGL) {
+   // What is below is WRONG. Disable it until fixed
+   if (0) {
+   if (buff->fOption == TBuffer3D::kOGL && !TestShapeBit(kGeoEltu)) {
       buff->fNbPnts  = 3;
       buff->fNbSegs  = 0;
       buff->fNbPols  = 0;
@@ -628,6 +622,7 @@ void TGeoTube::Paint(Option_t *option)
 
       buff->Paint(option);
       return;
+   }
    }
 
    Int_t NbPnts = 4*n;
@@ -1463,14 +1458,6 @@ void TGeoTubeSeg::InspectShape() const
    printf("    phi2 = %11.5f\n", fPhi2);
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
-}
-
-//_____________________________________________________________________________
-void *TGeoTubeSeg::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeTubs3DBuffer(vol);
 }
 
 //_____________________________________________________________________________

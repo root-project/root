@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.8 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.9 2004/11/08 09:56:24 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -274,14 +274,6 @@ void TGeoParaboloid::InspectShape() const
    printf("    dz     = %11.5f\n", fDz);
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
-}
-
-//_____________________________________________________________________________
-void *TGeoParaboloid::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeParaboloid3DBuffer(vol);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.16 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.17 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -490,14 +490,6 @@ void TGeoTorus::InspectShape() const
    printf("    Dphi = %11.5f\n", fDphi);
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
-}
-
-//_____________________________________________________________________________
-void *TGeoTorus::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeTorus3DBuffer(vol);
 }
 
 //_____________________________________________________________________________

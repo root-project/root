@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.46 2004/11/03 08:39:47 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.47 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -560,7 +560,10 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    if (!view) {
       view = new TView(11);
       view->SetAutoRange(kTRUE);
-      PaintOverlap(overlap, "range");
+      TBuffer3D *buff = gPad->GetBuffer3D();
+      buff->fOption = TBuffer3D::kRANGE;
+      PaintOverlap(ovlp, "range");
+      buff->fOption = TBuffer3D::kPAD;
       view->SetAutoRange(kFALSE);
       overlap->GetPolyMarker()->Draw("SAME");
       if (has_pad) gPad->Update();
@@ -834,6 +837,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    if (!fGeom) return;
    TGeoOverlap *overlap = (TGeoOverlap *)ovlp;
    if (!overlap) return;
+   Int_t color, transparency;
    if (fOverlap != overlap) fOverlap = overlap;
    TGeoHMatrix *hmat = fGeom->GetGLMatrix();
    TGeoVolume *vol = overlap->GetVolume();
@@ -841,227 +845,56 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
    fGeom->SetMatrixTransform(kTRUE);
    if (fOverlap->IsExtrusion()) {
       if (!fVisLock) fVisVolumes->Add(vol);
-      fOverlap->SetLineColor(3);
-      fOverlap->SetLineWidth(vol->GetLineWidth());
       *hmat = gGeoIdentity;
+      gGeoManager->SetPaintVolume(vol);
+      color = vol->GetLineColor();
+      transparency = vol->GetTransparency();
+      vol->SetLineColor(3);
+      vol->SetTransparency(49);
+      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
       vol->GetShape()->Paint(option);
+      vol->SetLineColor(color);
+      vol->SetTransparency(transparency);
       node1 = overlap->GetNode(0);
       *hmat = node1->GetMatrix();
       vol = node1->GetVolume();
       if (!fVisLock) fVisVolumes->Add(vol);
-      fOverlap->SetLineColor(4);
-      fOverlap->SetLineWidth(vol->GetLineWidth());
+      gGeoManager->SetPaintVolume(vol);
+      color = vol->GetLineColor();
+      vol->SetLineColor(4);
+      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
       vol->GetShape()->Paint(option);
+      vol->SetLineColor(color);
    } else {
       node1 = overlap->GetNode(0);
       vol = node1->GetVolume();
-      fOverlap->SetLineColor(3);
-      fOverlap->SetLineWidth(vol->GetLineWidth());
       *hmat = node1->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
+      gGeoManager->SetPaintVolume(vol);
+      color = vol->GetLineColor();
+      transparency = vol->GetTransparency();
+      vol->SetLineColor(3);
+      vol->SetTransparency(40);
+      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
       vol->GetShape()->Paint(option);
+      vol->SetLineColor(color);
+      vol->SetTransparency(transparency);
       node2 = overlap->GetNode(1);
       vol = node2->GetVolume();
-      fOverlap->SetLineColor(4);
-      fOverlap->SetLineWidth(vol->GetLineWidth());
       *hmat = node2->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
+      gGeoManager->SetPaintVolume(vol);
+      color = vol->GetLineColor();
+      transparency = vol->GetTransparency();
+      vol->SetLineColor(4);
+      vol->SetTransparency(40);
+      if (!strstr(option,"range")) ((TAttLine*)vol)->Modify();
       vol->GetShape()->Paint(option);
+      vol->SetLineColor(color);
+      vol->SetTransparency(transparency);
    }     
    fGeom->SetMatrixTransform(kFALSE);
    fVisLock = kTRUE;
-}
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeBox3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-   const Int_t numpoints = 8;
-
-   buff->numPoints = 8;
-
-   Double_t *points = new Double_t[3*numpoints];
-   TGeoShape *shape = vol->GetShape();
-
-   shape->SetPoints(points);
-
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeTorus3DBuffer(const TGeoVolume *vol)
-{
-// Create a torus 3D buffer for a given shape.
-   Int_t n = fNsegments+1;
-   TGeoShape *shape = vol->GetShape();
-   TGeoTorus *tor = (TGeoTorus*)shape;
-   if (!tor) return 0;
-   X3DPoints *buff = new X3DPoints;
-   Int_t numpoints = n*(n-1);
-   Bool_t hasrmin = (tor->GetRmin()>0)?kTRUE:kFALSE;
-   Bool_t hasphi  = (tor->GetDphi()<360)?kTRUE:kFALSE;
-   if (hasrmin) numpoints *= 2;
-   else if (hasphi) numpoints += 2;
-   Double_t *points = new Double_t[3*numpoints];
-   if (!points) return 0;
-
-   shape->SetPoints(points);
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-   Int_t n = fNsegments;
-   Int_t numpoints = 4*n;
-
-   Double_t *points = new Double_t[3*numpoints];
-   TGeoShape *shape = vol->GetShape();
-   Double_t rmin = 0.;
-   if (shape->TestShapeBit(TGeoShape::kGeoTube)) rmin=((TGeoTube*)shape)->GetRmin();
-   else rmin=((TGeoCone*)shape)->GetRmin1()+((TGeoCone*)shape)->GetRmin2();
-
-   shape->SetPoints(points);
-
-   if (rmin==0.) {
-      Int_t inew = numpoints/2;
-      Double_t *ptn = new Double_t[3*inew];
-      memcpy(&ptn[0], &points[3*n], 3*n*sizeof(Double_t));
-      memcpy(&ptn[3*n], &points[9*n], 3*n*sizeof(Double_t));
-      delete [] points;
-      points = ptn;
-      numpoints = inew;
-   }
-
-   buff->numPoints = numpoints;
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeXtru3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-   TGeoXtru *xtru = (TGeoXtru*)vol->GetShape();
-   Int_t numpoints = xtru->GetNz()*xtru->GetNvert();
-
-   buff->numPoints = numpoints;
-
-   Double_t *points = new Double_t[3*numpoints];
-
-   xtru->SetPoints(points);
-
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeParaboloid3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-   TGeoShape *shape = vol->GetShape();
-   Int_t numpoints = shape->GetNmeshVertices();
-
-   buff->numPoints = numpoints;
-
-   Double_t *points = new Double_t[3*numpoints];
-
-   shape->SetPoints(points);
-
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeTubs3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-
-   const Int_t n = fNsegments+1;
-   const Int_t numpoints = 4*n;
-
-   //*-* Allocate memory for points *-*
-
-   Double_t *points = new Double_t[3*numpoints];
-
-   buff->numPoints =   numpoints;
-
-   TGeoShape *shape = vol->GetShape();
-   shape->SetPoints(points);
-   buff->points = points;
-   return buff;
-}   
-
-//______________________________________________________________________________
-void *TGeoPainter::MakeSphere3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-
-   TGeoShape *shape = vol->GetShape();
-   ((TGeoSphere*)shape)->SetNumberOfDivisions(fNsegments);
-   const Int_t n = ((TGeoSphere*)shape)->GetNumberOfDivisions()+1;
-   Int_t nz = ((TGeoSphere*)shape)->GetNz()+1;
-   if (nz < 2) return 0;
-   Int_t numpoints = 2*n*nz;
-   if (numpoints <= 0) return 0;
-
-   //*-* Allocate memory for points *-*
-
-   Double_t *points = new Double_t[3*numpoints];
-
-   buff->numPoints = numpoints;
-
-   shape->SetPoints(points);
-   buff->points = points;
-   return buff;
-}
-
-//______________________________________________________________________________
-void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
-{
-// Create a box 3D buffer for a given shape.
-   X3DPoints *buff = new X3DPoints;
-
-   TGeoPcon *shape = (TGeoPcon*)vol->GetShape();
-   const Int_t n = shape->GetNsegments()+1;
-   Int_t nz = shape->GetNz();
-   if (nz < 2) return 0;
-   Int_t numpoints =  nz*2*n;
-   if (numpoints <= 0) return 0;
-   Double_t *points = new Double_t[3*numpoints];
-   shape->SetPoints(points);
-   if (shape->GetDphi()==360.) {
-      Double_t *ptn = new Double_t[3*numpoints];
-      Int_t inew = 0;
-      for (Int_t i=0; i<nz; i++) {
-         if (shape->GetRmin(i)>0.) {
-            memcpy(&ptn[3*inew], &points[6*i*n], 6*n*sizeof(Double_t));
-            inew += 2*n;
-         } else {
-            memcpy(&ptn[3*inew], &points[6*i*n+3*n], 3*n*sizeof(Double_t));
-            inew += n;
-         }
-      }
-      if (inew<numpoints) {
-         delete [] points;
-         numpoints = inew;
-         points = new Double_t[3*numpoints];
-         memcpy(points, ptn, 3*numpoints*sizeof(Double_t));
-      }
-      delete [] ptn;
-   }
-   buff->numPoints = numpoints;
-   buff->points = points;
-   return buff;
 }
 
 //______________________________________________________________________________

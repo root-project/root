@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.25 2004/08/13 07:38:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.26 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -69,7 +69,8 @@ enum EShapeType {
    kGeoClosedShape = BIT(26),
    kGeoXtru    = BIT(27),
    kGeoParaboloid = BIT(28),
-   kGeoHalfSpace  = BIT(29)
+   kGeoHalfSpace  = BIT(29),
+   kGeoHype    = BIT(30)
 };
 
 protected :
@@ -116,7 +117,6 @@ public:
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const              = 0;
    static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option)                 = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;

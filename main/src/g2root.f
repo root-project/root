@@ -703,6 +703,20 @@ C
       endif
       if(ishape.eq.11)npar0=4
       if(ishape.eq.12)npar0=3
+**HYPE
+      if (ishape.eq.14) then
+         hyrmin = qjv(jpar+1)
+         hyrmax = qjv(jpar+2)
+         hydz = qjv(jpar+3)
+         hyst = qjv(jpar+4)
+         dummypars(1) = hyrmin
+         dummypars(2) = hyst
+         dummypars(3) = hyrmax
+         dummypars(4) = hyst
+         dummypars(5) = hydz
+         npar0 = -5
+       endif  
+         
 *      print 2351, cname(1:n1),kshap(ishape)
 * 2351      format('Volume:',a, ' shape=',a)
       if (npar.le.0) then
@@ -711,7 +725,7 @@ C
        return
       endif
       if(npar0.le.0)then
-         call toreals(npar0,dummypars(1),creals,ncr)
+         call toreals(-npar0,dummypars(1),creals,ncr)
       else
          call toreals(npar0,qjv(7),creals,ncr)
       endif

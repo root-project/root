@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.36 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.37 2004/11/18 14:37:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -602,14 +602,6 @@ void TGeoCone::InspectShape() const
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
-
-//_____________________________________________________________________________
-void *TGeoCone::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeTube3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 void TGeoCone::Paint(Option_t *option)
@@ -1648,14 +1640,6 @@ void TGeoConeSeg::InspectShape() const
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
-
-//_____________________________________________________________________________
-void *TGeoConeSeg::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeTubs3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 void TGeoConeSeg::Paint(Option_t *option)

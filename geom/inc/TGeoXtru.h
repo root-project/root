@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.6 2004/08/30 07:04:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.7 2004/11/08 09:56:23 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -84,7 +84,6 @@ public:
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

@@ -27,32 +27,33 @@ void geodemo ()
    bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro"); 
    bar->AddButton("ROOTgeom    ","rgeom()","A simple geometry example.");
+   bar->AddButton("Arb8        ","arb8()","An arbitrary polyedron defined by vertices (max 8) sitting on 2 parallel planes");
    bar->AddButton("Box         ","box()","A box shape.");
-   bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
-   bar->AddButton("Tube segment","tubeseg()","A tube segment");
-   bar->AddButton("Cut tube    ","ctub()","A cut tube segment");
+   bar->AddButton("Composite   ","composite()","A composite shape");
    bar->AddButton("Cone        ","cone()","A conical tube");
    bar->AddButton("Cone segment","coneseg()","A conical segment");
-   bar->AddButton("Sphere      ","sphere()","A spherical sector");
+   bar->AddButton("Cut tube    ","ctub()","A cut tube segment");
    bar->AddButton("Eliptical tube","eltu()","An eliptical tube");
+   bar->AddButton("Extruded poly","xtru()","A general polygone extrusion");
+   bar->AddButton("Hyperboloid  ","hype()","A hyperboloid"); 
    bar->AddButton("Paraboloid  ","parab()","A paraboloid"); 
-   bar->AddButton("Polygone    ","pgon()","A polygone"); 
    bar->AddButton("Polycone    ","pcon()","A polycone shape");
-   bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
-   bar->AddButton("Arb8        ","arb8()","An arbitrary polyedron defined by vertices (max 8) sitting on 2 parallel planes");
+   bar->AddButton("Polygone    ","pgon()","A polygone"); 
    bar->AddButton("Parallelipiped","para()","A parallelipiped shape");
+   bar->AddButton("Sphere      ","sphere()","A spherical sector");
    bar->AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
    bar->AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
    bar->AddButton("Trapezoid   ","trap()","A general trapezoid");
    bar->AddButton("Torus       ","torus()","A toroidal segment");
-   bar->AddButton("Extruded poly","xtru()","A general polygone extrusion");
-   bar->AddButton("Composite shape","composite()","A composite shape");
-   bar->AddButton("Ideal geometry","ideal()","An ideal (un-aligned) geometry");
-   bar->AddButton("Align geometry","align()","Some alignment operation");
-   bar->AddButton("Ray-trace ON/OFF","raytrace()","Toggle ray-tracing mode");
-   bar->AddButton("Comments ON/OFF","comments = !comments;","Toggle explanations pad ON/OFF");
-   bar->AddButton("Axes ON/OFF","axes()","Toggle axes ON/OFF");
-   bar->AddButton("Autorotate ON/OFF","autorotate()","Toggle autorotation ON/OFF");
+   bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
+   bar->AddButton("Tube segment","tubeseg()","A tube segment");
+   bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
+   bar->AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
+   bar->AddButton("Un-aligned","align()","Some alignment operation");
+   bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+   bar->AddButton("COMMENTS  ON/OFF","comments = !comments;","Toggle explanations pad ON/OFF");
+   bar->AddButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
+   bar->AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
    bar->Show();
    gROOT->SaveContext();
    gRandom = new TRandom3();
@@ -130,10 +131,13 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }   
-   TCanvas *c = new TCanvas("box shape", "A simple box", 700,800);
+   TCanvas *c = new TCanvas("box shape", "A simple box", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("box", "poza1");
@@ -151,6 +155,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -190,10 +195,13 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("para shape", "A parallelipiped", 700,800);
+   TCanvas *c = new TCanvas("para shape", "A parallelipiped", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("para", "poza1");
@@ -211,6 +219,7 @@ void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -253,10 +262,13 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }   
-   TCanvas *c = new TCanvas("tube shape", "A tube", 700,800);
+   TCanvas *c = new TCanvas("tube shape", "A tube", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tube", "poza2");
@@ -274,7 +286,8 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+//   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -314,10 +327,13 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }   
-   TCanvas *c = new TCanvas("tubeseg shape", "A tube segment ", 700,800);
+   TCanvas *c = new TCanvas("tubeseg shape", "A tube segment ", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tubeseg", "poza3");
@@ -335,7 +351,8 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+//   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -377,10 +394,13 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-2.\n");
       return;
    }   
-   TCanvas *c = new TCanvas("ctub shape", "A cut tube segment ", 700,800);
+   TCanvas *c = new TCanvas("ctub shape", "A cut tube segment ", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("ctub", "poza3");
@@ -410,7 +430,8 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+//   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -446,10 +467,13 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("cannot divide cone on Rxy\n");
       return;
    }   
-   TCanvas *c = new TCanvas("cone shape", "A cone", 700,800);
+   TCanvas *c = new TCanvas("cone shape", "A cone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("cone", "poza4");
@@ -457,7 +481,7 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
-   TGeoVolume *vol = gGeoManager->MakeCone("CONE",med, 40,30,40,35,45);
+   TGeoVolume *vol = gGeoManager->MakeCone("CONE",med, 40,10,20,35,45);
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    if (iaxis) {
@@ -467,7 +491,7 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(20);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -509,10 +533,13 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }   
-   TCanvas *c = new TCanvas("coneseg shape", "A cone segment", 700,800);
+   TCanvas *c = new TCanvas("coneseg shape", "A cone segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("coneseg", "poza5");
@@ -530,7 +557,7 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -570,10 +597,13 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("eltu shape", "An Elliptical tube", 700,800);
+   TCanvas *c = new TCanvas("eltu shape", "An Elliptical tube", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("eltu", "poza6");
@@ -591,7 +621,7 @@ void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -631,10 +661,13 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide spheres\n");
       return;
    }   
-   TCanvas *c = new TCanvas("Sphere shap", "A spherical sector", 700,800);
+   TCanvas *c = new TCanvas("Sphere shap", "A spherical sector", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("sphere", "poza7");
@@ -652,7 +685,7 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -684,10 +717,13 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide a torus\n");
       return;
    }   
-   TCanvas *c = new TCanvas("torus shape", "A toroidal segment", 700,800);
+   TCanvas *c = new TCanvas("torus shape", "A toroidal segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("torus", "poza2");
@@ -704,7 +740,7 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(2);
    }
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(40);
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -739,10 +775,13 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       return;
    }   
    
-   TCanvas *c = new TCanvas("trd1 shape", "A trapezoid with dX varying", 700,800);
+   TCanvas *c = new TCanvas("trd1 shape", "A trapezoid with dX varying", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd1", "poza8");
@@ -760,6 +799,7 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -796,10 +836,13 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void parab()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,800);
+   TCanvas *c = new TCanvas("parab shape", "A paraboloid segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("parab", "paraboloid");
@@ -813,6 +856,7 @@ void parab()
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -842,6 +886,59 @@ void parab()
 }
 
 //______________________________________________________________________________
+void hype()
+{
+   gROOT->GetListOfCanvases()->Delete();
+   TCanvas *c = new TCanvas("hype shape", "A hyperboloid", 700,1000);
+   if (comments) {
+      c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
+      c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
+   }   
+   if (gGeoManager) delete gGeoManager;
+   new TGeoManager("hype", "hyperboloid");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeHype("HYPE",med,10, 45 ,20,45,40); 
+   TGeoHype *hype = (TGeoHype*)vol->GetShape();
+   vol->SetLineColor(randomColor());
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   MakePicture();
+   if (!comments) return;
+   c->cd(2);
+   TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
+   pt->SetLineColor(1);
+   TText *text = pt->AddText("TGeoHype - Hyperboloid class");
+   text->SetTextColor(2);
+   AddText(pt,"fRmin",hype->GetRmin(),"minimum inner radius");
+   AddText(pt,"fStIn",hype->GetStIn(),"inner surface stereo angle [deg]");
+   AddText(pt,"fRmax",hype->GetRmax(),"minimum outer radius");
+   AddText(pt,"fStOut",hype->GetStOut(),"outer surface stereo angle [deg]");
+   AddText(pt,"fDz",hype->GetDz(),"half-length on Z axis");
+   pt->AddText("----- A hyperboloid is described by the equation:");
+   pt->AddText("-----    r^2 - (tan(stereo)*z)^2 = rmin^2;   where: r = x*x + y*y");
+   pt->AddText("----- Create with:    TGeoHype *hype = new TGeoHype(rin, stin, rout, stout, dz);");
+   pt->AddText("-----      rin < rout; rout > 0");
+   pt->AddText("-----      rin = 0; stin > 0 => inner surface conical");
+   pt->AddText("-----      stin/stout = 0 => corresponding surface cyllindrical");
+   pt->AddText(" ");
+   pt->SetAllWith("-----","color",2);
+   pt->SetAllWith("-----","font",72);
+   pt->SetAllWith("-----","size",0.04);
+   pt->SetTextAlign(12);
+   pt->SetTextSize(0.044);
+   pt->Draw();
+   c->cd(1);
+}
+//______________________________________________________________________________
 void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
@@ -853,10 +950,13 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide pcon on Rxy\n");
       return;
    }   
-   TCanvas *c = new TCanvas("pcon shape", "A polycone", 700,800);
+   TCanvas *c = new TCanvas("pcon shape", "A polycone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pcon", "poza10");
@@ -879,6 +979,7 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -929,10 +1030,13 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide pgon on Rxy\n");
       return;
    }   
-   TCanvas *c = new TCanvas("pgon shape", "A polygone", 700,800);
+   TCanvas *c = new TCanvas("pgon shape", "A polygone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pgon", "poza11");
@@ -953,6 +1057,7 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1001,10 +1106,13 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide arb8\n");
       return;
    }   
-   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyedron", 700,800);
+   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyedron", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("arb8", "poza12");
@@ -1031,6 +1139,7 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1076,10 +1185,13 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }   
-   TCanvas *c = new TCanvas("trd2 shape", "A trapezoid with dX and dY varying with Z", 700,800);
+   TCanvas *c = new TCanvas("trd2 shape", "A trapezoid with dX and dY varying with Z", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd2", "poza9");
@@ -1097,6 +1209,7 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1138,10 +1251,13 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }   
-   TCanvas *c = new TCanvas("trap shape", "A more general trapezoid", 700,800);
+   TCanvas *c = new TCanvas("trap shape", "A more general trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trap", "poza10");
@@ -1159,6 +1275,7 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1206,10 +1323,13 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }   
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,800);
+   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("gtra", "poza11");
@@ -1227,6 +1347,7 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1271,10 +1392,13 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void xtru()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,800);
+   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
@@ -1295,6 +1419,7 @@ void xtru()
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1330,10 +1455,13 @@ void xtru()
 void composite()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,800);
+   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
@@ -1360,8 +1488,8 @@ void composite()
    vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
-   gGeoManager->SetNsegments(20);
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1423,10 +1551,13 @@ void ideal()
 //   check = optional check if the new aligned node is overlapping
 // gGeoManager->SetDrawExtraPaths(Bool_t flag)
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,800);
+   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
       c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
    }   
    gSystem->Load("libGeom");
    if (gGeoManager) delete gGeoManager;
@@ -1444,6 +1575,7 @@ void ideal()
    vol->SetLineColor(randomColor());
    slicey->AddNode(vol,1);
    gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
    top->Draw();
    MakePicture();
    if (!comments) return;
@@ -1509,12 +1641,10 @@ void align()
 //______________________________________________________________________________
 void MakePicture()
 {
-//   gGeoManager->SetNsegments(80);
    TView *view = gPad->GetView();
    if (view) {
-      view->RotateView(248,66);
+//      view->RotateView(248,66);
       if (axis) view->ShowAxis();
-      if (comments) view->MoveViewCommand('k',1);
    }
    Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
    if (is_raytracing != raytracing) {
@@ -1659,4 +1789,3 @@ void help() {
    hdemo->Draw();
 }
 
-   

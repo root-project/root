@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.34 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.35 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -154,7 +154,6 @@ public:
    Bool_t          IsStyleDefault() const;
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
-   void           *Make3DBuffer() const {return fShape->Make3DBuffer(this);}
    virtual TGeoVolume *MakeCopyVolume(TGeoShape *newshape);
    void            MakeCopyNodes(const TGeoVolume *other);
    Bool_t          OptimizeVoxels(); // *MENU*

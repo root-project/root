@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.24 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.25 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -309,7 +309,7 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
       ResetShapeBit(f);
    }
 }
-         
+
 //_____________________________________________________________________________
 void TGeoShape::TransformPoints(TBuffer3D *buff) const
 {

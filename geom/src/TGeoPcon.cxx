@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.35 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.36 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -666,14 +666,6 @@ void TGeoPcon::InspectShape() const
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
-
-//_____________________________________________________________________________
-void *TGeoPcon::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakePcon3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 void TGeoPcon::Paint(Option_t *option)

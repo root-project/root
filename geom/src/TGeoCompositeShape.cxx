@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.22 2004/08/13 07:38:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.23 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -274,12 +274,6 @@ void TGeoCompositeShape::InspectShape() const
 }
 
 //_____________________________________________________________________________
-void *TGeoCompositeShape::Make3DBuffer(const TGeoVolume *vol) const
-{
-   return TGeoBBox::Make3DBuffer(vol);
-}   
-
-//_____________________________________________________________________________
 void TGeoCompositeShape::MakeNode(const char *expression)
 {
 // Make a booleann node according to the top level boolean operation of expression.
@@ -357,5 +351,5 @@ Int_t TGeoCompositeShape::GetNmeshVertices() const
 {
 // Return number of vertices of the mesh representation
    if (!fNode) return 0;
-   return 4;
+   return 8;
 }      

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.4 2003/02/13 11:04:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoOverlap.cxx,v 1.5 2003/07/05 20:42:48 brun Exp $
 // Author: Andrei Gheata   09-02-03
 
 /*************************************************************************
@@ -49,8 +49,8 @@ TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol, Double_t ovlp)
    }   
    fMarker  = new TPolyMarker3D();
    fMarker->SetMarkerColor(2);
-   fMarker->SetMarkerStyle(8);
-   fMarker->SetMarkerSize(0.5);
+//   fMarker->SetMarkerStyle(2);
+//   fMarker->SetMarkerSize(0.5);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.15 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.16 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -57,7 +57,6 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsComposite() const {return kTRUE;}
    virtual Bool_t        IsCylType() const {return kFALSE;}
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    void                  MakeNode(const char *expression);
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.7 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef1.h,v 1.8 2004/08/13 07:38:11 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,7 @@
 #pragma link C++ class TGeoTubeSeg+;
 #pragma link C++ class TGeoCtub+;
 #pragma link C++ class TGeoEltu+;
+#pragma link C++ class TGeoHype+;
 #pragma link C++ class TGeoCone+;
 #pragma link C++ class TGeoConeSeg+;
 #pragma link C++ class TGeoParaboloid+;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.54 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.55 2004/11/04 10:38:21 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -283,6 +283,8 @@ public:
                                       Double_t phi, Double_t dphi, Int_t nz);
    TGeoVolume            *MakeParaboloid(const char *name, const TGeoMedium *medium,
                                       Double_t rlo, Double_t rhi, Double_t dz);
+   TGeoVolume            *MakeHype(const char *name, const TGeoMedium *medium,
+                                      Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz);
    TGeoVolume            *MakePgon(const char *name, const TGeoMedium *medium,
                                       Double_t phi, Double_t dphi, Int_t nedges, Int_t nz);
    TGeoVolume            *MakeSphere(const char *name, const TGeoMedium *medium,

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.6 2004/06/25 11:59:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTorus.h,v 1.7 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -78,7 +78,6 @@ public:
    Double_t              GetDphi() const {return fDphi;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);

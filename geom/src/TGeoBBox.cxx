@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.32 2004/10/15 15:30:49 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.33 2004/11/08 09:56:24 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -426,14 +426,6 @@ void TGeoBBox::InspectShape() const
    printf("    dZ = %11.5f\n", fDZ);
    printf("    origin: x=%11.5f y=%11.5f z=%11.5f\n", fOrigin[0], fOrigin[1], fOrigin[2]);
 }
-
-//_____________________________________________________________________________
-void *TGeoBBox::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeBox3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 void TGeoBBox::Paint(Option_t *option)

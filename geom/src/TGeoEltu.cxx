@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.18 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.19 2004/11/08 09:56:24 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TGeoEltu::TGeoEltu()
 
 //_____________________________________________________________________________
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
-           :TGeoTube(a, b, dz)
+           :TGeoTube()
 {
 // Default constructor specifying X and Y semiaxis length
    SetShapeBit(TGeoShape::kGeoEltu);
@@ -48,9 +48,10 @@ TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
 
 //_____________________________________________________________________________
 TGeoEltu::TGeoEltu(const char *name, Double_t a, Double_t b, Double_t dz)
-           :TGeoTube(name, a, b, dz)
+           :TGeoTube()
 {
 // Default constructor specifying X and Y semiaxis length
+   SetName(name);
    SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);
    ComputeBBox();

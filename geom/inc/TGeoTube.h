@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.17 2004/06/25 11:59:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.18 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -68,9 +68,9 @@ public:
    virtual Double_t      GetRmin() const {return fRmin;}
    virtual Double_t      GetRmax() const {return fRmax;}
    virtual Double_t      GetDz() const   {return fDz;}
+   Bool_t                HasRmin() const {return (fRmin>0)?kTRUE:kFALSE;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
@@ -137,7 +137,6 @@ public:
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 

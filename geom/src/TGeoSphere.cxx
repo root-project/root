@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.32 2004/11/02 16:55:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.33 2004/11/08 09:56:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -1015,14 +1015,6 @@ void TGeoSphere::Paint(Option_t *option)
    // Paint gPad->fBuffer3D
    buff->Paint(option);
 }
-
-//_____________________________________________________________________________
-void *TGeoSphere::Make3DBuffer(const TGeoVolume *vol) const
-{
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return 0;
-   return painter->MakeSphere3DBuffer(vol);
-}   
 
 //_____________________________________________________________________________
 Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const

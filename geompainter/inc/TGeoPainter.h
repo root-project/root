@@ -117,14 +117,6 @@ public:
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    virtual void       ModifiedPad() const;
-   virtual void      *MakeBox3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeTorus3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeTube3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeParaboloid3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakePcon3DBuffer(const TGeoVolume *vol);
-   virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol);
    virtual void       Paint(Option_t *option="");
    virtual void       PaintNode(TGeoNode *node, Option_t *option="");
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");

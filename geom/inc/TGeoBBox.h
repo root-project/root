@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.13 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.14 2004/11/08 09:56:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -70,7 +70,6 @@ public:
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}
    virtual Bool_t        IsNullBox() const {return ((fDX==0)&&(fDY==0)&&(fDZ==0))?kTRUE:kFALSE;}
-   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.27 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.28 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -98,14 +98,6 @@ public:
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
-   virtual void      *MakeBox3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeTorus3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeTube3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeParaboloid3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakePcon3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol) = 0;
-   virtual void      *MakeXtru3DBuffer(const TGeoVolume *vol) = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="") = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.98 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.99 2004/11/19 14:30:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -424,6 +424,7 @@
 #include "TGeoParaboloid.h"
 #include "TGeoTube.h"
 #include "TGeoEltu.h"
+#include "TGeoHype.h"
 #include "TGeoCone.h"
 #include "TGeoSphere.h"
 #include "TGeoArb8.h"
@@ -3572,6 +3573,22 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
    }
    return vol;
 }
+//_____________________________________________________________________________
+TGeoVolume *TGeoManager::MakeHype(const char *name, const TGeoMedium *medium,
+                                        Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
+{
+// Make in one step a volume pointing to a tube shape with given medium
+   TGeoHype * hype =  new TGeoHype(name, rin,stin,rout,stout,dz);
+   TGeoVolume *vol = 0;
+   if (hype->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(hype);
+   } else {
+      vol = new TGeoVolume(name, hype, medium);
+   }
+   return vol;
+}
+
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::MakeParaboloid(const char *name, const TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
