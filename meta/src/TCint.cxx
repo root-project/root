@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.45 2001/12/20 18:36:40 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.46 2001/12/21 09:33:40 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -238,16 +238,13 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
          // to synchronize user keyboard input and ROOT prompt line
 
          if (strstr(line,fantomline)) {
-             G__free_tempobject();
-             TCint::UpdateAllCanvases();
+            G__free_tempobject();
+            TCint::UpdateAllCanvases();
          } else {
-             if (error && *error!=TInterpreter::kProcessing) {
-                *error = TInterpreter::kNoError;
-             }
-             ret = G__process_cmd((char *)line, fPrompt, &fMore, (int*)error, 0);
-             if (error && *error == TInterpreter::kProcessing) {
-                *error = TInterpreter::kNoError;
-             }
+            int local_error = 0;
+            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
+            if (error) *error = (EErrorCode)local_error;
+            gROOT->SetLineHasBeenProcessed();
          }
       } else
          ret = ProcessLineAsynch(line, error);
