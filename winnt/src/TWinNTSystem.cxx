@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.66 2004/01/25 17:59:54 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.67 2004/01/26 09:49:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -54,12 +54,8 @@
 const char *kProtocolName   = "tcp";
 typedef void (*SigHandler_t)(ESignals);
 
-// for testing purpose only !!!
-#ifdef GDK_WIN32
-HANDLE hEvent1;
-HANDLE hThread1;
-unsigned thread1ID;
-#endif
+static HANDLE gConsoleEvent;
+static HANDLE gConsoleThreadHandle;
 
 
 static struct signal_map {
@@ -86,10 +82,8 @@ static struct signal_map {
 
 //////////////////// Windows TFdSet ////////////////////////////////////////////////
 class TFdSet {
-
 private:
    fd_set *fds_bits; // file descriptors (according MSDN maximum is 64)
-
 public:
    TFdSet() { fds_bits = new fd_set; fds_bits->fd_count = 0; }
    virtual ~TFdSet() { delete fds_bits; }
@@ -424,20 +418,18 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
 
    while (1) {
       if(gROOT->GetApplication()) {
-         if (hEvent1) {
-            ::WaitForSingleObject(hEvent1, INFINITE);
+         if (gConsoleEvent) {
+            ::WaitForSingleObject(gConsoleEvent, INFINITE);
          }
 
-         if(!gROOT->IsLineProcessing()) {
-            if(!gApplication->HandleTermInput()) break; // no terminal input
+         if(!gApplication->HandleTermInput()) break; // no terminal input
 
-            if (gSplash) {    // terminate splash window after first key press
-               delete gSplash;
-               gSplash = 0;
-            }
+         if (gSplash) {    // terminate splash window after first key press
+            delete gSplash;
+            gSplash = 0;
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
-         if (hEvent1) ::ResetEvent(hEvent1);
+         if (gConsoleEvent) ::ResetEvent(gConsoleEvent);
       } else {
          static int i = 0;
          ::SleepEx(100, 1);
@@ -446,8 +438,8 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
       }
    }
 
-   ::CloseHandle(hThread1);
-   hThread1 = 0;
+   ::CloseHandle(gConsoleThreadHandle);
+   gConsoleThreadHandle = 0;
    _endthreadex( 0 );
    return 0;
 }
@@ -519,7 +511,7 @@ TWinNTSystem::~TWinNTSystem()
    }
 
 #ifdef GDK_WIN32
-   if (hThread1) ::CloseHandle(hThread1);
+   if (gConsoleThreadHandle) ::CloseHandle(gConsoleThreadHandle);
 #else
    ::CloseHandle(fhTermInputEvent);
 #endif
@@ -575,9 +567,9 @@ Bool_t TWinNTSystem::Init()
 
 #ifdef GDK_WIN32
    if (!gROOT->IsBatch()) {
-      hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-      hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread,
-                                         0, 0, &thread1ID );
+      gConsoleEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+      gConsoleThreadHandle = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread,
+                                         0, 0, 0);
    }
 #else
    // The the name of the DLL to be used as a stock of the icon
@@ -1004,7 +996,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    } switcher(!pendingOnly);
 
    // used for syncronization with HandleConsoleThread
-   if (hEvent1) ::SetEvent(hEvent1);
+   if (gConsoleEvent) ::SetEvent(gConsoleEvent);
 
    // first handle any GUI events
    if (gXDisplay) {
