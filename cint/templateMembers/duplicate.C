@@ -3,19 +3,19 @@
 class HistMan {
 public:
    template<class THType>
-    THType* Book(const char* name, const char* title, 
-                 int nbinsx, Axis_t xmin, Axis_t xmax,
-                 const char* path=".") {
+    THType* Book(const char*, const char* , 
+                 int, Axis_t, Axis_t,
+                 const char* =".") {
         //TH1* h = Adopt(path, new THType(name,title,nbinsx,xmin,xmax));
         //return dynamic_cast<THType*>(h);
         return 0;
     }
            
     template<class THType>
-    THType* Book(const char* name, const char* title,
-                 int nbinsx, Axis_t xmin, Axis_t xmax,
-                 int nbinsy, Axis_t ymin, Axis_t ymax,
-                 const char* path=".") {
+    THType* Book(const char* , const char* ,
+                 int , Axis_t , Axis_t ,
+                 int , Axis_t , Axis_t ,
+                 const char* = ".") {
         //TH1* h= Adopt(path, new THType(name,title,nbinsx,xmin,xmax,
         //                               nbinsy,ymin,ymax));
         //return dynamic_cast<THType*>(h);
