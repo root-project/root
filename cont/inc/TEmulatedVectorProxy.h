@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.2 2004/02/18 07:28:02 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.3 2004/08/20 21:02:10 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -27,8 +27,12 @@
 #include "TVirtualCollectionProxy.h"
 
 class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStreamer {
-
-  typedef std::vector<void*> ProxyList_t;
+#if !(defined(__CINT__) && defined(G__MSC_VER))
+   // work around a problem with vector<void*> in CINT on MS compiler 
+   typedef std::vector<void*> ProxyList_t;
+#else
+   typedef std::vector<char*> ProxyList_t;
+#endif
    
    TString      fProxiedName; // name of the class being proxied.
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.7 2004/02/19 23:47:40 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.8 2004/08/20 21:02:10 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -32,7 +32,12 @@ namespace ROOT {
    template <class vec> class TVectorProxy : public TVirtualCollectionProxy {
 
       typedef typename vec::value_type nested;
+#if !(defined(__CINT__) && defined(G__MSC_VER))
+      // work around a problem with vector<void*> in CINT on MS compiler 
       typedef std::vector<void*> ProxyList_t;
+#else
+      typedef std::vector<char*> ProxyList_t;
+#endif
       
       vec*        fProxied;
       ProxyList_t fProxyList;
