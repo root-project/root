@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.97 2002/11/25 16:30:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.98 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -461,6 +461,8 @@ TClass::~TClass()
    if (fClassMenuList)
       fClassMenuList->Delete();
    delete fClassMenuList;
+
+   if ( fInterStreamer ) delete ((G__CallFunc*)fInterStreamer);
 }
 
 //______________________________________________________________________________
@@ -563,7 +565,7 @@ void TClass::BuildRealData(void *pointer)
          void *address;
          long  offset;
          func.SetFunc(fClassInfo->GetMethod("ShowMembers",
-                                            "TMemberInspector&,char*", &offset).InterfaceMethod());
+                                            "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
             ::Error("BuildRealData","Can not find any ShowMembers function for %s!",GetName());
          } else {
@@ -2046,7 +2048,11 @@ void TClass::Streamer(void *object, TBuffer &b)
    if (IsTObject()) {           // TObject, regular case
 
       if (!fInterStreamer) {
-         if (fClassInfo) fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         if (fClassInfo)  {
+            G__CallFunc* f  = new G__CallFunc;
+            f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+            fInterStreamer = f;
+         }
          else return;
          fOffsetStreamer = GetBaseClassOffset(TObject::Class());
       }
@@ -2055,16 +2061,17 @@ void TClass::Streamer(void *object, TBuffer &b)
 
    } else if (!IsForeign()) {   // Instrumented class
 
-      if (!fInterStreamer) {
-        fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+      if (!fInterStreamer)  {
+         G__CallFunc* f  = new G__CallFunc;
+         f->SetFunc(fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer));
+         fInterStreamer = f;
       }
 
-      G__CallFunc func;
-      func.SetFunc((G__InterfaceMethod)fInterStreamer);
+      G__CallFunc* func = (G__CallFunc*)fInterStreamer;
       // set arguments
-      func.SetArg((Long_t)&b);
+      func->SetArg((Long_t)&b);
       // call function
-      func.Exec((char*)((Long_t)object + fOffsetStreamer) );
+      func->Exec((char*)((Long_t)object + fOffsetStreamer) );
 
    } else {                      // Foreign class
 
