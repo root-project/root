@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.2 2002/02/18 18:15:39 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.3 2002/02/18 23:11:50 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -388,7 +388,7 @@ Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id, const char *blockname, c
 #ifndef WIN32
    hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier,strlen(blockname),strlen(branchname));
 #else
-   hgnt1(id,PASSCHAR(blockname),strlen(blockname),PASSCHAR(branchname),strlen(branchname),0,-1,entry+1,ier);
+   hgnt1(id,PASSCHAR(blockname),PASSCHAR(branchname),0,-1,entry+1,ier);
 #endif
    return 0;
 }
