@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.76 2002/01/09 16:33:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.77 2002/01/09 16:39:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -890,7 +890,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	     //   build index of columns 'iindex'
 	     ncols  = 1;
 	     vexp=varexp;
-	     for (int j=0;j<i;j++)  if (vexp[j] == ':') ncols++;
+	     for (j=0;j<i;j++)  if (vexp[j] == ':') ncols++;
 	     if (ncols < 4 ) {  // max 3 columns
 	       MakeIndex(vexp,iindex);
 	     } else {
