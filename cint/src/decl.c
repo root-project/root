@@ -3372,6 +3372,17 @@ char *new_name;
         if(isupper(memvar->type[memindex])) {
           *(long *)(buf.obj.i)=(long)G__int(reg);
         }
+#ifndef G__OLDIMPLEMENTATION1603
+	else if('c'==memvar->type[memindex] && 
+		0<memvar->varlabel[memindex][1] &&
+		'"'==expr[0]) {
+	  if(memvar->varlabel[memindex][1]+1>strlen((char*)reg.obj.i)) 
+	    strcpy((char*)buf.obj.i,(char*)reg.obj.i);
+	  else
+	    strncpy((char*)buf.obj.i,(char*)reg.obj.i
+		    ,memvar->varlabel[memindex][1]+1);
+	}
+#endif
         else {
           G__letvalue(&buf,reg);
         }
