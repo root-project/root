@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.2 2000/06/13 10:57:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.3 2000/07/10 06:07:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -100,6 +100,7 @@ public:
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
         virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
+        virtual void     Set(Int_t n);
         virtual void     SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void     SetTitle(const char *title="");    // *MENU*
                 void     Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
