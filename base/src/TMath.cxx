@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.51 2004/04/23 16:18:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.52 2004/04/23 20:29:53 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2823,7 +2823,7 @@ Bool_t TMath::Permute(Int_t *a, Int_t n, Bool_t &start)
 
    if (start) {
       // Prime the array
-      for (i=0; i<n; a[i++]=i);
+      for(i=0;i<n;i++) a[i]=i;
       start=kFALSE;
       return kTRUE;
    } else {
