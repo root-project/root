@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.8 2001/03/07 11:50:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.9 2001/03/08 20:16:28 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -320,6 +320,7 @@ TGClient::TGClient(const char *dpyName)
    // finding of windows based on window id (see GetWindowById()).
 
    fWlist = new THashList(200);
+   fUWHandlers = 0;
 
    // Setup some atoms (defined in TVirtualX)...
 
@@ -674,6 +675,25 @@ void TGClient::UnregisterWindow(TGWindow *w)
 }
 
 //______________________________________________________________________________
+void TGClient::AddUnknownWindowHandler(TGUnknownWindowHandler *h)
+{
+   // Add handler for unknown (i.e. unregistered) windows.
+
+   if (!fUWHandlers)
+      fUWHandlers = new TList;
+
+   fUWHandlers->Add(h);
+}
+
+//______________________________________________________________________________
+void TGClient::RemoveUnknownWindowHandler(TGUnknownWindowHandler *h)
+{
+   // Remove handler for unknown (i.e. unregistered) windows.
+
+   fUWHandlers->Remove(h);
+}
+
+//______________________________________________________________________________
 TGWindow *TGClient::GetWindowById(Window_t wid) const
 {
    // Find a TGWindow via its handle. If window is not found return 0.
@@ -690,6 +710,8 @@ TGClient::~TGClient()
 
    if (fWlist) fWlist->Delete("slow");
    delete fWlist;
+   if (fUWHandlers) fUWHandlers->Delete();
+   delete fUWHandlers;
    delete fPicturePool;
    delete fMimeTypeList;
 
@@ -818,7 +840,19 @@ Bool_t TGClient::HandleEvent(Event_t *event)
    TGWindow *w;
 
    // Find window where event happened
-   if ((w = GetWindowById(event->fWindow)) == 0) return kFALSE;
+   if ((w = GetWindowById(event->fWindow)) == 0) {
+      if (fUWHandlers && fUWHandlers->GetSize() > 0) {
+         TGUnknownWindowHandler *unkwh;
+         TListIter it(fUWHandlers);
+         while ((unkwh = (TGUnknownWindowHandler*)it.Next())) {
+            if (unkwh->HandleEvent(event))
+               return kTRUE;
+         }
+      }
+      //Warning("HandleEvent", "unknown window %ld not handled\n",
+      //        event->fWindow);
+      return kFALSE;
+   }
 
    // and let it handle the event
    w->HandleEvent(event);

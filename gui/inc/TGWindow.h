@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.2 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.3 2001/04/11 17:28:08 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -85,6 +85,27 @@ public:
    virtual Bool_t IsMapped();
 
    ClassDef(TGWindow,0)  // GUI Window base class
+};
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TGUnknownWindowHandler                                               //
+//                                                                      //
+// Handle events for windows that are not part of the native ROOT GUI.  //
+// Typically windows created by Xt or Moptif (see TRootOIViewer).       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TGUnknownWindowHandler : public TObject {
+
+public:
+   TGUnknownWindowHandler() { }
+   virtual ~TGUnknownWindowHandler() { }
+
+   virtual Bool_t HandleEvent(Event_t *) = 0;
+
+   ClassDef(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
 };
 
 #endif

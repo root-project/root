@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.2 2001/04/03 10:36:21 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 
 
 ClassImp(TGWindow)
+ClassImp(TGUnknownWindowHandler)
 
 //______________________________________________________________________________
 TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
