@@ -3,15 +3,6 @@
 #
 # Authors: Linev Sergey, Rene Brun 10/05/2004
 
-XMLINCDIR := $(XMLDIR)/include
-ifeq ($(PLATFORM),win32)
-XMLLIBDIR       := $(XMLDIR)/lib/libxml2_a.lib $(XMLDIR)/lib/iconv_a.lib Ws2_32.lib
-XMLLIBEXTRA  :=
-else
-XMLLIBDIR    := -L$(XMLDIR)/.libs
-XMLLIBEXTRA  := -lxml2
-endif
-
 MODDIR       := xml
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
@@ -48,7 +39,7 @@ include/%.h:    $(XMLDIRI)/%.h
 $(XMLLIB):      $(XMLO) $(XMLDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRXML.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
-		   "$(XMLLIBDIR)  $(XMLLIBEXTRA) "
+		   "$(XMLLIBDIR) $(XMLCLILIB) $(XMLLIBEXTRA)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
