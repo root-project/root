@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.48 2001/02/28 11:04:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.49 2001/03/09 17:47:05 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -50,6 +50,7 @@ TStreamerInfo::TStreamerInfo()
    fMethod   = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fSize     = 0;
    fClassVersion = 0;
    fOptimized = kFALSE;
 }
@@ -72,6 +73,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fMethod   = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fSize     = 0;
    fOptimized = kFALSE;
    fClassVersion = fClass->GetClassVersion();
 
@@ -341,7 +343,7 @@ void TStreamerInfo::BuildCheck()
       printf("ERROR reading TStreamerInfo: %s fClassVersion=%d\n",GetName(),fClassVersion);
       SetBit(kCanDelete);
       fNumber = -1;
-      return;
+      return; 
    }
    array->AddAtAndExpand(this,fClassVersion);
    fgCount++;
@@ -361,6 +363,8 @@ void TStreamerInfo::BuildOld()
    if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class:%s, version:%d\n",GetName(),fClassVersion);
    TIter next(fElements);
    TStreamerElement *element;
+   Int_t offset = 0;
+   Streamer_t streamer = 0;
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
       if (element->IsA() == TStreamerBase::Class()) {
@@ -370,17 +374,36 @@ void TStreamerInfo::BuildOld()
          TStreamerInfo *infobase = baseclass->GetStreamerInfo(version);
          if (infobase->GetNdata() == 0) infobase->BuildOld();
          element->Init();
-         element->SetOffset(fClass->GetBaseClassOffset(baseclass));
+         Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
+         if (baseOffset < 0) baseOffset = 0;
+         element->SetOffset(baseOffset);
+         offset += baseclass->Size();
          continue;
       }
       //in principle, we should look rather into TRealData to support the
       //case where a member has been moved to a base class
       TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
-      if (dm && dm->IsPersistent()) {
+      // may be a fake class
+      if (!dm && fClass->GetDeclFileLine() < 0) {
+         streamer = 0;
+         element->SetOffset(offset);
+         element->Init(fClass);
+         element->SetStreamer(streamer);
+         Int_t alength = element->GetArrayLength();
+         if (alength == 0) alength = 1;
+         Int_t asize = element->GetSize();
+         //if (asize == 0) asize = 8;
+         //offset += asize*alength;
+         offset += asize;
+         if (element->GetType() == kObject || element->GetType() == kTString) {
+            //element->SetOffset(kMissing);
+            //element->SetNewType(-1);
+         }           
+      } else if (dm && dm->IsPersistent()) {
          TDataType *dt = dm->GetDataType();
-         Streamer_t streamer = 0;
          fClass->BuildRealData();
-         Int_t offset = GetDataMemberOffset(dm,streamer);
+         streamer = 0;
+         offset = GetDataMemberOffset(dm,streamer);
          element->SetOffset(offset);
          element->Init(fClass);
          element->SetStreamer(streamer);
@@ -403,7 +426,7 @@ void TStreamerInfo::BuildOld()
       }
    }
 
-   Compile();
+   Compile(); 
 }
 
 
@@ -528,6 +551,14 @@ void TStreamerInfo::BuildUserInfo(const char *info)
    delete [] newmethod;
 #endif
 }
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::CanOptimize()
+{
+// static function returning true if optimization can be on
+   return fgOptimize;
+}
+
 //______________________________________________________________________________
 void TStreamerInfo::Compile()
 {
@@ -570,6 +601,8 @@ void TStreamerInfo::Compile()
       element = (TStreamerElement*)fElements->At(i);
       if (!element) break;
       if (element->GetType() < 0) continue;
+      Int_t asize = element->GetSize();
+      if (element->GetArrayLength()) asize /= element->GetArrayLength();
       fType[fNdata]   = element->GetType();
       fNewType[fNdata]= element->GetNewType();
       fOffset[fNdata] = element->GetOffset();
@@ -583,7 +616,7 @@ void TStreamerInfo::Compile()
                   && (element->GetType() > 0)
                   && (element->GetArrayDim() == 0)
                   && (element->GetType() == (fType[keep]%kRegrouped))
-                  && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*element->GetSize())) {
+                  && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)) {
          if (fLength[keep] == 0) fLength[keep]++;
          fLength[keep]++;
          fType[keep] = element->GetType() + kRegrouped;
@@ -600,10 +633,25 @@ void TStreamerInfo::Compile()
          fNdata++;
       }
    }
+   
+   ComputeSize();
 
    if (gDebug > 0) ls();
 }
 
+
+//______________________________________________________________________________
+void TStreamerInfo::ComputeSize()
+{
+// Compute total size of all persistent elements of the class
+   
+   TIter next(fElements);
+   TStreamerElement *element;
+   fSize = 0;
+   while ((element = (TStreamerElement*)next())) {
+      fSize += element->GetSize();
+   }
+}
 
 //______________________________________________________________________________
 void TStreamerInfo::ForceWriteInfo()
@@ -772,11 +820,11 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    char dmbracket[256];
    sprintf(dmbracket,"%s[",dm->GetName());
    Int_t offset = kMissing;
+   if (fClass->GetDeclFileLine() < 0) offset = dm->GetOffset();
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
-//printf("rdmc=%s, dm->GetName()=%s\n",rdmc,dm->GetName());
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
          streamer = rdm->GetStreamer();
@@ -813,6 +861,120 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
    return 0;
 }
 
+
+//______________________________________________________________________________
+Int_t TStreamerInfo::GetSize() const
+{
+//  return total size of all persistent elements of the class
+   
+   return fSize;
+}
+
+//______________________________________________________________________________
+Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j) const
+{
+//  return value of element i in object at pointer.
+//  if element is an array, j is the index in the array
+   
+   char *ladd = pointer + fOffset[i];
+   switch (fType[i]) {
+         // basic types
+      case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
+      case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
+      case kInt:               {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+      case kLong:              {Long_t *val   = (Long_t*)ladd;   return Double_t(*val);}
+      case kFloat:             {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
+      case kDouble:            {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
+      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  return Double_t(*val);}
+      case kUShort:            {UShort_t *val = (UShort_t*)ladd; return Double_t(*val);}
+      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
+      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  return Double_t(*val);}
+
+         // array of basic types  array[8]
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[j]);}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[j]);}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[j]);}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[j]);}
+
+         // pointer to an array of basic types  array[n]
+      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[j]);}
+      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[j]);}
+      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[j]);}
+      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[j]);}
+         // array counter //[n]
+      case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j) const
+{
+//  return value of element i in object number j in a TClonesArray.
+
+   Int_t nc = clones->GetEntriesFast();
+   if (j >= nc) return 0;
+      
+   //find offset of this class with respect to class in clones
+   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
+   //Int_t leng   = fLength[i];
+   Int_t offset = baseOffset + fOffset[i];
+   char *pointer = (char*)clones->UncheckedAt(j);
+   char *ladd = pointer+offset;
+//printf("vclones:%s, fType[%d]=%d, j=%d\n",GetName(),i,fType[i],j);
+   switch (fType[i]) {
+         // basic types
+      case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
+      case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
+      case kInt:               {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+      case kLong:              {Long_t *val   = (Long_t*)ladd;   return Double_t(*val);}
+      case kFloat:             {Float_t *val  = (Float_t*)ladd;  return Double_t(*val);}
+      case kDouble:            {Double_t *val = (Double_t*)ladd; return Double_t(*val);}
+      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  return Double_t(*val);}
+      case kUShort:            {UShort_t *val = (UShort_t*)ladd; return Double_t(*val);}
+      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
+      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  return Double_t(*val);}
+
+         // array of basic types  array[8]
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[j]);}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[j]);}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[j]);}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[j]);}
+
+         // pointer to an array of basic types  array[n]
+      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[j]);}
+      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[j]);}
+      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[j]);}
+      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
+      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[j]);}
+         // array counter //[n]
+      case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
+   }
+   return 0;
+}
  
 //______________________________________________________________________________
 void TStreamerInfo::ls(Option_t *option) const
@@ -828,6 +990,58 @@ void TStreamerInfo::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
+Int_t TStreamerInfo::New(const char *p)
+{
+//  fake constructor for this class.
+//  A fake object is created at address p
+   
+   TIter next(fElements);
+   TStreamerElement *element;
+   //fSize = 0;
+   while ((element = (TStreamerElement*)next())) {
+      Int_t etype = element->GetType();
+      if (element->GetOffset() == kMissing) continue;
+      if (etype == kObjectp) {
+         // if the option "->" is given in the data member comment field 
+         // it is assumed that the object exist before reading data in.
+         // In this case an object must be created
+         if (strstr(element->GetTitle(),"->") == element->GetTitle()) {
+            char line[200];
+            char pname[100];
+            char clonesClass[40];
+            // in case of a TClonesArray, the class name of the contained objects
+            // must be specified
+            sprintf(clonesClass,"%s"," ");
+            if (element->GetClassPointer() == TClonesArray::Class()) {
+               char *bracket1 = strchr(element->GetTitle(),'(');
+               char *bracket2 = strchr(element->GetTitle(),')');
+               if (bracket1 && bracket2) {
+                  clonesClass[0] = '"';
+                  strncat(clonesClass,bracket1+1,bracket2-bracket1-1);
+                  strcat(clonesClass,"\"");
+               }
+            }
+            // object is created via the interpreter
+            sprintf(pname,"R__%s_%s",GetName(),element->GetName());
+            sprintf(line,"%s* %s = (%s*)0x%x; *%s = new %s(%s);",
+               element->GetTypeName(),pname,element->GetTypeName(),
+               (Seek_t)((char*)p + element->GetOffset()),pname,
+               element->GetClassPointer()->GetName(),clonesClass);
+               gROOT->ProcessLine(line);
+         }
+      }
+      if (etype == kObject || etype == kAny || etype == kBase || 
+          etype == kTObject || etype == kTString || etype == kTNamed) {
+         TClass *cle = element->GetClassPointer();
+         if (!cle) continue;
+//         printf("New object class: %s fSize=%d, at %x\n",GetName(),fSize,(Seek_t)((char*)p + element->GetOffset()));
+         cle->New((char*)p + element->GetOffset());
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 void TStreamerInfo::Optimize(Bool_t opt)
 {
 //  This is a static function.
@@ -839,6 +1053,316 @@ void TStreamerInfo::Optimize(Bool_t opt)
    fgOptimize = opt;
 }
 
+
+//______________________________________________________________________________
+void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i) const
+{
+//  print value of element i in object at pointer
+   
+   printf(" %-15s = ",name);
+   Int_t j;
+   char *ladd = pointer + fOffset[i];
+   switch (fType[i]) {
+         // basic types
+      case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;} 
+      case kShort:             {Short_t *val  = (Short_t*)ladd;  printf("%d",*val);  break;}
+      case kInt:               {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+      case kLong:              {Long_t *val   = (Long_t*)ladd;   printf("%ld",*val); break;}
+      case kFloat:             {Float_t *val  = (Float_t*)ladd;  printf("%f",*val);  break;}
+      case kDouble:            {Double_t *val = (Double_t*)ladd; printf("%g",*val);  break;}
+      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  printf("%d",*val);  break;}
+      case kUShort:            {UShort_t *val = (UShort_t*)ladd; printf("%d",*val);  break;}
+      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
+      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  printf("%ld",*val); break;}
+
+         // array of basic types  array[8]
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%f ",val[j]);  break;}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<fLength[i];j++) printf("%g ",val[j]);  break;}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+
+         // pointer to an array of basic types  array[n]
+      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);  break;}
+      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);  break;}
+      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+         // array counter //[n]
+      case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+         // Class *  derived from TObject with comment field  //->
+      case kObjectp: {
+                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      break;
+                     }
+
+         // Class*   derived from TObject
+      case kObjectP: { 
+                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      break;
+                     }
+
+         // Class    derived from TObject
+      case kObject:  { 
+                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      printf("%s",obj->GetName());
+                      break;
+                     }
+
+         // Special case for TString, TObject, TNamed
+      case kTString: { 
+                      TString *st = (TString*)(pointer+fOffset[i]);
+                      printf("%s",st->Data());
+                      break;
+                     }
+      case kTObject: { 
+                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      printf("%s",obj->GetName());
+                      break;
+                     }
+      case kTNamed:  { 
+                      TNamed *named = (TNamed*) (pointer+fOffset[i]);
+                      printf("%s/%s",named->GetName(),named->GetTitle());
+                      break;
+                     }
+   
+         // Any Class not derived from TObject
+      case kOffsetL + kObjectp:
+      case kOffsetL + kObjectP:
+      case kAny:     {
+                      printf("printing kAny case (%d)",fType[i]);
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      //TClass *clany = element->GetClassPointer();
+                      //TStreamerInfo *infoany = clany->GetStreamerInfo();
+                      //infoany->PrintValue();
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         //printf("ERROR, Streamer is null\n");
+                         //element->ls();
+                         break;
+                      }
+                      //(*pstreamer)(b,pointer+fOffset[i],0);
+                      break;
+                     }
+         // Base Class
+      case kBase:    { 
+                      printf("printing kBase case (%d)",fType[i]);
+                       //TStreamerBase *element = (TStreamerBase*)fElem[i];
+                       //element->ReadBuffer(b,pointer);
+                       break;
+                     }
+
+      case kStreamer: {
+                      printf("printing kStreamer case (%d)",fType[i]);
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         //printf("ERROR, Streamer is null\n");
+                         //element->ls();
+                         break;
+                      }
+                      //UInt_t start,count;
+                      //b.ReadVersion(&start, &count);
+                      //(*pstreamer)(b,pointer+fOffset[i],0);
+                      //b.CheckByteCount(start,count,IsA());
+                      break;
+                     }
+
+      case kStreamLoop: {
+                      printf("printing kStreamLoop case (%d)",fType[i]);
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         //printf("ERROR, Streamer is null\n");
+                         //element->ls();
+                         break;
+                      }
+                      //Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                      //UInt_t start,count;
+                      ///b.ReadVersion(&start, &count);
+                      //(*pstreamer)(b,pointer+fOffset[i],*counter);
+                      //b.CheckByteCount(start,count,IsA());
+                      break;
+                     }
+   }
+   printf("\n");
+}
+
+
+//______________________________________________________________________________
+void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i) const
+{
+//  print value of element i in a TClonesArray
+   
+   printf(" %-15s = ",name);
+   Int_t nc = clones->GetEntriesFast();
+   const Int_t kMaxPrint = 10;
+   if (nc > kMaxPrint) nc = kMaxPrint;
+   
+   //find offset of this class with respect to class in clones
+   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
+   //Int_t leng   = fLength[i];
+   Int_t offset = baseOffset + fOffset[i];
+   Int_t j;
+   for (Int_t k=0;k<nc;k++) {
+      char *pointer = (char*)clones->UncheckedAt(k);
+      char *ladd = pointer+offset;
+      switch (fType[i]) {
+         // basic types
+      case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;} 
+      case kShort:             {Short_t *val  = (Short_t*)ladd;  printf("%d",*val);  break;}
+      case kInt:               {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+      case kLong:              {Long_t *val   = (Long_t*)ladd;   printf("%ld",*val); break;}
+      case kFloat:             {Float_t *val  = (Float_t*)ladd;  printf("%f",*val);  break;}
+      case kDouble:            {Double_t *val = (Double_t*)ladd; printf("%g",*val);  break;}
+      case kUChar:             {UChar_t *val  = (UChar_t*)ladd;  printf("%d",*val);  break;}
+      case kUShort:            {UShort_t *val = (UShort_t*)ladd; printf("%d",*val);  break;}
+      case kUInt:              {UInt_t *val   = (UInt_t*)ladd;   printf("%d",*val);  break;}
+      case kULong:             {ULong_t *val  = (ULong_t*)ladd;  printf("%ld",*val); break;}
+
+         // array of basic types  array[8]
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%f ",val[j]);  break;}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; for(j=0;j<fLength[i];j++) printf("%g ",val[j]);  break;}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
+
+         // pointer to an array of basic types  array[n]
+      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%f ",(*val)[j]);  break;}
+      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%g ",(*val)[j]);  break;}
+      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
+      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
+         // array counter //[n]
+      case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+         // Class *  derived from TObject with comment field  //->
+      case kObjectp: {
+                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      break;
+                     }
+
+         // Class*   derived from TObject
+      case kObjectP: { 
+                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                      printf("(%s*)%x",el->GetClass()->GetName(),(Seek_t)(*obj));
+                      break;
+                     }
+
+         // Class    derived from TObject
+      case kObject:  { 
+                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      printf("%s",obj->GetName());
+                      break;
+                     }
+
+         // Special case for TString, TObject, TNamed
+      case kTString: { 
+                      TString *st = (TString*)(pointer+fOffset[i]);
+                      printf("%s",st->Data());
+                      break;
+                     }
+      case kTObject: { 
+                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      printf("%s",obj->GetName());
+                      break;
+                     }
+      case kTNamed:  { 
+                      TNamed *named = (TNamed*) (pointer+fOffset[i]);
+                      printf("%s/%s",named->GetName(),named->GetTitle());
+                      break;
+                     }
+   
+         // Any Class not derived from TObject
+      case kOffsetL + kObjectp:
+      case kOffsetL + kObjectP:
+      case kAny:     {
+                      printf("printing kAny case");
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      //TClass *clany = element->GetClassPointer();
+                      //TStreamerInfo *infoany = clany->GetStreamerInfo();
+                      //infoany->PrintValue();
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         //printf("ERROR, Streamer is null\n");
+                         element->ls();
+                         break;
+                      }
+                      //(*pstreamer)(b,pointer+fOffset[i],0);
+                      break;
+                     }
+         // Base Class
+      case kBase:    { 
+                      printf("printing kBase case");
+                       //TStreamerBase *element = (TStreamerBase*)fElem[i];
+                       //element->ReadBuffer(b,pointer);
+                       break;
+                     }
+
+      case kStreamer: {
+                      printf("printing kStreamer case");
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         //printf("ERROR, Streamer is null\n");
+                         element->ls();
+                         break;
+                      }
+                      //UInt_t start,count;
+                      //b.ReadVersion(&start, &count);
+                      //(*pstreamer)(b,pointer+fOffset[i],0);
+                      //b.CheckByteCount(start,count,IsA());
+                      break;
+                     }
+
+      case kStreamLoop: {
+                      printf("printing kStreamLoop case");
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
+                      if (pstreamer == 0) {
+                         printf("ERROR, Streamer is null\n");
+                         element->ls();
+                         break;
+                      }
+                      //Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                      //UInt_t start,count;
+                      ///b.ReadVersion(&start, &count);
+                      //(*pstreamer)(b,pointer+fOffset[i],*counter);
+                      //b.CheckByteCount(start,count,IsA());
+                      break;
+                     }
+      }
+      if (k < nc-1) printf(", ");
+   }
+   printf("\n");
+
+}
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
@@ -995,10 +1519,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
+      TStreamerElement *element = (TStreamerElement*)fElem[i];
 //#ifdef DEBUG
       if (gDebug > 1) {
-         TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
+         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%x, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Seek_t)pointer, fOffset[i]);
       }
 //#endif
       switch (fType[i]) {
@@ -1062,7 +1586,16 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                         }
 
          // Class    derived from TObject
-         case kObject:  { ((TObject*)(pointer+fOffset[i]))->Streamer(b); break;}
+         case kObject:  { 
+                         TClass *cl = element->GetClassPointer();
+                         if (cl->GetClassInfo()) {
+                            ((TObject*)(pointer+fOffset[i]))->Streamer(b);
+                            break;
+                         } else {
+                            cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],0);
+                         }
+                         break;
+                        }
 
          // Special case for TString, TObject, TNamed
          case kTString: { ((TString*)(pointer+fOffset[i]))->Streamer(b); break;}
@@ -1076,8 +1609,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          TStreamerElement *element = (TStreamerElement*)fElem[i];
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
-                            printf("ERROR, Streamer is null\n");
-                            element->ls();
+                            if (gDebug > 0) {
+                               printf("ERROR, Streamer is null\n");
+                               element->ls(); 
+                            }
                             break;
                          }
                          (*pstreamer)(b,pointer+fOffset[i],0);
@@ -1093,8 +1628,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          TStreamerElement *element = (TStreamerElement*)fElem[i];
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
-                            printf("ERROR, Streamer is null\n");
-                            element->ls();
+                            if (gDebug > 0) {
+                               printf("ERROR, Streamer is null\n");
+                               element->ls(); 
+                            }
                             break;
                          }
                          UInt_t start,count;
@@ -1108,8 +1645,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          TStreamerElement *element = (TStreamerElement*)fElem[i];
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
-                            printf("ERROR, Streamer is null\n");
-                            element->ls();
+                            if (gDebug > 0) {
+                               printf("ERROR, Streamer is null\n");
+                               element->ls(); 
+                            }
                             break;
                          }
                          Int_t *counter = (Int_t*)(pointer+fMethod[i]);
@@ -1710,7 +2249,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
    for (Int_t i=first;i<last;i++) {
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
+         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%x, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Seek_t)pointer,fOffset[i]);
       }
       switch (fType[i]) {
          // write basic types

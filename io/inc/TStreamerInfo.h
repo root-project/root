@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.16 2001/02/06 10:52:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.17 2001/02/21 08:54:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -42,6 +42,7 @@ private:
    Int_t             fClassVersion;   //Class version identifier
    Int_t             fNumber;         //!Unique identifier
    Int_t             fNdata;          //!number of optmized types
+   Int_t             fSize;           //!size of the persistent class
    Int_t            *fType;           //![fNdata]
    Int_t            *fNewType;        //![fNdata]
    Int_t            *fOffset;         //![fNdata]
@@ -56,7 +57,6 @@ private:
    static  Bool_t    fgOptimize;      //True if optimization on
    
    void              BuildUserInfo(const char *info);
-   void              Compile();
            
 public:
 
@@ -78,6 +78,8 @@ public:
    void                Build();
    void                BuildCheck();
    void                BuildOld();
+   void                Compile();
+   void                ComputeSize();
    void                ForceWriteInfo();
    Int_t               GenerateHeaderFile(const char *dirname);
    TClass             *GetClass() const {return fClass;}
@@ -91,9 +93,15 @@ public:
    Int_t              *GetLengths() const {return fLength;}
    ULong_t            *GetMethods() const {return fMethod;}
    Int_t              *GetOffsets() const {return fOffset;}
+   Int_t               GetSize()    const;
    Int_t              *GetTypes()   const {return fType;}
+   Double_t            GetValue(char *pointer, Int_t i, Int_t j) const;
+   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j) const;
    Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
+   Int_t               New(const char *p);
+   void                PrintValue(const char *name, char *pointer, Int_t i) const;
+   void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i) const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    void                SetClass(TClass *cl) {fClass = cl;}
@@ -102,6 +110,7 @@ public:
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
+   static Bool_t       CanOptimize();
    static void         Optimize(Bool_t opt=kTRUE);
     
    ClassDef(TStreamerInfo,2)  //Streamer information for one class version
