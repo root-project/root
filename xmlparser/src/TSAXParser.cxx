@@ -1,4 +1,4 @@
-// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.1 2005/03/14 15:33:43 rdm Exp $
+// @(#)root/xmlparser:$Name:  $:$Id: TSAXParser.cxx,v 1.2 2005/03/14 17:22:38 rdm Exp $
 // Author: Jose Lo   12/1/2005
 
 /*************************************************************************
@@ -55,10 +55,10 @@ public:
    static void EndElement(void *fParser, const xmlChar *name);
    static void Characters(void *fParser, const xmlChar *ch, Int_t len);
    static void Comment(void *fParser, const xmlChar *value);
+   static void CdataBlock(void *fParser, const xmlChar *value, Int_t len);
    static void Warning(void *fParser, const char *fmt, ...);
    static void Error(void *fParser, const char *fmt, ...);
    static void FatalError(void *fParser, const char *fmt, ...);
-   static void CdataBlock(void *fParser, const xmlChar *value, Int_t len);
 };
 
 
@@ -72,16 +72,26 @@ TSAXParser::TSAXParser()
    fSAXHandler = new xmlSAXHandler;
    memset(fSAXHandler, 0, sizeof(xmlSAXHandler));
 
-   fSAXHandler->startDocument = TSAXParserCallback::StartDocument;
-   fSAXHandler->endDocument   = TSAXParserCallback::EndDocument;
-   fSAXHandler->startElement  = TSAXParserCallback::StartElement;
-   fSAXHandler->endElement    = TSAXParserCallback::EndElement;
-   fSAXHandler->characters    = TSAXParserCallback::Characters;
-   fSAXHandler->comment       = TSAXParserCallback::Comment;
-   fSAXHandler->warning       = TSAXParserCallback::Warning;
-   fSAXHandler->error         = TSAXParserCallback::Error;
-   fSAXHandler->fatalError    = TSAXParserCallback::FatalError;
-   fSAXHandler->cdataBlock    = TSAXParserCallback::CdataBlock;
+   fSAXHandler->startDocument =
+                   (startDocumentSAXFunc)TSAXParserCallback::StartDocument;
+   fSAXHandler->endDocument   =
+                   (endDocumentSAXFunc)TSAXParserCallback::EndDocument;
+   fSAXHandler->startElement  =
+                   (startElementSAXFunc)TSAXParserCallback::StartElement;
+   fSAXHandler->endElement    =
+                   (endElementSAXFunc)TSAXParserCallback::EndElement;
+   fSAXHandler->characters    =
+                   (charactersSAXFunc)TSAXParserCallback::Characters;
+   fSAXHandler->comment       =
+                   (commentSAXFunc)TSAXParserCallback::Comment;
+   fSAXHandler->cdataBlock    =
+                   (cdataBlockSAXFunc)TSAXParserCallback::CdataBlock;
+   fSAXHandler->warning       =
+                   (warningSAXFunc)TSAXParserCallback::Warning;
+   fSAXHandler->error         =
+                   (errorSAXFunc)TSAXParserCallback::Error;
+   fSAXHandler->fatalError    =
+                   (fatalErrorSAXFunc)TSAXParserCallback::FatalError;
 }
 
 //______________________________________________________________________________
