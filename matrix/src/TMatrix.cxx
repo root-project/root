@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.46 2003/07/17 13:42:08 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.48 2003/08/23 00:08:13 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -163,6 +163,59 @@
 
 ClassImp(TMatrix)
 
+
+//______________________________________________________________________________
+TMatrix::TMatrix(Int_t no_rows, Int_t no_cols)
+{
+   Allocate(no_rows, no_cols);
+}
+
+//______________________________________________________________________________
+TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
+{
+   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+}
+
+//______________________________________________________________________________
+TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
+                        const Real_t *elements, Option_t *option)
+{
+  // option="F": array elements contains the matrix stored column-wise
+  //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
+  // else        it is supposed that array elements are stored row-wise
+  //             a[i,j] = elements[i*no_cols+j]
+
+  Allocate(no_rows, no_cols);
+  SetElements(elements,option);
+}
+
+//______________________________________________________________________________
+TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+                        const Real_t *elements, Option_t *option)
+{
+  Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+  SetElements(elements,option);
+}
+
+//______________________________________________________________________________
+TMatrix::TMatrix(const TLazyMatrix &lazy_constructor)
+{
+   Allocate(lazy_constructor.fRowUpb-lazy_constructor.fRowLwb+1,
+            lazy_constructor.fColUpb-lazy_constructor.fColLwb+1,
+            lazy_constructor.fRowLwb, lazy_constructor.fColLwb);
+  lazy_constructor.FillIn(*this);
+}
+
+//______________________________________________________________________________
+TMatrix::TMatrix(const TMatrix &another) : TObject(another)
+{
+   if (another.IsValid()) {
+      Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);
+      *this = another;
+   } else
+      Error("TMatrix(const TMatrix&)", "other matrix is not valid");
+}
+
 //______________________________________________________________________________
 void TMatrix::Allocate(Int_t no_rows, Int_t no_cols, Int_t row_lwb, Int_t col_lwb)
 {
@@ -203,6 +256,39 @@ void TMatrix::Allocate(Int_t no_rows, Int_t no_cols, Int_t row_lwb, Int_t col_lw
    Real_t *col_p;
    for (i = 0, col_p = &fElements[0]; i < fNcols; i++, col_p += fNrows)
       fIndex[i] = col_p;
+}
+
+//______________________________________________________________________________
+TMatrix &TMatrix::Apply(const TElementAction &action)
+{
+   if (!IsValid())
+      Error("Apply(TElementAction&)", "matrix not initialized");
+   else
+      for (Real_t *ep = fElements; ep < fElements+fNelems; ep++)
+         action.Operation(*ep);
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrix &TMatrix::Apply(const TElementPosAction &action)
+{
+   // Apply action to each element of the matrix. To action the location
+   // of the current element is passed. The matrix is traversed in the
+   // natural (that is, column by column) order.
+
+   if (!IsValid()) {
+      Error("Apply(TElementPosAction&)", "matrix not initialized");
+      return *this;
+   }
+
+   Real_t *ep = fElements;
+   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+         action.Operation(*ep++);
+
+   Assert(ep == fElements+fNelems);
+
+   return *this;
 }
 
 //______________________________________________________________________________
@@ -339,6 +425,12 @@ void TMatrix::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_up
    } else {
       Allocate(new_nrows, new_ncols, row_lwb, col_lwb);
    }
+}
+
+//______________________________________________________________________________
+void TMatrix::ResizeTo(const TMatrix &m)
+{
+   ResizeTo(m.GetRowLwb(), m.GetRowUpb(), m.GetColLwb(), m.GetColUpb());
 }
 
 //______________________________________________________________________________
@@ -643,6 +735,54 @@ Bool_t TMatrix::operator>=(Real_t val) const
 }
 
 //______________________________________________________________________________
+TMatrix &TMatrix::operator=(const TLazyMatrix &lazy_constructor)
+{
+   if (!IsValid()) {
+      Error("operator=(const TLazyMatrix&)", "matrix is not initialized");
+      return *this;
+   }
+   if (lazy_constructor.fRowUpb != GetRowUpb() ||
+       lazy_constructor.fColUpb != GetColUpb() ||
+       lazy_constructor.fRowLwb != GetRowLwb() ||
+       lazy_constructor.fColLwb != GetColLwb()) {
+      Error("operator=(const TLazyMatrix&)", "matrix is incompatible with "
+            "the assigned Lazy matrix");
+      return *this;
+   }
+
+   lazy_constructor.FillIn(*this);
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrix &TMatrix::operator=(const TMatrix &source)
+{
+   if (this != &source && AreCompatible(*this, source)) {
+      TObject::operator=(source);
+      memcpy(fElements, source.fElements, fNelems*sizeof(Real_t));
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+Real_t &TMatrix::operator()(Int_t rown, Int_t coln)
+{
+   return (Real_t&)((*(const TMatrix *)this)(rown,coln));
+}
+
+//______________________________________________________________________________
+const TMatrixRow TMatrix::operator[](int rown) const
+{
+   return TMatrixRow(*this,rown);
+}
+
+//______________________________________________________________________________
+TMatrixRow TMatrix::operator[](int rown)
+{
+   return TMatrixRow(*this,rown);
+}
+
+//______________________________________________________________________________
 TMatrix &TMatrix::Abs()
 {
    // Take an absolute value of a matrix, i.e. apply Abs() to each element.
@@ -919,6 +1059,29 @@ Double_t E2Norm(const TMatrix &m1, const TMatrix &m2)
 }
 
 //______________________________________________________________________________
+void TMatrix::GetElements(Real_t *elements, Option_t *option) const
+{
+  if (!IsValid()) {
+    Error("GetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(elements,fElements,fNelems*sizeof(Real_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
+    }
+  }
+}
+
+//______________________________________________________________________________
 TMatrix &TMatrix::NormByDiag(const TVector &v, Option_t *option)
 {
    // b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))
@@ -1089,6 +1252,29 @@ void TMatrix::Print(Option_t *) const
       }
    }
    printf("\n");
+}
+
+//______________________________________________________________________________
+void TMatrix::SetElements(const Real_t *elements, Option_t *option)
+{
+  if (!IsValid()) {
+    Error("SetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(fElements,elements,fNelems*sizeof(Real_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
+    }
+  }
 }
 
 //______________________________________________________________________________
@@ -2008,6 +2194,16 @@ void TMatrix::EigenSort(TMatrix &eigenVectors, TVector &eigenValues)
 }
 
 //______________________________________________________________________________
+TMatrix &TMatrix::Zero()
+{
+   if (!IsValid())
+      Error("Zero", "matrix not initialized");
+   else
+      memset(fElements, 0, fNelems*sizeof(Real_t));
+   return *this;
+}
+
+//______________________________________________________________________________
 const Real_t &TMatrix::operator()(Int_t rown, Int_t coln) const
 {
    // Access a single matrix element.
@@ -2574,6 +2770,27 @@ void Compare(const TMatrix &matrix1, const TMatrix &matrix2)
    printf("\n||Matrix1-Matrix2||\t\t\t\t%g", ndiff);
    printf("\n||Matrix1-Matrix2||/sqrt(||Matrix1|| ||Matrix2||)\t%g\n\n",
           ndiff/TMath::Max(TMath::Sqrt(norm1*norm2), 1e-7));
+}
+
+//______________________________________________________________________________
+Bool_t AreCompatible(const TMatrix &im1, const TMatrix &im2)
+{
+   if (!im1.IsValid()) {
+      ::Error("AreCompatible", "matrix 1 not initialized");
+      return kFALSE;
+   }
+   if (!im2.IsValid()) {
+      ::Error("AreCompatible", "matrix 2 not initialized");
+      return kFALSE;
+   }
+
+   if (im1.fNrows  != im2.fNrows  || im1.fNcols  != im2.fNcols ||
+       im1.fRowLwb != im2.fRowLwb || im1.fColLwb != im2.fColLwb) {
+      ::Error("AreCompatible", "matrices 1 and 2 not compatible");
+      return kFALSE;
+   }
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

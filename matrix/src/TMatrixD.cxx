@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.45 2003/07/17 10:10:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.46 2003/07/17 13:42:09 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -159,9 +159,139 @@
 #include "TClass.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilHist.h"
+#include "TMatrixDUtils.h"
 
 
 ClassImp(TMatrixD)
+
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols)
+{
+   Allocate(no_rows, no_cols);
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
+{
+   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols,
+                          const Double_t *elements, Option_t *option)
+{
+  // option="F": array elements contains the matrix stored column-wise
+  //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
+  // else        it is supposed that array elements are stored row-wise
+  //             a[i,j] = elements[i*no_cols+j]
+
+  Allocate(no_rows, no_cols);
+  SetElements(elements,option);
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
+                          const Double_t *elements, Option_t *option)
+{
+  Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
+  SetElements(elements,option);
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(EMatrixCreatorsOp1 op, const TMatrixD &prototype)
+{
+   // Create a matrix applying a specific operation to the prototype.
+   // Example: TMatrixD a(10,12); ...; TMatrixD b(TMatrixD::kTransposed, a);
+   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kInvertedPosDef.
+
+   Invalidate();
+
+   if (!prototype.IsValid()) {
+      Error("TMatrixD(EMatrixCreatorOp1)", "prototype matrix not initialized");
+      return;
+   }
+
+   switch(op) {
+      case kZero:
+         Allocate(prototype.fNrows, prototype.fNcols,
+                  prototype.fRowLwb, prototype.fColLwb);
+         break;
+
+      case kUnit:
+         Allocate(prototype.fNrows, prototype.fNcols,
+                  prototype.fRowLwb, prototype.fColLwb);
+         UnitMatrix();
+         break;
+
+      case kTransposed:
+         Transpose(prototype);
+         break;
+
+      case kInverted:
+         Invert(prototype);
+         break;
+
+      case kInvertedPosDef:
+         InvertPosDef(prototype);
+         break;
+
+      default:
+         Error("TMatrixD(EMatrixCreatorOp1)", "operation %d not yet implemented", op);
+   }
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(const TMatrixD &a, EMatrixCreatorsOp2 op, const TMatrixD &b)
+{
+   // Create a matrix applying a specific operation to two prototypes.
+   // Example: TMatrixD a(10,12), b(12,5); ...; TMatrixD c(a, TMatrixD::kMult, b);
+   // Supported operations are: kMult (a*b), kTransposeMult (a'*b),
+   // kInvMult,kInvPosDefMult (a^(-1)*b) and kAtBA (a'*b*a).
+
+   Invalidate();
+
+   if (!a.IsValid()) {
+      Error("TMatrixD(EMatrixCreatorOp2)", "matrix a not initialized");
+      return;
+   }
+   if (!b.IsValid()) {
+      Error("TMatrixD(EMatrixCreatorOp2)", "matrix b not initialized");
+      return;
+   }
+
+   switch(op) {
+      case kMult:
+         AMultB(a, b);
+         break;
+
+      case kTransposeMult:
+         AtMultB(a, b);
+         break;
+
+      default:
+         Error("TMatrixD(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
+   }
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(const TMatrixD &another) : TObject(another)
+{
+   if (another.IsValid()) {
+      Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);
+      *this = another;
+   } else
+      Error("TMatrixD(const TMatrixD&)", "other matrix is not valid");
+}
+
+//______________________________________________________________________________
+TMatrixD::TMatrixD(const TLazyMatrixD &lazy_constructor)
+{
+   Allocate(lazy_constructor.fRowUpb-lazy_constructor.fRowLwb+1,
+            lazy_constructor.fColUpb-lazy_constructor.fColLwb+1,
+            lazy_constructor.fRowLwb, lazy_constructor.fColLwb);
+  lazy_constructor.FillIn(*this);
+}
 
 //______________________________________________________________________________
 void TMatrixD::Allocate(Int_t no_rows, Int_t no_cols, Int_t row_lwb, Int_t col_lwb)
@@ -216,6 +346,39 @@ TMatrixD::~TMatrixD()
 }
 
 //______________________________________________________________________________
+TMatrixD &TMatrixD::Apply(const TElementActionD &action)
+{
+   if (!IsValid())
+      Error("Apply(TElementActionD&)", "matrix not initialized");
+   else
+      for (Double_t *ep = fElements; ep < fElements+fNelems; ep++)
+         action.Operation(*ep);
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
+{
+   // Apply action to each element of the matrix. To action the location
+   // of the current element is passed. The matrix is traversed in the
+   // natural (that is, column by column) order.
+
+   if (!IsValid()) {
+      Error("Apply(TElementPosActionD&)", "matrix not initialized");
+      return *this;
+   }
+
+   Double_t *ep = fElements;
+   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
+      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+         action.Operation(*ep++);
+
+   Assert(ep == fElements+fNelems);
+
+   return *this;
+}
+
+//______________________________________________________________________________
 void TMatrixD::Clear(Option_t *)
 {
    // delete dynamic structures
@@ -246,6 +409,29 @@ void TMatrixD::Draw(Option_t *option)
       }
    }
    util->PaintMatrix(*this,option);
+}
+
+//______________________________________________________________________________
+void TMatrixD::GetElements(Double_t *elements, Option_t *option) const
+{
+  if (!IsValid()) {
+    Error("GetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(elements,fElements,fNelems*sizeof(Double_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
+    }
+  }
 }
 
 //______________________________________________________________________________
@@ -341,79 +527,9 @@ void TMatrixD::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_u
 }
 
 //______________________________________________________________________________
-TMatrixD::TMatrixD(EMatrixCreatorsOp1 op, const TMatrixD &prototype)
+void TMatrixD::ResizeTo(const TMatrixD &m)
 {
-   // Create a matrix applying a specific operation to the prototype.
-   // Example: TMatrixD a(10,12); ...; TMatrixD b(TMatrixD::kTransposed, a);
-   // Supported operations are: kZero, kUnit, kTransposed, kInverted and kInvertedPosDef.
-
-   Invalidate();
-
-   if (!prototype.IsValid()) {
-      Error("TMatrixD(EMatrixCreatorOp1)", "prototype matrix not initialized");
-      return;
-   }
-
-   switch(op) {
-      case kZero:
-         Allocate(prototype.fNrows, prototype.fNcols,
-                  prototype.fRowLwb, prototype.fColLwb);
-         break;
-
-      case kUnit:
-         Allocate(prototype.fNrows, prototype.fNcols,
-                  prototype.fRowLwb, prototype.fColLwb);
-         UnitMatrix();
-         break;
-
-      case kTransposed:
-         Transpose(prototype);
-         break;
-
-      case kInverted:
-         Invert(prototype);
-         break;
-
-      case kInvertedPosDef:
-         InvertPosDef(prototype);
-         break;
-
-      default:
-         Error("TMatrixD(EMatrixCreatorOp1)", "operation %d not yet implemented", op);
-   }
-}
-
-//______________________________________________________________________________
-TMatrixD::TMatrixD(const TMatrixD &a, EMatrixCreatorsOp2 op, const TMatrixD &b)
-{
-   // Create a matrix applying a specific operation to two prototypes.
-   // Example: TMatrixD a(10,12), b(12,5); ...; TMatrixD c(a, TMatrixD::kMult, b);
-   // Supported operations are: kMult (a*b), kTransposeMult (a'*b),
-   // kInvMult,kInvPosDefMult (a^(-1)*b) and kAtBA (a'*b*a).
-
-   Invalidate();
-
-   if (!a.IsValid()) {
-      Error("TMatrixD(EMatrixCreatorOp2)", "matrix a not initialized");
-      return;
-   }
-   if (!b.IsValid()) {
-      Error("TMatrixD(EMatrixCreatorOp2)", "matrix b not initialized");
-      return;
-   }
-
-   switch(op) {
-      case kMult:
-         AMultB(a, b);
-         break;
-
-      case kTransposeMult:
-         AtMultB(a, b);
-         break;
-
-      default:
-         Error("TMatrixD(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
-   }
+   ResizeTo(m.GetRowLwb(), m.GetRowUpb(), m.GetColLwb(), m.GetColUpb());
 }
 
 //______________________________________________________________________________
@@ -640,6 +756,55 @@ Bool_t TMatrixD::operator>=(Double_t val) const
 
    return kTRUE;
 }
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator=(const TLazyMatrixD &lazy_constructor)
+{
+   if (!IsValid()) {
+      Error("operator=(const TLazyMatrixD&)", "matrix is not initialized");
+      return *this;
+   }
+   if (lazy_constructor.fRowUpb != GetRowUpb() ||
+       lazy_constructor.fColUpb != GetColUpb() ||
+       lazy_constructor.fRowLwb != GetRowLwb() ||
+       lazy_constructor.fColLwb != GetColLwb()) {
+      Error("operator=(const TLazyMatrixD&)", "matrix is incompatible with "
+            "the assigned Lazy matrix");
+      return *this;
+   }
+
+   lazy_constructor.FillIn(*this);
+   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::operator=(const TMatrixD &source)
+{
+   if (this != &source && AreCompatible(*this, source)) {
+      TObject::operator=(source);
+      memcpy(fElements, source.fElements, fNelems*sizeof(Double_t));
+   }
+   return *this;
+}
+
+//______________________________________________________________________________
+Double_t &TMatrixD::operator()(Int_t rown, Int_t coln)
+{
+   return (Double_t&)((*(const TMatrixD *)this)(rown,coln));
+}
+
+//______________________________________________________________________________
+const TMatrixDRow TMatrixD::operator[](int rown) const
+{
+   return TMatrixDRow(*this,rown);
+}
+
+//______________________________________________________________________________
+TMatrixDRow TMatrixD::operator[](int rown)
+{
+   return TMatrixDRow(*this,rown);
+}
+
 
 //______________________________________________________________________________
 TMatrixD &TMatrixD::Abs()
@@ -2010,6 +2175,39 @@ void TMatrixD::EigenSort(TMatrixD &eigenVectors,
 }
 
 //______________________________________________________________________________
+void TMatrixD::SetElements(const Double_t *elements, Option_t *option)
+{
+  if (!IsValid()) {
+    Error("SetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(fElements,elements,fNelems*sizeof(Double_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
+    }
+  }
+}
+
+//______________________________________________________________________________
+TMatrixD &TMatrixD::Zero()
+{
+   if (!IsValid())
+      Error("Zero", "matrix not initialized");
+   else
+      memset(fElements, 0, fNelems*sizeof(Double_t));
+   return *this;
+}
+
+//______________________________________________________________________________
 const Double_t &TMatrixD::operator()(Int_t rown, Int_t coln) const
 {
    // Access single matrix element.
@@ -2520,6 +2718,27 @@ void TMatrixD::Streamer(TBuffer &R__b)
    } else {
       TMatrixD::Class()->WriteBuffer(R__b,this);
    }
+}
+
+//______________________________________________________________________________
+Bool_t AreCompatible(const TMatrixD &im1, const TMatrixD &im2)
+{
+   if (!im1.IsValid()) {
+      ::Error("AreCompatible", "matrix 1 not initialized");
+      return kFALSE;
+   }
+   if (!im2.IsValid()) {
+      ::Error("AreCompatible", "matrix 2 not initialized");
+      return kFALSE;
+   }
+
+   if (im1.fNrows  != im2.fNrows  || im1.fNcols  != im2.fNcols ||
+       im1.fRowLwb != im2.fRowLwb || im1.fColLwb != im2.fColLwb) {
+      ::Error("AreCompatible", "matrices 1 and 2 not compatible");
+      return kFALSE;
+   }
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________
