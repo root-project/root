@@ -24,7 +24,7 @@ GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
 ifneq ($(OPENIVLIB),)
 GLS          += TRootOIViewer.cxx
 IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
-IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) -lXm -lXt -lXext -lX11
+IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) -lXm -lXt -lXext -lX11 -lm
 endif
 endif
 endif
