@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenericPdf.cc,v 1.17 2002/09/05 04:33:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,32 +38,33 @@ ClassImp(RooGenericPdf)
 
 
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), _formula(name,title,dependents)
+  RooAbsPdf(name,title), 
+  _formula(name,title,dependents),
+  _actualVars("actualVars","Variables used by PDF expression",this)
 {  
-  // Constructor with title used as formula expression
-  TIterator* depIter = _formula.actualDependents().createIterator() ;
-  RooAbsArg* server = 0;
-  while (server=(RooAbsArg*)depIter->Next()) {
-    addServer(*server,kTRUE,kFALSE) ;
-  }
+  // Constructor with formula expression and list of input variables
+  _actualVars.add(dependents) ; 
+
+  if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
 			     const char* formula, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), _formula(name,formula,dependents)
+  RooAbsPdf(name,title), 
+  _formula(name,formula,dependents),
+  _actualVars("actualVars","Variables used by PDF expression",this)
 {  
-  // Constructor with separate title and formula expression
-  TIterator* depIter = _formula.actualDependents().createIterator() ;
-  RooAbsArg* server = 0;
-  while (server=(RooAbsArg*)depIter->Next()) {
-    addServer(*server,kTRUE,kFALSE) ;
-  }
+  _actualVars.add(dependents) ; 
+
+  if (_actualVars.getSize()==0) _value = traceEval(0) ;
 }
 
 
 RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) : 
-  RooAbsPdf(other, name), _formula(other._formula)
+  RooAbsPdf(other, name), 
+  _formula(other._formula),
+  _actualVars("actualVars",this,other._actualVars) 
 {
   // Copy constructor
 }

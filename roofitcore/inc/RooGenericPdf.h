@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenericPdf.rdl,v 1.13 2002/09/05 04:33:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,6 +18,7 @@
 
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooFormula.hh"
+#include "RooFitCore/RooListProxy.hh"
 
 class RooArgList ;
 
@@ -44,6 +45,7 @@ public:
 protected:
 
   // Function evaluation
+  RooListProxy _actualVars ; 
   virtual Double_t evaluate() const ;
 
   Bool_t setFormula(const char* formula) ;
