@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.1 2003/05/05 20:34:35 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.h,v 1.2 2003/08/08 09:18:35 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,8 @@ public:
   virtual Double_t *GetCovarianceMatrix();
   virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc);
   Double_t*        GetPL0() const { return fPL0;} 
-  virtual Double_t GetParameter(Int_t ipar);
+  virtual Double_t GetParError(Int_t ipar) const;
+  virtual Double_t GetParameter(Int_t ipar) const ;
   virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh);
   virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx);
   virtual Double_t GetSumLog(Int_t );

@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.10 2003/07/05 20:41:18 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.11 2003/08/08 09:18:35 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -782,13 +782,23 @@ Double_t *TFumili::GetCovarianceMatrix()
 
 }
 
+
 //______________________________________________________________________________
-Double_t TFumili::GetParameter(Int_t ipar)
+Double_t TFumili::GetParError(Int_t ipar) const
+{
+   // return error of parameter ipar
+
+   if (ipar<0 || ipar>=fNpar) return 0;
+   else return fA[ipar];
+}
+
+//______________________________________________________________________________
+Double_t TFumili::GetParameter(Int_t ipar) const
 {
    // return current value of parameter ipar
 
    if (ipar<0 || ipar>=fNpar) return 0;
-   else return fA[ipar];
+   else return fParamError[ipar];
 }
 
 

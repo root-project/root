@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.9 2003/07/09 06:55:58 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.10 2003/08/08 09:18:35 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -110,8 +110,23 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
    return ierr;
 }
 
+
 //______________________________________________________________________________
-Double_t TFitter::GetParameter(Int_t ipar)
+Double_t TFitter::GetParError(Int_t ipar) const
+{
+   // return error of parameter ipar
+
+   Int_t ierr = 0;
+   TString pname;
+   Double_t value,verr,vlow,vhigh;
+
+   fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
+   return verr;
+}
+
+
+//______________________________________________________________________________
+Double_t TFitter::GetParameter(Int_t ipar) const
 {
    // return current value of parameter ipar
 
