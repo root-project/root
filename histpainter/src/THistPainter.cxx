@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.197 2004/11/07 09:16:27 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.198 2004/11/22 15:55:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2425,8 +2425,8 @@ void THistPainter::PaintContour(Option_t *option)
    }
    //store negative contours from 0 to minimum, then all positive contours
    k = 0;
-   for (ipoly=first;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
-   for (ipoly=first+1;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
+   for (ipoly=first-1;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
+   for (ipoly=first;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
    // we can now draw sorted contours
    ContListNb = 0;
    for (k=0;k<ncontour;k++) {
