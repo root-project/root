@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.127 2003/03/17 13:02:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.128 2003/03/21 09:09:48 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4551,7 +4551,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
       funlevel[i] = fH->GetContourLevel(i);
-      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
    colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
