@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttLineEditor.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -16,6 +16,12 @@
 //  Implements GUI for editing line attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/line_e.gif">
+*/
+//End_Html
+
 
 #include "TAttLineEditor.h"
 #include "TGColorSelect.h"

@@ -26,6 +26,12 @@
 #include "TGLabel.h"
 #include "TColor.h"
 #include "TCanvas.h"
+//Begin_Html
+/*
+<img src="gif/pad_e.gif">
+*/
+//End_Html
+
 
 
 ClassImp(TGedFrame)

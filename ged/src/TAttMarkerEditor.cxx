@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.2 2004/06/18 22:10:13 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttMarkerEditor.cxx,v 1.3 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -16,6 +16,12 @@
 //  Implements GUI for editing marker attributes.                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/mark_e.gif">
+*/
+//End_Html
+
 
 #include "TAttMarkerEditor.h"
 #include "TGedMarkerSelect.h"

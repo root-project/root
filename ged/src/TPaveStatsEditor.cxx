@@ -16,6 +16,12 @@
 //  Implements GUI for editing attributes of TPaveStats objects.        //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/pavs_e.gif">
+*/
+//End_Html
+
 
 #include "TPaveStatsEditor.h"
 #include "TGClient.h"

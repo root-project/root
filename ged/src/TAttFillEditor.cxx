@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.1 2004/06/18 15:55:00 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -16,6 +16,11 @@
 //  Implements GUI for editing fill attributes.                         //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/fill_e.gif">
+*/
+//End_Html
 
 #include "TAttFillEditor.h"
 #include "TGedPatternSelect.h"

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.3 2004/06/30 13:04:44 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -16,6 +16,12 @@
 //  Implements GUI for axis attributes.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+//Begin_Html
+/*
+<img src="gif/axis_e.gif">
+*/
+//End_Html
+
 
 #include "TAxisEditor.h"
 #include "TGedFrame.h"
