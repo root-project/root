@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.38 2003/04/03 13:46:50 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.39 2003/04/04 10:21:16 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -65,15 +65,17 @@
 #include "compiledata.h"
 
 #ifndef R__WIN32
-const char* const kCP = "/bin/cp -f";
-const char* const kRM = "/bin/rm -rf";
-const char* const kLS = "/bin/ls -l";
-const char* const kUNTAR = "/bin/zcat %s/%s | (cd %s; tar xf -)";
+const char* const kCP     = "/bin/cp -f";
+const char* const kRM     = "/bin/rm -rf";
+const char* const kLS     = "/bin/ls -l";
+const char* const kUNTAR  = "%s -c %s/%s | (cd %s; tar xf -)";
+const char* const kGUNZIP = "gunzip";
 #else
-const char* const kCP = "copy";
-const char* const kRM = "delete";
-const char* const kLS = "dir";
-const char* const kUNTAR = "...";
+const char* const kCP     = "copy";
+const char* const kRM     = "delete";
+const char* const kLS     = "dir";
+const char* const kUNTAR  = "...";
+const char* const kGUNZIP = "gunzip";
 #endif
 
 
@@ -669,12 +671,21 @@ void TProofServ::HandleSocketInput()
                   if (st)
                      Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s %s/%s",
                            kRM, fPackageDir.Data(), packnam.Data());
-                  // untar package
-                  st = gSystem->Exec(Form(kUNTAR, fPackageDir.Data(), filenam.Data(),
-                                     fPackageDir.Data()));
-                  if (st)
-                     Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s",
-                           Form(kUNTAR, fPackageDir.Data(), filenam.Data(), fPackageDir.Data()));
+                  // find gunzip...
+                  char *gunzip = gSystem->Which(gSystem->Getenv("PATH"),kGUNZIP,
+                                                kExecutePermission);
+                  if (gunzip) {
+                     // untar package
+                     st = gSystem->Exec(Form(kUNTAR, gunzip, fPackageDir.Data(),
+                                        filenam.Data(), fPackageDir.Data()));
+                     if (st)
+                        Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s",
+                              Form(kUNTAR, gunzip, fPackageDir.Data(),
+                                   filenam.Data(), fPackageDir.Data()));
+                     delete [] gunzip;
+                  } else
+                     Error("HandleInputSocket:kPROOF_CHECKFILE", "%s not found",
+                           kGUNZIP);
                   // check that fPackageDir/packnam now exists
                   if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
                      // par file did not unpack itself in the expected directory, failure
@@ -784,8 +795,8 @@ void TProofServ::HandleSocketInput()
          {
             // handle here all cache and package requests:
             // type: 1 = ShowCache, 2 = ClearCache, 3 = ShowPackages,
-            // 4 = ClearPackages, 5 = ClearPackage, 6 = EnablePackage,
-            // 7 = ShowEnabledPackages
+            // 4 = ClearPackages, 5 = ClearPackage, 6 = BuildPackage,
+            // 7 = LoadPackage, 8 = ShowEnabledPackages
             Int_t  status = 0;
             Int_t  type;
             Bool_t all;  //build;
@@ -868,23 +879,47 @@ void TProofServ::HandleSocketInput()
                             status = -1;
                      }
 
-                     // check for SETUP.C and execute
-                     if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
-                        gROOT->Macro("PROOF-INF/SETUP.C");
-                     }
-
                      gSystem->ChangeDirectory(ocwd);
 
                   }
                   UnlockPackage();
+                  // if built successful propagate to slaves
+                  if (!status) {
+                     if (IsMaster())
+                        fProof->BuildPackage(package);
+
+                     PDB(kPackage, 1)
+                        Info("HandleSocketInput:kPROOF_CACHE",
+                             "package %s successfully built", package.Data());
+                  }
+                  break;
+               case 7:
+                  (*mess) >> package;
+                  // always follows on case 6 so no need to check for PROOF-INF
+                  pdir = fPackageDir + "/" + package;
+
+                  ocwd = gSystem->WorkingDirectory();
+                  gSystem->ChangeDirectory(pdir);
+
+                  // check for SETUP.C and execute
+                  if (!gSystem->AccessPathName(pdir + "/PROOF-INF/SETUP.C")) {
+                     gROOT->Macro("PROOF-INF/SETUP.C");
+                  }
+
+                  gSystem->ChangeDirectory(ocwd);
+
                   // if successful add to list and propagate to slaves
                   if (!status) {
                      fEnabledPackages->Add(new TObjString(package));
                      if (IsMaster())
-                        fProof->EnablePackage(package);
+                        fProof->LoadPackage(package);
+
+                     PDB(kPackage, 1)
+                         Info("HandleSocketInput:kPROOF_CACHE",
+                              "package %s successfully loaded", package.Data());
                   }
                   break;
-               case 7:
+               case 8:
                   (*mess) >> all;
                   if (IsMaster())
                      printf("*** Enabled packages ***\n");

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.41 2003/04/04 00:52:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.42 2003/04/04 10:21:16 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1708,7 +1708,7 @@ void TProof::ShowEnabledPackages(Bool_t all)
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(7) << all;
+   mess << Int_t(8) << all;
    Broadcast(mess);
    Collect();
 }
@@ -1734,14 +1734,15 @@ void TProof::ClearPackage(const char *package)
    if (!IsValid()) return;
 
    if (!package || !strlen(package)) {
-      ClearPackages();
+      Error("ClearPackage", "need to specify a package name");
       return;
    }
 
-   // if name, erroneously ends in .par, strip off .par
+   // if name, erroneously, is a par pathname strip off .par and path
    TString pac = package;
    if (pac.EndsWith(".par"))
       pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(5) << pac;
@@ -1750,10 +1751,66 @@ void TProof::ClearPackage(const char *package)
 }
 
 //______________________________________________________________________________
+Int_t TProof::BuildPackage(const char *package)
+{
+   // Build specified package. Executes the PROOF-INF/BUILD.sh
+   // script if it exists on all unique nodes.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (!package || !strlen(package)) {
+      Error("BuildPackage", "need to specify a package name");
+      return -1;
+   }
+
+   // if name, erroneously, is a par pathname strip off .par and path
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(6) << pac;
+   Broadcast(mess, kUnique);
+   Collect(kUnique);
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::LoadPackage(const char *package)
+{
+   // Load specified package. Executes the PROOF-INF/SETUP.C script
+   // on all active nodes.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (!package || !strlen(package)) {
+      Error("LoadPackage", "need to specify a package name");
+      return -1;
+   }
+
+   // if name, erroneously, is a par pathname strip off .par and path
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(7) << pac;
+   Broadcast(mess);
+   Collect();
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
-   // if exists followed by the PROOF-INF/SETUP.C script.
+   // script if it exists followed by the PROOF-INF/SETUP.C script.
    // Returns 0 in case of success and -1 in case of error.
 
    if (!IsValid()) return -1;
@@ -1763,21 +1820,23 @@ Int_t TProof::EnablePackage(const char *package)
       return -1;
    }
 
-   // if name, erroneously ends in .par, strip off .par
+   // if name, erroneously, is a par pathname strip off .par and path
    TString pac = package;
    if (pac.EndsWith(".par"))
       pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(6) << pac;
-   Broadcast(mess);
-   Collect();
+   if (BuildPackage(pac) == -1)
+      return -1;
 
-   return fStatus;
+   if (LoadPackage(pac) == -1)
+      return -1;
+
+   return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *par, Int_t parallel)
+Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -1794,14 +1853,16 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
 
    if (!IsValid()) return -1;
 
-   TString spar = par;
-   if (!spar.EndsWith(".par")) {
-      Error("UploadPackage", "package %s must have extension .par", par);
+   TString par = tpar;
+   if (!par.EndsWith(".par")) {
+      Error("UploadPackage", "package %s must have extension .par", tpar);
       return -1;
    }
 
+   gSystem->ExpandPathName(par);
+
    if (gSystem->AccessPathName(par, kReadPermission)) {
-      Error("UploadPackage", "package %s does not exist", par);
+      Error("UploadPackage", "package %s does not exist", par.Data());
       return -1;
    }
 
@@ -1844,7 +1905,7 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
          delete reply;
          sl->GetSocket()->Recv(reply);
          if (reply->What() != kPROOF_CHECKFILE) {
-            Error("UploadPackage", "unpacking of package %s failed", par);
+            Error("UploadPackage", "unpacking of package %s failed", par.Data());
             delete reply;
             return -1;
          }

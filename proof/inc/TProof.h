@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.32 2003/03/18 16:13:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.33 2003/04/04 00:52:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -62,9 +62,10 @@ class TPacketizer2;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
+// 2 -> 3: package manager enabling protocol changed
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 2;             // protocol version number
+const Int_t       kPROOF_Protocol = 3;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -145,6 +146,8 @@ private:
    void     AskStatus();
    Int_t    GoParallel(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
+   Int_t    BuildPackage(const char *package);
+   Int_t    LoadPackage(const char *package);
 
    Int_t    Broadcast(const TMessage &mess, TList *slaves);
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
