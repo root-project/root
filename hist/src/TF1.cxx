@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.45 2002/09/15 19:48:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.46 2002/09/27 12:14:44 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -90,6 +90,8 @@ ClassImp(TF1)
 //
 //
 //  TF1 objects can reference other TF1 objects (thanks John Odonnell)
+//  of type A or B defined above.This excludes CINT interpreted functions
+//  and compiled functions.
 //  However, there is a restriction. A function cannot reference a basic
 //  function if the basic function is a polynomial polN.
 //  Example:
