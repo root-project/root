@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.7 2000/08/28 17:24:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.8 2000/11/21 20:32:09 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -907,7 +907,7 @@ void TF1::InitStandardFunctions()
       f1 = new TF1("expo","expo",-1,1); f1->SetParameters(1,1);
       for (Int_t i=0;i<10;i++) {
          f1 = new TF1(Form("pol%d",i),Form("pol%d",i),-1,1);
-         f1->SetParameters(1,1,1,1,1,1,1,1,1);
+         f1->SetParameters(1,1,1,1,1,1,1,1,1,1);
       }
    }
 }
