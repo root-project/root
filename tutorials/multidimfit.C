@@ -93,6 +93,13 @@ int CompareResults(TMultiDimFit *fit)
         k++;
      }
   }
+  
+  // now test the result of the generated function
+  gROOT->ProcessLine(".L MDF.C");
+  Double_t x[]    = {5,5,5,5};
+  Double_t refMDF = 43.4507;
+  Double_t rMDF   = MDF(x);
+  if (TMath::Abs(rMDF -43.4507) > 1e-4) return 4;
   return 0;     
 }
 
@@ -107,15 +114,16 @@ Int_t multidimfit()
   cout << "*************************************************" << endl; 
   cout << endl;
 
-  // Initialize global TRasnom object. 
+  // Initialize global TRannom object. 
   gRandom = new TRandom();
 
   // Open output file 
   TFile* output = new TFile("mdf.root", "RECREATE");
-
+  
   // Global data parameters 
   Int_t nVars       = 4;
   Int_t nData       = 500;
+  Double_t x[4];
 
   // make fit object and set parameters on it. 
   TMultiDimFit* fit = new TMultiDimFit(nVars, TMultiDimFit::kMonomials,"v");
@@ -133,7 +141,6 @@ Int_t multidimfit()
   // variables to hold the temporary input data 
   Double_t d;
   Double_t e;
-  Double_t *x = new Double_t[nVars];
   
   // Print out the start parameters
   fit->Print("p");
