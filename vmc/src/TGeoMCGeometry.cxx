@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.2 2003/08/05 22:08:24 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.3 2003/09/23 14:03:15 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -17,8 +17,10 @@ ClassImp(TGeoMCGeometry)
 TGeoMCGeometry* TGeoMCGeometry::fgInstance=0;
 
 //_____________________________________________________________________________
-TGeoMCGeometry::TGeoMCGeometry(const char *name, const char *title) 
-  : TVirtualMCGeometry(name, title)
+TGeoMCGeometry::TGeoMCGeometry(const char *name, const char *title,
+                               Bool_t g3CompatibleVolumeNames) 
+  : TVirtualMCGeometry(name, title),
+    fG3CompatibleVolumeNames(g3CompatibleVolumeNames)
 {
   //
   // Standard constructor
@@ -27,7 +29,8 @@ TGeoMCGeometry::TGeoMCGeometry(const char *name, const char *title)
 
 //_____________________________________________________________________________
 TGeoMCGeometry::TGeoMCGeometry()
-  : TVirtualMCGeometry()
+  : TVirtualMCGeometry(),
+    fG3CompatibleVolumeNames(kFALSE)
 {    
   //
   // Default constructor
@@ -82,12 +85,19 @@ void TGeoMCGeometry::Vname(const char *name, char *vname) const
   //
   //  convert name to upper case. Make vname at least 4 chars
   //
-  Int_t l = strlen(name);
-  Int_t i;
-  l = l < 4 ? l : 4;
-  for (i=0;i<l;i++) vname[i] = toupper(name[i]);
-  for (i=l;i<4;i++) vname[i] = ' ';
-  vname[4] = 0;      
+  if (fG3CompatibleVolumeNames) {
+    Int_t l = strlen(name);
+    Int_t i;
+    l = l < 4 ? l : 4;
+    for (i=0;i<l;i++) vname[i] = toupper(name[i]);
+    for (i=l;i<4;i++) vname[i] = ' ';
+    vname[4] = 0;
+  }
+  else {
+    Int_t l = strlen(name);
+    for (Int_t i=0;i<l;i++) vname[i] = name[i];
+    vname[l] = 0;
+  }
 }
  
 //
