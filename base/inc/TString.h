@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.28 2004/01/30 08:12:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.29 2004/01/31 08:59:09 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -55,6 +55,7 @@ namespace std { using ::string; }
 class TRegexp;
 class TString;
 class TSubString;
+class TObjArray;
 
 TString operator+(const TString& s1, const TString& s2);
 TString operator+(const TString& s,  const char *cs);
@@ -346,6 +347,7 @@ public:
    TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
    void         ToLower();                              // Change self to lower-case
    void         ToUpper();                              // Change self to upper-case
+   TObjArray   *Tokenize(const TString &delim) const;
 
    // Static member functions
    static Ssiz_t  InitialCapacity(Ssiz_t ic = 15);      // Initial allocation capacity

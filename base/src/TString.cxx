@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.23 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.26 2004/01/31 08:59:09 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -28,7 +28,13 @@
 #include "TError.h"
 #include "Bytes.h"
 #include "TClass.h"
-#include <string>
+#include "TObjArray.h"
+#include "TObjString.h"
+#include <list>
+
+#ifdef R__GLOBALSTL
+namespace std { using ::list; }
+#endif
 
 // Amount to shift hash values to avoid clustering
 
@@ -1390,6 +1396,50 @@ Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
    return strcasecmp(s, s2) == 0;
 }
 
+//__________________________________________________________________________________
+TObjArray *TString::Tokenize(const TString &delim) const
+{
+   // This function is used to isolate sequential tokens in a TString.
+   // These tokens are separated in the string by at least one of the
+   // characters in delim. The returned array contains the tokens
+   // as TObjString's. The returned array is the owner of the objects,
+   // and must be deleted by the user.
+
+   std::list<Int_t> splitIndex;
+
+   Int_t i, start, nrDiff = 0;
+   for (i = 0; i < delim.Length(); i++) {
+      start = 0;
+      while (start < Length()) {
+         Int_t pos = Index(delim(i), start);
+         if (pos == kNPOS) break;
+         splitIndex.push_back(pos);
+         start = pos + 1;
+      }
+      if (start > 0) nrDiff++;
+   }
+   splitIndex.push_back(Length());
+
+   if (nrDiff > 1)
+      splitIndex.sort();
+
+   TObjArray *arr = new TObjArray();
+   arr->SetOwner();
+
+   start = -1;
+   std::list<Int_t>::const_iterator it;
+   for (it = splitIndex.begin(); it != splitIndex.end(); it++) {
+      Int_t stop = *it;
+      if (stop - 1 >= start + 1) {
+         TString tok = (*this)(start+1, stop-start-1);
+         TObjString *objstr = new TObjString(tok);
+         arr->Add(objstr);
+      }
+      start = stop;
+   }
+
+   return arr;
+}
 
 //---- Global String Handling Functions ----------------------------------------
 
