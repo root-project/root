@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.20 2002/05/22 00:48:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.21 2002/08/06 20:50:50 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
    Seek_t      fSeekInfo;         //Location on disk of StreamerInfo record
    Int_t       fD;                //File descriptor
    Int_t       fVersion;          //File format version
-   Int_t       fCompress;         //(=1 file is compressed, 0 otherwise)
+   Int_t       fCompress;         //Compression level from 0(not compressed) to 9 (max compression)
    Int_t       fNbytesFree;       //Number of bytes for free segments structure
    Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
    Int_t       fWritten;          //Number of objects written so far
