@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.40 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.41 2004/12/01 16:57:19 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -317,20 +317,22 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    // Handle mouse button events.
    // Buttons 4 and 5 are from the mouse scroll wheel
-   if (event->fCode == kButton4) {
-      // zoom out
-      fZoom[fConf] *= 1.2;
-      fCamera[fConf]->Zoom(fZoom[fConf]);
-      DrawObjects();
-      return kTRUE;
-   }
-   if (event->fCode == kButton5) {
-      // zoom in
-      fRender->SetNeedFrustum();
-      fZoom[fConf] /= 1.2;
-      fCamera[fConf]->Zoom(fZoom[fConf]);
-      DrawObjects();
-      return kTRUE;
+   if (event->fType == kButtonPress) {
+      if (event->fCode == kButton4) {
+         // zoom out
+         fZoom[fConf] *= 1.2;
+         fCamera[fConf]->Zoom(fZoom[fConf]);
+         DrawObjects();
+         return kTRUE;
+      }
+      if (event->fCode == kButton5) {
+         // zoom in
+         fRender->SetNeedFrustum();
+         fZoom[fConf] /= 1.2;
+         fCamera[fConf]->Zoom(fZoom[fConf]);
+         DrawObjects();
+         return kTRUE;
+      }
    }
    if (event->fType == kButtonPress) {
       if(event->fCode == kButton1 && fConf == kPERSP) {
