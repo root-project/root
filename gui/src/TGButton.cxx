@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.11 2003/07/16 09:19:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.12 2003/07/18 23:51:49 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -458,6 +458,24 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
 }
 
 //______________________________________________________________________________
+void TGTextButton::Resize(UInt_t w, UInt_t h)
+{
+   // Recalculate text size and resize button
+
+   if (w<9 || h<8) {
+      int max_ascent, max_descent;
+      fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
+      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
+      fTHeight = max_ascent + max_descent;
+   } else {
+      fTWidth = w - 8;
+      fTHeight = h - 7;
+   }
+   TGFrame::Resize(fTWidth + 8, fTHeight + 7);
+}
+
+
+//______________________________________________________________________________
 void TGTextButton::SetFont(FontStruct_t font)
 {
    // Changes text font
@@ -467,15 +485,11 @@ void TGTextButton::SetFont(FontStruct_t font)
       if (!v) return;
 
       fFontStruct = font;
-      int max_ascent, max_descent;
-      fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fTHeight = max_ascent + max_descent;
       TGGC normgc = *gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       TGGC *gc = new TGGC(normgc); // copy
       gc->SetFont(v);
       fNormGC = gc->GetGC();
-      Resize(fTWidth + 8, fTHeight + 7);
+      Resize();
    }
 }
 
@@ -488,6 +502,18 @@ void TGTextButton::SetFont(const char *fontName)
    if (font) {
       SetFont(font->GetFontStruct());
    }
+}
+
+//______________________________________________________________________________
+void TGTextButton::SetTextColor(Pixel_t color)
+{
+   // Changes text color
+
+   TGGC normgc = *gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
+   TGGC *gc = new TGGC(normgc); // copy
+   gc->SetForeground(color);
+   fNormGC = gc->GetGC();
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________

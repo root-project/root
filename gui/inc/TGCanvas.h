@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.16 2003/06/27 10:25:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.17 2003/07/14 12:22:48 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -116,6 +116,7 @@ public:
    const TGWindow   *GetMessageWindow() const { return fMsgWindow; }
    TGPosition        GetPagePosition() const;
    TGDimension       GetPageDimension() const;
+   TGCanvas         *GetCanvas() const { return fCanvas; }          
 
    virtual void   SetMapSubwindows(Bool_t on) { fMapSubwindows = on; }
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }

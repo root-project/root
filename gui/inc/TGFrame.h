@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.21 2002/12/09 14:03:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.22 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -198,15 +198,13 @@ public:
    virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
+   virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
    virtual void   Move(Int_t x, Int_t y);
-   virtual void   Resize(UInt_t w, UInt_t h);
+   virtual void   Resize(UInt_t w = 0, UInt_t h = 0);
    virtual void   Resize(TGDimension size);
-   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
    virtual UInt_t GetDefaultWidth() const { return GetDefaultSize().fWidth; }
    virtual UInt_t GetDefaultHeight() const { return GetDefaultSize().fHeight; }
-   virtual TGDimension GetDefaultSize() const
-                          { return TGDimension(fWidth, fHeight); }
-
    virtual Pixel_t GetBackground() const { return fBackground; }
    virtual void    ChangeBackground(Pixel_t back);
    virtual void    SetBackgroundColor(Pixel_t back);

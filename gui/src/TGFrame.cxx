@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.25 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.26 2003/06/24 13:41:59 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -442,11 +442,14 @@ void TGFrame::Move(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGFrame::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the frame.
+   // Resize the frame. 
+   // If w=0 && h=0 - Resize to deafult size 
 
    if (w != fWidth || h != fHeight) {
-      TGWindow::Resize(w, h);
-      fWidth = w; fHeight = h;
+      TGDimension siz = GetDefaultSize();
+      fWidth = w ? w : siz.fWidth; 
+      fHeight = h ? h : siz.fHeight;
+      TGWindow::Resize(fWidth, fHeight);
       Layout();
    }
 }
@@ -463,10 +466,14 @@ void TGFrame::Resize(TGDimension size)
 void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Move and/or resize the frame.
+   // If w=0 && h=0 - Resize to deafult size 
 
    // we do it anyway as we don't know if it's only a move or only a resize
-   TGWindow::MoveResize(x, y, w, h);
-   fX = x; fY = y; fWidth = w; fHeight = h;
+   TGDimension siz = GetDefaultSize();
+   fWidth = w ? w : siz.fWidth; 
+   fHeight = h ? h : siz.fHeight;
+   fX = x; fY = y;
+   TGWindow::MoveResize(x, y, fWidth, fHeight);
    Layout();
 }
 
