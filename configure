@@ -1552,21 +1552,31 @@ fi
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
     check_header "Python.h" "$pythonincdir" \
-        $PYTHONDIR/include/python2.3 $PYTHONDIR/include/python2.2 \
-        $PYTHONDIR/include /usr/include/python2.3 /usr/include/python2.2 \
-        /usr/local/include/python2.3 /usr/local/include/python2.2 \
+        $PYTHONDIR/include/python2.4 $PYTHONDIR/include/python2.3 \
+        $PYTHONDIR/include/python2.2 $PYTHONDIR/include \
+        /usr/local/include/python2.4 /usr/local/include/python2.3 \
+        /usr/local/include/python2.2 \
+        /usr/include/python2.4 /usr/include/python2.3 /usr/include/python2.2 \
+        /System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4 \
         /System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3 \
-        /cygdrive/c/Python23/include /cygdrive/c/Python22/include
+        /cygdrive/c/Python24/include /cygdrive/c/Python23/include \
+        /cygdrive/c/Python22/include
     pythoninc=$found_hdr
     pythonincdir=$found_dir
 
-    check_library "libpython2.3 libpython2.2 python23 Python" \
-        "$enable_shared" "$pythonlibdir" $PYTHONDIR/lib/python2.3/config \
+    check_library "libpython2.4 libpython2.3 libpython2.2 python24 python23 \
+                   Python" \
+        "$enable_shared" "$pythonlibdir" \
+        $PYTHONDIR/lib/python2.4/config $PYTHONDIR/lib/python2.3/config \
         $PYTHONDIR/lib/python2.2/config $PYTHONDIR/lib $PYTHONDIR/libs \
-        /usr/lib/python2.3/config /usr/lib/python2.2/config \
-        /usr/local/lib/python2.3/config /usr/local/lib/python2.2/config \
+        /usr/local/lib/python2.4/config /usr/local/lib/python2.3/config \
+        /usr/local/lib/python2.2/config \
+        /usr/lib/python2.4/config /usr/lib/python2.3/config \
+        /usr/lib/python2.2/config \
+        /System/Library/Frameworks/Python.framework/Versions/2.4 \
         /System/Library/Frameworks/Python.framework/Versions/2.3 \
-        /cygdrive/c/Python23/libs /cygdrive/c/Python22/libs
+        /cygdrive/c/Python24/libs /cygdrive/c/Python23/libs \
+        /cygdrive/c/Python22/libs
     pythonlib=$found_lib
     pythonlibdir=$found_dir
 
@@ -1575,7 +1585,7 @@ if test ! "x$enable_python" = "xno" ; then
     else
         pythonlibflags=
         case $platform in
-            win32) pythonlibflags="-nodefaultlib:python23" ;;
+            win32) pythonlibflags="-nodefaultlib:$pythonlib" ;;
         esac
     fi
 fi
