@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.5 2003/05/06 08:23:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.6 2003/06/05 11:33:37 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -220,6 +220,7 @@ TProofProgressDialog::~TProofProgressDialog()
                          "Progress(Long64_t,Long64_t)");
 
    fDialog->Cleanup();
+   fDialog->SetBit(kMustCleanup);
    delete fDialog;
 }
 
@@ -236,6 +237,7 @@ void TProofProgressDialog::DoClose()
 {
    // Close dialog.
 
+   fClose->SetState(kButtonDisabled);
    TTimer::SingleShot(50, "TProofProgressDialog", this, "CloseWindow()");
 }
 
