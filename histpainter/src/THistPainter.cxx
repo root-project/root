@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.59 2002/01/02 21:46:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.60 2002/01/07 18:11:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3868,7 +3868,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 
 //     Draw Fit parameters
    if (fit) {
-      Int_t ndf = fit->GetNumberFitPoints() - fit->GetNpar();
+      Int_t ndf = fit->GetNDF();
       sprintf(fstats,"Chi2 / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
       sprintf(t,fstats,(Float_t)fit->GetChisquare());
       if (print_fchi2) stats->AddText(t);
