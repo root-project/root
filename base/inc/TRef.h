@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.1 2001/10/01 10:29:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.1 2001/10/03 16:43:18 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -40,7 +40,7 @@ public:
    TRef(const TRef &ref);
    void operator=(TObject *obj);
    virtual ~TRef() {;}
-           TObject *GetObject(); //or better by simply dereferencing operator ->
+           TObject *GetObject() const; //or better by simply dereferencing operator ->
 
    static  void   ReadRef(TObject *obj, TBuffer &R__b, TFile *file);
    static  void   SaveRef(TObject *obj, TBuffer &R__b, TFile *file);
