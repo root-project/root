@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.3 2000/07/12 16:32:53 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -56,8 +56,8 @@ protected:
    TBuffer() : fMode(0), fBuffer(0) { fReadMap = 0; }
 
    // TBuffer objects cannot be copied or assigned
-   TBuffer(const TBuffer &) { }
-   void operator=(const TBuffer &) { }
+   TBuffer(const TBuffer &);           // not implemented
+   void operator=(const TBuffer &);    // not implemented
 
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
