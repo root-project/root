@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.11 2003/02/11 20:25:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.12 2004/01/06 08:27:33 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -78,6 +78,8 @@ void TBits::Clear(Option_t * /*option*/)
 {
    delete [] fAllBits;
    fAllBits = 0;
+   fNbits   = 0;
+   fNbytes  = 0;
 }
 
 //______________________________________________________________________________
@@ -85,6 +87,7 @@ void TBits::Compact()
 {
    // Reduce the storage used by the object to a minimun
 
+   if (!fNbits || !fAllBits) return;
    UInt_t needed;
    for(needed=fNbytes-1;
        needed > 0 && fAllBits[needed]==0; ) { needed--; };
@@ -266,7 +269,7 @@ void TBits::ResetAllBits(Bool_t)
 {
    // Reset all bits to 0 (false).
 
-   memset(fAllBits,0,fNbytes);
+   if (fAllBits) memset(fAllBits,0,fNbytes);
 }
 
 //______________________________________________________________________________
@@ -279,10 +282,12 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
       if (new_size > fNbytes) {
          UChar_t *old_location = fAllBits;
          fAllBits = new UChar_t[new_size];
-         memcpy(fAllBits,old_location,fNbytes);
+         if (old_location) {
+            memcpy(fAllBits,old_location,fNbytes);
+            delete [] old_location;
+         }
          memset(fAllBits+fNbytes ,0, new_size-fNbytes);
          fNbytes = new_size;
-         delete [] old_location;
       }
       fNbits = bitnumber+1;
    }
