@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.12 2002/05/18 08:21:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.13 2002/08/17 16:34:28 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -158,9 +158,11 @@ ULong_t TColor::GetPixel() const
 }
 
 //______________________________________________________________________________
-void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Float_t &g, Float_t &b)
+void TColor::HLS2RGB(Float_t hue, Float_t light, Float_t satur,
+                     Float_t &r, Float_t &g, Float_t &b)
 {
-   // Static method to compute HLS from RGB (see HIGZ routine IGHTOR).
+   // Static method to compute RGB from HLS. The l and s are between [0,1]
+   // and h is between [0,360]. The returned r,g,b triplet is between [0,1].
 
    Float_t rh, rl, rs, rm1, rm2;
    rh = rl = rs = 0;
@@ -168,11 +170,13 @@ void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Flo
    if (light > 0) rl = light; if (rl > 1)   rl = 1;
    if (satur > 0) rs = satur; if (rs > 1)   rs = 1;
 
-   if (rl <= 0.5) rm2 = rl*(1+rs);
-   else           rm2 = rl + rs - rl*rs;
-   rm1 = 2*rl - rm2;
+   if (rl <= 0.5)
+      rm2 = rl*(1.0 + rs);
+   else
+      rm2 = rl + rs - rl*rs;
+   rm1 = 2.0*rl - rm2;
 
-   if (!rs) { r = rl; g = rl; b = rl; return;}
+   if (!rs) { r = rl; g = rl; b = rl; return; }
    r = HLStoRGB1(rm1, rm2, rh+120);
    g = HLStoRGB1(rm1, rm2, rh);
    b = HLStoRGB1(rm1, rm2, rh-120);
@@ -181,7 +185,7 @@ void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Flo
 //______________________________________________________________________________
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
-   // Static method. Auxiliary to HLStoRGB (see HIGZ routine IGHR01).
+   // Static method. Auxiliary to HLS2RGB().
 
    Float_t hue = huei;
    if (hue > 360) hue = hue - 360;
@@ -190,6 +194,25 @@ Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
    if (hue < 180) return rn2;
    if (hue < 240) return rn1 + (rn2-rn1)*(240-hue)/60;
    return rn1;
+}
+
+//______________________________________________________________________________
+void TColor::HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b)
+{
+   // Static method to compute RGB from HLS. The h,l,s are between [0,255].
+   // The returned r,g,b triplet is between [0,255].
+
+   Float_t hh, ll, ss, rr, gg, bb;
+
+   hh = Float_t(h) * 360 / 255;
+   ll = Float_t(l) / 255;
+   ss = Float_t(s) / 255;
+
+   TColor::HLStoRGB(hh, ll, ss, rr, gg, bb);
+
+   r = (Int_t) (rr * 255);
+   g = (Int_t) (gg * 255);
+   b = (Int_t) (bb * 255);
 }
 
 //______________________________________________________________________________
@@ -210,36 +233,71 @@ void TColor::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TColor::RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &hue, Float_t &light, Float_t &satur )
+void TColor::RGB2HLS(Float_t rr, Float_t gg, Float_t bb,
+                     Float_t &hue, Float_t &light, Float_t &satur)
 {
-   // Static method to compute HLS from RGB.
+   // Static method to compute HLS from RGB. The r,g,b triplet is between
+   // [0,1], hue is between [0,360], light and satur are [0,1].
 
-   Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff;
+   Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff, r, g, b;
+   r = g = b = 0;
+   if (rr > 0) r = rr; if (r > 1) r = 1;
+   if (gg > 0) g = gg; if (g > 1) g = 1;
+   if (bb > 0) b = bb; if (b > 1) b = 1;
+
    minval = r;
-   if (g <minval) minval = g;
-   if (b <minval) minval = b;
+   if (g < minval) minval = g;
+   if (b < minval) minval = b;
    maxval = r;
-   if (g >maxval) maxval = g;
-   if (b >maxval) maxval = b;
+   if (g > maxval) maxval = g;
+   if (b > maxval) maxval = b;
 
-   rnorm  = gnorm = bnorm = 0;
-   mdiff  = maxval - minval;
-   msum   = maxval + minval;
-   light = 0.5*msum;
+   rnorm = gnorm = bnorm = 0;
+   mdiff = maxval - minval;
+   msum  = maxval + minval;
+   light = 0.5 * msum;
    if (maxval != minval) {
       rnorm = (maxval - r)/mdiff;
       gnorm = (maxval - g)/mdiff;
       bnorm = (maxval - b)/mdiff;
+   } else {
+      satur = hue = 0;
+      return;
    }
-   else { satur = hue = 0; return;}
 
-   if (light <= 0.5) satur = mdiff/msum;
-   else satur = mdiff/(2-msum);
+   if (light < 0.5)
+      satur = mdiff/msum;
+   else
+      satur = mdiff/(2.0 - msum);
 
-   if (r == maxval) hue = 60.0 * (6.0 + bnorm - gnorm);
-   if (g == maxval) hue = 60.0 * (2.0 + rnorm - bnorm);
-   if (b == maxval) hue = 60.0 * (4.0 + gnorm - rnorm);
-   if (hue > 360) hue = hue -360;
+   if (r == maxval)
+      hue = 60.0 * (6.0 + bnorm - gnorm);
+   else if (g == maxval)
+      hue = 60.0 * (2.0 + rnorm - bnorm);
+   else
+      hue = 60.0 * (4.0 + gnorm - rnorm);
+
+   if (hue > 360)
+      hue = hue - 360;
+}
+
+//______________________________________________________________________________
+void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
+{
+   // Static method to compute HLS from RGB. The r,g,b triplet is between
+   // [0,255], hue, light and satur are between [0,255].
+
+   Float_t rr, gg, bb, hue, light, satur;
+
+   rr = Float_t(r) / 255;
+   gg = Float_t(g) / 255;
+   bb = Float_t(b) / 255;
+
+   TColor::RGBtoHLS(rr, gg, bb, hue, light, satur);
+
+   h = (Int_t) (hue/360 * 255);
+   l = (Int_t) (light * 255);
+   s = (Int_t) (satur * 255);
 }
 
 //______________________________________________________________________________
@@ -332,6 +390,20 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 }
 
 //______________________________________________________________________________
+Int_t TColor::GetColor(ULong_t pixel)
+{
+   // Static method returning color number for color specified by
+   // system dependent pixel value. Pixel values can be obtained, e.g.,
+   // from the GUI color picker.
+
+   Int_t r, g, b;
+
+   Pixel2RGB(pixel, r, g, b);
+
+   return GetColor(r, g, b);
+}
+
+//______________________________________________________________________________
 Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 {
    // Static method returning color number for color specified by
@@ -380,7 +452,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // We didn't find a matching color in the color table, so we
    // add it. Note name is of the form "#rrggbb" where rr, etc. are
    // hexadecimal numbers.
-   color = new TColor(colors->GetEntries(), rr, gg, bb,
+   color = new TColor(colors->GetLast()+1, rr, gg, bb,
                       Form("#%02x%02x%02x", r, g, b));
 
    return color->GetNumber();
@@ -403,3 +475,76 @@ ULong_t TColor::Number2Pixel(Int_t ci)
    return 0;
 }
 
+//______________________________________________________________________________
+ULong_t TColor::RGB2Pixel(Float_t r, Float_t g, Float_t b)
+{
+   // Convert r,g,b to graphics system dependent pixel value.
+   // The r,g,b triplet must be [0,1].
+
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 1) r = 1;
+   if (g > 1) g = 1;
+   if (b > 1) b = 1;
+
+   ColorStruct_t color;
+   color.fRed   = UShort_t(r * 65535);
+   color.fGreen = UShort_t(g * 65535);
+   color.fBlue  = UShort_t(b * 65535);
+   color.fMask  = kDoRed | kDoGreen | kDoBlue;
+   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
+   return color.fPixel;
+}
+
+//______________________________________________________________________________
+ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
+{
+   // Convert r,g,b to graphics system dependent pixel value.
+   // The r,g,b triplet must be [0,255].
+
+   if (r < 0) r = 0;
+   if (g < 0) g = 0;
+   if (b < 0) b = 0;
+   if (r > 255) r = 255;
+   if (g > 255) g = 255;
+   if (b > 255) b = 255;
+
+   ColorStruct_t color;
+   color.fRed   = UShort_t(r * 257);  // 65535/255
+   color.fGreen = UShort_t(g * 257);
+   color.fBlue  = UShort_t(b * 257);
+   color.fMask  = kDoRed | kDoGreen | kDoBlue;
+   gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
+   return color.fPixel;
+}
+
+//______________________________________________________________________________
+void TColor::Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b)
+{
+   // Convert machine dependent pixel value (obtained via RGB2Pixel or
+   // via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+   // The r,g,b triplet will be [0,1].
+
+   ColorStruct_t color;
+   color.fPixel = pixel;
+   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
+   r = (Float_t)color.fRed / 65535;
+   g = (Float_t)color.fGreen / 65535;
+   b = (Float_t)color.fBlue / 65535;
+}
+
+//______________________________________________________________________________
+void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
+{
+   // Convert machine dependent pixel value (obtained via RGB2Pixel or
+   // via Number2Pixel() or via TColor::GetPixel()) to r,g,b triplet.
+   // The r,g,b triplet will be [0,255].
+
+   ColorStruct_t color;
+   color.fPixel = pixel;
+   gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
+   r = color.fRed / 257;
+   g = color.fGreen / 257;
+   b = color.fBlue / 257;
+}

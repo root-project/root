@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.4 2001/07/17 09:06:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.5 2002/08/17 16:34:28 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -76,12 +76,23 @@ public:
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
-   static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
-   static void    RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
+   static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
+   static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);
+   static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b)
+                     { TColor::HLS2RGB(h, l, s, r, g, b); } /* backward compatible */
+   static void    RGB2HLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
+   static void    RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s);
+   static void    RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s)
+                     { TColor::RGB2HLS(r, g, b, h, l, s); } /* backward compatible */
    static Int_t   GetColor(const char *hexcolor);
    static Int_t   GetColor(Float_t r, Float_t g, Float_t b);
    static Int_t   GetColor(Int_t r, Int_t g, Int_t b);
+   static Int_t   GetColor(ULong_t pixel);
    static ULong_t Number2Pixel(Int_t ci);
+   static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
+   static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
+   static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
+   static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
 
    ClassDef(TColor,1)  //Color defined by RGB or HLS
 };
