@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -129,7 +129,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    if (!fBpic)
       Error("TGComboBox", "arrow_down.xpm not found");
 
-   fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
+   fSelEntry = new TGTextLBEntry(this, new TGString(""), 0, TGTextLBEntry::GetDefaultGC()());
    fDDButton = new TGScrollBarElement(this, fBpic, kDefaultScrollBarWidth,
                                       kDefaultScrollBarWidth, kRaisedFrame);
 
