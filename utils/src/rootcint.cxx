@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.147 2004/01/03 09:42:30 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.148 2004/01/10 10:52:31 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1243,7 +1243,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    //    operator delete
    //    operator delete[]
 
-   string classname( RStl::DropDefaultArg( cl.Fullname() ) );
+   string classname( GetLong64_Name(RStl::DropDefaultArg( cl.Fullname() ) ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
    if (    TClassEdit::IsSTLCont( classname.c_str() ) == 0 
@@ -2022,7 +2022,7 @@ void WriteClassInit(G__ClassInfo &cl)
 {
    // Write the code to initialize the class name and the initialization object.
 
-   string classname = RStl::DropDefaultArg( cl.Fullname() );
+   string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
       // TClassEdit::ShortType( cl.Fullname(),
       //                                       TClassEdit::kRemoveDefaultAlloc );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
@@ -2573,18 +2573,8 @@ void WriteAutoStreamer(G__ClassInfo &cl)
    fprintf(fp, "   // Stream an object of class %s.\n\n", cl.Fullname());
    fprintf(fp, "   if (R__b.IsReading()) {\n");
    fprintf(fp, "      %s::Class()->ReadBuffer(R__b, this);\n", cl.Fullname());
-   G__BaseClassInfo br(cl);
-//VP   while (br.Next())            
-//VP      if (IsSTLContainer(br)) {
-//VP         STLBaseStreamer(br,0); 	//Redundant, already done in ReadBuffer
-//VP      }
    fprintf(fp, "   } else {\n");
    fprintf(fp, "      %s::Class()->WriteBuffer(R__b, this);\n", cl.Fullname());
-   G__BaseClassInfo bw(cl);
-//VP   while (bw.Next())		//Redundant, already done in WriteBuffer
-//VP      if (IsSTLContainer(bw)) {
-//VP         STLBaseStreamer(bw,1);
-//VP      }
    fprintf(fp, "   }\n");
    fprintf(fp, "}\n\n");
 }

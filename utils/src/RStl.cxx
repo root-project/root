@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: TStl.cxx,v 1.143 2003/08/15 18:52:50 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.1 2004/01/10 10:52:31 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -25,6 +25,7 @@ void WriteClassInit(G__ClassInfo &cl);
 void WriteAuxFunctions(G__ClassInfo &cl);
 enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=0);
+string GetLong64_Name(const string& original);
 
 //
 // ROOT::RStl is the rootcint STL handling class.
@@ -101,7 +102,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
 
    string streamerName = "stl_streamer_";
 
-   string shortTypeName = TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault);
+   string shortTypeName = GetLong64_Name( TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault) );
    string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
    
    streamerName += G__map_cpp_name((char *)shortTypeName.c_str());   
