@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.24 2000/10/27 06:26:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.25 2000/11/21 21:00:05 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -500,76 +500,76 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     Drawing expressions using arrays and array elements
 //     ===================================================
 // Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
-// or a TClonesArray. 
-// In a TTree::Draw expression you can now access fMatrix using the following 
+// or a TClonesArray.
+// In a TTree::Draw expression you can now access fMatrix using the following
 // syntaxes:
-// 
+//
 //   String passed    What is used for each entry of the tree
-// 
+//
 //   "fMatrix"       the 9 elements of fMatrix
 //   "fMatrix[][]"   the 9 elements of fMatrix
 //   "fMatrix[2][2]" only the elements fMatrix[2][2]
 //   "fMatrix[1]"    the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
 //   "fMatrix[1][]"  the 3 elements fMatrix[1][0], fMatrix[1][1] and fMatrix[1][2]
 //   "fMatrix[][0]"  the 3 elements fMatrix[0][0], fMatrix[1][0] and fMatrix[2][0]
-// 
+//
 //   "fEvent.fMatrix...." same as "fMatrix..." (unless there is more than one leaf named fMatrix!).
-// 
+//
 // In summary, if a specific index is not specified for a dimension, TTree::Draw
 // will loop through all the indices along this dimension.  Leaving off the
-// last (right most) dimension of specifying then with the two characters '[]' 
+// last (right most) dimension of specifying then with the two characters '[]'
 // is equivalent.  For variable size arrays (and TClonesArray) the range
 // of the first dimension is recalculated for each entry of the tree.
-// 
+//
 // TTree::Draw also now properly handling operations involving 2 or more arrays.
-// 
-// Let assume a second matrix fResults[5][2], here are a sample of some 
+//
+// Let assume a second matrix fResults[5][2], here are a sample of some
 // of the possible combinations, the number of elements they produce and
 // the loop used:
-//  
+//
 //  expression                       element(s)  Loop
-// 
+//
 //  "fMatrix[2][1] - fResults[5][2]"   one     no loop
 //  "fMatrix[2][]  - fResults[5][2]"   three   on 2nd dim fMatrix
 //  "fMatrix[2][]  - fResults[5][]"    two     on both 2nd dimensions
 //  "fMatrix[][2]  - fResults[][1]"    three   on both 1st dimensions
 //  "fMatrix[][2]  - fResults[][]"     six     on both 1st and 2nd dimensions of
 //                                             fResults
-//  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of 
+//  "fMatrix[][2]  - fResults[3][]"    two     on 1st dim of fMatrix and 2nd of
 //                                             fResults (at the same time)
-//  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim 
-//  
-// 
+//  "fMatrix[][]   - fResults[][]"     six     on 1st dim then on  2nd dim
+//
+//
 // In summary, TTree::Draw loops through all un-specified dimensions.  To
-// figure out the range of each loop, we match each unspecified dimension 
-// from left to right (ignoring ALL dimensions for which an index has been 
-// specified), in the equivalent loop matched dimensions use the same index 
+// figure out the range of each loop, we match each unspecified dimension
+// from left to right (ignoring ALL dimensions for which an index has been
+// specified), in the equivalent loop matched dimensions use the same index
 // and are restricted to the smallest range (of only the matched dimensions).
 // When involving variable arrays, the range can of course be different
 // for each entry of the tree.
-// 
+//
 // So the loop equivalent to "fMatrix[][2] - fResults[3][]" is:
-// 
+//
 //    for (Int_t i0; i < min(3,2); i++) {
 //       use the value of (fMatrix[i0][2] - fMatrix[3][i0])
 //    }
-// 
+//
 // So the loop equivalent to "fMatrix[][2] - fResults[][]" is:
-// 
+//
 //    for (Int_t i0; i < min(3,5); i++) {
-//       for (Int_t i1; i1 < 2; i1++) { 
+//       for (Int_t i1; i1 < 2; i1++) {
 //          use the value of (fMatrix[i0][2] - fMatrix[i0][i1])
 //       }
 //    }
-// 
+//
 // So the loop equivalent to "fMatrix[][] - fResults[][]" is:
-// 
+//
 //    for (Int_t i0; i < min(3,5); i++) {
-//       for (Int_t i1; i1 < min(3,2); i1++) { 
+//       for (Int_t i1; i1 < min(3,2); i1++) {
 //          use the value of (fMatrix[i0][i1] - fMatrix[i0][i1])
 //       }
 //    }
-// 
+//
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
@@ -1145,11 +1145,11 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
       // Look for the lowest common array size amongst the
       // variable and selection cut.
       ndata = fMultiplicity->GetNdata();
-      if (Var1Multiple && (fMultiplicity!=fVar1)) 
+      if (Var1Multiple && (fMultiplicity!=fVar1))
         ndata = TMath::Min(ndata,fVar1->GetNdata());
-      if (Var2Multiple && (fMultiplicity!=fVar2)) 
+      if (Var2Multiple && (fMultiplicity!=fVar2))
         ndata = TMath::Min(ndata,fVar2->GetNdata());
-      if (Var3Multiple && (fMultiplicity!=fVar3)) 
+      if (Var3Multiple && (fMultiplicity!=fVar3))
         ndata = TMath::Min(ndata,fVar3->GetNdata());
 
       // no data at all, let's move on to the next entry.
@@ -1403,7 +1403,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
    TString opt = option;
    opt.ToLower();
-   
+
    // Connect output files
    char *thead = new char[256];
 
@@ -1449,7 +1449,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"#include <TChain.h>\n");
    fprintf(fp,"#include <TFile.h>\n");
    if (opt.Contains("selector")) fprintf(fp,"#include <TSelector.h>\n");
-      
+
 // First loop on all leaves to generate dimension declarations
    Int_t len, lenb,l;
    char blen[128];
@@ -1833,7 +1833,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//    ProcessCut:  called at the beginning of each entry to return a flag\n");
       fprintf(fpc,"//                 true if the entry must be analyzed.\n");
       fprintf(fpc,"//    ProcessFill: called in the entry loop for all entries accepted \n");
-      fprintf(fpc,"//                 by Select.\n"); 
+      fprintf(fpc,"//                 by Select.\n");
       fprintf(fpc,"//    Terminate:   called at the end of a loop on a TTree.\n");
       fprintf(fpc,"//                 a convenient place to draw/fit your histograms.\n");
       fprintf(fpc,"//\n");
@@ -1891,7 +1891,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
-   }   
+   }
    printf("Files: %s and %s generated from Tree: %s\n",thead,tcimp,fTree->GetName());
    delete [] leafStatus;
    delete [] thead;
@@ -2125,7 +2125,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 {
 //*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
 //*-*              ====================================================
-// 
+//
 //   Create an instance of TPrincipal
 //   Fill it with the selected variables
 //   if option "n" is specified, the TPrincipal object is filled with
@@ -2139,7 +2139,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //   The option default value is "np"
 //
 //   see TTreePlayer::DrawSelect for explanation of the other parameters.
-   
+
    TTreeFormula *select, **var;
    TString *cnames;
    TString onerow;
@@ -2188,7 +2188,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    }
    var = new TTreeFormula* [ncols];
    Double_t *xvars = new Double_t[ncols];
-   
+
 //*-*- Create the TreeFormula objects corresponding to each column
    for (i=0;i<ncols;i++) {
       var[i] = new TTreeFormula("Var1",cnames[i].Data(),fTree);
@@ -2197,7 +2197,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    //*-* Build the TPrincipal object
    if (opt.Contains("n")) principal = new TPrincipal(ncols, "n");
    else                   principal = new TPrincipal(ncols);
-      
+
 //*-*- loop on all selected entries
    fSelectedRows = 0;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
@@ -2222,7 +2222,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
         if (opt.Contains("h")) principal->MakeHistograms();
         if (opt.Contains("c")) principal->MakeCode();
    }
-   
+
 //*-*- delete temporary objects
    delete select;
    for (i=0;i<ncols;i++) {
@@ -2232,7 +2232,7 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    delete [] cnames;
    delete [] index;
    delete [] xvars;
-   
+
    return principal;
 }
 
@@ -2248,10 +2248,10 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
-//   
+//
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
-//   
+//
 //     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
 //          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
@@ -2262,7 +2262,7 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
-//          the loop on all events. 
+//          the loop on all events.
 //
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
@@ -2281,10 +2281,10 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
    // This might reloads the script and delete your option
    // string! so let copy it first:
    TString opt(option);
-   TString file(filename);   
+   TString file(filename);
    selector = TSelector::GetSelector(file);
    if (!selector) return -1;
-   
+
    Int_t nsel = Process(selector,opt,nentries,firstentry);
    return nsel;
 }
@@ -2299,10 +2299,10 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
-//   
+//
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
-//   
+//
 //     Bool_t TSelector::ProcessCut(Int_t tentry). This function is called
 //          before processing tentry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
@@ -2313,14 +2313,14 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 //          all selected events. User fills histograms in this function.
 //
 //     void TSelector::Terminate(). This function is called at the end of
-//          the loop on all events. 
+//          the loop on all events.
 //
 //  If the Tree (Chain) has an associated EventList, the loop is on the nentries
-//  of the EventList, starting at firstentry, otherwise the loop is on the 
-//  specified Tree entries.   
+//  of the EventList, starting at firstentry, otherwise the loop is on the
+//  specified Tree entries.
 
    selector->SetOption(option);
-   
+
    selector->Begin(fTree); //<===call user initialisation function
 
    //Create a timer to get control in the entry loop(s)
@@ -2328,7 +2328,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
    Int_t interval = fTree->GetTimerInterval();
    if (!gROOT->IsBatch() && !gProofServ && interval)
       timer = new TProcessEventTimer(interval);
-   
+
    //loop on entries (elist or all entries)
    Int_t treeNumber = -1;
    Long_t entry, entryNumber;
@@ -2354,7 +2354,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
           selector->ProcessFill(entryNumber); //<==call user analysis function
    }
    selector->Terminate();  //<==call user termination function
-      
+
    return fSelectedRows;
 }
 
@@ -2606,7 +2606,12 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
 //  wh is the height of the canvas in pixels
 
    gROOT->LoadClass("TTreeViewer","TreeViewer");
+#ifdef R__WIN32
    gROOT->ProcessLine(Form("new TTreeViewer(\"%s\",\"TreeViewer\",%d,%d);",fTree->GetName(),ww,wh));
+#else
+   if (ww || wh) { }   // use unused variables
+   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
+#endif
 }
 
 //______________________________________________________________________________
@@ -2693,7 +2698,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 //*-*-*-*-*-*Estimate limits for 1-D, 2-D or 3-D objects*-*-*-*-*-*-*-*-*-*
 //*-*        ===========================================
 
-  Int_t i; 
+  Int_t i;
   Double_t rmin[3],rmax[3];
   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
@@ -2709,7 +2714,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 
      // When a PROOF client ask master for limits
      if (gProofServ) {
-        if (gProofServ->GetLogLevel() > 2) 
+        if (gProofServ->GetLogLevel() > 2)
            printf("have limits: (nfill=%d) %d, %f, %f\n", nfill, fNbins[0], fVmin[0], fVmax[0]);
         gProofServ->GetLimits(1, nfill, fNbins, fVmin, fVmax);
         if (gProofServ->GetLogLevel() > 2)
