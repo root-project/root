@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.13 2005/02/21 17:58:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.14 2005/02/25 17:06:34 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -73,15 +73,7 @@ public:
   /// Call to delete/destruct individual item
   virtual void DeleteItem(bool force, void* ptr)  const  {
     if ( force && ptr )  {
-      if ( fVal->fDelete )  {
-        (*fVal->fDelete)(ptr);
-      }
-      else if ( fVal->fType )  {
-        fVal->fType->Destructor(ptr);
-      }
-      else {
-        ::operator delete(ptr);
-      }
+      fVal->DeleteItem(ptr);
     }
   }
 };
@@ -191,13 +183,11 @@ public:
   /// Call to delete/destruct individual item
   virtual void DeleteItem(bool /* force */, void* ptr)  const  {
     if ( fKey->fCase&G__BIT_ISPOINTER )  {
-      if ( *(void**)ptr )  {
-        (*fKey->fDelete)(*(void**)ptr);
-      }
+      fKey->DeleteItem(*(void**)ptr);
     }
     if ( fVal->fCase&G__BIT_ISPOINTER )  {
       char *addr = ((char*)ptr)+fValOffset;
-      if ( *(void**)addr ) (*fVal->fDelete)(*(void**)addr);
+      fVal->DeleteItem(*(void**)addr);
     }
   }
 };
@@ -215,7 +205,8 @@ TGenCollectionProxy::Value::Value(const Value& copy)  {
 }
 
 //______________________________________________________________________________
-TGenCollectionProxy::Value::Value(const std::string& inside)  {
+TGenCollectionProxy::Value::Value(const std::string& inside_type)  {
+  std::string inside = (inside_type.find("const ")==0) ? inside_type.substr(6) : inside_type;
   fType = 0;
   fCase = 0;
   fCtor = 0;
@@ -314,6 +305,21 @@ TGenCollectionProxy::Value::Value(const std::string& inside)  {
         Fatal("TGenCollectionProxy","Could not find %s!",inside.c_str());
      }
      fSize = fType->Size();
+  }
+}
+
+void TGenCollectionProxy::Value::DeleteItem(void* ptr)  {
+  if ( ptr && fCase&G__BIT_ISPOINTER )  {
+    if ( fDelete )  {
+      (*fDelete)(ptr);
+    }
+    else if ( fType )  {
+      fType->Destructor(ptr);
+      ::operator delete(ptr);
+    }
+    else {
+      ::operator delete(ptr);
+    }
   }
 }
 
@@ -730,16 +736,16 @@ void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
       case TClassEdit::kMap:
       case TClassEdit::kMultiMap:
         if ( fKey->fCase&G__BIT_ISPOINTER )  {
-          if (*(void**)ptr) (*fKey->fDelete)(*(void**)ptr);
+          fKey->DeleteItem(*(void**)ptr);
         }
         if ( fVal->fCase&G__BIT_ISPOINTER )  {
           char *addr = ((char*)ptr)+fValOffset;
-          if (*(void**)addr) (*fVal->fDelete)(*(void**)addr);
+          fVal->DeleteItem(*(void**)addr);
         }
         break;
       default:
         if ( fVal->fCase&G__BIT_ISPOINTER )  {
-          (*fVal->fDelete)(*(void**)ptr);
+          fVal->DeleteItem(*(void**)ptr);
         }
         break;
     }

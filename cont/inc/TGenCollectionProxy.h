@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.4 2004/11/08 18:44:05 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.h,v 1.5 2005/02/25 17:06:34 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -66,8 +66,13 @@ public:
     TClass*         fType;      // TClass of Value_type in collection
     EDataType       fKind;      // kind of ROOT-fundamental type 
     size_t          fSize;      // fSize of the contained object
+
+    /// Copy constructor
     Value(const Value& inside);
+    /// Initializing constructor
     Value(const std::string& info);
+    /// Delete individual item from STL container
+    void DeleteItem(void* ptr);
   };
 
   /**@class StreamHelper
