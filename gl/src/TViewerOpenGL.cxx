@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.13 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.14 2004/09/06 10:29:38 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -318,6 +318,7 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
       gVirtualGL->PolygonGLMode(kFRONT_AND_BACK, kLINE);
       gVirtualGL->SetGLLineWidth(1.5f);
       DrawObjects();
+      break;
    case kKey_T:
    case kKey_t:
       fMode = kMat;
