@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.22 2004/05/10 08:16:10 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.23 2004/05/10 16:00:01 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -61,7 +61,7 @@
 
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
-static void  Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc = kFALSE);
+static Int_t Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc = kFALSE);
 static Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
 static Int_t Krb5CheckSecCtx(const char *, TSecContext *);
 
@@ -245,7 +245,10 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
             Info("Krb5Authenticate",
                  "valid credentials not found: try initializing (Principal: %s)",
                  Principal.Data());
-         Krb5InitCred(Principal,PromptPrinc);
+         if (Krb5InitCred(Principal,PromptPrinc)) {
+            Error("Krb5Authenticate","error executing kinit");
+            return -1;
+         }
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
@@ -273,7 +276,10 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                  "got credentials for different principal %s - try"
                  " initialization credentials for principal: %s",
                  TicketPrincipal.Data(), Principal.Data());
-         Krb5InitCred(Principal);
+         if (Krb5InitCred(Principal)) {
+            Error("Krb5Authenticate","error executing kinit");
+            return -1;
+         }
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
@@ -300,7 +306,10 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
             Info("Krb5Authenticate",
                  "credentials found have expired: try initializing"
                  " (Principal: %s)", TicketPrincipal.Data());
-         Krb5InitCred(TicketPrincipal);
+         if (Krb5InitCred(TicketPrincipal)) {
+            Error("Krb5Authenticate","error executing kinit");
+            return -1;
+         }
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
@@ -694,7 +703,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 }
 
 //______________________________________________________________________________
-void Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
+Int_t Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
 {
    // Checks if there are valid credentials in the cache.
    // If not, tries to initialise them.
@@ -727,6 +736,7 @@ void Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
    if (rc)
       if (gDebug > 0)
          Info("Krb5InitCred", "error: return code: %d", rc);
+   return rc;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.14 2004/05/10 08:17:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.15 2004/05/10 16:00:02 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -146,6 +146,9 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                      valid = kFALSE;
                   }
                }
+            } else {
+               TSocket::Close();
+               valid = kFALSE;
             }
          }
       }
