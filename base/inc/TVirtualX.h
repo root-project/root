@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.4 2000/09/07 00:26:05 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
    virtual Int_t     GetDoubleBuffer(Int_t wid);
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual const char *DisplayName(const char * = 0) { return "batch"; }
+   virtual Handle_t  GetNativeEvent() const { return 0; }
    virtual void      GetPlanes(Int_t &nplanes) { nplanes = 0; }
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);

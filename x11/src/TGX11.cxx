@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name$:$Id$
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -260,6 +260,7 @@ TGX11::TGX11()
    fScreenNumber = 0;
    fColormap     = 0;
    fWindows      = 0;
+   fXEvent       = new XEvent;
 }
 
 //______________________________________________________________________________
@@ -280,6 +281,7 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fCharacterUpX    = 1;
    fCharacterUpY    = 1;
    fDrawMode        = kCopy;
+   fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = 10;
    fWindows = new XWindow_t[fMaxNumberOfWindows];
@@ -305,6 +307,7 @@ TGX11::TGX11(const TGX11 &org)
    fCharacterUpX    = org.fCharacterUpX;
    fCharacterUpY    = org.fCharacterUpY;
    fDrawMode        = org.fDrawMode;
+   fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
    fWindows = new XWindow_t[fMaxNumberOfWindows];
@@ -335,6 +338,7 @@ TGX11::~TGX11()
 {
    // Destructor.
 
+   delete fXEvent;
    if (fWindows) delete [] fWindows;
 }
 

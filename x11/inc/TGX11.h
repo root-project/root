@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.4 2000/09/07 00:26:06 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -83,6 +83,7 @@ private:
    Int_t      fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t *fWindows;               //List of windows
    Cursor     fCursors[kNumCursors];  //List of cursors
+   XEvent    *fXEvent;                //Current native (X11) event
 
    void  CloseWindow1();
    void  ClearPixmap(Drawable *pix);
@@ -118,13 +119,13 @@ protected:
    Display   *fDisplay;            //Pointer to display
    Colormap   fColormap;           //Default colormap, 0 if b/w
    Int_t      fScreenNumber;       //Screen number
-   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
    Int_t      fTextAlignH;         //Text Alignment Horizontal
    Int_t      fTextAlignV;         //Text Alignment Vertical
    Int_t      fTextAlign;          //Text alignment (set in SetTextAlign)
    Float_t    fCharacterUpX;       //Character Up vector along X
    Float_t    fCharacterUpY;       //Character Up vector along Y
    Float_t    fTextMagnitude;      //Text Magnitude
+   Bool_t     fHasTTFonts;         //True when TrueType fonts are used
 
    // needed by TGX11TTF
    XWindow_t *GetCurrentWindow() const;
@@ -152,10 +153,11 @@ public:
    Int_t     GetDoubleBuffer(Int_t wid);
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    const char *DisplayName(const char *dpyName = 0);
+   Handle_t  GetNativeEvent() const { return (Handle_t) fXEvent; }
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
-   Float_t   GetTextMagnitude() {return fTextMagnitude;}
+   Float_t   GetTextMagnitude() { return fTextMagnitude; }
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
    Int_t     InitWindow(ULong_t window);

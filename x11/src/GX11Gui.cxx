@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.7 2000/09/29 08:59:37 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.8 2000/10/08 14:25:40 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -323,6 +323,8 @@ void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
          lxemask |= FocusChangeMask;
       if ((emask & kOwnerGrabButtonMask))
          lxemask |= OwnerGrabButtonMask;
+      if ((emask & kColormapChangeMask))
+         lxemask |= ColormapChangeMask;
       xemask = (UInt_t)lxemask;
    } else {
       emask = 0;
@@ -350,6 +352,8 @@ void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
          emask |= kFocusChangeMask;
       if ((xemask & OwnerGrabButtonMask))
          emask |= kOwnerGrabButtonMask;
+      if ((xemask & ColormapChangeMask))
+         emask |= kColormapChangeMask;
    }
 }
 
@@ -1201,12 +1205,10 @@ void TGX11::NextEvent(Event_t &event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   XEvent xev;
-
-   XNextEvent(fDisplay, &xev);
+   XNextEvent(fDisplay, fXEvent);
 
    // fill in Event_t
-   MapEvent(event, xev, kFALSE);
+   MapEvent(event, *fXEvent, kFALSE);
 }
 
 //______________________________________________________________________________
@@ -1280,6 +1282,7 @@ void TGX11::MapEvent(Event_t &ev, XEvent &xev, Bool_t tox)
       if (ev.fType == kSelectionClear)   xev.type = SelectionClear;
       if (ev.fType == kSelectionRequest) xev.type = SelectionRequest;
       if (ev.fType == kSelectionNotify)  xev.type = SelectionNotify;
+      if (ev.fType == kColormapNotify)   xev.type = ColormapNotify;
 
       xev.xany.window     = (Window) ev.fWindow;
       xev.xany.send_event = (Bool) ev.fSendEvent;
@@ -1337,6 +1340,7 @@ void TGX11::MapEvent(Event_t &ev, XEvent &xev, Bool_t tox)
       if (xev.type == SelectionClear)   ev.fType = kSelectionClear;
       if (xev.type == SelectionRequest) ev.fType = kSelectionRequest;
       if (xev.type == SelectionNotify)  ev.fType = kSelectionNotify;
+      if (xev.type == ColormapNotify)   ev.fType = kColormapNotify;
 
       ev.fWindow    = (Window_t) xev.xany.window;
       ev.fSendEvent = xev.xany.send_event ? kTRUE : kFALSE;
@@ -1433,6 +1437,11 @@ void TGX11::MapEvent(Event_t &ev, XEvent &xev, Bool_t tox)
          ev.fUser[1] = xev.xselection.selection;
          ev.fUser[2] = xev.xselection.target;
          ev.fUser[3] = xev.xselection.property;
+      }
+      if (ev.fType == kColormapNotify) {
+         ev.fHandle = xev.xcolormap.colormap;
+         ev.fCode   = xev.xcolormap.state; // ColormapUninstalled, ColormapInstalled
+         ev.fState  = xev.xcolormap.c_new; // true if new colormap
       }
    }
 }
