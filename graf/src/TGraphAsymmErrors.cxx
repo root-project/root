@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.32 2004/05/19 13:47:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.33 2004/05/19 13:54:34 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -286,6 +286,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // Marc Paterno (paterno@fnal.gov)
 // FNAL/CD
 //
+// The input histograms must be filled with weights of 1.
 // The assumption is that the entries in "pass" are a 
 // subset of those in "total". That is, we create an "efficiency" 
 // graph, where each entry is between 0 and 1, inclusive. 
@@ -319,42 +320,71 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // A fit using the full shape of the error distribution for each point
 // would be far more difficult to perform.
 
-   if (pass->GetNbinsX() != total->GetNbinsX()){
-      Error("BayesDivide","Histograms must have the same number of X bins!");
-      return;
-   }
+	TString opt = option; opt.ToLower();
 
-   Set(pass->GetNbinsX());
-  
-   // Ok, now set the points for each bin
-   // (Note: the TH1 bin content is shifted to the right one... 
-   //  bin=0 is underflow, bin=nbins+1 is overflow)
+	if (pass->GetNbinsX() != total->GetNbinsX()){
+		Error("BayesDivide","Histograms must have the same number of X bins");
+		return;
+	}
 
-   double mode, low, high; //these will hold the result of the Bayes calculation
+	if ( (TMath::Abs(pass->GetEntries()-pass->GetSumOfWeights())) > 1e-6) {
+		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
+		return;
+	}
+	if ( (TMath::Abs(total->GetEntries()-total->GetSumOfWeights())) > 1e-6) {
+		Error("BayesDivide","Total histogram has not been filled with weights = 1");
+		return;
+	}
 
-   for (int b=1; b<=pass->GetNbinsX(); ++b) { // loop through the bins
-      int t = (int)total->GetBinContent(b);
-      if (!t) continue;  //don't add points for bins with no information
+	//Set the graph to have a number of points equal to the number of histogram bins
+	Set(pass->GetNbinsX());
 
-      int p = (int)pass->GetBinContent(b);
-      if (p>t) {
-	 Warning("BayesDivide","Histogram bin %d in pass has more entries than corresponding bin in total! (%d>%d)",b,p,t);
-	 continue; //we may as well not go on...
-      }
+	// Ok, now set the points for each bin
+	// (Note: the TH1 bin content is shifted to the right by one: 
+	//  bin=0 is underflow, bin=nbins+1 is overflow.)
 
-      Efficiency(p,t,0.683,mode,low,high); //This is the Bayes calculation...
+	double mode, low, high; //these will hold the result of the Bayes calculation
+	int npoint=0;//this keeps track of the number of points added to the graph
+	for (int b=1; b<=pass->GetNbinsX(); ++b) { // loop through the bins
+		
+		int t = (int)total->GetBinContent(b);
+		if (!t) continue;  //don't add points for bins with no information
 
-      //Set the point center and its errors
-      SetPoint(b-1,pass->GetBinCenter(b),mode);
-      SetPointError(b-1,pass->GetBinLowEdge(b)-pass->GetBinCenter(b),pass->GetBinCenter(b)-(pass->GetBinLowEdge(b)+pass->GetBinWidth(b)),mode-low,high-mode);
+		int p = (int)pass->GetBinContent(b);
+		if (p>t) {
+			Warning("BayesDivide","Histogram bin %d in pass has more entries than corresponding bin in total! (%d>%d)",b,p,t);
+			continue; //we may as well go on...
+		}
 
-      TString opt = option;
-      opt.ToLower();
-      //The debug prints out what we get for each point...
-      if (opt.Contains("p")) {
-         printf("b=%d, xlow=%f, xcenter=%f, xhigh=%f, mode=%f, low=%f, high=%f\n",b,pass->GetBinLowEdge(b),pass->GetBinCenter(b),pass->GetBinLowEdge(b)+pass->GetBinWidth(b),mode,low,high);
-      }
-  }
+		//This is the Bayes calculation...
+		Efficiency(p,t,0.683,mode,low,high);
+
+		//These are the low and high error bars
+		low = mode-low;
+		high = high-mode;
+
+		//If either of the errors are 0, set them to 1/10 of the other error
+		//so that the fitters don't get confused.
+		if (low==0.0) low=high/10.;
+		if (high==0.0) high=low/10.;
+
+		//Set the point center and its errors
+		SetPoint(npoint,pass->GetBinCenter(b),mode);
+		SetPointError(npoint,
+			pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
+			pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
+			low,high);
+		npoint++;//we have added a point to the graph
+
+	}
+
+	Set(npoint);//tell the graph how many points we've really added
+
+	if (opt.Contains("debug")) {
+		printf("BayesDivide: made a graph with %d points from %d bins\n",npoint,pass->GetNbinsX());
+		Print();//The debug prints out what we get for each point
+	}
+
 }
 
 //______________________________________________________________________________
