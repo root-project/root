@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.5 2003/05/08 09:08:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.6 2003/11/24 14:11:02 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -57,7 +57,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
    if (!fgFitter) {
       TPluginHandler *h;
       if (fgDefault.Length() == 0) fgDefault = gEnv->GetValue("Root.Fitter","Minuit");
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",fgDefault.Data()))) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",fgDefault))) {
          if (h->LoadPlugin() == -1)
             return 0;
          fgFitter = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
@@ -73,7 +73,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 const char *TVirtualFitter::GetDefaultFitter()
 {
    // static: return the name of the default fitter
-   
+
    return fgDefault.Data();
 }
 
@@ -112,13 +112,13 @@ Double_t TVirtualFitter::GetPrecision()
 void TVirtualFitter::SetDefaultFitter(const char *name)
 {
    // static: set name of default fitter
-   
+
    if (fgDefault == name) return;
    delete fgFitter;
    fgFitter = 0;
    fgDefault = name;
 }
-  
+
 //______________________________________________________________________________
 void TVirtualFitter::SetFitter(TVirtualFitter *fitter, Int_t maxpar)
 {
@@ -133,7 +133,7 @@ void TVirtualFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double
 {
    // To set the address of the minimization objective function
    // called by the native compiler (see function below when called by CINT)
-   
+
    fFCN = fcn;
 }
 
