@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.135 2002/10/30 21:56:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.136 2002/11/06 09:11:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1405,21 +1405,32 @@ TFile *TTree::ChangeFile(TFile *file)
    
    // current directory may contain histograms and trees.
    // These objects must be moved to the new file
+   TBranch *branch;
    TObject *obj;
    while((obj = file->GetList()->First())) {
       file->GetList()->Remove(obj);
-      if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TTree")) {
+      //histogram: just change the directory
+      if (obj->InheritsFrom("TH1")) {
          gROOT->ProcessLine(Form("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);",obj->ClassName(),(Long_t)obj,(Long_t)newfile));
+         continue;
+      }
+      //tree: must save all Trees in the old file, reset them
+      if (obj->InheritsFrom("TTree")) {
+         TTree *t = (TTree*)obj;
+         if (t != this) {
+            t->Write();
+            t->Reset();
+            t->fFileNumber = fFileNumber;
+         }
+         t->SetDirectory(newfile);
+         TIter nextb(t->GetListOfBranches());
+         while ((branch = (TBranch*)nextb())) {
+            branch->SetFile(newfile);
+         }
       }
    }
-   SetDirectory(newfile);
    delete file;
    gFile = newfile;
-   TIter nextb(GetListOfBranches());
-   TBranch *branch;
-   while ((branch = (TBranch*)nextb())) {
-      branch->SetFile(newfile);
-   }
    delete [] fname;
    return newfile;
 }
