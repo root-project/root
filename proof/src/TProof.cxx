@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.43 2003/04/08 10:53:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.44 2003/05/01 17:51:42 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1929,11 +1929,11 @@ void TProof::Progress(Long64_t total, Long64_t processed)
    // to track progress.
 
    PDB(kGlobal,1)
-      Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
+      Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
    Long_t parm[2];
-   parm[0] = total;
-   parm[1] = processed;
+   parm[0] = (Long_t) (&total);
+   parm[1] = (Long_t) (&processed);
    Emit("Progress(Long64_t,Long64_t)", parm);
 }
 
