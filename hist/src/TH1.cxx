@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.25 2000/09/13 16:49:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.26 2000/10/10 11:11:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -788,16 +788,12 @@ Double_t TH1::ComputeIntegral()
    fIntegral = new Double_t[nbins+2];
    ibin = 0;
    fIntegral[ibin] = 0;
-   Double_t dx,dy,dz;
    for (binz=1;binz<=nbinsz;binz++) {
-      dz = fZaxis.GetBinWidth(binz);
       for (biny=1;biny<=nbinsy;biny++) {
-         dy = fYaxis.GetBinWidth(biny);
          for (binx=1;binx<=nbinsx;binx++) {
-            dx = fXaxis.GetBinWidth(binx);
             ibin++;
             bin  = GetBin(binx, biny, binz);
-            fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin)*dx*dy*dz;
+            fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin);
          }
       }
    }
