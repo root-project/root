@@ -52,7 +52,7 @@ void peaks(Int_t np=10) {
    TH1F *h2 = (TH1F*)h->Clone("h2");
    //Use TSpectrum to find the peak candidates
    TSpectrum *s = new TSpectrum(2*npeaks);
-   Int_t nfound = s->Search(h,1,"new");
+   Int_t nfound = s->Search(h,1,"");
    printf("Found %d candidate peaks to fit\n",nfound);
    c1->Update();
    c1->cd(2);
