@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.65 2004/09/06 11:58:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.66 2004/09/06 13:42:26 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1873,6 +1873,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    // iteration over all active classes to exclude the base ones
 
+   TString opt = option;
    TBits *bc = new TBits();
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
@@ -2067,7 +2068,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    out.close();
 
-   Printf(" C++ macro file %s has been generated", fname-i);
+   if (!opt.Contains("quiet")) Printf(" C++ macro file %s has been generated", fname-i);
 
    // reset bit TClass::kClassSaved for all classes
    nextc1.Reset();
@@ -2274,6 +2275,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    // iterate over all active classes to exclude the base ones
 
+   TString opt = option;
    TBits *bc = new TBits();
    TClass *c1, *c2, *c3;
    UInt_t k = 0;      // will mark k-bit of TBits if the class is a base class
@@ -2467,7 +2469,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    out.close();
 
-   Printf(" C++ macro file %s has been generated", fname-i);
+   if (!opt.Contains("quiet")) Printf(" C++ macro file %s has been generated", fname-i);
 
    // reset bit TClass::kClassSaved for all classes
    nextc1.Reset();
