@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.19 2004/05/18 11:32:49 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.20 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
-   virtual void      StoreFeedback(TSlave *slave, TList *out); // Adopts the list
+   virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    virtual void      Feedback(TList *objs); // *SIGNAL*
 
@@ -129,6 +129,7 @@ class TProofPlayerRemote : public TProofPlayer {
 private:
    TProof             *fProof;         // link to associated PROOF session
    TList              *fOutputLists;   // results returned by slaves
+   TList              *fFeedback;      // reference for use on master
    TList              *fFeedbackLists; // intermediate results
    TVirtualPacketizer *fPacketizer;    // transform TDSet into packets for slaves
 
@@ -140,8 +141,8 @@ protected:
    virtual void        StopFeedback();   // specialized teardown
 
 public:
-   TProofPlayerRemote() { fProof = 0; fOutputLists = 0; fFeedbackLists=0; fPacketizer=0;}
-   TProofPlayerRemote(TProof *proof);
+   TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
+                                           fFeedbackLists(0), fPacketizer(0) {}
    ~TProofPlayerRemote();   // Owns the fOutput list
 
    Int_t          Process(TDSet *set, const char *selector,
@@ -149,7 +150,7 @@ public:
                           Long64_t firstentry = 0, TEventList *evl = 0);
    void           StopProcess(Bool_t abort);
    void           StoreOutput(TList *out);   // Adopts the list
-   void           StoreFeedback(TSlave *slave, TList *out); // Adopts the list
+   void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
    void           MergeOutput();
    TDSetElement  *GetNextPacket(TSlave *slave, TMessage *r);
 

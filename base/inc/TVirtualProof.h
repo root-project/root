@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.8 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.9 2003/06/27 11:02:33 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
    virtual Int_t       GetStatus() const = 0;
    virtual Int_t       GetLogLevel() const = 0;
    virtual Int_t       GetParallel() const = 0;
+   virtual TList      *GetSlaveInfo() = 0;
 
    virtual Double_t    GetBytesRead() const = 0;
    virtual Float_t     GetRealTime() const = 0;

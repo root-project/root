@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.13 2004/05/30 23:16:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.14 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -225,7 +225,8 @@ ClassImp(TPacketizer)
 
 
 //______________________________________________________________________________
-TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num)
+TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
+                         Long64_t num, TList * /*input*/ )
 {
    PDB(kPacketizer,1) Info("TPacketizer", "Enter");
 
@@ -570,7 +571,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
             slstat->fCurFile = file;
             file->GetNode()->IncSlaveCnt();
-            TMessage m(kPROOF_REPORTSIZE);
+            TMessage m(kPROOF_GETENTRIES);
             TDSetElement *elem = file->GetElement();
             m << dset->IsTree()
               << TString(elem->GetFileName())
@@ -579,7 +580,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TPacketizer","sent to slave-%d (%s) via %p reportsize on %s %s %s %s",
+            PDB(kPacketizer,2) Info("TPacketizer","sent to slave-%d (%s) via %p GETENTRIES on %s %s %s %s",
                 s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
@@ -638,7 +639,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          PDB(kPacketizer,3) Info("TPacketizer","Got logdone");
          mon.Activate(sock);
          continue;
-      } else if ( reply->What() != kPROOF_REPORTSIZE ) {
+      } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
          Error("TPacketizer","unexpected message type (%d) from slave-%d (%s)", reply->What(),
                slave->GetOrdinal(), slave->GetName());

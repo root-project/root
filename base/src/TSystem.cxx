@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.90 2004/06/08 10:43:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.91 2004/06/25 09:56:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -736,19 +736,19 @@ Bool_t TSystem::IsAbsoluteFileName(const char *dir)
 //______________________________________________________________________________
 Bool_t TSystem::IsFileInIncludePath(const char *name)
 {
-   // Return true if 'name' is a file that can be found in the ROOT include 
-   // path or the current directory.  
-   // If 'name' contains any ACLiC style information (aka trailing +[+][g|O]),
-   // it is first strip of 'name'.
+   // Return true if 'name' is a file that can be found in the ROOT include
+   // path or the current directory.
+   // If 'name' contains any ACLiC style information (e.g. trailing +[+][g|O]),
+   // it will be striped off 'name'.
 
    if (name==0) return kFALSE;
    if (strlen(name)==0) return kFALSE;
-                                                                                            
+
    TString aclicMode;
    TString arguments;
    TString io;
    TString realname = SplitAclicMode(name, aclicMode, arguments, io);
-                                                                                            
+
    TString fileLocation = DirName(realname);
 
    TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
@@ -758,9 +758,9 @@ Bool_t TSystem::IsFileInIncludePath(const char *name)
       incPath.ReplaceAll(" :",":");
    }
    incPath.Prepend(fileLocation+":.:");
-                                                                                            
+
    const char *actual = Which(incPath,realname);
-                                                                                            
+
    if (actual==0) return kFALSE;
    else return kTRUE;
 
@@ -1235,7 +1235,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       l.Remove(idx+1);
    if (libs.Index(l) != kNPOS)
       return 1;
-   if (idx != kNPOS) 
+   if (idx != kNPOS)
       l.Remove(idx);
    if (l.BeginsWith("lib"))
       l.Replace(0, 3, "-l");

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.67 2004/06/22 14:25:39 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.68 2004/06/24 14:54:26 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TEnv.h"
 #include "TPluginManager.h"
 #include "TCondor.h"
+#include "Riostream.h"
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -88,7 +89,25 @@ Bool_t TProofInputHandler::Notify()
 }
 
 
+//------------------------------------------------------------------------------
+
+ClassImp(TSlaveInfo)
+
+void TSlaveInfo::Print(Option_t * /*option*/ ) const
+{
+   cout <<"OBJ: " << IsA()->GetName()
+        << "  Ordinal: "   << fOrdinal
+        << "  Hostname: "  << fHostName
+        << "  PerfIdx: "   << fPerfIndex
+        << endl;
+}
+
+
+
+//------------------------------------------------------------------------------
+
 ClassImp(TProof)
+
 
 //______________________________________________________________________________
 TProof::TProof(const char *masterurl, const char *conffile,
@@ -135,6 +154,7 @@ TProof::~TProof()
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
    SafeDelete(fCondor);
+   SafeDelete(fSlaveInfo);
 
    if (gProof == this) {
       gProof = 0;
@@ -179,10 +199,11 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fProgressDialog = 0;
    fStatus         = 0;
    fParallel       = 0;
+   fSlaveInfo      = 0;
    fPlayer         = 0;
    fCondor         = 0;
    fSecContext     = 0;
-   fUrlProt        = u->GetProtocol();
+   fUrlProtocol    = u->GetProtocol();
 
    delete u;
 
@@ -440,10 +461,10 @@ void TProof::Close(Option_t *)
          Interrupt(kShutdownInterrupt, kAll);
       }
 
-      fSlaves->Delete();
       fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
       fBadSlaves->Clear("nodelete");
+      fSlaves->Delete();
    }
 }
 
@@ -692,6 +713,39 @@ Int_t TProof::GetParallel() const
       return GetNumberOfActiveSlaves();
 
    return fParallel;
+}
+
+//______________________________________________________________________________
+TList *TProof::GetSlaveInfo()
+{
+   // Returns number of slaves active in parallel mode. Returns 0 in case
+   // there are no active slaves. Returns -1 in case of error.
+
+   if (!IsValid()) return 0;
+
+   if (fSlaveInfo == 0) {
+      fSlaveInfo = new TList;
+      fSlaveInfo->SetOwner();
+   } else {
+      fSlaveInfo->Delete();
+   }
+
+   if (IsMaster()) {
+      TIter next(GetListOfSlaves());
+      TSlave *slave;
+
+      while((slave = (TSlave *) next()) != 0) {
+         TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(), slave->GetName(),
+                                                slave->GetPerfIdx());
+         fSlaveInfo->Add(slaveinfo);
+      }
+
+   } else {
+      Broadcast(kPROOF_GETSLAVEINFO);
+      Collect();
+   }
+
+   return fSlaveInfo;
 }
 
 //______________________________________________________________________________
@@ -1055,6 +1109,16 @@ Int_t TProof::Collect(TMonitor *mon)
             }
             break;
 
+         case kPROOF_GETSLAVEINFO:
+            {
+               PDB(kGlobal,2) Info("Collect","Got kPROOF_GETSLAVEINFO");
+
+               (*mess) >> fSlaveInfo;
+               mon->DeActivate(s);
+               if (!mon->GetActive()) loop = 0;
+            }
+            break;
+
          default:
             Error("Collect", "unknown command received from slave (%d)", what);
             break;
@@ -1184,8 +1248,7 @@ void TProof::Print(Option_t *option) const
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
       Printf("Security context:         %s", fSecContext->AsString());
-      TIter next(fActiveSlaves);
-      TSlave *sl = (TSlave *)next();
+      TSlave *sl = (TSlave *)fActiveSlaves->First();
       Printf("Proofd protocol version:  %d", sl->GetSocket()->GetRemoteProtocol());
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.8 2004/06/01 17:53:46 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.9 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -60,6 +60,8 @@ private:
    Long64_t       fPacketSize;   // global base packet size
    Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index
 
+   Int_t          fMaxSlaveCnt;  // maximum number of slaves per filenode
+
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate
    void operator=(const TPacketizer2 &);  // error on accidental usage
@@ -81,7 +83,8 @@ private:
 
 
 public:
-   TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);
+   TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
+                TList *input);
    virtual ~TPacketizer2();
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }

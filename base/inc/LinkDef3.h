@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.14 2004/03/12 14:53:51 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.15 2004/06/13 16:26:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -165,7 +165,7 @@
 // inside the cintdlls.
 #pragma extra_include "string";
 // insure using namespace std and declaration of std::pair
-#pragma extra_include "Rpair.h"; 
+#pragma extra_include "Rpair.h";
 #include <utility>
 
 #pragma link C++ class std::pair<char*,int>+;
@@ -215,5 +215,9 @@
 #pragma link C++ class std::pair<const double,double>+;
 #pragma link C++ class std::pair<const double,void*>+;
 #pragma link C++ class std::pair<const double,char*>+;
+
+#pragma extra_include "Rtypes.h";
+#pragma link C++ class TParameter<Double_t>+;
+#pragma link C++ class TParameter<Long_t>+;
 
 #endif

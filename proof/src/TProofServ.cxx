@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.72 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.73 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -660,9 +660,9 @@ void TProofServ::HandleSocketInput()
          }
          break;
 
-      case kPROOF_REPORTSIZE:
+      case kPROOF_GETENTRIES:
          {
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Enter");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETENTRIES", "Enter");
             Bool_t         isTree;
             TString        filename;
             TString        dir;
@@ -671,21 +671,21 @@ void TProofServ::HandleSocketInput()
 
             (*mess) >> isTree >> filename >> dir >> objname;
 
-            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_GETENTRIES",
                                  "Report size of object %s (%s) in dir %s in file %s",
                                  objname.Data(), isTree ? "T" : "O",
                                  dir.Data(), filename.Data());
 
             entries = TDSet::GetEntries(isTree, filename, dir, objname);
 
-            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_GETENTRIES",
                                  "Found %lld %s", entries, isTree ? "entries" : "objects");
 
-            TMessage answ(kPROOF_REPORTSIZE);
+            TMessage answ(kPROOF_GETENTRIES);
             answ << entries;
             SendLogFile(); // in case of error messages
             fSocket->Send(answ);
-            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETENTRIES", "Done");
          }
          break;
 
@@ -990,6 +990,26 @@ void TProofServ::HandleSocketInput()
                   break;
             }
             SendLogFile(status);
+         }
+         break;
+
+      case kPROOF_GETSLAVEINFO:
+         {
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Enter");
+
+            if (IsMaster()) {
+               TList *info = fProof->GetSlaveInfo();
+
+               TMessage answ(kPROOF_GETSLAVEINFO);
+               answ << info;
+               fSocket->Send(answ);
+            } else {
+               TMessage answ(kPROOF_GETSLAVEINFO);
+               answ << (TList *)0;
+               fSocket->Send(answ);
+            }
+
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");
          }
          break;
 

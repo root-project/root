@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.20 2004/05/27 09:03:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.21 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -1043,7 +1043,7 @@ Int_t TSocket::SendHostAuth()
    while ((ha = (THostAuth *)next())) {
       TString Buf;
       ha->AsString(Buf);
-      if((ns = Send(Buf, kPROOF_SENDHOSTAUTH)) < 1) {
+      if((ns = Send(Buf, kPROOF_HOSTAUTH)) < 1) {
          retval = -1;
          break;
       }
@@ -1052,7 +1052,7 @@ Int_t TSocket::SendHostAuth()
    }
 
    // End of transmission ...
-   if ((ns = Send("END", kPROOF_SENDHOSTAUTH)) < 1)
+   if ((ns = Send("END", kPROOF_HOSTAUTH)) < 1)
       retval = -2;
    if (gDebug > 2)
       Info("SendHostAuth","sent %d bytes for closing",ns);
@@ -1081,7 +1081,7 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
    Int_t kind;
    char buf[kMAXSECBUF];
    Int_t nr = Recv(buf, kMAXSECBUF, kind);
-   if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+   if (nr < 0 || kind != kPROOF_HOSTAUTH) {
       Error("RecvHostAuth", "received: kind: %d (%d bytes)", kind, nr);
       return -1;
    }
@@ -1157,7 +1157,7 @@ Int_t TSocket::RecvHostAuth(Option_t *opt, const char *proofconf)
 
       // Get the next one
       nr = Recv(buf, kMAXSECBUF, kind);
-      if (nr < 0 || kind != kPROOF_SENDHOSTAUTH) {
+      if (nr < 0 || kind != kPROOF_HOSTAUTH) {
          Info("RecvHostAuth","Error: received: kind: %d (%d bytes)", kind, nr);
          return -1;
       }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.35 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.36 2004/06/13 16:26:35 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -135,7 +135,7 @@ void TProofPlayer::StoreOutput(TList *)
 }
 
 //______________________________________________________________________________
-void TProofPlayer::StoreFeedback(TSlave *, TList *)
+void TProofPlayer::StoreFeedback(TObject *, TList *)
 {
    MayNotUse("StoreFeedback");
 }
@@ -338,15 +338,6 @@ ClassImp(TProofPlayerRemote)
 
 
 //______________________________________________________________________________
-TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
-{
-   fProof         = proof;
-   fOutputLists   = 0;
-   fPacketizer    = 0;
-   fFeedbackLists = 0;
-}
-
-//______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
    delete fOutput;      // owns the output list
@@ -413,8 +404,15 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                             dset->GetDirectory() );
 
       delete fPacketizer;
-      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
-                                     first, nentries);
+      if (fInput->FindObject("PROOF_NewPacketizer") != 0) {
+         Info("Process","!!! Using TPacketizer2 !!!");
+         fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
+                                        first, nentries, fInput);
+      } else {
+         PDB(kGlobal,1) Info("Process","Using Standard TPacketizer");
+         fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
+                                       first, nentries, fInput);
+      }
 
       if ( !fPacketizer->IsValid() ) {
          return -1;
@@ -560,6 +558,20 @@ TList *TProofPlayerRemote::MergeFeedback()
 {
    PDB(kFeedback,1) Info("MergeFeedback","Enter");
 
+   if ( gProof->IsMaster() ) {
+      // process local feedback objects
+
+      TList *fb = new TList;
+      TIter next(fFeedback);
+      while( TObjString *name = (TObjString*) next() ) {
+         TObject *o = fOutput->FindObject(name->GetName());
+         if (o != 0) fb->Add(o->Clone());
+      }
+
+      StoreFeedback(this, fb); // adopts fb
+   }
+
+
    if ( fFeedbackLists == 0 ) {
       PDB(kFeedback,1) Info("MergeFeedback","Leave (no output)");
       return 0;
@@ -622,7 +634,7 @@ TList *TProofPlayerRemote::MergeFeedback()
 }
 
 //______________________________________________________________________________
-void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
+void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
 {
    PDB(kFeedback,1) Info("StoreFeedback","Enter");
 
@@ -673,12 +685,12 @@ void TProofPlayerRemote::SetupFeedback()
 {
    if (!gProof->IsMaster()) return; // Client does not need timer
 
-   TList *fb = (TList*) fInput->FindObject("FeedbackList");
+   fFeedback = (TList*) fInput->FindObject("FeedbackList");
 
    PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
-      fb == 0 ? "NOT ":"");
+      fFeedback == 0 ? "NOT ":"");
 
-   if (fb == 0) return;
+   if (fFeedback == 0) return;
 
    // OK, feedback was requested, setup the timer
 
