@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.118 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.119 2002/12/10 16:40:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4604,7 +4604,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
       // make NEXPT experiments (this should be a parameter)
       for (Int_t i=0; i < NEXPT; i++) {
          HExpt->Reset();
-         HExpt->FillRandom(h1,ne2);
+         HExpt->FillRandom(h1,(Int_t)ne2);
          KSEXPT = KolmogorovTest(HExpt,"M");
          HDistValues->Fill(KSEXPT);
       }
