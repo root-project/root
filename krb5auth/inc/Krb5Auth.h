@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.h,v 1.3 2003/10/28 23:29:24 brun Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.h,v 1.4 2003/11/07 03:29:41 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -41,7 +41,7 @@
 
 extern "C" {
    #define KRB5_PRIVATE 1
-   #if (defined(__sun) || defined(__sgi)) && !defined(linux)
+   #if (defined(__sun) || defined(__sgi) || defined(__APPLE__)) && !defined(linux)
       #include <com_err.h>
    #endif
    #include <krb5.h>
