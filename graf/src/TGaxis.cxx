@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.65 2004/01/12 12:58:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.66 2004/04/26 07:30:19 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -790,6 +790,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       return;
    }
 
+   Int_t maxDigits = 5;
+   if (fAxis && fAxis->GetNbins() <2) maxDigits = fgMaxDigits;
+   
    TLine *lineaxis = new TLine();
    TLatex *textaxis = new TLatex();
    lineaxis->SetLineColor(GetLineColor());
@@ -1250,7 +1253,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*-              (0.001 fgMaxDigits of 5 (fgMaxDigits) characters). Then we use x 10 n
 //*-*-              format. If AF >=0 x10 n cannot be used
                Double_t xmicros = 0.00099;
-               if (fgMaxDigits) xmicros = TMath::Power(10,-fgMaxDigits);
+               if (maxDigits) xmicros = TMath::Power(10,-maxDigits);
                if (!noExponent && (TMath::Abs(wmax-wmin)/Double_t(N1A)) < xmicros) {
                   AF    = TMath::Log10(WW) + epsilon;
                   if (AF < 0) {
@@ -1263,8 +1266,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      else          NEXE =  IEXE;
                      Wlabel  = Wlabel*TMath::Power(10,IEXE);
                      DWlabel = DWlabel*TMath::Power(10,IEXE);
-                     IF1     = fgMaxDigits;
-                     IF2     = fgMaxDigits-2;
+                     IF1     = maxDigits;
+                     IF2     = maxDigits-2;
                      goto L110;
                   }
                }
@@ -1272,8 +1275,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                else         AF = TMath::Log10(WW*0.0001);
                AF += epsilon;
                NF  = Int_t(AF)+1;
-               if (!noExponent && NF > fgMaxDigits)  FLEXPO = kTRUE;
-               if (!noExponent && NF < -fgMaxDigits) FLEXNE = kTRUE;
+               if (!noExponent && NF > maxDigits)  FLEXPO = kTRUE;
+               if (!noExponent && NF < -maxDigits) FLEXNE = kTRUE;
 
 //*-*-              Use x 10 n format. (only powers of 3 allowed)
 
@@ -1284,13 +1287,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                      WW      /= 10;
                      Wlabel  /= 10;
                      DWlabel /= 10;
-                     if (NEXE%3 == 0 && WW <= TMath::Power(10,fgMaxDigits-1)) break;
+                     if (NEXE%3 == 0 && WW <= TMath::Power(10,maxDigits-1)) break;
                   }
                }
 
                if (FLEXNE) {
                   FLEXE = kTRUE;
-                  RNE   = 1/TMath::Power(10,fgMaxDigits-2);
+                  RNE   = 1/TMath::Power(10,maxDigits-2);
                   while (1) {
                      NEXE--;
                      WW      *= 10;
@@ -1301,13 +1304,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                NA = 0;
-               for (i=fgMaxDigits-1; i>0; i--) {
-                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = fgMaxDigits-i;
+               for (i=maxDigits-1; i>0; i--) {
+                  if (TMath::Abs(WW) < TMath::Power(10,i)) NA = maxDigits-i;
                }
                ndyn = N1A;
                while (ndyn) {
                   Double_t wdyn = TMath::Abs((wmax-wmin)/ndyn);
-                  if (wdyn <= 0.999 && NA < fgMaxDigits-2) {
+                  if (wdyn <= 0.999 && NA < maxDigits-2) {
                      NA++;
                      ndyn /= 10;
                   }
@@ -1315,7 +1318,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                }
 
                IF2 = NA;
-               IF1 = TMath::Max(NF+NA,fgMaxDigits)+1;
+               IF1 = TMath::Max(NF+NA,maxDigits)+1;
 L110:
                if (TMath::Min(wmin,wmax) < 0)IF1 = IF1+1;
                IF1 = TMath::Min(IF1,32);
@@ -1876,7 +1879,8 @@ void TGaxis::SetFunction(const char *funcname)
 //______________________________________________________________________________
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
-   // static function to set fgMaxDigits
+   // static function to set fgMaxDigits for axis with the bin content
+   // (y axis for 1-d histogram, z axis for 2-d histogram)
    //fgMaxDigits is the maximum number of digits permitted for the axis
    //labels above which the notation with 10^N is used.
    //For example, to accept 6 digits number like 900000 on an axis
