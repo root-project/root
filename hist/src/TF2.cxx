@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.18 2003/03/07 10:45:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.19 2003/03/31 16:04:35 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -157,8 +157,27 @@ Int_t TF2::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   return TF1::DistancetoPrimitive(px, py);
+   if (!fHistogram) return 9999;
+   Int_t distance = fHistogram->DistancetoPrimitive(px,py);
+   if (distance <= 1) return distance;
 
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   const char *drawOption = GetDrawOption();
+   Double_t uxmin,uxmax;
+   Double_t uymin,uymax;
+   if (gPad->GetView() || strncmp(drawOption,"cont",4) == 0
+                       || strncmp(drawOption,"CONT",4) == 0) {
+      uxmin=gPad->GetUxmin();
+      uxmax=gPad->GetUxmax();
+      x = fXmin +(fXmax-fXmin)*(x-uxmin)/(uxmax-uxmin);
+      uymin=gPad->GetUymin();
+      uymax=gPad->GetUymax();
+      y = fYmin +(fYmax-fYmin)*(y-uymin)/(uymax-uymin);
+   }
+   if (x < fXmin || x > fXmax) return distance;
+   if (y < fYmin || y > fYmax) return distance;
+   return 0;
 }
 
 //______________________________________________________________________________
