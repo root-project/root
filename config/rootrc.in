@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.90 2004/12/15 09:36:20 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.91 2004/12/21 17:16:55 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -14,7 +14,7 @@ WinNT.*.Root.MacroPath:     .;@macrodir@
 
 # Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
-*.*.Root.TTFontPath:     @ttffontdir@
+*.*.Root.TTFontPath:        @ttffontdir@
 
 # Use thread library (if exists).
 Unix.*.Root.UseThreads:     false

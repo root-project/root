@@ -57,7 +57,7 @@ echo "#"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 echo "# CERN local rules for RFIO compatibility"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 echo "*.cern.ch:rootd usrpwd ssh uidgid"  >> $RPM_BUILD_ROOT%{_sysconfdir}/system.rootdaemonrc
 # The start script; will make it relocatable in the post-install
-install -m 755 %{_rootdir}/etc/rootd $RPM_BUILD_ROOT/etc/rc.d/init.d/rootd
+install -m 755 %{_rootdir}/rootd/misc/rootd.rc.d $RPM_BUILD_ROOT/etc/rc.d/init.d/rootd
 #---------------------------------------------------------------------
 # Files that go into this package 
 %files
@@ -99,7 +99,7 @@ if [ -d /etc/xinetd.d ] ; then
 #
 service rootd
 {
-        disable = no
+        disable         = no
         flags           = REUSE
         socket_type     = stream
         wait            = no
@@ -112,7 +112,7 @@ fi
 #
 # Make sure that port 1094 is assigned to rootd in /etc/services 
 if ! grep -qs "^rootd" /etc/services ; then
-    echo "rootd           1094/tcp # ROOT"  >> /etc/services
+    echo "rootd           1094/tcp # ROOT file access daemon"  >> /etc/services
 fi
 #
 # Make sure that the rootd location is correct in /etc/rc.d/init.d/rootd
