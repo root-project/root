@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.6 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.7 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -240,38 +240,35 @@ void TStreamerBasicPointer::Init(TObject *)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerTStringPointer)
+ClassImp(TStreamerLoop)
 
 //______________________________________________________________________________
-TStreamerTStringPointer::TStreamerTStringPointer()
+TStreamerLoop::TStreamerLoop()
 {
    // Default ctor.
 
 }
 
 //______________________________________________________________________________
-TStreamerTStringPointer::TStreamerTStringPointer(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t countVersion, const char *typeName)
-        : TStreamerElement(name,title,offset,TStreamerInfo::kTStringp,typeName)
+TStreamerLoop::TStreamerLoop(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t countVersion, const char *typeName)
+        : TStreamerElement(name,title,offset,TStreamerInfo::kStreamLoop,typeName)
 {
-   // Create a TStreamerTStringPointer object.
+   // Create a TStreamerLoop object.
 
    fCountName    = countName;
    fCountClass   = countClass;
    fCountVersion = countVersion;
    Init();
-   
-   //printf("TStringPointer Init:%s, countName=%s, countClass=%s, countVersion=%d, fCounter=%x\n",
-   //   name,countName,countClass,countVersion,fCounter);
 }
 
 //______________________________________________________________________________
-TStreamerTStringPointer::~TStreamerTStringPointer()
+TStreamerLoop::~TStreamerLoop()
 {
-   // TStreamerTStringPointer dtor.
+   // TStreamerLoop dtor.
 }
 
 //______________________________________________________________________________
-ULong_t TStreamerTStringPointer::GetMethod() const
+ULong_t TStreamerLoop::GetMethod() const
 {
    // return address of counter
    
@@ -279,7 +276,7 @@ ULong_t TStreamerTStringPointer::GetMethod() const
 }
 
 //______________________________________________________________________________
-void TStreamerTStringPointer::Init(TObject *)
+void TStreamerLoop::Init(TObject *)
 {   
    TClass *cl = gROOT->GetClass(fCountClass.Data());
    fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl,fCountVersion);
@@ -290,9 +287,9 @@ void TStreamerTStringPointer::Init(TObject *)
 }
 
 //______________________________________________________________________________
-const char *TStreamerTStringPointer::GetInclude() const
+const char *TStreamerLoop::GetInclude() const
 {
-   sprintf(includeName,"<%s>","TString.h");
+   sprintf(includeName,"<%s>","TString.h"); //to be generalized
    return includeName;
 }
 

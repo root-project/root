@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.7 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.8 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -113,7 +113,7 @@ public:
 };
 
 //________________________________________________________________________
-class TStreamerTStringPointer : public TStreamerElement {
+class TStreamerLoop : public TStreamerElement {
 
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
@@ -123,15 +123,15 @@ protected:
            
 public:
 
-   TStreamerTStringPointer();
-   TStreamerTStringPointer(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t version, const char *typeName);
-   virtual       ~TStreamerTStringPointer();
+   TStreamerLoop();
+   TStreamerLoop(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t version, const char *typeName);
+   virtual       ~TStreamerLoop();
    const char    *GetInclude() const;
    ULong_t        GetMethod() const;
    virtual void   Init(TObject *obj=0);
    virtual Bool_t IsaPointer() const {return kTRUE;}
    
-   ClassDef(TStreamerTStringPointer,1)  //Streamer element for a pointer to an array of TString
+   ClassDef(TStreamerLoop,1)  //Streamer element for a pointer to an array of objects
 };
 
 //________________________________________________________________________

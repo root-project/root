@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.6 2000/12/11 18:06:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.7 2000/12/13 15:13:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
       kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
       kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat   =  5, kDouble  =  8,
       kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
-      kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTStringp=46,
+      kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,
       kTString= 65,  kTObject = 66,  kTNamed  = 67,  kMissing = 99999,
       kSkip   =100,  kSkipL   =120,  kSkipP   =140,  kObjectV = 47,  kObjectVV=48,
       kConv   =200,  kConvL   =220,  kConvP   =240,  kStreamer=500,  kStreamLoop=501

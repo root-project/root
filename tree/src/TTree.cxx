@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.33 2000/12/13 16:45:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.34 2000/12/14 11:22:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -474,10 +474,11 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
                                          // character in the comment field
       rdname = rd->GetName();
       dname  = dm->GetName();
-
-  //  Next line now commented, functionality to process arrays is now implemented
-  //  the statement is left to show how to use Property() and kIsArray
-  //     if (dm->Property() & kIsArray) continue;
+      
+      if (cl->CanIgnoreTObjectStreamer()) {
+         if (strcmp(dname,"fBits") == 0) continue;
+         if (strcmp(dname,"fUniqueID") == 0) continue;
+      }
 
       TDataType *dtype = dm->GetDataType();
       Int_t code = 0;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.7 2000/12/10 17:14:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.8 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -103,7 +103,8 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
          continue;
       }
       // forget TObject part if splitlevel = 2
-      if (splitlevel > 1 || fList->TestBit(TClonesArray::kForgetBits)) {
+      if (splitlevel > 1 || fList->TestBit(TClonesArray::kForgetBits)
+                         || cl->CanIgnoreTObjectStreamer()) {
          if (strcmp(member->GetName(),"fBits")     == 0) continue;
          if (strcmp(member->GetName(),"fUniqueID") == 0) continue;
       }
