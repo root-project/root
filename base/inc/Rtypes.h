@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.4 2000/11/21 15:57:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.5 2000/11/21 21:45:32 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,6 +62,8 @@ typedef int            Ssiz_t;      //String size
 typedef float          Real_t;      //TVector and TMatrix element type
 
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
+class TBuffer;
+typedef void (*Streamer_t)(TBuffer &, void*);
 
 
 //---- constants ---------------------------------------------------------------
