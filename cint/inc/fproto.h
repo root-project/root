@@ -909,6 +909,12 @@ int G__bc_exec_typematch_bytecode G__P((G__value* catchtype,G__value* excptobj))
 int G__Isvalidassignment_val G__P((G__value* ltype,G__value* rtype));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2136
+int G__bc_setdebugview G__P((int i,struct G__view *pview));
+int G__bc_showstack G__P((FILE* fp));
+void G__bc_setlinenum G__P((int line));
+#endif
+
 G__value G__alloc_exceptionbuffer G__P((int tagnum));
 
 void G__argtype2param G__P((char *argtype,struct G__param *libp));

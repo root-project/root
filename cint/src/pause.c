@@ -50,6 +50,7 @@ extern void G__setcopyflag G__P((int flag));
 #define G__NUM_STDBOTH 3
 #endif
 
+#ifdef G__OLDIMPLEMENTATION2137
 struct G__store_env {
   struct G__var_array *var_local;
   long struct_offset;
@@ -64,6 +65,7 @@ struct G__view {
   int tagnum;
   int exec_memberfunc;
 };
+#endif
 
 #ifdef G__BORLANDCC5
 void G__decrement_undo_index(int *pi);
@@ -1416,7 +1418,10 @@ int G__pause()
     G__pause_return=0;
 
     ignore = G__process_cmd(command, prompt, &more,(int*)NULL,(G__value*)NULL);
-    if (ignore/G__PAUSE_ERROR_OFFSET) break;
+#ifndef G__OLDIMPLEMENTATION2139
+    if(G__return==G__RETURN_IMMEDIATE) break;
+#endif
+    if(ignore/G__PAUSE_ERROR_OFFSET) break;
     if(G__pause_return) break;
   }
 
@@ -1843,6 +1848,9 @@ char *com;
       if(0==com[i] || '\n'==com[i]) {
 	--i;
 	strcpy(com+i,G__input("> "));
+#ifndef G__OLDIMPLEMENTATION2139
+	if(G__return==G__RETURN_IMMEDIATE) return(-1);
+#endif
       }
 #endif
       break;
@@ -1880,6 +1888,9 @@ char *com;
     else {
       strcpy(com+i,G__input("end with ';', '@':abort > "));
     }
+#ifndef G__OLDIMPLEMENTATION2139
+    if(G__return==G__RETURN_IMMEDIATE) return(-1);
+#endif
     if('@'==com[i]) {
       com[0]=0;
       return(0);
@@ -1898,6 +1909,9 @@ char *com;
 #endif
      ) {
     strcpy(com+i,G__input("end with ';', '@':abort > "));
+#ifndef G__OLDIMPLEMENTATION2139
+    if(G__return==G__RETURN_IMMEDIATE) return(-1);
+#endif
     if('@'==com[i]) {
       com[0]=0;
       return(0);
@@ -1980,7 +1994,7 @@ char* name;
 }
 
 /******************************************************************
-* int G__process_cmd()
+* intG__process_cmd()
 ******************************************************************/
 int G__process_cmd(line, prompt, more, err, rslt)
 char *line;
@@ -3443,7 +3457,12 @@ G__value *rslt;
       /*******************************************************
        * show function call stack
        *******************************************************/
+#ifndef G__OLDIMPLEMENTATION2137
+      if(G__cintv6) G__bc_showstack(G__sout);
+      else          G__showstack(G__sout);
+#else
       G__showstack(G__sout);
+#endif
     }
 
     else if(strncmp("T",com,1)==0) {
@@ -3654,6 +3673,39 @@ G__value *rslt;
       temp1=atoi(command+1);
       temp=0;
       local=G__p_local;
+#ifndef G__OLDIMPLEMENTATION2137
+      if(G__cintv6) {
+        if(G__bc_setdebugview(temp1,&view)) G__pr(G__sout,view.file);
+      }
+      else {
+        while(local && temp<temp1-1) {
+	  ++temp;
+	  local=local->prev_local;
+        }
+        if(0==temp1) {
+	  view.file = G__ifile;
+	  view.var_local = G__p_local;
+	  view.struct_offset=G__store_struct_offset;
+	  view.tagnum=G__tagnum;
+	  view.exec_memberfunc=G__exec_memberfunc;
+	  G__pr(G__sout,view.file);
+        }
+        else if(local && local->prev_local) {
+	  view.file.filenum = local->prev_filenum ;
+	  strcpy(view.file.name,G__srcfile[view.file.filenum].filename);
+	  view.file.fp = G__srcfile[view.file.filenum].fp;
+	  view.file.line_number = local->prev_line_number;
+	  view.var_local = local->prev_local;
+	  view.struct_offset=view.var_local->struct_offset;
+	  view.tagnum=view.var_local->tagnum;
+	  view.exec_memberfunc=view.var_local->exec_memberfunc;
+	  G__pr(G__sout,view.file);
+        }
+        else {
+	  fprintf(G__sout,"Stack isn't that deep\n");
+        }
+      }
+#else
       while(local && temp<temp1-1) {
 	++temp;
 	local=local->prev_local;
@@ -3680,6 +3732,7 @@ G__value *rslt;
       else {
 	fprintf(G__sout,"Stack isn't that deep\n");
       }
+#endif
     }
 
 

@@ -62,7 +62,7 @@ extern "C" {
 char *G__calc(char*);
 char *G__getexpr(char*);
 char *G__getandor(char*);
-#ifndef __hpux
+#if !defined(__hpux) && !defined(__APPLE__) 
 char getopt(int argc,char **argv,char *optlist);
 #endif
 extern int optind;

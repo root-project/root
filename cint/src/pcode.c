@@ -386,6 +386,9 @@ long localmem;
   int store_cpp_aryindex[10];
   int store_cpp_aryindexp=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION2133
+  int store_step;
+#endif
 
 
   G__no_exec_compile=0;
@@ -769,6 +772,32 @@ long localmem;
 		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
 				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
 #endif
+#ifndef G__OLDIMPLEMENTATION2133
+      {
+	G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
+        G__ifile.filenum=G__asm_inst[pc+1]/G__CL_FILESHIFT;
+        if((G__srcfile[G__ifile.filenum].maxline>G__ifile.line_number &&
+            G__TESTBREAK&G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]) ||
+           G__step) {
+	  if(G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]&G__CONTUNTIL)
+	    G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number] &= G__NOCONTUNTIL;
+          struct G__input_file store_ifile = G__ifile;
+          if(G__ifile.filenum>=0) {
+            strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
+#ifndef G__OLDIMPLEMENTATION2136
+            G__bc_setlinenum(G__ifile.line_number);
+#endif
+          }
+          if(1 || G__istrace) {
+            G__istrace |= 0x80;
+            G__pr(G__serr,G__ifile);
+            G__istrace &= 0x3f;
+          }
+	  G__pause();
+	  G__ifile=store_ifile;
+        }
+      }
+#else
       if(G__breaksignal) {
         struct G__input_file store_ifile = G__ifile;
 	G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
@@ -779,6 +808,7 @@ long localmem;
 	G__pause();
 	G__ifile=store_ifile;
       }
+#endif
 #else /* 2132 */
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %d\n",pc,sp,G__asm_inst[pc+1]);
@@ -1038,12 +1068,21 @@ long localmem;
 #ifndef G__OLDIMPLEMENTATION804
       result->ref = 0; 
 #endif
+#ifndef G__OLDIMPLEMENTATION2133
+      if(G__stepover) {
+        store_step=G__step;
+        G__step=0;
+      }
+#endif
 #ifdef G__EXCEPTIONWRAPPER
       G__asm_exec=0;
       G__ExceptionWrapper(pfunc,result,funcname,&fpara,G__asm_inst[pc+2]);
       G__asm_exec=1;
 #else
       (*pfunc)(result,funcname,&fpara,G__asm_inst[pc+2]);
+#endif
+#ifndef G__OLDIMPLEMENTATION2133
+      if(G__stepover) G__step |= store_step;
 #endif
       pc+=5;
 #ifndef G__OLDIMPLEMENTATION907
@@ -6920,6 +6959,13 @@ int G__asm_clear()
 			 ,G__ifile.name ,G__ifile.line_number);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2134
+  if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]) G__inc_cp_asm(-2,0);
+  G__asm_inst[G__asm_cp]=G__CL;
+  G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
+                    + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
+  G__inc_cp_asm(2,0);
+#else /* 2134 */
   if(G__asm_cp<2 || G__CL!=G__asm_inst[G__asm_cp-2]) {
     G__asm_inst[G__asm_cp]=G__CL;
 #ifndef G__OLDIMPLEMENTATION2132
@@ -6930,6 +6976,7 @@ int G__asm_clear()
 #endif
     G__inc_cp_asm(2,0);
   }
+#endif /* 2134 */
   return(0);
 }
 
@@ -11061,7 +11108,7 @@ int isthrow;
       ***************************************/
       if(0==isthrow) {
 #ifndef G__OLDIMPLEMENTATION2132
-	fprintf(fout,"%3x: CL %s:%d\n",pc
+	fprintf(fout,"%3x: CL %s:%ld\n",pc
 		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
 				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
 #else

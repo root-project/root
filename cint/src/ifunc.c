@@ -282,7 +282,11 @@ int hash; /* not used */
 #endif
 
 #ifdef G__ASM_DBG
-  if(G__asm_dbg||G__dispsource) {
+  if(G__asm_dbg||(G__dispsource
+#ifndef G__OLDIMPLEMENTATION2135
+                  &&0==G__stepover
+#endif
+                  )) {
     if(bytecode->ifunc->tagnum>=0) 
       G__fprinterr(G__serr,"Running bytecode function %s::%s inst=%lx->%lx stack=%lx->%lx\n"
 	      ,G__struct.name[bytecode->ifunc->tagnum]
@@ -445,7 +449,11 @@ int hash; /* not used */
   if(bytecode->varsize>G__LOCALBUFSIZE) free((void*)localmem);
 
 #ifdef G__ASM_DBG
-  if(G__asm_dbg||G__dispsource) {
+  if(G__asm_dbg||(G__dispsource
+#ifndef G__OLDIMPLEMENTATION2135
+                  &&0==G__stepover
+#endif
+                  )) {
     if(bytecode->ifunc->tagnum>=0) 
       G__fprinterr(G__serr,"Exit bytecode function %s::%s restore inst=%lx stack=%lx\n"
 	      ,G__struct.name[bytecode->ifunc->tagnum]
@@ -542,6 +550,10 @@ int iexist;
   long store_globalvarpointer = G__globalvarpointer;
 #endif
   char funcname[G__ONELINE];
+#ifndef G__OLDIMPLEMENTATION2135
+  int store_dispsource = G__dispsource;
+  if(G__step||G__stepover) G__dispsource=0;
+#endif
 
   if(
 #ifndef G__OLDIMPLEMENTATION1164
@@ -629,6 +641,9 @@ int iexist;
   else if(0==G__def_struct_member)
     ifunc->pentry[iexist]->bytecodestatus = G__BYTECODE_FAILURE;
 
+#ifndef G__OLDIMPLEMENTATION2135
+  G__dispsource = store_dispsource;
+#endif
   return(ifunc->pentry[iexist]->bytecodestatus);
 }
 

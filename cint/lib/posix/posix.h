@@ -231,7 +231,7 @@ extern gid_t getgid(void);
 extern gid_t getegid(void);
 extern int setuid(uid_t uid);
 
-#if !(defined(G__APPLE) || defined(__APPLE)__)
+#if !(defined(G__APPLE) || defined(__APPLE__))
 extern char *cuserid(char *string);
 #endif
 extern char *getlogin(void);
@@ -258,7 +258,7 @@ extern int fchown(int fd,uid_t owner,gid_t group);
 #endif
 extern int fchdir(int fd);
 #if !defined(G__SUN) && !defined(G__CYGWIN)
-#if !(defined(G__APPLE) || defined(__APPLE__))
+#elif !(defined(G__APPLE) || defined(__APPLE__))
 extern char *get_current_dir_name(void);
 extern pid_t getpgid(pid_t pid);
 #endif

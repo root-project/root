@@ -282,6 +282,11 @@ char *prompt;
       G__dumpinput(line);
     }
   }
+#ifndef G__OLDIMPLEMENTATION2139
+  if(feof(G__sin)) {
+    G__return=G__RETURN_IMMEDIATE;
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION447
   clearerr(G__sin);
 #endif

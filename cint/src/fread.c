@@ -3018,7 +3018,11 @@ int G__fgetc()
        0==G__disp_mask&& 
        G__srcfile[G__ifile.filenum].breakpoint &&
        G__srcfile[G__ifile.filenum].maxline>G__ifile.line_number &&
-       G__TESTBREAK&(G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]|=(!G__no_exec))) {
+       G__TESTBREAK&(G__srcfile[G__ifile.filenum].breakpoint[G__ifile.line_number]|=(!G__no_exec))
+#ifndef G__OLDIMPLEMENTATION2138
+       && !G__cintv6
+#endif
+       ) {
       G__BREAKfgetc();
     }
     G__eof_count=0;

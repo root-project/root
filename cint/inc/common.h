@@ -829,7 +829,7 @@ struct G__includepath {
 #define G__CONTUNTIL     0x20
 #define G__NOCONTUNTIL   0xdf
 #define G__TRACED        0x01
-#define G__NOTRACED       0xfe
+#define G__NOTRACED      0xfe
 
 /*********************************************************************
 * const string list
@@ -1063,6 +1063,26 @@ struct G__funclist {
 #define G__BC_CINTVER6     0x01
 #define G__BC_COMPILEERROR 0x02
 #define G__BC_RUNTIMEERROR 0x04
+
+/*********************************************************************
+* debug interface
+*********************************************************************/
+#ifndef G__OLDIMPLEMENTATION2137
+struct G__store_env {
+  struct G__var_array *var_local;
+  long struct_offset;
+  int tagnum;
+  int exec_memberfunc;
+};
+
+struct G__view {
+  struct G__input_file file;
+  struct G__var_array *var_local;
+  long struct_offset;
+  int tagnum;
+  int exec_memberfunc;
+};
+#endif
 
 /*********************************************************************
 * cint parser function and global variable prototypes

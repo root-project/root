@@ -1582,6 +1582,10 @@ struct G__input_file view;
 #endif
   if(screen<=0) screen=24;
 
+#ifndef G__OLDIMPLEMENTATION2133
+  if(G__istrace&0x80) screen = 2;
+#endif
+
   if(0==view.line_number) {
     top=0;
     bottom=1000000;

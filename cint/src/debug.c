@@ -1415,6 +1415,9 @@ void G__setclassdebugcond(tagnum,brkflag)
 int tagnum;
 int brkflag;
 {
+#ifndef G__OLDIMPLEMENTATION2135
+  if(G__cintv6) return;
+#endif
   if(-1==tagnum) {
     G__debug = G__istrace;
   }
