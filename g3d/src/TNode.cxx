@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.8 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.9 2001/04/13 09:49:17 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -117,10 +117,10 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
       return;
    }
 
+   ImportShapeAttributes();
    if (fParent) {
       fParent->BuildListOfNodes();
       fParent->GetListOfNodes()->Add(this);
-      ImportShapeAttributes();
    } else {
       gGeometry->GetListOfNodes()->Add(this);
       cd();
