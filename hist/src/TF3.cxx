@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.6 2002/05/30 15:15:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.7 2002/07/16 20:37:11 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -284,7 +284,6 @@ void TF3::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   if (!opt.Contains("same")) gPad->Clear();
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {

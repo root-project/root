@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.12 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.13 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -457,7 +457,6 @@ void TF2::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   if (!opt.Contains("same")) gPad->Clear();
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {
