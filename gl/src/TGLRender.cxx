@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.11 2004/10/21 15:05:18 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.12 2004/10/21 15:11:50 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
 #include "TGLCamera.h"
+
+namespace std {} using namespace std;
 
 const UChar_t gXyz[][8] = {{0x44, 0x44, 0x28, 0x10, 0x10, 0x28, 0x44, 0x44},
                            {0x10, 0x10, 0x10, 0x10, 0x10, 0x28, 0x44, 0x44},
@@ -277,7 +279,7 @@ void TGLRender::SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z)
 void PrintNumber(Double_t x, Double_t y, Double_t z, Double_t num, Double_t ys)
 {
 #ifdef R__SSTREAM
-   std::ostringstream ss;
+   ostringstream ss;
 #else
    ostrstream ss;
 #endif
