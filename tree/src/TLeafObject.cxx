@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.10 2001/04/27 17:29:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.11 2001/05/02 20:44:33 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -118,6 +118,15 @@ const char *TLeafObject::GetTypeName() const
 //*-*            =========================
 
    return fTitle.Data();
+}
+
+//______________________________________________________________________________
+Bool_t TLeafObject::Notify()
+{
+   // This method must be overridden to handle object notifcation.
+
+   fClass      = gROOT->GetClass(GetTitle());
+   return kFALSE;
 }
 
 //______________________________________________________________________________

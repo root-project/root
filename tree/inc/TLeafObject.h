@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.7 2001/04/09 08:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.8 2001/04/27 17:29:36 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -50,6 +50,7 @@ public:
     const char     *GetTypeName() const ;
     Bool_t          IsOnTerminalBranch() const    { return kFALSE; }
     Bool_t          IsVirtual() const {return fVirtual;}
+    virtual Bool_t  Notify();
     virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    SetAddress(void *add=0);
