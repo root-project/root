@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.16 2003/03/14 08:45:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.17 2003/04/11 11:48:11 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -612,7 +612,6 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
 
       char gettername[128];
       sprintf(gettername, "Get%s", dataname+1);
-      if (strstr(gettername, "Is")) sprintf(gettername, "Get%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
          return fValueGetter = new TMethodCall(cl, gettername, "");
       sprintf(gettername, "Is%s", dataname+1);
