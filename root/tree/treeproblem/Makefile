@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer Foo.so \
-	 write.out
+	 *.log $(ALL_LIBRARIES) *.exe
 TEST_TARGETS +=  check
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -72,13 +72,14 @@ dist:
 	tar -czvf treeproblem.tar.gz treeproblem 
 	rm -rf treeproblem 
 
-check:Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf) 
-	$(CMDECHO) root -b -l -q writer.C > write.out
-ifeq ($(FAIL),) 
-	@echo Test known to fail in `pwd`
-else
-	root -b -l -q reader.C
-endif
+write.log:  writer$(ExeSuf) Foo.$(DllSuf)
+	$(CMDECHO) root -b -l -q writer.C > write.log
+
+reader.log: Foo.$(DllSuf) reader$(ExeSuf) write.log
+	$(CMDECHO) root -b -l -q reader.C > reader.log
+
+check: reader.log
+	$(CMDECHO)diff -b -w reader.ref reader.log
 
 #clean:
 #	rm -f *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer
