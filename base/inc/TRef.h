@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.4 2001/11/28 14:49:01 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.h,v 1.5 2001/12/02 15:20:06 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -52,9 +52,13 @@ public:
    static Int_t       AddExec(const char *name);
           TObject    *GetObject() const;
    static TObjArray  *GetListOfExecs();
-   virtual void       SetAction(const char *name);
+   TProcessID        *GetPID() const {return fPID;}
+   Bool_t             IsValid() const {return GetUniqueID()!=0 ? kTRUE : kFALSE;}virtual void       SetAction(const char *name);
    virtual void       SetAction(TObject *parent);
    static  void       SetObject(TObject *obj);
+   
+   friend Bool_t operator==(const TRef &r1, const TRef &r2);
+   friend Bool_t operator!=(const TRef &r1, const TRef &r2);
 
    ClassDef(TRef,1)  //Persistent Reference link to a TObject
 };

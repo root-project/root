@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.11 2002/02/02 11:57:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.12 2002/02/03 16:14:31 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -224,6 +224,24 @@ TRef &TRef::operator=(const TRef &ref)
    SetUniqueID(ref.GetUniqueID());
    fPID = ref.fPID;
    return *this;
+}
+
+//______________________________________________________________________________
+Bool_t operator==(const TRef &r1, const TRef &r2)
+{
+   // return kTRUE if r1 and r2 point to the same object
+   
+   if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kTRUE;
+   else return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t operator!=(const TRef &r1, const TRef &r2)
+{
+   // return kTRUE if r1 and r2 do not point to the same object
+   
+   if (r1.GetPID() == r2.GetPID() && r1.GetUniqueID() == r2.GetUniqueID()) return kFALSE;
+   else return kTRUE;
 }
 
 //______________________________________________________________________________

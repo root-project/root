@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.15 2002/02/04 21:22:23 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.16 2002/03/15 17:23:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,9 @@
 
 #pragma link C++ function operator==(const TUUID&,const TUUID&);
 #pragma link C++ function operator!=(const TUUID&,const TUUID&);
+
+#pragma link C++ function operator==(const TRef&,const TRef&);
+#pragma link C++ function operator!=(const TRef&,const TRef&);
 
 #pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
