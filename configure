@@ -883,19 +883,6 @@ fi
 
 ######################################################################
 #
-### echo %%% Explicitlink - explicitly link with all dependent libraries
-#
-case $platform in
-freebsd*|aix*|win32*)
-    enable_explicitlink="yes"
-    ;;
-esac
-if test "x$enable_explicitlink" = "xyes" && test ! "$platform" = "win32" ; then
-    mkliboption=$mkliboption"-x "
-fi
-
-######################################################################
-#
 ### echo %%% Posix Thread Library
 #
 # Check for posix thread library
@@ -1547,14 +1534,9 @@ if test ! "x$enable_python" = "xno" ; then
 
     if test "x$pythonincdir" = "x" || test "x$pythonlib" = "x"; then
         enable_python="no"
-    elif test ! "x$enable_explicitlink" = "xyes" ; then
-        message "Checking for option --enable-explicitlink (required for Python)"
-        pythoninc=""
-        pythonincdir=""
-        pythonlib=""
-        pythonlibdir=""
-        enable_python="no"
-        echo "no"
+    else
+        # Python support requires the explicitlink option
+        enable_explicitlink="yes"
     fi
 fi
 
@@ -2217,6 +2199,19 @@ case $arch in
             echo "no"
         fi ;;
 esac
+
+######################################################################
+#
+### echo %%% Explicitlink - explicitly link with all dependent libraries
+#
+case $platform in
+freebsd*|aix*|win32*)
+    enable_explicitlink="yes"
+    ;;
+esac
+if test "x$enable_explicitlink" = "xyes" && test ! "$platform" = "win32" ; then
+    mkliboption=$mkliboption"-x "
+fi
 
 ######################################################################
 #
