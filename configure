@@ -1,4 +1,4 @@
-#! /bin/sh
+t#! /bin/sh
 
 # A (not so) simple configure script.
 #
@@ -1393,7 +1393,6 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$cintincdir" = "x";   then cintincdir=$datadir/cint; fi
     if test "x$iconpath" = "x";     then iconpath=$datadir/icons; fi
     if test "x$srcdir" = "x";       then srcdir=$datadir/src; fi
-    if test "x$ttflibdir" = "x";    then ttflibdir=$libdir; fi
     if test "x$ttffontdir" = "x";   then ttffontdir=$datadir/fonts; fi
     if test "x$docdir" = "x";       then docdir=$prefix/share/doc/root; fi
     if test "x$testdir" = "x";      then testdir=$docdir/test; fi
