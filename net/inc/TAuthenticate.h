@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.10 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.11 2003/09/12 17:36:34 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -112,6 +112,7 @@ public:
    virtual ~TAuthenticate() { }
 
    Bool_t             Authenticate();
+   Bool_t             CheckNetrc(TString &user, TString &passwd);
    Bool_t             CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash);
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }

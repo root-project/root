@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.18 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.19 2003/09/12 17:36:34 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -703,6 +703,18 @@ Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd, Bool_t & p
 }
 
 //______________________________________________________________________________
+Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
+{
+   // Try to get user name and passwd from the ~/.rootnetrc or
+   // ~/.netrc files. For more info see the version with 3 arguments.
+   // This version is maintained for backward compatability reasons.
+
+   Bool_t hash;
+
+   return CheckNetrc(user, passwd, hash);
+}
+
+//______________________________________________________________________________
 Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash)
 {
    // Try to get user name and passwd from the ~/.rootnetrc or
@@ -711,8 +723,8 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash)
    // Returns kTRUE if user and passwd were found for the machine
    // specified in the URL. If kFALSE, user and passwd are "".
    // The boolean pwhash is set to kTRUE if passwd is to be understood as
-   // password hash, ie if the 'password-hash' keyword is used in the
-   // 'machine' lines; not implemented for 'secure'.
+   // password hash, i.e. if the 'password-hash' keyword is used in the
+   // 'machine' lines; not implemented for 'secure' and the .netrc file.
    // The format of these files are:
    //
    // # this is a comment line
