@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.4 2003/05/09 13:47:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.5 2003/07/18 15:36:37 brun Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -104,8 +104,10 @@ Short_t TTF::CharToUnicode(UInt_t code)
       UShort_t i, platform, encoding;
       FT_CharMap  charmap;
 
+      if (!fgFace[fgCurFontIdx]) return 0;
       Int_t n = fgFace[fgCurFontIdx]->num_charmaps;
       for (i = 0; i < n; i++) {
+         if (!fgFace[fgCurFontIdx]) continue;
          charmap  = fgFace[fgCurFontIdx]->charmaps[i];
          platform = charmap->platform_id;
          encoding = charmap->encoding_id;
