@@ -155,6 +155,9 @@ endif
 %_cxx.$(DllSuf) : %.cxx
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cxx.build.log
 
+%_h.$(DllSuf) : %.h
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_h.build.log
+
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
