@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.22 2000/12/22 10:44:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.23 2000/12/26 16:56:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -542,7 +542,10 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    // Generate header file for the class described by this TStreamerInfo
    // the function is called by TFile::MakeProject for each class in the file
 
-   if (gROOT->GetClass(GetName())->GetClassInfo()) return 0; // skip known classes
+   TClass *cl = gROOT->GetClass(GetName());
+   if (cl) {
+      if (cl->GetClassInfo()) return 0; // skip known classes
+   }
    if (gDebug) printf("generating code for class %s\n",GetName());
 
    //open the file
