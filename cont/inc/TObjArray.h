@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.8 2001/05/08 14:21:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.9 2001/07/12 17:29:14 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
    TObject         *First() const;
    TObject         *Last() const;
    virtual TObject *&operator[](Int_t i);
+   virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
    Int_t            IndexOf(const TObject *obj) const;
    void             SetLast(Int_t last);
@@ -133,6 +134,14 @@ inline TObject *&TObjArray::operator[](Int_t at)
    if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("operator[]", at);
    fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   return fCont[0];
+}
+
+inline TObject *TObjArray::operator[](Int_t at) const
+{
+   int j = at-fLowerBound;
+   if (j >= 0 && j < fSize) return fCont[j];
+   BoundsOk("operator[]", at);
    return fCont[0];
 }
 

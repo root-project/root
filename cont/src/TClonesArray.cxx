@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.24 2001/12/24 11:11:57 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.25 2002/02/25 11:24:22 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -554,6 +554,19 @@ TObject *&TClonesArray::operator[](Int_t idx)
 
    fLast = TMath::Max(idx, GetAbsLast());
    Changed();
+
+   return fCont[idx];
+}
+
+//______________________________________________________________________________
+TObject *TClonesArray::operator[](Int_t idx) const
+{
+   // const flavour of operator [] (read only)
+
+   if (idx < 0 || idx >= fSize) {
+      Error("operator[]", "out of bounds at %d in %x", idx, this);
+      return fCont[0];
+   }
 
    return fCont[idx];
 }
