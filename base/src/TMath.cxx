@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.85 2004/09/15 19:24:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.86 2004/09/24 18:14:08 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2049,6 +2049,8 @@ Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
 	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         if (isAllocated)
+            delete [] ind;
          return a[ind[rk]];
       } else {
          mid = (l+ir) >> 1; //choose median of left, center and right
@@ -2077,8 +2079,6 @@ Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
          if (j<=rk) l=i;      //contains the k_th element
       }
    }
-   if (isAllocated)
-      delete[] ind;
 }
 
 //______________________________________________________________________________
