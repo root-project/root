@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.77 2004/08/07 18:19:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.78 2004/09/13 22:49:10 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -237,11 +237,6 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // get socket to be used (setup in proofd)
    Int_t sock = atoi(argv[8]);
-
-   // make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
-   gInterpreter->UpdateListOfTypes();
 
    // abort on higher than kSysError's and set error handler
    gErrorAbortLevel = kSysError + 1;
