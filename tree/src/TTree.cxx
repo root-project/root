@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.18 2000/08/11 20:39:28 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.19 2000/08/17 09:47:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1636,8 +1636,8 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //*-*              ================================================
 //
 //   The code in filename is loaded (interpreted or compiled , see below)
-//   filename must contain a valid class implementation derived from TTreeProcess.
-//   where TTreeProcess has the following member functions:
+//   filename must contain a valid class implementation derived from TSelector.
+//   where TSelector has the following member functions:
 //
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
