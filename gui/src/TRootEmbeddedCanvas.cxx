@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.2 2000/10/04 23:40:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.3 2001/02/14 15:39:35 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -193,7 +193,7 @@ Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
       if (str[0] == 3)   // ctrl-c sets the interrupt flag
          gROOT->SetInterrupt();
-      fCanvas->HandleInput(kKeyPress, str[0], 0);
+      fCanvas->HandleInput(kKeyPress, str[0], keysym);
    } else if (event->fType == kKeyRelease)
       fButton = 0;
 
