@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.23 2003/08/21 10:17:15 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.24 2003/12/11 10:34:33 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -227,9 +227,9 @@ void TGeoBBox::ComputeBBox()
 Bool_t TGeoBBox::Contains(Double_t *point) const
 {
 // test if point is inside this shape
+   if (TMath::Abs(point[2]-fOrigin[2]) > fDZ) return kFALSE;
    if (TMath::Abs(point[0]-fOrigin[0]) > fDX) return kFALSE;
    if (TMath::Abs(point[1]-fOrigin[1]) > fDY) return kFALSE;
-   if (TMath::Abs(point[2]-fOrigin[2]) > fDZ) return kFALSE;
    return kTRUE;
 }
 
@@ -255,17 +255,14 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to surface
-   Double_t s[3];
-   Int_t ipl;
+   Double_t s=0, smin=TGeoShape::Big();
    for (i=0; i<3; i++) {
       if (dir[i]!=0) {
-         s[i] = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
-      } else {
-         s[i] = TGeoShape::Big();
-      }
+         s = (dir[i]>0)?(saf[(i<<1)+1]/dir[i]):(-saf[i<<1]/dir[i]);
+         if (s < smin) smin = s;
+	  }
    }
-   ipl = TMath::LocMin(3, s);
-   return s[ipl];
+   return smin;
 }
 
 //_____________________________________________________________________________
@@ -461,17 +458,21 @@ Double_t TGeoBBox::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t safe = TGeoShape::Big();
-   Double_t saf[3];
-   Double_t par[3];
-   par[0] = fDX;
-   par[1] = fDY;
-   par[2] = fDZ;
-   for (Int_t i=0; i<3; i++) {
-      saf[i] = par[i] - TMath::Abs(point[i]-fOrigin[i]);
-      if (!in) saf[i] = -saf[i];
+
+   Double_t safe, safy, safz;
+   if (in) {
+	   safe = fDX - TMath::Abs(point[0]-fOrigin[0]);
+	   safy = fDY - TMath::Abs(point[1]-fOrigin[1]);
+	   safz = fDZ - TMath::Abs(point[2]-fOrigin[2]);
+	   if (safy < safe) safe = safy;
+	   if (safz < safe) safe = safz;
+   } else {
+	   safe = -fDX + TMath::Abs(point[0]-fOrigin[0]);
+	   safy = -fDY + TMath::Abs(point[1]-fOrigin[1]);
+	   safz = -fDZ + TMath::Abs(point[2]-fOrigin[2]);
+	   if (safy > safe) safe = safy;
+	   if (safz > safe) safe = safz;
    }
-   safe = (in)?saf[TMath::LocMin(3,saf)]:saf[TMath::LocMax(3,saf)];   
    return safe;
 }
 
