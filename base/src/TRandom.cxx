@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.15 2003/01/26 21:03:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.16 2003/01/27 10:28:12 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -569,14 +569,12 @@ Double_t TRandom::Rndm(Int_t)
 //  Universal version (Fred James 1985).
 //  generates a number in ]0,1]
 
-   const Float_t kCONS = 4.6566128730774E-10;
-   const Int_t kMASK31 = 2147483647;
-   const Int_t kMASK24 = 2147483392;
+   const Double_t kCONS = 4.6566128730774E-10;
+   const Int_t kMASK24  = 2147483392;
 
    fSeed *= 69069;      
-   fSeed &= kMASK31;            // keep only lower 31 bits      
    UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
-   if (jy) return Double_t(kCONS*jy);
+   if (jy) return kCONS*jy;
    return Rndm();
 }
 
@@ -585,18 +583,16 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-   const Float_t kCONS = 4.6566128730774E-10;
-   const Int_t kMASK31 = 2147483647;
-   const Int_t kMASK24 = 2147483392;
+   const Double_t kCONS = 4.6566128730774E-10;
+   const Int_t  kMASK24 = 2147483392;
    
    Int_t i=0;
    UInt_t jy;
    while (i<n) {
       fSeed *= 69069;      
-      fSeed &= kMASK31;       // keep only lower 31 bits      
       jy = (fSeed&kMASK24);   // Set lower 8 bits to zero to assure exact float
       if (jy) {
-         array[i] = Double_t(kCONS*jy);
+         array[i] = kCONS*jy;
          i++;
       }
    }
@@ -608,17 +604,15 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
   // Return an array of n random numbers uniformly distributed in ]0,1]
    
    const Float_t kCONS = 4.6566128730774E-10;
-   const Int_t kMASK31 = 2147483647;
    const Int_t kMASK24 = 2147483392;
    
    Int_t i=0;
    UInt_t jy;
    while (i<n) {
       fSeed *= 69069;      
-      fSeed &= kMASK31;      // keep only lower 31 bits      
       jy = (fSeed&kMASK24);  // Set lower 8 bits to zero to assure exact float
       if (jy) {
-         array[i] = Float_t(kCONS*jy);
+         array[i] = kCONS*jy;
          i++;
       }
    }
