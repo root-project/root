@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.100 2004/07/26 22:57:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.101 2004/07/30 19:42:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1275,14 +1275,34 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (libs.Index(l) != kNPOS)
       return 1;
 
+   // load any dependent libraries
+   TString deplibs = gInterpreter->GetSharedLibDeps(module);
+   if (!deplibs.IsNull()) {
+      TString delim(" ");
+      TObjArray *tokens = deplibs.Tokenize(delim);
+      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+         const char *deplib = ((TObjString*)tokens->At(i))->GetName();
+         if (gDebug > 0)
+            Info("Load", "loading dependent library %s for library %s",
+                 deplib, ((TObjString*)tokens->At(0))->GetName());
+         if (Load(deplib, "", system) == -1) {
+            delete tokens;
+            return -1;
+         }
+      }
+      delete tokens;
+   }
+
    char *path;
    int i = -1;
    if ((path = DynamicPathName(module))) {
       i = gInterpreter->Load(path, system);
+      if (gDebug > 0)
+         Info("Load", "loaded library %s, status %d", path, i);
       delete [] path;
    }
 
-   if (!entry || !strlen(entry)) return i;
+   if (!entry || !entry[0]) return i;
 
    Func_t f = DynFindSymbol(module, entry);
    if (f) return 0;
