@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.1 2001/02/22 09:41:40 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -45,6 +45,9 @@
 #ifdef HAVE_MMAP
 #   include <unistd.h>
 #   include <sys/mman.h>
+#ifndef MAP_FILE
+#define MAP_FILE 0           /* compatability flag */
+#endif
 #endif
 
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.1 2001/02/22 09:41:40 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    Int_t ChangeDirectory(const char *dir);
    Int_t MakeDirectory(const char *dir);
    Int_t DeleteDirectory(const char *dir);
-   Int_t ListDirectory();
+   Int_t ListDirectory(Option_t *opt = "");
    Int_t PrintDirectory();
    Int_t Rename(const char *file1, const char *file2);
    Int_t DeleteFile(const char *file);
@@ -93,15 +93,15 @@ public:
    // standard ftp equivalents...
    Int_t put(const char *file, const char *remoteName = 0) { return PutFile(file, remoteName); }
    Int_t get(const char *file, const char *localName = 0) { return GetFile(file, localName); }
-   Int_t cd(const char *dir) { return ChangeDirectory(dir); }
-   Int_t mkdir(const char *dir) { return MakeDirectory(dir); }
-   Int_t rmdir(const char *dir) { return DeleteDirectory(dir); }
-   Int_t ls() { return ListDirectory(); }
-   Int_t pwd() { return PrintDirectory(); }
-   Int_t rename(const char *file1, const char *file2) { return Rename(file1, file2); }
-   Int_t rm(const char *file) { return DeleteFile(file); }
-   Int_t chmod(const char *file, Int_t mode) { return ChangeProtection(file, mode); }
-   Int_t bye() { return Close(); }
+   void  cd(const char *dir) { ChangeDirectory(dir); }
+   void  mkdir(const char *dir) { MakeDirectory(dir); }
+   void  rmdir(const char *dir) { DeleteDirectory(dir); }
+   void  ls(Option_t *opt = "") { ListDirectory(opt); }
+   void  pwd() { PrintDirectory(); }
+   void  rename(const char *file1, const char *file2) { Rename(file1, file2); }
+   void  rm(const char *file) { DeleteFile(file); }
+   void  chmod(const char *file, Int_t mode) { ChangeProtection(file, mode); }
+   void  bye() { Close(); }
 
    ClassDef(TFTP, 1)  // File Transfer Protocol class using rootd
 };
