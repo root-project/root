@@ -742,10 +742,12 @@ void TGListTree::Search()
 
    Int_t ret = 0;
    char msg[256];
+   static TString buf;
 
    fSearch = new TGSearchType;
-   TGListTreeItem *item;
+   fSearch->fBuffer = (char*)buf.Data();
 
+   TGListTreeItem *item;
    new TGSearchDialog(fClient->GetRoot(), fCanvas, 400, 150, fSearch, &ret);
 
    if (ret) {
@@ -760,6 +762,7 @@ void TGListTree::Search()
          HighlightItem(item);
       }
    }
+   buf = fSearch->fBuffer;
    delete fSearch;
    fSearch = 0;
 }
@@ -1529,8 +1532,9 @@ TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *na
    }
 
    while (item) {
-      if (item->fText == name)
+      if (item->fText == name) {
          return item;
+      }
       item = item->fNextsibling;
    }
    return 0;
@@ -1551,8 +1555,9 @@ TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData
    }
 
    while (item) {
-      if (item->fUserData == userData)
+      if (item->fUserData == userData) {
          return item;
+      }
       item = item->fNextsibling;
    }
    return 0;
@@ -1569,7 +1574,6 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    const char *p = path, *s;
    char dirname[256];
    TGListTreeItem *item = 0;
-   TGListTreeItem *found = 0;
 
    while (1) {
       while (*p && *p == '/') p++;
@@ -1582,10 +1586,9 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
          strncpy(dirname, p, s-p);
          dirname[s-p] = 0;
       }
-      found = item;
       item = FindChildByName(item, dirname);
 
-      if (!s) return item;
+      if (!s || !strlen(s)) return item;
       p = ++s;
    }
    return 0;
