@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.43 2004/05/28 18:14:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.44 2004/06/18 15:47:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -33,6 +33,9 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
+#ifndef ROOT_TStreamerInfo
+#include "TStreamerInfo.h"
+#endif
 
 class TBaseClass;
 class TBrowser;
@@ -41,7 +44,6 @@ class TMethod;
 class TRealData;
 class TCint;
 class TBuffer;
-class TStreamerInfo;
 class G__ClassInfo;
 class TVirtualCollectionProxy;
 class TMethodCall;
@@ -108,7 +110,7 @@ private:
    TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
 
    TMethod           *GetClassMethod(Long_t faddr);
-   TMethod           *GetClassMethod(const char*name, const char* signature);
+   TMethod           *GetClassMethod(const char *name, const char *signature);
    TStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;
       else return (fCurrentInfo=(TStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
@@ -152,8 +154,8 @@ public:
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
    void               Dump() const { TDictionary::Dump(); }
-   void               Dump(void* obj) const;
-   char              *EscapeChars(char * text) const;
+   void               Dump(void *obj) const;
+   char              *EscapeChars(const char *text) const;
    Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
@@ -174,7 +176,7 @@ public:
    TList             *GetListOfAllPublicDataMembers();
    const char        *GetImplFileName() const { return fImplFileName; }
    Short_t            GetImplFileLine() const { return fImplFileLine; }
-   TClass            *GetActualClass(const void* object) const;
+   TClass            *GetActualClass(const void *object) const;
    TClass            *GetBaseClass(const char *classname);
    TClass            *GetBaseClass(const TClass *base);
    Int_t              GetBaseClassOffset(const TClass *base);
@@ -195,14 +197,14 @@ public:
    TRealData         *GetRealData(const char *name) const;
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
-   TClassStreamer    *GetStreamer() const     { return fStreamer;    }
-   TObjArray         *GetStreamerInfos() const { return fStreamerInfo;}
+   TClassStreamer    *GetStreamer() const { return fStreamer; }
+   TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
    TStreamerInfo     *GetStreamerInfo(Int_t version=0);
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
-   Bool_t             IsFolder() const {return kTRUE;}
+   Bool_t             IsFolder() const { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
    Bool_t             IsStartingWithTObject() const;
@@ -235,14 +237,14 @@ public:
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
    static VoidFuncPtr_t  GetDict (const char *cname);
-   static VoidFuncPtr_t  GetDict (const type_info& info);
+   static VoidFuncPtr_t  GetDict (const type_info &info);
 
-   static Int_t       AutoBrowse(TObject *obj,TBrowser *browser);
+   static Int_t       AutoBrowse(TObject *obj, TBrowser *browser);
    static ENewType    IsCallingNew();
    static TClass     *Load(TBuffer &b);
    void               Store(TBuffer &b) const;
 
-   // Pseudo-method apply to the 'obj'.  In particular those are used to
+   // Pseudo-method apply to the 'obj'. In particular those are used to
    // implement TObject like methods for non-TObject classes
 
    Int_t              Browse(void *obj, TBrowser *b) const;
@@ -250,7 +252,6 @@ public:
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
    void               Streamer(void *obj, TBuffer &b);
-
 
    ClassDef(TClass,0)  //Dictionary containing class information
 };

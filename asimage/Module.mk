@@ -91,6 +91,10 @@ else
 		if [ "$(ARCH)" = "sgicc64" ]; then \
 			ACC="gcc -mabi=64"; \
 		fi; \
+		if [ "$(ARCH)" = "hpuxia64acc" ]; then \
+			ACC="cc +DD64 -Ae"; \
+			ACCALT="gcc -mlp64"; \
+		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			MMX="--enable-mmx-optimization=no"; \
 		fi; \
@@ -105,11 +109,13 @@ else
 		fi; \
 		if [ "$(ASGIFINCDIR)" != "" ]; then \
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
+			NOUNGIF="--with-builtin-ungif=no"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
+		--with-ttf=NO --with-afterbase=no \
 		$$MMX \
-		--with-ttf=NO --with-builtin-ungif=no --with-afterbase=no \
+		$$NOUNGIF \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
 		$$TIFFINCDIR \

@@ -74,7 +74,8 @@ $(GLDO):        $(GLDS)
 		   -I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
 else
 $(GLDO):        $(GLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(OPENGLINCDIR) \
+		   $(IVFLAGS) -o $@ -c $<
 endif
 
 all-gl:         $(GLLIB)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.57 2004/07/07 22:44:07 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.58 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 #include "TROOT.h"
 #include "TError.h"
 #include "Bytes.h"
-#include "TStreamerInfo.h"
+#include "TClass.h"
 #include "TRegexp.h"
 #include "TProcessUUID.h"
 

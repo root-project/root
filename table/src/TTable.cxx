@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2003/10/14 07:39:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.7 2004/07/23 16:52:53 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -1435,17 +1435,6 @@ Bool_t TTable::IsFolder() const {
 #endif
 }
 
-
-#ifdef WIN32
-# ifndef finite
-#   define finite _finite
-# endif
-#else
-#  ifdef R__SOLARIS
-     extern "C" {int finite( double x );}
-#  endif
-#endif
-
 //______________________________________________________________________________
 Int_t TTable::NaN()
 {
@@ -1480,7 +1469,7 @@ Int_t TTable::NaN()
         cell = table + offset + irow*lrow;
         for (iword=0;iword<nwords; iword++,cell+=wordsize) { //words in col
            word = (code==kDouble) ? *(double*)cell : *(float*)cell;
-           if (::finite(word))     continue;
+           if (TMath::Finite(word))     continue;
 //              ERROR FOUND
            nerr++; colname = rowDes->GetColumnName(icol);
            Warning("NaN"," Table %s.%s.%d\n",GetName(),colname,irow);

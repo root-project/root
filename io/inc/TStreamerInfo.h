@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.57 2004/10/06 13:07:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.58 2004/10/19 11:00:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -24,11 +24,11 @@
 #ifndef ROOT_TFile
 #include "TFile.h"
 #endif
-#ifndef ROOT_TClass
-#include "TClass.h"
-#endif
 #ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
+#endif
+#ifndef ROOT_TROOT
+#include "TROOT.h"
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
@@ -37,6 +37,9 @@
 #define R__BROKEN_FUNCTION_TEMPLATES
 #endif
 
+class TClass;
+class TDataMember;
+class TMemberStreamer;
 class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;

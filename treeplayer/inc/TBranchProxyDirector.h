@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.4 2004/07/20 09:40:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.5 2004/07/29 18:09:40 brun Exp $
 // Author: Philippe Canal 13/05/2003
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 #include "TTree.h"
 #endif
 #include <list>
-#ifdef R__HPUX
+#ifdef R__OLDHPACC
 namespace std {
    using ::list;
 }

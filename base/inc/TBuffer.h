@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.38 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.39 2004/10/19 11:00:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 #include <vector>
 
-#ifdef R__HPUX
+#ifdef R__OLDHPACC
 namespace std {
    using ::string;
    using ::vector;

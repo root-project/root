@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.75 2004/06/22 22:00:07 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.76 2004/08/02 08:52:53 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -31,16 +31,14 @@
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
-#   ifdef __ia64
-#      define R__HPUX11    /* find a better test for HP-UX 11 */
-#   endif
+    /* R__HPUX10 or R__HPUX11 is determined in the Makefile */
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
 #   ifdef __LP64__
 #      define R__B64
 #   endif
-#   ifndef R__HPUX11
+#   ifdef R__HPUX10
 #      define NEED_SNPRINTF
 #   endif
 #endif
@@ -334,13 +332,14 @@
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define R__THROWNEWDELETE  /* new/delete throw exceptions */
-#   if __HP_aCC >= 53000
+#   if __HP_aCC <= 015000
+#      define R__OLDHPACC
+#      define R__TEMPLATE_OVERLOAD_BUG
+#      define R__GLOBALSTL       /* STL in global name space */
+#   else
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #      define R__TMPLTSTREAM     /* iostream implemented with templates */
-#   else
-#      define R__TEMPLATE_OVERLOAD_BUG
-#      define R__GLOBALSTL       /* STL in global name space */
 #   endif
 #   ifndef _INCLUDE_LONGLONG
 #      define _INCLUDE_LONGLONG

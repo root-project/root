@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.151 2004/08/20 21:02:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.152 2004/10/07 17:07:56 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1142,7 +1142,7 @@ void TClass::Dump(void *obj) const
 }
 
 //______________________________________________________________________________
-char *TClass::EscapeChars(char *text) const
+char *TClass::EscapeChars(const char *text) const
 {
    // Introduce an escape character (@) in front of a special chars.
    // You need to use the result immediately before it is being overwritten.
@@ -1151,13 +1151,15 @@ char *TClass::EscapeChars(char *text) const
    Int_t nch = strlen(text);
    if (nch > 127) nch = 127;
    Int_t icur = -1;
-   for (Int_t i=0;i<nch;i++) {
+   for (Int_t i = 0; i < nch; i++) {
       icur++;
-      if ( text[i] == '\"' || text[i] == '[' || text[i] == '~'
-           || text[i] == ']'  || text[i] == '&'
-           || text[i] == '#'  || text[i] == '!'
-           || text[i] == '^'  || text[i] == '<'
-           || text[i] == '?'  || text[i] == '>') { name[icur] = '@'; icur++; }
+      if (text[i] == '\"' || text[i] == '[' || text[i] == '~' ||
+          text[i] == ']'  || text[i] == '&' || text[i] == '#' ||
+          text[i] == '!'  || text[i] == '^' || text[i] == '<' ||
+          text[i] == '?'  || text[i] == '>') {
+         name[icur] = '@';
+         icur++;
+      }
       name[icur] = text[i];
    }
    name[icur+1] = 0;

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.149 2004/10/26 08:07:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.150 2004/10/28 10:53:11 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1490,7 +1490,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
             Int_t dim = d->GetArrayDim();
             Int_t indx = 0;
-            sprintf(dname,"%s",obj->EscapeChars((char*)d->GetName()));
+            sprintf(dname,"%s",obj->EscapeChars(d->GetName()));
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
@@ -1528,7 +1528,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             if (fcount > nf) break;
             if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
-            ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars((char*)m->GetName()));
+            ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars(m->GetName()));
 
             // Check if method is overloaded in a derived class
             // If yes, Change the color of the text to blue

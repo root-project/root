@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.9 2004/07/03 09:34:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.10 2004/07/15 23:08:23 rdm Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#ifdef R__HPUX
+#ifdef R__OLDHPACC
 namespace std {
    using ::string;
    using ::vector;
