@@ -1549,12 +1549,13 @@ fi
 #
 if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
-    check_header "ruby.h" "$rubyincdir" \
+    check_header "ruby.h" "$rubyincdir" $RUBYDIR $RUBYDIR/include \
         `ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
-    check_library "libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib" "$enable_shared" "$rubylibdir" \
+    check_library "libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib" \
+        "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
         `ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
     rubylib=$found_lib
     rubylibdir=$found_dir
