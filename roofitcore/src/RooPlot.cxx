@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.31 2002/09/05 04:33:47 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.32 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -329,6 +329,8 @@ void RooPlot::Draw(Option_t *options) {
   while(obj= _iterator->Next()) {
     obj->Draw(_iterator->GetOption());
   }
+
+  TH1::Draw("AXISSAME");
 }
 
 void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const {
