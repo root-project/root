@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.13 2001/07/06 13:22:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.14 2001/07/10 16:17:35 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -44,6 +44,9 @@
 // If a folder has been declared the owner of its objects/folders via
 // TFolder::SetOwner, then the contained objects are deleted when the
 // folder is deleted. By default, a folder does not own its contained objects.
+// NOTE that folder ownership can be set
+//   - via TFolder::SetOwner
+//   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
 //
 // Standard Root objects are automatically added to the folder hierarchy.
 // For example, the following folders exist:
@@ -311,6 +314,17 @@ TObject *TFolder::FindObjectAny(const char *name) const
 }
 
 //______________________________________________________________________________
+Bool_t TFolder::IsOwner()  const
+{
+// folder ownership has been set via
+//   - TFolder::SetOwner
+//   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
+   
+   if (fFolders) return kFALSE;
+   return fFolders->IsOwner();
+}
+      
+//______________________________________________________________________________
 void TFolder::ls(Option_t *option) const
 {
 // List folder contents
@@ -399,3 +413,20 @@ void TFolder::SaveAs(const char *filename)
    if (fFolders) fFolders->Write();
    printf("Folder: %s saved to file: %s\n",GetName(),filename);
 }
+
+//______________________________________________________________________________
+void TFolder::SetOwner(Bool_t owner)
+{
+// Set ownership
+// If the folder is declared owner, when the folder is deleted, all
+// the objects added via TFolder::Add are deleted via TObject::Delete,
+// otherwise TObject::Clear is called.
+//
+// NOTE that folder ownership can be set
+//   - via TFolder::SetOwner
+//   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
+
+   if (!fFolders) fFolders = new TList();
+   fFolders->SetOwner(owner);
+}
+   
