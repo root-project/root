@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.93 2003/05/12 18:46:04 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.94 2003/05/12 20:25:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,8 +59,8 @@ ClassImp(RooAbsReal)
 RooIntegratorConfig* RooAbsReal::_defaultIntegratorConfig(0) ;
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
-  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(0), _plotMax(0), _forceNumInt(kFALSE), _specIntegratorConfig(0)
+  RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100), 
+  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0)
 {
   // Constructor with unit label
   setValueDirty() ;
@@ -69,8 +69,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
-  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(minVal), _plotMax(maxVal), _forceNumInt(kFALSE), _specIntegratorConfig(0)
+  RooAbsArg(name,title), _plotMin(minVal), _plotMax(maxVal), _plotBins(100),
+  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0)
 {
   // Constructor with plot range and unit label
   setValueDirty() ;
@@ -79,9 +79,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
-  RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value),
-  _forceNumInt(other._forceNumInt)
+  RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
+  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt)
 {
 
   // Copy constructor
@@ -1538,7 +1537,6 @@ UInt_t RooAbsReal::crc32(const char* data) const
   
   unsigned int        result(0);
   int                 i(0);
-  unsigned char       octet(0);
   
   result = *data++ << 24;
   result |= *data++ << 16;

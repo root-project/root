@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedListElem.rdl,v 1.5 2002/09/05 04:33:38 verkerke Exp $
+ *    File: $Id: RooLinkedListElem.rdl,v 1.6 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,12 +27,12 @@ class RooLinkedListElem {
 public:
   // Initial element ctor
   RooLinkedListElem(TObject* arg) : 
-    _arg(arg), _prev(0), _next(0), _refCount(1) {
+    _prev(0), _next(0), _arg(arg), _refCount(1) {
   }
 
   // Link element ctor
   RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
-    _arg(arg), _prev(after), _next(after->_next), _refCount(1) {
+    _prev(after), _next(after->_next), _arg(arg), _refCount(1) {
 
     // Insert self in link
     after->_next = this ;

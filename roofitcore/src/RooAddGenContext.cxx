@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAddGenContext.cc,v 1.7 2002/09/05 04:33:11 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,6 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _coefThresh = new Double_t[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
-  Int_t i=1 ;
   while(pdf=(RooAbsPdf*)model._pdfIter->Next()) {
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,verbose) ;
     _gcList.Add(cx) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.1 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.2 2003/05/10 19:50:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -110,6 +110,7 @@ Bool_t RooSegmentedIntegrator1D::initialize()
     _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
   }
 
+  return kTRUE ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenProdProj.cc,v 1.1 2003/04/28 20:42:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,15 +43,14 @@ RooGenProdProj::RooGenProdProj()
 {
 }
 
-
 RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, 
 			       const RooArgSet& _intSet, const RooArgSet& _normSet) :
   RooAbsReal(name, title),
+  _compSetOwnedN(0), 
+  _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
   _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
-  _intList("intList","List of integrals",this,kTRUE),
-  _compSetOwnedN(0), 
-  _compSetOwnedD(0)
+  _intList("intList","List of integrals",this,kTRUE)
 {
   // Constructor
 
@@ -74,11 +73,11 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 
 RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   RooAbsReal(other, name), 
+  _compSetOwnedN(0), 
+  _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this),
   _compSetD("compSetD","Set of integral components owned by denominator",this),
-  _intList("intList","List of integrals",this),
-  _compSetOwnedN(0), 
-  _compSetOwnedD(0)
+  _intList("intList","List of integrals",this)
 {
   // Copy constructor
   _compSetOwnedN = (RooArgSet*) other._compSetN.snapshot() ;

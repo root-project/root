@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooResolutionModel.cc,v 1.27 2002/10/23 00:44:55 wverkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.28 2003/01/14 00:07:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -68,7 +68,9 @@ RooFormulaVar* RooResolutionModel::_identity = 0;
 
 
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
-  RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x),
+  RooAbsPdf(name,title), 
+  x("x","Dependent or convolution variable",this,_x),
+  _basisCode(0), _basis(0), 
   _ownBasis(kFALSE)
 {
   // Constructor with convolution variable 'x'
@@ -77,7 +79,9 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
 
 
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
-  RooAbsPdf(other,name), _basis(0), _basisCode(other._basisCode), x("x",this,other.x),
+  RooAbsPdf(other,name), 
+  x("x",this,other.x),
+  _basisCode(other._basisCode), _basis(0),
   _ownBasis(kFALSE)
 {
   // Copy constructor

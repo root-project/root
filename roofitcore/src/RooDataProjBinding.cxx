@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.7 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.8 2002/11/05 01:18:05 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,11 +36,10 @@
 ClassImp(RooDataProjBinding)
 ;
 
-
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, 
 				       const RooArgSet &vars, const RooArgSet* nset) :
-  RooRealBinding(real,vars,0), _data(&data), _real(&real), _nset(nset), 
-  _catTable(0), _superCat(0), _first(kTRUE)
+  RooRealBinding(real,vars,0), _first(kTRUE), _real(&real), _data(&data), _nset(nset), 
+  _superCat(0), _catTable(0)
 {  
   // Constructor
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.18 2003/05/07 21:06:24 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.19 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +32,7 @@ ClassImp(RooIntegrator1D)
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps), _minStepsZero(999)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _epsAbs(eps), _epsRel(eps)
 {
   // Use this form of the constructor to integrate over the function's default range.
 
@@ -44,9 +44,9 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegrator
   RooAbsIntegrator(function), 
   _rule(config.summationRule1D()), 
   _maxSteps(config.maxSteps1D()), 
-  _epsRel(config.epsilonRel1D()),
+  _minStepsZero(config.minStepsZero1D()),
   _epsAbs(config.epsilonAbs1D()),
-  _minStepsZero(config.minStepsZero1D())
+  _epsRel(config.epsilonRel1D())
 {
   // Use this form of the constructor to integrate over the function's default range.
   _useIntegrandLimits= kTRUE;
@@ -56,7 +56,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooIntegrator
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsRel(eps), _epsAbs(eps), _minStepsZero(999)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _minStepsZero(999), _epsAbs(eps), _epsRel(eps)
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -71,9 +71,9 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   RooAbsIntegrator(function), 
   _rule(config.summationRule1D()), 
   _maxSteps(config.maxSteps1D()), 
-  _epsRel(config.epsilonRel1D()),
+  _minStepsZero(config.minStepsZero1D()),
   _epsAbs(config.epsilonAbs1D()),
-  _minStepsZero(config.minStepsZero1D())
+  _epsRel(config.epsilonRel1D())
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -166,7 +166,7 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
 
   // Copy yvec to xvec if provided
   if (yvec) {
-    Int_t i ; for (i=0 ; i<_function->getDimension()-1 ; i++) {
+    UInt_t i ; for (i=0 ; i<_function->getDimension()-1 ; i++) {
       _x[i+1] = yvec[i] ;
     }
   }

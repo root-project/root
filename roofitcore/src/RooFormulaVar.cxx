@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormulaVar.cc,v 1.26 2002/09/05 04:33:27 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.27 2003/01/14 00:07:50 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,8 +42,9 @@ ClassImp(RooFormulaVar)
 
 
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents) : 
-  RooAbsReal(name,title), _formExpr(formula), _formula(0),
-  _actualVars("actualVars","Variables used by formula expression",this)
+  RooAbsReal(name,title), 
+  _actualVars("actualVars","Variables used by formula expression",this),
+  _formula(0), _formExpr(formula)
 {  
   // Constructor with formula expression and list of input variables
 //   RooFormula tmpFormula(name,formula,dependents) ;
@@ -54,8 +55,9 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* fo
 
 
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsReal(name,title), _formExpr(title), _formula(0),
-  _actualVars("actualVars","Variables used by formula expression",this)
+  RooAbsReal(name,title),
+  _actualVars("actualVars","Variables used by formula expression",this),
+  _formula(0), _formExpr(title)
 {  
   // Constructor with formula expression, title and list of input variables
 //   RooFormula tmpFormula(name,title,dependents) ;
@@ -66,8 +68,9 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
 
 
 RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
-  RooAbsReal(other, name), _formExpr(other._formExpr), _formula(0),
-  _actualVars("actualVars",this,other._actualVars) 
+  RooAbsReal(other, name), 
+  _actualVars("actualVars",this,other._actualVars),
+  _formula(0), _formExpr(other._formExpr)
 {
   // Copy constructor
 }

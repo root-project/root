@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooBrentRootFinder.cc,v 1.5 2002/09/05 04:33:15 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,7 +51,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
 
   Bool_t ac_equal(kFALSE);
   Double_t fc= fb;
-  Double_t c,d,e;
+  Double_t c(0),d(0),e(0);
   for(Int_t iter= 0; iter <= MaxIterations; iter++) {
 
     if ((fb < 0 && fc < 0) || (fb > 0 && fc > 0)) {

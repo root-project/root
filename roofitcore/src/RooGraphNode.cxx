@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.cc,v 1.6 2002/10/23 00:44:55 wverkerke Exp $
+ *    File: $Id: RooGraphNode.cc,v 1.7 2002/10/25 03:04:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -82,7 +82,7 @@ void RooGraphNode::paint()
   t->SetTextSize(0.02F);
   t->Paint();
   char text[20];
-  int precision = 5;
+  //int precision = 5;
   sprintf(text,"%.7f",fnumber) ;
   TText *n = new TText(fX1,fY1,text);
   n->SetTextSize(0.03F);
@@ -103,7 +103,7 @@ void RooGraphNode::draw()
     }
   if (fnumber != 0)
     { char text[20];
-    int precision = 5;
+    //int precision = 5;
     sprintf(text,"%.7f",fnumber) ;
     TText *n = new TText(fX1,fY1,text);
     n->SetTextSize(0.03F);
@@ -125,7 +125,7 @@ void RooGraphNode::draw(int color)
     }
   if (fnumber != 0)
     { char text[20];
-    int precision = 5;
+    //int precision = 5;
     sprintf(text,"%.7f",fnumber) ;
     TText *n = new TText(fX1,fY1,text);
     n->SetTextSize(0.03F);
@@ -198,7 +198,7 @@ void RooGraphNode::GetNumber(double number)
   //draws the given number value to the screen at the node location.
   //This is a number or value associated with the node.
   char text[20];
-  int precision = 5;
+  // int precision = 5;
   sprintf(text,"%.7f",fnumber) ;
   TText *t = new TText(fX1,fY1,text);
   t->SetTextSize(0.03F);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.9 2002/09/05 04:33:39 verkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.10 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,10 +30,11 @@
 ClassImp(RooMCIntegrator)
 ;
 
+
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 				 GeneratorType genType, Bool_t verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
-  _genType(genType), _mode(mode), _alpha(1.5),
+  _alpha(1.5),  _mode(mode), _genType(genType),
   _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
 {
   // check that our grid initialized without errors
@@ -44,9 +45,9 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooIntegratorConfig& config) :
   RooAbsIntegrator(function), _grid(function), 
   _verbose(config.verboseMC()),
-  _genType(config.generatorTypeMC()), 
-  _mode(config.samplingModeMC()), 
   _alpha(config.alphaMC()),
+  _mode(config.samplingModeMC()), 
+  _genType(config.generatorTypeMC()), 
   _nRefineIter(config.nRefineIterMC()),
   _nRefinePerDim(config.nRefinePerDimMC()),
   _nIntegratePerDim(config.nIntegratePerDimMC())
@@ -82,7 +83,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
   // of the integral. Also sets *absError to the estimated absolute error of the integral
   // estimate if absError is non-zero.
 
-  cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
+  //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
 
   // reset the grid to its initial state if we are starting from scratch
   if(stage == AllStages) _grid.initialize(*_function);

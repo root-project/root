@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooBinning.cc,v 1.7 2002/09/07 18:09:07 verkerke Exp $
+ *    File: $Id: RooBinning.cc,v 1.8 2003/04/08 01:27:33 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,7 +32,7 @@ ClassImp(RooBinning)
 ;
 
 
-RooBinning::RooBinning(Double_t xlo, Double_t xhi) : _array(0), _ownBoundHi(kTRUE), _ownBoundLo(kTRUE)
+RooBinning::RooBinning(Double_t xlo, Double_t xhi) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
 {
   _bIter = binIterator() ;
 
@@ -41,7 +41,7 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi) : _array(0), _ownBoundHi(kTRU
 
 
 
-RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi) : _array(0), _ownBoundHi(kTRUE), _ownBoundLo(kTRUE)
+RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
 {
   _bIter = binIterator() ;
 
@@ -53,7 +53,7 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi) : _array(0), _ow
 
 
 
-RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries) : _array(0), _ownBoundHi(kTRUE), _ownBoundLo(kTRUE)
+RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries) : _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(0)
 {
   _bIter = binIterator() ;
 

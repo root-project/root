@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMath.cc,v 1.12 2002/09/05 04:33:42 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -125,7 +125,7 @@ void RooMath::initFastCERF(Int_t reBins, Double_t reMin, Double_t reMax, Int_t i
     _imCerfArray[imIdx] = new Double_t[_reBins] ;
   }
   
-  Bool_t cacheLoaded ;
+  Bool_t cacheLoaded(kFALSE) ;
   if (!_cacheTable || !(cacheLoaded=loadCache())) {
 
     cout << "                       Filling table: |..................................................|\r" 
@@ -324,8 +324,8 @@ Double_t RooMath::interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x)
   // Interpolate array 'ya' with 'n' elements for 'xa' 
 
   // Int to Double conversion is faster via array lookup than type conversion!
-  static Double_t itod[20] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
-			      10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0} ;
+//   static Double_t itod[20] = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+// 			      10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0} ;
   int i,m,ns=1 ;
   Double_t den,dif,dift,ho,hp,w,y,dy ;
   Double_t c[20], d[20] ;

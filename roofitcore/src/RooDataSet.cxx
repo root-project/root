@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.78 2002/09/05 04:33:23 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.79 2003/04/09 01:33:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -639,7 +639,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   opts.ToLower();
   Bool_t verbose= !opts.Contains("q");
   Bool_t debug= opts.Contains("d");
-  Bool_t haveRefBlindString(false), haveUnblindFile(false) ;
+  Bool_t haveRefBlindString(false) ;
 
   RooDataSet *data= new RooDataSet("dataset", fileList, variables);
   if (ownIsBlind) { variables.remove(*blindState) ; delete blindState ; }
@@ -654,7 +654,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
   // Find index category, if requested
   RooCategory *indexCat     = 0;
-  RooCategory *indexCatOrig = 0;
+  //RooCategory *indexCatOrig = 0;
   if (indexCatName) { 
     RooAbsArg* tmp = 0;
     tmp = data->_vars.find(indexCatName) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.54 2003/04/14 21:55:42 wverkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.55 2003/04/28 20:42:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,17 +55,17 @@ ClassImp(RooAddPdf)
 
 RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
-  _coefList("coefList","List of coefficients",this),
-  _pdfList("pdfList","List of PDFs",this),
   _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _pdfProjList(0),
-  _codeReg(10),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kTRUE),
   _projectCoefs(kFALSE),
   _projListMgr(10),
+  _pdfProjList(0),
   _suppListMgr(10),
-  _lastSupNormSet(0)
+  _lastSupNormSet(0),
+  _codeReg(10),
+  _pdfList("pdfList","List of PDFs",this),
+  _coefList("coefList","List of coefficients",this),
+  _haveLastCoef(kFALSE),
+  _allExtendable(kTRUE)
 {
   // Dummy constructor 
   _pdfIter   = _pdfList.createIterator() ;
@@ -78,17 +78,17 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 RooAddPdf::RooAddPdf(const char *name, const char *title,
 		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title),
-  _coefList("coefList","List of coefficients",this),
-  _pdfList("pdfProxyList","List of PDFs",this),
   _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _pdfProjList(0),
-  _codeReg(10),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE),
   _projectCoefs(kFALSE),
   _projListMgr(10),
+  _pdfProjList(0),
   _suppListMgr(10),
-  _lastSupNormSet(0)
+  _lastSupNormSet(0),
+  _codeReg(10),
+  _pdfList("pdfProxyList","List of PDFs",this),
+  _coefList("coefList","List of coefficients",this),
+  _haveLastCoef(kFALSE),
+  _allExtendable(kFALSE)
 {
   // Special constructor with two PDFs and one coefficient (most frequent use case)
 
@@ -103,19 +103,20 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
 }
 
+
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList) :
   RooAbsPdf(name,title),
-  _coefList("coefList","List of coefficients",this),
-  _pdfList("pdfProxyList","List of PDFs",this),
   _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _pdfProjList(0),
-  _codeReg(10),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE),
   _projectCoefs(kFALSE),
   _projListMgr(10),
+  _pdfProjList(0),
   _suppListMgr(10),
-  _lastSupNormSet(0)
+  _lastSupNormSet(0),
+  _codeReg(10),
+  _pdfList("pdfProxyList","List of PDFs",this),
+  _coefList("coefList","List of coefficients",this),
+  _haveLastCoef(kFALSE),
+  _allExtendable(kFALSE)
 { 
   // Generic constructor from list of PDFs and list of coefficients.
   // Each pdf list element (i) is paired with coefficient list element (i).
@@ -177,21 +178,19 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
 
 
 
-
-
 RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) :
   RooAbsPdf(name,title),
-  _coefList("coefList","List of coefficients",this),
-  _pdfList("pdfProxyList","List of PDFs",this),
   _refCoefNorm("refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _pdfProjList(0),
-  _codeReg(10),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kTRUE),
   _projectCoefs(kFALSE),
   _projListMgr(10),
+  _pdfProjList(0),
   _suppListMgr(10),
-  _lastSupNormSet(0)
+  _lastSupNormSet(0),
+  _codeReg(10),
+  _pdfList("pdfProxyList","List of PDFs",this),
+  _coefList("coefList","List of coefficients",this),
+  _haveLastCoef(kFALSE),
+  _allExtendable(kTRUE)
 { 
   // Generic constructor from list of extended PDFs. There are no coefficients as the expected
   // number of events from each components determine the relative weight of the PDFs.
@@ -226,17 +225,17 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
 
 RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
-  _coefList("coefList",this,other._coefList),
-  _pdfList("pdfProxyList",this,other._pdfList),
   _refCoefNorm("refCoefNorm",this,other._refCoefNorm),
-  _pdfProjList(0),
-  _codeReg(other._codeReg),
-  _haveLastCoef(other._haveLastCoef),
-  _allExtendable(other._allExtendable),
   _projectCoefs(other._projectCoefs),
   _projListMgr(other._projListMgr),
+  _pdfProjList(0),
   _suppListMgr(other._projListMgr),
-  _lastSupNormSet(0)
+  _lastSupNormSet(0),
+  _codeReg(other._codeReg),
+  _pdfList("pdfProxyList",this,other._pdfList),
+  _coefList("coefList",this,other._coefList),
+  _haveLastCoef(other._haveLastCoef),
+  _allExtendable(other._allExtendable)
 {
   // Copy constructor
 
@@ -495,7 +494,6 @@ Double_t RooAddPdf::evaluate() const
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   _pdfIter->Reset() ;
   _coefIter->Reset() ;
-  RooAbsReal* coef ;
   RooAbsPdf* pdf ;
   Double_t snormVal ;
 
@@ -507,7 +505,8 @@ Double_t RooAddPdf::evaluate() const
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)_snormList->at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
-      Double_t pdfNorm = pdf->getNorm(nset) ;
+      pdf->getNorm(nset) ;
+      //Double_t pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
 	if (_verboseEval<0) {
@@ -570,7 +569,8 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   // First iteration, determine what each component can integrate analytically
   while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
     RooArgSet subAnalVars ;
-    Int_t subCode = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+    pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+    //Int_t subCode = pdf->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
     //cout << "RooAddPdf::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << pdf->GetName() << ") = " << subCode << endl ;
 
     // If a dependent is not supported by any of the components, 
@@ -693,7 +693,6 @@ Double_t RooAddPdf::expectedEvents() const
   // or the sum of the components extended terms
 
   Double_t expectedTotal(0.0);
-  RooAbsReal* coef ;
   RooAbsPdf* pdf ;
     
   if (_allExtendable) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMPSentinel.rdl,v 1.3 2002/09/05 04:33:41 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,7 +24,7 @@ class RooMPSentinel {
 public:
 
   RooMPSentinel() ;
-  ~RooMPSentinel() ;
+  virtual ~RooMPSentinel() ;
  
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.rdl,v 1.30 2002/10/26 01:18:41 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.31 2003/01/14 00:07:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,7 +89,7 @@ protected:
  
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
-  Double_t _numPdf ;           // Number of registered PDFs
+  Int_t    _numPdf ;           // Number of registered PDFs
   Bool_t   _anyCanExtend ;     // Flag set if all component PDFs are extendable
   Bool_t   _anyMustExtend ;    // Flag set if all component PDFs are extendable
 

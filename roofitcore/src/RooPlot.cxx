@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooPlot.cc,v 1.31 2002/09/05 04:33:47 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,16 +49,18 @@ ClassImp(RooPlot)
   ;
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
-  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
+  TH1(histName(),"A RooPlot",100,xmin,xmax), 
+  _items(), _plotVarClone(0), _plotVarSet(0), 
+  _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with the specified x-axis limits.
   initialize();
 }
 
+
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
-  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
+  TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
+  _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits.
   SetMinimum(ymin);
@@ -67,8 +69,8 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 }
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
-  TH1(histName(),"A RooPlot",100,var1.getFitMin(),var1.getFitMax()), _plotVarClone(0), 
-  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
+  TH1(histName(),"A RooPlot",100,var1.getFitMin(),var1.getFitMax()), _items(),
+  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
@@ -92,8 +94,8 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 
 RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
-  _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(0)
+  TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
+  _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
 {
   // Create an empty frame with the specified x- and y-axis limits
   // and with labels determined by the specified variables.
@@ -106,8 +108,8 @@ RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
 }
 
 RooPlot::RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nbins) :
-  TH1(histName(),"RooPlot",nbins,xmin,xmax),
-  _plotVarClone(0), _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
+  TH1(histName(),"RooPlot",nbins,xmin,xmax), _items(), 
+  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable

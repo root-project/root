@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenericPdf.cc,v 1.18 2002/11/12 21:44:02 wverkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.19 2003/01/14 00:07:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,8 +39,8 @@ ClassImp(RooGenericPdf)
 
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
   RooAbsPdf(name,title), 
-  _formula(name,title,dependents),
-  _actualVars("actualVars","Variables used by PDF expression",this)
+  _actualVars("actualVars","Variables used by PDF expression",this),
+  _formula(name,title,dependents)
 {  
   // Constructor with formula expression and list of input variables
   _actualVars.add(dependents) ; 
@@ -52,8 +52,8 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
 RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
 			     const char* formula, const RooArgList& dependents) : 
   RooAbsPdf(name,title), 
-  _formula(name,formula,dependents),
-  _actualVars("actualVars","Variables used by PDF expression",this)
+  _actualVars("actualVars","Variables used by PDF expression",this),
+  _formula(name,formula,dependents)
 {  
   _actualVars.add(dependents) ; 
 
@@ -63,8 +63,8 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
 
 RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) : 
   RooAbsPdf(other, name), 
-  _formula(other._formula),
-  _actualVars("actualVars",this,other._actualVars) 
+  _actualVars("actualVars",this,other._actualVars),
+  _formula(other._formula)
 {
   // Copy constructor
 }

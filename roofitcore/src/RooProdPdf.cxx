@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.37 2003/05/12 18:46:04 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.38 2003/05/12 22:16:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -42,11 +42,11 @@ ClassImp(RooProdPdf)
 
 RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
   RooAbsPdf(name,title), 
-  _pdfList("_pdfList","List of PDFs",this),
-  _cutOff(cutOff),
-  _genCode(10),
-  _extendedIndex(-1),
   _partListMgr(10),
+  _genCode(10),
+  _cutOff(cutOff),
+  _pdfList("_pdfList","List of PDFs",this),
+  _extendedIndex(-1),
   _useDefaultGen(kFALSE)
 {
   // Dummy constructor
@@ -56,12 +56,12 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
 RooProdPdf::RooProdPdf(const char *name, const char *title,
 		       RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff) : 
   RooAbsPdf(name,title), 
+  _partListMgr(10),
+  _genCode(10),
+  _cutOff(cutOff),
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(cutOff),
-  _genCode(10),
   _extendedIndex(-1),
-  _partListMgr(10),
   _useDefaultGen(kFALSE)
 {
   // Constructor with 2 PDFs (most frequent use case).
@@ -103,12 +103,12 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
 
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff) :
   RooAbsPdf(name,title), 
+  _partListMgr(10),
+  _genCode(10),
+  _cutOff(cutOff),
   _pdfList("_pdfList","List of PDFs",this),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(cutOff),
-  _genCode(10),
   _extendedIndex(-1),
-  _partListMgr(10),
   _useDefaultGen(kFALSE)
 {
   // Constructor from a list of PDFs
@@ -155,14 +155,15 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
 }
 
 
+
 RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
   RooAbsPdf(other,name), 
+  _partListMgr(other._partListMgr),
+  _genCode(other._genCode),
+  _cutOff(other._cutOff),
   _pdfList("_pdfList",this,other._pdfList),
   _pdfIter(_pdfList.createIterator()), 
-  _cutOff(other._cutOff),
-  _genCode(other._genCode),
   _extendedIndex(other._extendedIndex),
-  _partListMgr(other._partListMgr),
   _useDefaultGen(other._useDefaultGen) 
 {
   // Copy constructor

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsRealLValue.cc,v 1.30 2002/09/05 04:33:09 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -72,7 +72,7 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
   // Return kTRUE if the input value is within our fit range. Otherwise, return
   // kFALSE and write a clipped value into clippedValPtr if it is non-zero.
 
-  Double_t range = getFitMax() - getFitMin() ; // ok for +/-INIFINITY
+  // Double_t range = getFitMax() - getFitMin() ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
   Bool_t inRange(kTRUE) ;
 

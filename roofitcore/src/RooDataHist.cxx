@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.33 2003/04/08 01:27:34 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.34 2003/04/09 01:33:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -120,7 +120,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   }
 
   // Copy fitting and plotting bins/ranges from TH1 to dimension variables
-  Int_t nDim = vars.getSize() ;
+  // Int_t nDim = vars.getSize() ;
   TH1* histo = const_cast<TH1*>(hist) ;
 
   // X
@@ -453,7 +453,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), *myVarSubset) ;
 
   RooFormulaVar* cloneVar = 0;
-  RooArgSet* tmp ;
+  RooArgSet* tmp(0) ;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
     tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;
@@ -793,7 +793,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, Doubl
   checkInit() ;
 
   RooFormulaVar* cloneVar = 0;
-  RooArgSet* tmp ;
+  RooArgSet* tmp(0) ;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
     tmp = (RooArgSet*) RooArgSet(*cutVar).snapshot() ;

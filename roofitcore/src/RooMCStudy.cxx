@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.15 2002/09/05 04:33:40 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.16 2003/04/01 22:34:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,17 +49,18 @@
 ClassImp(RooMCStudy)
 ;
 
+
 RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
 		       const RooArgSet& dependents, const char* genOptions, 
 		       const char* fitOptions, const RooDataSet* genProtoData, 
 		       const RooArgSet& projDeps) :
   _genModel((RooAbsPdf*)&genModel), 
-  _fitModel((RooAbsPdf*)&fitModel), 
+  _genProtoData(genProtoData),
   _projDeps(projDeps),
   _dependents(dependents), 
   _allDependents(dependents), 
+  _fitModel((RooAbsPdf*)&fitModel), 
   _fitOptions(fitOptions),
-  _genProtoData(genProtoData),
   _canAddFitResults(kTRUE)
 {
   // Constructor with a generator and fit model. Both models may point

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooTruthModel.cc,v 1.18 2002/09/05 04:34:03 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -143,9 +143,10 @@ Double_t RooTruthModel::evaluate() const
     Double_t tscaled = fabs(x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
   }  
+  default:
+    assert(0) ;
   }
 
-  assert(0) ;
   return 0 ;
 }
 
@@ -232,6 +233,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t t_max = x.max()/tau ;
       return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
     }
+  default:
+    assert(0) ;
   }
 
   assert(0) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.69 2003/05/07 21:06:25 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.70 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,6 +31,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooFitCore/RooSegmentedIntegrator1D.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooImproperIntegrator1D.hh"
 #include "RooFitCore/RooMCIntegrator.hh"
@@ -38,29 +39,33 @@
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooSuperCategory.hh"
+#include "RooFitCore/RooSegmentedIntegrator2D.hh"
 #include "RooFitCore/RooIntegrator2D.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
 
 ClassImp(RooRealIntegral) 
 ;
 
-
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsReal& function, const RooArgSet& depList,
 				 const RooArgSet* funcNormSet, const RooIntegratorConfig* config) :
-  RooAbsReal(name,title), _mode(0),
-  _function("function","Function to be integrated",this,
-	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
+  RooAbsReal(name,title), 
+  _valid(kTRUE), 
   _sumList("sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
   _intList("intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
-  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config),
   _facListIter(_facList.createIterator()),
   _jacListIter(_jacList.createIterator()),
+  _function("function","Function to be integrated",this,
+	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
+  _iconfig((RooIntegratorConfig*)config),
+  _funcACleanBranchIter(_funcACleanBranchList.createIterator()),
+  _mode(0),
+  _operMode(Hybrid), 
   _restartNumIntEngine(kFALSE),
-  _funcACleanBranchIter(_funcACleanBranchList.createIterator())
+  _numIntEngine(0), _numIntegrand(0) 
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -388,7 +393,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Determine auto-dirty status
   
   // If any of our servers are is forcedDirty or a projectedDependent, then we need to be ADirty
-  Bool_t adirty(kFALSE) ;
+  //Bool_t adirty(kFALSE) ;
   TIterator* iter = serverIterator() ;  
   while(arg=(RooAbsArg*)iter->Next()){
     if (arg->operMode()==ADirty && arg->isValueServer(*this)) {      
@@ -417,7 +422,6 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
    }
 
    // Loop over all clients
-   Bool_t ret(kTRUE) ;
    Int_t numLVServ(0) ;
    RooAbsArg* client ;
    TIterator* cIter = server->clientIterator() ;
@@ -481,17 +485,13 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     // --- 1D integration ---
     if(RooNumber::isInfinite(_numIntegrand->getMinLimit(0)) ||
        RooNumber::isInfinite(_numIntegrand->getMaxLimit(0))) {
-      if (_iconfig) {
-	_numIntEngine= new RooImproperIntegrator1D(*_numIntegrand,*_iconfig);
-      } else {
-	_numIntEngine= new RooImproperIntegrator1D(*_numIntegrand);
-      }
+      _numIntEngine= new RooImproperIntegrator1D(*_numIntegrand,*_iconfig);
     }
     else {
-      if (_iconfig) {
-	_numIntEngine= new RooIntegrator1D(*_numIntegrand,*_iconfig);
+      if (_iconfig->numSegments1D()>1) {
+	_numIntEngine= new RooSegmentedIntegrator1D(*_numIntegrand,_iconfig->numSegments1D(),*_iconfig);
       } else {
-	_numIntEngine= new RooIntegrator1D(*_numIntegrand);
+	_numIntEngine= new RooIntegrator1D(*_numIntegrand,*_iconfig);
       }
     }
 
@@ -502,11 +502,11 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     _intList.Print("1") ;
 
     // --- 2D integration ---
-    if (_iconfig) {
-      _numIntEngine= new RooIntegrator2D(*_numIntegrand,*_iconfig);
+    if (_iconfig->numSegments1D()>1) {
+      _numIntEngine= new RooSegmentedIntegrator2D(*_numIntegrand,_iconfig->numSegments1D(),*_iconfig);
     } else {
-      _numIntEngine= new RooIntegrator2D(*_numIntegrand);
-    }    
+      _numIntEngine= new RooIntegrator2D(*_numIntegrand,*_iconfig);
+    }
 
   } else {
     // let the constructor check that the domain is finite
@@ -532,20 +532,25 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   return kTRUE;
 }
 
+
+
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
-  RooAbsReal(other,name), _mode(other._mode),
- _function("function",this,other._function), 
-  _intList("intList",this,other._intList), 
+  RooAbsReal(other,name), 
+  _valid(other._valid),
   _sumList("sumList",this,other._sumList),
+  _intList("intList",this,other._intList), 
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
   _facList("facList",this,other._facList),
-  _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid),
-  _iconfig(other._iconfig),
   _facListIter(_facList.createIterator()),
   _jacListIter(_jacList.createIterator()),
+  _function("function",this,other._function), 
+  _iconfig(other._iconfig),
+  _funcACleanBranchIter(_funcACleanBranchList.createIterator()),
+  _mode(other._mode),
+  _operMode(other._operMode), 
   _restartNumIntEngine(kFALSE),
-  _funcACleanBranchIter(_funcACleanBranchList.createIterator())
+  _numIntEngine(0), _numIntegrand(0) 
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
@@ -567,7 +572,7 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate() const 
 {  
-  Double_t retVal ;
+  Double_t retVal(0) ;
   switch (_operMode) {
     
   case Hybrid: 
@@ -704,7 +709,6 @@ Double_t RooRealIntegral::sum() const
 
     RooSuperCategory sumCat("sumCat","sumCat",_sumList) ;
     TIterator* sumIter = sumCat.typeIterator() ;
-    Int_t counter(0) ;
     RooCatType* type ;
     while(type=(RooCatType*)sumIter->Next()) {
       sumCat.setIndex(type->getVal()) ;

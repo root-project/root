@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.cc,v 1.4 2002/09/05 22:29:48 verkerke Exp $
+ *    File: $Id: RooGraphSpring.cc,v 1.5 2002/09/09 21:43:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -155,10 +155,10 @@ double RooGraphSpring::GetSpringDEnergy(char m)
   //either x or y, determined by the input parameter m
   double l = GetLength();
   double k = GetSpringConstant();
-  double x1;
-  double x2;
-  double y1;
-  double y2;
+  double x1(0);
+  double x2(0);
+  double y1(0);
+  double y2(0);
   if (m == 'x')
     {
       x1 = fn1->GetX1();
@@ -183,10 +183,10 @@ double RooGraphSpring::GetSpringD2Energy(char m)
   //x or y, determined by the input parameter m
   double l = GetLength();
   double k = GetSpringConstant();
-  double x1;
-  double x2;
-  double y1;
-  double y2;
+  double x1(0);
+  double x2(0);
+  double y1(0);
+  double y2(0);
   if (m == 'y')
     {
       x1 = fn1->GetX1();

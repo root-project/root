@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsGenContext.cc,v 1.9 2002/09/05 04:33:05 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,10 +24,13 @@
 ClassImp(RooAbsGenContext)
 ;
 
-
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
 				   const RooDataSet *prototype, Bool_t verbose) :
-  TNamed(model), _prototype(prototype), _theEvent(0), _verbose(verbose), _isValid(kTRUE)
+  TNamed(model), 
+  _prototype(prototype), 
+  _theEvent(0), 
+  _isValid(kTRUE),
+  _verbose(verbose) 
 {
   // Constructor
 

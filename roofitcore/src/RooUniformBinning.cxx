@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooUniformBinning.cc,v 1.6 2002/09/05 04:34:04 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,7 @@ RooUniformBinning::RooUniformBinning()
   _array = 0 ;
 }
 
-RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) : _nbins(nBins), _array(0)
+RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins) : _array(0), _nbins(nBins)
 {
   setRange(xlo,xhi) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAICRegistry.cc,v 1.12 2002/09/05 04:33:00 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,14 +21,15 @@
 ClassImp(RooAICRegistry)
 ;
 
+
 RooAICRegistry::RooAICRegistry(Int_t regSize) :
-  _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0), _regSize(regSize)
+  _regSize(regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
 }
 
 
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
-  _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0), _regSize(other._regSize)
+  _regSize(other._regSize), _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
   // Copy code-list array if other PDF has one
   if (other._clArr) {

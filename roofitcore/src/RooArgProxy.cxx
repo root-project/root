@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooArgProxy.cc,v 1.19 2002/09/05 04:33:13 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,8 +36,8 @@ ClassImp(RooArgProxy)
 
 RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
 			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
-  TNamed(name,desc), _arg(&arg),
-  _valueServer(valueServer), _shapeServer(shapeServer), _owner(owner), _ownArg(proxyOwnsArg)
+  TNamed(name,desc), _owner(owner), _arg(&arg),
+  _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
   // Constructor with owner and proxied variable
   _owner->registerProxy(*this) ;
@@ -46,8 +46,8 @@ RooArgProxy::RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, R
 
 
 RooArgProxy::RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) : 
-  RooAbsProxy(other), TNamed(other), _arg(other._arg), 
-  _valueServer(other._valueServer), _shapeServer(other._shapeServer), _owner(owner),
+  TNamed(other), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
+  _valueServer(other._valueServer), _shapeServer(other._shapeServer),
   _isFund(other._isFund), _ownArg(other._ownArg) 
 {
   // Copy constructor

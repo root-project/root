@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealMPFE.cc,v 1.3 2002/09/05 04:33:53 verkerke Exp $
+ *    File: $Id: RooRealMPFE.cc,v 1.4 2002/10/23 00:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,8 +43,8 @@ ClassImp(RooRealMPFE)
 
 RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline) : 
   RooAbsReal(name,title),
-  _arg("arg","arg",this,arg),
   _state(Initialize),
+  _arg("arg","arg",this,arg),
   _vars("vars","vars",this),
   _verboseClient(kFALSE),
   _verboseServer(kFALSE),
@@ -60,8 +60,8 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
 
 RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) : 
   RooAbsReal(other, name),
-  _arg("arg",this,other._arg),
   _state(other._state),
+  _arg("arg",this,other._arg),
   _vars("vars",this,other._vars),
   _verboseClient(other._verboseClient),
   _verboseServer(other._verboseServer),

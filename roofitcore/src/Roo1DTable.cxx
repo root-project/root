@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: Roo1DTable.cc,v 1.14 2002/09/05 04:33:00 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,8 +25,9 @@
 
 ClassImp(Roo1DTable)
 
+
 Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
-  RooTable(name,title), _nOverflow(0), _total(0)
+  RooTable(name,title), _total(0), _nOverflow(0)
 {
   // Create an empty table from abstract category. The number of table entries and 
   // their names are taken from the category state labels at the time of construction,
@@ -51,7 +52,7 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 
 
 Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
-  RooTable(other), _nOverflow(other._nOverflow), _total(other._total)
+  RooTable(other), _total(other._total), _nOverflow(other._nOverflow)
 {  
   // Copy constructor
 

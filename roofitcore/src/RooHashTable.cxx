@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.5 2002/09/05 04:33:31 verkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.6 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,7 +38,7 @@ RooHashTable::RooHashTable(Int_t capacity)
 
 
 RooHashTable::RooHashTable(const RooHashTable& other) :
-  _size(other._size), _usedSlots(other._usedSlots), _entries(other._entries)
+  _usedSlots(other._usedSlots), _entries(other._entries), _size(other._size)
 {
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));  

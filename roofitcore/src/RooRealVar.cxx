@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealVar.cc,v 1.43 2002/09/05 04:33:55 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -443,7 +443,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   // append our value if requested
   char buffer[256];
   if(!hideValue) {
-    Double_t chopped= chopAt(_value, whereVal);
+    chopAt(_value, whereVal);
     sprintf(buffer, fmtVal, _value);
     text->Append(buffer);
   }
@@ -617,7 +617,6 @@ void RooRealVar::Streamer(TBuffer &R__b)
    } else {
       R__c = R__b.WriteVersion(RooRealVar::IsA(), kTRUE);
       RooAbsRealLValue::Streamer(R__b);
-      Double_t fitMin(getFitMin()),fitMax(getFitMax()),fitBins(getFitBins()) ;
       R__b << _error;
       R__b << _asymErrLo;
       R__b << _asymErrHi;

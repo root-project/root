@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCustomizer.cc,v 1.13 2002/09/05 04:33:21 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -118,9 +118,13 @@ ClassImp(RooCustomizer)
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneNodeList(&splitLeafs),
-  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), 
-  _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
+  _sterile(kFALSE),
+  _masterPdf((RooAbsArg*)&pdf), 
+  _masterCat((RooAbsCategoryLValue*)&masterCat), 
+  _masterBranchList("masterBranchList"), 
+  _masterLeafList("masterLeafList"), 
+  _cloneBranchList("cloneBranchList"), 
+  _cloneNodeList(&splitLeafs)
 {
   // Constructor with masterCat state. Customizers created by this constructor offer the full functionality
   _masterBranchList.setHashTableSize(1000) ;
@@ -134,9 +138,14 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneNodeList(0),
-  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), 
-  _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
+  _sterile(kTRUE), 
+  _name(name),
+  _masterPdf((RooAbsArg*)&pdf), 
+  _masterCat(0), 
+  _masterBranchList("masterBranchList"), 
+  _masterLeafList("masterLeafList"), 
+  _cloneBranchList("cloneBranchList"), 
+  _cloneNodeList(0)
 {
   // Sterile Constructor. Customizers created by this constructor offer only the replace() method. The supplied
   // 'name' is used as suffix for any cloned branch nodes

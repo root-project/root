@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooLinearVar.cc,v 1.19 2002/09/05 04:33:36 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -53,10 +53,10 @@ ClassImp(RooLinearVar)
 RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, 
 			   const RooAbsReal& slope, const RooAbsReal& offset, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
+  _binning(variable.getBinning(),slope.getVal(),offset.getVal()),
   _var("var","variable",this,variable,kTRUE,kTRUE),
   _slope("slope","slope",this,(RooAbsReal&)slope),
-  _offset("offset","offset",this,(RooAbsReal&)offset),
-  _binning(variable.getBinning(),slope.getVal(),offset.getVal())
+  _offset("offset","offset",this,(RooAbsReal&)offset)
 {
   // Constructor with RooRealVar variable and RooAbsReal slope and offset
 
@@ -78,11 +78,11 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
 
 
 RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
-  RooAbsRealLValue(other,name),
+  RooAbsRealLValue(other,name), 
+  _binning(other._binning),
   _var("var",this,other._var),
   _slope("slope",this,other._slope),
-  _offset("offset",this,other._offset),
-  _binning(other._binning) 
+  _offset("offset",this,other._offset)
 {
   // Copy constructor
 }

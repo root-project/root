@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooStreamParser.cc,v 1.19 2002/09/05 04:33:59 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.20 2002/10/23 00:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,15 +46,14 @@
 
 ClassImp(RooStreamParser)
 
-
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(is), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~"), _atEOF(kFALSE)
+  _is(is), _atEOF(kFALSE), _prefix(""), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor
 }
 
 RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
-  _is(is), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~"), _atEOF(kFALSE)
+  _is(is), _atEOF(kFALSE), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor with error message prefix
 }

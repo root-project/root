@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHistPdf.cc,v 1.11 2002/09/05 04:33:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,12 +26,11 @@
 ClassImp(RooHistPdf)
 ;
 
-
 RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, 
 		       const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title), 
-  _dataHist((RooDataHist*)&dhist), 
   _depList("depList","List of dependents",this),
+  _dataHist((RooDataHist*)&dhist), 
   _codeReg(10),
   _intOrder(intOrder)
 {
@@ -64,8 +63,8 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
 RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name), 
-  _dataHist(other._dataHist),
   _depList("depList",this,other._depList),
+  _dataHist(other._dataHist),
   _codeReg(other._codeReg),
   _intOrder(other._intOrder)
 {

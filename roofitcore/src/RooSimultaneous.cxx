@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.48 2002/11/27 07:27:52 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.49 2003/01/14 00:07:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,10 +48,11 @@ ClassImp(RooSimultaneous)
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 RooAbsCategoryLValue& indexCat) : 
-  RooAbsPdf(name,title), _numPdf(0.),
-  _indexCat("indexCat","Index category",this,indexCat),
+  RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _normListMgr(10),
+  _indexCat("indexCat","Index category",this,indexCat),
+  _numPdf(0),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
@@ -67,10 +68,11 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, 
 				 const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) :
-  RooAbsPdf(name,title), _numPdf(0.),
-  _indexCat("indexCat","Index category",this,indexCat),
+  RooAbsPdf(name,title), 
   _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _normListMgr(10),
+  _indexCat("indexCat","Index category",this,indexCat),
+  _numPdf(0),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
@@ -107,11 +109,12 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
-  _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
   _plotCoefNormSet("plotCoefNormSet",this,other._plotCoefNormSet),
+  _normListMgr(other._normListMgr),
+  _indexCat("indexCat",this,other._indexCat), 
+  _numPdf(other._numPdf),
   _anyCanExtend(other._anyCanExtend),
-  _anyMustExtend(other._anyMustExtend),
-  _normListMgr(other._normListMgr)
+  _anyMustExtend(other._anyMustExtend)
 {
   // Copy constructor
 
@@ -172,7 +175,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   // Create a proxy named after the associated index state
   TObject* proxy = new RooRealProxy(catLabel,catLabel,this,(RooAbsPdf&)pdf) ;
   _pdfProxyList.Add(proxy) ;
-  _numPdf += 1.0 ;
+  _numPdf += 1 ;
 
   if (pdf.canBeExtended()) _anyCanExtend = kTRUE ;
   if (pdf.mustBeExtended()) _anyMustExtend = kTRUE ;
@@ -495,7 +498,6 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 //RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
   TIterator* pIter = _pdfProxyList.MakeIterator() ;
-  Double_t plotFrac(0) ;
   Double_t sumWeight(0) ;
   while(proxy=(RooRealProxy*)pIter->Next()) {
 

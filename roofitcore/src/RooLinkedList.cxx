@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.cc,v 1.6 2002/09/05 04:33:37 verkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.7 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -338,7 +338,8 @@ void RooLinkedList::swapWithNext(RooLinkedListElem* elemB)
 void RooLinkedList::Streamer(TBuffer &b)
 {
   if (b.IsReading()) {
-    Version_t v = b.ReadVersion();
+    //Version_t v = b.ReadVersion();
+    b.ReadVersion();
     TObject::Streamer(b);
 
     Int_t size ;

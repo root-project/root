@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.55 2003/05/02 18:43:35 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.56 2003/05/07 21:06:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -73,7 +73,7 @@ RooTreeData::RooTreeData()
 
 
 RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& vars) :
-  RooAbsData(name,title,vars), _truth("Truth"), _defCtor(kFALSE)
+  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
 {
   // Constructor of empty collection with specified dimensions
   RooTrace::create(this) ;
@@ -89,8 +89,8 @@ RooTreeData::RooTreeData(const char *name, const char *title, const RooArgSet& v
 
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
                        const RooArgSet& vars, const char *cuts) :
- RooAbsData(name,title,vars), _truth("Truth"), 
-  _blindString(t->_blindString), _defCtor(kFALSE)
+ RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
+  _blindString(t->_blindString)
 {
   // Constructor from existing data collection with specified dimensions and
   // optional string expression cut
@@ -114,10 +114,11 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 }
 
 
+
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
-  RooAbsData(name,title,vars),_truth("Truth"), 
-  _blindString(t->_blindString), _defCtor(kFALSE)
+  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
+  _blindString(t->_blindString)
 {
   // Constructor from existing data collection with specified dimensions and
   // RooFormulaVar cut
@@ -149,7 +150,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 
 RooTreeData::RooTreeData(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
-  RooAbsData(name,title,vars), _truth("Truth"), _defCtor(kFALSE)
+  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
 {
   // Constructor from external TTree with specified dimensions and
   // RooFormulaVar cut
@@ -178,10 +179,11 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 }
 
 
+
 RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t, 
                        const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache) :
-  RooAbsData(name,title,vars), _truth("Truth"), 
-  _blindString(t->_blindString), _defCtor(kFALSE)
+  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth"), 
+  _blindString(t->_blindString)
 {
   // Protected constructor for internal use only
 
@@ -217,9 +219,10 @@ RooTreeData::RooTreeData(const char *name, const char *title, RooTreeData *t,
 
 
 
+
 RooTreeData::RooTreeData(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
-  RooAbsData(name,title,vars), _truth("Truth"), _defCtor(kFALSE)
+  RooAbsData(name,title,vars), _defCtor(kFALSE), _truth("Truth")
 {
   // Constructor from external TTree with specified dimensions and
   // optional string expression cut
@@ -247,7 +250,7 @@ RooTreeData::RooTreeData(const char *name, const char *title, TTree *t,
 RooTreeData::RooTreeData(const char *name, const char *filename,
 		       const char *treename,
                        const RooArgSet& vars, const char *cuts) :
-  RooAbsData(name,name,vars), _truth("Truth"), _defCtor(kFALSE)
+  RooAbsData(name,name,vars), _defCtor(kFALSE), _truth("Truth")
 {
   // Constructor from external TTree with given name in given file
   // with specified dimensions and optional string expression cut
@@ -272,7 +275,7 @@ RooTreeData::RooTreeData(const char *name, const char *filename,
 
 
 RooTreeData::RooTreeData(RooTreeData const & other, const char* newName) : 
-  RooAbsData(other,newName), _truth("Truth"), _defCtor(other._defCtor)
+  RooAbsData(other,newName), _defCtor(other._defCtor), _truth("Truth")
 {
   // Copy constructor
   RooTrace::create(this) ;
@@ -884,7 +887,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   // Extract values from named arguments
   Option_t* drawOptions = pc.getString("drawOption") ;
   const char* cutSpec = pc.getString("cutString") ;
-  const RooAbsReal* cutVar = (const RooAbsReal*) pc.getObject("cutVar") ;
+  //const RooAbsReal* cutVar = (const RooAbsReal*) pc.getObject("cutVar") ;
   const RooAbsBinning* bins = (const RooAbsBinning*) pc.getObject("binning") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
   RooAbsData::ErrorType etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;

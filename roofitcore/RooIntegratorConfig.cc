@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.cc,v 1.7 2003/05/07 21:51:31 wverkerke Exp $
+ *    File: $Id: RooIntegratorConfig.cc,v 1.8 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,8 @@ RooIntegratorConfig::RooIntegratorConfig()
   _rule = RooIntegrator1D::Trapezoid ;
   _maxSteps = 20 ;
   _minSteps = 999 ;
-  _epsRel = 1e-6 ;
-  _epsAbs = 1e-6 ;
+  _epsRel = 1e-7 ;
+  _epsAbs = 1e-7 ;
   _nseg1d = 1 ;
 
   // 2D integrator

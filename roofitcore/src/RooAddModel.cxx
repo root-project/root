@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.31 2002/09/05 04:33:12 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.32 2002/09/09 21:43:33 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,18 +44,17 @@
 ClassImp(RooAddModel)
 ;
 
-
 RooAddModel::RooAddModel(const char *name, const char *title,
 			 const RooArgList& modelList, const RooArgList& coefList) :
   RooResolutionModel(name,title,((RooResolutionModel*)modelList.at(0))->convVar()),
-  _modelProxyIter(_modelProxyList.MakeIterator()),
-  _coefProxyIter(_coefProxyList.MakeIterator()),
-  _dummyProxy("dummyProxy","dummy proxy",this,(RooRealVar&)RooRealConstant::value(0)),
-  _isCopy(kFALSE),
   _nsetCache(10),
   _codeReg(10),
   _genReg(10),
-  _genThresh(0)
+  _genThresh(0),
+  _isCopy(kFALSE),
+  _dummyProxy("dummyProxy","dummy proxy",this,(RooRealVar&)RooRealConstant::value(0)),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator())
 {
   // Constructor from list of PDFs and list of coefficients.
   // Each model list element (i) is paired with coefficient list element (i).
@@ -122,17 +121,16 @@ RooAddModel::RooAddModel(const char *name, const char *title,
 
 }
 
-
 RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   RooResolutionModel(other,name),
-  _modelProxyIter(_modelProxyList.MakeIterator()),
-  _coefProxyIter(_coefProxyList.MakeIterator()),
-  _dummyProxy("dummyProxy",this,other._dummyProxy),
+  _nsetCache(10),
   _codeReg(other._codeReg),
   _genReg(other._genReg),
+  _genThresh(0),
   _isCopy(kTRUE), 
-  _nsetCache(10),
-  _genThresh(0)
+  _dummyProxy("dummyProxy",this,other._dummyProxy),
+  _modelProxyIter(_modelProxyList.MakeIterator()),
+  _coefProxyIter(_coefProxyList.MakeIterator())
 {
   // Copy constructor
 
@@ -489,8 +487,9 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
   while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
     model = (RooResolutionModel*) proxy->absArg() ;
     RooArgSet subAnalVars ;
-    Int_t subCode = model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
-//     cout << "RooAddModel::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << model->GetName() << ") = " << subCode << endl ;
+    model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+    //Int_t subCode = model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
+    //cout << "RooAddModel::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << model->GetName() << ") = " << subCode << endl ;
 
     // If a dependent is not supported by any of the components, 
     // it is dropped from the combined analytic list

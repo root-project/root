@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealSumPdf.cc,v 1.5 2002/09/05 04:33:54 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,14 +44,14 @@ ClassImp(RooRealSumPdf)
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
-  _coefList("coefList","List of coefficients",this),
-  _funcList("funcList","List of functions",this),
+  _codeReg(10),
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
   _haveLastCoef(kFALSE),
-  _codeReg(10)
+  _funcList("funcList","List of functions",this),
+  _coefList("coefList","List of coefficients",this)
 {
   // Dummy constructor 
   _funcIter   = _funcList.createIterator() ;
@@ -62,14 +62,14 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 		     RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) : 
   RooAbsPdf(name,title),
-  _coefList("coefList","List of coefficients",this),
-  _funcList("funcProxyList","List of functions",this),
+  _codeReg(10),
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
   _haveLastCoef(kFALSE),
-  _codeReg(10)
+  _funcList("funcProxyList","List of functions",this),
+  _coefList("coefList","List of coefficients",this)
 {
   // Special constructor with two functions and one coefficient
   _funcIter  = _funcList.createIterator() ;
@@ -83,14 +83,14 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 
 RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList) :
   RooAbsPdf(name,title),
-  _coefList("coefList","List of coefficients",this),
-  _funcList("funcProxyList","List of functions",this),
+  _codeReg(10),
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
   _haveLastCoef(kFALSE),
-  _codeReg(10)
+  _funcList("funcProxyList","List of functions",this),
+  _coefList("coefList","List of coefficients",this)
 { 
   // Constructor from list of functions and list of coefficients.
   // Each func list element (i) is paired with coefficient list element (i).
@@ -148,14 +148,14 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
 
 RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
   RooAbsPdf(other,name),
-  _coefList("coefList",this,other._coefList),
-  _funcList("funcProxyList",this,other._funcList),
+  _codeReg(other._codeReg),
   _lastFuncIntSet(0),
   _lastFuncNormSet(0),
   _funcIntList(0),
   _funcNormList(0),
   _haveLastCoef(other._haveLastCoef),
-  _codeReg(other._codeReg)
+  _funcList("funcProxyList",this,other._funcList),
+  _coefList("coefList",this,other._coefList)
 {
   // Copy constructor
 
@@ -294,7 +294,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //   cout << "RooRealSumPdf::aiWN code = " << code << endl ;
 
   RooArgSet *allDeps, *normSet ;
-  const Int_t* tmp = _codeReg.retrieve(code-1,allDeps,normSet) ;
+  _codeReg.retrieve(code-1,allDeps,normSet) ;
   syncFuncIntList(allDeps) ;
   if (normSet) syncFuncNormList(normSet) ;
 

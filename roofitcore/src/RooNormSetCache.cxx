@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.4 2002/09/05 04:33:46 verkerke Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.5 2002/10/23 00:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,13 +22,13 @@ ClassImp(RooNormSetCache)
 ;
 
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
-  _asArr1(0), _asArr2(0), _regSize(regSize), _nreg(0)
+  _regSize(regSize), _nreg(0), _asArr1(0), _asArr2(0)
 {
 }
 
 
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
-  _asArr1(0), _asArr2(0), _regSize(other._regSize), _nreg(0)
+   _regSize(other._regSize), _nreg(0), _asArr1(0), _asArr2(0)
 {
 }
 

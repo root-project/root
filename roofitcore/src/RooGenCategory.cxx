@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenCategory.cc,v 1.14 2002/09/05 04:33:28 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,7 @@
 ClassImp(RooGenCategory)
 
 
+
 RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFunc, RooArgSet& catList) :
   RooAbsCategory(name, title), 
   _superCat("superCat","Super Category",catList), 
@@ -60,8 +61,8 @@ RooGenCategory::RooGenCategory(const char *name, const char *title, void *userFu
 
 RooGenCategory::RooGenCategory(const RooGenCategory& other, const char *name) :
   RooAbsCategory(other,name), _superCat(other._superCat), 
-  _map(0), _userFuncName(other._userFuncName),
-  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat)
+  _superCatProxy("superCatProxy","Super Category Proxy",this,_superCat),
+  _map(0), _userFuncName(other._userFuncName)
 {
   // Copy constructor
   removeServer((RooAbsArg&)other._superCat) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.5 2002/10/25 23:49:14 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.6 2003/01/14 00:07:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,11 +48,11 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, Ro
   _pdf(&pdf),
   _data(&data),
   _projDeps((RooArgSet*)projDeps.Clone()),
-  _nCPU(nCPU),
   _simCount(1),
+  _nGof(0),
   _gofArray(0),
-  _mpfeArray(0),
- _nGof(0)
+  _nCPU(nCPU),
+  _mpfeArray(0)
 {
   // Register all parameters as servers 
   RooArgSet* params = pdf.getParameters(&data) ;
@@ -83,20 +83,19 @@ RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const char *name, const char *title, Ro
 
 
 
-
 RooAbsGoodnessOfFit::RooAbsGoodnessOfFit(const RooAbsGoodnessOfFit& other, const char* name) : 
   RooAbsReal(other,name), 
-  _setNum(other._setNum),
-  _numSets(other._numSets),
   _paramSet("paramSet",this,other._paramSet),
-  _nCPU(other._nCPU),
-  _gofOpMode(other._gofOpMode),
-  _nEvents(other._nEvents),
-  _simCount(other._simCount),
   _pdf(other._pdf),
   _data(other._data),
   _projDeps((RooArgSet*)other._projDeps->Clone()),
-  _init(other._init)
+  _simCount(other._simCount),
+  _init(other._init),
+  _gofOpMode(other._gofOpMode),
+  _nEvents(other._nEvents),
+  _setNum(other._setNum),
+  _numSets(other._numSets),
+  _nCPU(other._nCPU)
 {
   if (operMode()==SimMaster) {
     _nGof = other._nGof ; 

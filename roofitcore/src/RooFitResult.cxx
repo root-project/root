@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.19 2002/09/05 04:33:26 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.20 2002/09/30 00:57:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -389,7 +389,7 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
 	                       -1*((RooRealVar*)_finalPars->at(i))->getAsymErrorLo()) ;
       } else {
 	Double_t err = ((RooRealVar*)_finalPars->at(i))->getError() ;
-	os << (doAsymErr?"        ":"") << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
+	os << (doAsymErr?"        ":"") << " +/- " << setw(9)  << Form("%9.2e",err) ;
       }
 
       if (_globalCorr) {
@@ -493,7 +493,6 @@ void RooFitResult::fillCorrMatrix()
   ncoef = (gMinuit->fNpagwd - 19) / 6;
   nparm = TMath::Min(gMinuit->fNpar,ncoef);
   RooRealVar* gcVal = 0;
-  RooRealVar* par = 0 ;
   for (i = 1; i <= gMinuit->fNpar; ++i) {
     ix  = gMinuit->fNexofi[i-1];
     ndi = i*(i + 1) / 2;

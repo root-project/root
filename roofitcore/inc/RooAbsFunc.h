@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsFunc.rdl,v 1.3 2002/09/05 04:33:04 verkerke Exp $
+ *    File: $Id: RooAbsFunc.rdl,v 1.4 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,7 +20,7 @@
 
 class RooAbsFunc {
 public:
-  inline RooAbsFunc(UInt_t dimension) : _dimension(dimension), _valid(kTRUE), _ncall(0) { }
+  inline RooAbsFunc(UInt_t dimension) : _ncall(0), _dimension(dimension), _valid(kTRUE) { }
   inline virtual ~RooAbsFunc() { }
   inline UInt_t getDimension() const { return _dimension; }
   inline Bool_t isValid() const { return _valid; }

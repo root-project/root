@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConvCoefVar.cc,v 1.3 2002/09/05 04:33:19 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,12 +26,11 @@
 ClassImp(RooConvCoefVar)
 ;
 
-
 RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooConvolutedPdf& input, 
 			       Int_t coefIdx, const RooArgSet* varList) :
   RooAbsReal(name,title),
-  _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input),
   _varSet("varSet","Set of coefficient variables",this),
+  _convPdf("convPdf","Convoluted PDF",this,(RooAbsReal&)input),
   _coefIdx(coefIdx)
 {
   // Constuctor
@@ -41,8 +40,8 @@ RooConvCoefVar::RooConvCoefVar(const char *name, const char *title, const RooCon
 
 RooConvCoefVar::RooConvCoefVar(const RooConvCoefVar& other, const char* name) :
   RooAbsReal(other,name),
-  _convPdf("convPdf",this,other._convPdf),
   _varSet("varSet",this,other._varSet),
+  _convPdf("convPdf",this,other._convPdf),
   _coefIdx(other._coefIdx)
 {
   // Copy constructor

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMinuit.cc,v 1.6 2002/09/05 04:33:42 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -319,7 +319,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
   Bool_t constValChange(kFALSE) ;
   Bool_t constStatChange(kFALSE) ;
 
-  Int_t index(0), nFree(_nPar);
+  Int_t index(0) ;
 
   // Handle eventual migrations from constParamList -> floatParamList 
   for(index= 0; index < _constParamList->getSize() ; index++) {

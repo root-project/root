@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooExtendPdf.cc,v 1.9 2002/09/05 04:33:26 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,14 +48,14 @@ ClassImp(RooExtendPdf)
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf& pdf,
 			   const RooAbsReal& norm) :
   RooAbsPdf(name,title),
-  _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
-  _n("n","Normalization",this,(RooAbsReal&)norm),
-  _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
-  _origDepSet("origDepSet","Set of dependent with full integration range",this),
+  _useFrac(kFALSE),
   _lastFracSet(0),
   _fracIntegral(0),
   _integralCompSet(0),
-  _useFrac(kFALSE)
+  _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
+  _n("n","Normalization",this,(RooAbsReal&)norm),
+  _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
+  _origDepSet("origDepSet","Set of dependent with full integration range",this)
 {
   // Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
   // but adds an extended likelihood term. The expected number of events return
@@ -74,14 +74,14 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf&
 			   const RooAbsReal& norm, const RooArgList& depList, 
 			   const RooArgList& cutDepList) :
   RooAbsPdf(name,title),
-  _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
-  _n("n","Normalization",this,(RooAbsReal&)norm),
-  _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
-  _origDepSet("origDepSet","Set of dependent with full integration range",this),
+  _useFrac(kTRUE),
   _lastFracSet(0),
   _fracIntegral(0),
   _integralCompSet(0),
-  _useFrac(kTRUE)
+  _pdf("pdf","PDF",this,(RooAbsReal&)pdf),
+  _n("n","Normalization",this,(RooAbsReal&)norm),
+  _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
+  _origDepSet("origDepSet","Set of dependent with full integration range",this)
 {
   // Constructor. The ExtendedPdf behaves identical to the supplied input pdf,
   // but adds an extended likelihood term. The expected number of events return
@@ -155,14 +155,14 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf&
 
 RooExtendPdf::RooExtendPdf(const RooExtendPdf& other, const char* name) :
   RooAbsPdf(other,name),
-  _pdf("pdf",this,other._pdf),
-  _n("n",this,other._n),
-  _cutDepSet("cutDepSet",this,other._cutDepSet),
-  _origDepSet("origDepSet",this,other._origDepSet),
+  _useFrac(other._useFrac),
   _lastFracSet(0),
   _fracIntegral(0),
   _integralCompSet(0),
-  _useFrac(other._useFrac)
+  _pdf("pdf",this,other._pdf),
+  _n("n",this,other._n),
+  _cutDepSet("cutDepSet",this,other._cutDepSet),
+  _origDepSet("origDepSet",this,other._origDepSet)
 {
   // Copy constructor
 }

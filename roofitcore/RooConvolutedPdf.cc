@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConvolutedPdf.cc,v 1.36 2002/09/05 04:33:20 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -85,14 +85,14 @@ RooConvolutedPdf::RooConvolutedPdf(const char *name, const char *title,
 
 
 RooConvolutedPdf::RooConvolutedPdf(const RooConvolutedPdf& other, const char* name) : 
-  RooAbsPdf(other,name), _convVar(0), _isCopy(kTRUE),
+  RooAbsPdf(other,name), _isCopy(kTRUE),
+  _model(other._model), _convVar(0), 
   _convSet("convSet",this,other._convSet),
+  _basisList(other._basisList),
   _convNormSet(new RooArgSet(*other._convNormSet)),
   _convSetIter(_convSet.createIterator()),
-  _codeReg(other._codeReg),
-  _model(other._model),
   _coefNormMgr(other._coefNormMgr),
-  _basisList(other._basisList)
+  _codeReg(other._codeReg)
 {
   // Copy constructor
 
@@ -424,7 +424,7 @@ Double_t RooConvolutedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
 
   // Unpack master code
   RooArgSet *intCoefSet, *intConvSet, *normCoefSet, *normConvSet ;
-  const Int_t* tmp = _codeReg.retrieve(code-1,intCoefSet,intConvSet,normCoefSet,normConvSet) ;
+  _codeReg.retrieve(code-1,intCoefSet,intConvSet,normCoefSet,normConvSet) ;
 //   cout << "ai: mastercode = " << code << endl ;
 //   cout << "intCoefSet: " << intCoefSet << " " ; if (intCoefSet) intCoefSet->Print("1") ; else cout << "<none>" << endl ;
 //   cout << "intConvSet: " << intConvSet << " "  ; if (intConvSet) intConvSet->Print("1") ; else cout << "<none>" << endl ;

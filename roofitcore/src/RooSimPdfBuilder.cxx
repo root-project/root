@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.22 2002/09/05 04:33:57 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.23 2002/10/23 00:44:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -149,7 +149,7 @@
 //    supplied in each line, e.g.
 //  </p>
 //  <pre>
-// pdfName = {splitCat} : {parameter} [,{parameter},....] \\
+// pdfName = {splitCat} : {parameter} [,{parameter},....] 
 //           {splitCat} : {parameter} [,{parameter},....]
 //  </pre>
 //  <p>
@@ -171,8 +171,8 @@
 //  <pre>
 //   physModels = pdf
 //   splitCats  = tagCat runBlock
-//   pdf        = tagCat          : signalRes,bkgRes \\
-//                runBlock        : fudgeFactor      \\
+//   pdf        = tagCat          : signalRes,bkgRes 
+//                runBlock        : fudgeFactor      
 //                tagCat,runBlock : kludgeParam
 //  </pre>
 //
@@ -285,7 +285,7 @@
 //  <pre>
 //    physModels = mode : pdfA=modeA  pdfB=modeB  pdfA=modeC  pdfB=modeD
 //    splitCats = tagCat
-//    pdfA      = tagCat : bogusPar \\
+//    pdfA      = tagCat : bogusPar 
 //                mode   : funnyPar
 //    pdfB      = mode   : kludgeFactor
 //  </pre>
@@ -357,7 +357,7 @@
 //<Contents of config>
 //   physModels = pdf
 //   splitCats  = tagCat runBlock
-//   pdf        = tagCat          : signalRes \\
+//   pdf        = tagCat          : signalRes 
 //                tagMap          : fudgeFactor      
 //                ^^^^^^
 //  </pre>
@@ -520,7 +520,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   RooArgSet physModelSet ;
   if (physCat) {
     // Absorb colon token
-    char* colon = strtok(0,spaceChars) ;
+    strtok(0,spaceChars) ;
     physName = strtok(0,spaceChars) ;
   } else {
     physName = strtok(buf,spaceChars) ;
@@ -728,7 +728,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       Mode mode(SplitCat) ;
 
       char* splitCatName ;
-      RooAbsCategory* splitCat ;
+      RooAbsCategory* splitCat(0) ;
 
       while(token) {
 	switch (mode) {

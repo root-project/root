@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsString.cc,v 1.23 2002/09/05 04:33:10 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,13 +35,13 @@ ClassImp(RooAbsString)
 ;
 
 
-RooAbsString::RooAbsString() : RooAbsArg(), _value(new char[128]), _len(128) 
+RooAbsString::RooAbsString() : RooAbsArg(), _len(128) , _value(new char[128])
 {
 }
 
 
 RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) : 
-  RooAbsArg(name,title), _value(new char[bufLen]), _len(bufLen)
+  RooAbsArg(name,title), _len(bufLen), _value(new char[bufLen]) 
 {
   // Constructor
   setValueDirty() ;
@@ -51,7 +51,7 @@ RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) :
 
 
 RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
-  RooAbsArg(other, name), _value(new char[other._len]), _len(other._len)
+  RooAbsArg(other, name), _len(other._len), _value(new char[other._len])
 {
   // Copy constructor
   strcpy(_value,other._value) ;
