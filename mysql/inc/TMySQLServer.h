@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.h,v 1.2 2001/08/24 16:34:18 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -17,7 +17,9 @@
 #endif
 
 #if !defined(__CINT__)
+#ifndef R__WIN32
 #include <sys/time.h>
+#endif
 #include <mysql.h>
 #else
 struct MYSQL;

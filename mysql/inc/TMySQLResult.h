@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name$:$Id$
+// @(#)root/mysql:$Name:  $:$Id: TMySQLResult.h,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -17,10 +17,12 @@
 #endif
 
 #if !defined(__CINT__)
+#ifndef R__WIN32
 #include <sys/time.h>
+#endif
 #include <mysql.h>
 #else
-struct MYSQL_RES;   
+struct MYSQL_RES;
 struct MYSQL_FIELD;
 #endif
 
@@ -30,18 +32,18 @@ class TMySQLResult : public TSQLResult {
 private:
    MYSQL_RES   *fResult;      // query result (rows)
    MYSQL_FIELD *fFieldInfo;   // info for each field in the row
-    
+
    Bool_t  IsValid(Int_t field);
 
 public:
    TMySQLResult(void *result);
    ~TMySQLResult();
-    
+
    void        Close(Option_t *opt="");
    Int_t       GetFieldCount();
    const char *GetFieldName(Int_t field);
    TSQLRow    *Next();
-   
+
    ClassDef(TMySQLResult,0)  // MySQL query result
 };
 
