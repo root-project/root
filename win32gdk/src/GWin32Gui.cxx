@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.10 2002/10/25 17:38:00 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.11 2002/11/01 21:37:02 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -210,7 +210,7 @@ void TGWin32::MapWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
    // Map window on screen.
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -220,7 +220,7 @@ void TGWin32::MapSubwindows(Window_t id)
 {
    EnterCriticalSection(flpCriticalSection);
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_MAP_SUBWINDOWS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_MAP_SUBWINDOWS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -231,11 +231,11 @@ void TGWin32::MapRaised(Window_t id)
    EnterCriticalSection(flpCriticalSection);
    // Map window on screen and put on top of all windows.
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RAISE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RAISE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -246,7 +246,7 @@ void TGWin32::UnmapWindow(Window_t id)
    // Unmap window from screen.
    EnterCriticalSection(flpCriticalSection);
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_HIDE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_HIDE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -258,7 +258,7 @@ void TGWin32::DestroyWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_DESTROY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_DESTROY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -270,7 +270,7 @@ void TGWin32::RaiseWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RAISE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RAISE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -282,7 +282,7 @@ void TGWin32::LowerWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_LOWER, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_LOWER, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -296,7 +296,7 @@ void TGWin32::MoveWindow(Window_t id, Int_t x, Int_t y)
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.x = x;
    fThreadP.y = y;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -313,7 +313,7 @@ void TGWin32::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w,
    fThreadP.y = y;
    fThreadP.w = w;
    fThreadP.h = h;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE_RESIZE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE_RESIZE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -327,7 +327,7 @@ void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.w = w;
    fThreadP.h = h;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RESIZE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RESIZE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -339,7 +339,7 @@ void TGWin32::IconifyWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_LOWER, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_LOWER, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -355,7 +355,7 @@ void TGWin32::SetWindowBackground(Window_t id, ULong_t color)
    fThreadP.color.red = GetRValue(color);
    fThreadP.color.green = GetGValue(color);
    fThreadP.color.blue = GetBValue(color);
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -369,7 +369,7 @@ void TGWin32::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.pParam = (void *)pxm;
    fThreadP.iParam = 0;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -405,7 +405,7 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       fThreadP.Drawable = (GdkDrawable *) parent;
       fThreadP.lParam = xmask;
       fThreadP.pRet = NULL;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       newWin = (GdkWindow *) fThreadP.pRet;
    } else {
@@ -425,7 +425,7 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       else
          fThreadP.xattr.y = -1.0 * y;
       fThreadP.pRet = NULL;
-      PostThreadMessage(fIDThread, WIN32_GDK_CMAP_GET_SYSTEM, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_CMAP_GET_SYSTEM, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       fThreadP.xattr.colormap = (GdkColormap *)fThreadP.pRet;
       fThreadP.xattr.cursor = NULL;
@@ -440,7 +440,7 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
          xmask |= GDK_WA_VISUAL;
       } else {
          fThreadP.pRet = NULL;
-         PostThreadMessage(fIDThread, WIN32_GDK_VISUAL_GET_SYSTEM, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_VISUAL_GET_SYSTEM, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          fThreadP.xattr.visual = (GdkVisual *)fThreadP.pRet;
          xmask |= GDK_WA_VISUAL;
@@ -458,17 +458,17 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       fThreadP.Drawable = (GdkDrawable *) parent;
       fThreadP.lParam = xmask;
       fThreadP.pRet = NULL;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       newWin = (GdkWindow *)fThreadP.pRet;
 
       fThreadP.Drawable = (GdkDrawable *) newWin;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (border > 0) {
       fThreadP.Drawable = (GdkDrawable *) newWin;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, GDK_DECOR_BORDER, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, GDK_DECOR_BORDER, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (attr) {
@@ -477,19 +477,19 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
             fThreadP.Drawable = (GdkDrawable *) newWin;
             fThreadP.pParam = (void *) GDK_NONE;
             fThreadP.iParam = 0;
-            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);  
+            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);
             WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          } else if (attr->fBackgroundPixmap == kParentRelative) {
             fThreadP.Drawable = (GdkDrawable *) newWin;
             fThreadP.pParam = (void *) GDK_NONE;
             fThreadP.iParam = 1;
-            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);  
+            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);
             WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          } else {
             fThreadP.Drawable = (GdkDrawable *) newWin;
             fThreadP.pParam = (void *) attr->fBackgroundPixmap;
             fThreadP.iParam = 0;
-            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);  
+            PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);
             WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          }
       }
@@ -499,7 +499,7 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
          fThreadP.color.red = GetRValue(attr->fBackgroundPixel);
          fThreadP.color.green = GetGValue(attr->fBackgroundPixel);
          fThreadP.color.blue = GetBValue(attr->fBackgroundPixel);
-         PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       }
    }
@@ -876,7 +876,7 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    Bool_t isViewable, isVisible;
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    attr.fX = fThreadP.x;
    attr.fY = fThreadP.y;
@@ -885,19 +885,19 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    attr.fDepth = fThreadP.iRet;
 
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_ROOT_PARENT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_ROOT_PARENT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   
+
    attr.fRoot = (Window_t) fThreadP.pRet;
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_COLORMAP, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_COLORMAP, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    attr.fColormap = (Colormap_t) fThreadP.pRet;
    attr.fBorderWidth = 0;
    fThreadP.pRet = NULL;
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_VISUAL, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_VISUAL, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    attr.fVisual = fThreadP.pRet;
    attr.fClass = kInputOutput;
@@ -907,11 +907,11 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    attr.fOverrideRedirect = kFALSE;   // boolean value for override-redirect
    fThreadP.iRet = 0;
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_IS_VISIBLE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_IS_VISIBLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    isVisible = fThreadP.iRet;
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_IS_VIEWABLE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_IS_VIEWABLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    isViewable = fThreadP.iRet;
    if (!isVisible)
@@ -948,7 +948,7 @@ void TGWin32::CloseDisplay()
 {
 
     if (fIDThread) {
-        PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);  
+        PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);
         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
         CloseHandle(fThreadP.hThrSem);
         CloseHandle(hGDKThread);
@@ -969,7 +969,7 @@ Int_t TGWin32::GetDepth() const
    // Get maximum number of planes.
    EnterCriticalSection(flpCriticalSection);
 
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return fThreadP.iRet;
@@ -985,7 +985,7 @@ Atom_t TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
 
    fThreadP.iParam = only_if_exist;
    sprintf(fThreadP.sParam,"%s",atom_name);
-   PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkAtom a = (GdkAtom)fThreadP.ulRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -1002,9 +1002,9 @@ Window_t TGWin32::GetDefaultRootWindow() const
    EnterCriticalSection(flpCriticalSection);
 
 //   fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_ROOT_PARENT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_ROOT_PARENT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   
+
    LeaveCriticalSection(flpCriticalSection);
    return (Window_t) fThreadP.pRet;
 }
@@ -1016,9 +1016,9 @@ Window_t TGWin32::GetParent(Window_t id) const
    EnterCriticalSection(flpCriticalSection);
 
 //   fThreadP.lParam = id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_PARENT, 0, id);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GET_PARENT, 0, id);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   
+
    LeaveCriticalSection(flpCriticalSection);
    return (Window_t) fThreadP.pRet;
 //   return (Window_t) NULL;
@@ -1035,7 +1035,7 @@ FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
 
    fThreadP.pRet = NULL;
    sprintf(fThreadP.sParam,"%s",font_name);
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkFont *fs = (GdkFont *)fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -1051,7 +1051,7 @@ FontH_t TGWin32::GetFontHandle(FontStruct_t fs)
    if (fs) {
       fThreadP.pRet = NULL;
       fThreadP.pParam = (void *) fs;
-      PostThreadMessage(fIDThread, WIN32_GDK_FONT_REF, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_FONT_REF, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       GdkFont *fss = (GdkFont *)fThreadP.pRet;
       LeaveCriticalSection(flpCriticalSection);
@@ -1068,7 +1068,7 @@ void TGWin32::DeleteFont(FontStruct_t fs)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pParam = (void *) fs;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1090,7 +1090,7 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t * gval)
    fThreadP.pRet = NULL;
    fThreadP.Drawable = NULL;
    fThreadP.iParam = xmask;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_NEW_WITH_VAL, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_NEW_WITH_VAL, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkGC *gc = (GdkGC *)fThreadP.pRet;
 
@@ -1118,7 +1118,7 @@ void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
       fThreadP.color.red   = xgval.foreground.red;
       fThreadP.color.green = xgval.foreground.green;
       fThreadP.color.blue  = xgval.foreground.blue;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FOREGROUND, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FOREGROUND, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCBackground) {
@@ -1127,61 +1127,61 @@ void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
       fThreadP.color.red   = xgval.foreground.red;
       fThreadP.color.green = xgval.foreground.green;
       fThreadP.color.blue  = xgval.foreground.blue;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_BACKGROUND, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_BACKGROUND, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCFont) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.pParam = (void *) xgval.font;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FONT, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCFunction) {
       fThreadP.GC = (GdkGC *) gc;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FUNCTION, xgval.function, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FUNCTION, xgval.function, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCFillStyle) {
       fThreadP.GC = (GdkGC *) gc;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FILL, xgval.fill, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FILL, xgval.fill, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCTile) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.pParam = (void *) xgval.tile;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TILE, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TILE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCStipple) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.pParam = (void *) xgval.stipple;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_STIPPLE, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_STIPPLE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if ((mask & kGCTileStipXOrigin) || (mask & kGCTileStipYOrigin)) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.x = xgval.ts_x_origin;
       fThreadP.y = xgval.ts_y_origin;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TS_ORIGIN, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_TS_ORIGIN, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if ((mask & kGCClipXOrigin) || (mask & kGCClipYOrigin)) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.x = xgval.clip_x_origin;
       fThreadP.y = xgval.clip_y_origin;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_ORIGIN, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_ORIGIN, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCClipMask) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.pParam = (void *) xgval.clip_mask;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_MASK, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_MASK, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCGraphicsExposures) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.iParam = xgval.graphics_exposures;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_EXPOSURES, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_EXPOSURES, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if ((mask & kGCLineWidth) || (mask & kGCLineStyle) ||
@@ -1191,13 +1191,13 @@ void TGWin32::ChangeGC(GContext_t gc, GCValues_t * gval)
       fThreadP.iParam =  xgval.line_style;
       fThreadP.iParam1 = xgval.cap_style;
       fThreadP.iParam2 = xgval.join_style;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_LINE_ATTR, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_LINE_ATTR, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (mask & kGCSubwindowMode) {
       fThreadP.GC = (GdkGC *) gc;
       fThreadP.iParam = xgval.subwindow_mode;
-      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_SUBWINDOW, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_SUBWINDOW, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    LeaveCriticalSection(flpCriticalSection);
@@ -1224,7 +1224,7 @@ void TGWin32::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 
    fThreadP.GC = (GdkGC *) dest;
    fThreadP.pParam = (void *) org;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_COPY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_COPY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1236,7 +1236,7 @@ void TGWin32::DeleteGC(GContext_t gc)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.GC = (GdkGC *) gc;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_UNREF, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_UNREF, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1245,7 +1245,8 @@ void TGWin32::DeleteGC(GContext_t gc)
 Cursor_t TGWin32::CreateCursor(ECursor cursor)
 {
    // Create cursor handle (just return cursor from cursor pool fCursors).
-   return (Cursor_t) & fCursors[cursor];
+
+   return (Cursor_t) fCursors[cursor];
 }
 
 //______________________________________________________________________________
@@ -1256,7 +1257,7 @@ void TGWin32::SetCursor(Window_t id, Cursor_t curid)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.pParam = (void *) curid;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_CURSOR, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_CURSOR, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1269,16 +1270,16 @@ Pixmap_t TGWin32::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
    EnterCriticalSection(flpCriticalSection);
 
    Int_t depth;
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    depth = fThreadP.iRet;
-   
+
    fThreadP.pRet = NULL;
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.w = w;
    fThreadP.h = h;
    fThreadP.iParam = depth;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_NEW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_NEW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Pixmap_t) fThreadP.pRet;
@@ -1302,7 +1303,7 @@ Pixmap_t TGWin32::CreatePixmap(Drawable_t id, const char *bitmap,
    fThreadP.iParam = depth;
    fThreadP.lParam = forecolor;
    fThreadP.lParam1 = backcolor;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_DATA, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_DATA, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Pixmap_t) fThreadP.pRet;
@@ -1320,7 +1321,7 @@ Pixmap_t TGWin32::CreateBitmap(Drawable_t id, const char *bitmap,
    fThreadP.pParam = (char *) bitmap;
    fThreadP.w = width;
    fThreadP.h = height;
-   PostThreadMessage(fIDThread, WIN32_GDK_BMP_CREATE_FROM_DATA, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_BMP_CREATE_FROM_DATA, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Pixmap_t) fThreadP.pRet;
@@ -1333,7 +1334,7 @@ void TGWin32::DeletePixmap(Pixmap_t pmap)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) pmap;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIX_UNREF, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIX_UNREF, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1354,14 +1355,14 @@ Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
    sprintf(fThreadP.sParam,"%s",filename);
    fThreadP.pRet = NULL;
    fThreadP.pParam1 = 0;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    pict = (Pixmap_t) fThreadP.pRet;
-   
+
    pict_mask = (Pixmap_t) fThreadP.pParam;
 
    fThreadP.Drawable = (GdkDrawable *) pict;
-   PostThreadMessage(fIDThread, WIN32_GDK_DRAWABLE_GET_SIZE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAWABLE_GET_SIZE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    attr.fWidth  = fThreadP.w;
    attr.fHeight = fThreadP.h;
@@ -1393,10 +1394,10 @@ Bool_t TGWin32::CreatePictureFromData(Drawable_t id, char **data,
    fThreadP.pParam = (void *) data;
    fThreadP.pParam1 = 0;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM_D, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM_D, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    pict = (Pixmap_t) fThreadP.pRet;
-   
+
    pict_mask = (Pixmap_t) fThreadP.pParam;
 
    LeaveCriticalSection(flpCriticalSection);
@@ -1423,10 +1424,10 @@ Bool_t TGWin32::ReadPictureDataFromFile(const char *filename,
    sprintf(fThreadP.sParam,"%s",filename);
    fThreadP.pParam1 = 0;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    rdata = (char **)fThreadP.pRet;
-   
+
    ret_data = &rdata;
    LeaveCriticalSection(flpCriticalSection);
    return kTRUE;
@@ -1459,7 +1460,7 @@ void TGWin32::SetDashes(GContext_t gc, Int_t offset, const char *dash_list,
    fThreadP.GC = (GdkGC *) gc;
    fThreadP.iParam = offset;
    fThreadP.iParam2 = n;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_DASHES, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_DASHES, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -1490,12 +1491,12 @@ Bool_t TGWin32::ParseColor(Colormap_t cmap, const char *cname,
    GdkColor xc;
 
    sprintf(fThreadP.sParam,"%s",cname);
-   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_PARSE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_PARSE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    if (fThreadP.iRet) {
-      color.fPixel = 
-          fThreadP.color.pixel = 
+      color.fPixel =
+          fThreadP.color.pixel =
           RGB(fThreadP.color.red, fThreadP.color.green, fThreadP.color.blue);
       color.fRed = fThreadP.color.red;
       color.fGreen = fThreadP.color.green;
@@ -1524,7 +1525,7 @@ Bool_t TGWin32::AllocColor(Colormap_t cmap, ColorStruct_t & color)
    fThreadP.pParam = (void *) cmap;
    fThreadP.iParam = FALSE;
    fThreadP.iParam1 = TRUE;
-   PostThreadMessage(fIDThread, WIN32_GDK_COLORMAP_ALLOC_COLOR, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_COLORMAP_ALLOC_COLOR, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    color.fPixel = fThreadP.color.pixel;
@@ -1545,13 +1546,13 @@ void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
 
    fThreadP.pRet = NULL;
    fThreadP.pParam = (void *) fColormap;
-   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_CONTEXT_NEW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_CONTEXT_NEW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkColorContext *cc = (GdkColorContext *)fThreadP.pRet;
 
    fThreadP.pParam = (void *) cc;
    fThreadP.iParam = 1;
-   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_CONTEXT_QUERY_COLORS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_COLOR_CONTEXT_QUERY_COLORS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    color.fPixel = fThreadP.color.pixel = RGB(fThreadP.color.red, fThreadP.color.green, fThreadP.color.blue);
@@ -1575,7 +1576,7 @@ Int_t TGWin32::EventsPending()
     // Returns number of pending events.
    EnterCriticalSection(flpCriticalSection);
 
-    PostThreadMessage(fIDThread, WIN32_GDK_EVENTS_PENDING, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_EVENTS_PENDING, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
     return fThreadP.iRet;
@@ -1592,7 +1593,7 @@ void TGWin32::NextEvent(Event_t & event)
    GdkEvent *xev = NULL;
 
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_EVENT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_EVENT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    xev = (GdkEvent *) fThreadP.pRet;
 
@@ -1889,7 +1890,7 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       ev.fSendEvent = kFALSE; //xev.any.send_event ? kTRUE : kFALSE;
 
       fThreadP.pParam = (void *) &xev;
-      PostThreadMessage(fIDThread, WIN32_GDK_EVENT_GET_TIME, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_EVENT_GET_TIME, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       ev.fTime = fThreadP.iRet;
 
@@ -1941,13 +1942,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
             ev.fUser[4] = xev.key.string[2];
          fThreadP.pRet = NULL;
          fThreadP.Drawable = (GdkDrawable *) xev.key.window;
-         PostThreadMessage(fIDThread, WIN32_GW_CHILD, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GW_CHILD, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND) fThreadP.pRet;
 //         HWND tmpwin = GetWindow((HWND) GDK_DRAWABLE_XID(xev.key.window), GW_CHILD);
          if (tmpwin) {
              fThreadP.Drawable = (GdkDrawable *) tmpwin;
-             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);  
+             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
          }
@@ -1964,17 +1965,17 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          if (ev.fType == kButtonRelease)
             ev.fState |= kButtonReleaseMask;
          ev.fCode = xev.button.button;	// button code
-         
+
          fThreadP.Drawable = (GdkDrawable *) xev.button.window;
          fThreadP.x = xev.button.x;
          fThreadP.y = xev.button.y;
          fThreadP.pRet = NULL;
-         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
              fThreadP.Drawable = (GdkDrawable *) tmpwin;
-             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);  
+             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
          }
@@ -1993,12 +1994,12 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          fThreadP.Drawable = (GdkDrawable *) xev.motion.window;
          fThreadP.x = xev.button.x;
          fThreadP.y = xev.button.y;
-         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
              fThreadP.Drawable = (GdkDrawable *) tmpwin;
-             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);  
+             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
          }
@@ -2081,12 +2082,12 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          fThreadP.x = xev.scroll.x;
          fThreadP.y = xev.scroll.y;
          fThreadP.pRet = NULL;
-         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_WIN_CHILD_FROM_POINT, 0, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
              fThreadP.Drawable = (GdkDrawable *) tmpwin;
-             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);  
+             PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
          }
@@ -2102,7 +2103,7 @@ void TGWin32::Bell(Int_t percent)
 {
    EnterCriticalSection(flpCriticalSection);
 
-   PostThreadMessage(fIDThread, WIN32_GDK_BEEP, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_BEEP, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2127,7 +2128,7 @@ void TGWin32::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    fThreadP.xpos = dest_x;
    fThreadP.ypos = dest_y;
 
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_COPY_AREA, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_COPY_AREA, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    LeaveCriticalSection(flpCriticalSection);
@@ -2150,7 +2151,7 @@ void TGWin32::ChangeWindowAttributes(Window_t id,
       evmask = (Mask_t) attr->fEventMask;
       MapEventMask(evmask, xevmask);
       fThreadP.Drawable = (GdkDrawable *) id;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, xevmask, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, xevmask, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (attr && (attr->fMask & kWABackPixel)) {
@@ -2159,7 +2160,7 @@ void TGWin32::ChangeWindowAttributes(Window_t id,
       fThreadP.color.red = GetRValue(attr->fBackgroundPixel);
       fThreadP.color.green = GetGValue(attr->fBackgroundPixel);
       fThreadP.color.blue = GetBValue(attr->fBackgroundPixel);
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACKGROUND, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
 //   if (attr && (attr->fMask & kWAOverrideRedirect))
@@ -2168,25 +2169,25 @@ void TGWin32::ChangeWindowAttributes(Window_t id,
       fThreadP.Drawable = (GdkDrawable *) id;
       fThreadP.pParam = (void *) attr->fBackgroundPixmap;
       fThreadP.iParam = 0;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_BACK_PIXMAP, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (attr && (attr->fMask & kWACursor)) {
       fThreadP.Drawable = (GdkDrawable *) id;
       fThreadP.pParam = (void *) attr->fCursor;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_CURSOR, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_CURSOR, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (attr && (attr->fMask & kWAColormap)) {
       fThreadP.Drawable = (GdkDrawable *) id;
       fThreadP.pParam = (void *) attr->fColormap;
-      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_COLORMAP, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_COLORMAP, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    if (attr && (attr->fMask & kWABorderWidth)) {
       if (attr->fBorderWidth > 0) {
          fThreadP.Drawable = (GdkDrawable *) id;
-         PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, GDK_DECOR_BORDER, 0L);  
+         PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, GDK_DECOR_BORDER, 0L);
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       }
    }
@@ -2210,7 +2211,7 @@ void TGWin32::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
    fThreadP.iParam2 = len;
 //   fThreadP.pParam = data;
    sprintf(fThreadP.sParam,"%s",data);
-   PostThreadMessage(fIDThread, WIN32_GDK_PROPERTY_CHANGE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_PROPERTY_CHANGE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2228,7 +2229,7 @@ void TGWin32::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1,
    fThreadP.y1 = y1;
    fThreadP.x2 = x2;
    fThreadP.y2 = y2;
-   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 
@@ -2245,7 +2246,7 @@ void TGWin32::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
    fThreadP.y = y;
    fThreadP.w = w;
    fThreadP.h = h;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_CLEAR_AREA, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_CLEAR_AREA, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    LeaveCriticalSection(flpCriticalSection);
@@ -2270,7 +2271,7 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
 //   fThreadP.iParam = fThreadP.event.type;
    fThreadP.pParam = (void *) & xev;
    fThreadP.iParam = xev.type;
-   PostThreadMessage(fIDThread, WIN32_GDK_CHECK_TYPED_WIN_EVENT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_CHECK_TYPED_WIN_EVENT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    Bool_t r = fThreadP.iRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -2295,7 +2296,7 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
    MapEvent(*ev, xev, kTRUE);
    fThreadP.pParam = (void *) & xev;
    EnterCriticalSection(flpCriticalSection);
-   PostThreadMessage(fIDThread, WIN32_GDK_EVENT_PUT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_EVENT_PUT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 //   gdk_flush();
 
@@ -2309,7 +2310,7 @@ void TGWin32::WMDeleteNotify(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_WM_DELETE_NOTIFY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_WM_DELETE_NOTIFY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2320,7 +2321,7 @@ void TGWin32::SetKeyAutoRepeat(Bool_t on)
    // Turn key auto repeat on or off.
    EnterCriticalSection(flpCriticalSection);
 
-   PostThreadMessage(fIDThread, WIN32_GDK_SET_KEY_AUTOREPEAT, on, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SET_KEY_AUTOREPEAT, on, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2342,7 +2343,7 @@ void TGWin32::GrabKey(Window_t id, Int_t keycode, UInt_t modifier,
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.uiParam = xmod;
-   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_KEY, grab, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_KEY, grab, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2367,7 +2368,7 @@ void TGWin32::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.uiParam = xevmask;
-   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_BUTTON, grab, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_BUTTON, grab, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2390,7 +2391,7 @@ void TGWin32::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    fThreadP.uiParam = xevmask;
    fThreadP.pParam1 = (void *) confine;
    fThreadP.pParam2 = (void *) cursor;
-   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_POINTER, grab, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GRAB_POINTER, grab, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2403,7 +2404,7 @@ void TGWin32::SetWindowName(Window_t id, char *name)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    sprintf(fThreadP.sParam,"%s",name);
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_TITLE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_TITLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2416,7 +2417,7 @@ void TGWin32::SetIconName(Window_t id, char *name)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    sprintf(fThreadP.sParam,"%s",name);
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_ICON_NAME, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_ICON_NAME, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2429,7 +2430,7 @@ void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.pParam = (void *) pic;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_ICON, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_ICON, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2450,7 +2451,7 @@ void TGWin32::SetClassHints(Window_t id, char *className,
 
    fThreadP.iParam = kFALSE;
    sprintf(fThreadP.sParam,"WM_CLASS");
-   PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    prop = (GdkAtom)fThreadP.ulRet;
 
@@ -2475,9 +2476,9 @@ void TGWin32::SetClassHints(Window_t id, char *className,
       fThreadP.iParam2 = len_nm + len_cl + 2;
       sprintf(fThreadP.sParam,"%s",class_string);
 //      fThreadP.pParam = (void *) class_string;
-      PostThreadMessage(fIDThread, WIN32_WIN32_PROPERTY_CHANGE, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_WIN32_PROPERTY_CHANGE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-     
+
       free(class_string);
    }
    LeaveCriticalSection(flpCriticalSection);
@@ -2491,12 +2492,12 @@ void TGWin32::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs,
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, value, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_DECOR, value, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.iParam = funcs;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_FUNCTIONS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_FUNCTIONS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2509,7 +2510,7 @@ void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.x = x;
    fThreadP.y = y;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_MOVE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2522,7 +2523,7 @@ void TGWin32::SetWMSize(Window_t id, UInt_t w, UInt_t h)
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.w = w;
    fThreadP.h = h;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RESIZE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_RESIZE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2552,7 +2553,7 @@ void TGWin32::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.iParam = flags;
    fThreadP.pParam = (void *) &hints;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_GEOM_HINTS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_GEOM_HINTS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2585,7 +2586,7 @@ void TGWin32::SetWMTransientHint(Window_t id, Window_t main_id)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.pParam = (void *) main_id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_TRANSIENT_FOR, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_TRANSIENT_FOR, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2599,7 +2600,7 @@ void TGWin32::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 
    GdkGCValues values;
    fThreadP.GC = (GdkGC *) gc;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    fThreadP.Drawable = (GdkDrawable *) id;
@@ -2624,7 +2625,7 @@ Int_t TGWin32::TextWidth(FontStruct_t font, const char *s, Int_t len)
    fThreadP.pParam = (void *) font;
    fThreadP.iParam = len;
    sprintf(fThreadP.sParam,"%s",s);
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return fThreadP.iRet;
@@ -2655,7 +2656,7 @@ void TGWin32::GetGCValues(GContext_t gc, GCValues_t & gval)
    MapGCValues(gval, xmask, xgval, kTRUE);
 
    fThreadP.GC = (GdkGC *) gc;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    MapGCValues(gval, xmask, fThreadP.gcvals, kFALSE);
@@ -2673,7 +2674,7 @@ FontStruct_t TGWin32::GetFontStruct(FontH_t fh)
 
    fThreadP.pRet = NULL;
    fThreadP.pParam = (void *) fh;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_REF, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FONT_REF, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    fs = (GdkFont *)fThreadP.pRet;
 
@@ -2688,7 +2689,7 @@ void TGWin32::FreeFontStruct(FontStruct_t fs)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pParam = (void *) fs;
-   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FONT_UNREF, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2700,7 +2701,7 @@ void TGWin32::ClearWindow(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_CLEAR, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_CLEAR, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2717,7 +2718,7 @@ Int_t TGWin32::KeysymToKeycode(UInt_t keysym)
 
    MapKeySym(keysym, xkeysym);
    fThreadP.uiParam = xkeysym;
-   PostThreadMessage(fIDThread, WIN32_GDK_KEYVAL_FROM_NAME, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_KEYVAL_FROM_NAME, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    xkeysym = fThreadP.uiRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -2739,7 +2740,7 @@ void TGWin32::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
    fThreadP.w = w;
    fThreadP.h = h;
    fThreadP.bFill = kTRUE;
-   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2758,7 +2759,7 @@ void TGWin32::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
    fThreadP.w = w;
    fThreadP.h = h;
    fThreadP.bFill = kFALSE;
-   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_RECTANGLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2774,7 +2775,7 @@ void TGWin32::DrawSegments(Drawable_t id, GContext_t gc, Segment_t * seg,
    fThreadP.GC = (GdkGC *) gc;
    fThreadP.pParam = (void *) seg;
    fThreadP.iParam = nseg;
-   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_SEGMENTS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_DRAW_SEGMENTS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    LeaveCriticalSection(flpCriticalSection);
@@ -2796,7 +2797,7 @@ void TGWin32::SelectInput(Window_t id, UInt_t evmask)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.uiParam = xevmask;
-   PostThreadMessage(fIDThread, WIN32_GDK_SELECT_INPUT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SELECT_INPUT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2808,7 +2809,7 @@ Window_t TGWin32::GetInputFocus()
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_INPUT_FOCUS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_INPUT_FOCUS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Window_t) fThreadP.pRet;
@@ -2821,7 +2822,7 @@ void TGWin32::SetInputFocus(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_SET_INPUT_FOCUS, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SET_INPUT_FOCUS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2834,7 +2835,7 @@ Window_t TGWin32::GetPrimarySelectionOwner()
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_GET, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_GET, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Window_t) fThreadP.pRet;
@@ -2849,7 +2850,7 @@ void TGWin32::SetPrimarySelectionOwner(Window_t id)
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.lParam = clipboard_atom;
-   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_SET, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_SET, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2872,7 +2873,7 @@ void TGWin32::ConvertPrimarySelection(Window_t id, Atom_t clipboard,
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.ulParam = clipboard;
    fThreadP.uiParam = when;
-   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_CONVERT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_CONVERT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2963,7 +2964,7 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
 
    fThreadP.Drawable = (GdkDrawable *) id;
    fThreadP.ulParam = atom;
-   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_PROP_GET, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_PROP_GET, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    nread = fThreadP.iRet;
    actual_format = fThreadP.iRet1;
@@ -2980,7 +2981,7 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
    g_free(data);
    if (del) {
       fThreadP.Drawable = (GdkDrawable *) id;
-      PostThreadMessage(fIDThread, WIN32_GDK_PROP_DELETE, 0, 0L);  
+      PostThreadMessage(fIDThread, WIN32_GDK_PROP_DELETE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    LeaveCriticalSection(flpCriticalSection);
@@ -3004,7 +3005,7 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
    fThreadP.x = src_x;
    fThreadP.y = src_y;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_TRANSLATE_COORDINATES, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_TRANSLATE_COORDINATES, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    child = (Window_t) fThreadP.pRet;
    if (child == src)
@@ -3025,7 +3026,7 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
    Int_t ddum;
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    x = fThreadP.x;
    y = fThreadP.y;
@@ -3052,7 +3053,7 @@ void TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t * points,
    fThreadP.pParam = (GdkPoint *) points;
    fThreadP.iParam = npnt;
 
-   PostThreadMessage(fIDThread, WIN32_GDK_FILL_POLYGON, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FILL_POLYGON, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    LeaveCriticalSection(flpCriticalSection);
@@ -3076,7 +3077,7 @@ void TGWin32::QueryPointer(Window_t id, Window_t & rootw,
    fThreadP.pRet = NULL;
    fThreadP.pRet1 = NULL;
    fThreadP.Drawable = (GdkDrawable *) id;
-   PostThreadMessage(fIDThread, WIN32_GDK_QUERY_POINTER1, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_QUERY_POINTER1, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    root_x = fThreadP.x;
    root_y = fThreadP.y;
@@ -3101,9 +3102,9 @@ void TGWin32::SetForeground(GContext_t gc, ULong_t foreground)
    fThreadP.color.red = GetRValue(foreground);
    fThreadP.color.green = GetGValue(foreground);
    fThreadP.color.blue = GetBValue(foreground);
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FOREGROUND, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_FOREGROUND, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   
+
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -3126,7 +3127,7 @@ void TGWin32::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
    }
    fThreadP.GC = (GdkGC *) gc;
    fThreadP.pParam = (void *) grects;
-   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_RECT, 1, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_RECT, 1, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -3139,7 +3140,7 @@ void TGWin32::Update(Int_t mode)
    // requests have been processed by X server.
    EnterCriticalSection(flpCriticalSection);
 
-   PostThreadMessage(fIDThread, WIN32_GDK_FLUSH, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_FLUSH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -3151,7 +3152,7 @@ Region_t TGWin32::CreateRegion()
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_NEW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_NEW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Region_t) fThreadP.pRet;
@@ -3164,7 +3165,7 @@ void TGWin32::DestroyRegion(Region_t reg)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pParam = (void *) reg;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_DESTROY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_DESTROY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -3182,7 +3183,7 @@ void TGWin32::UnionRectWithRegion(Rectangle_t * rect, Region_t src,
    fThreadP.w = rect->fWidth;
    fThreadP.h = rect->fHeight;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_UNION_WITH_RECT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_UNION_WITH_RECT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    dest = (Region_t) fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -3206,7 +3207,7 @@ Region_t TGWin32::PolygonRegion(Point_t * points, Int_t np, Bool_t winding)
    fThreadP.iParam = np;
    fThreadP.iParam1 = winding;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_POLYGON, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_POLYGON, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Region_t) fThreadP.pRet;
@@ -3222,7 +3223,7 @@ void TGWin32::UnionRegion(Region_t rega, Region_t regb, Region_t result)
    fThreadP.pParam = (void *) rega;
    fThreadP.pParam1 = (void *)regb;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_UNION, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_UNION, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    result = (Region_t) fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -3239,7 +3240,7 @@ void TGWin32::IntersectRegion(Region_t rega, Region_t regb,
    fThreadP.pParam = (void *) rega;
    fThreadP.pParam1 = (void *) regb;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_INTERSECT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_INTERSECT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    result = (Region_t) fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -3254,7 +3255,7 @@ void TGWin32::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
    fThreadP.pParam = (void *) rega;
    fThreadP.pParam1 = (void *) regb;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_SUBSTRACT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_SUBSTRACT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    result = (Region_t) fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -3270,7 +3271,7 @@ void TGWin32::XorRegion(Region_t rega, Region_t regb, Region_t result)
    fThreadP.pParam = (void *) rega;
    fThreadP.pParam1 = (void *) regb;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_XOR, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGIONS_XOR, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    result = (Region_t) fThreadP.pRet;
    LeaveCriticalSection(flpCriticalSection);
@@ -3284,7 +3285,7 @@ Bool_t TGWin32::EmptyRegion(Region_t reg)
 
    fThreadP.pRet = NULL;
    fThreadP.pParam = (void *) reg;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_EMPTY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_EMPTY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Bool_t) fThreadP.iRet;
@@ -3300,7 +3301,7 @@ Bool_t TGWin32::PointInRegion(Int_t x, Int_t y, Region_t reg)
    fThreadP.x = x;
    fThreadP.y = y;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_POINT_IN, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_POINT_IN, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Bool_t) fThreadP.iRet;
@@ -3315,7 +3316,7 @@ Bool_t TGWin32::EqualRegion(Region_t rega, Region_t regb)
    fThreadP.pParam = (void *) rega;
    fThreadP.pParam1 = (void *) regb;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_EQUAL, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_EQUAL, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
    return (Bool_t) fThreadP.iRet;
@@ -3329,7 +3330,7 @@ void TGWin32::GetRegionBox(Region_t reg, Rectangle_t * rect)
 
    fThreadP.pRet = NULL;
    fThreadP.pParam = (void *) reg;
-   PostThreadMessage(fIDThread, WIN32_GDK_REGION_GET_CLIPBOX, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_REGION_GET_CLIPBOX, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    rect->fX = fThreadP.x;
    rect->fY = fThreadP.y;
@@ -3347,7 +3348,7 @@ char **TGWin32::ListFonts(char *fontname, Int_t /*max*/, Int_t &count)
 
     fThreadP.pRet = NULL;
     sprintf(fThreadP.sParam,"%s",fontname);
-    PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     fontlist = (char **)fThreadP.pRet;
     fontcount = fThreadP.iRet;
@@ -3363,7 +3364,7 @@ void TGWin32::FreeFontNames(char **fontlist)
 {
     EnterCriticalSection(flpCriticalSection);
     fThreadP.pParam = fontlist;
-    PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_FREE, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_FREE, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     LeaveCriticalSection(flpCriticalSection);
 }
@@ -3376,7 +3377,7 @@ Drawable_t TGWin32::CreateImage(UInt_t width, UInt_t height)
     fThreadP.w = width;
     fThreadP.h = height;
     fThreadP.pRet = NULL;
-    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_NEW, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_NEW, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     LeaveCriticalSection(flpCriticalSection);
     return (Drawable_t) fThreadP.pRet;
@@ -3448,7 +3449,7 @@ void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
 {
     EnterCriticalSection(flpCriticalSection);
     fThreadP.Drawable = (GdkDrawable *) id;
-    fThreadP.GC = (GdkGC *)gc; 
+    fThreadP.GC = (GdkGC *)gc;
     fThreadP.pParam = (GdkImage*)img;
     fThreadP.x = x;
     fThreadP.y = y;
@@ -3456,9 +3457,9 @@ void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
     fThreadP.y1 = dy;
     fThreadP.w = w;
     fThreadP.h = h;
-    PostThreadMessage(fIDThread, WIN32_GDK_DRAW_IMAGE, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_DRAW_IMAGE, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-    PostThreadMessage(fIDThread, WIN32_GDK_FLUSH, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_FLUSH, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     LeaveCriticalSection(flpCriticalSection);
 }
@@ -3468,7 +3469,7 @@ void TGWin32::DeleteImage(Drawable_t img)
 {
     EnterCriticalSection(flpCriticalSection);
     fThreadP.pParam = (void *)img;
-    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     LeaveCriticalSection(flpCriticalSection);
 }
@@ -3484,7 +3485,7 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    int wval, hval;
 
    fThreadP.Drawable = (GdkDrawable *) wind;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_GEOMETRY, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    xval  = fThreadP.x;
    yval  = fThreadP.y;
@@ -3503,7 +3504,7 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
    fThreadP.xattr.colormap = gdk_colormap_get_system();
 //   fThreadP.xattr.event_mask = 0;
-   mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP | GDK_WA_WMCLASS | 
+   mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP | GDK_WA_WMCLASS |
        GDK_WA_NOREDIR;
 
    fThreadP.xattr.window_type = GDK_WINDOW_CHILD;
@@ -3511,20 +3512,20 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    fThreadP.Drawable = (GdkDrawable *) wind;
    fThreadP.lParam = mask;
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_NEW, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GLWin = (GdkWindow *) fThreadP.pRet;
 
    fThreadP.Drawable = (GdkDrawable *) GLWin;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, 0, 0L);  
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   
-   fThreadP.Drawable = (GdkDrawable *) GLWin;
-   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_EVENTS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    fThreadP.Drawable = (GdkDrawable *) GLWin;
-   PostThreadMessage(fIDThread, WIN32_GDK_INIT_PIXEL_FORMAT, 0, 0L);  
+   PostThreadMessage(fIDThread, WIN32_GDK_WIN_SHOW, 0, 0L);
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+
+   fThreadP.Drawable = (GdkDrawable *) GLWin;
+   PostThreadMessage(fIDThread, WIN32_GDK_INIT_PIXEL_FORMAT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
    if(fThreadP.iRet == -1)
@@ -3540,7 +3541,7 @@ ULong_t TGWin32::GetWinDC(Window_t wind)
 {
     EnterCriticalSection(flpCriticalSection);
     fThreadP.Drawable = (GdkDrawable *) wind;
-    PostThreadMessage(fIDThread, WIN32_GDK_GET_WIN_DC, 0, 0L);  
+    PostThreadMessage(fIDThread, WIN32_GDK_GET_WIN_DC, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     LeaveCriticalSection(flpCriticalSection);
     return (ULong_t) fThreadP.pRet;
