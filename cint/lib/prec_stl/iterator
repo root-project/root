@@ -57,7 +57,7 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 #ifdef G__GNUC
-#pragma link off funciton iterator_category(const output_iterator&);
+#pragma link off function iterator_category(const output_iterator&);
 #endif
 
 template <class T, class Distance> 
@@ -644,7 +644,7 @@ template<class _Category,
 
 #if (G__GNUC>=3) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
 
-#if (G__GNUC_MINOR<1) && (G__GNUC<4)
+#if (G__GNUC_MINOR<1) && (G__GNUC==3)
 // for g++ 3.00
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator
@@ -776,7 +776,7 @@ operator+(__normal_iterator<_Iterator, _Container>::difference_type __n,
 { return __normal_iterator<_Iterator, _Container>(__i.base() + __n); }
 
 //#else // (G__GNUC_MINOR>=1) 
-#elif (G__GNUC_MINOR==1) 
+#elif (G__GNUC_MINOR==1) && (G__GNUC==3) 
 // for g++ 3.1
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator
