@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.10 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.11 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -64,7 +64,7 @@ private :
    Double_t             *fCldirChecked;     //! unit vector to current checked shape
    Double_t             *fPoint;            //![3] current point
    Double_t             *fDirection;        //![3] current direction
-   UInt_t                fExplodedView;     // exploded view mode
+   Int_t                 fExplodedView;     // exploded view mode
    Int_t                 fVisOption;        // global visualization option
    Int_t                 fVisLevel;         // maximum visualization depth
    Int_t                 fNsegments;        // number of segments to approximate circles
@@ -144,7 +144,7 @@ public:
    Bool_t                 IsInPhiRange() const;
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
-   void                   SetExplodedView(UInt_t iopt=0); // *MENU*
+   void                   SetExplodedView(Int_t iopt=0); // *MENU*
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 

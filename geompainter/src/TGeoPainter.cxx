@@ -1351,7 +1351,7 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
    }          
 }
 //______________________________________________________________________________
-void TGeoPainter::SetExplodedView(UInt_t ibomb)    
+void TGeoPainter::SetExplodedView(Int_t ibomb)    
 {
    // set type of exploding view
    if ((ibomb<0) || (ibomb>3)) {

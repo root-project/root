@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.20 2002/10/13 15:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.21 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2078,7 +2078,7 @@ TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, const char *mate
 }
 
 //-----------------------------------------------------------------------------
-void TGeoManager::SetExplodedView(UInt_t ibomb)
+void TGeoManager::SetExplodedView(Int_t ibomb)
 {
 // Set type of exploding view (see TGeoPainter::SetExplodedView())
    GetGeomPainter();

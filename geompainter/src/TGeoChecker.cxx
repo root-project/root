@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.7 2002/10/13 15:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.9 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -292,7 +292,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    //TGeoNode *node;
    //Bool_t is_sentering;
    TGeoNode *startnode, *endnode;
-   Bool_t vis1,vis2, is_entering, is_null;
+   Bool_t vis1,vis2, is_entering;
    Int_t i=0;
    Int_t ipoint;
    Int_t itot=0;
@@ -343,7 +343,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 //      if (vis2) printf(" end visible\n");
 //      else printf(" end invisible\n");
       is_entering = fGeom->IsEntering();
-      is_null = fGeom->IsNullStep();
+//      is_null = fGeom->IsNullStep();
 //      printf("endpoint : %g, %g, %g  step: %g\n", fGeom->GetCurrentPoint()[0],
 //         fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2], step);
 //      printf("propagating...\n");
@@ -385,7 +385,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          step = fGeom->GetStep();
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
          is_entering = fGeom->IsEntering();
-         is_null = fGeom->IsNullStep();
+//         is_null = fGeom->IsNullStep();
 //         printf(" new step : %g point: %g, %g, %g\n", step, fGeom->GetCurrentPoint()[0],
 //            fGeom->GetCurrentPoint()[1], fGeom->GetCurrentPoint()[2]);
 //         if (is_entering) printf(" entering\n");

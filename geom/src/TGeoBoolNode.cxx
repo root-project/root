@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.1 2002/09/28 06:39:05 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -405,23 +405,25 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       if (inside) {
          // propagate to outside of '-'
          d1 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
+	 safety = *safe;
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
          // now master outside '-'; check if inside '+'
          fLeftMat->MasterToLocal(&master[0], &local[0]);
          if (fLeft->Contains(&local[0])) return snxt;
-         safety = *safe;
          epsil = 1E-8;
       } 
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
+      safety = *safe;
       if (d2>1E20) return TGeoShape::kBig;
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
-      safety = *safe;
+      safety = TMath::Min(*safe, safety);
       if (d2<d1) {
          snxt += d2+epsil;
+	 *safe = safety;
          return snxt;
       }   
       // propagate to '-'
@@ -620,6 +622,7 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    // point is neither in left nor right shapes
    fRightMat->MasterToLocal(point, &local[0]);
    d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
+   *safe = TMath::Min(safety, *safe);
    snxt += TMath::Max(d1, d2);
    if (snxt>1E20) return snxt;
    for (i=0; i<3; i++) master[i] += (snxt+1E-8)*dir[i];

@@ -92,7 +92,7 @@ public:
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3, Double_t bombr=1.3);
-   virtual void       SetExplodedView(UInt_t iopt=0);
+   virtual void       SetExplodedView(Int_t iopt=0);
    virtual void       SetNsegments(Int_t nseg=20);
    virtual void       SetGeoManager(TGeoManager *geom) {fGeom=geom;}
    virtual void       SetVisLevel(Int_t level=3);

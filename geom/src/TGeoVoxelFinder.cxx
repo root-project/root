@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.8 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.9 2002/10/11 16:41:54 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -1573,7 +1573,7 @@ void TGeoCylVoxels::BuildVoxelLimits()
    Double_t xyz[6];
    const Double_t *translation;
    TGeoBBox *box = 0;
-   Double_t *origin;
+//   Double_t *origin;
    Double_t dx, dy, dz, x0, y0;
    Double_t orig[3];
    TGeoShape *shape = 0;
@@ -1585,7 +1585,7 @@ void TGeoCylVoxels::BuildVoxelLimits()
       shape = node->GetVolume()->GetShape();
 //      shape->InspectShape();
       box = (TGeoBBox*)shape;
-      origin = box->GetOrigin();
+//      origin = box->GetOrigin();
       matrix = node->GetMatrix();
       box->SetBoxPoints(&vert[0]);
       for (Int_t point=0; point<8; point++) {

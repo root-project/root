@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.7 2002/09/30 20:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.8 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -98,7 +98,7 @@ public:
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,
                                      Double_t bombr=1.3) = 0;
-   virtual void       SetExplodedView(UInt_t iopt=0) = 0;
+   virtual void       SetExplodedView(Int_t iopt=0) = 0;
    virtual void       SetNsegments(Int_t nseg=20) = 0;    
    static  TVirtualGeoPainter *GeoPainter();
    static void        SetPainter(const TVirtualGeoPainter *painter);
