@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.2 2000/06/13 11:04:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -331,28 +331,23 @@ void TLine::Streamer(TBuffer &R__b)
    // Stream an object of class TLine.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion();
-      TObject::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      if (R__v < 2) {
-         Float_t x1,y1,x2,y2;
-         R__b >> x1; fX1 = x1;
-         R__b >> y1; fY1 = y1;
-         R__b >> x2; fX2 = x2;
-         R__b >> y2; fY2 = y2;
-      } else {
-         R__b >> fX1;
-         R__b >> fY1;
-         R__b >> fX2;
-         R__b >> fY2;
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TLine::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
       }
-   } else {
-      R__b.WriteVersion(TLine::IsA());
+      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
-      R__b << fX1;
-      R__b << fY1;
-      R__b << fX2;
-      R__b << fY2;
+      Float_t x1,y1,x2,y2;
+      R__b >> x1; fX1 = x1;
+      R__b >> y1; fY1 = y1;
+      R__b >> x2; fX2 = x2;
+      R__b >> y2; fY2 = y2;
+      //====end of old versions
+      
+   } else {
+      TLine::Class()->WriteBuffer(R__b,this);
    }
 }

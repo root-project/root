@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.26 2000/10/10 11:11:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.27 2000/10/25 07:22:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2555,7 +2555,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
 //  Ex:  h->SetBit(TH1::kCanRebin);
 
    if (!TestBit(kCanRebin)) return;
-   char achoice = toupper(ax[0]);
+   char achoice = toupper(ax[0]); 
    TAxis *axis = &fXaxis;
    if (achoice == 'Y') axis = &fYaxis;
    if (achoice == 'Z') axis = &fZaxis;
@@ -2564,7 +2564,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    Int_t  nbinsx = fXaxis.GetNbins();
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
-   Axis_t range = cxmax-cxmin;
+   Axis_t range = cxmax-cxmin; 
 
     //recompute new axis limits by doubling the current range
    Int_t bin;
@@ -2896,9 +2896,22 @@ void TH1::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =====================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH1::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         
+         fXaxis.SetParent(this);
+         fYaxis.SetParent(this);
+         fZaxis.SetParent(this);
+         if (!gROOT->ReadingObject()) {
+            fDirectory = gDirectory;
+            if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
+         }
+         return;
+      }
+      //process old versions before automatic schema evolution
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -2942,31 +2955,9 @@ void TH1::Streamer(TBuffer &b)
          if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
       }
       b.CheckByteCount(R__s, R__c, TH1::IsA());
+      
    } else {
-      R__c = b.WriteVersion(TH1::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      TAttMarker::Streamer(b);
-      b << fNcells;
-      fXaxis.Streamer(b);
-      fYaxis.Streamer(b);
-      fZaxis.Streamer(b);
-      b << fBarOffset;
-      b << fBarWidth;
-      b << fEntries;
-      b << fTsumw;
-      b << fTsumw2;
-      b << fTsumwx;
-      b << fTsumwx2;
-      b << fMaximum;
-      b << fMinimum;
-      b << fNormFactor;
-      fContour.Streamer(b);
-      fSumw2.Streamer(b);
-      fOption.Streamer(b);
-      fFunctions->Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TH1::Class()->WriteBuffer(b,this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.19 2000/10/13 07:30:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.20 2000/10/25 15:54:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3049,9 +3049,15 @@ void TGraph::Streamer(TBuffer &b)
 {
    // Stream an object of class TGraph.
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TGraph::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         if (fHistogram) fHistogram->SetDirectory(0);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -3059,49 +3065,29 @@ void TGraph::Streamer(TBuffer &b)
       b >> fNpoints;
       fX = new Double_t[fNpoints];
       fY = new Double_t[fNpoints];
-      if (R__v < 2) {
-         Float_t *x = new Float_t[fNpoints];
-         Float_t *y = new Float_t[fNpoints];
-         b.ReadFastArray(x,fNpoints);
-         b.ReadFastArray(y,fNpoints);
-         for (Int_t i=0;i<fNpoints;i++) {
-            fX[i] = x[i];
-            fY[i] = y[i];
-         }
-         delete [] y;
-         delete [] x;
-      } else {
-         b.ReadFastArray(fX,fNpoints);
-         b.ReadFastArray(fY,fNpoints);
+      Float_t *x = new Float_t[fNpoints];
+      Float_t *y = new Float_t[fNpoints];
+      b.ReadFastArray(x,fNpoints);
+      b.ReadFastArray(y,fNpoints);
+      for (Int_t i=0;i<fNpoints;i++) {
+         fX[i] = x[i];
+         fY[i] = y[i];
       }
+      delete [] y;
+      delete [] x;
       b >> fFunctions;
       b >> fHistogram;
       if (fHistogram) fHistogram->SetDirectory(0);
-      if (R__v < 2) {
-         Float_t mi,ma;
-         b >> mi;
-         b >> ma;
-         fMinimum = mi;
-         fMaximum = ma;
-      } else {
-         b >> fMinimum;
-         b >> fMaximum;
-      }
+      Float_t mi,ma;
+      b >> mi;
+      b >> ma;
+      fMinimum = mi;
+      fMaximum = ma;
       b.CheckByteCount(R__s, R__c, TGraph::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TGraph::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      TAttMarker::Streamer(b);
-      b << fNpoints;
-      b.WriteFastArray(fX,fNpoints);
-      b.WriteFastArray(fY,fNpoints);
-      b << fFunctions;
-      b << (TObject *)fHistogram;
-      b << fMinimum;
-      b << fMaximum;
-      b.SetByteCount(R__c, kTRUE);
+      TGraph::Class()->WriteBuffer(b,this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.2 2000/09/08 07:36:57 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.3 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TNode.h"
 #include "TMaterial.h"
 #include "TBrowser.h"
+#include "TClass.h"
 
 TGeometry *gGeometry = 0;
 
@@ -519,20 +520,29 @@ void TGeometry::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   Int_t i;
-   TMaterial *onemat;
-   TRotMatrix *onematrix;
-   TShape *oneshape;
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
-      TNamed::Streamer(b);
-      fMaterials->Streamer(b);
-      fMatrices->Streamer(b);
-      fShapes->Streamer(b);
-
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TGeometry::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      } else {
+         //====process old versions before automatic schema evolution
+         TNamed::Streamer(b);
+         fMaterials->Streamer(b);
+         fMatrices->Streamer(b);
+         fShapes->Streamer(b);
+         fNodes->Streamer(b);
+         b >> fBomb;
+         b.CheckByteCount(R__s, R__c, TGeometry::IsA());
+         //====end of old versions
+      }
 //*-*- Build direct access pointers to individual materials,matrices and shapes
+      Int_t i;
+      TMaterial *onemat;
+      TRotMatrix *onematrix;
+      TShape *oneshape;
       Int_t nmat = fMaterials->GetSize();
       if (nmat) fMaterialPointer = new TMaterial* [nmat];
       TIter nextmat(fMaterials);
@@ -560,9 +570,6 @@ void TGeometry::Streamer(TBuffer &b)
          i++;
       }
 
-      fNodes->Streamer(b);
-      b >> fBomb;
-
 //*-*- If geometry already exists, delete old version
       TGeometry *oldgeom = (TGeometry*)gROOT->GetGeometry(GetName());
       delete oldgeom;
@@ -570,16 +577,8 @@ void TGeometry::Streamer(TBuffer &b)
       gROOT->GetListOfGeometries()->Add(this);
 
       fCurrentNode = (TNode*)GetListOfNodes()->First();
-      b.CheckByteCount(R__s, R__c, TGeometry::IsA());
    } else {
-      R__c = b.WriteVersion(TGeometry::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      fMaterials->Streamer(b);
-      fMatrices->Streamer(b);
-      fShapes->Streamer(b);
-      fNodes->Streamer(b);
-      b << fBomb;
-      b.SetByteCount(R__c, kTRUE);
+      TGeometry::Class()->WriteBuffer(b,this);
    }
 }
 

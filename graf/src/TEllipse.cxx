@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.2 2000/06/13 10:54:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -496,43 +496,29 @@ void TEllipse::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TEllipse.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      TAttFill::Streamer(R__b);
-      if (R__v < 2) {
-         Float_t x1,y1,r1,r2,phimin,phimax,theta;
-         R__b >> x1;     fX1 = x1;
-         R__b >> y1;     fY1 = y1;
-         R__b >> r1;     fR1 = r1;
-         R__b >> r2;     fR2 = r2;
-         R__b >> phimin; fPhimin = phimin;
-         R__b >> phimax; fPhimax = phimax;
-         R__b >> theta;  fTheta  = theta;
-      } else {
-         R__b >> fX1;
-         R__b >> fY1;
-         R__b >> fR1;
-         R__b >> fR2;
-         R__b >> fPhimin;
-         R__b >> fPhimax;
-         R__b >> fTheta;
+      if (R__v > 1) {
+         TEllipse::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
       }
-      R__b.CheckByteCount(R__s, R__c, TEllipse::IsA());
-   } else {
-      R__c = R__b.WriteVersion(TEllipse::IsA(), kTRUE);
+      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      R__b << fX1;
-      R__b << fY1;
-      R__b << fR1;
-      R__b << fR2;
-      R__b << fPhimin;
-      R__b << fPhimax;
-      R__b << fTheta;
-      R__b.SetByteCount(R__c, kTRUE);
+      Float_t x1,y1,r1,r2,phimin,phimax,theta;
+      R__b >> x1;     fX1 = x1;
+      R__b >> y1;     fY1 = y1;
+      R__b >> r1;     fR1 = r1;
+      R__b >> r2;     fR2 = r2;
+      R__b >> phimin; fPhimin = phimin;
+      R__b >> phimax; fPhimax = phimax;
+      R__b >> theta;  fTheta  = theta;
+      R__b.CheckByteCount(R__s, R__c, TEllipse::IsA());
+      //====end of old versions
+      
+   } else {
+      TEllipse::Class()->WriteBuffer(R__b,this);
    }
 }

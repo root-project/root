@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -262,9 +262,15 @@ void TParticle::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TParticle.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TParticle::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       R__b >> fPdgCode;
@@ -285,26 +291,9 @@ void TParticle::Streamer(TBuffer &R__b)
       R__b >> fPolarPhi;
       fParticlePDG = TDatabasePDG::Instance()->GetParticle(fPdgCode);
       R__b.CheckByteCount(R__s, R__c, TParticle::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TParticle::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      R__b << fPdgCode;
-      R__b << fStatusCode;
-      R__b.WriteArray(fMother, 2);
-      R__b.WriteArray(fDaughter, 2);
-      R__b << fWeight;
-      R__b << fCalcMass;
-      R__b << fPx;
-      R__b << fPy;
-      R__b << fPz;
-      R__b << fE;
-      R__b << fVx;
-      R__b << fVy;
-      R__b << fVz;
-      R__b << fVt;
-      R__b << fPolarTheta;
-      R__b << fPolarPhi;
-      R__b.SetByteCount(R__c, kTRUE);
+      TParticle::Class()->WriteBuffer(R__b,this);
    }
 }

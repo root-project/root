@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.4 2000/06/13 11:09:40 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.5 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -574,43 +574,29 @@ void TPave::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TPave.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TBox::Streamer(R__b);
-      if (R__v < 2) {
-         Float_t x1ndc,y1ndc,x2ndc,y2ndc,rad;
-         R__b >> x1ndc; fX1NDC = x1ndc;
-         R__b >> y1ndc; fY1NDC = y1ndc;
-         R__b >> x2ndc; fX2NDC = x2ndc;
-         R__b >> y2ndc; fY2NDC = y2ndc;
-         R__b >> fBorderSize;
-         R__b >> fInit;
-         R__b >> rad;   fCornerRadius = rad;
-      } else {
-         R__b >> fX1NDC;
-         R__b >> fY1NDC;
-         R__b >> fX2NDC;
-         R__b >> fY2NDC;
-         R__b >> fBorderSize;
-         R__b >> fInit;
-         R__b >> fCornerRadius;
+      if (R__v > 1) {
+         TPave::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
       }
+      //====process old versions before automatic schema evolution
+      TBox::Streamer(R__b);
+      Float_t x1ndc,y1ndc,x2ndc,y2ndc,rad;
+      R__b >> x1ndc; fX1NDC = x1ndc;
+      R__b >> y1ndc; fY1NDC = y1ndc;
+      R__b >> x2ndc; fX2NDC = x2ndc;
+      R__b >> y2ndc; fY2NDC = y2ndc;
+      R__b >> fBorderSize;
+      R__b >> fInit;
+      R__b >> rad;   fCornerRadius = rad;
       fOption.Streamer(R__b);
       fName.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPave::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TPave::IsA(), kTRUE);
-      TBox::Streamer(R__b);
-      R__b << fX1NDC;
-      R__b << fY1NDC;
-      R__b << fX2NDC;
-      R__b << fY2NDC;
-      R__b << fBorderSize;
-      R__b << fInit;
-      R__b << fCornerRadius;
-      fOption.Streamer(R__b);
-      fName.Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TPave::Class()->WriteBuffer(R__b,this);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.2 2000/08/18 09:33:00 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -302,8 +302,16 @@ void TEventList::Streamer(TBuffer &b)
 {
    // Stream an object of class TEventList.
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TEventList::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         fDirectory = gDirectory;
+         gDirectory->Append(this);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       b >> fN;
@@ -316,16 +324,10 @@ void TEventList::Streamer(TBuffer &b)
       fDirectory = gDirectory;
       gDirectory->Append(this);
       b.CheckByteCount(R__s, R__c, TEventList::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TEventList::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      b << fN;
-      b << fSize;
-      b << fDelta;
-      if (fN) {
-         b.WriteFastArray(fList,fN);
-      }
-      b.SetByteCount(R__c, kTRUE);
+      TEventList::Class()->WriteBuffer(b,this);
    }
 }
 

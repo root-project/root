@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.5 2000/07/11 13:58:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.6 2000/08/15 08:24:10 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -876,9 +876,14 @@ void TProfile::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TProfile.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TProfile::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TH1D::Streamer(R__b);
       fBinEntries.Streamer(R__b);
       R__b >> (Int_t&)fErrorMode;
@@ -891,13 +896,9 @@ void TProfile::Streamer(TBuffer &R__b)
          R__b >> fYmax;
       }
       R__b.CheckByteCount(R__s, R__c, TProfile::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TProfile::IsA(), kTRUE);
-      TH1D::Streamer(R__b);
-      fBinEntries.Streamer(R__b);
-      R__b << (Int_t)fErrorMode;
-      R__b << fYmin;
-      R__b << fYmax;
-      R__b.SetByteCount(R__c, kTRUE);
+      TProfile::Class()->WriteBuffer(R__b,this);
    }
 }

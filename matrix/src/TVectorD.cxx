@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.1 2000/06/16 15:15:47 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.2 2000/10/10 11:13:58 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 
 #include "TMatrixD.h"
 #include "TROOT.h"
+#include "TClass.h"
 
 
 
@@ -750,19 +751,21 @@ void TVectorD::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVectorD.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TVectorD::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         fNmem = fNrows;
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       R__b >> fRowLwb;
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
    } else {
-      R__c = R__b.WriteVersion(TVectorD::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      R__b << fRowLwb;
-      R__b.WriteArray(fElements, fNrows);
-      R__b.SetByteCount(R__c, kTRUE);
+      TVectorD::Class()->WriteBuffer(R__b,this);
    }
 }
 

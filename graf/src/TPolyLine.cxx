@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.2 2000/06/13 11:16:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPolyLine.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -462,39 +462,33 @@ void TPolyLine::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TPolyLine::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TObject::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       b >> fN;
       fX = new Double_t[fN];
       fY = new Double_t[fN];
-      if (R__v < 2) {
-         Float_t *x = new Float_t[fN];
-         Float_t *y = new Float_t[fN];
-         b.ReadFastArray(x,fN);
-         b.ReadFastArray(y,fN);
-         for (Int_t i=0;i<fN;i++) {
-            fX[i] = x[i];
-            fY[i] = y[i];
-         }
-      } else {
-         b.ReadFastArray(fX,fN);
-         b.ReadFastArray(fY,fN);
+      Float_t *x = new Float_t[fN];
+      Float_t *y = new Float_t[fN];
+      b.ReadFastArray(x,fN);
+      b.ReadFastArray(y,fN);
+      for (Int_t i=0;i<fN;i++) {
+         fX[i] = x[i];
+         fY[i] = y[i];
       }
       fOption.Streamer(b);
       b.CheckByteCount(R__s, R__c, TPolyLine::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TPolyLine::IsA(), kTRUE);
-      TObject::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      b << fN;
-      b.WriteFastArray(fX,fN);
-      b.WriteFastArray(fY,fN);
-      fOption.Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TPolyLine::Class()->WriteBuffer(b,this);
    }
 }

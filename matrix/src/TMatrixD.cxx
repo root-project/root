@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.1 2000/06/16 15:15:47 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.2 2000/10/10 13:03:27 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -156,6 +156,7 @@
 
 #include "TMatrixD.h"
 #include "TROOT.h"
+#include "TClass.h"
 
 
 
@@ -1288,8 +1289,25 @@ void TMatrixD::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixD.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TMatrixD::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         if (fNcols == 1) {
+            fIndex = &fElements;
+         } else {
+            fIndex = new Double_t*[fNcols];
+            if (fIndex)
+               memset(fIndex, 0, fNcols*sizeof(Double_t*));
+            Int_t i;
+            Double_t *col_p;
+            for (i = 0, col_p = &fElements[0]; i < fNcols; i++, col_p += fNrows)
+               fIndex[i] = col_p;
+         }
+         return;
+      }
+      //====process old versions before automatic schema evolution
       R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
       R__b >> fNrows;
@@ -1309,15 +1327,10 @@ void TMatrixD::Streamer(TBuffer &R__b)
             fIndex[i] = col_p;
       }
       R__b.CheckByteCount(R__s, R__c, TMatrixD::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TMatrixD::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      R__b << fNrows;
-      R__b << fNcols;
-      R__b << fRowLwb;
-      R__b << fColLwb;
-      R__b.WriteArray(fElements, fNelems);
-      R__b.SetByteCount(R__c, kTRUE);
+      TMatrixD::Class()->WriteBuffer(R__b,this);
    }
 }
 

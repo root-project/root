@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.9 2000/10/12 13:25:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.10 2000/10/13 20:32:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -652,9 +652,14 @@ void TAxis::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TAxis.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 5) {
+         TAxis::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(R__b);
       TAttAxis::Streamer(R__b);
       R__b >> fNbins;
@@ -688,19 +693,10 @@ void TAxis::Streamer(TBuffer &R__b)
          SetTimeFormat();
       }
       R__b.CheckByteCount(R__s, R__c, TAxis::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TAxis::IsA(), kTRUE);
-      TNamed::Streamer(R__b);
-      TAttAxis::Streamer(R__b);
-      R__b << fNbins;
-      R__b << fXmin;
-      R__b << fXmax;
-      fXbins.Streamer(R__b);
-      R__b << fFirst;
-      R__b << fLast;
-      R__b << fTimeDisplay;
-      fTimeFormat.Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TAxis::Class()->WriteBuffer(R__b,this);
    }
 }
 

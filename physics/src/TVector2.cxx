@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat   12/02/99
 //------------------------------------------------------------------------------
 // Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
@@ -13,6 +13,7 @@
 //------------------------------------------------------------------------------
 
 #include "TVector2.h"
+#include "TClass.h"
 
 ClassImp(TVector2)
 
@@ -54,17 +55,21 @@ void TVector2::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVector2.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TVector2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) TObject::Streamer(R__b);
       R__b >> fX;
       R__b >> fY;
       R__b.CheckByteCount(R__s, R__c, TVector2::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TVector2::IsA(), kTRUE);
-      R__b << fX;
-      R__b << fY;
-      R__b.SetByteCount(R__c, kTRUE);
+      TVector2::Class()->WriteBuffer(R__b,this);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -448,9 +448,14 @@ void TPCON::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TPCON::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TShape::Streamer(b);
       b >> fPhi1;
       b >> fDphi1;
@@ -463,17 +468,10 @@ void TPCON::Streamer(TBuffer &b)
       b.ReadArray(fDz);
       b >> fNdiv;
       b.CheckByteCount(R__s, R__c, TPCON::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TPCON::IsA(), kTRUE);
-      TShape::Streamer(b);
-      b << fPhi1;
-      b << fDphi1;
-      b << fNz;
-      b.WriteArray(fRmin, fNz);
-      b.WriteArray(fRmax, fNz);
-      b.WriteArray(fDz, fNz);
-      b << fNdiv;
-      b.SetByteCount(R__c, kTRUE);
+      TPCON::Class()->WriteBuffer(b,this);
    }
 }
 

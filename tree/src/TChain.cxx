@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.9 2000/08/15 08:56:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.10 2000/10/09 13:56:40 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -682,9 +682,14 @@ void TChain::Streamer(TBuffer &b)
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TChain::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TTree::Streamer(b);
       b >> fTreeOffsetLen;
       b >> fNtrees;
@@ -695,14 +700,9 @@ void TChain::Streamer(TBuffer &b)
          b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
       }
       b.CheckByteCount(R__s, R__c, TChain::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TChain::IsA(), kTRUE);
-      TTree::Streamer(b);
-      b << fTreeOffsetLen;
-      b << fNtrees;
-      fFiles->Streamer(b);
-      fStatus->Streamer(b);
-      b.WriteFastArray(fTreeOffset,fTreeOffsetLen);
-      b.SetByteCount(R__c, kTRUE);
+      TChain::Class()->WriteBuffer(b,this);
    }
 }

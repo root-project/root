@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.24 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.25 2000/10/05 06:29:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2063,10 +2063,19 @@ void TTree::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       gTree = this;
-      Version_t v = b.ReadVersion(&R__s, &R__c);
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 4) {
+         TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         if (fEstimate <= 10000) fEstimate = 1000000;
+         fSavedBytes = fTotBytes;
+         fDirectory = gDirectory;
+         gDirectory->Append(this);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -2085,30 +2094,14 @@ void TTree::Streamer(TBuffer &b)
       fSavedBytes = fTotBytes;
       fDirectory = gDirectory;
       gDirectory->Append(this);
-      if (v > 1) fIndexValues.Streamer(b);
-      if (v > 2) fIndex.Streamer(b);
-      if (v > 3) fStreamerInfoList->Streamer(b);
+      if (R__v > 1) fIndexValues.Streamer(b);
+      if (R__v > 2) fIndex.Streamer(b);
+      if (R__v > 3) fStreamerInfoList->Streamer(b);
       b.CheckByteCount(R__s, R__c, TTree::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TTree::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      TAttMarker::Streamer(b);
-      b << fScanField;
-      b << fMaxEntryLoop;
-      b << fMaxVirtualSize;
-      b << fEntries;
-      b << fTotBytes;
-      b << fZipBytes;
-      b << fAutoSave;
-      b << fEstimate;
-      fBranches.Streamer(b);
-      fLeaves.Streamer(b);
-      fIndexValues.Streamer(b);
-      fIndex.Streamer(b);
-      fStreamerInfoList->Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TTree::Class()->WriteBuffer(b,this);
    }
 }
 

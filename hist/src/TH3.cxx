@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.5 2000/06/29 10:07:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.6 2000/07/12 07:06:18 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1024,17 +1024,21 @@ void TH3::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TH1::Streamer(R__b);
       TAtt3D::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TH3::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH3::IsA(), kTRUE);
-      TH1::Streamer(R__b);
-      TAtt3D::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH3::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1161,10 +1165,15 @@ void TH3C::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3C.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       if (gFile && gFile->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH3C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1176,11 +1185,10 @@ void TH3C::Streamer(TBuffer &R__b)
          TArrayC::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH3C::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH3C::IsA(), kTRUE);
-      TH3::Streamer(R__b);
-      TArrayC::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH3C::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1357,10 +1365,15 @@ void TH3S::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3S.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       if (gFile && gFile->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH3S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1372,11 +1385,10 @@ void TH3S::Streamer(TBuffer &R__b)
          TArrayS::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH3S::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH3S::IsA(), kTRUE);
-      TH3::Streamer(R__b);
-      TArrayS::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH3S::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1532,10 +1544,15 @@ void TH3F::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3F.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       if (gFile && gFile->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH3F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1547,11 +1564,10 @@ void TH3F::Streamer(TBuffer &R__b)
          TArrayF::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH3F::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH3F::IsA(), kTRUE);
-      TH3::Streamer(R__b);
-      TArrayF::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH3F::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1707,10 +1723,15 @@ void TH3D::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3D.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       if (gFile && gFile->GetVersion() < 22300) return;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH3D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1722,11 +1743,10 @@ void TH3D::Streamer(TBuffer &R__b)
          TArrayD::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH3D::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH3D::IsA(), kTRUE);
-      TH3::Streamer(R__b);
-      TArrayD::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH3D::Class()->WriteBuffer(R__b,this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.6 2000/08/18 06:22:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.7 2000/08/28 17:24:42 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1559,9 +1559,14 @@ void TF1::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v > 4) {
+         TF1::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TFormula::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -1608,29 +1613,15 @@ void TF1::Streamer(TBuffer &b)
          } else fSave = 0;
       }
       b.CheckByteCount(R__s, R__c, TF1::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TF1::IsA(), kTRUE);
-      TFormula::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      TAttMarker::Streamer(b);
-      b << fXmin;
-      b << fXmax;
-      b << fNpx;
-      b << fType;
-      b << fChisquare;
-      b.WriteArray(fParErrors,fNpar);
-      b.WriteArray(fParMin,fNpar);
-      b.WriteArray(fParMax,fNpar);
-      b << fNpfits;
-      b << fMinimum;
-      b << fMaximum;
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(0,0);}
-      b << fNsave;
-      if (fNsave > 0) b.WriteArray(fSave, fNsave+10);
+      
+      TF1::Class()->WriteBuffer(b,this);
+      
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
-      b.SetByteCount(R__c, kTRUE);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 
 #include "TVector.h"
 #include "TMatrix.h"
+#include "TClass.h"
 
 
 ClassImp(TLazyMatrix)
@@ -114,22 +115,13 @@ void TMatrixRow::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixRow.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      R__b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(R__b);
-      R__b >> (TMatrix*&)fMatrix;
-      R__b >> fRowInd;
-      R__b >> fInc;
-      R__b.CheckByteCount(R__s, R__c, TMatrixRow::IsA());
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TMatrixRow::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
       fPtr = &(fMatrix->fIndex[0][fRowInd]);
    } else {
-      R__c = R__b.WriteVersion(TMatrixRow::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      R__b << fMatrix;
-      R__b << fRowInd;
-      R__b << fInc;
-      R__b.SetByteCount(R__c, kTRUE);
+      TMatrix::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -210,20 +202,13 @@ void TMatrixColumn::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixColumn.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      R__b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(R__b);
-      R__b >> (TMatrix*&)fMatrix;
-      R__b >> fColInd;
-      R__b.CheckByteCount(R__s, R__c, TMatrixColumn::IsA());
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TMatrixColumn::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
       fPtr = &(fMatrix->fIndex[fColInd][0]);
    } else {
-      R__c = R__b.WriteVersion(TMatrixColumn::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      R__b << fMatrix;
-      R__b << fColInd;
-      R__b.SetByteCount(R__c, kTRUE);
+      TMatrixColumn::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -307,22 +292,13 @@ void TMatrixDiag::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TMatrixDiag.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      R__b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(R__b);
-      R__b >> (TMatrix*&)fMatrix;
-      R__b >> fInc;
-      R__b >> fNdiag;
-      R__b.CheckByteCount(R__s, R__c, TMatrixDiag::IsA());
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TMatrixDiag::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
       fPtr = &(fMatrix->fElements[0]);
    } else {
-      R__c = R__b.WriteVersion(TMatrixDiag::IsA(), kTRUE);
-      TObject::Streamer(R__b);
-      R__b << fMatrix;
-      R__b << fInc;
-      R__b << fNdiag;
-      R__b.SetByteCount(R__c, kTRUE);
+      TMatrixDiag::Class()->WriteBuffer(R__b,this);
    }
 }
 

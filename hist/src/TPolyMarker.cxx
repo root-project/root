@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.2 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -194,30 +194,30 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
 }
 
 //_______________________________________________________________________
-void TPolyMarker::Streamer(TBuffer &b)
+void TPolyMarker::Streamer(TBuffer &R__b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
-   if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(b);
-      TAttMarker::Streamer(b);
-      b >> fN;
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TPolyMarker::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TObject::Streamer(R__b);
+      TAttMarker::Streamer(R__b);
+      R__b >> fN;
       fX = new Float_t[fN];
       fY = new Float_t[fN];
-      b.ReadFastArray(fX,fN);
-      b.ReadFastArray(fY,fN);
-      fOption.Streamer(b);
-      b.CheckByteCount(R__s, R__c, TPolyMarker::IsA());
+      R__b.ReadFastArray(fX,fN);
+      R__b.ReadFastArray(fY,fN);
+      fOption.Streamer(R__b);
+      R__b.CheckByteCount(R__s, R__c, TPolyMarker::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TPolyMarker::IsA(), kTRUE);
-      TObject::Streamer(b);
-      TAttMarker::Streamer(b);
-      b << fN;
-      b.WriteFastArray(fX,fN);
-      b.WriteFastArray(fY,fN);
-      fOption.Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TPolyMarker::Class()->WriteBuffer(R__b,this);
    }
 }

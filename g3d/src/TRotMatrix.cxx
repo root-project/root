@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TRotMatrix.cxx,v 1.2 2000/11/06 07:17:01 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TGeometry.h"
 #include "TRotMatrix.h"
+#include "TClass.h"
 
 ClassImp(TRotMatrix)
 
@@ -230,4 +231,32 @@ void TRotMatrix::SetReflection()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    ResetBit(kReflection);
    if (Determinant() < 0) { fType=1; SetBit(kReflection);}
+}
+
+//______________________________________________________________________________
+void TRotMatrix::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TRotMatrix.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TRotMatrix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TNamed::Streamer(R__b);
+      R__b >> fNumber;
+      R__b >> fType;
+      R__b >> fTheta;
+      R__b >> fPhi;
+      R__b >> fPsi;
+      R__b.ReadStaticArray(fMatrix);
+      R__b.CheckByteCount(R__s, R__c, TRotMatrix::IsA());
+      //====end of old versions
+      
+   } else {
+      TRotMatrix::Class()->WriteBuffer(R__b,this);
+   }
 }

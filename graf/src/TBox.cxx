@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.2 2000/06/13 10:45:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -602,34 +602,26 @@ void TBox::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TBox.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      TObject::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      TAttFill::Streamer(R__b);
-      if (R__v < 2) {
-         Float_t x1,y1,x2,y2;
-         R__b >> x1; fX1 = x1;
-         R__b >> y1; fY1 = y1;
-         R__b >> x2; fX2 = x2;
-         R__b >> y2; fY2 = y2;
-      } else {
-         R__b >> fX1;
-         R__b >> fY1;
-         R__b >> fX2;
-         R__b >> fY2;
+      if (R__v > 1) {
+         TBox::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
       }
-      R__b.CheckByteCount(R__s, R__c, TBox::IsA());
-   } else {
-      R__c = R__b.WriteVersion(TBox::IsA(), kTRUE);
+      //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      R__b << fX1;
-      R__b << fY1;
-      R__b << fX2;
-      R__b << fY2;
-      R__b.SetByteCount(R__c, kTRUE);
+      Float_t x1,y1,x2,y2;
+      R__b >> x1; fX1 = x1;
+      R__b >> y1; fY1 = y1;
+      R__b >> x2; fX2 = x2;
+      R__b >> y2; fY2 = y2;
+      R__b.CheckByteCount(R__s, R__c, TBox::IsA());
+      //====end of old versions
+      
+   } else {
+      TBox::Class()->WriteBuffer(R__b,this);
    }
 }

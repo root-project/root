@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.6 2000/08/11 20:10:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.7 2000/11/10 11:36:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1860,9 +1860,14 @@ void TFormula::Streamer(TBuffer &b)
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
    Int_t i;
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v > 3) {
+         TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       b >> fNdim;
       b >> fNumber;
@@ -1882,18 +1887,9 @@ void TFormula::Streamer(TBuffer &b)
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
       gROOT->GetListOfFunctions()->Add(this);
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TFormula::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      b << fNdim;
-      b << fNumber;
-      b << fNval;
-      b << fNstring;
-      b.WriteArray(fParams,fNpar);
-      b.WriteArray(fOper,fNoper);
-      b.WriteArray(fConst,fNconst);
-      for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
-      for (i=0;i<fNpar;i++)  fNames[i].Streamer(b);
-      b.SetByteCount(R__c, kTRUE);
+      TFormula::Class()->WriteBuffer(b,this);
    }
 }

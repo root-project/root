@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.3 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -183,6 +183,7 @@ TNode::~TNode()
 //*-*-*-*-*-*-*-*-*-*-*Node default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
+   if (!gGeometry) return;
    if (fParent)     fParent->GetListOfNodes()->Remove(this);
    else    gGeometry->GetListOfNodes()->Remove(this);
    if (fNodes) fNodes->Delete();
@@ -250,7 +251,7 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
    if (!view) return big;
 
 //*-*- Update translation vector and rotation matrix for new level
-   if (fMatrix) {
+   if (fMatrix && gGeometry) {
       gGeometry->UpdateTempMatrix(fX,fY,fZ,fMatrix->GetMatrix(),fMatrix->IsReflection());
    }
 //*-*- Paint Referenced shape
@@ -264,7 +265,8 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
       }
    }
    if ( TestBit(kSonsInvisible) ) return dist;
-
+   if (!gGeometry) return dist;
+   
 //*-*- Loop on all sons
    Int_t nsons = 0;
    if (fNodes) nsons = fNodes->GetSize();
@@ -606,7 +608,8 @@ void TNode::Paint(Option_t *option)
 
    TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
 
-   Int_t level = gGeometry->GeomLevel();
+   Int_t level = 0;
+   if (gGeometry) level = gGeometry->GeomLevel();
 // restrict the levels for "range" option
    if (level > 3 && option && strlen(option) && strcmp(option,"range") == 0) return;
 //*-*- Update translation vector and rotation matrix for new level
@@ -776,9 +779,14 @@ void TNode::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      Version_t v = b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TNode::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
@@ -790,24 +798,13 @@ void TNode::Streamer(TBuffer &b)
       b >> fParent;
       b >> fNodes;
       fOption.Streamer(b);
-      if (v > 1) b >> fVisibility;
+      if (R__v > 1) b >> fVisibility;
       else  fVisibility = fShape->GetVisibility();
       b.CheckByteCount(R__s, R__c, TNode::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TNode::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      TAttLine::Streamer(b);
-      TAttFill::Streamer(b);
-      b << fX;
-      b << fY;
-      b << fZ;
-      b << fMatrix;
-      b << fShape;
-      b << fParent;
-      b << fNodes;
-      fOption.Streamer(b);
-      b << fVisibility;
-      b.SetByteCount(R__c, kTRUE);
+      TNode::Class()->WriteBuffer(b,this);
    }
 }
 

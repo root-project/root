@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.2 2000/06/13 11:12:13 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -17,6 +17,7 @@
 #include "TPaveStats.h"
 #include "TStyle.h"
 #include "TFile.h"
+#include "TClass.h"
 
 ClassImp(TPaveStats)
 
@@ -109,9 +110,14 @@ void TPaveStats::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TPaveStats.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TPaveStats::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TPaveText::Streamer(R__b);
       R__b >> fOptFit;
       R__b >> fOptStat;
@@ -123,13 +129,9 @@ void TPaveStats::Streamer(TBuffer &R__b)
          SetStatFormat();
       }
       R__b.CheckByteCount(R__s, R__c, TPaveStats::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TPaveStats::IsA(), kTRUE);
-      TPaveText::Streamer(R__b);
-      R__b << fOptFit;
-      R__b << fOptStat;
-      fFitFormat.Streamer(R__b);
-      fStatFormat.Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TPaveStats::Class()->WriteBuffer(R__b,this);
    }
 }

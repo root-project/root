@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.3 2000/06/13 11:13:27 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.4 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -844,9 +844,14 @@ void TPaveText::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TPaveText.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TPaveText::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TPave::Streamer(R__b);
       TAttText::Streamer(R__b);
       if (R__v > 1) fLabel.Streamer(R__b);
@@ -854,14 +859,9 @@ void TPaveText::Streamer(TBuffer &R__b)
       R__b >> fMargin;
       R__b >> fLines;
       R__b.CheckByteCount(R__s, R__c, TPaveText::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TPaveText::IsA(), kTRUE);
-      TPave::Streamer(R__b);
-      TAttText::Streamer(R__b);
-      fLabel.Streamer(R__b);
-      R__b << fLongest;
-      R__b << fMargin;
-      R__b << fLines;
-      R__b.SetByteCount(R__c, kTRUE);
+      TPaveText::Class()->WriteBuffer(R__b,this);
    }
 }

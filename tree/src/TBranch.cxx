@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.7 2000/09/11 09:59:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.8 2000/10/09 13:55:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -888,12 +888,25 @@ void TBranch::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
+      TBranch *branchSave = gBranch;
       gBranch = this;
       fTree = gTree;
+      fAddress = 0;
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
+      if (v > 5) {
+         TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
+         
+         gBranch = branchSave;
+         fDirectory = gDirectory;
+         fNleaves = fLeaves.GetEntriesFast();
+         if (fFileName.Length() != 0) fDirectory = 0;
+         gROOT->SetReadingObject(kFALSE);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;
@@ -905,7 +918,6 @@ void TBranch::Streamer(TBuffer &b)
       b >> fTotBytes;
       b >> fZipBytes;
       b >> fOffset;
-      fAddress = 0;
       fBranches.Streamer(b);
       gBranch = this;  // must be set again, was changed in previous statement
       fLeaves.Streamer(b);
@@ -936,37 +948,20 @@ void TBranch::Streamer(TBuffer &b)
       if (v < 4) SetAutoDelete(kTRUE);
       gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TBranch::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      b << fCompress;
-      b << fBasketSize;
-      b << fEntryOffsetLen;
-      b << fMaxBaskets;
-      b << fWriteBasket;
-      b << fEntryNumber;
-      b << fEntries;
-      b << fTotBytes;
-      b << fZipBytes;
-      b << fOffset;
-      fBranches.Streamer(b);
-      fLeaves.Streamer(b);
-      fBaskets.Streamer(b);
-      b.WriteArray(fBasketEntry,fMaxBaskets);
-      b.WriteArray(fBasketBytes,fMaxBaskets);
-      b.WriteArray(fBasketSeek, fMaxBaskets);
-      fFileName.Streamer(b);
+      TBranch::Class()->WriteBuffer(b,this);
 
          // if branch is in a separate file save this branch
          // as an independent key
       if (fDirectory && fDirectory != fTree->GetDirectory()) {
          TDirectory *cursav = gDirectory;
          fDirectory->cd();
-         fDirectory = 0;  // to avoid recusive calls
+         fDirectory = 0;  // to avoid recursive calls
          Write();
          fDirectory = gDirectory;
          cursav->cd();
       }
-      b.SetByteCount(R__c, kTRUE);
    }
 }

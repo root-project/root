@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -481,9 +481,15 @@ void TSPHE::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      Version_t v = b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TSPHE::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         SetNumberOfDivisions (fNdiv);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TShape::Streamer(b);
       b >> fRmin;    // minimum radius
       b >> fRmax;    // maximum radius
@@ -493,27 +499,17 @@ void TSPHE::Streamer(TBuffer &b)
       b >> fPhimax;  // maximum phi
       Int_t tNdiv;   // XXX added by RvdE XXX (fNdiv is set by SetNumberOfDivisions)
       b >> tNdiv;
-      if (v > 1) {
+      if (R__v > 1) {
         b >> faX;
         b >> faY;
         b >> faZ;
       }
       SetNumberOfDivisions (tNdiv); // XXX added by RvdE
       b.CheckByteCount(R__s, R__c, TSPHE::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TSPHE::IsA(), kTRUE);
-      TShape::Streamer(b);
-      b << fRmin;    // minimum radius
-      b << fRmax;    // maximum radius
-      b << fThemin;  // minimum theta
-      b << fThemax;  // maximum theta
-      b << fPhimin;  // minimum phi
-      b << fPhimax;  // maximum phi
-      b << fNdiv;
-      b << faX;
-      b << faY;
-      b << faZ;
-      b.SetByteCount(R__c, kTRUE);
+      TSPHE::Class()->WriteBuffer(b,this);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.2 2000/06/13 10:36:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.3 2000/08/15 08:51:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -780,9 +780,14 @@ void TProfile2D::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TProfile2D.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TProfile2D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TH2D::Streamer(R__b);
       fBinEntries.Streamer(R__b);
       R__b >> (Int_t&)fErrorMode;
@@ -795,13 +800,9 @@ void TProfile2D::Streamer(TBuffer &R__b)
          R__b >> fZmax;
       }
       R__b.CheckByteCount(R__s, R__c, TProfile2D::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TProfile2D::IsA(), kTRUE);
-      TH2D::Streamer(R__b);
-      fBinEntries.Streamer(R__b);
-      R__b << (Int_t)fErrorMode;
-      R__b << fZmin;
-      R__b << fZmax;
-      R__b.SetByteCount(R__c, kTRUE);
+      TProfile2D::Class()->WriteBuffer(R__b,this);
    }
 }

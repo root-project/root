@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.4 2000/09/05 09:21:23 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -475,22 +475,21 @@ void TText::Streamer(TBuffer &R__b)
    // Stream an object of class TText.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion();
-      TNamed::Streamer(R__b);
-      TAttText::Streamer(R__b);
-      if (R__v < 2) {
-         Float_t x,y;
-         R__b >> x; fX = x;
-         R__b >> y; fY = y;
-      } else {
-         R__b >> fX;
-         R__b >> fY;
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TText::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
       }
-   } else {
-      R__b.WriteVersion(TText::IsA());
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(R__b);
       TAttText::Streamer(R__b);
-      R__b << fX;
-      R__b << fY;
+      Float_t x,y;
+      R__b >> x; fX = x;
+      R__b >> y; fY = y;
+      //====end of old versions
+      
+   } else {
+      TText::Class()->WriteBuffer(R__b,this);
    }
 }

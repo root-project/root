@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.2 2000/06/13 10:37:48 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -516,10 +516,15 @@ void TF2::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TF2.
 
-   Int_t nlevels;
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 3) {
+         TF2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      Int_t nlevels;
       TF1::Streamer(R__b);
       if (R__v < 3) {
          Float_t ymin,ymax;
@@ -541,14 +546,9 @@ void TF2::Streamer(TBuffer &R__b)
          fContour.Streamer(R__b);
       }
       R__b.CheckByteCount(R__s, R__c, TF2::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TF2::IsA(), kTRUE);
-      TF1::Streamer(R__b);
-      R__b << fYmin;
-      R__b << fYmax;
-      R__b << fNpy;
-      R__b << fContour.fN; // must also save fN for backward compatibility
-      fContour.Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TF2::Class()->WriteBuffer(R__b,this);
    }
 }

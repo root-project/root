@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.9 2000/07/12 07:06:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.10 2000/10/10 13:01:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1084,19 +1084,22 @@ void TH2::Streamer(TBuffer &R__b)
    // Stream an object of class TH2.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH2::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TH1::Streamer(R__b);
       R__b >> fScalefactor;
       R__b >> fTsumwy;
       R__b >> fTsumwy2;
       R__b >> fTsumwxy;
+      //====end of old versions
+      
    } else {
-      R__b.WriteVersion(TH2::IsA());
-      TH1::Streamer(R__b);
-      R__b << fScalefactor;
-      R__b << fTsumwy;
-      R__b << fTsumwy2;
-      R__b << fTsumwxy;
+      TH2::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1224,9 +1227,14 @@ void TH2C::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2C.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH2C::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1241,11 +1249,10 @@ void TH2C::Streamer(TBuffer &R__b)
          TArrayC::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH2C::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH2C::IsA(), kTRUE);
-      TH2::Streamer(R__b);
-      TArrayC::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH2C::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1427,9 +1434,14 @@ void TH2S::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2S.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH2S::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1444,11 +1456,10 @@ void TH2S::Streamer(TBuffer &R__b)
          TArrayS::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH2S::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH2S::IsA(), kTRUE);
-      TH2::Streamer(R__b);
-      TArrayS::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH2S::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1622,9 +1633,14 @@ void TH2F::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2F.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH2F::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1639,11 +1655,10 @@ void TH2F::Streamer(TBuffer &R__b)
          TArrayF::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH2F::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH2F::IsA(), kTRUE);
-      TH2::Streamer(R__b);
-      TArrayF::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH2F::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -1825,9 +1840,14 @@ void TH2D::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2D.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TH2D::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       if (R__v < 2) {
          R__b.ReadVersion();
          TH1::Streamer(R__b);
@@ -1842,11 +1862,10 @@ void TH2D::Streamer(TBuffer &R__b)
          TArrayD::Streamer(R__b);
          R__b.CheckByteCount(R__s, R__c, TH2D::IsA());
       }
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TH2D::IsA(), kTRUE);
-      TH2::Streamer(R__b);
-      TArrayD::Streamer(R__b);
-      R__b.SetByteCount(R__c, kTRUE);
+      TH2D::Class()->WriteBuffer(R__b,this);
    }
 }
 

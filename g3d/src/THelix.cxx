@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -613,4 +613,36 @@ Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
    //
    if ( TMath::Abs(phi1-phi0) < TMath::Abs(phi2-phi0) )  return phi1;
    else                                                  return phi2;
+}
+
+//______________________________________________________________________________
+void THelix::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class THelix.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      if (R__v > 1) {
+         THelix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TPolyLine3D::Streamer(R__b);
+      R__b >> fX0;
+      R__b >> fY0;
+      R__b >> fZ0;
+      R__b >> fVt;
+      R__b >> fPhi0;
+      R__b >> fVz;
+      R__b >> fW;
+      R__b.ReadStaticArray(fAxis);
+      R__b >> fRotMat;
+      R__b.ReadStaticArray(fRange);
+      R__b.CheckByteCount(R__s, R__c, THelix::IsA());
+      //====end of old versions
+      
+   } else {
+      THelix::Class()->WriteBuffer(R__b,this);
+   }
 }

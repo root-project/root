@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -220,30 +220,28 @@ void TLeaf::Streamer(TBuffer &b)
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion(&R__s, &R__c);
-      TNamed::Streamer(b);
-      b >> fLen;
-      b >> fLenType;
-      b >> fOffset;
-      b >> fIsRange;
-      b >> fIsUnsigned;
-      b >> fLeafCount;
+      UInt_t R__s, R__c;
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TLeaf::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+      } else {
+         //====process old versions before automatic schema evolution
+         TNamed::Streamer(b);
+         b >> fLen;
+         b >> fLenType;
+         b >> fOffset;
+         b >> fIsRange;
+         b >> fIsUnsigned;
+         b >> fLeafCount;
+         b.CheckByteCount(R__s, R__c, TLeaf::IsA());
+         //====end of old versions
+      }
       fBranch = gBranch;
       if (fLen == 0) fLen = 1;
       ResetBit(kNewValue);
       SetAddress();
-      b.CheckByteCount(R__s, R__c, TLeaf::IsA());
    } else {
-      R__c = b.WriteVersion(TLeaf::IsA(), kTRUE);
-      TNamed::Streamer(b);
-      b << fLen;
-      b << fLenType;
-      b << fOffset;
-      b << fIsRange;
-      b << fIsUnsigned;
-      b << fLeafCount;
-      b.SetByteCount(R__c, kTRUE);
+      TLeaf::Class()->WriteBuffer(b,this);
    }
 }

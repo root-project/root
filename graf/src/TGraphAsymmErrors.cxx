@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.3 2000/10/12 13:26:12 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.4 2000/10/13 07:32:07 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -397,47 +397,41 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
 {
    // Stream an object of class TGraphAsymmErrors.
 
-   UInt_t R__s, R__c;
    if (b.IsReading()) {
+      UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TGraphAsymmErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TGraph::Streamer(b);
       fEXlow  = new Double_t[fNpoints];
       fEYlow  = new Double_t[fNpoints];
       fEXhigh = new Double_t[fNpoints];
       fEYhigh = new Double_t[fNpoints];
-      if (R__v < 2) {
-         Float_t *exlow  = new Float_t[fNpoints];
-         Float_t *eylow  = new Float_t[fNpoints];
-         Float_t *exhigh = new Float_t[fNpoints];
-         Float_t *eyhigh = new Float_t[fNpoints];
-         b.ReadFastArray(exlow,fNpoints);
-         b.ReadFastArray(eylow,fNpoints);
-         b.ReadFastArray(exhigh,fNpoints);
-         b.ReadFastArray(eyhigh,fNpoints);
-         for (Int_t i=0;i<fNpoints;i++) {
-            fEXlow[i]  = exlow[i];
-            fEYlow[i]  = eylow[i];
-            fEXhigh[i] = exhigh[i];
-            fEYhigh[i] = eyhigh[i];
-         }
-         delete [] eylow;
-         delete [] exlow;
-         delete [] eyhigh;
-         delete [] exhigh;
-      } else {
-         b.ReadFastArray(fEXlow,fNpoints);
-         b.ReadFastArray(fEYlow,fNpoints);
-         b.ReadFastArray(fEXhigh,fNpoints);
-         b.ReadFastArray(fEYhigh,fNpoints);
+      Float_t *exlow  = new Float_t[fNpoints];
+      Float_t *eylow  = new Float_t[fNpoints];
+      Float_t *exhigh = new Float_t[fNpoints];
+      Float_t *eyhigh = new Float_t[fNpoints];
+      b.ReadFastArray(exlow,fNpoints);
+      b.ReadFastArray(eylow,fNpoints);
+      b.ReadFastArray(exhigh,fNpoints);
+      b.ReadFastArray(eyhigh,fNpoints);
+      for (Int_t i=0;i<fNpoints;i++) {
+         fEXlow[i]  = exlow[i];
+         fEYlow[i]  = eylow[i];
+         fEXhigh[i] = exhigh[i];
+         fEYhigh[i] = eyhigh[i];
       }
+      delete [] eylow;
+      delete [] exlow;
+      delete [] eyhigh;
+      delete [] exhigh;
       b.CheckByteCount(R__s, R__c, TGraphAsymmErrors::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = b.WriteVersion(TGraphAsymmErrors::IsA(), kTRUE);
-      TGraph::Streamer(b);
-      b.WriteFastArray(fEXlow,fNpoints);
-      b.WriteFastArray(fEYlow,fNpoints);
-      b.WriteFastArray(fEXhigh,fNpoints);
-      b.WriteFastArray(fEYhigh,fNpoints);
-      b.SetByteCount(R__c, kTRUE);
+      TGraphAsymmErrors::Class()->WriteBuffer(b,this);
    }
 }
