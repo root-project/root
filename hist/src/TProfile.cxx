@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.8 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.9 2000/12/18 14:54:49 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -11,6 +11,7 @@
 
 #include "TProfile.h"
 #include "TMath.h"
+#include <fstream.h>
 
 ClassImp(TProfile)
 
@@ -807,6 +808,67 @@ void TProfile::Reset(Option_t *option)
 //*-*                =====================================
   TH1D::Reset(option);
   fBinEntries.Reset();
+}
+
+//______________________________________________________________________________
+void TProfile::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   //Note the following restrictions in the code generated:
+   // - variable bin size not implemented
+   // - SetErrorOption not implemented
+
+   char quote = '"';
+   out<<"   "<<endl;
+   out<<"   "<<ClassName()<<" *";
+   
+   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
+                 <<","<<GetXaxis()->GetNbins()
+                 <<","<<GetXaxis()->GetXmin()
+                 <<","<<GetXaxis()->GetXmax();
+              out<<");"<<endl;
+   if (fMinimum != -1111) {
+      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+   }
+   if (fMaximum != -1111) {
+      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+   }
+   if (fNormFactor != 0) {
+      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
+   }
+   if (fEntries != 0) {
+      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
+   }
+   Int_t bin;
+   for (bin=0;bin<fNcells;bin++) {
+      Double_t bi = GetBinEntries(bin);
+      if (bi) {
+         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
+      }
+   }
+   for (bin=0;bin<fNcells;bin++) {
+      Double_t bc = fArray[bin];
+      if (bc) {
+         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+      }
+   }
+   if (fSumw2.fN) {
+      for (bin=0;bin<fNcells;bin++) {
+         Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
+         if (be) {
+            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+         }
+      }
+   }
+   SaveFillAttributes(out,GetName(),0,1001);
+   SaveLineAttributes(out,GetName(),1,1,1);
+   SaveMarkerAttributes(out,GetName(),1,1,1);
+   fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
+   fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
+   fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
+   out<<"   "<<GetName()<<"->Draw("
+      <<quote<<option<<quote<<");"<<endl;
 }
 
 //______________________________________________________________________________
