@@ -12,19 +12,18 @@ self or do fixes).
 Introduction:
 =============
 These are the Debian GNU/Linux and Redhat packages of ROOT, the
-analysis frame work written in C++. 
+analysis frame work written in C++.
 
 The packages are:
 
 * `root-cint'      Almost bare CINT, the C/C++ interpretor
-* `libroot'        Basic ROOT libraries   
+* `libroot'        Basic ROOT libraries
 * `root-bin'       The interactive interface and utilities
 * `libroot-dev'    The header files for the ROOT libraries
 * `root-daemon'    Remote fileserver and PROOF environment
 * `root-zebra'     Conversion tools from HBOOK to ROOT files
 * `root-star'      Contributed classes from STAR Collaboration
-* `root-ttf'       True Type Font support in ROOT
-* `root-gl'	   OpenGL support using Mesa (or XFree) 
+* `root-gl'        OpenGL support using Mesa (or XFree)
 * `root-gliv'      OpenGL support using OpenInventor
 * `root-mysql'     MySQL client for ROOT
 * `root-psql'      PostGreSQL client for ROOT
@@ -33,12 +32,12 @@ The packages are:
 * `root-pythia'    Wrapper for Pythia event generators
 * `root-venus'     Wrapper for Venus event generator
 
-The packages are structured like this, to allow maximum modularity and 
-flexibility for the user. 
+The packages are structured like this, to allow maximum modularity and
+flexibility for the user.
 
 The latest Debian GNU/Linux packages should be available from [1], and
 a back catalogue as well as latest build should be available from the
-ROOT web-site [2]. 
+ROOT web-site [2].
 
 It is hoped that these packages will eventually be part of some Debian
 GNU/Linux and Redhat distributions.  Current licensing issues
@@ -70,9 +69,9 @@ ROOT packages for Debian GNU/Linux and Redhat as easy as possible.
 This cooperate work has made many improvements to both the packages,
 as well as for the ROOT system itself.
 
-The sources for ROOT are available via anonymous CVS from 
+The sources for ROOT are available via anonymous CVS from
 
-    Repository:   :pserver:cvs@root.cern.ch:/user/cvs 
+    Repository:   :pserver:cvs@root.cern.ch:/user/cvs
     Password:     cvs
 
 For more availability of ROOT, including other OSs then Linux - IBM
@@ -82,12 +81,12 @@ AIX, HP Unix, Digital Unix on Alpha, FreeBSD, Windows, and many others
 
 Parallel Redhat and Debian GNU/Linux Packages:
 ==============================================
-These packages was developed in parallel on both Debian GNU/Linux and 
+These packages was developed in parallel on both Debian GNU/Linux and
 Redhat, so that a coherent outlook could be maintained over the two
-Linux distributions.  
+Linux distributions.
 
 Documentation, Mailing list and Questions:
-========================================== 
+==========================================
 No documentation package is made.  This is because the documentation
 is vast and not particularly manageable in a package.  Instead, please
 refer to the ROOT web-site [2].  There you'll find reference pages for
@@ -112,20 +111,20 @@ GNU/Linux system, the `root-cint' package exploits the "alternatives"
 feature of dpkg.  Since most ROOT users never use then Pure CINT
 programs "cint" and "makecint" is is reasonably safe to have a Pure
 CINT installation next to ROOT.  A Debian GNU/Linux package of CINT is
-being maintained by Richard B. Kreckel. 
+being maintained by Richard B. Kreckel.
 
 I (Christian Holm) know of no such system on Redhat so no attempt to
 provide a similar mechanism has been tried.  If anyone should know
-about such a system, please let us know. 
+about such a system, please let us know.
 
 Building the Package:
 =====================
 The basic process of building the RPM and Debian packages is given in
-README/INSTALL; here we'll go into the details.   
+README/INSTALL; here we'll go into the details.
 
 Basic configuration:
 --------------------
-The source tree is configured with 
+The source tree is configured with
 
   ./configure <arch> \
 		--prefix=<prefix>				\
@@ -142,19 +141,19 @@ The source tree is configured with
 where <arch> is "linux" for Red Hat and "linuxdeb" for Debian
 GNU/Linux and "hurddeb" for Debian GNU/Hurd.  More will be said on the
 paths <prefix> and <etcdir> below.  This configuration has the
-following meanings:  
+following meanings:
 
 * 3rd party libraries:
   The packages will use third-party shared libraries when ever
-  possible.  This is noted in the below items. 
+  possible.  This is noted in the below items.
 
 * Thread Support and API:
   Since libpthread is generally available in Debian GNU/Linux, this
-  feature shouldn't cause any headaches. 
+  feature shouldn't cause any headaches.
 
 * STAR Contributions:
   This is native to ROOT, and doesn't depend on 3rd-party software,
-  hence, there should be no problem. 
+  hence, there should be no problem.
 
 * TrueType Font Support:
   Note, that if you want to have system wide TrueType Font support,
@@ -162,15 +161,15 @@ following meanings:
 
     @prefix@/share/fonts/truetype
 
-  It's possible for individual users to override this path, using the 
-  lines 
+  It's possible for individual users to override this path, using the
+  lines
 
     # Path where to look for TrueType fonts
     Unix.*.Root.UseTTFonts:     true
     Unix.*.Root.TTFontPath:     <ttffontdir>
 
-  in thier "~/.rootrc", where <ttffontdir> is the path to the TrueType  
-  Fonts. 
+  in thier "~/.rootrc", where <ttffontdir> is the path to the TrueType
+  Fonts.
 
   The currently supported TrueType Fonts in ROOT are:
 
@@ -190,35 +189,33 @@ following meanings:
      12 : symbol-medium-r-normal      symbol.ttf
      13 : times-medium-r-normal       times.ttf
      14 :                             wingding.ttf
-  
-  These fonts are available from [7].  Please note, that these fonts
-  are copyright of Microsoft, under a restrictive license.  In a nut 
-  shell, this license prohibits the maintainer from including them in
-  the packages, since it will violate other license issues, and make
-  ROOT less close to being OpenSource.  For now, we must endure. 
+
+  Please note, that these fonts are copyright of Microsoft, under
+  a restrictive license.  In a nut shell, this license prohibits
+  the maintainer from including them in the packages, since it will
+  violate other license issues, and make ROOT less close to being
+  OpenSource.  For now, we must endure.
 
 * Version number in soname:
-  Debian GNU/Linux (indirectly) mandates that any shared library shall 
+  Debian GNU/Linux (indirectly) mandates that any shared library shall
   have the major version number the soname, so that the packaging
   system ("dpkg"/"apt") may resolve conflicts, dependencies, etc.
   Hence, the ROOT libraries are build with the major version number in
-  the`soname.  Redhat does not have such a strict policy, but it is 
+  the`soname.  Redhat does not have such a strict policy, but it is
   generally a good idea to set version numbers in sonames (the shared
   library's internal identifier) so that the runtime environment may
-  resolve conflicts etc. cleanly. 
-
-[7] ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz
+  resolve conflicts etc. cleanly.
 
 
 Features:
 ---------
 The number of features that is compiled in and how many packages are
 made depend upon the system you're building the packages.  The
-possible feature packages are 
+possible feature packages are
 
 * `root-gl' - OpenGL usage (Mesa or XFree86 based):
-  You need an OpenGL implementation installed on your system.  Several 
-  Debian GNU/Linux and Redhat packages provide OpenGL.  
+  You need an OpenGL implementation installed on your system.  Several
+  Debian GNU/Linux and Redhat packages provide OpenGL.
 
   If you're running XFree86 version 4 or higher, the OpenGL support
   comes with the X server.  The maintainer highly recommends using
@@ -228,16 +225,16 @@ possible feature packages are
   can get (poor) OpenGL support via the package mesag (Debian) or Mesa
   (Red Hat).  However, some graphics cards - like Matrox G200 and G400
   - are supported with fully fleshed 3D acceleration, using the OpenGL
-  package "libutahglx1", so it's recommended to checkout this package 
+  package "libutahglx1", so it's recommended to checkout this package
   first.
 
 * `root-gl' - OpenGL usage (OpenInventor based):
   This package is similar to the above, and in Debian they conflict.
   This, again, provides 3D rendering using OpenGL, but in addition to
   the Mesa or XFree86 based interface, it also has an OpenInventor [8]
-  rendering engine interface. 
+  rendering engine interface.
 
-* `root-zebra' - ZEBRA conversion tools: 
+* `root-zebra' - ZEBRA conversion tools:
   The CERNLIB libraries "libpacklib" and "libkernlib" are statically
   linked into the applications "h2root" and "g2root", so these need
   only be installed at build time.  As of the 2000 release, CERNLIB is
@@ -248,24 +245,24 @@ possible feature packages are
   All you need is the MySQL client library, which for Debian GNU/Linux
   is available in the main distribution in section libs.  The client
   library is also available for Redhat, either on the PowerTools CD,
-  or from the MySQL web-site [10]. 
+  or from the MySQL web-site [10].
 
 * `root-psql' - PostGreSQL client API:
   All you need is the PostGreeSQL client library, which is available
   in both Debian and Red Hat.
 
-* `root-sapdb' - Sap DB support: 
+* `root-sapdb' - Sap DB support:
   ROOT interface to the Sap DB Relational Database Manager.
   Currently there exists only SapDB packages for Red Hat and non for
-  Debian.  This feature has not been tested extensively. 
+  Debian.  This feature has not been tested extensively.
 
 * `root-shift' - SHIFT interface:
-  The SHIFT API library libshift is statically linked into libRFIO, so  
+  The SHIFT API library libshift is statically linked into libRFIO, so
   you only need this library when building the package.  No Copyright
   notice was found anywhere for SHIFT, so use this feature with some
   discresion.  In no way will the maintainer claim any responsibility
   for misuse of this feature on the recipient of this packages
-  part.  You have been warned. 
+  part.  You have been warned.
 
 * `root-pythia' - Pythia interfaces:
   The ROOT interfaces to event generators Pythia version 5 and 6 uses
@@ -285,7 +282,7 @@ possible feature packages are
   packages part.  You have been warned.
 
 * `root-venus' - Venus Event Generator interface:
-  This package has not been tested at all. 
+  This package has not been tested at all.
 
 Other features exist in the ROOT distribution, namely AFS and SRP
 support, but was not used in this package.  AFS and SRP support
@@ -294,7 +291,7 @@ since one can not clearly separate out these binaries from the system,
 it was chosen not to include AFS and SRP support, since one may be in
 a situation where on `root-daemon' package has AFS and SRP support, and
 another not.  In the future, there might be an extra package with AFS
-and SRP support. 
+and SRP support.
 
 [8] http://oss.sgi.com/projects/inventor/
 [9] @prefix@/share/doc/copyright/GPL
@@ -303,44 +300,44 @@ and SRP support.
 Some Red Hat notes:
 -------------------
 The availability of third-party libraries on the system that made the
-"root.spec" file dictates which packages will be build.  Hence, if you 
+"root.spec" file dictates which packages will be build.  Hence, if you
 got a spec file from somewhere else, it may not be right for your
 system.  The packages build from any given spec file can be examined
-by look at the end of the spec, at the line containing the command 
+by look at the end of the spec, at the line containing the command
 
-   build/package/lib/makerpmfiles.sh 
+   build/package/lib/makerpmfiles.sh
 
 The list after the 5'th argument is the packages that this spec file
-builds (possibly empty). 
+builds (possibly empty).
 
 If you feel you may have more or less features available on your
-system, try run configure as  
+system, try run configure as
 
-   ./configure linux --pkglist 
+   ./configure linux --pkglist
 
 This will give you a list of the packages that is possible to build on
 your system.  If that list differs from the one in the spec file, you
-should remake the spec file with 
+should remake the spec file with
 
-   make redhat 
+   make redhat
 
 Some Debian notes:
 ------------------
 The availability of third-party libraries on the system that made the
 debian directory dictates which packages will be build.  Hence, if you
 got source package from somewhere else, it may not be right for your
-system.  Inspect the file debian/control to see the packages build.  
+system.  Inspect the file debian/control to see the packages build.
 
 If you feel you may have more or less features available on your
-system, try run configure as  
+system, try run configure as
 
-   ./configure linux --pkglist 
+   ./configure linux --pkglist
 
 This will give you a list of the packages that is possible to build on
 your system.  If that list differs from those in the debian/control
-file, you should remake the debian directory with 
+file, you should remake the debian directory with
 
-   ./build/package/lib/makedebdir.sh 
+   ./build/package/lib/makedebdir.sh
 
 Rebuilding the packages:
 ========================
@@ -350,14 +347,14 @@ observe:
 
 * The license of ROOT doesn't allow you to redistribute a package
   without the explicit consent of the ROOT team, since such a package
-  constitute "derived work". 
+  constitute "derived work".
 * The packages created with the files in this directory was structured
   to make the packages as modular as possible.  However, if you
   disagree with the structure, please contact the maintainer, stating
   your reasons, and you're preferred structure.
 * Please check the ROOT web-site [1] or [2] first to see if a set of
-  packages already exist for the current ROOT version. 
-* Do not move files yourself. 
+  packages already exist for the current ROOT version.
+* Do not move files yourself.
 
 Make sure you've got the necessary libraries/headers/fonts installed.
 Should you want to not include a feature and the corresponding package
@@ -369,32 +366,32 @@ in the build, you should edit the file in
 On Debian GNU/Linux, the initial checks done via "./configure <arch>
 --pkglist" is build into the build dependencies of the
 "debian/control" file, so that the packages will not be build if all
-needed packages are not installed. 
+needed packages are not installed.
 
-The definition of variable "pkgs" is usual defined via 
+The definition of variable "pkgs" is usual defined via
 
-    ./configure [linuxdeb|linux] --pkglist 
+    ./configure [linuxdeb|linux] --pkglist
 
-Starting from that output, you can set that variable yourself.  For 
+Starting from that output, you can set that variable yourself.  For
 example, to build only the basic (read: minimal) set of packages
 `libroot', `libroot-dev', `root-bin', `root-daemon' and `root-cint', the
-definition should read:  
+definition should read:
 
-    pkgs="task-root root-daemon root-cint root-bin libroot-dev libroot"  
+    pkgs="task-root root-daemon root-cint root-bin libroot-dev libroot"
 
 Please note that the order is important (See note one ".files" files
-below). 
+below).
 
 Per default, the packages are build with "prefix=/usr" and
 "etcdir=/etc/root".  Depending on the system, you can more or less
-easily redefine this to something else, say "prefix=/usr/local".  
+easily redefine this to something else, say "prefix=/usr/local".
 
-* Debian: Edit the file 
+* Debian: Edit the file
 
-    build/package/lib/makedebdir.sh 
+    build/package/lib/makedebdir.sh
 
-  so that prefix and/or etcdir is set to where you want to install the 
-  package.  
+  so that prefix and/or etcdir is set to where you want to install the
+  package.
 
 * Red Hat:  First make the spec file.  Then at the top of the spec file
   edit the definition of "_prefix" and "_sysconfdir" to your liking.
@@ -413,12 +410,12 @@ ROOT libraries loads some libraries dynamically, and at the moment,
 the library file must end in one of ".so", ".a", ".sl", or ".dll", so
 the <library>.so files _must_ be in the binary packages.  If the ROOT
 team would change that behaviour of "TSystem::Load()", then we could
-separate out the development symbolic links.   
+separate out the development symbolic links.
 
 Since this package is not in any Debian GNU/Linux distribution, the
-regular Debian GNU/Linux bug tracking system cannot be used. 
+regular Debian GNU/Linux bug tracking system cannot be used.
 Therefore, please send bug reports to the Debian GNU/Linux package
-maintainer <cholm@nbi.dk>.     
+maintainer <cholm@nbi.dk>.
 
 The same goes for the Redhat package, but send bugs reports to [11]
 and [12].
@@ -433,53 +430,52 @@ GNU/Linux is build from the same source.  For example, package
 descriptions and file lists are kept in a generic form and only made
 concrete during package build.  Doing it like that, we can easily
 maintain both sets of packages at the same time and still be
-coherent. 
+coherent.
 
-In the directory "build", you will find the subdirectory "package". 
-Looking into that you'll see three subdirectories: 
+In the directory "build", you will find the subdirectory "package".
+Looking into that you'll see three subdirectories:
 
   common
-  debian 
+  debian
   lib
-  rpm 
+  rpm
 
 The "common" subdirectory contains the files that are common to both
 sets as well as generic "source" files for other files.  You'll find
-this file there too.  
+this file there too.
 
 The "lib" directory contains a number of scripts to build the final
-packaging scripts from the common source files. 
+packaging scripts from the common source files.
 
 The "debian" subdirectory contains files that are "final" (i.e., will
 not be changed during package set build), as well as skeleton files.
 Skeleton files end in ".in" and will be modified during package set
-build.  
+build.
 
 The "rpm" directory only contains skeleton spec files, one for each
 package and two global ones. These files will be merge into one file,
-after appropriate substitutions are made, into the final spec file 
+after appropriate substitutions are made, into the final spec file
 
 Common subdirectory:
 --------------------
 The common source files in the common directory are organised by
-giving the descriptive names: 
+giving the descriptive names:
 
   <cmn file name> ::= <pkg>.<type>
 
-where "<pkg>" is the package name. Currently we have  
+where "<pkg>" is the package name. Currently we have
 
-            <pkg> ::= root-cint  
+            <pkg> ::= root-cint
 		      libroot
 		      root-bin
 		      libroot-dev
 		      root-daemon
-		      root-zebra 
-		      root-ttf   
+		      root-zebra
 		      root-gl
 		      root-gliv
-		      root-mysql 
-		      root-pgsql 
-		      root-shift 
+		      root-mysql
+		      root-pgsql
+		      root-shift
 		      root-pythia
 
            <type> ::= conffiles
@@ -490,13 +486,13 @@ where "<pkg>" is the package name. Currently we have
 		      postrm
 		      preinst
 		      prerm
-		      
+
 * `conffiles':
   list of configuration files for sub-package if any. In the RPM spec
   file they should be marked by "%config". For the deb package they
-  should be put in a file "<pkg>.conffiles". 
+  should be put in a file "<pkg>.conffiles".
 
-* `copyright': 
+* `copyright':
   This only applies to the deb packages. If file "<pkg>.copyright"
   exist, and the file "../debian/<pkg>.`copyright.in" exist, the
   former will be insert into the later at the mark "@copyright" and
@@ -506,39 +502,39 @@ where "<pkg>" is the package name. Currently we have
   in the packaging directory, thus giving a common copyright file for
   all packages that doesn't have it's own file.
 
-* `dscr': 
+* `dscr':
   The contents of these files will insert into
-  "build/packages/debian/<pkg>.control.in"  and 
+  "build/packages/debian/<pkg>.control.in"  and
   "build/packages/rpm/<pkg>.spec.in" at marks "@short@" and "@long@",
   and the output will be stored in "../../../debian/control" or in the
-  final spec file "../rpm/root.spec". The format of these files are  
+  final spec file "../rpm/root.spec". The format of these files are
 
       short: <short descrition - less then 60 characters>
       long:
       <free format long description. Break into paragraphs by blank
       lines. Indented lines are not formated. Use plain english.>
 
-  The text after "short:" will be replaced for "@short@" and the 
-  text after "long:" will be insert for "@long@". Please note, 
+  The text after "short:" will be replaced for "@short@" and the
+  text after "long:" will be insert for "@long@". Please note,
   that there should be no empty lines after the last line of text in
   the long description. Other wise, one is fairly free to format the
   text as one wants, though one should aim to stay within the 70th
-  column (looks best on an plain text console). 
+  column (looks best on an plain text console).
 
-* `files': 
+* `files':
   List of files that go into package <pkg>. They should be listed one
-  per line. Wild cards are allowed. 
+  per line. Wild cards are allowed.
 
   Please note, that shared libraries and configuration files should
   _not_ be put in these files.  Those are handled by the `.shlibs'
-  and `.conffiles' files.  
+  and `.conffiles' files.
 
   Note that RPM behaves somewhat curiously when making many
   packages. It will happily install the same file into many
   sub-packages, if that file is specified in the file list for more
   then one package.  A file can be specified to be in more then one
   package directly or indirectly - via wild card or  because it's in an
-  included directory.  This is not what we want. 
+  included directory.  This is not what we want.
 
   Therefore, when we make the rpm packages we only make the file list
   `rpm/<pkg>.files' _after_ the temporary installation into "rpm/tmp".
@@ -549,21 +545,21 @@ where "<pkg>" is the package name. Currently we have
   list for each package. This does create some overhead due to packing
   and unpacking, but on most machines this will be no more then a
   couple of minutes. Incidently, this is almost how the `debhelper'
-  tools work.  
+  tools work.
 
 * `shlibs':
   List of shared libraries, if any, that go into package <pkg>. It's
   important to specify the libraries correctly here, since this is
-  what RPM and dpkg uses for binary dependencies. 
- 
+  what RPM and dpkg uses for binary dependencies.
+
 * `preinst':
-  Body of a pre-installation script.  No magic line - "#!/bin/sh" - can 
+  Body of a pre-installation script.  No magic line - "#!/bin/sh" - can
   be specified.  The contents of this file is put into the spec file
-  in case of Red Hat packages, or in `debian/<pkg>.preinst' in case of  
+  in case of Red Hat packages, or in `debian/<pkg>.preinst' in case of
   Debian packages. Please note that the `root-daemon' package needs
   some special treatment, since Redhat and Debian GNU/Linux adds users
   and groups n slightly differently - we need to add the (system) user
-  `rootd', remember. 
+  `rootd', remember.
 
 * `postinst':
   Body of a post-installation script.  No magic line - "#!/bin/sh" -
@@ -572,7 +568,7 @@ where "<pkg>" is the package name. Currently we have
   case of Debian packages. Please note that the `root-daemon' package
   needs some special treatment, since Redhat and Debian GNU/Linux adds
   users and groups in slightly differently - we need to add the
-  (system) user `rootd', remember. 
+  (system) user `rootd', remember.
 
 * `prerm':
   Body of a pre-removal script.  No magic line - "#!/bin/sh" - can be
@@ -605,117 +601,117 @@ ROOT source directory.
 
   Distribution scripts:
   ---------------------
-  * `makerpmspec.sh' 
+  * `makerpmspec.sh'
     This scripts makes the `rpm/root.spec' file.  It loops over the
     packages defined via the "./configure <arch> --pkglist" and
     executes `makerpmspecs.sh' for each package. This script takes no
     arguments.
 
-  * `makerpmfiles.sh' 
+  * `makerpmfiles.sh'
     This script makes the package file lists for each package defined
     in "./configure <arch> --pkglist", as outline in the `.files'
     description above.  It is executed from the rpm spec file in the
     install section after all binaries have been installed into the
     temporary directory `rpm/tmp'.  It takes 7 arguments
-    
+
       1: The build directory (as specified in spec)
-      2: The common (e.g., "build/packages/common") directory 
-      3: The target (e.g, "rpm") directory 
+      2: The common (e.g., "build/packages/common") directory
+      3: The target (e.g, "rpm") directory
       4: The prefix (usually "/usr")
       5: The system configuration directory (e.g., "/etc")
-      6: The documentation directory (e.g., "/usr/share/doc"). 
+      6: The documentation directory (e.g., "/usr/share/doc").
       7: The package list
 
   * `makerpmclean.sh'
-    Cleans up after a rpm package build. 
+    Cleans up after a rpm package build.
 
   * `makedebdir.sh'
     This script makes the "debian" directory, moves static files into
     it, and loops over each package defined via the "./configure
     <arch> --pkglist" to build the various files needed.
 
-  * `makedebchangelog.sh' 
+  * `makedebchangelog.sh'
     Write (and if necessary updates) the "debian/changelog" file. This
     is important, since `dpkg-buildpackage' uses this file for
     identifying the package, it's version and urgency.
 
-  * `makedebclean.sh' 
-    Cleans up after a deb package build. 
+  * `makedebclean.sh'
+    Cleans up after a deb package build.
 
   Package scripts:
   ----------------
   These scripts are divided into rpm and deb specific ones.  They must
-  be passed the package name.  
+  be passed the package name.
 
   * `makerpmspecs.sh'
     This script parses the common source files ".dscr" and writes an
-    appropriate sub-package spec file.  
+    appropriate sub-package spec file.
 
-  * `makedebconffiles.sh' 
+  * `makedebconffiles.sh'
     This scrips parses "<pkg>.conffiles", and writes
-    "debian/<pkg>.conffiles". 
+    "debian/<pkg>.conffiles".
 
-  * `makedebcontrol.sh' 
-    This script parses "<pkg>.dscr" and writes the short and long 
-    description to "debian/control" in the appropriate section. 
+  * `makedebcontrol.sh'
+    This script parses "<pkg>.dscr" and writes the short and long
+    description to "debian/control" in the appropriate section.
 
   * `makedebcopyright.sh'
     Parses "<pkg>.copyright" (if it exists) and writes it to
-    "debian/<pkg>.copyright".  Also, if no package is passed to the 
-    file, it'll write the general "debian/copyright" file, based on the 
-    "LICENSE" file in the top most directory.  
+    "debian/<pkg>.copyright".  Also, if no package is passed to the
+    file, it'll write the general "debian/copyright" file, based on the
+    "LICENSE" file in the top most directory.
 
   * `makedebdocs.sh'
     Parses "<pkg>.docs" (if it exists) and writes an appropriate
-    "debian/<pkg>.docs". 
+    "debian/<pkg>.docs".
 
-  * `makedebexamples.sh' 
+  * `makedebexamples.sh'
     Parses "<pkg>.examples" (if it exists) and writes an appropriate
-    "debian/<pkg>.examples". 
-   
-  * `makedebfiles.sh, 
+    "debian/<pkg>.examples".
+
+  * `makedebfiles.sh,
     Parses the "<pkg>.shlibs", "<pkg>.conffiles", and "<pkg>.files"
-    files (those that exist) and writes "debian/<pkg>.files".  This is   
+    files (those that exist) and writes "debian/<pkg>.files".  This is
     needed, as debhelper wants all entries (directories, files,
     including wild cards) on one line [Note: Actually it doesn't
-    anymore, but we still need to expand "@prefix@" etc. marks]. 
+    anymore, but we still need to expand "@prefix@" etc. marks].
 
-  * `makedebrules.sh' 
+  * `makedebrules.sh'
     Adds the passed package to the list of packages in "debian/rules"
-    to be build. The order in which the packages are passed to this 
-    script is important (see `.files' description above). 
+    to be build. The order in which the packages are passed to this
+    script is important (see `.files' description above).
 
-  * `makedebscr.sh' 
+  * `makedebscr.sh'
     Parses any of "<pkg>.<pre|post><inst|rm>" and writes corresponding
-    script to "debian/<pkg>.<pre|post><inst|rm>". 
+    script to "debian/<pkg>.<pre|post><inst|rm>".
 
   * `makedebshlocal.sh'
     Parses "<pkg>.shlibs" for each package defined and writes
     entry(ies) to "debian/shlibs.local", so that dpkg may figure out
-    the dependencies.  
+    the dependencies.
 
 Thanks:
 =======
 Many MANY thanks to the ROOT team - Rene Brun and Fons Rademarkers -
 for a great piece of software.  Especially thanks to Fons Rademarkers
 for putting up with a lot of emails from me (Christian Holm) during
-the initial development. 
+the initial development.
 
-Many thanks to Masaharu Goto for CINT, inspirrering correspondence, 
-advice, and patience (loads of emails from me). 
+Many thanks to Masaharu Goto for CINT, inspirrering correspondence,
+advice, and patience (loads of emails from me).
 
 Also many thanks to all the contributors of ROOT, for making it
-great. 
+great.
 
 Thanks to Anders Waananen for putting the Redhat package together,
-many suggestions and inspirrational talks. 
+many suggestions and inspirrational talks.
 
 Thanks to Richard B. Kreckel the CINT Debian GNU/Linux package
 maintainer, for inspirring correspondence, advice, and great
-cooperation.  
+cooperation.
 
 Thanks to Brett Viren for alpha and beta testing of the Debian
-GNU/Linux packages. 
+GNU/Linux packages.
 
  -- Anders Waananen <waananen@nbi.dk>, Fri,  16 Mar 2001 12:45:54 +0100
  -- Christian Holm <cholm@nbi.dk>, Sat,  16 Mar 2001 12:45:54 +0100
