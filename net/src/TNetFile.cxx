@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.45 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.46 2004/05/06 16:57:39 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -331,6 +331,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
       Int_t st;
       Long64_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
+         SetBit(kWriteError);
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
       }
@@ -344,11 +345,13 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
    gSystem->IgnoreInterrupt();
 
    if (fSocket->Send(Form("%lld %d", fOffset, len), kROOTD_PUT) < 0) {
+      SetBit(kWriteError);
       Error("WriteBuffer", "error sending kROOTD_PUT command");
       result = kTRUE;
       goto end;
    }
    if (fSocket->SendRaw(buf, len) < 0) {
+      SetBit(kWriteError);
       Error("WriteBuffer", "error sending buffer");
       result = kTRUE;
       goto end;
@@ -359,6 +362,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+      SetBit(kWriteError);
       PrintError("WriteBuffer", stat);
       result = kTRUE;
       goto end;

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.3 2004/01/05 13:46:07 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.4 2004/02/09 21:43:36 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -510,16 +510,17 @@ Bool_t TAlienFile::WriteBuffer(const char *buf, Int_t len)
          // Write the system error only once for this file
          SetBit(kWriteError);
          SetWritable(kFALSE);
-         SysError("WriteBuffer", "error writing to file %s(%d)", GetName(),siz);
+         SysError("WriteBuffer", "error writing to file %s (%d)", GetName(), siz);
          return kTRUE;
       }
       if (siz != len) {
+         SetBit(kWriteError);
          Error("WriteBuffer",
                "error writing all requested bytes to file %s, wrote %d of %d",
                GetName(), siz, len);
          return kTRUE;
       }
-      fBytesWrite += siz;
+      fBytesWrite  += siz;
       fgBytesWrite += siz;
 
       return kFALSE;
