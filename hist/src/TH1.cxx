@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.99 2002/06/04 07:22:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.100 2002/06/08 20:07:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2122,10 +2122,6 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
   if (GetDimension() > 1) {
      Error("GetQuantiles","Only available for 1-d histograms");
-     return 0;
-  }
-  if (nprobSum < 2) {
-     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
      return 0;
   }
 
