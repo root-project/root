@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.46 2004/02/19 17:29:34 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.47 2004/02/23 23:49:26 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1110,6 +1110,7 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
       if (str[0] == 19) {  // ctrl-s
          static TString dir(".");
          TGFileInfo fi;
+         TGMainFrame *main = (TGMainFrame*)GetMainFrame();
          fi.fFileTypes = gSaveMacroTypes;
          fi.fIniDir    = StrDup(dir);
          new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
@@ -1117,10 +1118,10 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
          dir = fi.fIniDir;
          const char *fname = gSystem->BaseName(gSystem->UnixPathName(fi.fFilename));
          if (strstr(fname, ".C"))
-            SaveSource(fname, "");
+            main->SaveSource(fname, "");
          else {
             Int_t retval;
-            new TGMsgBox(fClient->GetRoot(), this, "Error...",
+            new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
                         Form("file (%s) must have extension .C", fname),
                         kMBIconExclamation, kMBRetry | kMBCancel, &retval);
             if (retval == kMBRetry)

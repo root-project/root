@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.35 2004/02/09 08:28:24 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.36 2004/02/23 23:49:26 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -228,8 +228,6 @@ public:
    virtual Bool_t  IsEditable() const { return kFALSE; }
    virtual void    SetEditable(Bool_t) {}
 
-   virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
-
    UInt_t GetWidth() const { return fWidth; }
    UInt_t GetHeight() const { return fHeight; }
    TGDimension GetSize() const { return TGDimension(fWidth, fHeight); }
@@ -447,7 +445,6 @@ public:
         hmax = fWMMaxHeight; winc = fWMWidthInc; hinc = fWMHeightInc; }
    EInitialState GetWMState() const { return fWMInitState; }
 
-   virtual const TGWindow *GetMainFrame() const { return this; }
    virtual void SavePrimitive(ofstream &out, Option_t *option);
    virtual void SaveSource(const char *filename, Option_t *option); // *MENU*
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.8 2004/01/20 10:41:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.9 2004/02/23 23:49:26 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    if (p) {
       fClient = p->fClient;
       if (fClient->IsEditable()) type = wtype & ~1;
- 
+
       fParent = p;
       fId = gVirtualX->CreateWindow(fParent->fId, x, y,
                                     TMath::Max(w, (UInt_t) 1),
@@ -96,9 +96,9 @@ TGWindow::~TGWindow()
 }
 
 //______________________________________________________________________________
-const TGWindow * TGWindow::GetMainFrame() const
+const TGWindow *TGWindow::GetMainFrame() const
 {
-   // returns main frame
+   // Returns main frame.
 
    return (fParent == fClient->GetDefaultRoot()) ? this : fParent->GetMainFrame();
 }
