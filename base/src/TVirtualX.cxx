@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.4 2003/11/25 15:51:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.5 2003/12/16 16:22:56 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -65,7 +65,7 @@ void TVirtualX::GetWindowAttributes(Window_t /*id*/, WindowAttributes_t &attr)
 }
 
 //______________________________________________________________________________
-Bool_t TVirtualX::ParseColor(Colormap_t /*cmap*/, const char */*cname*/,
+Bool_t TVirtualX::ParseColor(Colormap_t /*cmap*/, const char * /*cname*/,
                              ColorStruct_t &color)
 {
    // Looks up the string name of a color "cname" with respect to the screen
@@ -154,7 +154,7 @@ void TVirtualX::GetPasteBuffer(Window_t /*id*/, Atom_t /*atom*/, TString &text,
 }
 
 //______________________________________________________________________________
-Bool_t TVirtualX::Init(void */*display*/)
+Bool_t TVirtualX::Init(void * /*display*/)
 {
    // Initializes the X system. Returns kFALSE in case of failure.
    // It is implementation dependent.
@@ -213,7 +213,7 @@ void TVirtualX::DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
 //______________________________________________________________________________
 void TVirtualX::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/,
                               Int_t /*x2*/, Int_t /*y2*/,
-                              Int_t /*nx*/, Int_t /*ny*/, Int_t */*ic*/)
+                              Int_t /*nx*/, Int_t /*ny*/, Int_t * /*ic*/)
 {
    // Draws a cell array. The drawing is done with the pixel presicion
    // if (x2-x1)/nx (or y) is not a exact pixel number the position of
@@ -226,7 +226,7 @@ void TVirtualX::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/,
 }
 
 //______________________________________________________________________________
-void TVirtualX::DrawFillArea(Int_t /*n*/, TPoint */*xy*/)
+void TVirtualX::DrawFillArea(Int_t /*n*/, TPoint * /*xy*/)
 {
    // Fills area described by the polygon.
    //
@@ -244,7 +244,7 @@ void TVirtualX::DrawLine(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint */*xy*/)
+void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint * /*xy*/)
 {
    // Draws a line through all points in the list.
    //
@@ -253,7 +253,7 @@ void TVirtualX::DrawPolyLine(Int_t /*n*/, TPoint */*xy*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::DrawPolyMarker(Int_t /*n*/, TPoint */*xy*/)
+void TVirtualX::DrawPolyMarker(Int_t /*n*/, TPoint * /*xy*/)
 {
    // Draws "n" markers with the current attributes at position [x,y].
    //
@@ -280,7 +280,7 @@ void TVirtualX::DrawText(Int_t /*x*/, Int_t /*y*/, Float_t /*angle*/,
 }
 
 //______________________________________________________________________________
-UInt_t TVirtualX::ExecCommand(TGWin32Command */*code*/)
+UInt_t TVirtualX::ExecCommand(TGWin32Command * /*code*/)
 {
    // Executes the command "code" coming from the other threads (Win32)
 
@@ -319,7 +319,7 @@ void TVirtualX::GetGeometry(Int_t /*wid*/, Int_t &x, Int_t &y,
 }
 
 //______________________________________________________________________________
-const char *TVirtualX::DisplayName(const char */*= 0*/)
+const char *TVirtualX::DisplayName(const char *)
 {
    // Returns hostname on which the display is opened.
 
@@ -359,7 +359,7 @@ void TVirtualX::GetRGB(Int_t /*index*/, Float_t &r, Float_t &g, Float_t &b)
 }
 
 //______________________________________________________________________________
-void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char */*mess*/)
+void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 {
    // Returns the size of the specified character string "mess".
    //
@@ -449,7 +449,7 @@ void TVirtualX::QueryPointer(Int_t &ix, Int_t &iy)
 }
 
 //______________________________________________________________________________
-Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char */*file*/,  
+Pixmap_t TVirtualX::ReadGIF(Int_t /*x0*/, Int_t /*y0*/, const char * /*file*/,  
                             Window_t /*id*/)
 {
    // If id is NULL - loads the specified gif file at position [x0,y0] in the 
@@ -633,7 +633,7 @@ void TVirtualX::SetLineColor(Color_t /*cindex*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::SetLineType(Int_t /*n*/, Int_t */*dash*/)
+void TVirtualX::SetLineType(Int_t /*n*/, Int_t * /*dash*/)
 {
    // Sets the line type.
    //
@@ -779,7 +779,7 @@ Int_t TVirtualX::WriteGIF(char * /*name*/)
 
 //______________________________________________________________________________
 void TVirtualX::WritePixmap(Int_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/,
-                            char */*pxname*/)
+                            char * /*pxname*/)
 {
    // Writes the pixmap "wid" in the bitmap file "pxname".
    //
@@ -903,7 +903,7 @@ void TVirtualX::SetWindowBackgroundPixmap(Window_t /*id*/, Pixmap_t /*pxm*/)
 Window_t TVirtualX::CreateWindow(Window_t /*parent*/, Int_t /*x*/, Int_t /*y*/,
                                  UInt_t /*w*/, UInt_t /*h*/,
                                  UInt_t /*border*/, Int_t /*depth*/,
-                                 UInt_t /*clss*/, void */*visual*/,
+                                 UInt_t /*clss*/, void * /*visual*/,
                                  SetWindowAttributes_t * /*attr*/,
                                  UInt_t /*wtype*/)
 {
@@ -930,7 +930,7 @@ Window_t TVirtualX::CreateWindow(Window_t /*parent*/, Int_t /*x*/, Int_t /*y*/,
 }
 
 //______________________________________________________________________________
-Int_t TVirtualX::OpenDisplay(const char */*dpyName*/)
+Int_t TVirtualX::OpenDisplay(const char * /*dpyName*/)
 {
    // Opens connection to display server (if such a thing exist on the
    // current platform). The encoding and interpretation of the display
@@ -1010,7 +1010,7 @@ Window_t TVirtualX::GetDefaultRootWindow() const
 }
 
 //______________________________________________________________________________
-Atom_t  TVirtualX::InternAtom(const char */*atom_name*/,
+Atom_t  TVirtualX::InternAtom(const char * /*atom_name*/,
                               Bool_t /*only_if_exist*/)
 {
    // Returns the atom identifier associated with the specified "atom_name"
@@ -1032,7 +1032,7 @@ Window_t TVirtualX::GetParent(Window_t /*id*/) const
 }
 
 //______________________________________________________________________________
-FontStruct_t TVirtualX::LoadQueryFont(const char */*font_name*/)
+FontStruct_t TVirtualX::LoadQueryFont(const char * /*font_name*/)
 {
    // Provides the most common way for accessing a font: opens (loads) the
    // specified font and returns a pointer to the appropriate FontStruct_t
@@ -1056,7 +1056,7 @@ void TVirtualX::DeleteFont(FontStruct_t /*fs*/)
 }
 
 //______________________________________________________________________________
-GContext_t TVirtualX::CreateGC(Drawable_t /*id*/, GCValues_t */*gval*/)
+GContext_t TVirtualX::CreateGC(Drawable_t /*id*/, GCValues_t * /*gval*/)
 {
    // Creates a graphics context using the provided GCValues_t *gval structure.
    // The mask data member of gval specifies which components in the GC are
@@ -1068,7 +1068,7 @@ GContext_t TVirtualX::CreateGC(Drawable_t /*id*/, GCValues_t */*gval*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::ChangeGC(GContext_t /*gc*/, GCValues_t */*gval*/)
+void TVirtualX::ChangeGC(GContext_t /*gc*/, GCValues_t * /*gval*/)
 {
    // Changes the components specified by the mask in gval for the specified GC.
    //
@@ -1122,7 +1122,7 @@ Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, UInt_t /*w*/, UInt_t /*h*/)
    return kNone;
 }
 //______________________________________________________________________________
-Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, const char */*bitmap*/,
+Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, const char * /*bitmap*/,
                                  UInt_t /*width*/, UInt_t /*height*/,
                                  ULong_t /*forecolor*/, ULong_t /*backcolor*/,
                                  Int_t /*depth*/)
@@ -1143,7 +1143,7 @@ Pixmap_t TVirtualX::CreatePixmap(Drawable_t /*id*/, const char */*bitmap*/,
 }
 
 //______________________________________________________________________________
-Pixmap_t TVirtualX::CreateBitmap(Drawable_t /*id*/, const char */*bitmap*/,
+Pixmap_t TVirtualX::CreateBitmap(Drawable_t /*id*/, const char * /*bitmap*/,
                                  UInt_t /*width*/, UInt_t /*height*/)
 {
    // Creates a bitmap (i.e. pixmap with depth 1) from the bitmap data.
@@ -1163,7 +1163,7 @@ void TVirtualX::DeletePixmap(Pixmap_t /*pmap*/)
 
 //______________________________________________________________________________
 Bool_t TVirtualX::CreatePictureFromFile(Drawable_t /*id*/,
-                                        const char */*filename*/,
+                                        const char * /*filename*/,
                                         Pixmap_t &/*pict*/,
                                         Pixmap_t &/*pict_mask*/,
                                         PictureAttributes_t &/*attr*/)
@@ -1177,7 +1177,7 @@ Bool_t TVirtualX::CreatePictureFromFile(Drawable_t /*id*/,
 }
 
 //______________________________________________________________________________
-Bool_t TVirtualX::CreatePictureFromData(Drawable_t /*id*/, char **/*data*/,
+Bool_t TVirtualX::CreatePictureFromData(Drawable_t /*id*/, char ** /*data*/,
                                         Pixmap_t &/*pict*/,
                                         Pixmap_t &/*pict_mask*/,
                                         PictureAttributes_t & /*attr*/)
@@ -1190,8 +1190,8 @@ Bool_t TVirtualX::CreatePictureFromData(Drawable_t /*id*/, char **/*data*/,
    return kFALSE;
 }
 //______________________________________________________________________________
-Bool_t TVirtualX::ReadPictureDataFromFile(const char */*filename*/,
-                                          char ***/*ret_data*/)
+Bool_t TVirtualX::ReadPictureDataFromFile(const char * /*filename*/,
+                                          char *** /*ret_data*/)
 {
    // Reads picture data from file "filename" and store it in "ret_data".
    // Returns kTRUE in case of success, kFALSE otherwise.
@@ -1200,7 +1200,7 @@ Bool_t TVirtualX::ReadPictureDataFromFile(const char */*filename*/,
 }
 
 //______________________________________________________________________________
-void TVirtualX::DeletePictureData(void */*data*/)
+void TVirtualX::DeletePictureData(void * /*data*/)
 {
    // Delete picture data created by the function ReadPictureDataFromFile.
 }
@@ -1270,7 +1270,7 @@ void TVirtualX::CopyArea(Drawable_t /*src*/, Drawable_t /*dest*/,
 
 //______________________________________________________________________________
 void TVirtualX::ChangeWindowAttributes(Window_t /*id*/,
-                                       SetWindowAttributes_t */*attr*/)
+                                       SetWindowAttributes_t * /*attr*/)
 {
    // Changes the attributes of the specified window "id" according the
    // values provided in "attr". The mask data member of "attr" specifies
@@ -1281,7 +1281,7 @@ void TVirtualX::ChangeWindowAttributes(Window_t /*id*/,
 
 //______________________________________________________________________________
 void TVirtualX::ChangeProperty(Window_t /*id*/, Atom_t /*property*/,
-                               Atom_t /*type*/, UChar_t */*data*/,
+                               Atom_t /*type*/, UChar_t * /*data*/,
                                Int_t /*len*/)
 {
    // Alters the property for the specified window and causes the X server
@@ -1336,7 +1336,7 @@ Bool_t TVirtualX::CheckEvent(Window_t /*id*/, EGEventType /*type*/,
 }
 
 //______________________________________________________________________________
-void TVirtualX::SendEvent(Window_t /*id*/, Event_t */*ev*/)
+void TVirtualX::SendEvent(Window_t /*id*/, Event_t * /*ev*/)
 {
    // Specifies the event "ev" is to be sent to the window "id".
    // This function requires you to pass an event mask.
@@ -1406,13 +1406,13 @@ void TVirtualX::GrabPointer(Window_t /*id*/, UInt_t /*evmask*/,
 }
 
 //______________________________________________________________________________
-void TVirtualX::SetWindowName(Window_t /*id*/, char */*name*/)
+void TVirtualX::SetWindowName(Window_t /*id*/, char * /*name*/)
 {
    // Sets the window name.
 }
 
 //______________________________________________________________________________
-void TVirtualX::SetIconName(Window_t /*id*/, char */*name*/)
+void TVirtualX::SetIconName(Window_t /*id*/, char * /*name*/)
 {
    // Sets the window icon name.
 }
@@ -1424,8 +1424,8 @@ void TVirtualX::SetIconPixmap(Window_t /*id*/, Pixmap_t /*pix*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::SetClassHints(Window_t /*id*/, char */*className*/,
-                              char */*resourceName*/)
+void TVirtualX::SetClassHints(Window_t /*id*/, char * /*className*/,
+                              char * /*resourceName*/)
 {
    // Sets the windows class and resource name.
 }
@@ -1483,7 +1483,7 @@ void TVirtualX::SetWMTransientHint(Window_t /*id*/, Window_t /*main_id*/)
 
 //______________________________________________________________________________
 void TVirtualX::DrawString(Drawable_t /*id*/, GContext_t /*gc*/, Int_t /*x*/,
-                           Int_t /*y*/, const char */*s*/, Int_t /*len*/)
+                           Int_t /*y*/, const char * /*s*/, Int_t /*len*/)
 {
    // Each character image, as defined by the font in the GC, is treated as an
    // additional mask for a fill operation on the drawable.
@@ -1504,7 +1504,7 @@ void TVirtualX::DrawString(Drawable_t /*id*/, GContext_t /*gc*/, Int_t /*x*/,
 }
 
 //______________________________________________________________________________
-Int_t TVirtualX::TextWidth(FontStruct_t /*font*/, const char */*s*/,
+Int_t TVirtualX::TextWidth(FontStruct_t /*font*/, const char * /*s*/,
                              Int_t /*len*/)
 {
    // Return lenght of the string "s" in pixels. Size depends on font.
@@ -1599,7 +1599,7 @@ void TVirtualX::DrawRectangle(Drawable_t /*id*/, GContext_t /*gc*/,
 
 //______________________________________________________________________________
 void TVirtualX::DrawSegments(Drawable_t /*id*/, GContext_t /*gc*/,
-                             Segment_t */*seg*/, Int_t /*nseg*/)
+                             Segment_t * /*seg*/, Int_t /*nseg*/)
 {
    // Draws multiple line segments. Each line is specified by a pair of points.
    // Segment_t *seg - specifies an array of segments
@@ -1667,7 +1667,7 @@ void TVirtualX::ConvertPrimarySelection(Window_t /*id*/, Atom_t /*clipboard*/,
 }
 
 //______________________________________________________________________________
-void TVirtualX::LookupString(Event_t */*event*/, char */*buf*/,
+void TVirtualX::LookupString(Event_t * /*event*/, char * /*buf*/,
                              Int_t /*buflen*/, UInt_t &keysym)
 {
    // Converts the keycode from the event structure to a key symbol (according
@@ -1717,24 +1717,24 @@ void TVirtualX::GetWindowSize(Drawable_t /*id*/, Int_t &x, Int_t &y,
    //        parent window's origin
    // w, h - the inside size of the window, not including the border
 
-   x = y = 0;
-   w = h = 1;
+   x = y = 0; 
+   w = h = 1; 
 }
+
 //______________________________________________________________________________
-void TVirtualX::FillPolygon(Window_t /*id*/, GContext_t /*gc*/,
-                            Point_t */*points*/, Int_t /*npnt*/)
-{
+void TVirtualX::FillPolygon(Window_t /*id*/, GContext_t /*gc*/, Point_t *
+                            /*points*/, Int_t /*npnt*/) {
    // Fills the region closed by the specified path. The path is closed
-   // automatically if the last point in the list does not coincide with
-   // the first point.
+   // automatically if the last point in the list does not coincide with the
+   // first point.
    //
    // Point_t *points - specifies an array of points
    // Int_t npnt      - specifies the number of points in the array
    //
    // GC components in use: function, plane-mask, fill-style, fill-rule,
-   // subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.
-   // GC mode-dependent components: foreground, background, tile, stipple,
-   // tile-stipple-x-origin, and tile-stipple-y-origin.
+   // subwindow-mode, clip-x-origin, clip-y-origin, and clip-mask.  GC
+   // mode-dependent components: foreground, background, tile, stipple,
+   // tile-stipple-x-origin, and tile-stipple-y-origin. 
    // (see also the GCValues_t structure)
 }
 
@@ -1774,7 +1774,7 @@ void TVirtualX::SetForeground(GContext_t /*gc*/, ULong_t /*foreground*/)
 
 //______________________________________________________________________________
 void TVirtualX::SetClipRectangles(GContext_t /*gc*/, Int_t /*x*/, Int_t /*y*/,
-                                  Rectangle_t */*recs*/, Int_t /*n*/)
+                                  Rectangle_t * /*recs*/, Int_t /*n*/)
 {
    // Sets clipping rectangles in graphics context. [x,y] specify the origin
    // of the rectangles. "recs" specifies an array of rectangles that define
@@ -1805,7 +1805,7 @@ void TVirtualX::DestroyRegion(Region_t /*reg*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::UnionRectWithRegion(Rectangle_t */*rect*/, Region_t /*src*/,
+void TVirtualX::UnionRectWithRegion(Rectangle_t * /*rect*/, Region_t /*src*/,
                                     Region_t /*dest*/)
 {
    // Updates the destination region from a union of the specified rectangle
@@ -1817,7 +1817,7 @@ void TVirtualX::UnionRectWithRegion(Rectangle_t */*rect*/, Region_t /*src*/,
 }
 
 //______________________________________________________________________________
-Region_t TVirtualX::PolygonRegion(Point_t */*points*/, Int_t /*np*/,
+Region_t TVirtualX::PolygonRegion(Point_t * /*points*/, Int_t /*np*/,
                                   Bool_t /*winding*/)
 {
    // Returns a region for the polygon defined by the points array.
@@ -1897,13 +1897,13 @@ Bool_t  TVirtualX::EqualRegion(Region_t /*rega*/, Region_t /*regb*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t */*rect*/)
+void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 {
    // Returns smallest enclosing rectangle.
 }
 
 //______________________________________________________________________________
-char **TVirtualX::ListFonts(char */*fontname*/, Int_t /*max*/, Int_t &/*count*/)
+char **TVirtualX::ListFonts(char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
 {
    // Returns list of font names matching fontname regexp, like "-*-times-*".
    // The pattern string can contain any characters, but each asterisk (*)
@@ -1922,7 +1922,7 @@ char **TVirtualX::ListFonts(char */*fontname*/, Int_t /*max*/, Int_t &/*count*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::FreeFontNames(char **/*fontlist*/)
+void TVirtualX::FreeFontNames(char ** /*fontlist*/)
 {
    // Frees the specified the array of strings "fontlist".
 }
@@ -1953,7 +1953,7 @@ void TVirtualX::PutPixel(Drawable_t /*id*/, Int_t /*x*/, Int_t /*y*/,
    // The image must contain the x and y coordinates.
    //
    // id    - specifies the image
-   // x, y  - coordinates
+   // x, y  - coordinates 
    // pixel - the new pixel value
 }
 
@@ -2310,25 +2310,25 @@ void TVirtualX::glNewList(UInt_t /*list*/, UInt_t /*mode*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::glGetBooleanv(UInt_t /*mode*/, UChar_t */*bRet*/)
+void TVirtualX::glGetBooleanv(UInt_t /*mode*/, UChar_t * /*bRet*/)
 {
    // Returns the Boolean value or values of the specified parameter "mode".
 }
 
 //______________________________________________________________________________
-void TVirtualX::glGetDoublev(UInt_t /*mode*/, Double_t */*dRet*/)
+void TVirtualX::glGetDoublev(UInt_t /*mode*/, Double_t * /*dRet*/)
 {
    // Returns the double value or values of the specified parameter "mode".
 }
 
 //______________________________________________________________________________
-void TVirtualX::glGetFloatv(UInt_t /*mode*/, Float_t */*fRet*/)
+void TVirtualX::glGetFloatv(UInt_t /*mode*/, Float_t * /*fRet*/)
 {
    // Returns the float value or values of the specified parameter "mode".
 }
 
 //______________________________________________________________________________
-void TVirtualX::glGetIntegerv(UInt_t /*mode*/, Int_t */*iRet*/)
+void TVirtualX::glGetIntegerv(UInt_t /*mode*/, Int_t * /*iRet*/)
 {
    // Returns the integer value or values of the specified parameter "mode".
 }
@@ -2445,14 +2445,14 @@ void TVirtualX::glTranslated(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::glMultMatrixd(const Double_t */*matrix*/)
+void TVirtualX::glMultMatrixd(const Double_t * /*matrix*/)
 {
    // Multiplies the current matrix by the one specified in "matrix".
    // The product replaces the current matrix.
 }
 
 //______________________________________________________________________________
-void TVirtualX::glColor3fv(const Float_t */*color*/)
+void TVirtualX::glColor3fv(const Float_t * /*color*/)
 {
    // Sets the current color to "color"
    //
@@ -2466,7 +2466,7 @@ void TVirtualX::glVertex3f(Float_t /*x*/, Float_t /*y*/, Float_t /*z*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::glVertex3fv(const Float_t */*vert*/)
+void TVirtualX::glVertex3fv(const Float_t * /*vert*/)
 {
    // Specifies a vertex with coordinates (x, y, z).
    //
@@ -2646,7 +2646,7 @@ void TVirtualX::glPolygonMode(UInt_t /*face*/, UInt_t /*mode*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::glLoadMatrixd(const Double_t */*matrix*/)
+void TVirtualX::glLoadMatrixd(const Double_t * /*matrix*/)
 {
    // Replaces the current matrix with the specified "matrix".
 }
@@ -2662,7 +2662,7 @@ void TVirtualX::glShadeModel(UInt_t /*mode*/)
 }
 
 //______________________________________________________________________________
-void TVirtualX::glNormal3fv(const Float_t */*norm*/)
+void TVirtualX::glNormal3fv(const Float_t * /*norm*/)
 {
    // Sets the current normal vector.
    //
