@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.61 2002/05/08 07:23:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.62 2002/05/09 16:51:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -296,7 +296,7 @@ zombie:
 }
 
 //______________________________________________________________________________
-TFile::TFile(const TFile &file)
+TFile::TFile(const TFile &file) : TDirectory()
 {
    ((TFile&)file).Copy(*this);
 }

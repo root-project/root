@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.8 2002/03/07 18:11:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.9 2002/05/18 08:21:58 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
 }
 
 //______________________________________________________________________________
-TRefArray::TRefArray(const TRefArray &a)
+TRefArray::TRefArray(const TRefArray &a) : TSeqCollection()
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
