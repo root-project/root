@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.17 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.18 2004/02/20 18:14:40 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -86,7 +86,7 @@ private:
    Int_t        GetVersion() const { return fVersion; }
    Int_t        ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
    Bool_t       GetUserPasswd(TString &user, TString &passwd,
-                              Bool_t &pwhash, Bool_t &srppwd);
+                              Bool_t &pwhash, Bool_t srppwd);
    char        *GetRandString(Int_t Opt,Int_t Len);
    Int_t        RfioAuth(TString &user);
    void         SetEnvironment();
@@ -130,7 +130,7 @@ public:
                           Int_t *Message, Int_t *Rflag, CheckSecCtx_t funcheck);
    Bool_t             CheckNetrc(TString &user, TString &passwd);
    Bool_t             CheckNetrc(TString &user, TString &passwd,
-                                 Bool_t &pwhash, Bool_t &srppwd);
+                                 Bool_t &pwhash, Bool_t srppwd);
    THostAuth         *GetHostAuth() const { return fHostAuth; }
    const char        *GetProtocol() const { return fProtocol; }
    const char        *GetRemoteHost() const { return fRemote; }
@@ -154,7 +154,7 @@ public:
    static Bool_t      GetGlobalSRPPwd();
    static const char *GetGlobalUser();
    static GlobusAuth_t GetGlobusAuthHook();
-   static THostAuth  *GetHostAuth(const char *host, const char *user="", 
+   static THostAuth  *GetHostAuth(const char *host, const char *user="",
                                   Option_t *opt = "R", Int_t *Exact = 0);
    static Bool_t      GetPromptUser();
    static TList      *GetProofAuthInfo();
