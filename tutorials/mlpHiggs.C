@@ -7,6 +7,7 @@ void mlpHiggs(Int_t ntrain=100) {
    
    if (!gROOT->GetClass("TMultiLayerPerceptron")) {
       gSystem->Load("libMLP");
+      gSystem->Load("libTreePlayer");
    }
 
    // Prepare inputs
@@ -62,8 +63,9 @@ void mlpHiggs(Int_t ntrain=100) {
    }
    train.Print();
    test.Print();
-   // Build and train the NN
-   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf/F,ptsumf/F,acolin/F,acopl/F:8:type/I",simu);
+   // Build and train the NN ptsumf is used as a weight since we are primarly 
+   // interested  by high pt events.
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf,acolin,acopl:8:type","ptsumf",simu);
    mlp->SetTrainingDataSet(&train);
    mlp->SetTestDataSet(&test);
    mlp->Train(ntrain, "text,graph,update=10");

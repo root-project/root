@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.2 2003/08/29 14:28:40 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.h,v 1.3 2003/09/05 10:40:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TNeuron
@@ -11,6 +11,7 @@
 #include "TObjArray.h"
 #endif
 
+class TTreeFormula;
 class TSynapse;
 class TBranch;
 class TTree;
@@ -45,8 +46,7 @@ class TNeuron : public TObject {
    virtual ~ TNeuron() {} 
    inline TSynapse* GetPre(Int_t n) { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) { return (TSynapse*) fpost.At(n); }
-   void UseBranch(TBranch*, char);
-   void UseBranch(TTree*, const char*, char);
+   TTreeFormula* UseBranch(TTree*, const char*);
    Double_t GetValue();
    Double_t GetDerivative();
    Double_t GetError();
@@ -70,12 +70,11 @@ class TNeuron : public TObject {
  private:
    TObjArray fpre;        // pointers to the previous level in a network
    TObjArray fpost;       // pointers to the next level in a network
-   Double_t fBranch;      // branch to be used for inputs and outputs
    Double_t fWeight;      // weight used for computation
    Double_t fNorm[2];     // normalisation to mean=0, RMS=1.
    NeuronType fType;      // neuron type
-   char fBType;           // branch type
    //buffers
+   TTreeFormula* fFormula;//! formula to be used for inputs and outputs
    Bool_t fNewValue;      //! do we need to compute fValue again ?
    Double_t fValue;       //! buffer containing the last neuron output
    Bool_t fNewDeriv;      //! do we need to compute fDerivative again ?
@@ -84,7 +83,7 @@ class TNeuron : public TObject {
    Double_t fDeDw;        //! buffer containing the last derivative of the error
    Double_t fDEDw;        //! buffer containing the sum over all examples of DeDw
    
-   ClassDef(TNeuron, 1)   // Neuron for MultiLayerPerceptrons
+   ClassDef(TNeuron, 2)   // Neuron for MultiLayerPerceptrons
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.5 2003/09/11 10:39:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.6 2003/09/11 14:38:28 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -24,6 +24,7 @@
 #include "TSynapse.h"
 #include "TNeuron.h"
 #include "TTree.h"
+#include "TTreeFormula.h"
 #include "TBranch.h"
 #include "TCanvas.h"
 #include "TROOT.h"
@@ -45,7 +46,7 @@ TNeuron::TNeuron(TNeuron::NeuronType type)
    fNewValue = true;
    fNewDeriv = true;
    fNewDeDw = true;
-   fBType = 'D';
+   fFormula = NULL;
 }
 
 //______________________________________________________________________________
@@ -814,76 +815,29 @@ void TNeuron::AddPost(TSynapse * post)
 }
 
 //______________________________________________________________________________
-void TNeuron::UseBranch(TBranch * input, char btype)
+TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
 {
-   // Sets a branch that can be used to make the neuron an input.
-   // The branch is automatically normalized to mean=0, RMS=1.
+   // Sets a formula that can be used to make the neuron an input.
+   // The formula is automatically normalized to mean=0, RMS=1.
    // This normalisation is used by GetValue() (input neurons) 
    // and GetError() (output neurons)
-   input->SetAddress(&fBranch);
-   fBType = btype;
+   if (fFormula) delete fFormula;
+   fFormula = new TTreeFormula(Form("NF%d",this),formula,input);
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
-   TString cmd = TString(input->GetName()) + ">>tmpb";
    gROOT->SetBatch(1);
    TCanvas tmpCanvas;
-   input->GetTree()->Draw(cmd.Data(),"","groff");
+   input->Draw(Form("%s>>tmpb",formula),"","groff");
    gROOT->SetBatch(0);
    fNorm[0] = tmp.GetRMS();
    fNorm[1] = tmp.GetMean();
-}
-
-//______________________________________________________________________________
-void TNeuron::UseBranch(TTree* input, const char* bname, char btype)
-{
-   // Sets a branch that can be used to make the neuron an input.
-   // The branch is automatically normalized to mean=0, RMS=1.
-   // This normalisation is used by GetValue() (input neurons) 
-   // and GetError() (output neurons)
-   // This version doesn't see the branch directly and can thus 
-   // be used with TChains 
-   input->SetBranchAddress(bname,&fBranch);
-   fBType = btype;
-   TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
-   TString cmd = TString(bname) + ">>tmpb";
-   gROOT->SetBatch(1);
-   TCanvas tmpCanvas;
-   input->Draw(cmd.Data(),"","groff");
-   gROOT->SetBatch(0);
-   fNorm[0] = tmp.GetRMS();
-   fNorm[1] = tmp.GetMean();
+   return fFormula;
 }
 
 //______________________________________________________________________________
 Double_t TNeuron::GetBranch()
 {
-   // Uses the branch type to return the value.
-   Double_t branch = 0;
-   switch (fBType) {
-   case 'I':
-      {
-         branch = *(Int_t *) (&fBranch);
-         break;
-      }
-   case 'i':
-      {
-         branch = *(UInt_t *) (&fBranch);
-         break;
-      }
-   case 'F':
-      {
-         branch = *(Float_t *) (&fBranch);
-         break;
-      }
-   case 'D':
-      {
-         branch = fBranch;
-         break;
-      }
-   default:
-      {
-         Error("GetBranch","Branch type %d not handled. Try I,i,F,D.",fBType); 
-      }
-   }
+   // Returns the formula value.
+   Double_t branch = fFormula->EvalInstance();
    if (isnan(branch))
       branch = 0.;
    return branch;
@@ -986,35 +940,8 @@ Double_t TNeuron::GetDeDw()
 void TNeuron::ForceExternalValue(Double_t value)
 {
    // Uses the branch type to force an external value.
-   switch (fBType) {
-   case 'I':
-      {
-         Int_t* tmp = (Int_t *) (&fBranch);
-         *tmp = (Int_t)value;
-         break;
-      }
-   case 'i':
-      {
-         UInt_t* tmp = (UInt_t *) (&fBranch);
-         *tmp = (UInt_t)value;
-         break;
-      }
-   case 'F':
-      {
-         Float_t* tmp = (Float_t *) (&fBranch);
-         *tmp = (Float_t)value;
-         break;
-      }
-   case 'D':
-      {
-         fBranch = value;
-         break;
-      }
-   default:
-      {
-         Error("ForceExternalValue", "Branch type %d not handled. Try I,i,F,D.",fBType);
-      }
-   }
+   fNewValue = false;
+   fValue = (value - fNorm[1]) / fNorm[0];
 }
 
 //______________________________________________________________________________
@@ -1053,5 +980,4 @@ void TNeuron::SetDEDw(Double_t in)
    // Sets the derivative of the total error wrt the neuron weight.
    fDEDw = in; 
 }
-
 

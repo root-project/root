@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.1 2003/08/27 15:31:13 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.2 2003/10/20 08:40:00 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TMultiLayerPerceptron
@@ -19,6 +19,8 @@
 
 class TTree;
 class TEventList;
+class TTreeFormula;
+class TTreeFormulaManager;
 
 //____________________________________________________________________
 //
@@ -51,7 +53,10 @@ class TMultiLayerPerceptron : public TObject {
    TMultiLayerPerceptron(TString layout, TTree* data = NULL, 
                          TEventList* training = NULL, 
                          TEventList* test = NULL);
-   virtual ~ TMultiLayerPerceptron() {} 
+   TMultiLayerPerceptron(TString layout, TString weight, TTree* data = NULL,
+                         TEventList* training = NULL,
+                         TEventList* test = NULL);
+   virtual ~ TMultiLayerPerceptron();  
    void SetData(TTree*);
    void SetTrainingDataSet(TEventList* train);
    void SetTestDataSet(TEventList* test);
@@ -101,24 +106,28 @@ class TMultiLayerPerceptron : public TObject {
    void Shuffle(Int_t*, Int_t);
    void MLP_Line(Double_t*, Double_t*, Double_t);
    
-   TTree* fData;                   //! buffer holding a pointer to the tree used as datasource
+   TTree* fData;                   //! pointer to the tree used as datasource
+   Int_t fCurrentTree;             //! index of the current tree in a chain
+   Double_t fCurrentTreeWeight;    //! weight of the current tree in a chain
    TObjArray fNetwork;             // Collection of all the neurons in the network
-   TObjArray fFirstLayer;          // Collection of the input neurons. This is a subset of fNetwork
-   TObjArray fLastLayer;           // Collection of the output neurons. This is a subset of fNetwork
+   TObjArray fFirstLayer;          // Collection of the input neurons; subset of fNetwork
+   TObjArray fLastLayer;           // Collection of the output neurons; subset of fNetwork
    TObjArray fSynapses;            // Collection of all the synapses in the network
-   TString fStructure;             // String containing the network structure. This is the constructor first argument
+   TString fStructure;             // String containing the network structure
+   TString fWeight;                // String containing the event weight
    TEventList *fTraining;          //! EventList defining the events in the training dataset
    TEventList *fTest;              //! EventList defining the events in the test dataset
    LearningMethod fLearningMethod; //! The Learning Method
-   Double_t fEventWeight;          //! buffer containing the event weight
+   TTreeFormula* fEventWeight;     //! formula representing the event weight
+   TTreeFormulaManager* fManager;  //! TTreeFormulaManager for the weight and neurons
    Double_t fEta;                  //! Eta - used in stochastic minimisation - Default=0.1
    Double_t fEpsilon;              //! Epsilon - used in stochastic minimisation - Default=0.
    Double_t fDelta;                //! Delta - used in stochastic minimisation - Default=0.
    Double_t fEtaDecay;             //! EtaDecay - Eta *= EtaDecay at each epoch - Default=1.
    Double_t fTau;                  //! Tau - used in line search - Default=3.
    Double_t fLastAlpha;            //! internal parameter used in line search
-   Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent. Default=50
-   ClassDef(TMultiLayerPerceptron, 1)	// a Neural Network
+   Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent - Default=50
+   ClassDef(TMultiLayerPerceptron, 2)	// a Neural Network
 };
 
 #endif

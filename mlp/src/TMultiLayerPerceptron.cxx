@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.10 2003/09/11 13:30:30 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.11 2003/10/20 08:40:00 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -13,13 +13,14 @@
 // neurons are linear.
 //
 // The basic input is a TTree and two (training and test) TEventLists.
-// For classification jobs, a branch (maybe in a TFriend) must contain 
-// the expected output.
+// Input and output neurons are assigned a value computed for each event 
+// with the same possibilities as for TTree::Draw().
+// Events may be weighted individualy or via TTree::SetWeight().
 // 6 learning methods are available: kStochastic, kBatch, 
 // kSteepestDescent, kRibierePolak, kFletcherReeves and kBFGS.
 //
-// This implementation is *inspired* from the mlpfit package from 
-// J.Schwindling et al.
+// This implementation, written by C. Delaere,  is *inspired* from 
+// the mlpfit package from J.Schwindling et al.
 //
 ///////////////////////////////////////////////////////////////////////////
 //BEGIN_HTML <!--
@@ -39,14 +40,14 @@ institutions. Some randomly choosen examples are:</P>
 	over background discrimination)</P>
 </UL>
 <P>More than 50% of neural networks are multilayer perceptrons. This
-implementation of multilayer perceptrons 
-is inspired from the 
+implementation of multilayer perceptrons is inspired from the 
 <A HREF="http://schwind.home.cern.ch/schwind/MLPfit.html">MLPfit
 package</A> originaly written by Jerome Schwindling. MLPfit remains
 one of the fastest tool for neural networks studies, and this ROOT
 add-on will not try to compete on that. A clear and flexible Object
 Oriented implementation has been choosen over a faster but more
-difficult to maintain code.</P>
+difficult to maintain code. Nevertheless, the time penalty does not 
+exceed a factor 2.</P>
 <UL>
 	<LI><P><A NAME="mlp"></A><FONT COLOR="#5c8526">
 	<FONT SIZE=4 STYLE="font-size: 15pt">The
@@ -138,16 +139,17 @@ the direction is reset to the steepes descent.</P>
 	to use it...</FONT></FONT></P></LI>
 </UL>
 <P><FONT SIZE=3>TMLP is build from 3 classes: TNeuron, TSynapse and
-TMultiLayerPerceptron. Only TMultiLayerPerceptron sould be used
+TMultiLayerPerceptron. Only TMultiLayerPerceptron should be used
 explicitely by the user.</FONT></P>
 <P><FONT SIZE=3>TMultiLayerPerceptron will take examples from a TTree
 given in the constructor. The network is described by a simple
-string: The input/output layers are defined by giving the branch
-names and types, separated by comas. Hidden layers are just described
+string: The input/output layers are defined by giving the expression for 
+each neuron, separated by comas. Hidden layers are just described
 by the number of neurons. The layers are separated by semicolons.
-In addition, output layer types can be preceded by '@' (e.g "out/@F")
+In addition, output layer formulas can be preceded by '@' (e.g "@out")
 if one wants to also normalize the output.
-Input and outputs are taken from the TTree given as second argument.
+Input and outputs are taken from the TTree given as second argument. 
+Expressions are evaluated as for TTree::Draw().
 One defines the training and test datasets by TEventLists.</FONT></P>
 <P STYLE="margin-left: 2cm"><FONT SIZE=3><SPAN STYLE="background: #e6e6e6">
 <U><FONT COLOR="#ff0000">Example</FONT></U><SPAN STYLE="text-decoration: none">:
@@ -175,21 +177,24 @@ TMultiLayerPerceptron::kSteepestDescent,<BR>
 TMultiLayerPerceptron::kRibierePolak,<BR>
 TMultiLayerPerceptron::kFletcherReeves,<BR>
 TMultiLayerPerceptron::kBFGS<BR></FONT></P>
+<P>A weight can be assigned to events, either in the constructor, either 
+with TMultiLayerPerceptron::SetEventWeight(). In addition, the TTree weight
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
+is taken into account.</P>
 <P><FONT SIZE=3>Finally, one starts the training with
 TMultiLayerPerceptron::Train(Int_t nepoch, Option_t* options). The
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
-<P>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx<P>
 first argument is the number of epochs while option is a string that
 can contain: &quot;text&quot; (simple text output) , &quot;graph&quot;
 (evoluting graphical training curves), &quot;update=X&quot; (step for
@@ -209,8 +214,6 @@ the feature lists are not exactly matching:
 	<LI><P>output neurons can be normalized, this is not the case for mlpfit</P></LI>
 	<LI><P>the neural net is exported in C++ (not in FORTRAN)</P></LI>
 	<LI><P>the drawResult() method allows a fast check of the learning procedure</P></LI>
-	<LI><P>input and outputs must be in existing trees, and cannot be computed dynamically, as it is for the paw mlpfit implementation</P></LI>
-	<LI><P>mlpfit remains faster</P></LI>
 </UL>
 In addition, the paw version of mlpfit had additional limitations on the number of neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerceptron.
 <!-- */
@@ -233,6 +236,8 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TMath.h"
+#include "TTreeFormula.h"
+#include "TTreeFormulaManager.h"
 
 ClassImp(TMultiLayerPerceptron)
 
@@ -245,8 +250,11 @@ TMultiLayerPerceptron::TMultiLayerPerceptron()
    fLastLayer.SetOwner(false);
    fSynapses.SetOwner(true);
    fData = NULL;
+   fCurrentTree = -1;
+   fCurrentTreeWeight = 1;
    fTraining = NULL;
-   fEventWeight = 1;
+   fEventWeight = NULL;
+   fManager = NULL;
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
    fEta = .1;
    fEtaDecay = 1;
@@ -262,14 +270,13 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(TString layout, TTree * data,
                                              TEventList * training,
                                              TEventList * test)
 {
-   // Usual constructor
    // The network is described by a simple string: 
    // The input/output layers are defined by giving 
-   // the branch names and types, separated by comas.
+   // the branch names separated by comas.
    // Hidden layers are just described by the number of neurons.
    // The layers are separated by semicolons.
-   // Ex: "x/F,y/F:10:5:f/F"
-   // The output type can be prepended by '@' if the variable has to be
+   // Ex: "x,y:10:5:f"
+   // The output can be prepended by '@' if the variable has to be
    // normalized.
    // Input and outputs are taken from the TTree given as second argument.
    // training and test are the two TEventLists defining events 
@@ -283,12 +290,14 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(TString layout, TTree * data,
    fSynapses.SetOwner(true);
    fStructure = layout;
    fData = data;
+   fCurrentTree = -1;
+   fCurrentTreeWeight = 1;
    fTraining = training;
    fTest = test;
+   fWeight = "1";
    if (data)
       BuildNetwork();
    fLearningMethod = TMultiLayerPerceptron::kBFGS;
-   fEventWeight = 1;
    fEta = .1;
    fEtaDecay = 1;
    fDelta = 0;
@@ -299,21 +308,74 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(TString layout, TTree * data,
 }
 
 //______________________________________________________________________________
+TMultiLayerPerceptron::TMultiLayerPerceptron(TString layout, TString weight, TTree * data,
+                                             TEventList * training,
+                                             TEventList * test)
+{
+   // The network is described by a simple string: 
+   // The input/output layers are defined by giving 
+   // the branch names separated by comas.
+   // Hidden layers are just described by the number of neurons.
+   // The layers are separated by semicolons.
+   // Ex: "x,y:10:5:f"
+   // The output can be prepended by '@' if the variable has to be
+   // normalized.
+   // Input and outputs are taken from the TTree given as second argument.
+   // training and test are the two TEventLists defining events 
+   // to be used during the neural net training. 
+   // Both the TTree and the TEventLists  can be defined in the constructor, 
+   // or later with the suited setter method.
+   
+   fNetwork.SetOwner(true);
+   fFirstLayer.SetOwner(false);
+   fLastLayer.SetOwner(false);
+   fSynapses.SetOwner(true);
+   fStructure = layout;
+   fData = data;
+   fCurrentTree = -1;
+   fTraining = training;
+   fTest = test;
+   fWeight = weight;
+   if (data)
+      BuildNetwork();
+   fLearningMethod = TMultiLayerPerceptron::kBFGS;
+   fEta = .1;
+   fEtaDecay = 1;
+   fDelta = 0;
+   fEpsilon = 0;
+   fTau = 3;
+   fLastAlpha = 0;
+   fReset = 50;
+}
+
+//______________________________________________________________________________
+TMultiLayerPerceptron::~TMultiLayerPerceptron() { }
+ 
+//______________________________________________________________________________
 void TMultiLayerPerceptron::SetData(TTree * data)
 {
    // Set the data source
+   if (fData) {
+      cerr << "Error: data already defined." << endl;
+      return;
+   }
    fData = data;
-   BuildNetwork();
+   if (data)
+      BuildNetwork();
 }
 
 //______________________________________________________________________________
 void TMultiLayerPerceptron::SetEventWeight(TString branch)
 {
-   // Set the event weights. Data must be set.
-   if (fData)
-      fData->SetBranchAddress(branch.Data(), &fEventWeight);
-   else
-      Error("SetEventWeight","no data set. Cannot set the weights");
+   // Set the event weight
+   fWeight=branch;
+   if (fData) {
+      if (fEventWeight) {
+         fManager->Remove(fEventWeight);
+         delete fEventWeight;
+      }
+      fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
+   }
 }
 
 //______________________________________________________________________________
@@ -404,6 +466,11 @@ void TMultiLayerPerceptron::GetEntry(Int_t entry)
    // Load an entry into the network
    if (fData)
       fData->GetEntry(entry);
+   if (fData->GetTreeNumber() != fCurrentTree) {
+      fCurrentTree = fData->GetTreeNumber();
+      fManager->Notify();
+      fCurrentTreeWeight = fData->GetWeight();
+   }
    Int_t nentries = fNetwork.GetEntriesFast();
    for (Int_t i=0;i<nentries;i++) {
       TNeuron *neuron = (TNeuron *)fNetwork.UncheckedAt(i);
@@ -592,7 +659,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                BFGSH.UnitMatrix();
                SteepestDir(dir);
                if (LineSearch(dir, buffer)) {
-                  cout << "Line search fail" << endl;
+                  Error("TMultiLayerPerceptron::Train()","Line search fail");
                   iepoch = nEpoch;
                }
             }
@@ -602,8 +669,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       // Security: would the learning lead to non real numbers, 
       // the learning should stop now.
       if (isnan(GetError(TMultiLayerPerceptron::kTraining))) {
-//          || isinf(GetError(TMultiLayerPerceptron::kTraining))) {
-         cout << "Training Error. Stop." <<endl;
+         Error("TMultiLayerPerceptron::Train()","Stop.");
          iepoch = nEpoch;
       }
       // Process other ROOT events.  Time penalty is less than 
@@ -682,7 +748,8 @@ Double_t TMultiLayerPerceptron::GetError(Int_t event)
                 ((TNeuron *) fLastLayer[i])->GetError());
    }
    error /= 2.;
-   error *= fEventWeight;
+   error *= fEventWeight->EvalInstance();
+   error *= fCurrentTreeWeight;
    return error;
 }
 
@@ -726,19 +793,22 @@ void TMultiLayerPerceptron::ComputeDEDw()
       neuron = (TNeuron *) fNetwork.UncheckedAt(i);
       neuron->SetDEDw(0.);
    }
+   Double_t eventWeight = 1.;
    if (fTraining) {
       Int_t nEvents = fTraining->GetN();
       for (i = 0; i < nEvents; i++) {
          GetEntry(fTraining->GetEntry(i));
+	 eventWeight = fEventWeight->EvalInstance();
+	 eventWeight *= fCurrentTreeWeight;
          nentries = fSynapses.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             synapse = (TSynapse *) fSynapses.UncheckedAt(j);
-            synapse->SetDEDw(synapse->GetDEDw() + synapse->GetDeDw());
+            synapse->SetDEDw(synapse->GetDEDw() + (synapse->GetDeDw()*eventWeight));
          }
          nentries = fNetwork.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             neuron = (TNeuron *) fNetwork.UncheckedAt(j);
-            neuron->SetDEDw(neuron->GetDEDw() + neuron->GetDeDw());
+            neuron->SetDEDw(neuron->GetDEDw() + (neuron->GetDeDw()*eventWeight));
          }
       }
       nentries = fSynapses.GetEntriesFast();
@@ -755,15 +825,17 @@ void TMultiLayerPerceptron::ComputeDEDw()
       Int_t nEvents = (Int_t) fData->GetEntries();
       for (i = 0; i < nEvents; i++) {
          GetEntry(i);
+	 eventWeight = fEventWeight->EvalInstance();
+	 eventWeight *= fCurrentTreeWeight;
          nentries = fSynapses.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             synapse = (TSynapse *) fSynapses.UncheckedAt(j);
-            synapse->SetDEDw(synapse->GetDEDw() + synapse->GetDeDw());
+            synapse->SetDEDw(synapse->GetDEDw() + (synapse->GetDeDw()*eventWeight));
          }
          nentries = fNetwork.GetEntriesFast();
          for (j=0;j<nentries;j++) {
             neuron = (TNeuron *) fNetwork.UncheckedAt(j);
-            neuron->SetDEDw(neuron->GetDEDw() + neuron->GetDeDw());
+            neuron->SetDEDw(neuron->GetDEDw() + (neuron->GetDeDw()*eventWeight));
          }
       }
       nentries = fSynapses.GetEntriesFast();
@@ -804,6 +876,7 @@ void TMultiLayerPerceptron::Randomize()
 void TMultiLayerPerceptron::BuildNetwork()
 {
    // Instanciates the network from the description
+   fManager = new TTreeFormulaManager;
    TString input  = TString(fStructure(0, fStructure.First(':')));
    TString hidden = TString(
            fStructure(fStructure.First(':') + 1,
@@ -815,60 +888,45 @@ void TMultiLayerPerceptron::BuildNetwork()
            hidden(hidden.Last(':') + 1,
                   hidden.Length() - (hidden.Last(':') + 1))).Data());
    if (input.Length() == 0) {
-      Error("BuildNetwork()","malformed structure. No input layer");
+      Error("BuildNetwork()","malformed structure. No input layer.");
       return;
    }
    if (output.Length() == 0) {
-      Error("BuildNetwork()","malformed structure. No output layer");
+      Error("BuildNetwork()","malformed structure. No output layer.");
       return;
    }
    BuildFirstLayer(input);
    BuildHiddenLayers(hidden);
    BuildLastLayer(output, bll);
+   if(fManager->GetMultiplicity()>1)
+      Warning("BuildNetwork()","all indices in arrays must be specified.\nFirst element will be assumed.");
+   fManager->Add((fEventWeight = new TTreeFormula("NNweight",fWeight.Data(),fData)));
+   fManager->Sync();
 }
 
 //______________________________________________________________________________
 void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
 {
-   // Instanciates the branches in input
-   // Input branches are normalised and the type is set to kOff 
-   // (simple forward of the branch value)
+   // Instanciates the neurons in input
+   // Inputs are normalised and the type is set to kOff 
+   // (simple forward of the formula value)
    
    Int_t beg = 0;
    Int_t end = input.Index(",", beg + 1);
    TString brName;
-   char brType;
    TNeuron *neuron = NULL;
    while (end != -1) {
       brName = TString(input(beg, end - beg));
-      Int_t slashPos = brName.Index("/");
-      if (slashPos != -1) {
-         brType = brName[slashPos + 1];
-         brName = brName(0, slashPos);
-      } else
-         brType = 'D';
       neuron = new TNeuron(TNeuron::kOff);
-      if (!fData->GetBranch(brName.Data())) {
-         Error("BuildNetwork()","malformed structure. Unknown Branch",brName.Data());
-      }
-      neuron->UseBranch(fData,brName.Data(), brType);
+      fManager->Add(neuron->UseBranch(fData,brName.Data()));
       fFirstLayer.AddLast(neuron);
       fNetwork.AddLast(neuron);
       beg = end + 1;
       end = input.Index(",", beg + 1);
    }
    brName = TString(input(beg, input.Length() - beg));
-   Int_t slashPos = brName.Index("/");
-   if (slashPos != -1) {
-      brType = brName[slashPos + 1];
-      brName = brName(0, slashPos);
-   } else
-      brType = 'D';
    neuron = new TNeuron(TNeuron::kOff);
-   if (!fData->GetBranch(brName.Data())) {
-      Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
-   }
-   neuron->UseBranch(fData,brName.Data(), brType);
+   fManager->Add(neuron->UseBranch(fData,brName.Data()));
    fFirstLayer.AddLast(neuron);
    fNetwork.AddLast(neuron);
 }
@@ -918,35 +976,22 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    // Neurons are linear combinations of input.
    // By default, the branch is not normalised since this would degrade 
    // performance for classification jobs.
-   // Normalisation can be requested by putting '@' in front of 
-   // the branch type.
+   // Normalisation can be requested by putting '@' in front of the formula.
    Int_t beg = 0;
    Int_t end = output.Index(",", beg + 1);
    Int_t prevStop = fNetwork.GetEntriesFast();
    Int_t prevStart = prevStop - prev;
    TString brName;
-   char brType;
    TNeuron *neuron;
    TSynapse *synapse;
    Int_t j;
    while (end != -1) {
       Bool_t normalize = false;
       brName = TString(output(beg, end - beg));
-      Int_t slashPos = brName.Index("/");
-      if (slashPos != -1) {
-         brType = brName[slashPos + 1];
-         if (brType=='@') {
-            normalize = true;
-            brType = brName[slashPos + 2];
-         }
-         brName = brName(0, slashPos);
-      } else
-         brType = 'D';
+      if (brName[0]=='@')
+         normalize = true;
       neuron = new TNeuron(TNeuron::kLinear);
-      if (!fData->GetBranch(brName.Data())) {
-         Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
-      }
-      neuron->UseBranch(fData,brName.Data(), brType);
+      fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
       if(!normalize) neuron->SetNormalisation(0., 1.);
       for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
@@ -957,19 +1002,13 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
       beg = end + 1;
       end = output.Index(",", beg + 1);
    }
+   Bool_t normalize = false;
    brName = TString(output(beg, output.Length() - beg));
-   Int_t slashPos = brName.Index("/");
-   if (slashPos != -1) {
-      brType = brName[slashPos + 1];
-      brName = brName(0, slashPos);
-   } else
-      brType = 'D';
+   if (brName[0]=='@')
+      normalize = true;
    neuron = new TNeuron(TNeuron::kLinear);
-   if (!fData->GetBranch(brName.Data())) {
-      Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
-   }
-   neuron->UseBranch(fData,brName.Data(), brType);
-   neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
+   fManager->Add(neuron->UseBranch(fData,brName.Data() + (normalize?1:0)));
+   if(!normalize) neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
    for (j = prevStart; j < prevStop; j++) {
       synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
       fSynapses.AddLast(synapse);
