@@ -5,13 +5,6 @@ test: tests ;
 # The previous line contains just ';' in order to disable the implicit 
 # rule building an executable 'test' from test.C
 
-
-# Track the version of ROOT we are runing with
-
-ROOTV=$(ROOTTEST_HOME)/root_version
-dummy:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTV)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTV); echo "New ROOT version ($(ROOTSYS))" >&2))
-
-
 # The user directory should define
 # SUBDIRS listing any activated subdirectory
 # TEST_TARGETS with the list of activated test
@@ -166,6 +159,11 @@ DllSuf   = so
 ExeSuf   = 
 OutPutOpt= -o 
 endif
+
+# Track the version of ROOT we are runing with
+
+ROOTV=$(ROOTTEST_HOME)/root_version
+dummy:=$(shell (echo "$(ROOTSYS)" | diff - "$(ROOTV)" 2> /dev/null ) || (echo "$(ROOTSYS)" > $(ROOTV); echo "New ROOT version ($(ROOTSYS))" >&2))
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
 
