@@ -11,18 +11,17 @@ OSREL=`uname -r`
 TYPE=$MACHINE.$OSREL
 TARFILE=root_v$ROOTVERS.$TYPE.tar
 
-TAR=`which gtar`
-dum=`echo $TAR | grep "no gtar"`
-stat=$?
-if [ "$TAR" = '' ] || [ $stat = 0 ]; then
-   TAR="tar cvf"
-   rm -f ../$TARFILE.gz
-   EXCLUDE=
-else
+rm -f ../${TARFILE}.gz
+
+if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]
+then
    TAR=$TAR" zcvf"
-   rm -f ../$TARFILE.gz
    TARFILE=$TARFILE".gz"
    EXCLUDE="--exclude CVS"
+else
+   TAR="tar cvf"
+   EXCLUDE=
+   DOGZIP="y"
 fi
 
 cp -f main/src/rmain.cxx include/
@@ -37,7 +36,7 @@ $TAR $TARFILE $EXCLUDE $dir/LICENSE $dir/README $dir/bin \
    $dir/test/RootShower/*.cxx $dir/test/RootShower/Makefile* \
    $dir/test/RootShower/anim $dir/test/RootShower/icons \
    $dir/macros $dir/icons $dir/fonts $dir/etc $dir/proof/etc $dir/proof/utils
-if [ "$TAR" = '' ] || [ $stat = 0 ]; then
+if [ "x$DOGZIP" = "xy" ]; then
    gzip $TARFILE
 fi
 
