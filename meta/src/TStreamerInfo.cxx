@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.106 2001/11/30 16:58:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.107 2001/12/02 15:17:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2673,8 +2673,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
                           //must write StreamerInfo if pointer is null
                           if (!(*obj)) {
-                             TStreamerObjectPointer *fgElement = (TStreamerObjectPointer*)fElem[i];
-                             TClass *cl = fgElement->GetClass();
+                             TStreamerObjectPointer *elp = (TStreamerObjectPointer*)fgElement;
+                             TClass *cl = elp->GetClass();
                              cl->GetStreamerInfo()->ForceWriteInfo();
                           }
                           b << *obj;
