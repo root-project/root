@@ -1100,7 +1100,6 @@ char *funcheader;   /* funcheader = 'funcname(' */
        char *pt2;
        pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        pt1 = funcheader + strlen( "operator<" );
-       //char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        if ( *(pt2+2)=='<' ) {
           /* we have operator<< <...> */
           ++pt2;
