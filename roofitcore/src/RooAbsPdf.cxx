@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.81 2003/05/07 21:06:23 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.82 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -620,6 +620,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Opti
   Bool_t saveRes  = fopt.Contains("r") ;
   Bool_t cOpt     = oopt.Contains("p") || // for backward compatibility
                     oopt.Contains("c") ;
+  Bool_t blindfit   = fopt.Contains("b") ;  
+
+
   Int_t  ncpu = 1 ;
   if (oopt.Contains("2")) ncpu=2 ;
   if (oopt.Contains("3")) ncpu=3 ;
@@ -635,6 +638,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Opti
   
   // Minimize NLL
   RooMinuit m(nll) ;
+  if(blindfit)
+    m.setPrintLevel(-1);
+
   if (cOpt) m.optimizeConst(1) ;
   m.fit(fopt) ;
   
