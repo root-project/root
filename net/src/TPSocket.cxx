@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.2 2001/01/26 17:11:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.3 2001/01/29 00:03:55 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -128,6 +128,9 @@ TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
    fReadMonitor->DeActivateAll();
 
    SetName(fSockets[0]->GetName());
+   SetTitle(fSockets[0]->GetTitle());
+   fAddress = fSockets[0]->GetInetAddress();
+
    gROOT->GetListOfSockets()->Add(this);
 }
 
