@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.73 2004/06/11 15:59:10 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.74 2004/06/14 08:01:57 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -177,6 +177,7 @@ const char null_cursor_bits[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 static GdkCursor *gNullCursor;
+static HWND gConsoleWindow = 0;   // console window handle
 
 //
 // Data to create fill area interior style
@@ -748,6 +749,27 @@ static char *EventMask2String(UInt_t evmask)
 }
 
 //______________________________________________________________________________
+static void TGWin32SetConsoleWindowName()
+{
+   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
+   char pszOldWindowTitle[1024]; // contains original WindowTitle
+
+   ::GetConsoleTitle(pszOldWindowTitle, 1024);
+   // format a "unique" NewWindowTitle
+   wsprintf(pszNewWindowTitle,"%d/%d", ::GetTickCount(), ::GetCurrentProcessId());
+   // change current window title
+   ::SetConsoleTitle(pszNewWindowTitle);
+   // ensure window title has been updated
+   ::Sleep(40);
+   // look for NewWindowTitle
+   gConsoleWindow = ::FindWindow(0, pszNewWindowTitle);
+   // restore original window title
+   ::ShowWindow(gConsoleWindow, SW_RESTORE);
+   ::SetForegroundWindow(gConsoleWindow);
+   ::SetConsoleTitle("ROOT session");
+}
+
+//______________________________________________________________________________
 static Bool_t MessageProcessingFunc(MSG *msg)
 {
    // windows message processing procedure
@@ -922,6 +944,7 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
+   TGWin32SetConsoleWindowName();
 }
 
 //______________________________________________________________________________
