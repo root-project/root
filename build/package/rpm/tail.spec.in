@@ -40,7 +40,7 @@
         --disable-afs 					\
         --disable-srp 					\
         --with-sys-iconpath=/usr/share/pixmaps 		\
-        --fontdir=/usr/share/fonts/truetype
+        --fontdir=@prefix@/share/fonts/truetype
 make 
 
 #---------------------------------------------------------------------
