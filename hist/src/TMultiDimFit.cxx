@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.14 2005/02/21 18:00:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.16 2005/03/08 21:53:25 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -3314,7 +3314,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   outFile << "double " << prefix
           << "MDF(double *x) {" << endl
 	  << "  double returnValue = " << prefix << "gDMean;" << endl
-	  << "  int    i = 0, j = 0" << endl
+	  << "  int    i = 0, j = 0, k = 0;" << endl
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
@@ -3335,7 +3335,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 	  << "      case 2: r = v; break; " << endl
 	  << "      default: " << endl
 	  << "        p2 = v; " << endl
-	  << "        for (i = 3; i <= power; i++) { " << endl
+	  << "        for (k = 3; k <= power; k++) { " << endl
 	  << "          p3 = p2 * v;" << endl;
   if (fPolyType == kLegendre)
     outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
