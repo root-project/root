@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.74 2002/04/02 16:21:03 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.75 2002/04/08 10:46:31 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4366,9 +4366,16 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
       gVirtualPS->SetTextColor(color);
       gVirtualPS->SetTextFont(font);
       if (font%10 > 2) {
-         gVirtualPS->SetTextSize(tsize);
-         Float_t dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
-         tsize = dy/(fY2-fY1);
+         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
+         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
+         Float_t dy;
+         if (wh < hh)  {
+            dy = AbsPixeltoX(Int_t(tsize)) - AbsPixeltoX(0);
+            tsize = dy/(fX2-fX1);
+         } else {
+            dy = AbsPixeltoY(0) - AbsPixeltoY(Int_t(tsize));
+            tsize = dy/(fY2-fY1);
+         }
       }
       gVirtualPS->SetTextSize(tsize);
    }
