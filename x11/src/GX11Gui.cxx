@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.6 2000/09/07 00:26:06 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.7 2000/09/29 08:59:37 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -321,6 +321,8 @@ void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
          lxemask |= LeaveWindowMask;
       if ((emask & kFocusChangeMask))
          lxemask |= FocusChangeMask;
+      if ((emask & kOwnerGrabButtonMask))
+         lxemask |= OwnerGrabButtonMask;
       xemask = (UInt_t)lxemask;
    } else {
       emask = 0;
@@ -346,6 +348,8 @@ void TGX11::MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox)
          emask |= kLeaveWindowMask;
       if ((xemask & FocusChangeMask))
          emask |= kFocusChangeMask;
+      if ((xemask & OwnerGrabButtonMask))
+         emask |= kOwnerGrabButtonMask;
    }
 }
 
