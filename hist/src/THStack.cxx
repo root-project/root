@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.24 2003/10/08 16:36:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.25 2004/03/18 20:41:31 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -72,6 +72,7 @@ THStack::THStack(const char *name, const char *title)
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
+   gROOT->GetListOfCleanups()->Add(this);   
 }
 
 //______________________________________________________________________________
@@ -80,6 +81,7 @@ THStack::~THStack()
 // THStack destructor
 
 
+   gROOT->GetListOfCleanups()->Remove(this);   
    if (!fHists) return;
    fHists->Delete();
    delete fHists;
@@ -507,6 +509,16 @@ void THStack::Print(Option_t *option) const
        h->Print(option);
      }
    }
+}
+
+//______________________________________________________________________________
+void THStack::RecursiveRemove(TObject *obj)
+{
+// Recursively remove object from the list of histograms
+
+   if (!fHists) return;
+   fHists->RecursiveRemove(obj);
+   while (fHists->IndexOf(obj) >= 0) fHists->Remove(obj);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.5 2002/07/15 10:46:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.6 2002/08/13 21:17:58 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
         virtual void     Modified();
         virtual void     Paint(Option_t *chopt="");
         virtual void     Print(Option_t *chopt="") const;
+        virtual void     RecursiveRemove(TObject *obj);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
         virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
