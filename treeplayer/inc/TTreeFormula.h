@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.39 2004/10/05 13:21:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.40 2005/02/07 17:23:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -33,6 +33,16 @@
 
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
+#endif
+
+#include <string>
+#include <vector>
+
+#ifdef R__OLDHPACC
+namespace std {
+   using ::string;
+   using ::vector;
+}
 #endif
 
 const Int_t kMAXCODES = kMAXFOUND; // must be the same as kMAXFOUND in TFormula
@@ -76,6 +86,7 @@ protected:
    TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
    TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
+   
 
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
@@ -86,24 +97,29 @@ protected:
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM];  //Pointer to a variable index.
 
-   void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
+   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
+   virtual void*      GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const;
+   Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
 
+   // Helper members and function used during the construction and parsing
+   TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
+   std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
+
+   TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<string>& aliases);
+   void Init(const char *name, const char *formula);
+   Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
+   Int_t       DefineAlternate(const char* expression);
+   void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
+   Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, Bool_t &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>&, const char *fullExpression);
+   TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
+   Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, const char *fullExpression);
    Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
    Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info);
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 
-   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
-   virtual void*      GetValuePointerFromMethod(Int_t i, TLeaf *leaf) const;
-   Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
-   
-   TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
-   Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, 
-                               const char* method,const char* params, 
-                               Long64_t readentry) const;
 
-   TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    TAxis      *fAxis;           //! pointer to histogram axis if this is a string
 
    Bool_t      fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated

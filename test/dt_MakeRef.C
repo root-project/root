@@ -11,17 +11,17 @@
 #include "Event.h"
 #endif
 
-TH1F* RefClone(TH1F* orig) {    
-  TH1F *cloned = (TH1F*)orig->Clone(); 
-  TString name = orig->GetName();
-  name.Prepend("ref");
-  cloned->SetName(name); 
-  cloned->Reset();
-  return cloned;
+TH1 *RefClone(TH1* orig) {
+   TH1 *cloned = (TH1*)orig->Clone(); 
+   TString name = orig->GetName();
+   name.Prepend("ref");
+   cloned->SetName(name);
+   cloned->Reset();
+   return cloned;
 };
 
-TH1F* RefClone(TDirectory* from, const char* name) {
-  TH1F * orig = (TH1F*)from->Get(name);
+TH1* RefClone(TDirectory* from, const char* name) {
+  TH1 * orig = (TH1*)from->Get(name);
   if (!orig) {
     cerr << "Missing " << name << " from " << from->GetName() << endl;
     return 0;
@@ -71,6 +71,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refValid  = RefClone(where,"hValid");
    TH1F *refPointValue  = RefClone(where,"hPointValue");
    TH1F *refAlias  = RefClone(where,"hAlias");
+   TH1F *refAliasSymbol  = RefClone(where,"hAliasSymbol");
    TH1F *refBool   = RefClone(where,"hBool");
 
    TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
@@ -269,6 +270,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          refBreit->Fill(TMath::BreitWigner(t->GetPx(),3,2));
 
          refAlias->Fill(head->GetEvtNum()*6+t->GetPx()*t->GetPy());
+         refAliasSymbol->Fill(t->GetPx()+t->GetPy());
       }
    }
 

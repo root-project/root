@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.82 2005/01/19 17:00:07 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.83 2005/01/25 22:14:16 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1111,7 +1111,10 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                 ctemp.ReplaceAll(escapedSlash, slash);
                 Int_t action;
                 k = DefinedVariable(ctemp,action);
-                if (k==-2) {
+                if (k==-3) {
+                   // Error message already issued
+                   err = 1;
+                } if (k==-2) {
                    err = 31;
                    chaine_error = ctemp;
                 } else if ( k >= 0 ) {

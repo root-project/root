@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.162 2005/02/07 17:23:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.163 2005/02/09 10:19:54 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
+#include <algorithm>
 
 const Int_t kMaxLen     = 512;
 R__EXTERN TTree *gTree;
@@ -137,13 +138,26 @@ TTreeFormula::TTreeFormula(): TFormula(), fDidBooleanOptimization(kFALSE)
 
 //______________________________________________________________________________
 TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
-  :TFormula(), fDidBooleanOptimization(kFALSE)
+  :TFormula(), fTree(tree), fDidBooleanOptimization(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*-*Normal Tree Formula constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
-//
+   // Normal TTree Formula Constuctor
 
-   fTree         = tree;
+   Init(name,expression);
+}
+
+//______________________________________________________________________________
+TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree,
+                           const std::vector<std::string>& aliases)
+  :TFormula(), fTree(tree), fAliasesUsed(aliases), fDidBooleanOptimization(kFALSE)
+{
+   // Constructor used during the expansion of an alias
+   Init(name,expression);
+}
+
+void TTreeFormula::Init(const char*name, const char* expression)
+{
+   // Initialiation called from the constructors.
+
    fNindex       = kMAXFOUND;
    fLookupType   = new Int_t[fNindex];
    fNcodes       = 0;
@@ -545,130 +559,34 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
 }
 
 //______________________________________________________________________________
-Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
+Int_t TTreeFormula::DefineAlternate(const char *expression) 
 {
-//*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
-//*-*        ==================================================
-//
-//   This member function redefines the function in TFormula
-//   If a leaf has a name corresponding to the argument name, then
-//   returns a new code.
-//   A TTreeFormula may contain more than one variable.
-//   For each variable referenced, the pointers to the corresponding
-//   branch and leaf is stored in the object arrays fBranches and fLeaves.
-//
-//   name can be :
-//      - Leaf_Name (simple variable or data member of a ClonesArray)
-//      - Branch_Name.Leaf_Name
-//      - Branch_Name.Method_Name
-//      - Leaf_Name[index]
-//      - Branch_Name.Leaf_Name[index]
-//      - Branch_Name.Leaf_Name[index1]
-//      - Branch_Name.Leaf_Name[][index2]
-//      - Branch_Name.Leaf_Name[index1][index2]
-//   New additions:
-//      - Branch_Name.Leaf_Name[OtherLeaf_Name]
-//      - Branch_Name.Datamember_Name
-//      - '.' can be replaced by '->'
-//   and
-//      - Branch_Name[index1].Leaf_Name[index2]
-//      - Leaf_name[index].Action().OtherAction(param)
-//      - Leaf_name[index].Action()[val].OtherAction(param)
-//
-//   The expected returns values are
-//     -2 :  the name has been recognized but won't be usable
-//     -1 :  the name has not been recognized
-//    >=0 :  the name has been recognized, return the internal code for this name.
-//
+   // This method check for treat the case where expression contains $Atl and load up
+   // both fAliases and fExpr.
+   // We return 
+   //   -1 in case of failure
+   //   0 in case we did not find $Alt
+   //   the action number in case of success.
 
-
-   action = kDefinedVariable;
-   if (!fTree) return -1;
-   // Later on we will need to read one entry, let's make sure
-   // it is a real entry.
-   Long64_t readentry = fTree->GetReadEntry();
-   if (readentry==-1) readentry=0;
-   fNpar = 0;
-   Int_t nchname = name.Length();
-   if (nchname > kMaxLen) return -1;
-   Int_t i,k;
-   Int_t numberOfVarDim = 0;
-
-   const char *cname = name.Data();
-
-   char    first[kMaxLen];  first[0] = '\0';
-   char   second[kMaxLen]; second[0] = '\0';
-   char    right[kMaxLen];  right[0] = '\0';
-   char     dims[kMaxLen];   dims[0] = '\0';
-   char     work[kMaxLen];   work[0] = '\0';
-   char  scratch[kMaxLen];
-   char scratch2[kMaxLen];
-   char *current;
-
-   TLeaf *leaf=0, *tmp_leaf=0;
-   TBranch *branch=0, *tmp_branch=0;
-
-   Bool_t final = kFALSE;
-
-   UInt_t paran_level = 0;
-   TObjArray castqueue;
-
-   if (strcmp(cname,"Entry$")==0) {
-      Int_t code = fNcodes++;
-      fCodes[code] = 0;
-      fLookupType[code] = kIndexOfEntry;
-      return code;
-   }
-   if (strcmp(cname,"Entries$")==0) {
-      Int_t code = fNcodes++;
-      fCodes[code] = 0;
-      fLookupType[code] = kEntries;
-      return code;
-   }
-   if (strcmp(cname,"Iteration$")==0) {
-      Int_t code = fNcodes++;
-      fCodes[code] = 0;
-      fLookupType[code] = kIteration;
-      return code;
-   }
-   if (strcmp(cname,"Length$")==0) {
-      Int_t code = fNcodes++;
-      fCodes[code] = 0;
-      fLookupType[code] = kLength;
-      return code;
-   }
-   static const char *lenfunc = "Length$(";
-   if (strncmp(cname,"Length$(",strlen(lenfunc))==0
-       && cname[strlen(cname)-1]==')') {
-
-      TString subform = cname+strlen(lenfunc);
-      subform.Remove( subform.Length() - 1 );
-      TTreeFormula *lengthForm = new TTreeFormula("lengthForm",subform,fTree);
-      fAliases.AddAtAndExpand(lengthForm,fNoper);
-      Int_t code = fNcodes++;
-      fCodes[code] = 0;
-      fLookupType[code] = kLengthFunc;
-      return code;
-   }
    static const char *altfunc = "Alt$(";
-   if (   strncmp(cname,altfunc,strlen(altfunc))==0
-       && cname[strlen(cname)-1]==')'
-       ) {
-      TString full = cname;
+   if (   strncmp(expression,altfunc,strlen(altfunc))==0
+       && expression[strlen(expression)-1]==')' ) {
+
+      TString full = expression;
       TString part1;
       TString part2;
       int paran = 0;
       int instr = 0;
       int brack = 0;
-      for(unsigned int i=strlen(altfunc);i<strlen(cname);++i) {
-         switch (cname[i]) {
+      for(unsigned int i=strlen(altfunc);i<strlen(expression);++i) {
+         switch (expression[i]) {
             case '(': paran++; break;
             case ')': paran--; break;
             case '"': instr = instr ? 0 : 1; break;
             case '[': brack++; break;
             case ']': brack--; break;
          };
-         if (cname[i]==',' && paran==0 && instr==0 && brack==0) {
+         if (expression[i]==',' && paran==0 && instr==0 && brack==0) {
             part1 = full( strlen(altfunc), i-strlen(altfunc) );
             part2 = full( i+1, full.Length() -1 - (i+1) );
             break; // out of the for loop
@@ -681,7 +599,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
          if (alternate->GetManager()->GetMultiplicity() != 0 ) {
             Error("DefinedVariable","The 2nd arguments in %s can not be an array (%s,%d)!",
-                  name.Data(),alternate->GetTitle(),alternate->GetManager()->GetMultiplicity());
+                  expression,alternate->GetTitle(),alternate->GetManager()->GetMultiplicity());
             return -1;
          }
 
@@ -691,13 +609,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          if (primary->IsString()) {
             if (!alternate->IsString()) {
                Error("DefinedVariable","The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
-                     name.Data());
+                     expression);
                return -1;
             }
             isstring = 1;
          } else if (alternate->IsString()) {
             Error("DefinedVariable","The 2nd arguments in %s has to return the same type as the 1st argument (numerical type)!",
-                  name.Data());
+                  expression);
             return -1;
          }
 
@@ -707,399 +625,43 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          ++fNoper;
 
          fAliases.AddAtAndExpand(alternate,fNoper);
-         action = (Int_t)kAlias + isstring;
-         return 0;
+         return (Int_t)kAlias + isstring;
       }
    }
+   return 0;
+}
 
-   for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
-      // We will treated the terminator as a token.
-      *current++ = cname[i];
+//______________________________________________________________________________
+Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression, 
+                                  Bool_t final, UInt_t paran_level,
+                                   TObjArray &castqueue, 
+                                   const char* fullExpression) 
+{
+   // Decompose 'expression' as pointing to something inside the leaf
+   // Returns:
+   //   -2  Error: some information is missing (message already printed)
+   //   -1  Error: Syntax is incorrect (message already printed)
+   //    0
+   //    >0 the value returns is the action code.
 
-      if (cname[i] == ')') {
-         if (paran_level==0) {
-            Error("DefinedVariable","Unmatched paranthesis in %s",name.Data());
-            return -1;
-         }
-         // Let's see if work is a classname.
-         *(--current) = 0;
-         TString cast_name = gInterpreter->TypeName(work);
-         TClass *cast_cl = gROOT->GetClass(cast_name);
-         if (cast_cl) {
-            // We must have a cast
-            castqueue.AddAtAndExpand(cast_cl,paran_level);
-            current = &(work[0]);
-            *current = 0;
-            //            Warning("DefinedVariable","Found cast to %s",cast_name.Data());
-            paran_level--;
-            continue;
-         } else if (gROOT->GetType(cast_name)) {
-            // We reset work
-            current = &(work[0]);
-            *current = 0;
-            Warning("DefinedVariable",
-                    "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
-            paran_level--;
-            continue;
-         }
-         // if it is not a cast, we just ignore the closing paranthesis.
-         paran_level--;
-      }
-      if (cname[i] == '(') {
-         if (current==work+1) {
-            // If the expression starts with a paranthesis, we are likely
-            // to have a cast operator inside.
-            paran_level++;
-            current--;
-            continue;
-         }
-         // Right now we do not allow nested paranthesis
-         i++;
-         while( cname[i]!=')' && cname[i] ) {
-            *current++ = cname[i++];
-         }
-         *current++ = cname[i++];
-         *current='\0';
-         char *params = strchr(work,'(');
-         if (params) {
-            *params = 0; params++;
-         } else params = (char *) ")";
-
-         if (branch && !leaf) {
-            // We have a branch but not a leaf.  We are likely to have found
-            // the top of splitted branch.
-            if (BranchHasMethod(0,branch,work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s.\n",work,branch->GetName());
-            }
-         }
-
-         // What we have so far might be a member function of one of the
-         // leaves that are not splitted (for example "GetNtrack" for the Event class).
-         TIter next (fTree->GetIteratorOnAllLeaves());
-         TLeaf *leafcur;
-         while (!leaf && (leafcur = (TLeaf*)next())) {
-            if (BranchHasMethod(leafcur,leafcur->GetBranch(),work,params,readentry)) {
-               //fprintf(stderr,"Does have a method %s for %s found in leafcur %s.\n",work,leafcur->GetBranch()->GetName(),leafcur->GetName());
-               leaf = leafcur;
-            }
-         }
-         if (!leaf) {
-            // This actually not really any error, we probably received something
-            // like "abs(some_val)", let TFormula decompose it first.
-            return -1;
-         }
-         //         if (!leaf->InheritsFrom("TLeafObject") ) {
-         // If the leaf that we found so far is not a TLeafObject then there is
-            // nothing we would be able to do.
-         //   Error("DefinedVariable","Need a TLeafObject to call a function!");
-         // return -1;
-         //}
-         // We need to recover the info not used.
-         strcpy(right,work);
-         strcat(right,"(");
-         strcat(right,params);
-         final = kTRUE;
-
-         // we reset work
-         current = &(work[0]);
-         *current = 0;
-         break;
-      }
-      if (cname[i] == '.' || cname[i] == '[' || cname[i] == '\0' ) {
-         // A delimiter happened let's see if what we have seen
-         // so far does point to a leaf.
-
-         *current = '\0';
-         if (!leaf && !branch) {
-            // So far, we have not found a matching leaf or branch.
-            strcpy(first,work);
-
-            branch = fTree->FindBranch(first);
-            leaf = fTree->FindLeaf(first);
-
-            // Now look with the delimiter removed (we looked with it first
-            // because a dot is allowed at the end of some branches).
-            if (cname[i]) first[strlen(first)-1]='\0';
-            if (!branch) branch = fTree->FindBranch(first);
-            if (!leaf) leaf = fTree->FindLeaf(first);
-
-            if (branch && cname[i] != 0) {
-               // Since we found a branch and there is more information in the name,
-               // we do NOT look at the 'IsOnTerminalBranch' status of the leaf
-               // we found ... yet!
-
-               if (leaf==0) {
-                  // Note we do not know (yet?) what (if anything) to do
-                  // for a TBranchObject branch.
-                  if (branch->InheritsFrom(TBranchElement::Class()) ) {
-                     Int_t type = ((TBranchElement*)branch)->GetType();
-                     if ( type == 3 || type ==4) {
-                        // We have a Collection branch.
-                        leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
-                     }
-                  }
-               }
-
-               // we reset work
-               current = &(work[0]);
-               *current = 0;
-            } else if (leaf || branch) {
-               if (leaf && branch) {
-                  // We found both a leaf and branch matching the request name
-                  // let's see which one is the proper one to use! (On annoying case
-                  // is that where the same name is repeated ( varname.varname )
-
-                  // We always give priority to the branch
-                  // leaf = 0;
-               }
-               if (leaf && leaf->IsOnTerminalBranch()) {
-                  // This is a non-object leaf, it should NOT be specified more except for
-                  // dimensions.
-                  final = kTRUE;
-               }
-               // we reset work
-               current = &(work[0]);
-               *current = 0;
-            } else {
-               // What we have so far might be a data member of one of the
-               // leaves that are not splitted (for example "fNtrack" for the Event class.
-               TLeaf *leafcur = GetLeafWithDatamember(first,work,readentry);
-               if (leafcur) {
-                  leaf = leafcur;
-                  branch = leaf->GetBranch();
-                  if (leaf->IsOnTerminalBranch()) {
-                     final = kTRUE;
-                     strcpy(right,first);
-                     //We need to put the delimiter back!
-                     if (cname[i]=='.') strcat(right,".");
-
-                     // We reset work
-                     current = &(work[0]);
-                     *current = 0;
-                  };
-               } else if (cname[i] == '.') {
-                  // If we have a branch that match a name preceded by a dot
-                  // then we assume we are trying to drill down the branch
-                  // Let look if one of the top level branch has a branch with the name
-                  // we are looking for.
-                  TBranch *branchcur;
-                  TIter next( fTree->GetListOfBranches() );
-                  while(!branch && (branchcur=(TBranch*)next()) ) {
-                     branch = branchcur->FindBranch(first);
-                  }
-                  if (branch) {
-                     // We reset work
-                     current = &(work[0]);
-                     *current = 0;
-                  }
-               }
-            }
-         } else {  // correspond to if (leaf || branch)
-            if (final) {
-               Error("DefinedVariable", "Unexpected control flow!");
-               return -1;
-            }
-
-            // No dot is allowed in subbranches and leaves, so
-            // we always remove it in the present case.
-            if (cname[i]) work[strlen(work)-1] = '\0';
-            sprintf(scratch,"%s.%s",first,work);
-            sprintf(scratch2,"%s.%s.%s",first,second,work);
-
-
-
-            // First look for the current 'word' in the list of
-            // leaf of the
-            if (branch) {
-               tmp_leaf = branch->FindLeaf(work);
-               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
-               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
-            }
-            if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
-               // This is a non-object leaf, it should NOT be specified more except for
-               // dimensions.
-               final = kTRUE;
-            }
-
-            if (branch) {
-               tmp_branch = branch->FindBranch(work);
-               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
-               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch2);
-            }
-            if (tmp_branch) {
-               branch=tmp_branch;
-
-               // NOTE: Should we look for a leaf within here?
-               if (!final) {
-                  tmp_leaf = branch->FindLeaf(work);
-                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
-                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
-                  if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
-                     // This is a non-object leaf, it should NOT be specified
-                     // more except for dimensions.
-                     final = kTRUE;
-                     leaf = tmp_leaf;
-                  }
-               }
-            }
-            if (tmp_leaf) {
-               // Something was found.
-               if (second[0]) strcat(second,".");
-               strcat(second,work);
-               leaf = tmp_leaf;
-
-               // we reset work
-               current = &(work[0]);
-               *current = 0;
-            } else {
-               //We need to put the delimiter back!
-               if (strlen(work)) work[strlen(work)] = cname[i];
-               else --current;
-            }
-         }
-      }
-      if (cname[i] == '[') {
-         int bracket = i;
-         int bracket_level = 1;
-         int j;
-         for (j=++i; j<nchname && (bracket_level>0 || cname[j]=='['); j++, i++) {
-            if (cname[j]=='[')
-               bracket_level++;
-            else if (cname[j]==']')
-               bracket_level--;
-         }
-         if (bracket_level != 0) {
-            //Error("DefinedVariable","Bracket unbalanced");
-            return -1;
-         }
-         strncat(dims,&cname[bracket],j-bracket);
-         if (current!=work) *(--current) = '\0'; // remove bracket.
-         --i;
-         if (current == &(work[0])) { // leaf!=0 && branch!=0) {
-            // If we have already sucessfully analyzed the left part of the name
-            // we need to skip the dots that may be adjacent to the closing bracket
-            while (cname[i+1]=='.') i++;
-         }
-      }
-   }
-   // Copy the left over for later use.
-   if (strlen(work)) {
-      strcat(right,work);
-   }
-   if (i<nchname) {
-      if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
-         // In some cases we remove a little to fast the period, we added
-         // it back if we need.  It is assumed that 'right' and the rest of
-         // the name was cut by a delimiter, so this should be safe.
-         strcat(right,".");
-      }
-      strcat(right,&cname[i]);
-   }
-
-   if (!final && branch) {
-      if (!leaf) {
-         leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
-         if (!leaf) return -1;
-      }
-      final = leaf->IsOnTerminalBranch();
-   }
-
-   if (!leaf) {
-      // Check for an alias.
-      const char *aliasValue = fTree->GetAlias(work);
-      if (aliasValue) {
-         TTreeFormula *subform = new TTreeFormula(work,aliasValue,fTree);
-
-         fManager->Add(subform);
-         fAliases.AddAtAndExpand(subform,fNoper);
-
-         if (subform->IsString()) {
-            action = kAliasString;
-            return 0;
-         } else {
-            action = kAlias;
-            return 0;
-         }
-      }
-   }
+   Int_t action = 0;
 
    if (leaf) { // We found a Leaf.
 
-      if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
-         Error("DefinedVariable","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
-         return -2;
-      }
+      Int_t numberOfVarDim = 0;
+      char *current;
 
-      // Save the information
+      char  scratch[kMaxLen]; scratch[0] = '\0';
+      char     work[kMaxLen];    work[0] = '\0';
 
-      Int_t code = fNcodes++;
+      const char *right = subExpression;
+      TString name = fullExpression;
 
-      // We need to move all dimensions information from 'right'
-      // to dims so that they are ALL processed here.
+      TBranch *branch = leaf->GetBranch();
+      Long64_t readentry = fTree->GetReadEntry();
+      if (readentry==-1) readentry=0;
 
-      Int_t rightlen = strlen(right);
-      for(i=0,k=0; i<rightlen; i++, k++) {
-         if (right[i] == '[') {
-            int bracket = i;
-            int bracket_level = 1;
-            int j;
-            for (j=++i; j<rightlen && (bracket_level>0 || right[j]=='['); j++, i++) {
-               if (right[j]=='[') bracket_level++;
-               else if (right[j]==']') bracket_level--;
-            }
-            if (bracket_level != 0) {
-               //Error("DefinedVariable","Bracket unbalanced");
-               return -1;
-            }
-            strncat(dims,&right[bracket],j-bracket);
-            k += j-bracket;
-         }
-         if (i!=k) right[i] = right[k];
-      }
-      right[i]='\0';
-
-      // If needed will now parse the indexes specified for
-      // arrays.
-      if (dims[0]) {
-         current = &( dims[0] );
-         Int_t dim = 0;
-         char varindex[kMaxLen];
-         Int_t index;
-         Int_t scanindex ;
-         while (current) {
-            current++;
-            if (current[0] == ']') {
-               fIndexes[code][dim] = -1; // Loop over all elements;
-            } else {
-               scanindex = sscanf(current,"%d",&index);
-               if (scanindex) {
-                  fIndexes[code][dim] = index;
-               } else {
-                  fIndexes[code][dim] = -2; // Index is calculated via a variable.
-                  strcpy(varindex,current);
-                  char *end = varindex;
-                  for(char bracket_level = 0;*end!=0;end++) {
-                    if (*end=='[') bracket_level++;
-                    if (bracket_level==0 && *end==']') break;
-                    if (*end==']') bracket_level--;
-                  }
-                  if (end != 0) {
-                     *end = '\0';
-                     fVarIndexes[code][dim] = new TTreeFormula("index_var",
-                                                                  varindex,
-                                                                  fTree);
-                     current += strlen(varindex)+1; // move to the end of the index array
-                  }
-               }
-            }
-            dim ++;
-            if (dim >= kMAXFORMDIM) {
-               // NOTE: test that dim this is NOT too big!!
-               break;
-            }
-            current = (char*)strstr( current, "[" );
-         }
-      }
+      Int_t code = fNcodes-1;
 
       // Make a check to prevent problem with some corrupted files (missing TStreamerInfo).
       if (leaf->IsA()==TLeafElement::Class()) {
@@ -1124,7 +686,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             }
          }
       }
-
 
       // We need to record the location in the list of leaves because
       // the tree might actually be a chain and in that case the leaf will
@@ -1160,7 +721,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
       if (leaf->InheritsFrom("TLeafObject") ) {
          TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
          cl = gROOT->GetClass(bobj->GetClassName());
-         if (strlen(right)==0) strcpy(right,work);
       } else if (leaf->InheritsFrom("TLeafElement")) {
          TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
          TStreamerInfo *info = BranchEl->GetInfo();
@@ -1393,6 +953,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             castqueue.AddAt(0,paran_level);
          }
 
+         Int_t i;
          for (i=0, current = &(work[0]); i<=nchname;i++ ) {
             // We will treated the terminator as a token.
             if (right[i] == '(') {
@@ -1892,24 +1453,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                current = &(work[0]);
                *current = 0;
 
-               if (right[i] == '[') {
-                 int bracket = i;
-                 int bracket_level = 1;
-                 int j;
-                 for (j=++i; j<nchname && (bracket_level>0 || right[j]=='['); j++, i++) {
-                   if (right[j]=='[')
-                     bracket_level++;
-                   else if (right[j]==']')
-                     bracket_level--;
-                 }
-                 if (bracket_level != 0) {
-                   //Error("DefinedVariable","Bracket unbalanced");
-                   return -1;
-                 }
-                 strncat(dims,&right[bracket],j-bracket);
-                 if (current!=work) *(--current) = '\0'; // remove bracket.
-                 --i;
-               }
+               Assert(right[i] != '[');  // We are supposed to have removed all dimensions already!
+               
             } else
                *current++ = right[i];
          }
@@ -1957,9 +1502,596 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                fLookupType[code]=kDataMember;
             }
          }
-         action = kDefinedString;
-         return code;
+         return kDefinedString;
       }
+      return action;
+   }
+
+   return action;
+}
+
+//______________________________________________________________________________
+Int_t TTreeFormula::FindLeafForExpression(const char* expression,
+                                          TLeaf *&leaf,
+                                          TString &leftover, Bool_t &final, 
+                                          UInt_t &paran_level, TObjArray &castqueue, 
+                                          std::vector<std::string>& aliasUsed, 
+                                          const char *fullExpression)
+{
+   // Look for the leaf corresponding to the start of expression.
+   // It returns the corresponding leaf if any.
+   // It also modify the following arguments:
+   //   leftover: contain from expression that was not used to determine the leaf
+   //   final:
+   //   paran_level: number of un-matched open parenthesis
+   //   cast_queue: list of cast to be done
+   //   aliases: list of aliases used
+
+   // Later on we will need to read one entry, let's make sure
+   // it is a real entry.
+   Long64_t readentry = fTree->GetReadEntry();
+   if (readentry==-1) readentry=0;
+
+   const char *cname = expression;
+
+   char    first[kMaxLen];  first[0] = '\0';
+   char   second[kMaxLen]; second[0] = '\0';
+   char    right[kMaxLen];  right[0] = '\0';
+   char     work[kMaxLen];   work[0] = '\0';
+   char     left[kMaxLen];   left[0] = '\0';
+   char  scratch[kMaxLen];
+   char scratch2[kMaxLen];
+   char *current;
+
+   TLeaf *tmp_leaf=0;
+   TBranch *branch=0, *tmp_branch=0;
+
+
+   Int_t nchname = strlen(cname);
+   Int_t i;
+
+   for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
+      // We will treated the terminator as a token.
+      *current++ = cname[i];
+
+      if (cname[i] == ')') {
+         if (paran_level==0) {
+            Error("DefinedVariable","Unmatched paranthesis in %s",fullExpression);
+            return -1;
+         }
+         // Let's see if work is a classname.
+         *(--current) = 0;
+         TString cast_name = gInterpreter->TypeName(work);
+         TClass *cast_cl = gROOT->GetClass(cast_name);
+         if (cast_cl) {
+            // We must have a cast
+            castqueue.AddAtAndExpand(cast_cl,paran_level);
+            current = &(work[0]);
+            *current = 0;
+            //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
+            paran_level--;
+            continue;
+         } else if (gROOT->GetType(cast_name)) {
+            // We reset work
+            current = &(work[0]);
+            *current = 0;
+            Warning("DefinedVariable",
+                    "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
+            paran_level--;
+            continue;
+         }
+         // if it is not a cast, we just ignore the closing paranthesis.
+         paran_level--;
+      }
+      if (cname[i] == '(') {
+         if (current==work+1) {
+            // If the expression starts with a paranthesis, we are likely
+            // to have a cast operator inside.
+            paran_level++;
+            current--;
+            continue;
+         }
+         // Right now we do not allow nested paranthesis
+         i++;
+         while( cname[i]!=')' && cname[i] ) {
+            *current++ = cname[i++];
+         }
+         *current++ = cname[i++];
+         *current='\0';
+         char *params = strchr(work,'(');
+         if (params) {
+            *params = 0; params++;
+         } else params = (char *) ")";
+
+         if (branch && !leaf) {
+            // We have a branch but not a leaf.  We are likely to have found
+            // the top of splitted branch.
+            if (BranchHasMethod(0,branch,work,params,readentry)) {
+               //fprintf(stderr,"Does have a method %s for %s.\n",work,branch->GetName());
+            }
+         }
+
+         // What we have so far might be a member function of one of the
+         // leaves that are not splitted (for example "GetNtrack" for the Event class).
+         TIter next (fTree->GetIteratorOnAllLeaves());
+         TLeaf *leafcur;
+         while (!leaf && (leafcur = (TLeaf*)next())) {
+            if (BranchHasMethod(leafcur,leafcur->GetBranch(),work,params,readentry)) {
+               //fprintf(stderr,"Does have a method %s for %s found in leafcur %s.\n",work,leafcur->GetBranch()->GetName(),leafcur->GetName());
+               leaf = leafcur;
+            }
+         }
+         if (!leaf) {
+            // This is actually not really any error, we probably received something
+            // like "abs(some_val)", let TFormula decompose it first.
+            return -1;
+         }
+         //         if (!leaf->InheritsFrom("TLeafObject") ) {
+         // If the leaf that we found so far is not a TLeafObject then there is
+            // nothing we would be able to do.
+         //   Error("DefinedVariable","Need a TLeafObject to call a function!");
+         // return -1;
+         //}
+         // We need to recover the info not used.
+         strcpy(right,work);
+         strcat(right,"(");
+         strcat(right,params);
+         final = kTRUE;
+
+         // we reset work
+         current = &(work[0]);
+         *current = 0;
+         break;
+      }
+      if (cname[i] == '.' || cname[i] == '\0' ) {
+         // A delimiter happened let's see if what we have seen
+         // so far does point to a leaf.
+         *current = '\0';
+
+         if (left[0]==0) strcpy(left,work);
+         if (!leaf && !branch) {
+            // So far, we have not found a matching leaf or branch.
+            strcpy(first,work);
+
+            branch = fTree->FindBranch(first);
+            leaf = fTree->FindLeaf(first);
+
+            // Now look with the delimiter removed (we looked with it first
+            // because a dot is allowed at the end of some branches).
+            if (cname[i]) first[strlen(first)-1]='\0';
+            if (!branch) branch = fTree->FindBranch(first);
+            if (!leaf) leaf = fTree->FindLeaf(first);
+
+            if (branch && cname[i] != 0) {
+               // Since we found a branch and there is more information in the name,
+               // we do NOT look at the 'IsOnTerminalBranch' status of the leaf
+               // we found ... yet!
+
+               if (leaf==0) {
+                  // Note we do not know (yet?) what (if anything) to do
+                  // for a TBranchObject branch.
+                  if (branch->InheritsFrom(TBranchElement::Class()) ) {
+                     Int_t type = ((TBranchElement*)branch)->GetType();
+                     if ( type == 3 || type ==4) {
+                        // We have a Collection branch.
+                        leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
+                     }
+                  }
+               }
+
+               // we reset work
+               current = &(work[0]);
+               *current = 0;
+            } else if (leaf || branch) {
+               if (leaf && branch) {
+                  // We found both a leaf and branch matching the request name
+                  // let's see which one is the proper one to use! (On annoying case
+                  // is that where the same name is repeated ( varname.varname )
+
+                  // We always give priority to the branch
+                  // leaf = 0;
+               }
+               if (leaf && leaf->IsOnTerminalBranch()) {
+                  // This is a non-object leaf, it should NOT be specified more except for
+                  // dimensions.
+                  final = kTRUE;
+               }
+               // we reset work
+               current = &(work[0]);
+               *current = 0;
+            } else {
+               // What we have so far might be a data member of one of the
+               // leaves that are not splitted (for example "fNtrack" for the Event class.
+               TLeaf *leafcur = GetLeafWithDatamember(first,work,readentry);
+               if (leafcur) {
+                  leaf = leafcur;
+                  branch = leaf->GetBranch();
+                  if (leaf->IsOnTerminalBranch()) {
+                     final = kTRUE;
+                     strcpy(right,first);
+                     //We need to put the delimiter back!
+                     if (cname[i]=='.') strcat(right,".");
+
+                     // We reset work
+                     current = &(work[0]);
+                     *current = 0;
+                  };
+               } else if (cname[i] == '.') {
+                  // If we have a branch that match a name preceded by a dot
+                  // then we assume we are trying to drill down the branch
+                  // Let look if one of the top level branch has a branch with the name
+                  // we are looking for.
+                  TBranch *branchcur;
+                  TIter next( fTree->GetListOfBranches() );
+                  while(!branch && (branchcur=(TBranch*)next()) ) {
+                     branch = branchcur->FindBranch(first);
+                  }
+                  if (branch) {
+                     // We reset work
+                     current = &(work[0]);
+                     *current = 0;
+                  }
+               }
+            }
+         } else {  // correspond to if (leaf || branch)
+            if (final) {
+               Error("DefinedVariable", "Unexpected control flow!");
+               return -1;
+            }
+
+            // No dot is allowed in subbranches and leaves, so
+            // we always remove it in the present case.
+            if (cname[i]) work[strlen(work)-1] = '\0';
+            sprintf(scratch,"%s.%s",first,work);
+            sprintf(scratch2,"%s.%s.%s",first,second,work);
+
+
+
+            // First look for the current 'word' in the list of
+            // leaf of the
+            if (branch) {
+               tmp_leaf = branch->FindLeaf(work);
+               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
+            }
+            if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
+               // This is a non-object leaf, it should NOT be specified more except for
+               // dimensions.
+               final = kTRUE;
+            }
+
+            if (branch) {
+               tmp_branch = branch->FindBranch(work);
+               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
+               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch2);
+            }
+            if (tmp_branch) {
+               branch=tmp_branch;
+
+               // NOTE: Should we look for a leaf within here?
+               if (!final) {
+                  tmp_leaf = branch->FindLeaf(work);
+                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch2);
+                  if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
+                     // This is a non-object leaf, it should NOT be specified
+                     // more except for dimensions.
+                     final = kTRUE;
+                     leaf = tmp_leaf;
+                  }
+               }
+            }
+            if (tmp_leaf) {
+               // Something was found.
+               if (second[0]) strcat(second,".");
+               strcat(second,work);
+               leaf = tmp_leaf;
+
+               // we reset work
+               current = &(work[0]);
+               *current = 0;
+            } else {
+               //We need to put the delimiter back!
+               if (strlen(work)) work[strlen(work)] = cname[i];
+               else --current;
+            }
+         }
+      }
+   }
+
+   // Copy the left over for later use.
+   if (strlen(work)) {
+      strcat(right,work);
+   }
+
+   if (i<nchname) {
+      if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
+         // In some cases we remove a little to fast the period, we add
+         // it back if we need.  It is assumed that 'right' and the rest of
+         // the name was cut by a delimiter, so this should be safe.
+         strcat(right,".");
+      }
+      strcat(right,&cname[i]);
+   }
+
+   if (!final && branch) {
+      if (!leaf) {
+         leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
+         if (!leaf) return -1;
+      }
+      final = leaf->IsOnTerminalBranch();
+   }
+
+   if (leaf && leaf->InheritsFrom("TLeafObject") ) {
+      if (strlen(right)==0) strcpy(right,work);
+   }
+
+   if (leaf==0 && left[0]!=0) {
+      if (left[strlen(left)-1]=='.') left[strlen(left)-1]=0;
+
+      // Check for an alias.
+      const char *aliasValue = fTree->GetAlias(left);
+      if (aliasValue && strcspn(aliasValue,"+*/-%&!=<>|")==strlen(aliasValue)) {
+         // First check whether we are using this alias recursively (this would
+         // lead to an infinite recursion.
+         if (find(aliasUsed.begin(),
+                  aliasUsed.end(),
+                  left) != aliasUsed.end()) {
+            Error("DefinedVariable",
+                  "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
+                  "\tbecause \"%s\" is used [recursively] in its own definition!",
+                  left,aliasValue,fullExpression,left);
+            return -3;
+         }
+         aliasUsed.push_back(left);
+         TString newExpression = aliasValue;
+         newExpression += (cname+strlen(left));
+         Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level, castqueue, aliasUsed, fullExpression);
+         if (res<0) {
+            Error("DefinedVariable",
+                  "The substitution of the alias \"%s\" by \"%s\" failed.",left,aliasValue);
+            return -3;
+         }
+         return res;
+      }
+   }
+   leftover = right;
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
+{
+//*-*-*-*-*-*Check if name is in the list of Tree/Branch leaves*-*-*-*-*
+//*-*        ==================================================
+//
+//   This member function redefines the function in TFormula
+//   If a leaf has a name corresponding to the argument name, then
+//   returns a new code.
+//   A TTreeFormula may contain more than one variable.
+//   For each variable referenced, the pointers to the corresponding
+//   branch and leaf is stored in the object arrays fBranches and fLeaves.
+//
+//   name can be :
+//      - Leaf_Name (simple variable or data member of a ClonesArray)
+//      - Branch_Name.Leaf_Name
+//      - Branch_Name.Method_Name
+//      - Leaf_Name[index]
+//      - Branch_Name.Leaf_Name[index]
+//      - Branch_Name.Leaf_Name[index1]
+//      - Branch_Name.Leaf_Name[][index2]
+//      - Branch_Name.Leaf_Name[index1][index2]
+//   New additions:
+//      - Branch_Name.Leaf_Name[OtherLeaf_Name]
+//      - Branch_Name.Datamember_Name
+//      - '.' can be replaced by '->'
+//   and
+//      - Branch_Name[index1].Leaf_Name[index2]
+//      - Leaf_name[index].Action().OtherAction(param)
+//      - Leaf_name[index].Action()[val].OtherAction(param)
+//
+//   The expected returns values are
+//     -2 :  the name has been recognized but won't be usable
+//     -1 :  the name has not been recognized
+//    >=0 :  the name has been recognized, return the internal code for this name.
+//
+
+
+   action = kDefinedVariable;
+   if (!fTree) return -1;
+
+   fNpar = 0;
+   if (name.Length() > kMaxLen) return -1;
+   Int_t i,k;
+
+   if (name == "Entry$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kIndexOfEntry;
+      return code;
+   }
+   if (name == "Entries$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kEntries;
+      return code;
+   }
+   if (name == "Iteration$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kIteration;
+      return code;
+   }
+   if (name == "Length$") {
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kLength;
+      return code;
+   }
+   static const char *lenfunc = "Length$(";
+   if (strncmp(name.Data(),"Length$(",strlen(lenfunc))==0
+       && name[name.Length()-1]==')') {
+
+      TString subform = name.Data()+strlen(lenfunc);
+      subform.Remove( subform.Length() - 1 );
+      TTreeFormula *lengthForm = new TTreeFormula("lengthForm",subform,fTree);
+      fAliases.AddAtAndExpand(lengthForm,fNoper);
+      Int_t code = fNcodes++;
+      fCodes[code] = 0;
+      fLookupType[code] = kLengthFunc;
+      return code;
+   }
+   
+   // Check for $Alt(expression1,expression2)
+   Int_t res = DefineAlternate(name.Data());
+   if (res!=0) {
+      // There was either a syntax error or we found $Alt
+      if (res<0) return res;
+      action = res;
+      return 0;
+   }
+
+   // Find the top level leaf and deal with dimensions
+   
+   char    cname[kMaxLen];  strcpy(cname,name.Data());
+   char     dims[kMaxLen];   dims[0] = '\0';
+
+   Bool_t final = kFALSE;
+
+   UInt_t paran_level = 0;
+   TObjArray castqueue;
+
+   // First, it is easier to remove all dimensions information from 'cname'
+   Int_t cnamelen = strlen(cname);
+   for(i=0,k=0; i<cnamelen; ++i, ++k) {
+      if (cname[i] == '[') {
+         int bracket = i;
+         int bracket_level = 1;
+         int j;
+         for (j=++i; j<cnamelen && (bracket_level>0 || cname[j]=='['); j++, i++) {
+            if (cname[j]=='[') bracket_level++;
+            else if (cname[j]==']') bracket_level--;
+         }
+         if (bracket_level != 0) {
+            //Error("DefinedVariable","Bracket unbalanced");
+            return -1;
+         }
+         strncat(dims,&cname[bracket],j-bracket);
+         //k += j-bracket;
+      }
+      if (i!=k) cname[k] = cname[i];
+   }
+   cname[k]='\0';
+
+   TString leftover;
+   TLeaf *leaf = 0;
+   {  
+      std::vector<std::string> aliasSofar = fAliasesUsed;
+      res = FindLeafForExpression(cname, leaf, leftover, final, paran_level, castqueue, aliasSofar, name);
+   }
+   if (res<0) return res;
+
+   if (!leaf) {
+      // Check for an alias.
+      const char *aliasValue = fTree->GetAlias(cname);
+      if (aliasValue) {
+         // First check whether we are using this alias recursively (this would
+         // lead to an infinite recursion.
+         if (find(fAliasesUsed.begin(),
+                  fAliasesUsed.end(),
+                  cname) != fAliasesUsed.end()) {
+            Error("DefinedVariable",
+                  "The substitution of the alias \"%s\" by \"%s\" failed\n"\
+                  "\tbecause \"%s\" is recursively used in its own definition!",
+                  cname,aliasValue,cname);
+            return -3;
+         }
+   
+         std::vector<std::string> aliasSofar = fAliasesUsed;
+         aliasSofar.push_back( cname );
+
+         // Need to check the aliases used so far
+         TTreeFormula *subform = new TTreeFormula(cname,aliasValue,fTree,aliasSofar); // Need to pass the aliases used so far.
+
+         if (subform->GetNdim()==0) {
+            Error("DefinedVariable",
+                  "The substitution of the alias \"%s\" by \"%s\" failed.",cname,aliasValue);
+            return -3;
+         }
+
+         fManager->Add(subform);
+         fAliases.AddAtAndExpand(subform,fNoper);
+
+         if (subform->IsString()) {
+            action = kAliasString;
+            return 0;
+         } else {
+            action = kAlias;
+            return 0;
+         }
+      }
+   }
+   
+
+   if (leaf) {
+
+      if (leaf->GetBranch() && leaf->GetBranch()->TestBit(kDoNotProcess)) {
+         Error("DefinedVariable","the branch \"%s\" has to be enabled to be used",leaf->GetBranch()->GetName());
+         return -2;
+      }
+ 
+      Int_t code = fNcodes++;
+
+      // If needed will now parse the indexes specified for
+      // arrays.
+      if (dims[0]) {
+         char *current = &( dims[0] );
+         Int_t dim = 0;
+         char varindex[kMaxLen];
+         Int_t index;
+         Int_t scanindex ;
+         while (current) {
+            current++;
+            if (current[0] == ']') {
+               fIndexes[code][dim] = -1; // Loop over all elements;
+            } else {
+               scanindex = sscanf(current,"%d",&index);
+               if (scanindex) {
+                  fIndexes[code][dim] = index;
+               } else {
+                  fIndexes[code][dim] = -2; // Index is calculated via a variable.
+                  strcpy(varindex,current);
+                  char *end = varindex;
+                  for(char bracket_level = 0;*end!=0;end++) {
+                    if (*end=='[') bracket_level++;
+                    if (bracket_level==0 && *end==']') break;
+                    if (*end==']') bracket_level--;
+                  }
+                  if (end != 0) {
+                     *end = '\0';
+                     fVarIndexes[code][dim] = new TTreeFormula("index_var",
+                                                                  varindex,
+                                                                  fTree);
+                     current += strlen(varindex)+1; // move to the end of the index array
+                  }
+               }
+            }
+            dim ++;
+            if (dim >= kMAXFORMDIM) {
+               // NOTE: test that dim this is NOT too big!!
+               break;
+            }
+            current = (char*)strstr( current, "[" );
+         }
+      }
+
+      // Now that we have clean-up the expression, let's compare it to the content
+      // of the leaf!
+
+      Int_t res = ParseWithLeaf(leaf,leftover,final,paran_level,castqueue,name);
+      if (res<0) return res;
+      if (res>0) action = res;
       return code;
    }
 

@@ -7,30 +7,32 @@ int gHasLibrary = kFALSE;
 int gBranchStyle = 1;
 TList gSkipped;
 
-void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw) {
+void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw = true) {
   //cerr << "Doing " << what << " which is " << skip << endl;
-  if (draw) {
-    TString cut = what;
-    cut.Append(">>");
-    cut.Append(where);
-    tree->Draw(cut.Data(),"","goff");
-
-  } else {
-    gSkipped.Add(new TNamed(where,where));
-  }
-  
+   if (draw) {
+      TString cut = what;
+      cut.Append(">>");
+      cut.Append(where);
+      tree->Draw(cut.Data(),"","goff");
+      TH1* h = (TH1*)gDirectory->FindObject(where);
+      if (h) h->SetTitle(Form("histo made from T->Draw(\"%s\")",what));
+   } else {
+      gSkipped.Add(new TNamed(where,where));
+   }
 };
 
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
-                   const char* where, Bool_t draw) {
+                   const char* where, Bool_t draw = true) {
    //cerr << "Doing " << what << " which is " << skip << endl;
    if (draw) { 
       TString cut = what;
       cut.Append(">>");
       cut.Append(where);
       tree->Draw(cut.Data(),cond,"goff");
+      TH1* h = (TH1*)gDirectory->FindObject(where);
+      if (h) h->SetTitle(Form("histo made from T->Draw(\"%s\",\"%s\")",what,cond));
    } else {
-     gSkipped.Add(new TNamed(where,where));
+      gSkipped.Add(new TNamed(where,where));
    }
 };
 
@@ -74,13 +76,13 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
 
    //gBenchmark->Show("DrawTest");  gBenchmark->Start("DrawTest");
 
-   tree->Draw("fNtrack>>hNtrack",    "","goff");
-   tree->Draw("fNseg>>hNseg",        "","goff");
-   tree->Draw("fTemperature>>hTemp", "","goff");
+   DrawSkippable(tree,"fNtrack","hNtrack");
+   DrawSkippable(tree,"fNseg","hNseg");
+   DrawSkippable(tree,"fTemperature","hTemp");
 
-   tree->Draw("fH.GetMean()>>hHmean","","goff");
-   if (level>0) tree->Draw("fH.fXaxis.fXmax>>hHAxisMax","","goff");
-   if (level>0) tree->Draw("fH.fXaxis.GetXmax()>>hHAxisGetMax","","goff");
+   DrawSkippable(tree,"fH.GetMean()","hHmean");
+   if (level>0) DrawSkippable(tree,"fH.fXaxis.fXmax","hHAxisMax");
+   if (level>0) DrawSkippable(tree,"fH.fXaxis.GetXmax()","hHAxisGetMax");
    DrawSkippable(tree,"fH.GetXaxis().GetXmax()","hHGetAxisGetMax",(level>0));
    DrawSkippable(tree,"fH.GetXaxis().fXmax","hHGetAxisMax",(level>0));
    DrawSkippable(tree,"GetHistogram().GetXaxis().GetXmax()","hGetHGetAxisMax",
@@ -88,47 +90,49 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    DrawSkippable(tree,"event.GetHistogram().GetXaxis().GetXmax()",
                  "hGetRefHGetAxisMax",(level>0&&gHasLibrary));
 
-   tree->Draw("fTracks.fPx>>hPx","fEvtHdr.fEvtNum%10 == 0","goff");
-   tree->Draw("fTracks.fPy>>hPy","fEvtHdr.fEvtNum%10 == 0","goff");
-   tree->Draw("fTracks.fPz>>hPz","fEvtHdr.fEvtNum%10 == 0","goff");
-   tree->Draw("fRandom>>hRandom","3*(fEvtHdr.fEvtNum%10 == 1)","goff");
-   tree->Draw("fMass2>>hMass2",  "fEvtHdr.fEvtNum%10 == 1","goff");
-   tree->Draw("fBx>>hBx",        "fEvtHdr.fEvtNum%10 == 1","goff");
-   tree->Draw("fBy>>hBy",        "fEvtHdr.fEvtNum%10 == 1","goff");
-   tree->Draw("fXfirst>>hXfirst","fEvtHdr.fEvtNum%10 == 2","goff");
-   tree->Draw("fYfirst>>hYfirst","fEvtHdr.fEvtNum%10 == 2","goff");
-   tree->Draw("fZfirst>>hZfirst","fEvtHdr.fEvtNum%10 == 2","goff");
-   tree->Draw("fXlast>>hXlast",  "fEvtHdr.fEvtNum%10 == 3","goff");
-   tree->Draw("fYlast>>hYlast",  "fEvtHdr.fEvtNum%10 == 3","goff");
-   tree->Draw("fZlast>>hZlast",  "fEvtHdr.fEvtNum%10 == 3","goff");
-   tree->Draw("fCharge>>hCharge","fPx < 0","goff");
-   tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
-   tree->Draw("fValid>>hValid",  "fPx < 0","goff");
+   DrawSkippable(tree,"fTracks.fPx","fEvtHdr.fEvtNum%10 == 0","hPx");
+   DrawSkippable(tree,"fTracks.fPy","fEvtHdr.fEvtNum%10 == 0","hPy");
+   DrawSkippable(tree,"fTracks.fPz","fEvtHdr.fEvtNum%10 == 0","hPz");
+   DrawSkippable(tree,"fRandom","3*(fEvtHdr.fEvtNum%10 == 1)","hRandom");
+   DrawSkippable(tree,"fMass2",  "fEvtHdr.fEvtNum%10 == 1","hMass2");
+   DrawSkippable(tree,"fBx",        "fEvtHdr.fEvtNum%10 == 1","hBx");
+   DrawSkippable(tree,"fBy",        "fEvtHdr.fEvtNum%10 == 1","hBy");
+   DrawSkippable(tree,"fXfirst","fEvtHdr.fEvtNum%10 == 2","hXfirst");
+   DrawSkippable(tree,"fYfirst","fEvtHdr.fEvtNum%10 == 2","hYfirst");
+   DrawSkippable(tree,"fZfirst","fEvtHdr.fEvtNum%10 == 2","hZfirst");
+   DrawSkippable(tree,"fXlast",  "fEvtHdr.fEvtNum%10 == 3","hXlast");
+   DrawSkippable(tree,"fYlast",  "fEvtHdr.fEvtNum%10 == 3","hYlast");
+   DrawSkippable(tree,"fZlast",  "fEvtHdr.fEvtNum%10 == 3","hZlast");
+   DrawSkippable(tree,"fCharge","fPx < 0","hCharge");
+   DrawSkippable(tree,"fNpoint","fPx < 0","hNpoint");
+   DrawSkippable(tree,"fValid",  "fPx < 0","hValid");
    DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle!=0);
    tree->SetAlias("mult","fPx*fPy");
    DrawSkippable(tree,"fEvtHdr.fEvtNum*6+mult", "hAlias", 1);
+   tree->SetAlias("track","event.fTracks");
+   DrawSkippable(tree,"track.fPx+track.fPy", "hAliasSymbol", 1);
 
-   tree->Draw("fIsValid>>hBool", "", "goff");
+   DrawSkippable(tree,"fIsValid","hBool");
 
-   tree->Draw("fMatrix>>hFullMatrix","","goff");
-   tree->Draw("fMatrix[][0]>>hColMatrix","","goff");
-   tree->Draw("fMatrix[1][]>>hRowMatrix","","goff");
-   tree->Draw("fMatrix[2][2]>>hCellMatrix","","goff");
+   DrawSkippable(tree,"fMatrix","hFullMatrix");
+   DrawSkippable(tree,"fMatrix[][0]","hColMatrix");
+   DrawSkippable(tree,"fMatrix[1][]","hRowMatrix");
+   DrawSkippable(tree,"fMatrix[2][2]","hCellMatrix");
 
-   tree->Draw("fMatrix - fVertex>>hFullOper","","goff");
-   tree->Draw("fMatrix[2][1] - fVertex[5][1]>>hCellOper","","goff");
-   tree->Draw("fMatrix[][1]  - fVertex[5][1]>>hColOper","","goff");
-   tree->Draw("fMatrix[2][]  - fVertex[5][2]>>hRowOper","","goff");
-   tree->Draw("fMatrix[2][]  - fVertex[5][]>>hMatchRowOper","","goff");
-   tree->Draw("fMatrix[][2]  - fVertex[][1]>>hMatchColOper","","goff");
-   tree->Draw("fMatrix[][2]  - fVertex[][]>>hRowMatOper","","goff");
-   tree->Draw("fMatrix[][2]  - fVertex[5][]>>hMatchDiffOper","","goff");
-   tree->Draw("fMatrix[][]   - fVertex[][]>>hFullOper2","","goff");
+   DrawSkippable(tree,"fMatrix - fVertex","hFullOper");
+   DrawSkippable(tree,"fMatrix[2][1] - fVertex[5][1]","hCellOper");
+   DrawSkippable(tree,"fMatrix[][1]  - fVertex[5][1]","hColOper");
+   DrawSkippable(tree,"fMatrix[2][]  - fVertex[5][2]","hRowOper");
+   DrawSkippable(tree,"fMatrix[2][]  - fVertex[5][]","hMatchRowOper");
+   DrawSkippable(tree,"fMatrix[][2]  - fVertex[][1]","hMatchColOper");
+   DrawSkippable(tree,"fMatrix[][2]  - fVertex[][]","hRowMatOper");
+   DrawSkippable(tree,"fMatrix[][2]  - fVertex[5][]","hMatchDiffOper");
+   DrawSkippable(tree,"fMatrix[][]   - fVertex[][]","hFullOper2");
 
    // Test on variable arrays
-   tree->Draw("fClosestDistance>>hClosestDistance","","goff");
-   tree->Draw("fClosestDistance[2]>>hClosestDistance2","","goff");
-   tree->Draw("fClosestDistance[9]>>hClosestDistance9","","goff");
+   DrawSkippable(tree,"fClosestDistance","hClosestDistance");
+   DrawSkippable(tree,"fClosestDistance[2]","hClosestDistance2");
+   DrawSkippable(tree,"fClosestDistance[9]","hClosestDistance9");
 
    // Test variable indexing
    DrawSkippable(tree,"fClosestDistance[fNvertex/2]","hClosestDistanceIndex",

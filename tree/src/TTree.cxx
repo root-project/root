@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.233 2005/02/09 16:47:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.234 2005/02/10 13:01:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3984,28 +3984,34 @@ Long64_t  TTree::Scan(const char *varexp, const char *selection, Option_t *optio
 //______________________________________________________________________________
 Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set a tree variable alias*-*-*-*-*-*
-//*-*                  ====================================
-//
-//  Set an alias for an expression/formula based on the tree 'variables'.
-//
-//  The content of 'aliasName' can be used in TTreeFormula (i.e. TTree::Draw,
-//  TTree::Scan, TTreeViewer) and will be evaluated as the content of
-//  'aliasFormula'.
-//  If the alias 'aliasName' already existed, it is replaced by the new
-//  value.
-//  When being used, the alias can be preceded by an eventual 'Friend Alias'
-//  (see TTree::GetFriendAlias)
-//
-//  Return true if it was added properly.
-//
-//  For example:
-//     tree->SetAlias("x1","(tdc1[1]-tdc1[0])/49");
-//     tree->SetAlias("y1","(tdc1[3]-tdc1[2])/47");
-//     tree->SetAlias("x2","(tdc2[1]-tdc2[0])/49");
-//     tree->SetAlias("y2","(tdc2[3]-tdc2[2])/47");
-//     tree->Draw("y2-y1:x2-x1");
-//
+   //  Set a tree variable alias
+   //
+   //  Set an alias for an expression/formula based on the tree 'variables'.
+   //
+   //  The content of 'aliasName' can be used in TTreeFormula (i.e. TTree::Draw,
+   //  TTree::Scan, TTreeViewer) and will be evaluated as the content of
+   //  'aliasFormula'.
+   //  If the content of 'aliasFormula only contains symbol names, periods and
+   //  array index specification (for example event.fTracks[3]), then 
+   //  the content of 'aliasName' can be used as the start of symbol.
+   //
+   //  If the alias 'aliasName' already existed, it is replaced by the new
+   //  value.
+   //
+   //  When being used, the alias can be preceded by an eventual 'Friend Alias'
+   //  (see TTree::GetFriendAlias)
+   //
+   //  Return true if it was added properly.
+   //
+   //  For example:
+   //     tree->SetAlias("x1","(tdc1[1]-tdc1[0])/49");
+   //     tree->SetAlias("y1","(tdc1[3]-tdc1[2])/47");
+   //     tree->SetAlias("x2","(tdc2[1]-tdc2[0])/49");
+   //     tree->SetAlias("y2","(tdc2[3]-tdc2[2])/47");
+   //     tree->Draw("y2-y1:x2-x1");
+   //
+   //     tree->SetAlias("theGoodTrack","event.fTracks[3]");
+   //     tree->Draw("theGoodTrack.fPx"); // same as "event.fTracks[3].fPx"
 
    if (aliasName==0 || aliasFormula==0) return false;
    if (strlen(aliasName)==0 || strlen(aliasFormula)==0) return false;
