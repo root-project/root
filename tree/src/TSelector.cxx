@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.10 2002/07/17 12:29:38 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.11 2002/12/13 19:11:06 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@ TSelector::TSelector() : TObject()
 {
    // Default selector ctor.
 
+   fStatus = 0;
    fObject = 0;
    fInput  = 0;
    fOutput = new THashList;
