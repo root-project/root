@@ -2,3 +2,4 @@
 Event
 Event.root
 Event.h
+ *.dll 
