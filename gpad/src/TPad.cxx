@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.99 2003/03/03 08:00:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.100 2003/03/07 08:37:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3691,7 +3691,7 @@ void TPad::Print(const char *filename, Option_t *option)
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
       if (gVirtualX->WriteGIF(psname)) {
-         Info("Print", "GIF file %s has been created", psname);
+         if (!gSystem->AccessPathName(psname)) Info("Print", "GIF file %s has been created", psname);
       }
       return;
    }
@@ -3711,7 +3711,7 @@ void TPad::Print(const char *filename, Option_t *option)
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      Info("Print", "ROOT file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "ROOT file %s has been created", psname);
       return;
    }
 
@@ -3747,7 +3747,7 @@ void TPad::Print(const char *filename, Option_t *option)
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
-      Info("Print", "SVG file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname);
 
       delete gVirtualPS;
       gVirtualPS = psave;
@@ -3807,7 +3807,7 @@ void TPad::Print(const char *filename, Option_t *option)
          Paint();
       }
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      Info("Print", "PostScript file %s has been created", psname);
+      if (!gSystem->AccessPathName(psname)) Info("Print", "PostScript file %s has been created", psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;

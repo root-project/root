@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.36 2003/03/18 16:28:18 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.37 2003/03/19 18:06:55 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TPostScript.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TSystem.h"
 
 const char   kBackslash = '\\';
 const Int_t  kLatex = BIT(10);
@@ -269,7 +270,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
 
    // open OS file
    fStream = new ofstream(fname,ios::out);
-   if (fStream == 0) {
+   if (fStream == 0 || gSystem->AccessPathName(fname)) {
       printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fname);
       return;
    }
