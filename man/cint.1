@@ -1,270 +1,375 @@
-.\"
-.\" $Id$
-.\" 
-.TH CINT 1 "Version 3" "ROOT"
-.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
-.\" other parms are allowed: see man(7), man(1)
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH CINT 1 "February  3, 2001"
+.\" Please adjust this date whenever revising the manpage.
 .SH NAME
-cint \- C/C++ interactive interpretor
+cint \- C/C++ interpreter
 .SH SYNOPSIS
 .B cint
-.I "[options] files ..."
-.SH "DESCRIPTION"
-This manual page documents briefly the
-.BR cint ,
-program.
-.PP
-.B CINT 
-is a C/C++ interpreter which is aimed at processing C/C++
-scripts. Scripts are programs which perform specific tasks. Generally
-execution time is not critical, but rapid development is. Using an
-interpreter the compile and link cycle is dramatically reduced
-facilitating rapid development. 
-.PP
-.B CINT 
-is not aimed to be a 100% ANSI/ISO compliant C/C++ language
-processor. It rather is a portable script language environment which
-is close enough to the standard C++. 
-.PP
-Regulary check either of 
-.I /tmp /usr/tmp /temp /windows/temp 
-directory and remove temp-files which are accidentally left by 
-.BR CINT . 
-.PP
-.B CINT 
-reads source file on-the-fly from the file system. Do not change the
-active source during 
-.BR cint run . 
-Use 
-.B -C 
-option or 
-.B C1 
-command otherwise. 
-.PP
-In source code trace mode, 
-.B CINT 
-sometimes displays extra-characters. This is harmless. Please ignore.
-.PP
-.B CINT 
-covers about 95% of ANSI C and 85% of C++. 
-.BR CINT , 
-written in ANSI C (about 80000 loc), is solid enough
-to interpret itself and let the interpreted version execute a program. 
-.PP
-.B CINT 
-makes C/C++ programming enjoyable even for part-time programmers. 
-.PP
-.B CINT 
-is developed by 
-.BR Masaharu Goto , 
-who works for HP Japan. Masaharu collaborates closely with the 
-.B ROOT
-team to integrate 
-.B CINT 
-seamlessly into 
-.B ROOT 
-and to further optimize 
-.BR CINT / ROOT. 
-.PP 
-The 
-.B ROOT 
-system embeds 
-.B CINT 
-to be able to execute C++ scripts and C++ command line input. 
-.B CINT
-also provides 
-.B ROOT 
-with extensive RTTI (Run Time Type Identification) capabilities. 
-.PP
-This manual page was written for the Debian GNU/Linux distribution
-because the original program does not have a manual page.
+<[options]> <[sourcefiles]|[suboption]> <[arguments]>
+.SH DESCRIPTION
+.B cint
+is a C/C++ interpreter. About 95% of ANSI C and 90% of C++ features
+are covered. (Data abstraction, class inheritance, virtual function,
+function and operator overloading, default parameters, templates,
+etc...)  Cint has a source code debugger for interpreted source code
+and it has sufficient capability for debugging a C++ script.
+.SH CINT AND MAKECINT
+Cint can be used just as it is, but it is recommended to use makecint.
+Makecint can encapsulate native C/C++ objects into Cint as precompiled
+libraries.  User defined precompiled objects can be accessed from the
+interpreter and a user application can invoke the C/C++ interpreter as
+interactive interface. It provides a seamless compiler/interpreter
+scripting environment. Precompiled libraries can be dynamically
+loaded/unloaded if they are configured as Dynamic Link Library
+(DLL). See also makecint(1).
 .SH OPTIONS
+(*) : used only with makecint or -c option
 .TP
-.BR -A
- ANSI C++ mode(default)
+.B \-A
+ANSI C++ mode(default)
+.br
+Handles given file as C++, regardless of file extension. Otherwise, 
+.c files are handled as C and .cxx, .C and .cpp files are handled
+as C++.
 .TP
-.BR -b [line]
-set break line
-.TP  
-.B -c -1
-make C++ precompiled interface method files
+.B \-b BREAKPOINT
+Set break point
+.br
+Set break point in source file. Break point can be specified by either
+line number or function name. Use -f option to specify a source file
+that you want to set break point.
+.nf
+   -b [line]
+   -b [funcname]
+   -b [classname]::[funcname]
+.fi
 .TP
-.B -c -2
- make C precompiled interface method files
+.B \-c \-1 (*)
+Make C++ precompiled interface method files
+.br
+Cint creates interface method source file. Cint reads C++ header file and 
+analyzes interface that is exported to the interpreter. The information is
+then compiled into an interface method source file which can be compiled
+and lined with user code.
+Default name for the interface method source/header file is G__cpplink.C 
+and G__cpplink.h.
+-c option must be given after -n, -N, -w and -z option if used simultaneously.
+Normally, -c-1 option is used within the 'makecint' tool. In that case, a
+user does not need to know the detail.
 .TP
-.BR -C
- copy src to $TMPDIR so that src can be change during cint run
+.B \-c \-2 (*)
+Make C precompiled interface method files
+.br
+Cint creates interface method source file. Cint reads C header file and 
+analyzes interface that is exported to the interpreter. The information is
+then compiled into an interface method source file which can be compiled
+and lined with user code.
+Default name for the interface method source/header file is G__clink.c 
+and G__clink.h.
+-c option must be given after -n, -N, -w and -z option if used simultaneously.
+Normally, -c-1 option is used within the 'makecint' tool. In that case, a
+user does not need to know the detail.
 .TP
-.BR -d [dumpfile]
- dump function call history
+.B \-C
+Copy source to $TMPDIR so that src can be changed during cint run
 .TP
-.BR -D [macro]
- define macro symbol for #ifdef
+.B \-d DUMPFILE
+Dump function call history
 .TP
-.BR -e
- Not ignore extern declarations
+.B \-D MACRO
+Define macro MACRO with the value '1' as its definition.
 .TP
-.BR -E
- Dump core at error
+.B \-D MACRO=DEFN
+Define macro MACRO as DEFN
 .TP
-.BR -f [file]
- set break file
+.B \-e
+Process extern declarations in source file
 .TP
-.BR -F [assignement]
- set global variable
+.B \-E
+Dump core at error
 .TP
-.BR -G [tracedmp]
- dump exec trace into file
+.B \-f FILE
+Set break file
+.br
+This option is used with -b option when setting break point to a specified
+file.
 .TP
-.BR -i
- interactively return undefined symbol value
+.B \-F EXPRESSION
+Evaluate an EXPRESSION before running interpreted main() function.
+.br
+This option is normally used for overriding value of global variable after
+initialization.
 .TP
-.BR -I [includepath]
- set include file search path
+.B \-G TRACEDMP
+Dump execution trace into a file TRACEDMP
 .TP
-.BR -K
- C mode
+.B \-i
+Interactively return undefined symbol value
 .TP
-.BR -l [dynamiclinklib]
- link dynamic link library
+.B \-I INCLUDEPATH
+Append directory INCLUDEPATH to the list of directories searched for include
+files.
 .TP
-.BR -n [linkname]
- Specify precompiled interface method filename
+.B \-K
+C mode
+.br
+Handles given file as C, regardless of file extension. Otherwise, 
+.c files are handled as C and .cxx, .C and .cpp files are handled
+as C++.
 .TP
-.BR -N [DLL_name]
- Specify DLL interface method name
+.B \-l DYNAMICLINKLIB
+Link dynamic link library (or shared library)
 .TP
-.BR -O [0~4]
- Loop compiler on(1~5) off(0). Default on(4)
+.B \-n LINKNAME (*)
+Specify interface method filename
+.br
+This option must be used with -c, and must be given before the -c option.
+Cint creates an interface method source file as LINKNAME. If omitted,
+G__cpplink.C, G__cpplink.h are created for C++, and G__clink.c, G__clink.h
+are created for C.
 .TP
-.BR -p
- use preprocessor prior to interpretation
+.B \-N DLL_NAME (*)
+Specify DLL interface method name
+.br
+This option must be used with -c, and must be given before the -c option.
+This option changes function name in the interface method source file, 
+in order to avoid name conflict. All function names in the interface
+method source file are suffixed by DLL_NAME.
 .TP
-.BR -q [security]
- Set security level(default 0)
+.B \-O [0~5]
+Loop compiler on (1~5) off (0). Default is on (4)
+.br
+Controls bytecode compiler optimization level. In case of problem, it is
+safer to run script in a lower optimization level.
 .TP
-.BR -r
- revision and linked function/global info
+.B \-p
+Use preprocessor prior to interpretation
 .TP
-.BR -R
- display input file at break point
+.B \-q SECURITY
+Set security level (default 0)
 .TP
-.BR -s
- step execution mode
+.B \-r
+Revision and linked function/global info
 .TP
-.BR -S
- step execution mode, First stop in main()
+.B \-R
+Display input file at break point
 .TP
-.BR -t
- trace execution
+.B \-s
+Step(-into) execution mode
 .TP
-.BR -T
- trace from pre-run
+.B \-S
+Step(-over) execution mode, First stop in main()
 .TP
-.BR -u [undefout]
- listup possible undefined typenames
+.B \-t
+Trace execution mode
 .TP
-.BR -V
- Generate symbols for non-public member with -c option
+.B \-T
+Trace execution mode (from pre-run)
 .TP
-.BR -v
- Bytecode compiler debug mode
+.B \-u UNDEFOUT (*)
+Listup possible undefined typenames
+.br
+Lists up undefined typenames and output that list into a file UNDEFOUT.
 .TP
-.BR -X [readlinedumpfile]
- Execute readline dumpfile
+.B \-U DIR (*)
+Directory to disable interface method generation
+.br
+Interface method generation is surpressed if header file belongs to specified
+directory DIR.
 .TP
-.BR -x 'main() {...}'
- Execute argument as source code
-suboptions
+.B \-V (*)
+Generate interface method for non-public member
 .TP
-.B  
-+V
-turn on class title comment mode for following source fies
+.B \-v
+Bytecode compiler debug mode
 .TP
-.BR -V
- turn off class title comment mode for following source fies
+.B \-w [0|1] (*)
+Switch between archive library and DLL when creating interface method source
+file. This option is needed only for Windows-NT/9x/200x when cint creates
+.DEF file for precompiled library. This option must be given before -c option.
 .TP
-.B +P 
+.B \-X READLINEDUMPFILE
+Execute readline dumpfile
+.TP
+.B \-x 'main() {...}'
+Execute argument as source code
+.TP
+.B \-Y [0|1]
+ignore(1) not ignore(0) std namespace
+.br
+This option switches 'std' namespace to be used(0) or ignored(1).
+.TP
+.B \-z PROJECTNAME (*)
+Specify project name as PROJECTNAME when making interface method source file.
+This option is needed only for Windows-NT/9x/200x when cint creates .DEF file
+for precompiled library. This option must be given before -c option.
+.TP
+.B \-Z [0|1]
+Auto loading of standard header files with DLL
+.br
+This option controls automatic loading of standard header files with DLL.
+If -Z1 is given, standard header files included when making interface method
+source file are automatically loaded when loading DLL.
+.br
+.PP
+.SH SOURCEFILES
+.br
+Cint directly accepts C/C++ source file. If you give multiple source
+files, main() function must be included in the last one. If source
+file is omitted or main() function is not found in given source file,
+cint automatically starts interactive interface.  Cint reads source
+file on the fly from the file system.  Do not change the active source
+files during cint run.
+.PP
+.SH SUBOPTIONS
+.br
+(*) : used only with makecint or -c option
+Suboptions are options which appears  in  between  source files.
+.TP
+.B \-A
+ANSI C++ mode(default)
+.TP
+.B \+V
+turn on class title comment mode for following source files
+.TP
+.B \-V
+turn off class title comment mode for following source files
+.TP
+.B \+P
 turn on preprocessor for following source files
 .TP
-.BR -P
- turn off preprocessor for following source files
+.B \-P
+turn off preprocessor for following source files
 .TP
-.B +STUB
+.B \+STUB (*)
 stub function header begin
 .TP
-.BR -STUB
- stub function header end
-.TP
-.B [files]
-Any valid C/C++ source or header files
-.SH "EXAMPLES"
-.RS
-$ cint prog.c main.c
-.RE
-where the file 
-.I main.c
-may contain any ANSI C code, say 
-.RS 
-.ft 3
+.B -STUB (*)
+stub function header end
+
+ARGUMENTS
+Arguments to main(int argc,char *argv[]) function.
+.SH EXAMPLES
 .nf
-.sp
-int main() { 
-  char* greeting = "Hello World"
-  printf("The classic greeting: \"%s\"\n", greeting);
-  return 0;
-}
-.ft
-.LP
-.RE
-Interpreting the above file like
-.RS
-$ cint -S prog.c main.c
-.RE
-will single step through the body of 
-.BR main() .
-.SH "SEE ALSO"
-The program is documented fully on  
-.RS
-.I http://root.cern.ch/root/Cint.html
-.RE
-.sp 1
-.IR root(1), 
-.IR rootcint(1)
-.SH "ORIGINAL AUTHORS"
-.B Masaharu Goto
-.SH "COPYRIGHT"
-ROOT Software Terms and Conditions
-.PP
-The authors hereby grant permission to use, copy, and distribute this
-software and its documentation for any purpose, provided that existing
-copyright notices are retained in all copies and that this notice is
-included verbatim in any distributions. Additionally, the authors grant
-permission to modify this software and its documentation for any purpose,
-provided that such modifications are not distributed without the explicit
-consent of the authors and that existing copyright notices are retained in
-all copies. Users of the software are asked to feed back problems, benefits,
-and/or suggestions about the software to the ROOT Development Team
-(rootdev@root.cern.ch). Support for this software - fixing of bugs,
-incorporation of new features - is done on a best effort basis. All bug
-fixes and enhancements will be made available under the same terms and
-conditions as the original software,
-.PP
-IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
-DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
-OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES THEREOF,
-EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-.PP
-THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THIS SOFTWARE IS
-PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE NO
-OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-MODIFICATIONS.
-.SH AUTHOR 
-This manual page was written by Christian Holm Christensen
-<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
-others). 
-.\"
-.\" $Log$
-.\" 
+$ cint
+$ cint lib1.c lib2.c source.c
+$ cint -S -I../include -DDEBUG source.c
+$ cint -x 'main(int argc,char *argv[]){printf("%s\n",argv[1]);}'
+$ cint -qlevel1 myprog.C
+.fi
+
+.SH DEBUG MODE
+Cint starts debug mode at following situations:
+.br 
+- main() function is not included in the given source file.
+.br 
+- Step execution mode (-S,-s option)
+.br 
+- Program reaches to a break point
+.br 
+- Keyboard interrupt (CTL-C or Break)
+.br 
+- Explicit call of interactive interface function G__pause().
+.br 
+- Bus error or segmentation violation occurred.
+
+You can perform step and trace execution, locate as many break points
+as you want, look into function/variable/class information tables,
+etc...  Use of following debug mode commands enables you to do these
+things.  Cint's debug mode can only debug interpreted source code.
+You need to use a binary level debugger to debug precompiled library.
+Cint can be used with any kind of binary level debugger such as gdb.
+
+cint (C/C++ interpreter) debugger usage:
+.nf
+Dump:        n [file]  : create new readline dumpfile and start dump
+             y [file]  : append readline dump to [file]
+             z         : stop readline dump
+             < [file]  : execute readline dumpfile
+             > [file]  : output redirect to [file]
+             2> [file] : error redirect to [file]
+             .         : switch command input mode
+Help:        ?         : help
+             help      : help
+             /[keyword] : help information for keyword
+Completion:  [nam][Tab] : complete symbol name start with [nam]
+             [nam][Tab][Tab] : list up all symbol name start with [nam]]
+Shell:       ![shell]  : execute shell command
+Source:      v <[line]>: view source code <around [line]>
+             V [stack] : view source code in function call stack
+             t         : show function call stack
+             f [file]  : select file to debug
+             T         : turn on/off trace mode for all source
+             A [1|0]   : allowing automatic variable on/off
+             trace <classname> : turn on trace mode for class
+             deltrace <classname> : turn off trace mode for class
+             break [classname] : set break point at every [classname]
+                                 memberfunc
+             delbreak [classname] : turn off memberfunc break point
+Evaluation:  p [expr]  : evaluate expression
+                          (no declaration/loop/condition)
+             s [expr]  : step into expression
+                          (no declaration/loop/condition)
+             S [expr]  : step over expression
+                          (no declaration/loop/condition)
+             {[statements]} : evaluate statement (any kind)
+             x [file]  : load [file] and evaluate {statements} in the
+                         file
+             X [file]  : load [file] and execute function [file]
+                          (wo extension)
+             E <[file]>: open editor and evaluate {statements} in the
+                         file
+Load/Unload: L [file]  : load [file]
+             La [file] : reload all files loaded after [file]
+             U [file]  : unload [file]
+             C [1|0]   : copy source to $TMPDIR (on/off)
+             reset     : reset interpreter environment
+             undo      : undo previous declarations
+Monitor:     g <[var]> : list global variable
+             l <[var]> : list local variable
+             proto <[scope]::>[func] : show function prototype
+             class <[name]> : show class definition (one level)
+             Class <[name]> : show class definition (all level)
+             typedef <name> : show typedefs
+             function  : show interpreted functions
+             macro     : show macro functions
+             template  : show templates
+             include   : show include paths
+             file      : show loaded files
+             where     : show current file position
+             security  : show security level
+             refcount  : reference count control on/off
+             garbage   : show garbage collection buffer
+             Garbage   : Do garbage collection
+             cover [file] : save trace coverage
+             return [val] : return undefined symbol value
+Run:         S         : step over function/loop
+             s         : step into function/loop
+             i         : ignore and step over
+             c <[line]>: continue <to [line]>
+             e         : step out from function
+             f [file]  : select file to debug
+             b [line]  : set break point
+             db [line] : delete break point
+             a [assert]: break only if assertion is true
+             O [0~4]   : Set bytecode compiler mode
+             debug     : bytecode status display on/off
+             asmstep   : bytecode step mode on/off
+             status    : show bytecode exec flags
+             dasm      : disassembler
+Quit:        q         : quit cint
+             qqq       : really do quit cint
+.if
+
+.SH SEE ALSO
+.BR makecint (1),
+.br
+The programs are documented fully in various files under
+/usr/share/doc/cint/.
+.SH AUTHOR
+Masaharu Goto <MXJ02154@niftyserve.or.jp>
+.br
+Copyright \(co 1995-2000 Masaharu Goto
+.br
+This manual page was compiled from information in the Cint source
+package for the Debian GNU/Linux system (but may be used by others).
