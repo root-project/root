@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.61 2004/06/17 20:00:05 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.62 2004/06/29 21:36:18 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1621,8 +1621,12 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
         // get a class
         TClass *classInh =
           GetClass((const char *) inheritFrom->GetName());
-         
-        ClassHtmlTree(out, classInh, kUp, depth+1);
+        if (classInh)
+           ClassHtmlTree(out, classInh, kUp, depth+1);
+        else 
+           out << "<tt>" 
+               << (const char *) inheritFrom->GetName()
+               << "</tt>"; 
         out << "</td>"<< endl;
       }
       if (!first) {
