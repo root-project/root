@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += mytest staticConstTest
+TEST_TARGETS += sprintfselect mytest staticConstTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -28,3 +28,6 @@ staticConstTest.log: staticConst.C
 staticConstTest: staticConstTest.log
 	$(CMDECHO) diff -b staticConstTest.log staticConstTest.ref
 
+
+sprintfselect: sprintfselect.log
+	$(TestDiff)
