@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.20 2002/04/08 22:08:39 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.21 2002/04/10 20:59:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -90,10 +90,11 @@ public:
   RooAbsPdf*  _pdfClone ;
   RooArgSet*  _normSet ;
   RooArgSet   _origLeafNodeList ;
-  RooArgList*  _floatParamList ;
-  RooArgList*  _constParamList ;
-  RooArgSet*   _projDeps ;
+  RooArgList* _floatParamList ;
+  RooArgList* _constParamList ;
+  RooArgSet*  _projDeps ;
   Int_t       _nPar ;
+  Int_t       _numBadNLL ;
 
   mutable Bool_t _doOptCache ;
   Double_t _maxNLL ;  

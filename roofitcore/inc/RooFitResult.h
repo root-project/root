@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.10 2002/05/16 19:26:58 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.11 2002/05/17 22:58:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -42,6 +42,7 @@ public:
 
   // Accessors
   inline Int_t status() const { return _status ; }
+  inline Int_t numInvalidNLL() const { return _numBadNLL ; }
   inline Double_t edm() const { return _edm ; }
   inline Double_t minNll() const { return _minNLL ; }
   inline const RooArgList& constPars() const { return *_constPars ; } 
@@ -87,12 +88,14 @@ protected:
   inline void setMinNLL(Double_t val) { _minNLL = val ; }
   inline void setEDM(Double_t val) { _edm = val ; }
   inline void setStatus(Int_t val) { _status = val ; }
+  inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
   void fillCorrMatrix() ;
 
   Double_t correlation(Int_t row, Int_t col) const;
   Double_t covariance(Int_t row, Int_t col) const;
 
   Int_t    _status ;          // MINUIT status code
+  Int_t    _numBadNLL ;       // Number calls with bad (zero,negative) likelihood 
   Double_t _minNLL ;          // NLL at minimum
   Double_t _edm ;             // Estimated distance to minimum
   RooArgList* _constPars ;    // List of constant parameters

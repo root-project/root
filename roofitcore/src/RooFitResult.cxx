@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.14 2002/05/16 19:26:58 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.15 2002/05/17 22:58:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -351,14 +351,27 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
     }
 
 
-    os << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
-       << "  --------------------  ------------  --------------------------  --------" << endl ;
+
+    Bool_t doAsymErr = ((RooRealVar*)_finalPars->at(0))->hasAsymError() ;
+    if (doAsymErr) {
+      os << "    Floating Parameter  InitialValue    FinalValue (+HiError,-LoError)    GblCorr." << endl
+	 << "  --------------------  ------------  ----------------------------------  --------" << endl ;
+    } else {
+      os << "    Floating Parameter  InitialValue    FinalValue +/-  Error     GblCorr." << endl
+	 << "  --------------------  ------------  --------------------------  --------" << endl ;
+    }
 
     for (i=0 ; i<_finalPars->getSize() ; i++) {
       os << "  "    << setw(20) << ((RooAbsArg*)_finalPars->at(i))->GetName() ;
       os << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_initPars->at(i))->getVal())
-	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal())
-	 << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
+	 << "  "    << setw(12) << Form("%12.4e",((RooRealVar*)_finalPars->at(i))->getVal()) ;
+      
+      if (doAsymErr) {
+	os << setw(21) << Form(" (+%8.2e,-%8.2e)",((RooRealVar*)_finalPars->at(i))->getAsymErrorHi(),
+	                       -1*((RooRealVar*)_finalPars->at(i))->getAsymErrorLo()) ;
+      } else {
+	os << " +/- " << setw(9)  << Form("%9.2e",((RooRealVar*)_finalPars->at(i))->getError()) ;
+      }
 
       if (_globalCorr) {
 	os << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal()) ;

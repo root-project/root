@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.55 2002/04/10 20:59:04 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.56 2002/06/08 00:45:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,8 @@ static TVirtualFitter *_theFitter = 0;
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
 			     Bool_t cloneData, Bool_t clonePdf, Bool_t attachData, const RooArgSet* projDeps) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
-  _ownData(cloneData), _zombie(kFALSE), _projDeps(0), _verboseFit(kFALSE), _profileTimer(kFALSE)
+  _ownData(cloneData), _zombie(kFALSE), _projDeps(0), _verboseFit(kFALSE), _profileTimer(kFALSE),
+  _numBadNLL(0)
 {
   // Constructor
 
@@ -678,6 +679,9 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
   // Reset the *largest* negative log-likelihood value we have seen so far
   _maxNLL= -1e30 ;
 
+  // Reset the counter for bad (zero or negative) likelihood occurrences
+  _numBadNLL = 0 ;
+
   // Do the fit
   arglist[0]= 250*nFree; // maximum iterations
   arglist[1]= 1.0;       // tolerance
@@ -745,6 +749,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
     fitRes->setEDM(edm) ;    
     fitRes->setFinalParList(*_floatParamList) ;
     fitRes->fillCorrMatrix() ;
+    fitRes->setNumInvalidNLL(_numBadNLL) ;
   }
 
   // Print the time used, if requested
@@ -902,6 +907,7 @@ void RooFitGlue(Int_t &np, Double_t *gin,
     cout << "RooFitGlue: Events with zero or negative probability encountered. Returning maximum found likelihood" << endl
 	 << "            so far (" << maxNLL << ") to force MIGRAD to back out of this region" << endl ;
     f = maxNLL ;
+    context->_numBadNLL++ ;
   } else if (f>maxNLL) {
     maxNLL = f ;
   }
