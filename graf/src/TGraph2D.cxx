@@ -356,6 +356,61 @@ TGraph2D TGraph2D::operator=(const TGraph2D &g)
 
 
 //______________________________________________________________________________
+void TGraph2D::Build(Int_t n)
+{
+   // Creates the 2D graph basic data structure
+
+   if (n <= 0) {
+      Error("TGraph2D", "Invalid number of points (%d)", n);
+      return;
+   }
+
+   fSize       = n,
+   fTriedSize  = 0;
+   fMargin     = 0.;
+   fNpx        = 40;
+   fNpy        = 40;
+   fZout       = 0.;
+   fNdt        = 0;
+   fNhull      = 0;
+   fDirectory  = 0;
+   fFunctions  = 0;
+   fHistogram  = 0;
+   fMaximum    = -1111;
+   fMinimum    = -1111;
+   fHullPoints = 0;
+   fXN         = 0;
+   fYN         = 0;
+   fOrder      = 0;
+   fDist       = 0;
+   fPTried     = 0;
+   fNTried     = 0;
+   fMTried     = 0;
+   fGridLevels = 0;
+   fNbLevels   = 0;
+   fView       = 0;
+
+   SetMaxIter();
+
+   fX = new Double_t[fSize];
+   fY = new Double_t[fSize];
+   fZ = new Double_t[fSize];
+
+   fFunctions = new TList;
+
+   Bool_t add = TH1::AddDirectoryStatus();
+   if (add && gDirectory) {
+      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
+      if (old) {
+         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
+         gDirectory->GetList()->Remove(old);
+      }
+      gDirectory->Append(this);
+      fDirectory = gDirectory;
+   }
+}
+
+//______________________________________________________________________________
 Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 {
    // Finds the Delaunay triangle that the point (xx,yy) sits in (if any) and 
@@ -723,6 +778,40 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
    return distance;
 }
 
+//______________________________________________________________________________
+void TGraph2D::Draw(Option_t *option)
+{
+// Specific drawing options can be used to paint a TGraph2D:
+//   "TRI"  : The Delaunay triangles are drawn using filled area. 
+//            An hidden surface drawing technique is used. The surface is
+//            painted with the current fill area color. The edges of each 
+//            triangles are painted with the current line color. 
+//   "TRIW" : The Delaunay triangles are drawn as wire frame
+//   "TRI1" : The Delaunay triangles are painted with color levels. The edges
+//            of each triangles are painted with the current line color.
+//   "TRI2" : the Delaunay triangles are painted with color levels.
+//   "P"    : Draw a marker at each vertex
+//   "P0"   : Draw a circle at each vertex. Each circle background is white.
+//
+// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
+//
+// When a TGraph2D is drawn with one of the 2D histogram drawing option,
+// a intermediate 2D histogram is filled using the Delaunay triangles 
+// technique to interpolate the data set. 
+
+   TString opt = option;
+   opt.ToLower();
+   if (gPad) {
+      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!opt.Contains("same")) {
+         //the following statement is necessary in case one attempts to draw
+         //a temporary histogram already in the current pad
+         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         gPad->Clear();
+      }
+   }
+   AppendPad(opt.Data());
+}
 
 //______________________________________________________________________________
 Bool_t TGraph2D::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const
@@ -1118,63 +1207,6 @@ L10:
 L999:
    return DTinhull;
 }
-
-
-//______________________________________________________________________________
-void TGraph2D::Build(Int_t n)
-{
-   // Creates the 2D graph basic data structure
-
-   if (n <= 0) {
-      Error("TGraph2D", "Invalid number of points (%d)", n);
-      return;
-   }
-
-   fSize       = n,
-   fTriedSize  = 0;
-   fMargin     = 0.;
-   fNpx        = 40;
-   fNpy        = 40;
-   fZout       = 0.;
-   fNdt        = 0;
-   fNhull      = 0;
-   fDirectory  = 0;
-   fFunctions  = 0;
-   fHistogram  = 0;
-   fMaximum    = -1111;
-   fMinimum    = -1111;
-   fHullPoints = 0;
-   fXN         = 0;
-   fYN         = 0;
-   fOrder      = 0;
-   fDist       = 0;
-   fPTried     = 0;
-   fNTried     = 0;
-   fMTried     = 0;
-   fGridLevels = 0;
-   fNbLevels   = 0;
-   fView       = 0;
-
-   SetMaxIter();
-
-   fX = new Double_t[fSize];
-   fY = new Double_t[fSize];
-   fZ = new Double_t[fSize];
-
-   fFunctions = new TList;
-
-   Bool_t add = TH1::AddDirectoryStatus();
-   if (add && gDirectory) {
-      TObject *old = (TObject*)gDirectory->GetList()->FindObject(GetName());
-      if (old) {
-         Warning("Build","Replacing existing 2D graph: %s (Potential memory leak).",GetName());
-         gDirectory->GetList()->Remove(old);
-      }
-      gDirectory->Append(this);
-      fDirectory = gDirectory;
-   }
-}
-
 
 //______________________________________________________________________________
 Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const

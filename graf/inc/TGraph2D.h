@@ -112,6 +112,7 @@ public:
    TGraph2D operator=(const TGraph2D &);
 
    Int_t            DistancetoPrimitive(Int_t px, Int_t py);
+    virtual void    Draw(Option_t *option="");
    void             ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject *FindObject(const char *name) const;
    virtual TObject *FindObject(const TObject *obj) const;
