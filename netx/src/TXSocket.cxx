@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXSocket.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXSocket.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -27,15 +27,11 @@
 
 ClassImp(TXSocket);
 
-extern "C" void *SocketConnecterThread(void *);
-
-
 //_____________________________________________________________________________
 TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize)
          : TSocket()
 {
    // Create a TXSocket object (that doesn't actually connect to any server.
-   // The dedicated thread SocketConnecterThread will do).
 
    // Init of the separate connect parms
    fHost2contact.TcpAddress = TcpAddress;
@@ -254,36 +250,6 @@ Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
    WriteMonitorDeactivate();
 
 return byteswritten;
-}
-
-//_____________________________________________________________________________
-extern "C" void *SocketConnecterThread(void * arg)
-{
-   // This thread tries to connect the given (and calling) TXSocket to
-   // its destination host. In the meanwhile, the caller can simply check
-   // whether the socket descriptor becomes good after the condition variable
-   // says something, or the timeout has elapsed
-   int oldcanctype;
-
-   TXSocket *thisObj;
-
-   thisObj = (TXSocket *)arg;
-
-   // We want this thread to terminate when requested so
-   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &oldcanctype);
-
-   thisObj->Create(thisObj->fHost2contact.TcpAddress,
-                   thisObj->fHost2contact.TcpPort,
-                   thisObj->fHost2contact.TcpWindowSize);
-
-   pthread_testcancel();
-
-   // Something happened since we are here. So we signal the
-   // condition variable.
-   thisObj->fConnectSem->Post();
-
-   pthread_exit(0);
-   return 0;
 }
 
 //_____________________________________________________________________________

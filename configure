@@ -1661,12 +1661,17 @@ fi
 ### echo %%% Check for xrootd support
 #
 case $arch in
-linux)
+# The server builds on Linux, Solaris and MacOS X only
+# (for the time being)
+# linux* | solaris* | macos*)
+linux* | solaris*)
+# linux*)
     if test "x$enable_xrootd" = "x"; then
         enable_xrootd="yes"
     fi
     ;;
 esac
+#
 message "Checking whether to build xrootd"
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"

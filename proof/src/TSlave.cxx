@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.29 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.30 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -238,17 +238,19 @@ void TSlave::Print(Option_t *) const
    Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
-   Printf("    User:                    %s", GetUser());
-   Printf("    Security context:        %s", fSecContext->AsString());
-   Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
-   Printf("    Image name:              %s", GetImage());
-   Printf("    Working directory:       %s", GetWorkDir());
-   Printf("    Performance index:       %d", GetPerfIdx());
-   Printf("    MB's processed:          %.2f", float(GetBytesRead())/(1024*1024));
-   Printf("    MB's sent:               %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
-   Printf("    MB's received:           %.2f", fSocket ? float(fSocket->GetBytesSent())/(1024*1024) : 0.0);
-   Printf("    Real time used (s):      %.3f", GetRealTime());
-   Printf("    CPU time used (s):       %.3f", GetCpuTime());
+   if (fSocket) {
+      Printf("    User:                    %s", GetUser());
+      Printf("    Security context:        %s", fSecContext->AsString());
+      Printf("    Proofd protocol version: %d", fSocket->GetRemoteProtocol());
+      Printf("    Image name:              %s", GetImage());
+      Printf("    Working directory:       %s", GetWorkDir());
+      Printf("    Performance index:       %d", GetPerfIdx());
+      Printf("    MB's processed:          %.2f", float(GetBytesRead())/(1024*1024));
+      Printf("    MB's sent:               %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
+      Printf("    MB's received:           %.2f", fSocket ? float(fSocket->GetBytesSent())/(1024*1024) : 0.0);
+      Printf("    Real time used (s):      %.3f", GetRealTime());
+      Printf("    CPU time used (s):       %.3f", GetCpuTime());
+   }
 }
 
 //______________________________________________________________________________

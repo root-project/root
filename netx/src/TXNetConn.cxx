@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -32,8 +32,15 @@
 
 #include "XrdSec/XrdSecInterface.hh"
 
+#include <sys/socket.h>
+
 
 extern TEnv *gEnv;
+
+// Function to load security protocols
+static XrdSecProtocol *(*getp)(const struct sockaddr &,
+                               const XrdSecParameters &,
+                               XrdOucErrInfo*) = 0;
 
 //
 // Implementation of TXPhyConnLocker
@@ -1137,169 +1144,207 @@ Bool_t TXNetConn::DoLogin()
       delete[] plist;
 
    return resp;
-
 }
 
 //_____________________________________________________________________________
 Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 {
-  // Negotiate authentication with the remote server. Tries in turn
-  // all available protocols proposed by the server (in plist),
-  // starting from the first.
+   // Negotiate authentication with the remote server. Tries in turn
+   // all available protocols proposed by the server (in plist), 
+   // starting from the first.
 
-  if (!plist || !strlen(plist))
-     return kTRUE;
+   if (!plist || !strlen(plist))
+      return kTRUE;
 
-  if (DebugLevel() >= TXDebug::kHIDEBUG)
-     Info("DoAuthentication", "remote host: %s,"
-          " list of available protocols: %s (%d)",
-          fUrl.GetHost(), plist, strlen(plist));
+   if (DebugLevel() >= TXDebug::kHIDEBUG)
+      Info("DoAuthentication", "remote host: %s,"
+           " list of available protocols: %s (%d)",
+           fUrl.GetHost(), plist, strlen(plist));
+ 
+   // Prepare host/IP information of the remote xrootd. This is required
+   // for the authentication.
+   //
+   struct sockaddr_in netaddr;
+   netaddr.sin_family = AF_INET;
+   netaddr.sin_port   = 0;
+   netaddr.sin_addr.s_addr = INADDR_ANY;
 
-  // Prepare host/IP information of the remote xrootd. This is required
-  // for the authentication.
-  //
-  struct sockaddr_in netaddr;
-  netaddr.sin_family = AF_INET;
-  netaddr.sin_port   = 0;
-  netaddr.sin_addr.s_addr = INADDR_ANY;
+   UInt_t iaddr = gSystem->GetHostByName(fUrl.GetHost()).GetAddress();
+   UInt_t addr = htonl(iaddr);
+   memcpy((void *)&netaddr.sin_addr.s_addr, &addr,
+          sizeof(netaddr.sin_addr.s_addr));
+      
+   // Variables for negotiation
+   XrdSecParameters   secToken;
+   XrdSecProtocol    *protocol;
+   XrdSecCredentials *credentials;
 
-  UInt_t addr = htonl(gSystem->GetHostByName(fUrl.GetHost()).GetAddress());
-  memcpy((void *)&netaddr.sin_addr.s_addr, &addr,
-	   sizeof(netaddr.sin_addr.s_addr));
+   // Prepare tokenization
+   //
+   TString inPString((const char *)plist);
+   TObjArray *inPList = inPString.Tokenize(" "); 
 
-  // Variables for negotiation
-  XrdSecParameters   secToken;
-  XrdSecProtocol    *protocol;
-  XrdSecCredentials *credentials;
+   // Make sure that we got at least one token
+   //
+   if (inPList->GetEntries() < 1) { 
+      if (DebugLevel() >= TXDebug::kHIDEBUG)
+         Warning("DoAuthentication", "Protocol list empty");
+      return kFALSE;
+   }
 
-  // Prepare tokenization
-  //
-  TString inPString((const char *)plist);
-  TObjArray *inPList = inPString.Tokenize(" ");
+   if (!getp) {
+      // Load the relevant library
+#ifdef ROOTLIBDIR
+      TString seclib = TString(ROOTLIBDIR) + "/libXrdSec";
+#else
+      TString seclib = TString(gRootDir) + "/lib/libXrdSec";
+#endif
+      char *p = 0;
+      if ((p = gSystem->DynamicPathName(seclib, kTRUE))) {
+         delete[]p;
+         if (gSystem->Load(seclib) == -1) {
+            Error("DoAuthentication", "can't load %s",seclib.Data());
+            return kFALSE;
+         }
+      } else {
+         Error("DoAuthentication", "can't locate %s",seclib.Data());
+         return kFALSE;
+      }
+      //   
+      // Locate XrdSecGetProtocolClient
+      Func_t f = gSystem->DynFindSymbol(seclib,"XrdSecGetProtocolClient");
+      if (f) {
+         getp = (XrdSecProtocol *(*)(const struct sockaddr &, 
+                                     const XrdSecParameters &,
+                                     XrdOucErrInfo*))(f);
+      } else {
+         Error("DoAuthentication", "can't find XrdSecGetProtocolClient");
+         return kFALSE;
+      }
+   }
 
-  // Make sure that we got at least one token
-  //
-  if (inPList->GetEntries() < 1) {
-     if (DebugLevel() >= TXDebug::kHIDEBUG)
-        Warning("DoAuthentication", "Protocol list empty");
-     return kFALSE;
-  }
+   // Now try in turn the available methods (first preferred)
+   //
+   Bool_t resp = kFALSE;
+   TIter nxtoken(inPList);
+   TObjString *tkn = 0;
+   while (!resp && (tkn = (TObjString *)nxtoken())) {
 
-  // Now try in turn the available methods (first preferred)
-  //
-  Bool_t resp = kFALSE;
-  TIter nxtoken(inPList);
-  TObjString *tkn = 0;
-  while (!resp && (tkn = (TObjString *)nxtoken())) {
+      TString token = tkn->GetString();
 
-     TString token = tkn->GetString();
+      // Assign the security token that we have received at the login request
+      //
+      secToken.buffer = (char *)(token.Data());   
+      secToken.size   = token.Length();
+     
+      // Retrieve the security protocol context from the xrootd server
+      //
+      if (getp) {
 
-     // Assign the security token that we have received at the login request
-     //
-     secToken.buffer = (char *)(token.Data());
-     secToken.size   = token.Length();
+         protocol = (*getp)((const struct sockaddr &)netaddr,secToken, 0);
+         if (!protocol) { 
+            if (DebugLevel() >= TXDebug::kHIDEBUG)
+               Info("DoAuthentication", 
+                    "Unable to get protocol object (token: %s)",token.Data());
+            continue;
+         }
+      } else {
+         Error("DoAuthentication","no support for strong security");
+         continue;
+      }
 
-     // Retrieve the security protocol context from the xrootd server
-     //
-     protocol = XrdSecGetProtocol((const struct sockaddr &)netaddr,secToken, 0);
-     if (!protocol) {
-        if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthentication",
-                "Unable to get protocol object (token: %s)",token.Data());
-        continue;
-     }
+      // Extract the protocol name (identifier)
+      TString protname = "";
+      if (!token.BeginsWith("&P=")) {
+         if (DebugLevel() >= TXDebug::kHIDEBUG)
+            Warning("DoAuthentication",
+                    "Unable to get protocol name (token: %s)",token.Data());
+      } else {
+         protname = token;
+         protname.ReplaceAll("&P=","");
+         protname.Resize(protname.Index(","));
+      }
 
-     // Extract the protocol name (identifier)
-     TString protname = "";
-     if (!token.BeginsWith("&P=")) {
-        if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Warning("DoAuthentication",
-                   "Unable to get protocol name (token: %s)",token.Data());
-     } else {
-        protname = token;
-        protname.ReplaceAll("&P=","");
-        protname.Resize(protname.Index(","));
-     }
+      // Now we add the username and the hostname to the token, because
+      // they may be needed to get the credentials
+      secToken.size = token.Length()+strlen(username)+strlen(fUrl.GetHost())+2;
+      char *etoken = new char[secToken.size+5];
+      snprintf(etoken,secToken.size+5,"%s,%s,%s",token.Data(),username,
+               fUrl.GetHost());
+      secToken.buffer = etoken;
 
-     // Now we add the username and the hostname to the token, because
-     // they may be needed to get the credentials
-     secToken.size   = token.Length()+strlen(username)+strlen(fUrl.GetHost())+2;
-     char *etoken    = new char[secToken.size+5];
-     snprintf(etoken,secToken.size+5,"%s,%s,%s",token.Data(),username,fUrl.GetHost());
-     secToken.buffer = etoken;
+      // Once we have the protocol, get the credentials
+      //
+      credentials = protocol->getCredentials(&secToken);
+      if (!credentials) {
+         if (DebugLevel() >= TXDebug::kHIDEBUG)
+            Info("DoAuthentication",
+                 "Cannot obtain credentials (token: %s)",etoken);
+         if (etoken)
+            delete[] etoken;
+         continue;
+      } else
+         if (DebugLevel() >= TXDebug::kHIDEBUG)
+            Info("DoAuthentication", "cred= %s size=%d",
+                 credentials->buffer, credentials->size);
+      if (etoken)
+         delete[] etoken;
 
-     // Once we have the protocol, get the credentials
-     //
-     credentials = protocol->getCredentials(&secToken);
-     if (!credentials) {
-        if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthentication",
-                "Cannot obtain credentials (token: %s)",etoken);
-        if (etoken)
-           delete[] etoken;
-        continue;
-     } else
-        if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthentication", "cred= %s size=%d",
-                                    credentials->buffer, credentials->size);
-     if (etoken)
-        delete[] etoken;
+      // We fill the header struct containing the request for login
+      ClientRequest reqhdr;
+      SetSID(reqhdr.header.streamid);
+      reqhdr.header.requestid = kXR_auth;
+      memset(reqhdr.auth.reserved, 0, 12);
+      memcpy(reqhdr.auth.credtype, protname.Data(), protname.Length());
 
-     // We fill the header struct containing the request for login
-     ClientRequest reqhdr;
-     SetSID(reqhdr.header.streamid);
-     reqhdr.header.requestid = kXR_auth;
-     memset(reqhdr.auth.reserved, 0, 12);
-     memcpy(reqhdr.auth.credtype, protname.Data(), protname.Length());
+      struct ServerResponseHeader reshdr;
+      reshdr.status = kXR_authmore;
+      char *srvans = 0;
 
-     struct ServerResponseHeader reshdr;
-     reshdr.status = kXR_authmore;
-     char *srvans = 0;
+      resp = kFALSE;
+      while (reshdr.status == kXR_authmore) {
 
-     resp = kFALSE;
-     while (reshdr.status == kXR_authmore) {
+         // Length of the credentials buffer
+         reqhdr.header.dlen = credentials->size;
 
-        // Length of the credentials buffer
-        reqhdr.header.dlen = credentials->size;
-
-        resp = SendGenCommand(&reqhdr, credentials->buffer,
-                              (void **)&srvans, 0, kTRUE,
-                              (char *)"XTNetconn::DoAuthentication",&reshdr);
-        if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthenticate", "Server reply: status: %d dlen: %d",
+         resp = SendGenCommand(&reqhdr, credentials->buffer,
+                               (void **)&srvans, 0, kTRUE,
+                               (char *)"XTNetconn::DoAuthentication",&reshdr);
+         if (DebugLevel() >= TXDebug::kHIDEBUG)
+            Info("DoAuthenticate","Server reply: status: %d dlen: %d",
                                   reshdr.status,reshdr.dlen);
 
-        if (reshdr.status == kXR_authmore) {
-           // We are required to send additional information
-           // First assign the security token that we have received
-           // at the login request
-           //
-           secToken.buffer = srvans;
-           secToken.size   = strlen(srvans);
+         if (reshdr.status == kXR_authmore) {
+            // We are required to send additional information
+            // First assign the security token that we have received
+            // at the login request
+            //
+            secToken.buffer = srvans;
+            secToken.size   = strlen(srvans);
 
-           // then get next part of the credentials
-           //
-           credentials = protocol->getCredentials(&secToken);
-           if (!credentials) {
-              if (DebugLevel() >= TXDebug::kUSERDEBUG)
-                 Info("DoAuthentication",
-                      "Cannot obtain credentials (token: %s)", srvans);
-              break;
-           } else {
-              if (DebugLevel() >= TXDebug::kHIDEBUG)
-                 Info("DoAuthentication", "cred= %s size=%d",
-                      credentials->buffer, credentials->size);
-           }
-        }
-        // Release buffer allocated for the server reply
-        if (srvans)
-           delete[] srvans;
-     }
-  }
+            // then get next part of the credentials
+            //
+            credentials = protocol->getCredentials(&secToken);
+            if (!credentials) {
+               if (DebugLevel() >= TXDebug::kUSERDEBUG)
+                  Info("DoAuthentication",
+                       "Cannot obtain credentials (token: %s)", srvans);
+               break;
+            } else {
+               if (DebugLevel() >= TXDebug::kHIDEBUG)
+                  Info("DoAuthentication", "cred= %s size=%d",
+                       credentials->buffer, credentials->size);
+            }
+         }
+         // Release buffer allocated for the server reply
+         if (srvans)
+            delete[] srvans;
+      }
+   }
 
-  // Return the result of the negotiation
-  //
-  return resp;
+   // Return the result of the negotiation
+   //
+   return resp;
 }
 
 //_____________________________________________________________________________
@@ -1417,7 +1462,11 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
                                 gEnv->GetValue("XNet.RedirDomainDenyRE",
                                                "<unknown>") ) ) {
 	    Error("HandleServerError",
-		  "Redirection to a server out-of-domain disallowed. Abort.");
+		  "Redirection to a server out-of-domain disallowed.");
+            Error("HandleServerError", "New host: %s ", newhost.Data());
+            Error("HandleServerError", 
+                  "(list of allowed domains: %s) ", fClientHostDomain.Data());
+            Error("HandleServerError", "Abort.");
 	    gSystem->Abort();
 	 }
 

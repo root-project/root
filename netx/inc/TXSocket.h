@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXSocket.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -63,8 +63,6 @@ struct TXSocketConnectParms {
   Int_t TcpWindowSize;
 };
 
-extern "C" void *SocketConnecterThread(void *arg);
-
 class TXSocket : public TSocket {
 
 private:
@@ -75,8 +73,6 @@ private:
 
    TMonitor             *fReadMonitor;     // monitor read from socket
    TMonitor             *fWriteMonitor;    // monitor write on socket
-
-   friend void   *SocketConnecterThread(void *);
 
    TMutex               *fMonMutex;
    Int_t                fReadMonitorActCnt, fWriteMonitorActCnt;

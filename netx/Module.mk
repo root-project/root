@@ -40,10 +40,10 @@ NETXINCEXTRA := -I$(XROOTDDIRI)
 include/%.h:    $(NETXDIRI)/%.h
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(XROOTD) $(NETXLIBDEP) $(THREADLIB)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(MAINLIBS) $(NETXLIBDEP) $(THREADLIB)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
-		   "$(XRDSECLIB) $(NETXLIBEXTRA) -Llib -lThread"
+		"-Llib -lThread"
 
 $(NETXDS):      $(NETXH1) $(NETXL) $(ROOTCINTTMP) $(XROOTD)
 		@echo "Generating dictionary $@..."
