@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.8 2004/02/11 14:08:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.9 2004/08/17 10:57:05 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -695,9 +695,10 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
         refWeightedFraction = weightedFraction;
      }
   }
-  int nMax = 0;
-  Double_t contentsMax = 0;
+  int nMax = 1;
+  Double_t contentsMax = ((TH1*)fMCs.At(k0))->GetBinContent(bin);
   for (par = 0; par < fNpar; ++par) {
+     if (par == k0) continue;
      hw = (TH1*)fWeights.At(par);
      Double_t weightedFraction = hw ?
       hw->GetBinContent(bin) * fractions[par] : fractions[par];
