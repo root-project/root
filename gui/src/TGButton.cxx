@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.28 2004/02/18 15:06:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.29 2004/04/15 09:43:14 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -339,7 +339,10 @@ void TGTextButton::Init()
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
          const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-         main->BindKey(this, fHKeycode, kAnyModifier);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
       }
    }
 }
@@ -374,6 +377,9 @@ void TGTextButton::SetText(TGHotString *new_label)
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0)
          main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
    }
 
    int max_ascent, max_descent;
@@ -724,6 +730,9 @@ void TGCheckButton::Init()
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
          const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
          main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
       }
    }
 }
@@ -985,6 +994,9 @@ void TGRadioButton::Init()
       if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) {
          const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
          main->BindKey(this, fHKeycode, kKeyMod1Mask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyLockMask);
+         main->BindKey(this, fHKeycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
       }
    }
 

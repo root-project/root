@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.31 2004/03/22 15:39:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.32 2004/04/13 16:36:59 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -140,7 +140,12 @@ void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
 
    if ((keycode = t->GetHotKeyCode()) != 0) {
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-      main->BindKey(this, keycode, kAnyModifier);
+
+      // case unsensitive bindings
+      main->BindKey(this, keycode, kKeyMod1Mask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyLockMask);
+      main->BindKey(this, keycode, kKeyMod1Mask | kKeyShiftMask | kKeyLockMask);
    }
 }
 
