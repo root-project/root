@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.22 2000/12/12 09:55:04 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.23 2000/12/12 12:19:18 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -218,6 +218,7 @@ const char *help =
 #include <time.h>
 
 char *autold = "G__autoLinkDef.h";
+enum Estlstype {kNone,kVector, kList,kDeque,kMap,kMultimap,kSet,kMultiset};
 
 FILE *fp;
 
@@ -231,11 +232,13 @@ int IsSTLContainer(G__DataMemberInfo &m)
    char type[512];
    strcpy(type, s);
 
-   if (!strcmp(type, "vector")   || !strcmp(type, "list")     ||
-       !strcmp(type, "deque")    ||
-       !strcmp(type, "map")      || !strcmp(type, "set")      ||
-       !strcmp(type, "multimap") || !strcmp(type, "multiset"))
-      return 1;
+   if (!strcmp(type, "vector"))   return kVector;
+   if (!strcmp(type, "list"))     return kList;
+   if (!strcmp(type, "deque"))    return kDeque;
+   if (!strcmp(type, "map"))      return kMap;
+   if (!strcmp(type, "multimap")) return kMultimap;
+   if (!strcmp(type, "set"))      return kSet;
+   if (!strcmp(type, "multiset")) return kMultiset;
    return 0;
 }
 
@@ -434,19 +437,25 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
-   if (m.Type()->IsTmplt() && IsSTLContainer(m)) {
-      const char *stlc = m.Type()->TmpltName();
+   int stltype = IsSTLContainer(m);
+   if (m.Type()->IsTmplt() && stltype) {
       if (m.Property() & G__BIT_ISARRAY) return STLContainerArrayStreamer(m,rwmode);
 
       if (rwmode == 0) {
          // create read code
          fprintf(fp, "      {\n");
+         char tmparg[512];
+         strcpy(tmparg,m.Type()->Name());
+         int lenarg = strlen(tmparg);
+         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
+         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
          const char *s = TemplateArg(m).Name();
          if (!strncmp(s, "const ", 6)) s += 6;
-         if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "         %s = new %s<%s>;\n", m.Name(), stlc, s);
-         else
+         if (m.Property() & G__BIT_ISPOINTER) {
+            fprintf(fp, "         %s = new %s;\n", m.Name(), tmparg);
+         } else {
             fprintf(fp, "         %s.clear();\n", m.Name());
+         }
          fprintf(fp, "         int R__i, R__n;\n");
          fprintf(fp, "         R__b >> R__n;\n");
          fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
@@ -456,9 +465,18 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
              (TemplateArg(m).Property() & G__BIT_ISENUM)) {
             if (TemplateArg(m).Property() & G__BIT_ISENUM)
                fprintf(fp, "            R__b >> (Int_t&)R__t;\n");
-            else
-               fprintf(fp, "            R__b >> R__t;\n");
-         } else {
+            else {
+               if (stltype == kMap || stltype == kMultimap) {
+                  fprintf(fp, "            R__b >> R__t;\n");
+                  fprintf(fp, "            %s R__t2;\n",TemplateArg(m,1).Name());
+                  fprintf(fp, "            R__b >> R__t2;\n");
+               } else if (stltype == kSet || stltype == kMultiset) {
+                  fprintf(fp, "            R__b >> R__t;\n");
+               } else {
+                  fprintf(fp, "            R__b >> R__t;\n");
+               }
+             }
+          } else {
             if (TemplateArg(m).HasMethod("Streamer"))
                fprintf(fp, "            R__t.Streamer(R__b);\n");
             else {
@@ -468,10 +486,23 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
                fprintf(fp, "            //R__t.Streamer(R__b);\n");
             }
          }
-         if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            %s->push_back(R__t);\n", m.Name());
-         else
-            fprintf(fp, "            %s.push_back(R__t);\n", m.Name());
+         if (m.Property() & G__BIT_ISPOINTER) {
+            if (stltype == kMap || stltype == kMultimap) {
+               fprintf(fp, "            %s->insert(make_pair(R__t,R__t2));\n", m.Name());
+            } else if (stltype == kSet || stltype == kMultiset) {
+               fprintf(fp, "            %s->insert(R__t);\n", m.Name());
+            } else {
+               fprintf(fp, "            %s->push_back(R__t);\n", m.Name());
+            }
+         } else {
+            if (stltype == kMap || stltype == kMultimap) {
+               fprintf(fp, "            %s.insert(make_pair(R__t,R__t2));\n", m.Name());
+            } else if (stltype == kSet || stltype == kMultiset) {
+               fprintf(fp, "            %s.insert(R__t);\n", m.Name());
+            } else {
+               fprintf(fp, "            %s.push_back(R__t);\n", m.Name());
+            }
+         }
          fprintf(fp, "         }\n");
          fprintf(fp, "      }\n");
       } else {
@@ -481,7 +512,12 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             fprintf(fp, "         R__b << %s->size();\n", m.Name());
          else
             fprintf(fp, "         R__b << %s.size();\n", m.Name());
-         fprintf(fp, "         %s<%s>::iterator R__k;\n", stlc, TemplateArg(m).Name());
+         char tmparg[512];
+         strcpy(tmparg,m.Type()->Name());
+         int lenarg = strlen(tmparg);
+         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
+         if (tmparg[lenarg-1] == '*') {tmparg[lenarg-1] = 0; lenarg--;}
+         fprintf(fp, "         %s::iterator R__k;\n", tmparg);
          if (m.Property() & G__BIT_ISPOINTER)
             fprintf(fp, "         for (R__k = %s->begin(); R__k != %s->end(); ++R__k) {\n",
                     m.Name(), m.Name());
@@ -493,13 +529,28 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
              (TemplateArg(m).Property() & G__BIT_ISENUM)) {
             if (TemplateArg(m).Property() & G__BIT_ISENUM)
                fprintf(fp, "            R__b << (Int_t)*R__k;\n");
-            else
-               fprintf(fp, "            R__b << *R__k;\n");
+            else {
+               if (stltype == kMap || stltype == kMultimap) {
+                  fprintf(fp, "            R__b << (*R__k).first;\n");
+                  fprintf(fp, "            R__b << (*R__k).second;\n");
+               } else if (stltype == kSet || stltype == kMultiset) {
+                  fprintf(fp, "            R__b << *R__k;\n");
+               } else {
+                  fprintf(fp, "            R__b << *R__k;\n");
+               }
+            }
          } else {
-            if (TemplateArg(m).HasMethod("Streamer"))
-               fprintf(fp, "            (*R__k).Streamer(R__b);\n");
-            else
+            if (TemplateArg(m).HasMethod("Streamer")) {
+               if (stltype == kMap || stltype == kMultimap) {
+                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
+               } else if (stltype == kSet || stltype == kMultiset) {
+                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
+               } else {
+                  fprintf(fp, "            (*R__k).Streamer(R__b);\n");
+               }
+            } else {
                fprintf(fp, "            //(*R__k).Streamer(R__b);\n");
+            }
          }
          fprintf(fp, "         }\n");
          fprintf(fp, "      }\n");
