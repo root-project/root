@@ -1747,8 +1747,10 @@ char *filenamein;
    ******************************************************/
   if(G__NOLINK!=G__globalcomp && G__srcfile[fentry].fp) {
     if(!G__macroORtemplateINfile) {
+#ifdef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(G__srcfile[fentry].fp);
+#endif
 #ifndef G__PHILIPPE0
       /* After closing the file let's make sure than all reference to
 	 the file pointer are reset. When a preprocessor is used, we
@@ -1759,7 +1761,15 @@ char *filenamein;
 	  G__srcfile[i1].fp = (FILE*)NULL;
 	}
       }
+#ifndef G__OLDIMPLEMENTATION1562
+      /* Close file for process max file open limitation with -cN option */
+      fclose(tmpfp);
+#endif
 #else
+#ifndef G__OLDIMPLEMENTATION1562
+      /* Close file for process max file open limitation with -cN option */
+      fclose(G__srcfile[fentry].fp);
+#endif
       G__srcfile[fentry].fp = (FILE*)NULL;
 #endif
     }

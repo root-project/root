@@ -1020,6 +1020,23 @@ char *expression;
 #endif
 	  break;
 	}
+#ifndef G__OLDIMPLEMENTATION1560
+	else if(G__defined_templatefunc(ebuf)) {
+	  ++ig1;
+	  ebuf[lenbuf++] = c;
+	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,">");
+	  if('>'==c) strcat(ebuf,">");
+	  lenbuf = strlen(ebuf);
+	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,"(");
+	  if('('==c) strcat(ebuf,"(");
+	  lenbuf = strlen(ebuf);
+	  c=G__getstream_template(expression,&ig1,ebuf+lenbuf,")");
+	  if(')'==c) strcat(ebuf,")");
+	  lenbuf=strlen(ebuf);
+	  --ig1;
+	  break;
+	}
+#endif
 #ifndef G__OLDIMPLEMENTATION855
 	else if(strcmp(ebuf,"dynamic_cast")==0 ||
 		strcmp(ebuf,"static_cast")==0 ||

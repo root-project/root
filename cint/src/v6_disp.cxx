@@ -2002,7 +2002,6 @@ va_list arg;
 {
   int result;
   va_list argptr;
-  fp;
   va_start(argptr,fmt);
   if(G__ErrMsgCallback && G__serr==G__stderr) {
     char buf[G__LONGLINE];
@@ -2010,7 +2009,9 @@ va_list arg;
     (*G__ErrMsgCallback)(buf);
   }
   else {
-    result = vfprintf(G__serr,fmt,argptr);
+    if(fp) result = vfprintf(fp,fmt,argptr);
+    else if(G__serr) result = vfprintf(G__serr,fmt,argptr);
+    else result = vfprintf(stderr,fmt,argptr);
   }
   va_end(argptr);
   return(result);

@@ -732,6 +732,67 @@ struct G__param* libp;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1560
+/******************************************************************
+ * G__rename_templatefunc()
+ ******************************************************************/
+void G__rename_templatefunc(funcname,isrealloc)
+char *funcname;
+int isrealloc;
+{
+  char *ptmplt ;
+  ptmplt = strchr(funcname,'<');
+  if(ptmplt) {
+    *ptmplt = 0;
+    if(G__defined_templatefunc(funcname)) {
+      *ptmplt = 0;
+    }
+    else {
+      *ptmplt = '<';
+      ptmplt = (char*)0;
+    }
+  }
+  if(ptmplt) {
+    char funcname2[G__LONGLINE];
+    char buf[G__ONELINE];
+    char buf2[20];
+    int typenum,tagnum,len;
+    int ip=1;
+    int c;
+    strcpy(funcname2,funcname);
+    strcat(funcname2,"<");
+    do {
+      c = G__getstream_template(ptmplt,&ip,buf,",>");
+      len = strlen(buf)-1;
+      while('*'==buf[len]||'&'==buf[len]) --len;
+      ++len;
+      if(buf[len]) {
+	strcpy(buf2,buf+len);
+	buf[len] = 0;
+      }
+      else buf2[0] = 0;
+      typenum = G__defined_typename(buf);
+      if(-1!=typenum) {
+	strcpy(buf,G__fulltypename(typenum));
+      }
+      else {
+	tagnum = G__defined_tagname(buf,1);
+	if(-1!=tagnum) strcpy(buf,G__fulltagname(tagnum,1));
+      }
+      strcat(buf,buf2);
+      strcat(funcname2,buf);
+      buf2[0] = c; buf2[1] = 0;
+      strcat(funcname2,buf2);
+    } while(c!='>');
+    if(isrealloc) {
+      free((void*)funcname);
+      funcname = (char*)malloc(strlen(funcname2)+1);
+    }
+    strcpy(funcname,funcname2);
+  }
+}
+#endif
+
 /******************************************************************
 * G__value G__getfunction(item,known3,memfunc_flag)
 *
@@ -743,7 +804,7 @@ int *known3;
 int memfunc_flag;
 {
   G__value result3;
-  char funcname[G__MAXNAME*2];
+  char funcname[G__LONGLINE];
 #ifndef G__OLDIMPLEMENTATION1340
   int overflowflag=0;
   char result7[G__LONGLINE];
@@ -849,6 +910,12 @@ int memfunc_flag;
    ******************************************************/
   funcname[ig15++]='\0';
   
+#ifndef G__OLDIMPLEMENTATION1560
+  /******************************************************
+   * conv<B>(x) -> conv<ns::B>(x)
+   ******************************************************/
+  G__rename_templatefunc(funcname,0);
+#endif
   
   
   /******************************************************
@@ -1933,7 +2000,7 @@ int memfunc_flag;
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) {
-	      G__fprinterr(G__serr,"%3x: ALLOCTEMP\n",G__asm_cp);
+	      G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n",G__asm_cp,G__tagnum);
 	      G__fprinterr(G__serr,"%3x: SETTEMP\n",G__asm_cp);
 	    }
 #endif
@@ -2006,7 +2073,7 @@ int memfunc_flag;
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
 #ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP -1\n",G__asm_cp);
 #endif
 	    G__asm_inst[G__asm_cp]=G__POPTEMP;
 	    G__asm_inst[G__asm_cp+1] = -1;

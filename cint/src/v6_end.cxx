@@ -78,6 +78,19 @@ void G__scratch_all()
   /*******************************************
    * clear interpriveve global variables
    *******************************************/
+#ifndef G__OLDIMPLEMENTATION1559
+#ifdef G__MEMTEST
+  fprintf(G__memhist,"Freeing temp object %d\n",G__templevel);
+#endif
+  if(G__p_tempbuf) {
+    if(G__templevel>0) G__templevel = 0;
+    G__free_tempobject();
+  }
+#endif
+
+  /*******************************************
+   * clear interpriveve global variables
+   *******************************************/
 #ifdef G__MEMTEST
   fprintf(G__memhist,"Freeing global variables\n");
 #endif

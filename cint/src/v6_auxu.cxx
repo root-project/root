@@ -112,7 +112,7 @@ char *line;
     if(p) *p='\0';
   }
   else {
-    line[0]='\0';;
+    line[0]='\0';
   }
   if(null_fgets==NULL) return(0);
   else                 return(1);
@@ -135,7 +135,7 @@ char *arg[];
     G__split(line,argbuf,argn,arg);
   }
   else {
-    line[0]='\0';;
+    line[0]='\0';
     argbuf='\0';
     *argn=0;
     arg[0]=line;

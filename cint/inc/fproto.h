@@ -527,6 +527,9 @@ char* G__find_last_scope_operator G__P((char* name));
 int G__defined_tagname G__P((char *tagname,int noerror));
 int G__search_tagname G__P((char *tagname,int type));
 #endif
+#ifndef G__OLDIMPLEMENTATION1560
+int G__checkset_charlist G__P((char *tname,struct G__Charlist *pcall_para,int narg,int ftype));
+#endif
 void G__define_struct G__P((char type));
 G__value G__classassign G__P((long pdest,int tagnum,G__value result));
 int G__cattemplatearg G__P((char *tagname,struct G__Charlist *charlist));
@@ -553,6 +556,9 @@ int G__createtemplateclass G__P((char *new_name,struct G__Templatearg *targ,int 
 int G__createtemplateclass G__P((char *new_name,struct G__Templatearg *targ));
 #endif
 struct G__Definedtemplateclass *G__defined_templateclass G__P((char *name));
+#ifndef G__OLDIMPLEMENTATION1560
+struct G__Definetemplatefunc *G__defined_templatefunc G__P((char *name));
+#endif
 void G__declare_template G__P((void));
 int G__gettemplatearglist G__P((char *paralist,struct G__Charlist *charlist,struct G__Templatearg *def_para,int *pnpara));
 int G__instantiate_templateclass G__P((char *tagname));
@@ -575,6 +581,10 @@ int G__defined_type G__P((char *typenamein,int len));
 char *G__valuemonitor G__P((G__value buf,char *temp));
 char *G__access2string G__P((int caccess));
 char *G__tagtype2string G__P((int tagtype));
+#ifndef G__OLDIMPLEMENTATION1560
+void G__rename_templatefunc G__P((char* funcname,int isrealloc));
+char *G__fulltypename G__P((int typenum));
+#endif
 char *G__fulltagname G__P((int tagnum,int mask_dollar));
 int G__val2pointer G__P((G__value *result7));
 char *G__getbase G__P((unsigned int expression,int base,int digit,char *result1));

@@ -804,7 +804,11 @@ char *argv[] ;
 	G__exit(EXIT_FAILURE);
       }
       else {
+#ifndef G__OLDIMPLEMENATTION1564
+	G__tmpnam(G__xfile);
+#else
 	tmpnam(G__xfile);
+#endif
 	G__ifile.fp=fopen(G__xfile,"w");
 	fprintf(G__ifile.fp,"%s\n",optarg);
 	fclose(G__ifile.fp);

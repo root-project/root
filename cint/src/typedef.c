@@ -796,7 +796,7 @@ void G__define_type()
 #ifndef G__OLDIMPLEMENTATION673
   /* typedef oldtype &newtype */
   if(typename[0]=='&') {
-    if(G__PARAP2P==reftype) fprintf(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
+    if(G__PARAP2P==reftype) G__fprinterr(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
     reftype = G__PARAREFERENCE;
     if(strlen(typename)>1) {
       strcpy(val,typename);

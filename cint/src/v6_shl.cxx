@@ -1455,7 +1455,11 @@ G__value *buf;
   ifunc=G__p_ifunc;
   do {
     for(i=0;i<ifunc->allifunc;i++) {
-      if(strcmp(ifunc->funcname[i],funcname)==0) {
+      if(
+#ifndef G__OLDIMPLEMENTATION1561
+	 ifunc->funcname[i] && funcname &&
+#endif
+	 strcmp(ifunc->funcname[i],funcname)==0) {
 #ifdef G__TRUEP2F
 	if(-1 == ifunc->pentry[i]->filenum) { /* precompiled function */
 	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
@@ -1492,7 +1496,11 @@ G__value *buf;
   /* search for compiled ANSI library function */
   i=0;
   while(G__completionlist[i].name!=NULL) {
-    if(strcmp(G__completionlist[i].name,funcname)==0) {
+    if(
+#ifndef G__OLDIMPLEMENTATION1561
+       funcname &&
+#endif
+       strcmp(G__completionlist[i].name,funcname)==0) {
       if((long)G__completionlist[i].pfunc!=0) {
 	G__letint(buf,'Q',(long)G__completionlist[i].pfunc);
       }

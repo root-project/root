@@ -439,6 +439,7 @@ char *new_name;
 }
 #endif
 
+
 /**************************************************************************
 * G__createtemplateclass()
 *  template<class T,class E,int S> class A { .... };
@@ -579,11 +580,80 @@ int isforwarddecl;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1560
+/***********************************************************************
+* G__defined_templatefunc()
+*
+* Check if the template function is declared
+***********************************************************************/
+struct G__Definetemplatefunc *G__defined_templatefunc(name)
+char *name;
+{
+  struct G__Definetemplatefunc *deftmplt;
+  int hash,temp;
+  long dmy_struct_offset=0;
+  char atom_name[G__LONGLINE];
+  int env_tagnum=G__get_envtagnum();
+  int scope_tagnum = -1;
+  struct G__inheritance *baseclass;
+
+  /* return if no name */
+  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-') || strchr(name,'('))
+    return((struct G__Definetemplatefunc*)NULL);
+
+  /* get a handle for using declaration info */
+  if(-1!=env_tagnum) baseclass = G__struct.baseclass[env_tagnum];
+  else               baseclass = &G__globalusingnamespace;
+  if(0==baseclass->basen) baseclass = (struct G__inheritance*)NULL;
+
+  /* scope operator resolution, A::templatename<int> ... */
+  strcpy(atom_name,name);
+  G__hash(atom_name,hash,temp)
+  G__scopeoperator(atom_name,&hash,&dmy_struct_offset,&scope_tagnum);
+
+  /* Don't crash on a null name (like 'std::'). */
+  if('\0' == atom_name[0])
+    return((struct G__Definetemplatefunc*)NULL);
+
+  /* search for template name and scope match */
+  deftmplt = &G__definedtemplatefunc;
+  while(deftmplt->next) { /* BUG FIX */
+    if(hash==deftmplt->hash && strcmp(atom_name,deftmplt->name)==0) {
+      /* look for ordinary scope resolution */
+      if((-1==scope_tagnum&&(-1==deftmplt->parent_tagnum||
+			     env_tagnum==deftmplt->parent_tagnum))||
+	 scope_tagnum==deftmplt->parent_tagnum) {
+	return(deftmplt);
+      }
+      else if(-1==scope_tagnum) {
+	int env_parent_tagnum = env_tagnum;
+	if(baseclass) {
+	  /* look for using directive scope resolution */
+	  for(temp=0;temp<baseclass->basen;temp++) {
+	    if(baseclass->basetagnum[temp]==deftmplt->parent_tagnum) {
+	      return(deftmplt);
+	    }
+	  }
+	}
+	/* look for enclosing scope resolution */
+	while(-1!=env_parent_tagnum) {
+	  env_parent_tagnum = G__struct.parent_tagnum[env_parent_tagnum];
+	  if(env_parent_tagnum==deftmplt->parent_tagnum) return(deftmplt);
+	}
+      }
+    }
+    deftmplt=deftmplt->next;
+  }
+  return((struct G__Definetemplatefunc*)NULL);
+}
+#endif
+
+
 /***********************************************************************
 * G__defined_templateclass()
 *
-* Check if the template is declared
-* Not used now, but maybe in future I might need this to handle case 4,5
+* Check if the template class is declared
+*  but maybe in future I might need this to handle case 4,5
 ***********************************************************************/
 struct G__Definedtemplateclass *G__defined_templateclass(name)
 char *name;

@@ -2736,7 +2736,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	     ) 
-	    fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
+	    fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
 		    ,G__NEWID,buf);
 	  else
 #endif
@@ -2750,7 +2750,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	     )
-	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	    fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		    ,G__NEWID,buf);
 	  else
 #endif
@@ -2773,7 +2773,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
 	     )
-	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	    fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		    ,G__NEWID,buf);
 	  else
 #endif
@@ -2792,7 +2792,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	     )
-	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+	    fprintf(fp,"      p = ::new((G__%s_tag*)G__getgvp()) %s("
 		    ,G__NEWID,buf);
 	  else
 #endif
@@ -2805,7 +2805,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
 	     )
-	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+	    fprintf(fp,"      p = ::new((G__%s_tag*)G__getgvp()) %s("
 		    ,G__NEWID,buf);
 	  else
 #endif
@@ -2857,7 +2857,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	   )
-	  fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
+	  fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
 		  ,G__NEWID,buf);
 	else
 #endif
@@ -2871,7 +2871,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	   )
-	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	  fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		  ,G__NEWID,buf);
 	else
 #endif
@@ -2894,7 +2894,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
 	   )
-	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	  fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		  ,G__NEWID,buf);
 	else
 #endif
@@ -2912,11 +2912,11 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	   )
-	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+	  fprintf(fp,"      p=::new((G__%s_tag*)G__getgvp()) %s("
 		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",buf);
+	  fprintf(fp,"      p=new((void*)G__getgvp()) %s(",buf);
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1423
@@ -2925,7 +2925,7 @@ struct G__ifunc_table *ifunc;
 	     && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
 	   )
-	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+	  fprintf(fp,"      p=::new((G__%s_tag*)G__getgvp()) %s("
 		  ,G__NEWID,buf);
 	else
 #endif
@@ -3313,7 +3313,7 @@ int isnonpublicnew;
 	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	 )
-	fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
+	fprintf(fp,"         p=::new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else 
 #endif
@@ -3327,7 +3327,7 @@ int isnonpublicnew;
 	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	 )
-	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else
 #endif
@@ -3350,7 +3350,7 @@ int isnonpublicnew;
 	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW1ARG)
 #endif
 	 )
-	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+	fprintf(fp,"   else p=::new((G__%s_tag*)G__getgvp()) %s;\n" 
 		,G__NEWID,G__fulltagname(tagnum,1));
       else
 #endif
@@ -3417,7 +3417,7 @@ int isnonpublicnew;
 	 && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	 )
-	fprintf(fp,"   p=new((G__%s_tag*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",G__NEWID,temp,temp);
+	fprintf(fp,"   p=::new((G__%s_tag*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",G__NEWID,temp,temp);
       else
 #endif
 	fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
@@ -3986,7 +3986,7 @@ char *endoffunc;
 	      && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 		)
-	      sprintf(endoffunc,";\n        pobj=new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
+	      sprintf(endoffunc,";\n        pobj=::new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
 		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
 	    else
 #endif
@@ -4013,7 +4013,7 @@ char *endoffunc;
 	       && 0==(G__struct.funcs[tagnum]&G__HAS_OPERATORNEW2ARG)
 #endif
 	       )
-	      fprintf(fp,"        pobj=new((G__%s_tag*)G__getgvp()) %s("
+	      fprintf(fp,"        pobj=::new((G__%s_tag*)G__getgvp()) %s("
 		      ,G__NEWID,G__type2string('u',tagnum,deftyp,0,0));
 	    else
 #endif

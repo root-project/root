@@ -2039,11 +2039,11 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
 #ifndef G__FONS31
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx\n"
-			     ,pc,sp ,store_p_tempbuf);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%lx %d\n"
+			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
 #else
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x\n"
-			     ,pc,sp ,store_p_tempbuf);
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: POPTEMP 0x%x %d\n"
+			     ,pc,sp ,store_p_tempbuf,G__asm_inst[pc+1]);
 #endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1500
@@ -9851,8 +9851,11 @@ int *start;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
-		,G__struct.name[G__asm_inst[pc+1]]);
+	if(-1!=G__asm_inst[pc+1])
+	  G__fprinterr(G__serr,"%3lx: POPTEMP %s\n" ,pc
+		       ,G__struct.name[G__asm_inst[pc+1]]);
+	else 
+	  G__fprinterr(G__serr,"%3lx: POPTEMP -1\n" ,pc);
       }
 #endif
       /* no optimization */
@@ -11052,7 +11055,11 @@ int isthrow;
       * sp      <-  sp
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: POPTEMP %s\n" ,pc,G__struct.name[G__asm_inst[pc+1]]);
+	if(-1!=G__asm_inst[pc+1])
+	  fprintf(fout,"%3x: POPTEMP %s\n" 
+		  ,pc,G__struct.name[G__asm_inst[pc+1]]);
+	else
+	  fprintf(fout,"%3x: POPTEMP -1\n",pc);
       }
       pc+=2;
       break;
