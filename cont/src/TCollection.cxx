@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.12 2000/12/26 14:17:57 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.13 2001/03/29 10:51:51 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -230,11 +230,14 @@ void TCollection::ls(Option_t *option) const
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   Int_t nch = strlen(option);
+   char *star = 0;
+   if (option) star = (char*)strchr(option,'*');
 
    while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
+      if (star) {
+         TString s = object->GetName();
+         if (strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
+      }
       object->ls(option);
    }
 }
