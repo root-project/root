@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.18 2001/01/04 13:24:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.19 2001/01/07 15:30:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1373,7 +1373,7 @@ void TFile::ReadStreamerInfo()
 // The corresponding TClass objects are updated.
 
    TList *list = 0;
-   if (fSeekInfo) {
+   if (fSeekInfo > 0 && fSeekInfo < fEND) {
       TKey *key = new TKey();
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
