@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.58 2001/12/04 12:04:57 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.59 2001/12/04 17:58:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4050,6 +4050,28 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
    }
    if (TMath::Abs(fBottomMargin-0.1) > 0.01) {
       out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<endl;
+   }
+
+   if (GetFrameFillColor() != GetFillColor()) {
+      out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<endl;
+   }
+   if (GetFrameFillStyle() != 1001) {
+      out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<endl;
+   }
+   if (GetFrameLineStyle() != 1) {
+      out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<endl;
+   }
+   if (GetFrameLineColor() != 1) {
+      out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<endl;
+   }
+   if (GetFrameLineWidth() != 1) {
+      out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<endl;
+   }
+   if (GetFrameBorderMode() != 1) {
+      out<<"   "<<cname<<"->SetFrameBorderMode("<<GetFrameBorderMode()<<");"<<endl;
+   }
+   if (GetFrameBorderSize() != 1) {
+         out<<"   "<<cname<<"->SetFrameBorderSize("<<GetFrameBorderSize()<<");"<<endl;
    }
 
    TFrame *frame = fFrame;
