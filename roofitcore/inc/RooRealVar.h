@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.10 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.11 2001/04/11 23:25:28 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,7 @@
 #define ROO_REAL_VAR
 
 #include <iostream.h>
+#include <math.h>
 
 #include "TString.h"
 
@@ -37,21 +38,27 @@ public:
   RooRealVar& operator=(const RooRealVar& other) ;
   
   // Parameter value and error accessors
-  virtual operator Double_t&();
-  virtual operator Double_t() const ;
-  inline Double_t getError() const { return _error; }
   virtual void setVal(Double_t value);
-  inline void setError(Double_t value) { _error= value; }
   virtual Double_t operator=(Double_t newValue);
+  inline Double_t getError() const { return _error; }
+  inline void setError(Double_t value) { _error= value; }
 
-  // Fit limits
-  inline Double_t getFitMin() const { return _fitMin ; }
-  inline Double_t getFitMax() const { return _fitMax ; }
+  // Set/get finite fit range limits
   void setFitMin(Double_t value) ;
   void setFitMax(Double_t value) ;
   void setFitRange(Double_t min, Double_t max) ;
+  inline Double_t getFitMin() const { return _fitMin ; }
+  inline Double_t getFitMax() const { return _fitMax ; }
+
+  // Set/get infinite fit range limits
+  inline void removeFitMin() { _fitMin= -INFINITY; }
+  inline void removeFitMax() { _fitMax= +INFINITY; }
+  inline void removeFitRange() { _fitMin= -INFINITY; _fitMax= +INFINITY; }
+  inline Bool_t hasFitMin() const { return _fitMin != -INFINITY; }
+  inline Bool_t hasFitMax() const { return _fitMax != +INFINITY; }
+
+  // Test a value against our fit range
   Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
-  Bool_t hasFitLimits() const { return kTRUE ; }
 
   // Constant and Projected flags 
   inline Bool_t isConstant() const { return getAttribute("Constant") ; }

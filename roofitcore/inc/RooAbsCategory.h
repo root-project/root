@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.8 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.9 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,7 +40,7 @@ public:
   Bool_t operator==(const char* label) const ;
   
   // Type definition management
-  Bool_t defineType(Int_t index, const char* label) ;
+  Bool_t defineType(const char* label, Int_t index) ;
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  
   const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
@@ -52,7 +52,7 @@ public:
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
 

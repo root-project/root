@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.8 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.9 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,7 +22,6 @@
 ClassImp(RooAbsCategory) 
 ;
 
-
 RooAbsCategory::RooAbsCategory(const char *name, const char *title) : 
   RooAbsArg(name,title)
 {
@@ -30,23 +29,17 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
   setShapeDirty(kTRUE) ;  
 }
 
-
-
 RooAbsCategory::RooAbsCategory(const char* name, const RooAbsCategory& other) :
   RooAbsArg(name, other), _value(other._value) 
 {
   initCopy(other) ;
 }
 
-
-
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other) : 
   RooAbsArg(other), _value(other._value)
 {
   initCopy(other) ;
 }
-
-
 
 void RooAbsCategory::initCopy(const RooAbsCategory& other)
 {
@@ -61,14 +54,11 @@ void RooAbsCategory::initCopy(const RooAbsCategory& other)
   setShapeDirty(kTRUE) ;
 }
 
-
-
 RooAbsCategory::~RooAbsCategory()
 {
   // We own the contents of _types 
   _types.Delete() ;
 }
-
 
 RooAbsCategory& RooAbsCategory::operator=(const RooAbsCategory& other)
 {
@@ -89,36 +79,30 @@ RooAbsArg& RooAbsCategory::operator=(const RooAbsArg& aother)
   return operator=((const RooAbsCategory&)aother) ;
 }
 
-
 TIterator* RooAbsCategory::typeIterator() const
 {
   return _types.MakeIterator() ;
 }
-
 
 Bool_t RooAbsCategory::operator==(Int_t index) const
 {
   return (index==getIndex()) ;
 }
 
-
 Bool_t RooAbsCategory::operator==(const char* label) const
 {
   return !TString(label).CompareTo(getLabel()) ;
 }
-
 
 Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
   return lookupType(index)?kTRUE:kFALSE ;
 }
 
-
 Bool_t RooAbsCategory::isValidLabel(const char* label) const
 {
   return lookupType(label)?kTRUE:kFALSE ;
 }
-
 
 Int_t RooAbsCategory::getOrdinalIndex() const
 {
@@ -130,8 +114,6 @@ Int_t RooAbsCategory::getOrdinalIndex() const
        << "): Internal error: current type is illegal" << endl ;
   return -1 ;
 }
-
-
 
 Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex) 
 {
@@ -145,9 +127,7 @@ Bool_t RooAbsCategory::setOrdinalIndex(Int_t newIndex)
   return kFALSE ;
 }
 
-
-
-Bool_t RooAbsCategory::defineType(Int_t index, const char* label) 
+Bool_t RooAbsCategory::defineType(const char* label, Int_t index) 
 {
   if (isValidIndex(index)) {
     cout << "RooAbsCategory::defineType(" << GetName() << "): index " 
@@ -161,7 +141,6 @@ Bool_t RooAbsCategory::defineType(Int_t index, const char* label)
     return kTRUE ;
   }
 
-  
   Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
   _types.Add(new RooCatType(label,index)) ;
 
@@ -170,8 +149,6 @@ Bool_t RooAbsCategory::defineType(Int_t index, const char* label)
 
   return kFALSE ;
 }
-
-
 
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
@@ -187,8 +164,6 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
   }
   return 0 ;
 }
-
-
 
 const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const 
 {
@@ -211,24 +186,20 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   return 0 ;
 }
 
-
 Bool_t RooAbsCategory::isValid() const
 {
   return isValid(_value) ;
 }
-
 
 Bool_t RooAbsCategory::isValid(RooCatType value)  const
 {
   return isValidIndex(value.getVal()) ;
 }
 
-
 Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 {
   return new Roo1DTable(GetName(),label,*this) ;
 }
-
 
 Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
@@ -240,29 +211,32 @@ void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
   //Write object contents to stream (dummy for now)
 }
 
-void RooAbsCategory::printToStream(ostream& os, PrintOption opt) const
+void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  if (_types.GetEntries()==0) {
-    os << "RooAbsCategory: " << GetName() << " has no types defined" << endl ;
-    return ;
-  }
+  // Print info about this object to the specified stream. In addition to the info
+  // from RooAbsArg::printToStream() we add:
+  //
+  //  Standard : label and index
+  //     Shape : defined types
+  //   Verbose : default binning and print label
 
-  //Print object contents
-  if (opt==Shape) {
-    // list all of the types defined by this object
-    os << "RooAbsCategory: " << GetName() << ": \"" << GetTitle()
-       << "\" defines the following categories:"
-       << endl;
-    for (int i=0 ; i<_types.GetEntries() ; i++) {
-      os << "  [" << i << "] \"" << ((RooCatType*)_types.At(i))->GetName() << "\" (code = "
-	 << ((RooCatType*)_types.At(i))->getVal() << ")" << endl;      
+  RooAbsArg::printToStream(os,opt,indent);
+  if(opt >= Standard) {
+    os << indent << "--- RooAbsCategory ---" << endl;
+    if (_types.GetEntries()==0) {
+      os << indent << "  ** No values defined **" << endl;
+      return;
     }
-  } else {
-    os << "RooAbsCategory: " << GetName() << " = " << getLabel() << " (" << getIndex() << ")" ;
-    os << " : \"" << fTitle << "\"" ;
-
-    printAttribList(os) ;
-    os << endl ;
+    os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
+    if(opt >= Shape) {
+      os << indent << "  Has the following possible values:" << endl;
+      Int_t n= _types.GetEntries();
+      for (int i=0 ; i < n ; i++) {
+	os << indent
+	   << ((RooCatType*)_types.At(i))->GetName() << "\" ("
+	   << ((RooCatType*)_types.At(i))->getVal() << ")" << endl;      
+      }
+    }
   }
 }
 

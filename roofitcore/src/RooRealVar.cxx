@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.10 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.11 2001/04/11 23:25:28 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,7 +22,6 @@
 
 ClassImp(RooRealVar)
 
-
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
   RooAbsReal(name, title, 0, 0, unit), _error(0),
@@ -37,7 +36,6 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       const char *unit) :
   RooAbsReal(name, title, minValue, maxValue, unit),
   _fitMin(minValue), _fitMax(maxValue)
-
 {
   _value= 0.5*(minValue + maxValue);
 }  
@@ -59,7 +57,6 @@ RooRealVar::RooRealVar(const char* name, const RooRealVar& other) :
 {
 }
 
-
 RooRealVar::RooRealVar(const RooRealVar& other) :
   RooAbsReal(other), 
   _error(other._error),
@@ -68,22 +65,11 @@ RooRealVar::RooRealVar(const RooRealVar& other) :
 {
 }
 
-
 RooRealVar::~RooRealVar() 
 {
 }
 
-RooRealVar::operator Double_t&() {
-  return _value;
-}
-
-RooRealVar::operator Double_t() const {
-  return this->getVal();
-}
-
-
 void RooRealVar::setVal(Double_t value) {
-
   // Set current value
   Double_t clipValue ;
   inFitRange(value,&clipValue) ;
@@ -92,11 +78,10 @@ void RooRealVar::setVal(Double_t value) {
   _value = clipValue;
 }
 
-
 void RooRealVar::setFitMin(Double_t value) 
 {
   // Check if new limit is consistent
-  if (_fitMin>_fitMax) {
+  if (value > _fitMax) {
     cout << "RooRealVar::setFitMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     _fitMin = _fitMax ;
@@ -113,14 +98,13 @@ void RooRealVar::setFitMin(Double_t value)
   setShapeDirty(kTRUE) ;
 }
 
-
 void RooRealVar::setFitMax(Double_t value)
 {
   // Check if new limit is consistent
-  if (_fitMax<_fitMin) {
+  if (value < _fitMin) {
     cout << "RooRealVar::setFitMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _fitMax = _fitMax ;
+    _fitMax = _fitMin ;
   } else {
     _fitMax = value ;
   }
@@ -133,7 +117,6 @@ void RooRealVar::setFitMax(Double_t value)
 
   setShapeDirty(kTRUE) ;
 }
-
 
 void RooRealVar::setFitRange(Double_t min, Double_t max) {
   // Check if new limit is consistent
@@ -150,56 +133,49 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
   setShapeDirty(kTRUE) ;  
 }
 
-
-
-
 Bool_t RooRealVar::inFitRange(Double_t value, Double_t* clippedValPtr) const
 {
-  // Check which limit we exceeded and truncate. Print a warning message
-  // unless we are very close to the boundary.  
-  
-  Double_t range = _fitMax - _fitMin ;
+  // Return kTRUE if the input value is within our fit range. Otherwise, return
+  // kFALSE and write a clipped value into clippedValPtr if it is non-zero.
+
+  Double_t range = _fitMax - _fitMin ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
   Bool_t inRange(kTRUE) ;
 
-  if (hasFitLimits()) {
-    if(value > _fitMax) {
-      if(value - _fitMax > 1e-6*range) {
-	if (clippedValPtr)
-	  cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
-	       << " rounded down to max limit " << _fitMax << endl;
-      }
-      clippedValue = _fitMax;
-      inRange = kFALSE ;
+  // test this value against our upper fit limit
+  if(hasFitMax() && value > _fitMax) {
+    if(value - _fitMax > 1e-6*range) {
+      if (clippedValPtr)
+	cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
+	     << " rounded down to max limit " << _fitMax << endl;
     }
-    else if(value < _fitMin) {
-      if(_fitMin - value > 1e-6*range) {
-	if (clippedValPtr)
-	  cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
-	       << " rounded up to min limit " << _fitMin << endl;
-      }
-      clippedValue = _fitMin;
-      inRange = kFALSE ;
-    } 
+    clippedValue = _fitMax;
+    inRange = kFALSE ;
   }
+  // test this value against our lower fit limit
+  if(hasFitMin() && value < _fitMin) {
+    if(_fitMin - value > 1e-6*range) {
+      if (clippedValPtr)
+	cout << "RooRealVar::inFitRange(" << GetName() << "): value " << value
+	     << " rounded up to min limit " << _fitMin << endl;
+    }
+    clippedValue = _fitMin;
+    inRange = kFALSE ;
+  } 
 
   if (clippedValPtr) *clippedValPtr=clippedValue ;
   return inRange ;
 }
 
-
-
-
 Bool_t RooRealVar::isValid(Double_t value, Bool_t verbose) const {
   if (!inFitRange(value)) {
     if (verbose)
-      cout << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range" << endl ;
+      cout << "RooRealVar::isValid(" << GetName() << "): value " << value
+	   << " out of range" << endl ;
     return kFALSE ;
   }
   return kTRUE ;
 }
-
-
 
 void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 {
@@ -291,7 +267,6 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   }
 }
 
-
 void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 {
   // Write object contents to given stream
@@ -315,16 +290,23 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
     // Append plot limits
     os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
     // Append fit limits if not +Inf:-Inf
-    if (hasFitLimits()) {
-      os << "F(" << getFitMin() << " - " << getFitMax() << ") " ;      
+    if(hasFitMin()) {
+      os << "F(" << getFitMin();
+    }
+    else {
+      os << "-INF";
+    }
+    if(hasFitMax()) {
+      os << " - " << getFitMax() << ") ";
+    }
+    else {
+      os << " - +INF ) ";
     }
     // Add comment with unit, if unit exists
     if (!_unit.IsNull())
       os << "// [" << getUnit() << "]" ;
   }
 }
-
-
 
 Double_t RooRealVar::operator=(Double_t newValue) 
 {
@@ -333,7 +315,6 @@ Double_t RooRealVar::operator=(Double_t newValue)
   setValueDirty(kTRUE) ;
   return _value;
 }
-
 
 RooRealVar& RooRealVar::operator=(const RooRealVar& orig)
 {
@@ -345,12 +326,10 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& orig)
   return (*this) ;
 }
 
-
 RooAbsArg& RooRealVar::operator=(const RooAbsArg& aorig)
 {
   return operator=((const RooRealVar&)aorig) ;
 }
-
 
 void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info
@@ -364,10 +343,21 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
     os << indent << "--- RooRealVar ---" << endl;
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
-    os << indent << "  Error = " << unit << endl;
+    os << indent << "  Error = " << getError() << unit << endl;
     if(opt >= Verbose) {
-      os << indent << "  Fit range is [ " << getFitMin() << unit << " , "
-	 << getFitMax() << unit << " ]" << endl;
+      os << indent << "  Fit range is [ ";
+      if(hasFitMin()) {
+	os << getFitMin() << unit << " , ";
+      }
+      else {
+	os << "-INF , ";
+      }
+      if(hasFitMax()) {
+	os << getFitMax() << unit << " ]" << endl;
+      }
+      else {
+	os << "+INF ]" << endl;
+      }
     }
   }
 }
