@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.32 2002/09/16 10:57:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.33 2002/12/06 16:53:55 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1237,6 +1237,31 @@ void TDirectory::SaveSelf(Bool_t force)
       }
    }
 }
+
+//______________________________________________________________________________
+void TDirectory::SetWritable(Bool_t writable)
+{
+//  Set the new value of fWritable recursively
+ 
+   TDirectory *cursav = gDirectory;
+   cd();
+ 
+   fWritable = writable;
+ 
+   // recursively set all sub-directories
+   if (fList) {
+      TObject *idcur;
+      TIter    next(fList);
+      while ((idcur = next())) {
+         if (idcur->InheritsFrom(TDirectory::Class())) {
+            TDirectory *dir = (TDirectory*)idcur;
+            dir->SetWritable(writable);
+         }
+      }
+   }
+   cursav->cd();
+}
+
 
 //______________________________________________________________________________
 Int_t TDirectory::Sizeof() const

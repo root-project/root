@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.12 2002/08/02 18:54:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.13 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -116,6 +116,7 @@ public:
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
+   void                SetWritable(Bool_t writable=kTRUE);
    void                SetModified() {fModified = kTRUE;}
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual Int_t       Sizeof() const;
