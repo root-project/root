@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.8 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.9 2000/12/18 07:12:58 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -89,7 +89,7 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
 //*-*-  Create the first basket
    TBasket *basket = new TBasket(branchcount,fTree->GetName(),this);
    fBaskets.Add(basket);
-
+   
 //*-*- Loop on all public data members of the class and its base classes
    const char *itype = 0;
    TRealData *rd;
@@ -108,6 +108,9 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
          if (strcmp(member->GetName(),"fBits")     == 0) continue;
          if (strcmp(member->GetName(),"fUniqueID") == 0) continue;
       }
+      
+      gTree->BuildStreamerInfo(gROOT->GetClass(member->GetFullTypeName()));
+      
       TDataType *membertype = member->GetDataType();
       Int_t type = membertype->GetType();
       if (type == 0) {
