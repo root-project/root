@@ -1,0 +1,45 @@
+Setup for a benchmark
+---------------------
+
+Create a local libEvent.so
+
+% (cd $ROOTSYS/test; make libEvent.so)
+
+Create the PAR file
+
+% ./make_event_par.sh
+
+Start root
+
+% root
+
+Start PROOF
+
+root[0] gROOT->Proof()
+
+Create the files on the nodes in the cluster, the first
+argument is the directory the files will reside in. The
+second argument is the number of events in each file.
+The last argument is the number of files on each node.
+(not the number of files per slave!)
+
+root [1] .X make_event_trees.C("/data1/tmp", 100000, 4)
+
+Create the TDSet for these files
+
+root [2] .L make_tdset.C
+root [3] TDSet *d = make_tdset("/data1/tmp",4,.5)
+root [4] d->Print("a")
+OBJ: TDSet      type TTree      EventTree       in /    elements 2
+TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_1.root' dir='' obj='' first=0 num=-1
+TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_3.root' dir='' obj='' first=0 num=-1
+
+Test the system with a simple command
+
+root [5] d->Draw("fTemperature","1")
+
+
+Run Benchmark
+-------------
+
+   <to be written>
