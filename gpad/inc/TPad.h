@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.13 2001/12/04 12:04:57 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.14 2001/12/17 08:06:17 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -130,6 +130,7 @@ public:
    // TPad status bits
    enum {
       kFraming      = BIT(6),
+      kHori         = BIT(9),
       kPrintingPS   = BIT(11),
       kClearAfterCR = BIT(12)
    };
@@ -240,6 +241,7 @@ public:
    Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsModified() const {return fModified;}
    virtual Bool_t    IsRetained() const;
+   virtual Bool_t    IsVertical() const {return !TestBit(kHori);}
    virtual void      ls(Option_t *option="") const;
    void              Modified(Bool_t flag=1) { fModified = flag; }
    virtual Bool_t    OpaqueMoving() const;
@@ -272,9 +274,9 @@ public:
    virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
-   virtual void      RangeChanged() { Emit("RangeChanged()"); } //*SIGNAL*
+   virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
    virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
-   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } //*SIGNAL*
+   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
@@ -317,6 +319,7 @@ public:
    virtual void      SetTheta(Double_t theta=30) {fTheta = theta;}
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi;}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
    virtual void      Update();
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
