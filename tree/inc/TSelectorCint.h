@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.5 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.6 2002/04/19 18:24:01 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -36,6 +36,7 @@ private:
                      const char* argtype);
 
 protected:
+   G__ClassInfo  *fClass;        //!
    G__CallFunc   *fFuncInit;     //!
    G__CallFunc   *fFuncBegin;    //!
    G__CallFunc   *fFuncNotif;    //!

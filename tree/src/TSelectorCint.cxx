@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.7 2002/06/13 15:13:21 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.8 2002/07/17 12:29:38 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "THashList.h"
 #include "TSelectorCint.h"
 #include "Api.h"
+#include "TError.h"
 
 ClassImp(TSelectorCint)
 
@@ -61,6 +62,7 @@ TSelectorCint::~TSelectorCint()
    delete fFuncInp;
    delete fFuncOut;
    delete fIntSelector;
+   delete fClass;
 }
 
 
@@ -74,8 +76,7 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* 
    if ( gDebug > 2 )
       Info("SetFuncProto","Set %s(%s)  offset = %ld",fname,argtype,offset);
 
-   // TODO: this condition seems inverted ???
-   if ( cf->IsValid() )
+   if ( ! cf->IsValid() )
       Error("SetFuncProto","Cannot Set %s(%s)",fname,argtype);
 }
 
@@ -84,6 +85,11 @@ void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* 
 void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 {
    // Initialize the CallFunc objects when selector is interpreted
+   Assert(cl);
+
+   // The G__MethodInfo created by SetFuncProto will remember the address 
+   // of cl, so we need to keep it around.
+   fClass       = new G__ClassInfo(*cl);
 
    fIntSelector = iselector;
    fFuncInit    = new G__CallFunc();
@@ -98,17 +104,17 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    fFuncInp     = new G__CallFunc();
    fFuncOut     = new G__CallFunc();
 
-   SetFuncProto(fFuncInit,cl,"Init","TTree*");
-   SetFuncProto(fFuncBegin,cl,"Begin","TTree*");
-   SetFuncProto(fFuncNotif,cl,"Notify","");
-   SetFuncProto(fFuncTerm,cl,"Terminate","");
-   SetFuncProto(fFuncCut,cl,"ProcessCut","int");
-   SetFuncProto(fFuncFill,cl,"ProcessFill","int");
-   SetFuncProto(fFuncProc,cl,"Process","int");
-   SetFuncProto(fFuncOption,cl,"SetOption","const char*");
-   SetFuncProto(fFuncObj,cl,"SetObject","TObject*");
-   SetFuncProto(fFuncInp,cl,"SetInputList","TList*");
-   SetFuncProto(fFuncOut,cl,"GetOutputList","");
+   SetFuncProto(fFuncInit,fClass,"Init","TTree*");
+   SetFuncProto(fFuncBegin,fClass,"Begin","TTree*");
+   SetFuncProto(fFuncNotif,fClass,"Notify","");
+   SetFuncProto(fFuncTerm,fClass,"Terminate","");
+   SetFuncProto(fFuncCut,fClass,"ProcessCut","int");
+   SetFuncProto(fFuncFill,fClass,"ProcessFill","int");
+   SetFuncProto(fFuncProc,fClass,"Process","int");
+   SetFuncProto(fFuncOption,fClass,"SetOption","const char*");
+   SetFuncProto(fFuncObj,fClass,"SetObject","TObject*");
+   SetFuncProto(fFuncInp,fClass,"SetInputList","TList*");
+   SetFuncProto(fFuncOut,fClass,"GetOutputList","");
 }
 
 
