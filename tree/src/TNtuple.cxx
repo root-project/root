@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.5 2003/06/25 13:39:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.6 2003/06/26 08:55:18 brun Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -132,10 +132,10 @@ Int_t TNtuple::Fill()
 //______________________________________________________________________________
 Int_t TNtuple::Fill(const Float_t *x)
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple with an array of floats*-*-*-*-*-*-*-*-*-*
-//*-*              =====================================
+   // Fill a Ntuple with an array of floats
 
-//*-*- Store array x into buffer
+
+  // Store array x into buffer
   for (Int_t i=0;i<fNvar;i++)  {
      fArgs[i] = x[i];
   }
@@ -149,8 +149,10 @@ Int_t TNtuple::Fill(Float_t x0,Float_t x1,Float_t x2,Float_t x3,Float_t x4
               ,Float_t x5,Float_t x6,Float_t x7,Float_t x8,Float_t x9
               ,Float_t x10,Float_t x11,Float_t x12,Float_t x13,Float_t x14)
 {
-//*-*-*-*-*-*-*-*-*Fill a Ntuple: Each Ntuple item is an argument*-*-*-*-*-*-*
-//*-*              ==============================================
+   // Fill a Ntuple: Each Ntuple item is an argument
+   // NOTE that if the ntuple has only one column, this function must be
+   // called with a second dummy argument to prevent an ambiguity
+   // with the function above (when executed with CINT).
 
    if (fNvar >  0) fArgs[0]  = x0;
    if (fNvar >  1) fArgs[1]  = x1;
