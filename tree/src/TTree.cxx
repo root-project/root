@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.205 2004/08/20 14:59:50 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.206 2004/08/20 21:25:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -397,7 +397,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fUserInfo       = 0;
    fTreeIndex      = 0;
    fBranchRef      = 0;
-   
+
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
    SetLineColor(gStyle->GetHistLineColor());
@@ -458,11 +458,11 @@ TTree::~TTree()
       // delete the array but NOT its content
       delete fClones;
    }
-   
+
    delete fTreeIndex;
 
    delete fBranchRef;
-   
+
    fDirectory  = 0; //must be done after the destruction of friends
 }
 
@@ -1212,12 +1212,12 @@ TBranch *TTree::BranchRef()
     // This branch will keep all the information to find the branches
     // containing referenced objects
     //
-    // at each Tree::Fill, the branch numbers containing the 
+    // at each Tree::Fill, the branch numbers containing the
     // referenced objects are saved to the TBranchRef basket
     // When the Tree header is saved (via TTree::Write), the branch
     // is saved keeping the information with the pointers to the branches
     // having referenced objects.
-   
+
    if (fBranchRef) return 0;
    fBranchRef = new TBranchRef(this);
    return fBranchRef;
@@ -1445,7 +1445,7 @@ Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
    // A TTreeIndex object pointed by fTreeIndex is created.
    // This object will be automatically deleted by the TTree destructor
    // See also comments in TTree::SetTreeIndex
-   
+
    fTreeIndex = GetPlayer()->BuildIndex(this,majorname,minorname);
    if (fTreeIndex->IsZombie()) {
       delete fTreeIndex;
@@ -1466,10 +1466,10 @@ void TTree::SetTreeIndex(TVirtualIndex*index)
   // tree.Draw(...);
   // tree.SetTreeIndex(oldIndex);
   // tree.Draw(); etc
-   
+
    fTreeIndex = index;
 }
-   
+
 //______________________________________________________________________________
 TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
 {
@@ -1547,7 +1547,7 @@ TFile *TTree::ChangeFile(TFile *file)
    char uscore[10];
    for (Int_t i=0;i<10;i++) uscore[i] = 0;
    Int_t nus = 0;
-   
+
    //try to find a suitable file name that does not already exist
    while(nus < 10) {
       uscore[nus] = '_';
@@ -1578,7 +1578,7 @@ TFile *TTree::ChangeFile(TFile *file)
       nus++;
       Warning("ChangeFile","file %s already exist, trying with %d underscores",fname,nus+1);
    }
-   
+
    Int_t compress = file->GetCompressionLevel();
    TFile *newfile = TFile::Open(fname,"recreate","chain files",compress);
    Printf("Fill: Switching to new file: %s",fname);
@@ -2269,14 +2269,14 @@ Int_t TTree::Fill()
       branch->UpdateAddress();
    }
    if (fBranchRef) fBranchRef->Clear();
-   
+
    for (i=0;i<nb;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       if (branch->TestBit(kDoNotProcess)) continue;
       nbytes += branch->Fill();
    }
    if (fBranchRef) fBranchRef->Fill();
-   
+
    fEntries++;
 
    if (fEntries > fMaxEntries) KeepCircular();
@@ -3055,7 +3055,7 @@ TList *TTree::GetUserInfo()
 void TTree::KeepCircular()
 {
    // keep a maximum of fMaxEntries in memory
-   
+
    Int_t nb = fBranches.GetEntriesFast();
    Long64_t maxEntries = fMaxEntries - fMaxEntries/10;
    TBranch *branch;
@@ -3134,7 +3134,7 @@ Long64_t TTree::LoadTreeFriend(Long64_t entry, TTree *T)
   // in T are the same.
   // If the friend Tree has an index, one must find the value pair major,minor
   // in T to locate the corresponding entry in the friend Tree.
-   
+
    if (!fTreeIndex) return LoadTree(entry);
    return fReadEntry = fTreeIndex->GetEntryNumberFriend(T);
 }
@@ -3173,14 +3173,14 @@ Int_t TTree::MakeSelector(const char *selector)
 }
 
 //______________________________________________________________________________
-Int_t TTree::MakeProxy(const char *classname, const char *macrofilename, 
+Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
                        const char *cutfilename, const char *option,
                        Int_t maxUnrolling)
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy
    //
    // The skeleton is a TSelector where the access to the data is set
-   // via TBranchProxy.  
+   // via TBranchProxy.
    //
    // macrofilename and cutfilename can be files contains a C++ function
    // (with the same name as the file) using the branches of the Tree
@@ -3188,12 +3188,12 @@ Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
    //
    // Only the branch used will be read.
    //
-   // "option" is passed to ROOT::TTreeProxyGenerator to stir the 
+   // "option" is passed to ROOT::TTreeProxyGenerator to stir the
    // optional features in the generated code.  The possible options are:
-   //    nohist : indicates that the generated ProcessFill should not 
+   //    nohist : indicates that the generated ProcessFill should not
    //             fill the histogram.
    //
-   // 'maxUnrolling' controls how deep in the class hierachy does the 
+   // 'maxUnrolling' controls how deep in the class hierachy does the
    // system 'unroll' class that are not split.
    //
    // 'unrolling' means to offer an direct access to the data members of
@@ -3330,8 +3330,8 @@ TTree *TTree::MergeTrees(TList *list)
          tree->ResetBranchAddresses();
          newtree->ResetBranchAddresses();
          continue;
-      } 
-      
+      }
+
       newtree->CopyAddresses(tree);
       for (Long64_t i=0;i<nentries;i++) {
          tree->GetEntry(i);
@@ -3507,7 +3507,7 @@ void TTree::Print(Option_t *option) const
 
   //print TRefTable (if one)
   if (fBranchRef) fBranchRef->Print(option);
-  
+
   //print friends if option "all"
   if (!fFriends || !strstr(option,"all")) return;
   TIter nextf(fFriends);
@@ -3981,7 +3981,7 @@ void TTree::SetCircular(Long64_t maxEntries)
 {
    // Organize this Tree with circular buffers, keeping in memory
    // a maximum of maxEntries
-   
+
    fMaxEntries = maxEntries;
 }
 
@@ -4150,7 +4150,7 @@ void TTree::Show(Long64_t entry, Int_t lenmax)
       ltype = 10;
       if (leaf->IsA() == TLeafF::Class()) ltype = 5;
       if (leaf->IsA() == TLeafD::Class()) ltype = 5;
-      if (leaf->IsA() == TLeafC::Class()) ltype = 5;
+      if (leaf->IsA() == TLeafC::Class()) { len = 1; ltype = 5; };
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);
