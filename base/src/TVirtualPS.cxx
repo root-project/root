@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.5 2003/01/20 08:44:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.6 2004/02/13 17:04:35 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -42,6 +42,8 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
           : TNamed(name,"Postscript interface")
 {
    // VirtualPS constructor
+   fStream = 0;
+   fNByte = 0;
 }
 
 //______________________________________________________________________________

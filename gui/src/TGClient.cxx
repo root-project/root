@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.27 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.28 2004/01/20 10:41:11 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -159,6 +159,12 @@ TGClient::TGClient(const char *dpyName)
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
    gClient = this;
+}
+
+//______________________________________________________________________________
+const TGWindow *TGClient::GetDefaultRoot() const
+{
+   return fgRoot;
 }
 
 //______________________________________________________________________________
