@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.5 2002/06/09 08:26:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.6 2003/03/16 16:35:55 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ ClassImp(TRootContextMenu)
 
 //______________________________________________________________________________
 TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
-    : TGPopupMenu(gClient->GetRoot()), TContextMenuImp(c)
+    : TGPopupMenu(gClient->GetDefaultRoot()), TContextMenuImp(c)
 {
    // Create context menu.
 
@@ -162,7 +162,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                      case kMenuSubMenu:
                         if ((m = method->FindDataMember())) {
                            if (m->GetterMethod()) {
-                              TGPopupMenu *r = new TGPopupMenu(gClient->GetRoot());
+                              TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
                               AddPopup(method->GetName(), r);
                               fCleanup->Add(r);
                               TIter nxt(m->GetOptions());
@@ -267,12 +267,12 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
       if (c->GetCanvasImp()->IsA()->InheritsFrom(TGFrame::Class()))
          w = (TRootCanvas *) c->GetCanvasImp();
       else
-         w = gClient->GetRoot();
+         w = gClient->GetDefaultRoot();
    } else if (fContextMenu->GetBrowser()) {
       TBrowser *b = (TBrowser *) fContextMenu->GetBrowser();
       w = (TRootBrowser *) b->GetBrowserImp();
    } else
-      w = gClient->GetRoot();
+      w = gClient->GetDefaultRoot();
 
    fDialog = new TRootDialog(this, w, fContextMenu->CreateDialogTitle(object, function));
 

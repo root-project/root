@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.26 2003/12/19 16:00:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.27 2004/01/05 17:44:09 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -249,7 +249,7 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
    }
 
    if (text && strlen(text))
-      fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+      fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
 //______________________________________________________________________________
