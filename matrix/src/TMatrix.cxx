@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.33 2002/10/25 15:29:50 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.34 2002/11/06 06:33:37 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -720,8 +720,7 @@ TMatrix operator-(const TMatrix &source1, const TMatrix &source2)
 //______________________________________________________________________________
 TMatrix operator*(const TMatrix &source1, const TMatrix &source2)
 {
-  TMatrix target(source1);
-  target *= source2;
+  TMatrix target(source1,TMatrix::kMult,source2);
   return target;
 }
 
