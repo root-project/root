@@ -641,7 +641,7 @@ void G__add_replacesymbol_body(const char* s1,const char* s2) {
 * void G__add_replacesymbol()
 ******************************************************************/
 extern "C" void G__add_replacesymbol(const char* s1,const char* s2) {
-  return(G__add_replacesymbol_body(s1,s2));
+  G__add_replacesymbol_body(s1,s2);
 }
 
 /******************************************************************
