@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.13 2001/01/11 14:35:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.14 2001/01/24 16:32:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -390,10 +390,7 @@ Int_t TBranch::Fill()
      buf->WriteBuf( fEntryBuffer->Buffer() + objectStart , len );
 
    } else {
-     for (Int_t i=0;i<fNleaves;i++) {
-       TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-       leaf->FillBasket(*buf);
-     }
+     FillLeaves(*buf);
    }
    Int_t lnew   = buf->Length();
    Int_t nbytes = lnew - lold;
@@ -442,6 +439,16 @@ Int_t TBranch::Fill()
    }
    return nbytes;
 }
+
+//______________________________________________________________________________
+void TBranch::FillLeaves(TBuffer &b)
+{
+  for (Int_t i=0;i<fNleaves;i++) {
+    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+    leaf->FillBasket(b);
+  }
+}
+
 
 //______________________________________________________________________________
 TBasket *TBranch::GetBasket(Int_t basketnumber)
@@ -560,10 +567,8 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
    if (displacement) buf->SetBufferDisplacement(displacement[entry-first]);
    else buf->SetBufferDisplacement();
 
-   for (Int_t i=0;i<fNleaves;i++) {
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
-      leaf->ReadBasket(*buf);
-   }
+   ReadLeaves(*buf);
+
    nbytes = buf->Length() - bufbegin;
    fReadEntry = entry;
    return nbytes;
@@ -760,6 +765,15 @@ void TBranch::ReadBasket(TBuffer &)
 //*-*            =======================================================
 
 //   fLeaves->ReadBasket(basket);
+}
+
+//______________________________________________________________________________
+void TBranch::ReadLeaves(TBuffer &b)
+{
+  for (Int_t i=0;i<fNleaves;i++) {
+    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+    leaf->ReadBasket(b);
+  }
 }
 
 //______________________________________________________________________________

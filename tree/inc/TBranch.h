@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.5 2000/12/13 15:13:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.6 2000/12/26 14:22:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual void     DropBaskets();
     virtual Int_t    Fill();
+    virtual void     FillLeaves(TBuffer &b);
     virtual char    *GetAddress() const {return fAddress;}
     virtual Int_t    GetBasketSize() const {return fBasketSize;}
     virtual Int_t    GetCompressionLevel() const {return fCompress;}
@@ -126,6 +127,7 @@ public:
     Bool_t           IsFolder() const;
     virtual void     Print(Option_t *option="") const;
     virtual void     ReadBasket(TBuffer &b);
+    virtual void     ReadLeaves(TBuffer &b);
     virtual void     Reset(Option_t *option="");
     virtual void     ResetReadEntry() {fReadEntry = -1;}
     virtual void     SetAddress(void *add);
