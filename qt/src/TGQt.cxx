@@ -1,6 +1,6 @@
 // Author: Valeri Fine   21/01/2002
 /****************************************************************************
-** $Id: TGQt.cxx,v 1.57 2004/07/09 00:17:48 fine Exp $
+** $Id: TGQt.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $
 **
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
@@ -425,7 +425,7 @@ Bool_t TGQt::Init(void* /*display*/)
 #ifndef WIN32
    // vf   fQtInputHandler =   new TQtInputHandler();
 #endif
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.57 2004/07/09 00:17:48 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.1 2004/07/09 09:21:24 brun Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -500,14 +500,14 @@ Bool_t TGQt::Init(void* /*display*/)
    fQClientFilter = new TQtClientFilter();
 
    //  Query the default font for Widget decoration.  
-   fFontTextCode = "ISO8859-5";
+   fFontTextCode = "ISO8859-1";
    const char *default_font = 
       gEnv->GetValue("Gui.DefaultFont",  "-adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1");
    QApplication::setFont(*(QFont *)LoadQueryFont(default_font));
    //  define the font code page
    QString fontName(default_font);
    fFontTextCode = fontName.section('-',13).upper();
-   if  (fFontTextCode == "ISO8859-1" || fFontTextCode.isEmpty()) fFontTextCode = "ISO8859-5";
+   if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-1";
    
 
    //  printf(" TGQt::Init finsihed\n");
