@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.29 2003/03/18 20:25:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.30 2003/04/04 16:47:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -425,7 +425,7 @@ void TStyle::Reset(Option_t *)
    fStatW          = 0.20;
    fStatH          = 0.16;
    fStatX          = 0.98;
-   fStatY          = 0.98;
+   fStatY          = 0.995;
    SetStatFormat();
    SetFitFormat();
    SetPaintTextFormat();
