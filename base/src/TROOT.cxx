@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.30 2001/04/09 15:33:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.31 2001/04/12 08:21:40 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -186,6 +186,10 @@ Bool_t        TROOT::fgRootInit = kFALSE;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
 
+// This local static object initializes the ROOT system
+static TROOT root("root", "The ROOT of EVERYTHING");
+
+
 ClassImp(TROOT)
 
 //______________________________________________________________________________
@@ -216,7 +220,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // (e.g. the graphics system is initialized via such a function).
 
    if (fgRootInit) {
-      Warning("TROOT", "only one instance of TROOT allowed");
+      //Warning("TROOT", "only one instance of TROOT allowed");
       return;
    }
 
@@ -674,7 +678,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       return GetClass(name);
    }
    if (cl) return cl;
-   
+
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (!strcmp(name, "string")) return 0;
    if (strstr(name, "vector<")   || strstr(name, "list<") ||
@@ -682,7 +686,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
        strstr(name, "deque<")    || strstr(name, "multimap<") ||
        strstr(name, "multiset<") || strstr(name, "::" ))
       return 0;   //reject STL containers
-      
+
    if (gInterpreter->CheckClassInfo(name))
       return new TClass(name, 1, 0, 0, -1, -1);
    return 0;
@@ -1188,8 +1192,14 @@ void TROOT::ProcessLineSync(const char *line)
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
 
-   if (!fApplication)
+   if (!fApplication) {
+      // circular Form() buffer will be re-used in CreateApplication() (too
+      // many calls to Form()), so we need to save "line"
+      char *sline = StrDup(line);
       TApplication::CreateApplication();
+      line = Form("%s", sline);
+      delete [] sline;
+   }
 
    fApplication->ProcessLine(line, kTRUE);
 }
@@ -1200,6 +1210,15 @@ Long_t TROOT::ProcessLineFast(const char *line)
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
    // In all other cases use TROOT::ProcessLine().
+
+   if (!fApplication) {
+      // circular Form() buffer will be re-used in CreateApplication() (too
+      // many calls to Form()), so we need to save "line"
+      char *sline = StrDup(line);
+      TApplication::CreateApplication();
+      line = Form("%s", sline);
+      delete [] sline;
+   }
 
    Long_t result = 0;
 
