@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.81 2003/01/16 18:49:11 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.82 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1923,7 +1923,7 @@ Int_t TFile::SysSync(Int_t fd)
 #ifndef WIN32
    return ::fsync(fd);
 #else
-   return 0;
+   return ::_commit(fd);
 #endif
 }
 
