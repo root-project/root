@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.5 2000/06/08 17:42:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.6 2000/06/13 11:01:03 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1105,7 +1105,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
                fs2 = Anal1(spec,text+OpSquareCurly+1,length-OpSquareCurly-1);
                Savefs(&fs1);
                Savefs(&fs2);
-               result = FormSize(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,fs1.Width()),
+               result = FormSize(fs2.Width()+ GetHeight()*spec.size/10+TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width()),
                                  fs2.Dessus()+fs1.Height()+GetHeight()*spec.size/4,fs2.Dessous());
             } else {
                fs1 = Anal1(spec,text+OpSqrt+5,length-OpSqrt-5);
@@ -1116,7 +1116,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             if (OpSquareCurly>-1) { // ]{
                fs2 = Readfs();
                fs1 = Readfs();
-               Double_t pas = TMath::Max(GetHeight()*spec.size/2,fs1.Width());
+               Double_t pas = TMath::Max(GetHeight()*spec.size/2,(Double_t)fs1.Width());
                Double_t pas2 = pas + GetHeight()*spec.size/10;
                Double_t y1 = y-fs2.Dessus() ;
                Double_t y2 = y+fs2.Dessous() ;
