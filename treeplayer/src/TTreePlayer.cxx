@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.39 2001/02/27 17:24:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.40 2001/03/03 08:49:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -716,9 +716,9 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
    fHistogram = 0;
    if (hname) {
+      i = (int)( hname - varexp0 );
       hname += 2;
       hkeep  = 1;
-      i = strcspn(varexp0,">>");
       varexp = new char[i+1];
       varexp[0] = 0; //necessary if i=0
       Bool_t hnameplus = kFALSE;
