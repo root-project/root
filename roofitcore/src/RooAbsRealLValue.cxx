@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.25 2002/03/07 06:22:19 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.26 2002/03/07 22:35:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,6 +39,7 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooAbsBinning.hh"
 #include "RooFitCore/RooBinning.hh"
+#include "RooFitCore/RooUniformBinning.hh"
 
 ClassImp(RooAbsRealLValue)
 
@@ -320,7 +321,8 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   // Create an empty 1D-histogram with appropriate scale and labels for this variable.
 
   RooArgList list(*this) ;
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &bins);
+  const RooAbsBinning* pbins(&bins) ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
 }
 
 TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, 
@@ -378,7 +380,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
 }
 
-TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, const RooAbsBinning* bins) const {
+TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, const RooAbsBinning** bins) const {
   // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y variable. 
 
@@ -450,7 +452,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
 
 TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar, 
-					const char* tAxisLabel, const RooAbsBinning* bins) const {
+					const char* tAxisLabel, const RooAbsBinning** bins) const {
   // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
   // and the specified y,z variables. 
 
@@ -461,24 +463,22 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins)
 {
-  RooBinning bin[3] ;
+  const RooAbsBinning* bin[3] ;
   Int_t ndim = vars.getSize() ;
-  bin[0].addUniform(nBins[0],xlo[0],xhi[0]) ;
-  bin[0].setRange(xlo[0],xhi[0]) ;
-  if (ndim>1) {
-    bin[1].addUniform(nBins[1],xlo[1],xhi[1]) ;
-    bin[1].setRange(xlo[1],xhi[1]) ;
-  }
-  if (ndim>2) {
-    bin[2].addUniform(nBins[2],xlo[2],xhi[2]) ;
-    bin[2].setRange(xlo[2],xhi[2]) ;
-  }
+  bin[0] = new RooUniformBinning(xlo[0],xhi[0],nBins[0]) ;
+  bin[1] = (ndim>1) ? new RooUniformBinning(xlo[1],xhi[1],nBins[1]) : 0 ;
+  bin[2] = (ndim>2) ? new RooUniformBinning(xlo[2],xhi[2],nBins[2]) : 0 ;
 
-  return createHistogram(name,vars,tAxisLabel,bin) ;
+  TH1* ret = createHistogram(name,vars,tAxisLabel,bin) ;
+
+  if (bin[0]) delete bin[0] ;
+  if (bin[1]) delete bin[1] ;
+  if (bin[2]) delete bin[2] ;
+  return ret ;  
 }
 
 
-TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning* bins) 
+TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins) 
 {
   // Create a 1,2, or 3D-histogram with appropriate scale and labels.
   // Binning and ranges are taken from the variables themselves and can be changed by
@@ -515,18 +515,18 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   switch(dim) {
   case 1:
     histogram= new TH1F(histName.Data(), histTitle.Data(),
-			bins[0].numBins(),bins[0].array());
+			bins[0]->numBins(),bins[0]->array());
     break;
   case 2:
     histogram= new TH2F(histName.Data(), histTitle.Data(),
-			bins[0].numBins(),bins[0].array(),
-			bins[1].numBins(),bins[1].array());
+			bins[0]->numBins(),bins[0]->array(),
+			bins[1]->numBins(),bins[1]->array());
     break;
   case 3:
     histogram= new TH3F(histName.Data(), histTitle.Data(),
-			bins[0].numBins(),bins[0].array(),
-			bins[1].numBins(),bins[1].array(),
-			bins[2].numBins(),bins[2].array());
+			bins[0]->numBins(),bins[0]->array(),
+			bins[1]->numBins(),bins[1]->array(),
+			bins[2]->numBins(),bins[2]->array());
     break;
   default:
     assert(0);
@@ -561,7 +561,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
     for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= bins[index].averageBinWidth() ; // xyz[index]->getFitBins();
+      Double_t delta= bins[index]->averageBinWidth() ; // xyz[index]->getFitBins();
       if(index > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
       if(strlen(xyz[index]->getUnit())) {
