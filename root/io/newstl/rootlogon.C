@@ -14,4 +14,11 @@ enum EWhich {
 int which = kEnd - 1;
 int exec = 0;
 int pass = 0;
+
+TString dirname = gROOT->GetVersion();
+dirname.ReplaceAll(".","-");
+dirname.ReplaceAll("/","-");
+dirname.Append(".libs");
+gSystem->SetBuildDir(dirname);
+
 }
