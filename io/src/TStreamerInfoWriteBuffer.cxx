@@ -80,6 +80,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
    //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
    //  otherwise it is a pointer to the object
 
+   b.IncrementLevel(this);
+
    //mark this class as being used in the current file
    TagFile((TFile *)b.GetParent());
 
@@ -482,6 +484,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
             continue;
       }
    }
+
+   b.DecrementLevel(this);
+
    return 0;
 }
 
