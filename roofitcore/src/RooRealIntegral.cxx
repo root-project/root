@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.57 2002/04/10 20:59:05 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.58 2002/04/12 18:25:31 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -504,7 +504,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
   _facList("facList",this,other._facList),
-  _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid)
+  _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid),
+  _iconfig(other._iconfig)
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
