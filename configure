@@ -1598,7 +1598,12 @@ if test ! "x$enable_ruby" = "xno" ; then
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
-    check_library "libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib" \
+    if test "x$arch" != "xwin32gcc"; then
+        check_library_options="libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib"
+    else
+        check_library_options="libruby.dll.a"
+    fi
+    check_library $check_library_options \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
         $rubysyslibdir
     rubylib=$found_lib
