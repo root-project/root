@@ -2177,12 +2177,12 @@ if test "x$enable_globus" = "xyes"; then
             echo "Checking for $i ... $dirtmp"
             add="yes"
             for k in $glbpatchcflags ; do
-               if test "x$k" = "x$dirtmp" ; then
+               if test "x$k" = "x-I$dirtmp" ; then
                   add="no"
                fi
             done
             if test "x$add" = "xyes" ; then
-               glbpatchcflags="$glbpatchcflags $dirtmp"
+               glbpatchcflags="$glbpatchcflags -I$dirtmp"
             fi
          else
             echo "Checking for $i ... no (globus patch not applied)"
@@ -2201,7 +2201,7 @@ if test "x$enable_globus" = "xyes"; then
       # copy patched file in the globusauth/src directory
       cp -rp $globuspatchdir/$tobepatched.c globusauth/src/$tobepatched.c
 
-      glbpatchcflags="$glbpatchcflags $globuspatchdir/include"
+      glbpatchcflags="$glbpatchcflags -I$globuspatchdir/include"
 
       if test ! "x$glbpatchcflags" = "x" ; then
          echo "Applying experimental patch to $tobepatched.c"
