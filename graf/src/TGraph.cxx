@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.92 2003/01/06 08:38:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.93 2003/02/20 18:11:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -322,8 +322,6 @@ TGraph::TGraph(const TH1 *h)
    SetMarkerStyle(h->GetMarkerStyle());
    SetMarkerColor(h->GetMarkerColor());
    SetMarkerSize(h->GetMarkerSize());
-   SetMaximum(h->GetMaximumStored());
-   SetMinimum(h->GetMinimumStored());
 
    SetName(h->GetName());
    SetTitle(h->GetTitle());
