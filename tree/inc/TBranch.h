@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.7 2001/02/06 10:55:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.8 2001/04/09 08:15:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,6 +50,7 @@ class TClonesArray;
 
    const Int_t kDoNotProcess = BIT(10); // Active bit for branches
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
+   const Int_t kBranchObject = BIT(12); // branch is a TObject*
 
 class TBranch : public TNamed {
 
