@@ -124,7 +124,7 @@
 #
 #              UsrPwd                       us:<username> cp:<crypt_option>
 #              SRP                          us:<username> 
-#              Kerberos                     us:<username> pp:<principal> 
+#              Kerberos                     pp:<principal> us:<username>(<principal>) 
 #              Globus                       cd:<user_certkey_dir> 
 #                                           cf:<usercert_file>
 #                                           kf:<userkey_file>
@@ -140,9 +140,10 @@
 #           For Kerberos, the deafult principal is assumed of the form 
 #           <username>@<KERBEROS.REALM>; it is possible to specify a different
 #           principal via the key 'pp', access to which must be granted 
-#           remotely via .k5login . For backward compatibility, if the string 
-#           specified by 'us' has the form of a principal (i.e. contains a '@')
-#           thet it is taken as principal (provided that no 'pp' is specified).
+#           remotely via .k5login . It is also possible to specify a target
+#           username via the 'us' key. For backward compatibility, the principal 
+#           can also be specified by the 'us' key (ignored if 'pp' is specified;
+#           must contain a '@', otherwise is interpreted as remote username).
 #
 #           The keys for Globus allow to specify only partial changes of 
 #           the defaults:

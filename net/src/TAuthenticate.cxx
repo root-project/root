@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.48 2004/04/20 15:33:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.49 2004/04/22 13:10:47 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -809,28 +809,22 @@ void TAuthenticate::SetEnvironment()
                Pp = 0;
             } else {
                // Allow specification via 'us:' key
-               if (Us && strlen(Us) > 0) {
-                  char *pat = strstr(Us, "@");
-                  if (pat != 0) {
-                     fgKrb5Principal = TString(Us);
-                     if (!fUser.Length()) {
-                        delete[] Us;
-                        Us = 0;
-                     }
-                  }
+               if (Us && strlen(Us) > 0 && strstr(Us,"@")) {
+                  fgKrb5Principal = TString(Us);
+                  delete[] Us;
+                  Us = 0;
                }
             }
             // command line user specification (fUser) gets highest priority
-            if (fUser == "") {
-               if (Us && strlen(Us) > 0) {
-                  sprintf(UsDef, "%s", Us);
-                  // Make sure that there is no double entry for princ
-                  char *pat = strstr(UsDef, "@");
-                  if (pat != 0)
-                     *pat = '\0';
-               }
-            } else
+            if (fUser.Length()) {
                sprintf(UsDef, "%s", fUser.Data());
+            } else {
+               if (Us && strlen(Us) > 0 && !strstr(Us,"@")) {
+                  sprintf(UsDef, "%s", Us);
+                  delete[] Us;
+                  Us = 0;
+               }
+            }
             if (Us != 0) {
                delete[] Us;
                Us = 0;

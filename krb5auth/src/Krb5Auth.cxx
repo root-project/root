@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.18 2004/03/23 00:12:41 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.19 2004/04/20 15:25:17 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -57,11 +57,12 @@
 #include "TSystem.h"
 #include "TEnv.h"
 #include "NetErrors.h"
+#include "Getline.h"
 
 Int_t Krb5Authenticate(TAuthenticate *, TString &, TString &, Int_t);
 
-void  Krb5InitCred(const char *ClientPrincipal);
-Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
+static void  Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc = kFALSE);
+static Int_t Krb5CheckCred(krb5_context, krb5_ccache, TString, TDatime &);
 Int_t Krb5CheckSecCtx(const char *, TSecContext *);
 
 class Krb5AuthInit {
@@ -130,6 +131,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    Int_t Nsen = 0, Nrec = 0;
 
    TString targetUser(user);
+   TString localUser;
+   // The default will be the one related to the logged user
+   UserGroup_t *u = gSystem->GetUserInfo();
+   if (u) {
+      localUser = u->fUser;
+      delete u;
+   } else
+      localUser = TAuthenticate::GetDefaultUser();
+   Bool_t PromptPrinc = (targetUser != localUser);
 
    // first check if protocol version supports kerberos, krb5 support
    // was introduced in rootd version 6
@@ -173,38 +183,59 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    // get our principal from the cache
    krb5_principal client;
    TString Principal = TString(TAuthenticate::GetKrb5Principal());
+   Bool_t GotPrincipal = (Principal.Length() > 0) ? kTRUE : kFALSE;
    //
-   // if not defined or incomplete, complete with defaults
+   // if not defined or incomplete, complete with defaults;
+   // but only if interactive
    if (!Principal.Length() || !Principal.Contains("@")) {
       if (gDebug > 3)
          Info("Krb5Authenticate", 
               "incomplete principal: complete using defaults");
       krb5_principal default_princ;
-      if ((retval = krb5_parse_name(context, TAuthenticate::GetDefaultUser(),
-                                    &default_princ))) {
+
+      if (!Principal.Length()) {
+         // Try the default user
+         if ((retval = krb5_parse_name(context, localUser.Data(),
+                                       &default_princ))) {
             Error("Krb5Authenticate","failed <krb5_parse_name>: %s\n",
-                  error_message(retval));
-            return -1;
+                                        error_message(retval));
+         }
+      } else {
+         // Try first the name specified
+         if ((retval = krb5_parse_name(context, Principal.Data(),
+                                       &default_princ))) {
+            TString errmsg = TString(Form("First: %s",error_message(retval)));
+            // Try the default user in case of failure
+            if ((retval = krb5_parse_name(context, localUser.Data(),
+                                           &default_princ))) {
+               errmsg.Append(Form("- Second: %s",error_message(retval)));
+               Error("Krb5Authenticate","failed <krb5_parse_name>: %s\n",
+                                        errmsg.Data());
+            }
+         }
       }
-      char *default_name;
-      if ((retval = krb5_unparse_name(context, default_princ, &default_name))) {
-            Error("Krb5Authenticate","failed <krb5_unparse_name>: %s\n",
-                  error_message(retval));
-            krb5_free_principal(context,default_princ);
-            return -1;
+      //
+      // If successful, we get the string principal
+      if (!retval) {
+         char *default_name;
+         if ((retval = krb5_unparse_name(context, default_princ, &default_name))) {
+               Error("Krb5Authenticate","failed <krb5_unparse_name>: %s\n",
+                     error_message(retval));
+         } else {
+            Principal = TString(default_name);
+            free(default_name);
+         }
+         krb5_free_principal(context,default_princ);
       }
-      if (!Principal.Length())
-         Principal = TString(default_name);
-      else if (!Principal.Contains("@")) {
-         TString Realm = TString(default_name);
-         Realm.Remove(0,Realm.Index("@"));
-         Principal.Append(Realm);
-      }
-      free(default_name);      
-      krb5_free_principal(context,default_princ);
    }
-   if (gDebug > 3)
-      Info("Krb5Authenticate", "using principal: %s", Principal.Data());
+   // Notify
+   if (gDebug > 3) 
+      if (GotPrincipal)
+         Info("Krb5Authenticate", 
+              "user requested principal: %s", Principal.Data());
+      else
+         Info("Krb5Authenticate", 
+              "default principal: %s", Principal.Data());
 
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
 
@@ -214,7 +245,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
             Info("Krb5Authenticate",
                  "valid credentials not found: try initializing (Principal: %s)",
                  Principal.Data());
-         Krb5InitCred(Principal);
+         Krb5InitCred(Principal,PromptPrinc);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
@@ -227,46 +258,61 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
    }
 
-   // We must check that the principal for which we have a cached ticket
-   // is the one that we want
-   TString TmpPP = 
+   // If a principal was specified by the user, we must check that the 
+   // principal for which we have a cached ticket is the one that we want
+   TString TicketPrincipal = 
       TString(Form("%.*s@%.*s",client->data->length, client->data->data, 
                                client->realm.length, client->realm.data));
-   if (Principal != TmpPP) {
-      if (gDebug > 3)
-         Info("Krb5Authenticate",
-              "got credentials for wrong principal %s - try initializing"
-              " (Principal: %s)",
-              TmpPP.Data(), Principal.Data());
-      Krb5InitCred(Principal);
-      if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-         Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
-               error_message(retval));
-         return -1;
-      }
+   if (GotPrincipal) {
 
+      // If interactive require the ticket principal to be the same as the 
+      // required or default one
+      if (isatty(0) && isatty(1) && Principal != TicketPrincipal) {
+         if (gDebug > 3)
+            Info("Krb5Authenticate",
+                 "got credentials for different principal %s - try"
+                 " initialization credentials for principal: %s",
+                 TicketPrincipal.Data(), Principal.Data());
+         Krb5InitCred(Principal);
+         if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
+            Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
+                  error_message(retval));
+            return -1;
+         }
+         // This may have changed 
+         TString TicketPrincipal = 
+             TString(Form("%.*s@%.*s",client->data->length, client->data->data, 
+                                      client->realm.length, client->realm.data));
+      }
    }
 
    cleanup.client = client;
 
    TDatime ExpDate;
-   if (Krb5CheckCred(context,ccdef,Principal,ExpDate) != 1) {
+   if (Krb5CheckCred(context,ccdef,TicketPrincipal,ExpDate) != 1) {
+
+      // If the ticket expired we tray to re-initialize it for the same
+      // principal, which may be different from the default
 
       if (isatty(0) && isatty(1)) {
 
          if (gDebug >2)
             Info("Krb5Authenticate",
                  "credentials found have expired: try initializing"
-                 " (Principal: %s)", Principal.Data());
-         Krb5InitCred(Principal);
+                 " (Principal: %s)", TicketPrincipal.Data());
+         Krb5InitCred(TicketPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             Error("Krb5Authenticate","failed <krb5_cc_get_principal>: %s\n",
                   error_message(retval));
             return -1;
          }
          // Check credentials and get expiration time
-         if (Krb5CheckCred(context,ccdef,Principal,ExpDate) != 1)
+         if (Krb5CheckCred(context,ccdef,TicketPrincipal,ExpDate) != 1) {
+            Info("Krb5Authenticate",
+                 "ticket re-initialization failed for principal %s",
+                 TicketPrincipal.Data());
             return -1;
+         }
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
@@ -274,6 +320,11 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       }
    }
    cleanup.client = client;
+
+   // At this point we know which is the principal we will be using 
+   if (gDebug > 3)
+      Info("Krb5Authenticate", 
+           "using valid ticket for principal: %s", TicketPrincipal.Data());
 
    // Get a normal string for user
    TString User(client->data->data,client->data->length);
@@ -289,18 +340,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
    if (version > 1) {
 
-#if 0
-      // To check sec context
-      TString Principal(Form("%.*s@%.*s", client->data->length,
-          client->data->data, client->realm.length, client->realm.data));
-#endif
-
       // Check ReUse
       ReUse  = TAuthenticate::GetAuthReUse();
       Prompt = TAuthenticate::GetPromptUser();
 
       // Build auth details
-      Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,Principal.Data());
+      Details = Form("pt:%d ru:%d us:%s",Prompt,ReUse,TicketPrincipal.Data());
 
       // Create Options string
       int Opt = ReUse * kAUTH_REUSE_MSK;
@@ -312,7 +357,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       kind = kROOTD_KRB5;
       retval = ReUse;
       int rc = 0;
-      if ((rc = auth->AuthExists(Principal, TAuthenticate::kKrb5,
+      if ((rc = auth->AuthExists(TicketPrincipal, TAuthenticate::kKrb5,
                 Options, &kind, &retval, &Krb5CheckSecCtx)) == 1) {
          // A valid authentication exists: we are done ...
          return 1;
@@ -636,7 +681,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 }
 
 //______________________________________________________________________________
-void Krb5InitCred(const char *ClientPrincipal)
+void Krb5InitCred(const char *ClientPrincipal, Bool_t PromptPrinc)
 {
    // Checks if there are valid credentials in the cache.
    // If not, tries to initialise them.
@@ -644,13 +689,24 @@ void Krb5InitCred(const char *ClientPrincipal)
    if (gDebug > 2)
        Info("Krb5InitCred","enter: %s", ClientPrincipal);
 
+   // Check if the user wants to be prompt about principal
+   TString Principal = TString(ClientPrincipal);
+   if (TAuthenticate::GetPromptUser() || PromptPrinc) {
+      char *usr = Getline(Form("Principal (%s): ", Principal.Data()));
+      if (usr[0]) {
+         usr[strlen(usr) - 1] = 0; // get rid of \n
+         if (strlen(usr))
+            Principal = StrDup(usr);
+      }
+   }
+
    // Prepare command
    TString Cmd;
 
    if (strlen(R__KRB5INIT) <= 0)
-      Cmd = Form("/usr/kerberos/bin/kinit -f %s",ClientPrincipal);
+      Cmd = Form("/usr/kerberos/bin/kinit -f %s",Principal.Data());
    else
-      Cmd = Form("%s -f %s",R__KRB5INIT,ClientPrincipal);
+      Cmd = Form("%s -f %s",R__KRB5INIT,Principal.Data());
 
    if (gDebug > 2) 
       Info("Krb5InitCred","executing: %s",Cmd.Data());
