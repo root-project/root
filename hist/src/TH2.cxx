@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.47 2003/11/07 08:59:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.48 2004/01/25 20:33:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2099,7 +2099,7 @@ void TH2I::AddBinContent(Int_t bin, Stat_t w)
 //*-*                ==========================
 
    Int_t newval = fArray[bin] + Int_t(w);
-   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Short_t(newval); return;}
+   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
    if (newval >  2147483647) fArray[bin] =  2147483647;
 }
@@ -2150,7 +2150,7 @@ void TH2I::SetBinContent(Int_t bin, Stat_t content)
 // Set bin content
    if (bin < 0) return;
    if (bin >= fNcells) return;
-   fArray[bin] = Short_t (content);
+   fArray[bin] = Int_t (content);
    fEntries++;
 }
 
