@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.55 2003/04/11 18:21:27 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.56 2003/05/02 11:29:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -139,6 +139,9 @@
 #   ifdef IRIX64
 #      define R__SGI64
 #   endif
+#   if defined(__mips64) || defined(_ABI64)
+#      define R__B64
+#   endif
 #endif
 
 #if defined(linux)
@@ -206,7 +209,9 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-/*#   define R__B64 */     /* enable when 64 bit machine */
+#   if defined(__mips64) || defined(_ABI64)
+#      define R__B64      /* enable when 64 bit machine */
+#   endif
 #endif
 
 #if defined(linux) && defined(__powerpc__)
