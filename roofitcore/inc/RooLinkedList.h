@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.rdl,v 1.5 2002/04/08 20:20:44 verkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.6 2002/04/17 20:08:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -36,6 +36,21 @@ public:
     }
   }
 
+  // Assignment operator
+  RooLinkedList& operator=(const RooLinkedList& other) {
+
+    // Prevent self-assignment
+    if (&other==this) return *this ;
+
+    // Copy elements
+    RooLinkedListElem* elem = other._first ;
+    while(elem) {
+      Add(elem->_arg) ;
+      elem = elem->_next ;
+    }    
+
+    return *this ;
+  }
 
   Int_t getHashTableSize() const {
     return _htable ? _htable->size() : 0 ;

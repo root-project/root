@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.cc,v 1.8 2002/02/18 21:43:15 verkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.9 2002/02/19 00:13:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,6 +58,8 @@ void RooTrace::mark()
 
 void RooTrace::dump(ostream& os, Bool_t sinceMarked) {
   os << "List of RooFit objects allocated while trace active:" << endl ;
+
+
   char buf[100] ;
   Int_t i, nMarked(0) ;
   for(i=0 ; i<_list.GetSize() ; i++) {
