@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.9 2001/01/12 08:24:28 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.10 2001/01/12 08:42:23 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -108,7 +108,6 @@ class TDataSet : public TNamed
     virtual TObject     *Clone() const;
     virtual void         Delete(Option_t *opt="");
     virtual TDataSet    *Find(const char *path) const;
-    virtual TDataSet    *FindDataSet(const char *name,const char *path="",Option_t *opt="") const;
     virtual TDataSet    *FindByPath(const char *path) const;
     virtual TDataSet    *FindByName(const char *name,const char *path="",Option_t *opt="") const;
             TObject     *FindObject(const char *name) const {return FindByName(name);}

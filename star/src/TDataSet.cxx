@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.2 2001/01/10 23:28:34 fine Exp $"
+    "$Id: TDataSet.cxx,v 1.5 2001/01/12 07:49:31 brun Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
@@ -360,7 +360,7 @@ TDataSet *TDataSet::Find(const Char_t *path) const
 TDataSet *TDataSet::FindByName(const Char_t *name,const Char_t *path,Option_t *opt) const
 {
   //
-  // Full description see: TDataSetIter::FindDataSet
+  // Full description see: TDataSetIter::Find
   //
   // Note. This is method is quite expansive.
   // ----- It is done to simplify the user's code when one wants to find ONLY object.
