@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.52 2001/12/09 17:30:29 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.53 2001/12/10 21:11:17 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1562,7 +1562,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
       fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
       fHistogram->SetDirectory(0);
    }
-   fHistogram->Paint();
+   fHistogram->Paint("a");
   }
 
   //*-*  Set Clipping option
