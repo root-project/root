@@ -27,6 +27,7 @@ enable_pgsql=yes
 enable_pythia=yes
 enable_pythia6=yes
 enable_rfio=yes
+enable_dcache=yes
 enable_rpath=no
 enable_sapdb=yes
 enable_shared=yes
@@ -889,8 +890,7 @@ fi
 #
 if test ! "x$enable_dcache" = "xno" ; then
     check_library "libdcap" "$enable_shared" "$dcaplibdir" \
-	/afs/desy.de/products/dcache/lib /products/dcache/lib \
-	/opt/dcache/lib /usr/lib /usr/local/lib
+	/products/dcache/lib /opt/dcache/lib /usr/lib /usr/local/lib
     dcaplib=$found_lib
     dcaplibdir=$found_dir
 
