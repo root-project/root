@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.3 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.4 2001/01/16 16:15:13 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -161,11 +161,20 @@ void TLeafC::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) delete [] fValue;
+   if (ResetAddress(add)) {
+      delete [] fValue;
+      if (add) fNdata = 0;
+   }
    if (add) {
-      if (TestBit(kIndirectAddress)) {
+      if (fLeafCount) {
          fPointer = (char**)add;
-          if (*fPointer==0) *fPointer = new char[fNdata];
+         Int_t ncountmax = Int_t(fLeafCount->GetMaximum()+1);
+         if (ncountmax > fNdata || *fPointer == 0) {
+            delete *fPointer;
+            if (ncountmax > fNdata) fNdata = ncountmax;
+            *fPointer = new char[fNdata];
+         }
+         fValue = *fPointer;
       } else {
          fValue = (char*)add;
       }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.7 2000/12/13 15:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.8 2000/12/14 11:22:29 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -261,6 +261,7 @@ void TBranchObject::SetAddress(void *add)
       obj = (TObject*)cl->New();
       *ppointer = (void*)obj;
    }
+   //fOldObject = obj;
    Int_t i, offset;
    if (!cl) {
       for (i=0;i<nbranches;i++)  {

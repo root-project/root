@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.6 2001/01/16 16:15:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.7 2001/01/23 12:32:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -182,12 +182,19 @@ void TLeafS::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) delete [] fValue;
+   if (ResetAddress(add)) {
+      delete [] fValue;
+      if (add) fNdata = 0;
+   }
    if (add) {
-      if (TestBit(kIndirectAddress)) {
+      if (fLeafCount) {
          fPointer = (Short_t**) add;
-         delete *fPointer;
-         *fPointer = new Short_t[fNdata];
+         Int_t ncountmax = Int_t(fLeafCount->GetMaximum()+1);
+         if (ncountmax > fNdata || *fPointer == 0) {
+            delete *fPointer;
+            if (ncountmax > fNdata) fNdata = ncountmax;
+           *fPointer = new Short_t[fNdata];
+         }
          fValue = *fPointer;
       } else {
          fValue = (Short_t*)add;
