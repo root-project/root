@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.40 2002/11/15 22:20:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.41 2002/12/02 18:50:01 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -23,7 +23,6 @@
 #include "TFile.h"
 #include "TBuffer.h"
 #include "TExMap.h"
-#include "TObjPtr.h"
 #include "TClass.h"
 #include "TStorage.h"
 #include "TMath.h"

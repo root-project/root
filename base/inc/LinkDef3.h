@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.7 2002/09/16 10:57:57 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.8 2002/12/04 12:13:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -164,6 +164,7 @@
 #pragma link C++ typedef TObjNumUL;
 #pragma link C++ typedef TObjNumF;
 #pragma link C++ typedef TObjNumD;
+#pragma link C++ typedef TObjPtr;
 
 #pragma link C++ class TObjNum<Char_t>+;
 #pragma link C++ class TObjNum<UChar_t>+;
@@ -175,5 +176,6 @@
 #pragma link C++ class TObjNum<ULong_t>+;
 #pragma link C++ class TObjNum<Float_t>+;
 #pragma link C++ class TObjNum<Double_t>+;
+#pragma link C++ class TObjNum<void*>+;
 
 #endif

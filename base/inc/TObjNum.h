@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TObjNum.h,v 1.1 2002/12/04 12:13:32 rdm Exp $
 // Author: Fons Rademakers   02/12/02
 
 /*************************************************************************
@@ -60,15 +60,16 @@ public:
    ClassDef(TObjNum,1)  //Basic type wrapped in a TObject
 };
 
-typedef TObjNum<Char_t>   TObjNumC;
-typedef TObjNum<UChar_t>  TObjNumUC;
-typedef TObjNum<Short_t>  TObjNumS;
-typedef TObjNum<UShort_t> TObjNumUS;
-typedef TObjNum<Int_t>    TObjNumI;
-typedef TObjNum<UInt_t>   TObjNumUI;
-typedef TObjNum<Long_t>   TObjNumL;
-typedef TObjNum<ULong_t>  TObjNumUL;
-typedef TObjNum<Float_t>  TObjNumF;
-typedef TObjNum<Double_t> TObjNumD;
+typedef TObjNum<Char_t>      TObjNumC;
+typedef TObjNum<UChar_t>     TObjNumUC;
+typedef TObjNum<Short_t>     TObjNumS;
+typedef TObjNum<UShort_t>    TObjNumUS;
+typedef TObjNum<Int_t>       TObjNumI;
+typedef TObjNum<UInt_t>      TObjNumUI;
+typedef TObjNum<Long_t>      TObjNumL;
+typedef TObjNum<ULong_t>     TObjNumUL;
+typedef TObjNum<Float_t>     TObjNumF;
+typedef TObjNum<Double_t>    TObjNumD;
+typedef TObjNum<void*>       TObjPtr;
 
 #endif
