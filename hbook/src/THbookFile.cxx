@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.5 2002/02/20 16:57:31 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.6 2002/02/20 17:05:16 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -514,7 +514,11 @@ void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
       }
       Int_t last = 0;
       if (var == 1 && i == ncodes) last = 1;
+#ifndef WIN32
       hntvar3(id,last,PASSCHAR(leaf->GetName()),strlen(leaf->GetName()));
+#else
+      hntvar3(id,last,PASSCHAR(leaf->GetName()));
+#endif
    }
 }
 
