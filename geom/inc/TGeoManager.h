@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.13 2002/12/11 17:10:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.14 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -15,31 +15,19 @@
 #ifndef ROOT_TObjArray
 #include "TObjArray.h"
 #endif
-
-#ifndef ROOT_TGeoNode
-#include "TGeoNode.h"
-#endif
-
-#ifndef ROOT_TGeoVolume
-#include "TGeoVolume.h"
-#endif
-
-#ifndef ROOT_TGeoCache
+#ifndef ROOT_TGeoNodeCache
 #include "TGeoCache.h"
 #endif
 
-#ifndef ROOT_TVirtualGeoPainter
-#include "TVirtualGeoPainter.h"
-#endif
-
-
-
 // forward declarations
+class TGeoNode;
+class TGeoNode;
+class TGeoVolume;
+class TGeoVolumeMulti;
 class TGeoMatrix;
 class TGeoHMatrix;
 class TGeoMaterial;
 class TGeoMedium;
-class TGeoNodeCache;
 class TGeoShape;
 class TVirtualGeoPainter;
 
@@ -159,7 +147,7 @@ public:
    void                   CheckGeometry(Option_t *option="");
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
-   void                   DrawPath(const char *path) {GetGeomPainter()->DrawPath(path);} // *MENU*
+   void                   DrawPath(const char *path);
    void                   RandomPoints(const TGeoVolume *vol, Int_t npoints=10000, Option_t *option="");
    void                   RandomRays(Int_t nrays=1000, Double_t startx=0, Double_t starty=0, Double_t startz=0);
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
@@ -169,7 +157,7 @@ public:
 
    //--- geometry building
    void                   BuildDefaultMaterials();
-   void                   CloseGeometry();
+   void                   CloseGeometry(Option_t *option="");
    Bool_t                 IsClosed() const {return ((fCache==0)?kFALSE:kTRUE);}
    TGeoVolume            *MakeArb8(const char *name, const TGeoMedium *medium,
                                      Double_t dz, Double_t *vertices=0);
@@ -220,7 +208,6 @@ public:
    void                   SetTopVolume(TGeoVolume *vol);
    
    //--- geometry queries
-   void                   AddCheckedNode(const TGeoNode *node, Int_t level) {fNodes->AddAt((TGeoNode*)node,level);}
    TGeoNode              *FindNextBoundary(const char *path="");
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE) {fSearchOverlaps=fIsOutside=kFALSE; fStartSafe=safe_start; return SearchNode();}
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
@@ -264,6 +251,7 @@ public:
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    
    //--- list getters
+   TObjArray             *GetListOfNodes()              {return fNodes;}
    TList                 *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}
    TList                 *GetListOfMedia() const        {return fMedia;}

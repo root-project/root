@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.25 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.26 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -405,6 +405,7 @@
 #include "Riostream.h"
 
 #include "TROOT.h"
+#include "TGeoManager.h"
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
@@ -415,6 +416,7 @@
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
 #include "TGeoMatrix.h"
+#include "TGeoNode.h"
 #include "TGeoManager.h"
 #include "TGeoPara.h"
 #include "TGeoTube.h"
@@ -428,7 +430,6 @@
 #include "TGeoCompositeShape.h"
 #include "TVirtualGeoPainter.h"
 
-#include "TGeoManager.h"
 
 // statics and globals
 
@@ -562,6 +563,7 @@ TGeoManager::~TGeoManager()
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
+
 //-----------------------------------------------------------------------------
 Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
 {
@@ -678,7 +680,7 @@ void TGeoManager::ClearAttributes()
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoManager::CloseGeometry()
+void TGeoManager::CloseGeometry(Option_t *)
 {
 // Closing geometry implies checking the geometry validity, fixing shapes
 // with negative parameters (run-time shapes)building the cache manager,
@@ -848,6 +850,12 @@ void TGeoManager::DrawCurrentPoint(Int_t color)
 {
 // Draw current point in the same view.
    if (fPainter) fPainter->DrawCurrentPoint(color);
+}
+//-----------------------------------------------------------------------------
+void TGeoManager::DrawPath(const char *path)
+{
+// Draw current path
+   GetGeomPainter()->DrawPath(path);
 }
 //-----------------------------------------------------------------------------
 void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)

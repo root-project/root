@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.14 2002/12/11 17:10:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.15 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -34,18 +34,17 @@
 #include "TObjArray.h"
 #endif
 
-#ifndef ROOT_TGeoShape
-#include "TGeoShape.h"
-#endif
-
 #ifndef ROOT_TGeoMedium
 #include "TGeoMedium.h"
+#endif
+
+#ifndef ROOT_TGeoShape
+#include "TGeoShape.h"
 #endif
 
 // forward declarations
 class TH2F;
 class TGeoNode;
-class TGeoShape;
 class TGeoMaterial;
 class TGeoMatrix;
 class TGeoVoxelFinder;

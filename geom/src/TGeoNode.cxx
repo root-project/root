@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.12 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.13 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -200,7 +200,7 @@ Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
    TGeoNode *daughter;
    while ((daughter=(TGeoNode*)next())) {
       if (daughter==node) {
-         gGeoManager->AddCheckedNode(node, level+1);
+         gGeoManager->GetListOfNodes()->AddAt(daughter,level+1);
          return (level+1);
       }
    }
@@ -209,7 +209,7 @@ Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
    while ((daughter=(TGeoNode*)next())) {
       new_level = daughter->FindNode(node, level+1);
       if (new_level>=0) {
-         gGeoManager->AddCheckedNode(daughter, level+1);
+         gGeoManager->GetListOfNodes()->AddAt(daughter, level+1);
          return new_level;
       }
    }

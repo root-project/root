@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.4 2002/10/09 14:03:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.5 2003/01/06 17:05:43 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -74,7 +74,7 @@ public:
    static  Double_t         ScreenFactor(Double_t z);
 
 
-  ClassDef(TGeoMaterial, 1)              // base material class
+  ClassDef(TGeoMaterial, 2)              // base material class
 
 //***** Need to add classes and globals to LinkDef.h *****
 };

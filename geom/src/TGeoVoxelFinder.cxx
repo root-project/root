@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.11 2002/12/03 16:01:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVoxelFinder.cxx,v 1.12 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   04/02/02
 
 /*************************************************************************
@@ -147,7 +147,7 @@ void TGeoVoxelFinder::BuildVoxelLimits()
 // build the array of bounding boxes of the nodes inside
    Int_t nd = fVolume->GetNdaughters();
    if (!nd) return;
-//   printf("building boxes for %s  nd=%i\n", fVolume->GetName(), nd);
+   //printf("building boxes for %s  nd=%i\n", fVolume->GetName(), nd);
    Int_t id;
    TGeoNode *node;
    if (fBoxes) delete fBoxes;
@@ -1525,7 +1525,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
    }
    Int_t *index = new Int_t[2*nd]; // indexes for sorted boundaries on one axis
    Int_t *ind = new Int_t[nmaxslices*nperslice]; // ind[fOBx[i]] = ndghts in slice fInd[i]--fInd[i+1]
-   Int_t *extra = new Int_t[nmaxslices*2*(nd+1)]; 
+   Int_t *extra = new Int_t[nmaxslices*4]; 
    // extra[fOEx[i]]   = nextra_to_left (i/i-1)
    // extra[fOEx[i]+1] = nextra_to_right (i/i+1)
    // Int_t *extra_to_left  = extra[fOEx[i]+2]
@@ -1910,7 +1910,7 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       delete this;
    } else {
 //      Efficiency();
-   }   
+   } 
 }
 
 
