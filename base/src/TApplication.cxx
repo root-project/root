@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.2 2000/06/12 15:44:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.3 2000/08/20 14:42:43 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -475,6 +475,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync)
    if (!nch) return;
 
    if (!strncmp(line, ".exit", 4) || !strncmp(line, ".quit", 2)) {
+      gInterpreter->ResetGlobals();
       Terminate(0);
       return;
    }
