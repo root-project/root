@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.37 2002/04/13 14:00:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.38 2002/05/18 08:21:59 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -873,11 +873,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 //     f2->GetQuantiles(nprob,gr->GetY());
 //     gr->Draw("alp");
 
-  if (nprobSum < 2) {
-     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
-     return 0;
-  }
-  const Int_t npx     = TMath::Min(50,2*nprobSum);
+  const Int_t npx     = TMath::Min(250,TMath::Max(50,2*nprobSum));
   const Double_t xMin = GetXmin();
   const Double_t xMax = GetXmax();
   const Double_t dx   = (xMax-xMin)/npx;
