@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.h,v 1.2 2000/10/13 19:00:46 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TGCanvas;
 class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
-
+class TGLContainer;
 
 class TRootGLViewer : public TGMainFrame, public TGLViewerImp {
 
