@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.53 2004/08/20 09:57:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.54 2004/08/20 10:00:33 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -376,22 +376,22 @@ inline Bool_t TMath::Odd(Long_t a)
 //---- Abs ---------------------------------------------------------------------
 
 inline Short_t TMath::Abs(Short_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 inline Int_t TMath::Abs(Int_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 inline Long_t TMath::Abs(Long_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 inline Long64_t TMath::Abs(Long64_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 inline Float_t TMath::Abs(Float_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 inline Double_t TMath::Abs(Double_t d)
-   { return (d > 0) ? d : -d; }
+   { return (d >= 0) ? d : -d; }
 
 //---- Sign --------------------------------------------------------------------
 
