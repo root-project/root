@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.23 2003/12/27 16:13:48 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.24 2004/01/06 08:33:43 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -107,6 +107,7 @@ Event::Event()
       }
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
+   for (i0 = 0; i0 <20; i0++) fType[i0] = 0;
    fClosestDistance = 0;
    fEventName = 0;
    fWebHistogram.SetAction(this);
