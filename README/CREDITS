@@ -197,6 +197,10 @@ N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
 
+N: Carsten Hof
+E: Carsten_Hof@web.de
+D: Implementation of classes TGraphEditor, TH1Editor and TH2Editor
+
 N: Ivana Hrivnacova
 E: Ivana.Hrivnacova@cern.ch
 D: VirtualMC design and implementation + corresponding web pages
