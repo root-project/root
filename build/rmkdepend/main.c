@@ -28,7 +28,7 @@ in this Software without prior written authorization from the X Consortium.
 */
 
 #include "def.h"
-#ifdef hpux
+#ifdef __hpux
 #define sigvec sigvector
 #endif /* hpux */
 
@@ -50,7 +50,7 @@ in this Software without prior written authorization from the X Consortium.
 #ifndef WIN32
 #include <unistd.h>
 #endif
-#ifdef hpux
+#ifdef __hpux
 #include <sys/stat.h>
 #else
 extern int fchmod();
