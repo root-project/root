@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.16 2002/02/26 22:04:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.17 2002/02/27 11:41:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -110,7 +110,7 @@ protected:
    TObject      *fPadPointer;      //! free pointer
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
-   
+
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  HideToolTip(Int_t event);
@@ -243,7 +243,7 @@ public:
    virtual Bool_t    IsRetained() const;
    virtual Bool_t    IsVertical() const {return !TestBit(kHori);}
    virtual void      ls(Option_t *option="") const;
-   void              Modified(Bool_t flag=1) { fModified = flag; }
+   void              Modified(Bool_t flag=1);  // *SIGNAL*
    virtual Bool_t    OpaqueMoving() const;
    virtual Bool_t    OpaqueResizing() const;
    Double_t          PadtoX(Double_t x) const;
@@ -348,6 +348,13 @@ public:
 
 
 //---- inlines -----------------------------------------------------------------
+
+//______________________________________________________________________________
+inline void TPad::Modified(Bool_t flag)
+{
+   if (!fModified && flag) Emit("Modified()");
+   fModified = flag;
+}
 
 //______________________________________________________________________________
 inline void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
