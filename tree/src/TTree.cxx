@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.207 2004/08/27 15:56:17 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.208 2004/09/04 11:03:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1644,7 +1644,8 @@ TTree *TTree::CloneTree(Long64_t nentries, Option_t *)
 //    with   Event 1000 1 1 1
 
   // we make a full copy of this tree
-   if (LoadTree(0)<0) return 0; //in case this is a TChain
+  // we still make a clone if the Tree has no entries
+   if (fEntries > 0 && LoadTree(0)<0) return 0; //in case this is a TChain
    TTree *thistree = GetTree();
 
    TTree *newtree = (TTree*)thistree->Clone();
