@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Byteswap.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,15 +34,15 @@
 /* The following is copied from <bits/byteswap.h> (only from RH6.0 and above) */
 
 /* Swap bytes in 16 bit value.  */
-#define __bswap_constant_16(x) \
+#define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
 #if defined __GNUC__ && __GNUC__ >= 2
-# define __bswap_16(x) \
+# define R__bswap_16(x) \
      (__extension__                                                           \
       ({ register unsigned short int __v;                                     \
          if (__builtin_constant_p (x))                                        \
-           __v = __bswap_constant_16 (x);                                     \
+           __v = R__bswap_constant_16 (x);                                     \
          else                                                                 \
            __asm__ __volatile__ ("rorw $8, %w0"                               \
                                  : "=r" (__v)                                 \
@@ -51,12 +51,12 @@
          __v; }))
 #else
 /* This is better than nothing.  */
-# define __bswap_16(x) __bswap_constant_16 (x)
+# define R__bswap_16(x) R__bswap_constant_16 (x)
 #endif
 
 
 /* Swap bytes in 32 bit value.  */
-#define __bswap_constant_32(x) \
+#define R__bswap_constant_32(x) \
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |               \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
@@ -64,11 +64,11 @@
 /* To swap the bytes in a word the i486 processors and up provide the
    `bswap' opcode.  On i386 we have to use three instructions.  */
 # if !defined __i486__ && !defined __pentium__ && !defined __pentiumpro__
-#  define __bswap_32(x) \
+#  define R__bswap_32(x) \
      (__extension__                                                           \
       ({ register unsigned int __v;                                           \
          if (__builtin_constant_p (x))                                        \
-           __v = __bswap_constant_32 (x);                                     \
+           __v = R__bswap_constant_32 (x);                                     \
          else                                                                 \
            __asm__ __volatile__ ("rorw $8, %w0;"                              \
                                  "rorl $16, %0;"                              \
@@ -78,11 +78,11 @@
                                  : "cc");                                     \
          __v; }))
 # else
-#  define __bswap_32(x) \
+#  define R__bswap_32(x) \
      (__extension__                                                           \
       ({ register unsigned int __v;                                           \
          if (__builtin_constant_p (x))                                        \
-           __v = __bswap_constant_32 (x);                                     \
+           __v = R__bswap_constant_32 (x);                                     \
          else                                                                 \
            __asm__ __volatile__ ("bswap %0"                                   \
                                  : "=r" (__v)                                 \
@@ -90,19 +90,19 @@
          __v; }))
 # endif
 #else
-# define __bswap_32(x) __bswap_constant_32 (x)
+# define R__bswap_32(x) R__bswap_constant_32 (x)
 #endif
 
 
 #if defined __GNUC__ && __GNUC__ >= 2
 /* Swap bytes in 64 bit value.  */
-# define __bswap_64(x) \
+# define R__bswap_64(x) \
      (__extension__                                                           \
       ({ union { __extension__ unsigned long long int __ll;                   \
                  unsigned long int __l[2]; } __w, __r;                        \
          __w.__ll = (x);                                                      \
-         __r.__l[0] = __bswap_32 (__w.__l[1]);                                \
-         __r.__l[1] = __bswap_32 (__w.__l[0]);                                \
+         __r.__l[0] = R__bswap_32 (__w.__l[1]);                                \
+         __r.__l[1] = R__bswap_32 (__w.__l[0]);                                \
          __r.__ll; }))
 #endif /* bits/byteswap.h */
 
@@ -111,14 +111,14 @@
    of the possible optimizations are not possible.  */
 
 /* Return a value with all bytes in the 16 bit argument swapped.  */
-#define bswap_16(x) __bswap_16 (x)
+#define Rbswap_16(x) R__bswap_16 (x)
 
 /* Return a value with all bytes in the 32 bit argument swapped.  */
-#define bswap_32(x) __bswap_32 (x)
+#define Rbswap_32(x) R__bswap_32 (x)
 
 #if defined __GNUC__ && __GNUC__ >= 2
 /* Return a value with all bytes in the 64 bit argument swapped.  */
-# define bswap_64(x) __bswap_64 (x)
+# define Rbswap_64(x) R__bswap_64 (x)
 #endif
 
 #endif /* Byteswap.h */

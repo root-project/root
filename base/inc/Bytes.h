@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -55,7 +55,7 @@ inline void tobuf(char *&buf, UShort_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *((UShort_t *)buf) = bswap_16(x);
+   *((UShort_t *)buf) = Rbswap_16(x);
 # else
    char *sw = (char *)&x;
    buf[0] = sw[1];
@@ -71,7 +71,7 @@ inline void tobuf(char *&buf, UInt_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *((UInt_t *)buf) = bswap_32(x);
+   *((UInt_t *)buf) = Rbswap_32(x);
 # else
    char *sw = (char *)&x;
    buf[0] = sw[3];
@@ -90,7 +90,7 @@ inline void tobuf(char *&buf, ULong_t x)
 #ifdef R__BYTESWAP
 #ifdef R__B64
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((ULong_t *)buf) = bswap_64(x);
+   *((ULong_t *)buf) = Rbswap_64(x);
 # else
    char *sw = (char *)&x;
    buf[0] = sw[7];
@@ -104,7 +104,7 @@ inline void tobuf(char *&buf, ULong_t x)
 # endif
 #else
 # if defined(__linux) && defined(__i386__)
-   *((ULong_t *)buf) = bswap_32(x);
+   *((ULong_t *)buf) = Rbswap_32(x);
 # else
    char *sw = (char *)&x;
    buf[0] = sw[3];
@@ -123,7 +123,7 @@ inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *((UInt_t *)buf) = bswap_32(*((UInt_t *)&x));
+   *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
 # else
    char *sw = (char *)&x;
    buf[0] = sw[3];
@@ -141,7 +141,7 @@ inline void tobuf(char *&buf, Double_t x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((unsigned long long *)buf) = bswap_64(*((unsigned long long *)&x));
+   *((unsigned long long *)buf) = Rbswap_64(*((unsigned long long *)&x));
 # else
    char *sw = (char *)&x;
    buf[0] = sw[7];
@@ -168,7 +168,7 @@ inline void frombuf(char *&buf, UShort_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *x = bswap_16(*((UShort_t *)buf));
+   *x = Rbswap_16(*((UShort_t *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[1];
@@ -184,7 +184,7 @@ inline void frombuf(char *&buf, UInt_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *x = bswap_32(*((UInt_t *)buf));
+   *x = Rbswap_32(*((UInt_t *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[3];
@@ -203,7 +203,7 @@ inline void frombuf(char *&buf, ULong_t *x)
 #ifdef R__BYTESWAP
 #ifdef R__B64
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *x = bswap_64(*((ULong_t *)buf));
+   *x = Rbswap_64(*((ULong_t *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[7];
@@ -217,7 +217,7 @@ inline void frombuf(char *&buf, ULong_t *x)
 # endif
 #else
 # if defined(__linux) && defined(__i386__)
-   *x = bswap_32(*((ULong_t *)buf));
+   *x = Rbswap_32(*((ULong_t *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[3];
@@ -236,7 +236,7 @@ inline void frombuf(char *&buf, Float_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__)
-   *((UInt_t*)x) = bswap_32(*((UInt_t *)buf));
+   *((UInt_t*)x) = Rbswap_32(*((UInt_t *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[3];
@@ -254,7 +254,7 @@ inline void frombuf(char *&buf, Double_t *x)
 {
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   *((unsigned long long*)x) = bswap_64(*((unsigned long long *)buf));
+   *((unsigned long long*)x) = Rbswap_64(*((unsigned long long *)buf));
 # else
    char *sw = (char *)x;
    sw[0] = buf[7];
@@ -288,7 +288,7 @@ inline void frombuf(char *&buf, Long_t *x)  { frombuf(buf, (ULong_t *) x); }
 inline UShort_t host2net(UShort_t x)
 {
 # if defined(__linux) && defined(__i386__)
-   return bswap_16(x);
+   return Rbswap_16(x);
 # else
    return (((x & 0x00ff) << 8) | ((x & 0xff00) >> 8));
 #endif
@@ -297,7 +297,7 @@ inline UShort_t host2net(UShort_t x)
 inline UInt_t host2net(UInt_t x)
 {
 # if defined(__linux) && defined(__i386__)
-   return bswap_32(x);
+   return Rbswap_32(x);
 # else
    return (((x & 0x000000ffU) << 24) | ((x & 0x0000ff00U) <<  8) |
            ((x & 0x00ff0000U) >>  8) | ((x & 0xff000000U) >> 24));
@@ -308,7 +308,7 @@ inline ULong_t host2net(ULong_t x)
 {
 #ifdef R__B64
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   return bswap_64(x);
+   return Rbswap_64(x);
 # else
    char sw[sizeof(ULong_t)];
    *(ULong_t *)sw = x;
@@ -332,7 +332,7 @@ inline ULong_t host2net(ULong_t x)
 inline Float_t host2net(Float_t xx)
 {
 # if defined(__linux) && defined(__i386__)
-   return bswap_32(*((UInt_t *)&xx));
+   return Rbswap_32(*((UInt_t *)&xx));
 # else
    UInt_t *x = (UInt_t *)&xx;
    *x = (((*x & 0x000000ffU) << 24) | ((*x & 0x0000ff00U) <<  8) |
@@ -344,7 +344,7 @@ inline Float_t host2net(Float_t xx)
 inline Double_t host2net(Double_t x)
 {
 # if defined(__linux) && defined(__i386__) && defined __GNUC__ && __GNUC__ >= 2
-   return bswap_64(*((unsigned long long *)&x));
+   return Rbswap_64(*((unsigned long long *)&x));
 # else
    char sw[sizeof(Double_t)];
    *(Double_t *)sw = x;
