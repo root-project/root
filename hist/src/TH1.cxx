@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.187 2004/06/22 15:36:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.188 2004/07/01 15:10:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -988,6 +988,117 @@ Int_t TH1::BufferFill(Axis_t x, Stat_t w)
    fBuffer[2*nbentries+2] = x;
    fBuffer[0] += 1;
    return -2;
+}
+
+//______________________________________________________________________________
+Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint) 
+{
+  //The Chi2 (Pearson's) test for differences between h and this histogram. 
+  //a small value of prob indicates a significant difference between the distributions
+  //
+  //if the data was collected in such a way that the number of entries
+  //in the first histogram is necessarily equal to the number of entries
+  //in the second, the parameter _constraint_ must be made 1. Default is 0.
+  //any additional constraints on the data lower the number of degrees of freedom
+  //(i.e. increase constraint to more positive values) in accordance with
+  //their number
+  //
+  ///options:
+  //"O" -overflows included
+  //"U" - underflows included
+  //
+  //"P" - print information about number of degrees of freedom and
+  //the value of chi2
+  //by default underflows and overflows are not included
+
+  //algorithm taken from "Numerical Recipes in C++"
+  // implementation by Anna Kreshuk
+  
+  Int_t df;
+  Double_t chsq = 0;
+  Double_t prob;
+  Double_t temp;
+  Double_t koef1,koef2;
+  Double_t nen1, nen2;
+  Double_t bin1, bin2;
+  Int_t i_start, i_end;
+
+  TString opt = option;
+  opt.ToUpper();
+
+  TAxis *axis1 = this->GetXaxis();
+  TAxis *axis2 = h->GetXaxis();
+
+  Int_t nbins1 = axis1->GetNbins();
+  Int_t nbins2 = axis2->GetNbins();
+
+  //check dimensions
+  if (this->GetDimension()!=1 || h->GetDimension()!=1){
+    Error("Chi2Test","for 1-d only");
+    return 0;
+  }
+
+  //check number of channels
+  if (nbins1 != nbins2){
+    Error("Chi2Test","different number of channels");
+    return 0;
+  }
+
+  //check binning
+  Double_t diffprec = 1e-5;
+  Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
+  Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
+  if ((diff1 > diffprec)||(diff2>diffprec)){
+    Error("Chi2Test","different binning");
+    return 0;
+  }
+
+  //see options
+
+  i_start = 1;
+  i_end = nbins1;
+  df=nbins1-constraint;
+
+  if(opt.Contains("O")) {
+    i_end = nbins1+1;
+    df++;
+  }
+  if(opt.Contains("U")) {
+    i_start = 0;
+    df++;
+  }
+
+   //the test
+  nen1 = this->GetEntries();
+  nen2 = h->GetEntries();
+  if (TMath::Abs(nen1-nen2) > diffprec){
+    koef1=TMath::Sqrt(nen2/nen1);
+    koef2 = TMath::Sqrt(nen1/nen2);
+  } else{
+    koef1 =1;
+    koef2 = 1;
+  }
+
+  for (Int_t i=i_start; i<=i_end; i++){
+    bin1 = this->GetBinContent(i);
+    bin2 = h->GetBinContent(i);
+    if (bin1 ==0 && bin2==0){
+      --df; //no data means one less degree of freedom
+    }    
+    else {
+      temp = koef1*bin1-koef2*bin2;
+      chsq+=temp*temp/(bin1+bin2);
+    }
+  }
+  
+  prob=TMath::Prob(0.5*chsq, Int_t(0.5*df));
+  
+  if (opt.Contains("P")){
+    Printf("the value of chi2 = %f\n", chsq);
+    Printf("the number of degrees of freedom = %d\n", df);
+  }
+
+  return prob;
 }
 
 //______________________________________________________________________________
