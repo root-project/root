@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.7 2003/07/17 07:36:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.8 2003/07/22 16:06:18 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -77,23 +77,31 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //  This member function is called when a TFrame object is clicked.
 //
 
-
    if (!gPad->IsEditable()) return;
 
    TWbox::ExecuteEvent(event, px, py);
 
    if (event != kButton1Up) return;
-// update pad margins
-   Double_t xmin = gPad->GetUxmin();
-   Double_t xmax = gPad->GetUxmax();
-   Double_t ymin = gPad->GetUymin();
-   Double_t ymax = gPad->GetUymax();
-   Double_t dx   = xmax-xmin;
-   Double_t dy   = ymax-ymin;
-   gPad->SetLeftMargin((fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
-   gPad->SetRightMargin((gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1()));
-   gPad->SetBottomMargin((fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
-   gPad->SetTopMargin((gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1()));
+   // update pad margins
+   Double_t xmin         = gPad->GetUxmin();
+   Double_t xmax         = gPad->GetUxmax();
+   Double_t ymin         = gPad->GetUymin();
+   Double_t ymax         = gPad->GetUymax();
+   Double_t dx           = xmax-xmin;
+   Double_t dy           = ymax-ymin;
+   Double_t LeftMargin   = (fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   Double_t TopMargin    = (gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1());
+   Double_t RightMargin  = (gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1());
+   Double_t BottomMargin = (fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   // margin may get very small negative values
+   if (LeftMargin   < 0) LeftMargin   = 0;
+   if (TopMargin    < 0) TopMargin    = 0;
+   if (RightMargin  < 0) RightMargin  = 0;
+   if (BottomMargin < 0) BottomMargin = 0;
+   gPad->SetLeftMargin(LeftMargin);
+   gPad->SetRightMargin(RightMargin);
+   gPad->SetBottomMargin(BottomMargin);
+   gPad->SetTopMargin(TopMargin);
    Double_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
    Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
 
