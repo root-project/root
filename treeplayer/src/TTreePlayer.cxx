@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.88 2002/01/29 17:33:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.89 2002/02/03 17:38:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2190,9 +2190,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//\n");
       fprintf(fpc,"//   To use this file, try the following session on your Tree T\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"// Root > T.Process(\"%s.C\")\n",classname);
-      fprintf(fpc,"// Root > T.Process(\"%s.C,\"some options\"\")\n",classname);
-      fprintf(fpc,"// Root > T.Process(\"%s.C+\")\n",classname);
+      fprintf(fpc,"// Root > T->Process(\"%s.C\")\n",classname);
+      fprintf(fpc,"// Root > T->Process(\"%s.C\",\"some options\")\n",classname);
+      fprintf(fpc,"// Root > T->Process(\"%s.C+\")\n",classname);
       fprintf(fpc,"//\n");
       fprintf(fpc,"#include \"%s\"\n",thead);
       fprintf(fpc,"#include \"%s\"\n","TH2.h");
