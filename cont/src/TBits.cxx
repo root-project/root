@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.5 2001/12/06 15:27:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.6 2001/12/06 15:53:46 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -95,9 +95,9 @@ void TBits::Compact()
 }
 
 //______________________________________________________________________________
-UInt_t TBits::CountBits() const
+UInt_t TBits::CountBits(UInt_t startBit) const
 {
-   // Return number of bits set to 1
+   // Return number of bits set to 1 starting at bit startBit
       
    const Int_t nbits[256] = {
              0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
@@ -117,15 +117,30 @@ UInt_t TBits::CountBits() const
              3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
              4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8};
 
-   UInt_t count = 0;
-   for(UInt_t i=0; i<fNbytes; i++) {
-       count += nbits[fAllBits[i]];
+   UInt_t i,count = 0;
+   if (startBit == 0) {
+      for(i=0; i<fNbytes; i++) {
+         count += nbits[fAllBits[i]];
+      }
+      return count;
+   }
+   if (startBit >= fNbits) return count;
+   UInt_t startByte = startBit/8;
+   UInt_t ibit = startBit%8;
+   if (ibit) {
+      for (i=ibit;i<8;i++) {
+         if (fAllBits[startByte] & (1<<ibit)) count++;
+      }
+      startByte++;
+   }
+   for(i=startByte; i<fNbytes; i++) {
+      count += nbits[fAllBits[i]];
    }
    return count;
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstNullBit() const
+UInt_t TBits::FirstNullBit(UInt_t startBit) const
 {
    // Return position of first null bit
    
@@ -147,14 +162,30 @@ UInt_t TBits::FirstNullBit() const
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,8};
       
-   for(UInt_t i=0; i<fNbytes; i++) {
+   UInt_t i;
+   if (startBit == 0) {
+      for(UInt_t i=0; i<fNbytes; i++) {
+         if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
+      }
+      return fNbits+1;
+   }
+   if (startBit > fNbits) return fNbits+1;
+   UInt_t startByte = startBit/8;
+   UInt_t ibit = startBit%8;
+   if (ibit) {
+      for (i=ibit;i<8;i++) {
+         if ((fAllBits[startByte] & (1<<ibit)) == 0) return 8*startByte+ibit;
+      }
+      startByte++;
+   }
+   for(i=startByte; i<fNbytes; i++) {
       if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
    }
    return fNbits+1;
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstSetBit() const
+UInt_t TBits::FirstSetBit(UInt_t startBit) const
 {
    // Return position of first non null bit
    
@@ -176,7 +207,23 @@ UInt_t TBits::FirstSetBit() const
              5,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0};
       
-   for(UInt_t i=0; i<fNbytes; i++) {
+   UInt_t i;
+   if (startBit == 0) {
+      for(UInt_t i=0; i<fNbytes; i++) {
+         if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
+      }
+      return fNbits+1;
+   }
+   if (startBit > fNbits) return fNbits+1;
+   UInt_t startByte = startBit/8;
+   UInt_t ibit = startBit%8;
+   if (ibit) {
+      for (i=ibit;i<8;i++) {
+         if ((fAllBits[startByte] & (1<<ibit)) != 0) return 8*startByte+ibit;
+      }
+      startByte++;
+   }
+   for(i=startByte; i<fNbytes; i++) {
       if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
    }
    return fNbits+1;
