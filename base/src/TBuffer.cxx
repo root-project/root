@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.13 2001/03/22 07:01:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.14 2001/04/13 08:19:26 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1291,7 +1291,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
             Error("ReadObject", "object tag too large, I/O buffer corrupted");
             // exception
          }
-      }
+      } 
 
       obj = (TObject *) fReadMap->GetValue(tag);
       if (obj && clReq && !obj->IsA()->InheritsFrom(clReq)) {
@@ -1316,7 +1316,13 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      obj->Streamer(*this);
+      if (clRef->GetClassInfo()) {
+         obj->Streamer(*this);
+      } else {
+         //fake class has no Streamer
+         Warning("ReadObject","%s::Streamer not available, using TClass::ReadBuffer instead",clRef->GetName());
+         clRef->ReadBuffer(*this,obj);
+      }
 
       CheckByteCount(startpos, tag, clRef);
    }
