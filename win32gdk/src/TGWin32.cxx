@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.75 2004/06/14 15:52:58 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.76 2004/06/14 18:52:15 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4403,20 +4403,20 @@ void TGWin32::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
 
-   HWND hwnd =  ::GetForegroundWindow();
+   HWND hwnd = ::GetForegroundWindow();
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    ::ShowWindow(window, SW_SHOWNORMAL);
    ::ShowWindow(window, SW_RESTORE);
    ::BringWindowToTop(window);
+   ::SetForegroundWindow(window);
+
    if (hwnd == gConsoleWindow) {
       RECT r1, r2, r3;
       ::GetWindowRect(gConsoleWindow, &r1);
       ::GetWindowRect(window, &r2);
-      if (::IntersectRect(&r3, &r2, &r1)) {
-          ::SetForegroundWindow(window);
+      if (!::IntersectRect(&r3, &r2, &r1)) {
+          ::SetForegroundWindow(gConsoleWindow);
       }
-   } else {
-      ::SetForegroundWindow(window);
    }
 }
 
