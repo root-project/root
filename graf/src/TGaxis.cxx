@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.62 2003/11/27 15:15:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.63 2003/12/12 17:57:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1689,7 +1689,7 @@ L160:
                   Double_t u = gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1());
                   Double_t v = gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1());
                   if (firstintlab) {
-                     textaxis->GetBoundingBox(wi, hi);
+                     textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.5); hi*=(UInt_t)(hi*1.5);
                      xi1 = gPad->XtoAbsPixel(u);
                      yi1 = gPad->YtoAbsPixel(v);
                      firstintlab = kFALSE;
@@ -1702,7 +1702,7 @@ L160:
                      } else {
                         xi1 = xi2;
                         yi1 = yi2;
-                        textaxis->GetBoundingBox(wi, hi);
+                        textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.5); hi*=(UInt_t)(hi*1.5);
                         textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),CHTEMP);
                      }
                   }
