@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.5 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.6 2005/02/03 16:58:57 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -768,7 +768,7 @@ Double_t TGeoHype::SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoHype::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoHype::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

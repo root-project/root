@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.12 2005/02/03 11:40:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.13 2005/02/03 16:58:57 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -515,7 +515,7 @@ Int_t TGeoParaboloid::GetNmeshVertices() const
 }   
    
 //_____________________________________________________________________________
-void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoParaboloid::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

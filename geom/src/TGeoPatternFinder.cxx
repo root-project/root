@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.10 2004/02/10 08:56:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.11 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -128,7 +128,7 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternX::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternX::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -199,7 +199,7 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternY::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternY::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -274,7 +274,7 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternZ::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -349,7 +349,7 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternParaX::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternParaX::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -434,7 +434,7 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternParaY::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternParaY::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -523,7 +523,7 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternParaZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternParaZ::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -618,7 +618,7 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternTrapZ::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternTrapZ::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
@@ -686,7 +686,7 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternCylR::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternCylR::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -787,7 +787,7 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
 }
 
 //______________________________________________________________________________
-void TGeoPatternCylPhi::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternCylPhi::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -844,7 +844,7 @@ TGeoNode *TGeoPatternSphR::FindNode(Double_t * /*point*/)
 }
 
 //______________________________________________________________________________
-void TGeoPatternSphR::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternSphR::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
@@ -901,7 +901,7 @@ TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/)
 }
 
 //______________________________________________________________________________
-void TGeoPatternSphTheta::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternSphTheta::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
@@ -955,7 +955,7 @@ TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * /*point*/)
 }
 
 //______________________________________________________________________________
-void TGeoPatternSphPhi::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoPatternSphPhi::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;

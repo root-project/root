@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.5 2005/02/03 11:40:38 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.6 2005/02/03 16:58:57 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -170,7 +170,7 @@ Double_t TGeoHalfSpace::Safety(Double_t *point, Bool_t /*in*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoHalfSpace::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.35 2005/02/03 11:40:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.36 2005/02/09 13:30:27 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -692,7 +692,7 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
 }
 
 //_____________________________________________________________________________
-void TGeoTranslation::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoTranslation::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
@@ -936,7 +936,7 @@ void TGeoRotation::RotateZ(Double_t angle)
 }
 
 //_____________________________________________________________________________
-void TGeoRotation::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoRotation::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
@@ -2066,7 +2066,7 @@ void TGeoHMatrix::RotateZ(Double_t angle)
 }
 
 //_____________________________________________________________________________
-void TGeoHMatrix::SavePrimitive(ofstream &out, Option_t */*option*/)
+void TGeoHMatrix::SavePrimitive(ofstream &out, Option_t * /*option*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(kGeoSavePrimitive)) return;
