@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.149 2003/06/30 15:45:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.150 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1479,9 +1479,14 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 // option is reserved for future use
 // Note that only active branches are copied.
 //
-// IMPORTANT: Before invoking this function, the branch addresses
-//            of this TTree must have been set if one or more branches
-//            is not a basic type.
+// IMPORTANT: The cloned tree stays connected with this tree until this tree
+//            is deleted.  In particular, any changes in branch addresses
+//            in this tree are forwarded to the clone trees.  Any changes 
+//            made to the branch addresses of the cloned trees are over-ridden
+//            anytime this tree changes its branch addresses.
+//            Once this tree is deleted, all the addresses of the cloned tree
+//            are reset to their default values.
+//
 // For examples of CloneTree, see tutorials
 //  -copytree:
 //    Example of Root macro to copy a subset of a Tree to a new Tree
@@ -1630,9 +1635,14 @@ TTree *TTree::CopyTree(const char *selection, Option_t *option, Int_t nentries, 
 //*-*-*-*-*-*-*-*-*copy a Tree with selection*-*-*-*-*-*
 //*-*              ==========================
 //
-// IMPORTANT: Before invoking this function, the branch addresses
-//            of this TTree must have been set if one or more branches
-//            is not a basic type.
+// IMPORTANT: The copied tree stays connected with this tree until this tree
+//            is deleted.  In particular, any changes in branch addresses
+//            in this tree are forwarded to the clone trees.  Any changes 
+//            made to the branch addresses of the copied trees are over-ridden
+//            anytime this tree changes its branch addresses.
+//            Once this tree is deleted, all the addresses of the copied tree
+//            are reset to their default values.
+//
 // For examples of CloneTree, see tutorials
 //  -copytree:
 //    Example of Root macro to copy a subset of a Tree to a new Tree

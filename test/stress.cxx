@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.44 2003/06/17 16:45:25 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.45 2003/06/22 13:51:01 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -1258,16 +1258,11 @@ void stress13()
       chain->Add(filename);
    }
 
-   Event *event = 0;
-   chain->SetBranchAddress("event",&event);
-
    chain->Merge("Event.root");
 
    Double_t chentries = chain->GetEntries();
    delete chain;
 
-   event->ResetHistogramPointer(); // fH was deleted above!!
-   delete event;
    Event::Reset();
    gROOT->GetList()->Delete();
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.127 2003/06/27 11:02:34 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.128 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -314,7 +314,14 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    // nentries is the number of entries to process (default is all)
    // first is the first entry to process (default is 0)
    //
-   // Note that the branch addresses must be correctly set before calling this function
+   // IMPORTANT: The copied tree stays connected with this tree until this tree
+   //            is deleted.  In particular, any changes in branch addresses
+   //            in this tree are forwarded to the clone trees.  Any changes 
+   //            made to the branch addresses of the copied trees are over-ridden
+   //            anytime this tree changes its branch addresses.
+   //            Once this tree is deleted, all the addresses of the copied tree
+   //            are reset to their default values.
+   //
    // The following example illustrates how to copy some events from the Tree
    // generated in $ROOTSYS/test/Event
    //
@@ -328,7 +335,7 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    //   T2->Write();
 
 
-  // we make a copy of the tree header
+   // we make a copy of the tree header
    TTree *tree = fTree->CloneTree(0);
    if (tree == 0) return 0;
 

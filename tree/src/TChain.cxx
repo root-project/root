@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.69 2003/06/30 15:45:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.70 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -932,24 +932,16 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //     if (basketsize > 1000, the basket size for all branches of the
 //     new Tree will be set to basketsize.
 //
-// IMPORTANT Note 1: Before invoking this function, the branch addresses
-//            of the TTree must have been set.
 //  example using the file generated in $ROOTSYS/test/Event
 //  merge two copies of Event.root
 //
 //        gSystem.Load("libEvent");
-//        Event *event = new Event();
 //        TChain ch("T");
-//        ch.SetBranchAddress("event",&event);
 //        ch.Add("Event1.root");
 //        ch.Add("Event2.root");
 //        ch.Merge("all.root");
 //
-//  The SetBranchAddress statement is not necessary if the Tree
-//  contains only basic types (case of files converted from hbook)
-//  NOTE that the merged Tree contains only the active branches.
-//
-// IMPORTANT Note 2: AUTOMATIC FILE OVERFLOW
+// IMPORTANT Note 1: AUTOMATIC FILE OVERFLOW
 // -----------------------------------------
 // When merging many files, it may happen that the resulting file
 // reaches a size > TTree::fgMaxTreeSize (default = 1.9 GBytes). In this case
@@ -958,7 +950,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // will be named "merged_1.root", "merged_2.root", etc.
 // fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
 //
-// IMPORTANT Note 3: The input file is automatically closed and deleted.
+// IMPORTANT Note 2: The input file is automatically closed and deleted.
 // This is required because in general the automatic file overflow described
 // above may happen during the merge.
 //
@@ -971,7 +963,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
 // Clone Chain tree
    //file->cd();  //in case a user wants to write in a file/subdir
-   TTree *hnew = (TTree*)fTree->CloneTree(0);
+   TTree *hnew = CloneTree(0);
    hnew->SetAutoSave(2000000000);
 
 // May be reset branches compression level?
@@ -1000,34 +992,6 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    Int_t nentries = Int_t(GetEntriesFast());
    for (Int_t i=0;i<nentries;i++) {
       if (GetEntry(i) <= 0) break;
-      if (treeNumber != fTreeNumber) {
-         treeNumber = fTreeNumber;
-         TIter next(fTree->GetListOfBranches());
-         Bool_t failed = kFALSE;
-         while ((branch = (TBranch*)next())) {
-            TBranch *new_branch = hnew->GetBranch( branch->GetName() );
-            if (!new_branch) continue;
-            void *add = branch->GetAddress();
-            // in case branch addresses have not been set, give a last chance
-            // for simple Trees (h2root converted for example)
-            if (!add) {
-               TLeaf *leaf, *new_leaf;
-               TIter next_l(branch->GetListOfLeaves());
-               while ((leaf = (TLeaf*) next_l())) {
-                  add = leaf->GetValuePointer();
-                  if (add) {
-                     new_leaf = new_branch->GetLeaf(leaf->GetName());
-                     if(new_leaf) new_leaf->SetAddress(add);
-                  } else {
-                     failed = kTRUE;
-                  }
-               }
-            } else {
-               new_branch->SetAddress(add);
-            }
-            if (failed) Warning("Merge","Tree branch addresses not defined");
-         }
-      }
       hnew->Fill();
    }
 
