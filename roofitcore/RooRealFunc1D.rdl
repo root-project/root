@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFunc1D.rdl,v 1.4 2001/08/01 21:30:16 david Exp $
+ *    File: $Id: RooRealFunc1D.rdl,v 1.5 2001/08/02 21:39:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -17,7 +17,6 @@
 class RooAbsReal;
 class RooRealVar;
 class RooArgSet;
-class RooDataSet;
 class RooRealIntegral;
 
 class RooRealFunc1D : public RooAbsFunc1D {
@@ -31,7 +30,6 @@ protected:
   const RooAbsReal *_funcPtr;
   mutable RooRealVar *_xPtr;
   Double_t _scale;
-  RooArgSet *_nset;
   RooRealIntegral *_projected;
   ClassDef(RooRealFunc1D,0) // 1-dimensional function derived from an AbsReal object
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.5 2001/07/31 20:54:07 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.6 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.5 2001/07/31 20:54:07 david Exp $";
+"$Id: RooGenContext.cc,v 1.6 2001/08/01 21:30:15 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -177,7 +177,6 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
       return 0;
     }
   }
-  cout << "=== will generate " << nEvents << " events" << endl;
 
   // check that the dataset still defines the variables we need
   // (this is necessary since we never make a private clone for efficiency)

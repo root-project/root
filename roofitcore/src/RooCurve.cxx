@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.5 2001/06/30 01:33:12 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.6 2001/08/01 21:30:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.5 2001/06/30 01:33:12 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.6 2001/08/01 21:30:15 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -65,8 +65,6 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
   }
   setYAxisLabel(title.Data());
   // bind the function to the specified real var
-  cout << "normVars are ";
-  normVars->Print();
   RooRealFunc1D func= f(x,scaleFactor,normVars);
   // calculate the points to add to our curve
   addPoints(func,x.getPlotMin(),x.getPlotMax(),x.getPlotBins(),prec);

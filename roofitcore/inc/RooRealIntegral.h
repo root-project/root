@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.14 2001/07/31 20:54:07 david Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.15 2001/08/02 21:39:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,7 @@ public:
 
   // Constructors, assignment etc
   inline RooRealIntegral() : _numIntEngine(0) { }
-  RooRealIntegral(const char *name, const char *title, const RooAbsPdf& function, 
+  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, 
 		  RooArgSet& depList, Int_t maxSteps=20, Double_t eps=1e-6) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
@@ -40,8 +40,8 @@ public:
 
 protected:
 
-  enum OperMode { Hybrid, Analytic, Unity } ;
-  friend class RooAbsPdf ;
+  enum OperMode { Hybrid, Analytic, PassThrough } ;
+  //friend class RooAbsPdf ;
 
   void initNumIntegrator() ;
 

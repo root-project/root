@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.22 2001/08/01 01:24:08 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.23 2001/08/02 21:39:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,7 +12,7 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION --
-// RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsPdf objects
+// RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsReal objects
 // The class performs none of the actual integration, but only manages the logic
 // of what variables can be integrated analytically, accounts for eventual jacobian
 // terms and defines what numerical integrations needs to be done to complement the
@@ -36,10 +36,11 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsPdf& function, RooArgSet& depList,
+				 const RooAbsReal& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
   RooAbsReal(name,title), _mode(0),
-  _function("function","Function to be integrated",this,(RooAbsPdf&)function,kFALSE,kFALSE), 
+  _function("function","Function to be integrated",this,
+	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
   _sumList("sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
   _intList("intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
@@ -151,7 +152,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = ((RooAbsPdf&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
+  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Make list of numerical integration variables consisting of:            *  
@@ -237,7 +238,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     _operMode = Analytic ;    
   } else {
     // No integration performed
-    _operMode = Unity ;
+    _operMode = PassThrough ;
   }
 }
 
@@ -259,7 +260,7 @@ void RooRealIntegral::initNumIntegrator()
     break ;    
   case 1: 
     // 1-dimensional integration required
-    _numIntEngine = new RooIntegrator1D((RooAbsPdf&)_function.arg(),_mode,*((RooRealVar*)_intList.First())) ;
+    _numIntEngine = new RooIntegrator1D((RooAbsReal&)_function.arg(),_mode,*((RooRealVar*)_intList.First())) ;
     break ;
   default: 
     // multi-dimensional integration required (not supported currently)
@@ -323,13 +324,12 @@ Double_t RooRealIntegral::evaluate(const RooArgSet* nset) const
     }
   case Analytic:
     {
-      retVal =  ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
       break ;
     }
 
-  case Unity:
+  case PassThrough:
     {
-      //retVal =  1.0 ;
       retVal= _function;
       break ;
     }
@@ -407,7 +407,7 @@ Double_t RooRealIntegral::integrate() const
 
   // Trivial case, fully analytical integration
   if (!_numIntEngine) {
-    Double_t ret = ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+    Double_t ret = ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
     return ret ;
   }
 
@@ -442,11 +442,11 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
   if (opt==Verbose) {
     os << indent << "--- RooRealIntegral ---" << endl;
     os << indent << "  Integrates ";
-    _function.arg().printToStream(os,Standard);
+    _function.arg().printToStream(os,Standard,indent);
     TString deeper(indent);
     deeper.Append("  ");
     os << indent << "  operating mode is " 
-       << (_operMode==Hybrid?"Hybrid":(_operMode==Analytic?"Analytic":"Unity")) << endl ;
+       << (_operMode==Hybrid?"Hybrid":(_operMode==Analytic?"Analytic":"PassThrough")) << endl ;
     os << indent << "  Summed discrete args are ";
     _sumList.printToStream(os,Standard,deeper);
     os << indent << "  Numerically integrated args are ";
