@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.10 2004/04/15 10:13:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.11 2004/04/15 22:33:53 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -33,18 +33,13 @@
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
-#ifndef ROOT_TInetAddress
-#include "TInetAddress.h"
-#endif
-#ifndef ROOT_TDatime
-#include "TDatime.h"
-#endif
 
 // forward declaration
 class TBuffer;
 class TFile;
 class TDirectory;
-
+class TInetAddress;
+class TDatime;
 
 class TUUID {
 
