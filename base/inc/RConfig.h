@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.53 2003/04/06 21:30:12 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.54 2003/04/11 11:48:10 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -298,6 +298,9 @@
 #   else
 #      define R__TEMPLATE_OVERLOAD_BUG
 #      define R__GLOBALSTL       /* STL in global name space */
+#   endif
+#   ifndef _INCLUDE_LONGLONG
+#      define _INCLUDE_LONGLONG
 #   endif
 #endif
 
