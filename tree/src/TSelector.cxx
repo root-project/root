@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.6 2001/03/03 08:49:35 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.7 2002/01/18 14:24:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TSelector::TSelector() : TObject()
    fObject = 0;
    fInput  = 0;
    fOutput = new THashList;
-   fOutput->IsOwner();;
+   fOutput->IsOwner();
 }
 
 //______________________________________________________________________________
