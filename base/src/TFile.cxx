@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.41 2001/10/02 16:47:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.42 2001/12/02 15:15:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -62,6 +62,7 @@ TFile::TFile() : TDirectory()
    fSum2Buffer = 0;
    fClassIndex = 0;
    fCache      = 0;
+   fProcessIDs = 0;
 
    if (gDebug)
       cerr << "TFile default ctor" <<endl;
@@ -187,6 +188,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fSeekInfo   = 0;
    fNbytesInfo = 0;
    fCache      = 0;
+   fProcessIDs = 0;
 
    if (!fOption.CompareTo("NET", TString::kIgnoreCase))
       return;
