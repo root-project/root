@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.4 2000/06/13 09:52:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.5 2000/06/16 07:37:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -55,6 +55,7 @@ const Int_t kNMAX = 2000;
 static TH1 *hlist[10];
 const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
+const Int_t kCannotRotate = BIT(11);
 
 ClassImp(THistPainter)
 
@@ -235,8 +236,9 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad->IsEditable()) return;
 
 //*-*- come here if we have a lego/surface in the pad
-   if (gPad->GetView()) {
-      gPad->GetView()->ExecuteRotateView(event, px, py);
+   TView *view = gPad->GetView();
+   if (view && view->TestBit(kCannotRotate) == 0) {
+      view->ExecuteRotateView(event, px, py);
       return;
    }
 
@@ -1069,9 +1071,7 @@ void THistPainter::PaintContour()
       PaintSurface();
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
-      delete gPad->GetView();
-      gPad->SetView(0);
-
+      gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
       if (Hoption.Zscale) PaintPalette();
       return;
    }
