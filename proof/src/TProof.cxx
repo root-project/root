@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.72 2004/10/15 23:54:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.73 2004/11/24 07:41:32 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,9 @@
 #include "TPluginManager.h"
 #include "TCondor.h"
 #include "Riostream.h"
+#include "TProofServ.h"
+#include "TMap.h"
+#include "TTimer.h"
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -94,6 +97,30 @@ Bool_t TProofInputHandler::Notify()
 ClassImp(TSlaveInfo)
 
 //______________________________________________________________________________
+Int_t TSlaveInfo::Compare(const TObject *obj) const
+{
+   // Used to sort slaveinfos by ordinal.
+
+   const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
+
+   const Char_t *myord = GetOrdinal();
+   const Char_t *otherord = si->GetOrdinal();
+   while (myord && otherord) {
+      Int_t myval = atoi(myord);
+      Int_t otherval = atoi(otherord);
+      if (myval < otherval) return 1;
+      if (myval > otherval) return -1;
+      myord = strchr(myord, '.');
+      if (myord) myord++;
+      otherord = strchr(otherord, '.');
+      if (otherord) otherord++;
+   }
+   if (myord) return -1;
+   if (otherord) return 1;
+   return 0;
+}
+
+//______________________________________________________________________________
 void TSlaveInfo::Print(Option_t *opt) const
 {
    // Print slave info. If opt = "active" print only the active
@@ -115,6 +142,7 @@ void TSlaveInfo::Print(Option_t *opt) const
 
    cout << "Slave: "          << fOrdinal
         << "  hostname: "     << fHostName
+        << "  msd: "          << fMsd
         << "  perf index: "   << fPerfIndex
         << "  "               << stat
         << endl;
@@ -158,6 +186,25 @@ TProof::TProof(const char *masterurl, const char *conffile,
 }
 
 //______________________________________________________________________________
+TProof::TProof()
+{
+   // Protected constructor to be used by classes deriving from TProof
+   // (they have to call Init themselves and override StartSlaves
+   // appropriately).
+   //
+   // This constructor simply closes any previous gProof and sets gProof
+   // to this instance.
+
+   // Can have only one PROOF session open at a time (for the time being).
+   if (gProof) {
+      Warning("TProof", "closing currently open PROOF session");
+      gProof->Close();
+   }
+
+   gProof = this;
+}
+
+//______________________________________________________________________________
 TProof::~TProof()
 {
    // Clean up PROOF environment.
@@ -167,13 +214,13 @@ TProof::~TProof()
    SafeDelete(fSlaves);
    SafeDelete(fActiveSlaves);
    SafeDelete(fUniqueSlaves);
+   SafeDelete(fNonUniqueMasters);
    SafeDelete(fBadSlaves);
    SafeDelete(fAllMonitor);
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
-   SafeDelete(fCondor);
    SafeDelete(fSlaveInfo);
-   SafeDelete(fFeedback);
+   gROOT->GetListOfSockets()->Remove(this);
 
    if (gProof == this) {
       gProof = 0;
@@ -217,11 +264,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fIntHandler     = 0;
    fProgressDialog = 0;
    fStatus         = 0;
-   fParallel       = 0;
    fSlaveInfo      = 0;
    fFeedback       = 0;
    fPlayer         = 0;
-   fCondor         = 0;
    fSecContext     = 0;
    fUrlProtocol    = u->GetProtocol();
 
@@ -232,203 +277,195 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    gProofDebugMask  = TProofDebug::kAll;
 
    // sort slaves by descending performance index
-   fSlaves        = new TSortedList(kSortDescending);
-   fActiveSlaves  = new TList;
-   fUniqueSlaves  = new TList;
-   fBadSlaves     = new TList;
-   fAllMonitor    = new TMonitor;
-   fActiveMonitor = new TMonitor;
-   fUniqueMonitor = new TMonitor;
+   fSlaves           = new TSortedList(kSortDescending);
+   fActiveSlaves     = new TList;
+   fUniqueSlaves     = new TList;
+   fNonUniqueMasters = new TList;
+   fBadSlaves        = new TList;
+   fAllMonitor       = new TMonitor;
+   fActiveMonitor    = new TMonitor;
+   fUniqueMonitor    = new TMonitor;
+
+   if (!StartSlaves()) return 0;
+
+   // we are now properly initialized
+   fValid = kTRUE;
+
+   // De-activate monitor (will be activated in Collect)
+   fAllMonitor->DeActivateAll();
+
+   // By default go into parallel mode
+   GoParallel(9999);
+
+   // Send relevant initial state to slaves
+   SendInitialState();
+
+   SetActive(kFALSE);
+
+   if (IsValid())
+      gROOT->GetListOfSockets()->Add(this);
+
+   return fActiveSlaves->GetSize();
+}
+
+//______________________________________________________________________________
+Bool_t TProof::StartSlaves()
+{
+   // Start up PROOF slaves.
 
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (IsMaster()) {
 
       TString fconf;
-      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile);
-      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
+      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
+      PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         fconf.Form("%s/proof/etc/%s", confdir, conffile);
-         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
+         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
+         PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
-            Error("Init", "no PROOF config file found");
-            return 0;
+            Error("StartSlaves", "no PROOF config file found");
+            return kFALSE;
          }
       }
 
-      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf.Data());
+      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
 
-      Bool_t staticSlaves = gEnv->GetValue("Proofd.StaticSlaves", kTRUE);
-      PDB(kGlobal,1) Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
+      FILE *pconf;
+      if ((pconf = fopen(fconf, "r"))) {
 
-      if (staticSlaves) {
-         FILE *pconf;
-         if ((pconf = fopen(fconf, "r"))) {
+         fConfFile = fconf;
 
-            fConfFile = fconf;
+         // read the config file
+         char line[1024];
+         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+         int  ord = 0;
 
-            // read the config file
-            char line[1024];
-            TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-            int  ord = 0;
+         // check for valid master line
+         while (fgets(line, sizeof(line), pconf)) {
+            char word[12][128];
+            if (line[0] == '#') continue;   // skip comment lines
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+                word[2], word[3], word[4], word[5], word[6],
+                word[7], word[8], word[9], word[10], word[11]);
 
-            // check for valid master line
-            while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
-               if (line[0] == '#') continue;   // skip comment lines
-               int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
-                   word[2], word[3], word[4], word[5], word[6],
-                   word[7], word[8], word[9], word[10], word[11]);
-
-               // see if master may run on this node, accept both old "node"
-               // and new "master" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
-                   !fImage.Length()) {
-                  TInetAddress a = gSystem->GetHostByName(word[1]);
-                  if (!host.CompareTo(a.GetHostName()) ||
-                      !strcmp(word[1], "localhost")) {
-                     char *image = word[1];
-                     if (nword > 2 && !strncmp(word[2], "image=", 6))
-                        image = word[2]+6;
-                     fImage = image;
-                  }
-               }
-            }
-
-            if (fImage.Length() == 0) {
-               fclose(pconf);
-               Error("Init", "no appropriate master line found in %s", fconf.Data());
-               return 0;
-            }
-
-            // check for valid slave lines and start slaves
-            rewind(pconf);
-            while (fgets(line, sizeof(line), pconf)) {
-               char word[12][128];
-               if (line[0] == '#') continue;   // skip comment lines
-               int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
-                   word[2], word[3], word[4], word[5], word[6],
-                   word[7], word[8], word[9], word[10], word[11]);
-
-               // find all slave servers, accept both "slave" and "worker" lines
-               if (nword >= 2 &&
-                   (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
-                  int perfidx  = 100;
-                  int sport    = fPort;
-
+            // see if master may run on this node, accept both old "node"
+            // and new "master" lines
+            if (nword >= 2 &&
+                (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
+                !fImage.Length()) {
+               TInetAddress a = gSystem->GetHostByName(word[1]);
+               if (!host.CompareTo(a.GetHostName()) ||
+                   !strcmp(word[1], "localhost")) {
                   const char *image = word[1];
+                  const char *workdir = kPROOF_WorkDir;
                   for (int i = 2; i < nword; i++) {
 
-                     if (!strncmp(word[i], "perf=", 5))
-                        perfidx = atoi(word[i]+5);
                      if (!strncmp(word[i], "image=", 6))
                         image = word[i]+6;
-                     if (!strncmp(word[i], "port=", 5))
-                        sport = atoi(word[i]+5);
+                     if (!strncmp(word[i], "workdir=", 8))
+                        workdir = word[i]+8;
 
                   }
-
-                  // Get slave FQDN ...
-                  TString SlaveFqdn;
-                  TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
-                  if (SlaveAddr.IsValid()) {
-                     SlaveFqdn = SlaveAddr.GetHostName();
-                     if (SlaveFqdn == "UnNamedHost")
-                     SlaveFqdn = SlaveAddr.GetHostAddress();
+                  const char* expworkdir = gSystem->ExpandPathName(workdir);
+                  if (!strcmp(expworkdir,gProofServ->GetWorkDir())) {
+                     fImage = image;
                   }
-
-                  // create slave server
-                  TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
-                                             image, this);
-
-                  fSlaves->Add(slave);
-                  if (slave->IsValid()) {
-                     fAllMonitor->Add(slave->GetSocket());
-                     slave->SetInputHandler(new TProofInputHandler(this,
-                                            slave->GetSocket()));
-                  } else {
-                     fBadSlaves->Add(slave);
-                  }
-                  PDB(kGlobal,3)
-                     Info("Init","slave on host %s created and added to list", word[1]);
+                  delete [] expworkdir;
                }
             }
          }
-         fclose(pconf);
 
-      } else {
-         // non static config
-
-         fCondor = new TCondor;
-
-         fImage = fCondor->GetImage(gSystem->HostName());
          if (fImage.Length() == 0) {
-            Error("Init", "no appropriate master line found in %s for system %s",
-                  fconf.Data(), gSystem->HostName());
-            return 0;
+            fclose(pconf);
+            Error("StartSlaves", "no appropriate master line found in %s", fconf.Data());
+            return kFALSE;
          }
 
-         TList *claims = fCondor->Claim(9999, "dummy");
+         // check for valid slave lines and start slaves
+         rewind(pconf);
+         while (fgets(line, sizeof(line), pconf)) {
+            char word[12][128];
+            if (line[0] == '#') continue;   // skip comment lines
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+                word[2], word[3], word[4], word[5], word[6],
+                word[7], word[8], word[9], word[10], word[11]);
 
-         TIter next(claims);
-         TCondorSlave *c;
-         Int_t ord = 0;
-         while((c = (TCondorSlave*) next()) != 0) {
+            // find all slave servers, accept both "slave" and "worker" lines
+            if (nword >= 2 &&
+                (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
+               int perfidx  = 100;
+               int sport    = fPort;
 
-            // Get slave FQDN ...
-            TString SlaveFqdn;
-            TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)c->fHostname);
-            if (SlaveAddr.IsValid()) {
-               SlaveFqdn = SlaveAddr.GetHostName();
-               if (SlaveFqdn == "UnNamedHost")
-               SlaveFqdn = SlaveAddr.GetHostAddress();
-            }
+               const char *image = word[1];
+               const char *workdir = 0;
+               for (int i = 2; i < nword; i++) {
 
-            TSlave *slave = new TSlave(c->fHostname, c->fPort, ord++,
-                                       c->fPerfIdx, c->fImage, this);
+                  if (!strncmp(word[i], "perf=", 5))
+                     perfidx = atoi(word[i]+5);
+                  if (!strncmp(word[i], "image=", 6))
+                     image = word[i]+6;
+                  if (!strncmp(word[i], "port=", 5))
+                     sport = atoi(word[i]+5);
+                  if (!strncmp(word[i], "workdir=", 8))
+                     workdir = word[i]+8;
 
-            fSlaves->Add(slave);
-            if (slave->IsValid()) {
-               fAllMonitor->Add(slave->GetSocket());
-               slave->SetInputHandler(new TProofInputHandler(this,
-                                      slave->GetSocket()));
-            } else {
-               fBadSlaves->Add(slave);
+               }
+
+               // Get slave FQDN ...
+               TString SlaveFqdn;
+               TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
+               if (SlaveAddr.IsValid()) {
+                  SlaveFqdn = SlaveAddr.GetHostName();
+                  if (SlaveFqdn == "UnNamedHost")
+                  SlaveFqdn = SlaveAddr.GetHostAddress();
+               }
+
+               // create slave server
+               TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+               ord++;
+               TSlave *slave = CreateSlave(word[1], sport, fullord, perfidx, image, workdir);
+
+               fSlaves->Add(slave);
+               if (slave->IsValid()) {
+                  fAllMonitor->Add(slave->GetSocket());
+               } else {
+                  fBadSlaves->Add(slave);
+               }
+               PDB(kGlobal,3)
+                  Info("StartSlaves","slave on host %s created and added to list", word[1]);
             }
          }
       }
-
+      fclose(pconf);
    } else {
 
       // create master server
-      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", this);
+      TSlave *slave = CreateSubmaster(fMaster, fPort, "0", "master", fConfFile, 0);
 
       if (slave->IsValid()) {
          // check protocol compatability
          // protocol 1 is not supported anymore
          if (fProtocol == 1) {
-            Error("Init", "client and remote protocols not compatible (%d and %d)",
+            Error("StartSlaves", "client and remote protocols not compatible (%d and %d)",
                   fProtocol, kPROOF_Protocol);
             delete slave;
-            return 0;
+            return kFALSE;
          }
 
          fSlaves->Add(slave);
          fAllMonitor->Add(slave->GetSocket());
          Collect(slave);
-         if (fStatus == -99) {
-            Error("Init", "not allowed to connect to PROOF master server");
+         if (slave->GetStatus() == -99) {
+            Error("StartSlaves", "not allowed to connect to PROOF master server");
             return 0;
          }
 
          if (!slave->IsValid()) {
             delete slave;
-            Error("Init", "failed to setup connection with PROOF master server");
-            return 0;
+            Error("StartSlaves", "failed to setup connection with PROOF master server");
+            return kFALSE;
          }
-
-         slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
 
          fIntHandler = new TProofInterruptHandler(this);
          fIntHandler->Add();
@@ -441,29 +478,12 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
       } else {
          delete slave;
-         Error("Init", "failed to connect to a PROOF master server");
-         return 0;
+         Error("StartSlaves", "failed to connect to a PROOF master server");
+         return kFALSE;
       }
    }
 
-   // we are now properly initialized
-   fValid = kTRUE;
-
-   // de-activate monitor (will be activated in Collect)
-   fAllMonitor->DeActivateAll();
-
-   // by default go into parallel mode
-   GoParallel(9999);
-
-   // send relevant initial state to slaves
-   SendInitialState();
-
-   SetActive(kFALSE);
-
-   if (IsValid())
-      gROOT->GetListOfSockets()->Add(this);
-
-   return fActiveSlaves->GetSize();
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -483,9 +503,50 @@ void TProof::Close(Option_t *)
 
       fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
+      fNonUniqueMasters->Clear("nodelete");
       fBadSlaves->Clear("nodelete");
       fSlaves->Delete();
    }
+}
+
+//______________________________________________________________________________
+TSlave *TProof::CreateSlave(const char *host, Int_t port, const char *ord,
+                            Int_t perf, const char *image, const char *workdir)
+{
+   // Create a new TSlave of type TSlave::kSlave.
+   // Note: constructor of TSlave is private with TProof as a friend.
+   // Derived classes must use this function to create slaves.
+
+   TSlave* sl = new TSlave(host, port, ord, perf, image,
+                           this, TSlave::kSlave, workdir, 0, 0);
+
+   if (sl->IsValid()) {
+      sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
+      // must set fParallel to 1 for slaves since they do not
+      // report their fParallel with a LOG_DONE message
+      sl->fParallel = 1;
+   }
+
+   return sl;
+}
+
+//______________________________________________________________________________
+TSlave *TProof::CreateSubmaster(const char *host, Int_t port, const char *ord,
+                                const char *image, const char *conffile,
+                                const char *msd)
+{
+   // Create a new TSlave of type TSlave::kMaster.
+   // Note: constructor of TSlave is private with TProof as a friend.
+   // Derived classes must use this function to create slaves.
+
+   TSlave *sl = new TSlave(host, port, ord, 100, image, this,
+                           TSlave::kMaster, 0, conffile, msd);
+
+   if (sl->IsValid()) {
+      sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
+   }
+
+   return sl;
 }
 
 //______________________________________________________________________________
@@ -508,29 +569,54 @@ void TProof::FindUniqueSlaves()
 {
    // Add to the fUniqueSlave list the active slaves that have a unique
    // (user) file system image. This information is used to transfer files
-   // only once to nodes that share a file system (an image).
+   // only once to nodes that share a file system (an image). Submasters
+   // which are not in fUniqueSlaves are put in the fNonUniqueMasters
+   // list. That list is used to trigger the transferring of files to
+   // the submaster's unique slaves without the need to transfer the file
+   // to the submaster.
 
    fUniqueSlaves->Clear();
    fUniqueMonitor->RemoveAll();
+   fNonUniqueMasters->Clear();
 
    TIter next(fActiveSlaves);
 
-   TSlave *sl;
-   while ((sl = (TSlave *)next())) {
-      if (fImage == sl->fImage) continue;
+   while (TSlave *sl = dynamic_cast<TSlave*>(next())) {
+      if (fImage == sl->fImage) {
+         if (sl->GetSlaveType() == TSlave::kMaster)
+            fNonUniqueMasters->Add(sl);
+         continue;
+      }
+
       TIter next2(fUniqueSlaves);
-      TSlave *sl2;
-      Int_t   add = fUniqueSlaves->IsEmpty() ? 1 : 0;
-      while ((sl2 = (TSlave *)next2())) {
+      TSlave *replace_slave = 0;
+      Bool_t add = kTRUE;
+      while (TSlave *sl2 = dynamic_cast<TSlave*>(next2())) {
          if (sl->fImage == sl2->fImage) {
-            add = 0;
+            add = kFALSE;
+            if (sl->GetSlaveType() == TSlave::kMaster) {
+               if (sl2->GetSlaveType() == TSlave::kSlave) {
+                  // give preference to master
+                  replace_slave = sl2;
+                  add = kTRUE;
+               } else if (sl2->GetSlaveType() == TSlave::kMaster) {
+                  fNonUniqueMasters->Add(sl);
+               } else {
+                  Error("FindUniqueSlaves", "TSlave is neither Master nor Slave");
+                  Assert(0);
+               }
+            }
             break;
          }
-         add++;
       }
+
       if (add) {
          fUniqueSlaves->Add(sl);
          fUniqueMonitor->Add(sl->GetSocket());
+         if (replace_slave) {
+            fUniqueSlaves->Remove(replace_slave);
+            fUniqueMonitor->Remove(replace_slave->GetSocket());
+         }
       }
    }
 
@@ -574,14 +660,63 @@ Int_t TProof::GetNumberOfBadSlaves() const
 }
 
 //______________________________________________________________________________
-void TProof::AskStatus()
+void TProof::AskStatistics()
 {
-   // Ask the status of the slaves.
+   // Ask the for the statistics of the slaves.
 
    if (!IsValid()) return;
 
-   Broadcast(kPROOF_STATUS, kActive);
+   Broadcast(kPROOF_GETSTATS, kActive);
    Collect(kActive);
+}
+
+//______________________________________________________________________________
+void TProof::AskParallel()
+{
+   // Ask the for the number of parallel slaves.
+
+   if (!IsValid()) return;
+
+   Broadcast(kPROOF_GETPARALLEL, kActive);
+   Collect(kActive);
+}
+
+//______________________________________________________________________________
+Bool_t TProof::IsDataReady(Long64_t &totalbytes, Long64_t &bytesready)
+{
+   // See if the data is ready to be analyzed.
+
+   if (!IsValid()) return kFALSE;
+
+   TList submasters;
+   TIter NextSlave(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+      if (sl->GetSlaveType() == TSlave::kMaster) {
+         submasters.Add(sl);
+      }
+   }
+
+   fDataReady = kTRUE; //see if any submasters set it to false
+   fBytesReady = 0;
+   fTotalBytes = 0;
+   //loop over submasters and see if data is ready
+   if (submasters.GetSize() > 0) {
+      Broadcast(kPROOF_DATA_READY, &submasters);
+      Collect(&submasters);
+   }
+
+   bytesready = fBytesReady;
+   totalbytes = fTotalBytes;
+
+   Long_t parm[2];
+   parm[0] = (Long_t) (&totalbytes);
+   parm[1] = (Long_t) (&bytesready);
+   Emit("IsDataReady(Long64_t,Long64_t)", parm);
+
+   //PDB(kGlobal,2)
+   Info("IsDataReady", "%lld / %lld (%s)", bytesready, totalbytes, fDataReady?"READY":"NOT READY");
+
+   return fDataReady;
 }
 
 //______________________________________________________________________________
@@ -612,7 +747,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 
          // Send one byte out-of-band message to server
          if (s->SendRaw(&oobc, 1, kOob) <= 0) {
-            Error("Interrupt", "error sending oobc to slave %d", sl->GetOrdinal());
+            Error("Interrupt", "error sending oobc to slave %s", sl->GetOrdinal().Data());
             continue;
          }
 
@@ -642,8 +777,8 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                   if (nch > kBufSize) nch = kBufSize;
                   n = s->RecvRaw(waste, nch);
                   if (n <= 0) {
-                     Error("Interrupt", "error receiving waste from slave %d",
-                           sl->GetOrdinal());
+                     Error("Interrupt", "error receiving waste from slave %s",
+                           sl->GetOrdinal().Data());
                      break;
                   }
                   nbytes += n;
@@ -653,12 +788,12 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                   //
                   gSystem->Sleep(100);
                   if (++nloop > 100) {  // 10 seconds time-out
-                     Error("Interrupt", "server %d does not respond", sl->GetOrdinal());
+                     Error("Interrupt", "server %s does not respond", sl->GetOrdinal().Data());
                      break;
                   }
                } else {
-                  Error("Interrupt", "error receiving OOB from server %d",
-                        sl->GetOrdinal());
+                  Error("Interrupt", "error receiving OOB from server %s",
+                        sl->GetOrdinal().Data());
                   break;
                }
             }
@@ -685,16 +820,16 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
                if (nch > kBufSize) nch = kBufSize;
                n = s->RecvRaw(waste, nch);
                if (n <= 0) {
-                  Error("Interrupt", "error receiving waste (2) from slave %d",
-                        sl->GetOrdinal());
+                  Error("Interrupt", "error receiving waste (2) from slave %s",
+                        sl->GetOrdinal().Data());
                   break;
                }
                nbytes += n;
             }
             if (nbytes > 0) {
                if (IsMaster())
-                  Printf("*** Slave %s:%d synchronized: %d bytes discarded",
-                         sl->GetName(), sl->GetOrdinal(), nbytes);
+                  Printf("*** Slave %s:%s synchronized: %d bytes discarded",
+                         sl->GetName(), sl->GetOrdinal().Data(), nbytes);
                else
                   Printf("*** PROOF synchronized: %d bytes discarded", nbytes);
             }
@@ -729,10 +864,14 @@ Int_t TProof::GetParallel() const
 
    if (!IsValid()) return -1;
 
-   if (IsMaster())
-      return GetNumberOfActiveSlaves();
+   // iterate over active slaves and return total number of slaves
+   TIter NextSlave(GetListOfActiveSlaves());
+   Int_t nparallel = 0;
+   while (TSlave* sl = dynamic_cast<TSlave*>(NextSlave()))
+      if(sl->GetParallel() >= 0)
+         nparallel += sl->GetParallel();
 
-   return fParallel;
+   return nparallel;
 }
 
 //______________________________________________________________________________
@@ -744,47 +883,54 @@ TList *TProof::GetSlaveInfo()
    if (!IsValid()) return 0;
 
    if (fSlaveInfo == 0) {
-      fSlaveInfo = new TList;
+      fSlaveInfo = new TSortedList(kSortDescending);
       fSlaveInfo->SetOwner();
    } else {
       fSlaveInfo->Delete();
    }
 
-   if (IsMaster()) {
-      TIter next(GetListOfSlaves());
-      TSlave *slave;
+   TList masters;
+   TIter next(GetListOfSlaves());
+   TSlave *slave;
 
-      while (((slave = (TSlave *) next()))) {
+   while((slave = (TSlave *) next()) != 0) {
+      if (slave->GetSlaveType() == TSlave::kSlave) {
          TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(),
                                                 slave->GetName(),
                                                 slave->GetPerfIdx());
          fSlaveInfo->Add(slaveinfo);
-      }
 
-      TIter nextinfo(fSlaveInfo);
-      TSlaveInfo *info;
-      while ((info = (TSlaveInfo *) nextinfo())) {
-         TIter next1(GetListOfActiveSlaves());
-         while ((slave = (TSlave *) next1())) {
-            if (info->GetOrdinal() == slave->GetOrdinal()) {
-               info->SetStatus(TSlaveInfo::kActive);
+         TIter nextactive(GetListOfActiveSlaves());
+         TSlave *activeslave;
+         while ((activeslave = (TSlave *) nextactive())) {
+            if (slaveinfo->GetOrdinal() == activeslave->GetOrdinal()) {
+               slaveinfo->SetStatus(TSlaveInfo::kActive);
                break;
             }
          }
 
-         TIter next2(GetListOfBadSlaves());
-         while ((slave = (TSlave *) next2())) {
-            if (info->GetOrdinal() == slave->GetOrdinal()) {
-               info->SetStatus(TSlaveInfo::kBad);
+         TIter nextbad(GetListOfBadSlaves());
+         TSlave *badslave;
+         while ((badslave = (TSlave *) nextbad())) {
+            if (slaveinfo->GetOrdinal() == badslave->GetOrdinal()) {
+               slaveinfo->SetStatus(TSlaveInfo::kBad);
                break;
             }
          }
-      }
 
-   } else {
-      Broadcast(kPROOF_GETSLAVEINFO);
-      Collect();
+      } else if (slave->GetSlaveType() == TSlave::kMaster) {
+         if (slave->IsValid()) {
+            if (slave->GetSocket()->Send(kPROOF_GETSLAVEINFO) == -1)
+               MarkBad(slave);
+            else
+               masters.Add(slave);
+         }
+      } else {
+         Error("GetSlaveInfo", "TSlave is neither Master nor Slave");
+         Assert(0);
+      }
    }
+   if (masters.GetSize() > 0) Collect(&masters);
 
    return fSlaveInfo;
 }
@@ -1077,24 +1223,29 @@ Int_t TProof::Collect(TMonitor *mon)
             break;
 
          case kPROOF_LOGDONE:
-            (*mess) >> fStatus >> fParallel;
+            sl = FindSlave(s);
+            (*mess) >> sl->fStatus >> sl->fParallel;
             PDB(kGlobal,2) Info("Collect:kPROOF_LOGDONE","status %d  parallel %d",
-               fStatus, fParallel);
+               sl->fStatus, sl->fParallel);
+            if (sl->fStatus != 0) fStatus = sl->fStatus; //return last nonzero status
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
             break;
 
-         case kPROOF_STATUS:
-            if (IsMaster()) {
-               sl = FindSlave(s);
-               (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
-                       >> sl->fWorkDir;
-               fBytesRead += sl->fBytesRead;
-               fRealTime  += sl->fRealTime;
-               fCpuTime   += sl->fCpuTime;
-            } else {
-               (*mess) >> fParallel;
-            }
+         case kPROOF_GETSTATS:
+            sl = FindSlave(s);
+            (*mess) >> sl->fBytesRead >> sl->fRealTime >> sl->fCpuTime
+                    >> sl->fWorkDir >> sl->fProofWorkDir;
+            fBytesRead += sl->fBytesRead;
+            fRealTime  += sl->fRealTime;
+            fCpuTime   += sl->fCpuTime;
+            mon->DeActivate(s);
+            if (!mon->GetActive()) loop = 0;
+            break;
+
+         case kPROOF_GETPARALLEL:
+            sl = FindSlave(s);
+            (*mess) >> sl->fParallel;
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
             break;
@@ -1142,11 +1293,14 @@ Int_t TProof::Collect(TMonitor *mon)
          case kPROOF_PROGRESS:
             {
                PDB(kGlobal,2) Info("Collect:kPROOF_PROGRESS","Enter");
+
+               sl = FindSlave(s);
+
                Long64_t total, processed;
 
                (*mess) >> total >> processed;
 
-               fPlayer->Progress(total, processed);
+               fPlayer->Progress(sl, total, processed);
             }
             break;
 
@@ -1154,9 +1308,53 @@ Int_t TProof::Collect(TMonitor *mon)
             {
                PDB(kGlobal,2) Info("Collect:kPROOF_GETSLAVEINFO","Enter");
 
-               (*mess) >> fSlaveInfo;
+               sl = FindSlave(s);
+               Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
+               Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
+               TList* tmpinfo = 0;
+               (*mess) >> tmpinfo;
+               tmpinfo->SetOwner(kFALSE);
+               Int_t nentries = tmpinfo->GetSize();
+               for (Int_t i=0; i<nentries; i++) {
+                  TSlaveInfo* slinfo =
+                     dynamic_cast<TSlaveInfo*>(tmpinfo->At(i));
+                  if(slinfo) {
+                     fSlaveInfo->Add(slinfo);
+                     if (slinfo->fStatus != TSlaveInfo::kBad) {
+                        if (!active) slinfo->SetStatus(TSlaveInfo::kNotActive);
+                        if (bad) slinfo->SetStatus(TSlaveInfo::kBad);
+                     }
+                     if (!sl->GetMsd().IsNull()) slinfo->fMsd = sl->GetMsd();
+                  }
+               }
+               delete tmpinfo;
                mon->DeActivate(s);
                if (!mon->GetActive()) loop = 0;
+            }
+            break;
+
+         case kPROOF_VALIDATE_DSET:
+            {
+               PDB(kGlobal,2) Info("Collect:kPROOF_VALIDATE_DSET","Enter");
+               TDSet* dset = 0;
+               (*mess) >> dset;
+               if (!fDSet)
+                  Error("Collect:kPROOF_VALIDATE_DSET", "fDSet not set");
+               else
+                  fDSet->Validate(dset);
+               delete dset;
+            }
+            break;
+
+         case kPROOF_DATA_READY:
+            {
+               PDB(kGlobal,2) Info("Collect:kPROOF_DATA_READY","Enter");
+               Bool_t dataready = kFALSE;
+               Long64_t totalbytes, bytesready;
+               (*mess) >> dataready >> totalbytes >> bytesready;
+               fTotalBytes += totalbytes;
+               fBytesReady += bytesready;
+               if (dataready == kFALSE) fDataReady = dataready;
             }
             break;
 
@@ -1295,14 +1493,15 @@ void TProof::Print(Option_t *option) const
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
       if (IsValid())
-         ((TProof*)this)->SendPrint(option);
+         const_cast<TProof*>(this)->SendPrint(option);
    } else {
-      ((TProof*)this)->AskStatus();
+      const_cast<TProof*>(this)->AskStatistics();
       if (IsParallel())
-         Printf("*** Master server (parallel mode, %d slaves):",
-                GetNumberOfActiveSlaves());
+         Printf("*** Master server %s (parallel mode, %d slaves):",
+                gProofServ->GetOrdinal().Data(), GetParallel());
       else
-         Printf("*** Master server (sequential mode):");
+         Printf("*** Master server %s (sequential mode):",
+                gProofServ->GetOrdinal().Data());
 
       Printf("Master host name:         %s", gSystem->HostName());
       Printf("Port number:              %d", GetPort());
@@ -1322,7 +1521,26 @@ void TProof::Print(Option_t *option) const
       Printf("Total CPU time used (s):  %.3f", GetCpuTime());
       if (TString(option).Contains("a") && GetNumberOfSlaves()) {
          Printf("List of slaves:");
-         fSlaves->ForEach(TSlave,Print)(option);
+         TList masters;
+         TIter nextslave(fSlaves);
+         while (TSlave* sl = dynamic_cast<TSlave*>(nextslave())) {
+            if (!sl->IsValid()) continue;
+
+            if (sl->GetSlaveType() == TSlave::kSlave) {
+               sl->Print(option);
+            } else if (sl->GetSlaveType() == TSlave::kMaster) {
+               TMessage mess(kPROOF_PRINT);
+               mess.WriteString(option);
+               if (sl->GetSocket()->Send(mess) == -1)
+                  const_cast<TProof*>(this)->MarkBad(sl);
+               else
+                  masters.Add(sl);
+            } else {
+               Error("Print", "TSlave is neither Master nor Slave");
+               Assert(0);
+            }
+         }
+         const_cast<TProof*>(this)->Collect(&masters);
       }
    }
 }
@@ -1386,6 +1604,7 @@ void TProof::ClearInput()
 
    if (fPlayer) {
       fPlayer->ClearInput();
+      // the system feedback list is always in the input list
       if (fFeedback != 0) AddInput(fFeedback);
    }
 }
@@ -1574,7 +1793,7 @@ Int_t TProof::SendCurrentState(ESlaves list)
    // tell slave to delete all objects from its new current directory.
    Broadcast(gDirectory->GetPath(), kPROOF_RESET, list);
 
-   return GetNumberOfActiveSlaves();
+   return GetParallel();
 }
 
 //______________________________________________________________________________
@@ -1718,17 +1937,16 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
          continue;
 
       Long_t size = CheckFile(file, sl);
-      // if on client and size==0 broadcast anyway the kPROOF_SENDFILE command
-      // to the master so that the master can propagate the file to possibly
-      // newly added slaves
-      if (IsMaster() && size == 0)
+      // Don't send the kPROOF_SENDFILE command to real slaves when size=0.
+      // Masters might still need to send the file to newly added slaves.
+      if (sl->fSlaveType == TSlave::kSlave && size == 0)
          continue;
 
       PDB(kPackage,2)
          if (size > 0) {
             if (!nsl)
                Info("SendFile", "sending file %s to:", file);
-            printf("   slave = %s:%d\n", sl->GetName(), sl->GetOrdinal());
+            printf("   slave = %s:%s\n", sl->GetName(), sl->GetOrdinal().Data());
          }
 
       sprintf(buf, "%s %d %ld", gSystem->BaseName(file), bin, size);
@@ -1755,8 +1973,8 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
          }
 
          if (sl->GetSocket()->SendRaw(buf, len) == -1) {
-            SysError("SendFile", "error writing to slave %s:%d (now offline)",
-                     sl->GetName(), sl->GetOrdinal());
+            SysError("SendFile", "error writing to slave %s:%s (now offline)",
+                     sl->GetName(), sl->GetOrdinal().Data());
             MarkBad(sl);
             break;
          }
@@ -1828,10 +2046,11 @@ Int_t TProof::SetParallel(Int_t nodes)
       mess << nodes;
       Broadcast(mess);
       Collect();
-      PDB(kGlobal,1) Info("SetParallel", "got %d node%s", fParallel,
-         fParallel == 1 ? "" : "s");
-
-      return fParallel;
+      Int_t parallel = GetParallel();
+      PDB(kGlobal,1) Info("SetParallel", "got %d node%s", parallel,
+         parallel == 1 ? "" : "s");
+      if (parallel > 0) printf("PROOF set to parallel mode (%d slaves)\n", parallel);
+      return parallel;
    }
 }
 
@@ -1851,22 +2070,42 @@ Int_t TProof::GoParallel(Int_t nodes)
    fActiveMonitor->RemoveAll();
 
    TIter next(fSlaves);
-
+   //Simple algorithm for going parallel - fill up first nodes
    int cnt = 0;
    TSlave *sl;
    while (cnt < nodes && (sl = (TSlave *)next())) {
       if (sl->IsValid()) {
-         fActiveSlaves->Add(sl);
-         fActiveMonitor->Add(sl->GetSocket());
-         cnt++;
+         Int_t slavenodes = 0;
+         if (sl->GetSlaveType() == TSlave::kSlave) {
+            fActiveSlaves->Add(sl);
+            fActiveMonitor->Add(sl->GetSocket());
+            slavenodes = 1;
+         } else if (sl->GetSlaveType() == TSlave::kMaster) {
+            TMessage mess(kPROOF_PARALLEL);
+            mess << nodes-cnt;
+            if (sl->GetSocket()->Send(mess) == -1) {
+               MarkBad(sl);
+               slavenodes = 0;
+            } else {
+               Collect(sl);
+               if (sl->GetParallel()>0) {
+                  fActiveSlaves->Add(sl);
+                  fActiveMonitor->Add(sl->GetSocket());
+                  slavenodes = sl->GetParallel();
+               } else {
+                  slavenodes = 0;
+               }
+            }
+         } else {
+            Error("GoParallel", "TSlave is neither Master nor Slave");
+            Assert(0);
+         }
+         cnt += slavenodes;
       }
    }
 
-   // Will be activated in Collect
-   fActiveMonitor->DeActivateAll();
-
    // Get slave status (will set the slaves fWorkDir correctly)
-   AskStatus();
+   AskStatistics();
 
    // Find active slaves with unique image
    FindUniqueSlaves();
@@ -1874,12 +2113,12 @@ Int_t TProof::GoParallel(Int_t nodes)
    // Send new group-view to slaves
    SendGroupView();
 
-   Int_t n = GetNumberOfActiveSlaves();
+   Int_t n = GetParallel();
    if (IsMaster()) {
-      if (n > 0)
-         printf("PROOF set to parallel mode (%d slaves)\n", n);
-      else
+      if (n < 1)
          printf("PROOF set to sequential mode\n");
+   } else {
+      printf("PROOF set to parallel mode (%d slaves)\n", n);
    }
 
    PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
@@ -1895,9 +2134,30 @@ void TProof::ShowCache(Bool_t all)
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(1) << all;
+   mess << Int_t(kShowCache) << all;
    Broadcast(mess, kUnique);
-   Collect(kUnique);
+
+   if (all) {
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kShowSubCache) << all;
+      Broadcast(mess2, fNonUniqueMasters);
+
+      // make list of unique slaves (which will include
+      // unique slave on submasters)
+      TList allunique;
+      Int_t i;
+      for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
+         TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+         if (sl) allunique.Add(sl);
+      }
+      for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
+         TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+         if (sl) allunique.Add(sl);
+      }
+      Collect(&allunique);
+   } else {
+      Collect(kUnique);
+   }
 }
 
 //______________________________________________________________________________
@@ -1908,9 +2168,29 @@ void TProof::ClearCache()
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(2);
+   mess << Int_t(kClearCache);
    Broadcast(mess, kUnique);
-   Collect(kUnique);
+
+   TMessage mess2(kPROOF_CACHE);
+   mess2 << Int_t(kClearSubCache);
+   Broadcast(mess2, fNonUniqueMasters);
+
+   // make list of unique slaves (which will include
+   // unique slave on submasters
+   TList allunique;
+   Int_t i;
+   for (i = 0; i<fUniqueSlaves->GetSize(); i++) {
+      TSlave* sl =
+         dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   for (i = 0; i<fNonUniqueMasters->GetSize(); i++) {
+      TSlave* sl =
+         dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   Collect(&allunique);
+
    // clear file map so files get send again to remote nodes
    fFileMap.clear();
 }
@@ -1925,9 +2205,30 @@ void TProof::ShowPackages(Bool_t all)
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(3) << all;
+   mess << Int_t(kShowPackages) << all;
    Broadcast(mess, kUnique);
-   Collect(kUnique);
+
+   if (all) {
+      TMessage mess2(kPROOF_CACHE);
+      mess2 << Int_t(kShowSubPackages) << all;
+      Broadcast(mess2, fNonUniqueMasters);
+
+      // make list of unique slaves (which will include
+      // unique slave on submasters
+      TList allunique;
+      Int_t i;
+      for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
+         TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+         if (sl) allunique.Add(sl);
+      }
+      for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
+         TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+         if (sl) allunique.Add(sl);
+      }
+      Collect(&allunique);
+   } else {
+      Collect(kUnique);
+   }
 }
 
 //______________________________________________________________________________
@@ -1940,34 +2241,64 @@ void TProof::ShowEnabledPackages(Bool_t all)
    if (!IsValid()) return;
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(8) << all;
+   mess << Int_t(kShowEnabledPackages) << all;
    Broadcast(mess);
    Collect();
 }
 
 //______________________________________________________________________________
-void TProof::ClearPackages()
+Int_t TProof::ClearPackages()
 {
    // Remove all packages.
 
-   if (!IsValid()) return;
+   if (!IsValid()) return -1;
 
-   TMessage mess(kPROOF_CACHE);
-   mess << Int_t(4);
-   Broadcast(mess, kUnique);
-   Collect(kUnique);
+   if (UnloadPackages() == -1)
+      return -1;
+
+   if (DisablePackages() == -1)
+      return -1;
+
+   return fStatus;
 }
 
 //______________________________________________________________________________
-void TProof::ClearPackage(const char *package)
+Int_t TProof::ClearPackage(const char *package)
 {
    // Remove a specific package.
 
-   if (!IsValid()) return;
+   if (!IsValid()) return -1;
 
    if (!package || !strlen(package)) {
       Error("ClearPackage", "need to specify a package name");
-      return;
+      return -1;
+   }
+
+   // if name, erroneously, is a par pathname strip off .par and path
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
+
+   if (UnloadPackage(pac) == -1)
+      return -1;
+
+   if (DisablePackage(pac) == -1)
+      return -1;
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::DisablePackage(const char *package)
+{
+   // Remove a specific package.
+
+   if (!IsValid()) return -1;
+
+   if (!package || !strlen(package)) {
+      Error("DisablePackage", "need to specify a package name");
+      return -1;
    }
 
    // if name, erroneously, is a par pathname strip off .par and path
@@ -1977,9 +2308,60 @@ void TProof::ClearPackage(const char *package)
    pac = gSystem->BaseName(pac);
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(5) << pac;
+   mess << Int_t(kDisablePackage) << pac;
    Broadcast(mess, kUnique);
-   Collect(kUnique);
+
+   TMessage mess2(kPROOF_CACHE);
+   mess2 << Int_t(kDisableSubPackage) << pac;
+   Broadcast(mess2, fNonUniqueMasters);
+
+   // make list of unique slaves (which will include
+   // unique slave on submasters)
+   TList allunique;
+   Int_t i;
+   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   Collect(&allunique);
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::DisablePackages()
+{
+   // Remove all packages.
+
+   if (!IsValid()) return -1;
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(kDisablePackages);
+   Broadcast(mess, kUnique);
+
+   TMessage mess2(kPROOF_CACHE);
+   mess2 << Int_t(kDisableSubPackages);
+   Broadcast(mess2, fNonUniqueMasters);
+
+   // make list of unique slaves (which will include
+   // unique slave on submasters)
+   TList allunique;
+   Int_t i;
+   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   Collect(&allunique);
+
+   return fStatus;
 }
 
 //______________________________________________________________________________
@@ -2003,9 +2385,26 @@ Int_t TProof::BuildPackage(const char *package)
    pac = gSystem->BaseName(pac);
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(6) << pac;
+   mess << Int_t(kBuildPackage) << pac;
    Broadcast(mess, kUnique);
-   Collect(kUnique);
+
+   TMessage mess2(kPROOF_CACHE);
+   mess2 << Int_t(kBuildSubPackage) << pac;
+   Broadcast(mess2, fNonUniqueMasters);
+
+      // make list of unique slaves (which will include
+   // unique slave on submasters)
+   TList allunique;
+   Int_t i;
+   for (i = 0; i < fUniqueSlaves->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fUniqueSlaves->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   for (i = 0; i < fNonUniqueMasters->GetSize(); i++) {
+      TSlave* sl = dynamic_cast<TSlave*>(fNonUniqueMasters->At(i));
+      if (sl) allunique.Add(sl);
+   }
+   Collect(&allunique);
 
    return fStatus;
 }
@@ -2031,7 +2430,50 @@ Int_t TProof::LoadPackage(const char *package)
    pac = gSystem->BaseName(pac);
 
    TMessage mess(kPROOF_CACHE);
-   mess << Int_t(7) << pac;
+   mess << Int_t(kLoadPackage) << pac;
+   Broadcast(mess);
+   Collect();
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::UnloadPackage(const char *package)
+{
+   // Unload specified package.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   if (!package || !strlen(package)) {
+      Error("UnloadPackage", "need to specify a package name");
+      return -1;
+   }
+
+   // if name, erroneously, is a par pathname strip off .par and path
+   TString pac = package;
+   if (pac.EndsWith(".par"))
+      pac.Remove(pac.Length()-4);
+   pac = gSystem->BaseName(pac);
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(kUnloadPackage) << pac;
+   Broadcast(mess);
+   Collect();
+
+   return fStatus;
+}
+
+//______________________________________________________________________________
+Int_t TProof::UnloadPackages()
+{
+   // Unload all packages.
+   // Returns 0 in case of success and -1 in case of error.
+
+   if (!IsValid()) return -1;
+
+   TMessage mess(kPROOF_CACHE);
+   mess << Int_t(kUnloadPackages);
    Broadcast(mess);
    Collect();
 
@@ -2107,6 +2549,8 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
    mess << TString("+")+TString(gSystem->BaseName(par)) << (*md5);
    TMessage mess2(kPROOF_CHECKFILE);
    mess2 << TString("-")+TString(gSystem->BaseName(par)) << (*md5);
+   TMessage mess3(kPROOF_CHECKFILE);
+   mess3 << TString("=")+TString(gSystem->BaseName(par)) << (*md5);
    delete md5;
 
    // loop over all unique nodes
@@ -2127,7 +2571,7 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
          {
             TFTP ftp(TString("root://")+sl->GetName(), parallel);
             if (!ftp.IsZombie()) {
-               ftp.cd(Form("%s/%s", kPROOF_WorkDir, kPROOF_PackDir));
+               ftp.cd(Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir));
                ftp.put(par, gSystem->BaseName(par));
             }
          }
@@ -2140,6 +2584,28 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
             delete reply;
             return -1;
          }
+      }
+      delete reply;
+   }
+
+
+   // loop over all other master nodes
+   TIter nextmaster(fNonUniqueMasters);
+   TSlave *ma;
+   while ((ma = (TSlave *) nextmaster())) {
+      if (!ma->IsValid())
+         continue;
+
+      ma->GetSocket()->Send(mess3);
+
+      TMessage *reply;
+      ma->GetSocket()->Recv(reply);
+      if (reply->What() != kPROOF_CHECKFILE) {
+         // error -> package should have been found
+         Error("UploadPackage", "package %s did not exist on submaster %s",
+            par.Data(), ma->GetOrdinal().Data());
+         delete reply;
+         return -1;
       }
       delete reply;
    }
@@ -2163,22 +2629,6 @@ void TProof::Progress(Long64_t total, Long64_t processed)
 }
 
 //______________________________________________________________________________
-void TProof::SetActive(Bool_t active)
-{
-   // Suspend or resume PROOF via Condor.
-
-   if (fCondor) {
-      if (active) {
-         PDB(kCondor,1) Info("SetActive","-- Condor Resume --");
-         fCondor->Resume();
-      } else {
-         PDB(kCondor,1) Info("SetActive","-- Condor Suspend --");
-         fCondor->Suspend();
-      }
-   }
-}
-
-//______________________________________________________________________________
 void TProof::Feedback(TList *objs)
 {
    // Get list of feedback objects. Connect a slot to this signal
@@ -2194,8 +2644,135 @@ void TProof::Feedback(TList *objs)
 }
 
 //______________________________________________________________________________
+void TProof::ValidateDSet(TDSet *dset)
+{
+   // Validate a TDSet.
+
+   if (dset->ElementsValid()) return;
+
+   THashList nodes;
+   nodes.SetOwner();
+
+   TList slholder;
+   slholder.SetOwner();
+   TList elemholder;
+   elemholder.SetOwner();
+
+   // build nodelist with slaves and elements
+   TIter NextSlave(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+      TList *sllist = 0;
+      TPair *p = dynamic_cast<TPair*>(nodes.FindObject(sl->GetName()));
+      if (!p) {
+         sllist = new TList;
+         sllist->SetName(sl->GetName());
+         slholder.Add(sllist);
+         TList *elemlist = new TList;
+         elemlist->SetName(TString(sl->GetName())+"_elem");
+         elemholder.Add(elemlist);
+         nodes.Add(new TPair(sllist, elemlist));
+      } else {
+         sllist = dynamic_cast<TList*>(p->Key());
+      }
+      sllist->Add(sl);
+   }
+
+   // add local elements to nodes
+   TList NonLocal; // list of nonlocal elements
+   // make two iterations - first add local elements - then distribute nonlocals
+   for (Int_t i = 0; i < 2; i++) {
+      Bool_t local = i>0?kFALSE:kTRUE;
+      TIter NextElem(local?dset->GetListOfElements():&NonLocal);
+      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+         if (elem->GetValid()) continue;
+         TPair *p = dynamic_cast<TPair*>(local?nodes.FindObject(TUrl(elem->GetFileName()).GetHost()):nodes.At(0));
+         if (p) {
+            TList *eli = dynamic_cast<TList*>(p->Value());
+            TList *sli = dynamic_cast<TList*>(p->Key());
+            eli->Add(elem);
+
+            // order list by elements/slave
+            TPair *p2 = p;
+            Bool_t stop = kFALSE;
+            while (!stop) {
+               TPair *p3 = dynamic_cast<TPair*>(nodes.After(p2->Key()));
+               if (p3) {
+                  Int_t nelem = dynamic_cast<TList*>(p3->Value())->GetSize();
+                  Int_t nsl = dynamic_cast<TList*>(p3->Key())->GetSize();
+                  if (nelem*sli->GetSize() < eli->GetSize()*nsl) p2 = p3;
+                  else stop = kTRUE;
+               } else {
+                  stop = kTRUE;
+               }
+            }
+
+            if (p2!=p) {
+               nodes.Remove(p->Key());
+               nodes.AddAfter(p2->Key(), p);
+            }
+
+         } else {
+            if (local) {
+               NonLocal.Add(elem);
+            } else {
+               Error("ValidateDSet", "No Node to allocate TDSetElement to");
+               Assert(0);
+            }
+         }
+      }
+   }
+
+   // send to slaves
+   TList usedslaves;
+   TIter NextNode(&nodes);
+   SetDSet(dset); // set dset to be validated in Collect()
+   while (TPair *node = dynamic_cast<TPair*>(NextNode())) {
+      TList *slaves = dynamic_cast<TList*>(node->Key());
+      TList *setelements = dynamic_cast<TList*>(node->Value());
+
+      // distribute elements over the slaves
+      Int_t nslaves = slaves->GetSize();
+      Int_t nelements = setelements->GetSize();
+      for (Int_t i=0; i<nslaves; i++) {
+
+         TDSet set(dset->GetType(), dset->GetObjName(),
+                   dset->GetDirectory());
+         for (Int_t j = (i*nelements)/nslaves;
+                    j < ((i+1)*nelements)/nslaves;
+                    j++) {
+            TDSetElement *elem =
+               dynamic_cast<TDSetElement*>(setelements->At(j));
+            set.Add(elem->GetFileName(), elem->GetObjName(),
+                    elem->GetDirectory(), elem->GetFirst(),
+                    elem->GetNum(), elem->GetMsd());
+         }
+
+         if (set.GetListOfElements()->GetSize()>0) {
+            TMessage mesg(kPROOF_VALIDATE_DSET);
+            mesg << &set;
+
+            TSlave *sl = dynamic_cast<TSlave*>(slaves->At(i));
+            PDB(kGlobal,1) Info("ValidateDSet",
+                                "Sending TDSet with %d elements to slave %s"
+                                " to be validated",
+                                set.GetListOfElements()->GetSize(),
+                                sl->GetOrdinal().Data());
+            sl->GetSocket()->Send(mesg);
+            usedslaves.Add(sl);
+         }
+      }
+   }
+
+   PDB(kGlobal,1) Info("ValidateDSet","Calling Collect");
+   Collect(&usedslaves);
+   SetDSet(0);
+}
+
+//______________________________________________________________________________
 void TProof::AddFeedback(const char *name)
 {
+   // Add object to feedback list.
+
    if (fFeedback == 0) {
       fFeedback = new TList;
       fFeedback->SetOwner();
@@ -2209,6 +2786,8 @@ void TProof::AddFeedback(const char *name)
 //______________________________________________________________________________
 void TProof::RemoveFeedback(const char *name)
 {
+   // Remove object from feedback list.
+
    if (fFeedback == 0) return;
 
    TObject *obj = fFeedback->FindObject(name);
@@ -2221,6 +2800,8 @@ void TProof::RemoveFeedback(const char *name)
 //______________________________________________________________________________
 void TProof::ClearFeedback()
 {
+   // Clear feedback list.
+
    if (fFeedback == 0) return;
 
    fFeedback->Delete();
@@ -2229,6 +2810,8 @@ void TProof::ClearFeedback()
 //______________________________________________________________________________
 void TProof::ShowFeedback() const
 {
+   // Show items in feedback list.
+
    if (fFeedback == 0 || fFeedback->GetSize() == 0) {
       Info("","no feedback requested");
       return;
@@ -2238,7 +2821,535 @@ void TProof::ShowFeedback() const
 }
 
 //______________________________________________________________________________
-TList*  TProof::GetFeedbackList() const
+TList *TProof::GetFeedbackList() const
 {
+   // Return feedback list.
+
    return fFeedback;
+}
+
+
+//______________________________________________________________________________
+
+ClassImp(TProofCondor)
+
+
+//______________________________________________________________________________
+TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
+                           const char *confdir, Int_t loglevel)
+   : fCondor(0), fTimer(0)
+{
+   // Start proof using condor
+
+   if (!conffile || strlen(conffile) == 0) {
+      conffile = kPROOF_ConfFile;
+   } else if (!strncasecmp(conffile, "condor:", 7)) {
+      conffile+=7;
+   }
+
+   if (!confdir  || strlen(confdir) == 0) {
+      confdir = kPROOF_ConfDir;
+   }
+
+   Init(masterurl, conffile, confdir, loglevel);
+
+}
+
+//______________________________________________________________________________
+TProofCondor::~TProofCondor()
+{
+   // Clean up Condor PROOF environment.
+
+   SafeDelete(fCondor);
+   SafeDelete(fTimer);
+
+}
+
+//______________________________________________________________________________
+Bool_t TProofCondor::StartSlaves()
+{
+   // non static config
+
+   fCondor = new TCondor;
+   TString jobad = GetJobAd();
+
+   fImage = fCondor->GetImage(gSystem->HostName());
+   if (fImage.Length() == 0) {
+      Error("StartSlaves", "Empty Condor image found for system %s",
+            gSystem->HostName());
+      return kFALSE;
+   }
+
+   TList claims;
+   if (fConfFile.IsNull()) {
+      // startup all slaves if no config file given
+      TList *condorclaims = fCondor->Claim(9999, jobad);
+      TIter nextclaim(condorclaims);
+      while (TObject *o = nextclaim()) claims.Add(o);
+   } else {
+      // parse config file
+      TString fconf;
+      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
+      PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+      if (gSystem->AccessPathName(fconf, kReadPermission)) {
+         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
+         PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+         if (gSystem->AccessPathName(fconf, kReadPermission)) {
+            Error("StartSlaves", "no PROOF config file found");
+            return kFALSE;
+         }
+      }
+
+      PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+
+      FILE *pconf;
+      if ((pconf = fopen(fconf, "r"))) {
+
+         fConfFile = fconf;
+
+         // check for valid slave lines and claim condor nodes
+         char line[1024];
+         while (fgets(line, sizeof(line), pconf)) {
+            char word[12][128];
+            if (line[0] == '#') continue;   // skip comment lines
+            int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+                word[2], word[3], word[4], word[5], word[6],
+                word[7], word[8], word[9], word[10], word[11]);
+
+            // find all slave servers, accept both "slave" and "worker" lines
+            if (nword >= 2 &&
+                (!strcmp(word[0], "condorslave") || !strcmp(word[0], "condorworker"))) {
+               int perfidx  = 100;
+
+               const char *stripvm = strchr(word[1], '@');
+               const char *image = stripvm ? stripvm+1 : word[1];
+
+               for (int i = 2; i < nword; i++) {
+
+                  if (!strncmp(word[i], "perf=", 5))
+                     perfidx = atoi(word[i]+5);
+                  if (!strncmp(word[i], "image=", 6))
+                     image = word[i]+6;
+
+               }
+
+               TCondorSlave* csl = fCondor->Claim(word[1], jobad);
+               if (csl) {
+                  csl->fPerfIdx = perfidx;
+                  csl->fImage = image;
+                  claims.Add(csl);
+               }
+            }
+         }
+      }
+      fclose(pconf);
+   }
+
+   Long_t delay = 500; // timer delay 0.5s
+   Int_t ntries = 20; // allow 20 tries (must be > 1 for algorithm to work)
+   Int_t trial = 1;
+   Int_t idx = 0;
+   Int_t ord = 0;
+   while (claims.GetSize() > 0) {
+
+      // Get Condor Slave
+      TCondorSlave* c = 0;
+      if (trial == 1) {
+         c = dynamic_cast<TCondorSlave*>(claims.At(idx));
+         c->fOrdinal = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+         ord++;
+      } else {
+         TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+         TTimer *t = dynamic_cast<TTimer*>(p->Value());
+         // wait remaining time
+         Long_t wait = (Long_t) (t->GetAbsTime()-gSystem->Now());
+         if (wait>0) gSystem->Sleep(wait);
+         c = dynamic_cast<TCondorSlave*>(p->Key());
+      }
+
+      // Get slave FQDN ...
+      TString SlaveFqdn;
+      TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)c->fHostname);
+      if (SlaveAddr.IsValid()) {
+         SlaveFqdn = SlaveAddr.GetHostName();
+         if (SlaveFqdn == "UnNamedHost")
+         SlaveFqdn = SlaveAddr.GetHostAddress();
+      }
+
+      // create slave
+      TSlave *slave = CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
+                                  c->fPerfIdx, c->fImage, 0);
+
+      // add slave to appropriate list
+      if (trial<ntries) {
+         if (slave->IsValid()) {
+            fSlaves->Add(slave);
+            fAllMonitor->Add(slave->GetSocket());
+            if (trial == 1) {
+               claims.Remove(c);
+            } else {
+               TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+               delete dynamic_cast<TTimer*>(p->Value());
+               delete p;
+            }
+         } else {
+            if (trial == 1) {
+               TTimer* timer = new TTimer(delay);
+               TPair *p = new TPair(c, timer);
+               claims.RemoveAt(idx);
+               claims.AddAt(p, idx);
+            } else {
+               TPair *p = dynamic_cast<TPair*>(claims.At(idx));
+               dynamic_cast<TTimer*>(p->Value())->Reset();
+            }
+            delete slave;
+            idx++;
+         }
+      } else {
+         fSlaves->Add(slave);
+         if (slave->IsValid()) {
+            fAllMonitor->Add(slave->GetSocket());
+         } else {
+            fBadSlaves->Add(slave);
+         }
+         TPair *p = dynamic_cast<TPair*>(claims.Remove(c));
+         delete dynamic_cast<TTimer*>(p->Value());
+         delete p;
+      }
+
+      if (idx>=claims.GetSize()) {
+         trial++;
+         idx = 0;
+      }
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TProofCondor::SetActive(Bool_t active)
+{
+   // Suspend or resume PROOF via Condor.
+
+   if (fTimer == 0) {
+      fTimer = new TTimer();
+   }
+   if (active) {
+      PDB(kCondor,1) Info("SetActive","-- Condor Resume --");
+      fTimer->Stop();
+      if (fCondor->GetState() == TCondor::kSuspended)
+         fCondor->Resume();
+   } else {
+      Int_t delay = 10000; // milli seconds
+      PDB(kCondor,1) Info("SetActive","-- Delayed Condor Suspend (%d msec) --", delay);
+      fTimer->Connect("Timeout()", "TCondor", fCondor, "Suspend()");
+      fTimer->Start(10000, kTRUE); // single shot
+   }
+}
+
+//______________________________________________________________________________
+TString TProofCondor::GetJobAd()
+{
+   TString ad;
+
+   ad = "JobUniverse = 5\n"; // vanilla
+   ad += Form("Cmd = \"%s/bin/proofd\"\n", GetConfDir());
+   ad += "Iwd = \"/tmp\"\n";
+   ad += "In = \"/dev/null\"\n";
+   ad += "Out = \"/tmp/proofd.out.$(Port)\"\n";
+   ad += "Err = \"/tmp/proofd.err.$(Port)\"\n";
+   ad += Form("Args = \"-f -p $(Port) -d %d %s\"\n", GetLogLevel(), GetConfDir());
+
+   return ad;
+}
+
+//______________________________________________________________________________
+
+ClassImp(TProofSuperMaster)
+
+
+//______________________________________________________________________________
+TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile,
+                                     const char *confdir, Int_t loglevel)
+{
+   // Start super master PROOF session.
+
+   if (!conffile || strlen(conffile) == 0)
+      conffile = kPROOF_ConfFile;
+   else if (!strncasecmp(conffile, "sm:", 3))
+      conffile+=3;
+   if (!confdir  || strlen(confdir) == 0)
+      confdir = kPROOF_ConfDir;
+
+   Init(masterurl, conffile, confdir, loglevel);
+}
+
+//______________________________________________________________________________
+Bool_t TProofSuperMaster::StartSlaves()
+{
+   // Start up PROOF submasters.
+
+   // If this is a supermaster server, find the config file and start
+   // submaster servers as specified in the config file.
+   // There is a difference in startup between a slave and a submaster
+   // in which the submaster will issue a kPROOF_LOGFILE and
+   // then a kPROOF_LOGDONE message (which must be collected)
+   // while slaves do not.
+
+   TString fconf;
+   fconf.Form("%s/.%s", gSystem->Getenv("HOME"), fConfFile.Data());
+   PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+   if (gSystem->AccessPathName(fconf, kReadPermission)) {
+      fconf.Form("%s/proof/etc/%s", fConfDir.Data(), fConfFile.Data());
+      PDB(kGlobal,2) Info("StartSlaves", "checking PROOF config file %s", fconf.Data());
+      if (gSystem->AccessPathName(fconf, kReadPermission)) {
+         Error("StartSlaves", "no PROOF config file found");
+         return kFALSE;
+      }
+   }
+
+   PDB(kGlobal,1) Info("StartSlaves", "using PROOF config file: %s", fconf.Data());
+
+   TList validSlaves;
+
+   FILE *pconf;
+   if ((pconf = fopen(fconf, "r"))) {
+
+      TString fconfname = fConfFile;
+      fConfFile = fconf;
+
+      // read the config file
+      char line[1024];
+      TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+      int  ord = 0;
+
+      // check for valid master line
+      while (fgets(line, sizeof(line), pconf)) {
+         char word[12][128];
+         if (line[0] == '#') continue;   // skip comment lines
+         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+             word[2], word[3], word[4], word[5], word[6],
+             word[7], word[8], word[9], word[10], word[11]);
+
+         // see if master may run on this node, accept both old "node"
+         // and new "master" lines
+         if (nword >= 2 &&
+             (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
+             !fImage.Length()) {
+            TInetAddress a = gSystem->GetHostByName(word[1]);
+            if (!host.CompareTo(a.GetHostName()) ||
+                !strcmp(word[1], "localhost")) {
+               const char *image = word[1];
+               for (int i = 2; i < nword; i++) {
+
+                  if (!strncmp(word[i], "image=", 6))
+                     image = word[i]+6;
+
+               }
+               fImage = image;
+            }
+         }
+      }
+
+      if (fImage.Length() == 0) {
+         fclose(pconf);
+         Error("StartSlaves", "no appropriate master line found in %s", fconf.Data());
+         return kFALSE;
+      }
+
+      // check for valid submaster lines and start them
+      rewind(pconf);
+      while (fgets(line, sizeof(line), pconf)) {
+         char word[12][128];
+         if (line[0] == '#') continue;   // skip comment lines
+         int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+             word[2], word[3], word[4], word[5], word[6],
+             word[7], word[8], word[9], word[10], word[11]);
+
+         // find all submaster servers
+         if (nword >= 2 &&
+             !strcmp(word[0], "submaster")) {
+            int sport    = fPort;
+
+            const char *conffile = 0;
+            const char *image = word[1];
+            const char *msd = 0;
+            for (int i = 2; i < nword; i++) {
+
+               if (!strncmp(word[i], "image=", 6))
+                  image = word[i]+6;
+               if (!strncmp(word[i], "port=", 5))
+                  sport = atoi(word[i]+5);
+               if (!strncmp(word[i], "config=", 7))
+                  conffile = word[i]+7;
+               if (!strncmp(word[i], "msd=", 4))
+                  msd = word[i]+4;
+
+            }
+
+            // Get slave FQDN ...
+            TString SlaveFqdn;
+            TInetAddress SlaveAddr = gSystem->GetHostByName((const char *)word[1]);
+            if (SlaveAddr.IsValid()) {
+               SlaveFqdn = SlaveAddr.GetHostName();
+               if (SlaveFqdn == "UnNamedHost")
+               SlaveFqdn = SlaveAddr.GetHostAddress();
+            }
+
+            TString fullord = gProofServ->GetOrdinal() + "." + ((Long_t) ord);
+            ord++;
+            // create submaster server
+            TSlave *slave = CreateSubmaster(word[1], sport, fullord, image, conffile, msd);
+
+            fSlaves->Add(slave);
+            if (slave->IsValid()) {
+               // check protocol compatability
+               // protocol 1 is not supported anymore
+               if (fProtocol == 1) {
+                  Error("StartSlaves", "master and submaster protocols not compatible (%d and %d)",
+                        fProtocol, kPROOF_Protocol);
+                  fBadSlaves->Add(slave);
+               }
+               else {
+                  fAllMonitor->Add(slave->GetSocket());
+                  validSlaves.Add(slave);
+               }
+            } else {
+               fBadSlaves->Add(slave);
+            }
+            PDB(kGlobal,3)
+               Info("StartSlaves","slave on host %s created and added to list", word[1]);
+         }
+      }
+
+   }
+   fclose(pconf);
+   Collect(kAll); //Get kPROOF_LOGFILE and kPROOF_LOGDONE messages
+   TIter NextSlave(&validSlaves);
+   while (TSlave* sl = dynamic_cast<TSlave*>(NextSlave())){
+      if (sl->GetStatus() == -99) {
+         Error("StartSlaves", "not allowed to connect to PROOF master server");
+         fBadSlaves->Add(sl);
+         continue;
+      }
+
+      if (!sl->IsValid()) {
+         Error("StartSlaves", "failed to setup connection with PROOF master server");
+         fBadSlaves->Add(sl);
+         continue;
+      }
+
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
+                                 Long64_t nentries, Long64_t first, TEventList *evl)
+{
+   // Process a data set (TDSet) using the specified selector (.C) file.
+   // Returns -1 in case of error, 0 otherwise.
+
+   if (!IsValid()) return -1;
+
+   if (!GetPlayer())
+      SetPlayer(new TProofPlayerSuperMaster(this));
+
+   if (GetProgressDialog())
+      GetProgressDialog()->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
+                                  first, nentries);
+
+   return GetPlayer()->Process(set, selector, option, nentries, first, evl);
+}
+
+//______________________________________________________________________________
+void TProofSuperMaster::ValidateDSet(TDSet *dset)
+{
+   // Validate a TDSet.
+
+   if (dset->ElementsValid()) return;
+
+   THashList msds;
+   msds.SetOwner();
+
+   TList smholder;
+   smholder.SetOwner();
+   TList elemholder;
+   elemholder.SetOwner();
+
+   // build nodelist with slaves and elements
+   TIter NextSlave(GetListOfActiveSlaves());
+   while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+      TList *smlist = 0;
+      TPair *p = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
+      if (!p) {
+         smlist = new TList;
+         smlist->SetName(sl->GetMsd());
+         smholder.Add(smlist);
+         TList *elemlist = new TList;
+         elemlist->SetName(TString(sl->GetMsd())+"_elem");
+         elemholder.Add(elemlist);
+         msds.Add(new TPair(smlist, elemlist));
+      } else {
+         smlist = dynamic_cast<TList*>(p->Key());
+      }
+      smlist->Add(sl);
+   }
+
+   TIter NextElem(dset->GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+      if (elem->GetValid()) continue;
+      TPair *p = dynamic_cast<TPair*>(msds.FindObject(elem->GetMsd()));
+      if (p) {
+         dynamic_cast<TList*>(p->Value())->Add(elem);
+      } else {
+         Error("ValidateDSet", "No Node to allocate TDSetElement to");
+         Assert(0);
+      }
+   }
+
+   // send to slaves
+   TList usedsms;
+   TIter NextSM(&msds);
+   SetDSet(dset); // set dset to be validated in Collect()
+   while (TPair *msd = dynamic_cast<TPair*>(NextSM())) {
+      TList *sms = dynamic_cast<TList*>(msd->Key());
+      TList *setelements = dynamic_cast<TList*>(msd->Value());
+
+      // distribute elements over the slaves
+      Int_t nsms = sms->GetSize();
+      Int_t nelements = setelements->GetSize();
+      for (Int_t i=0; i<nsms; i++) {
+
+         TDSet set(dset->GetType(), dset->GetObjName(),
+                   dset->GetDirectory());
+         for (Int_t j = (i*nelements)/nsms;
+                    j < ((i+1)*nelements)/nsms;
+                    j++) {
+            TDSetElement *elem =
+               dynamic_cast<TDSetElement*>(setelements->At(j));
+            set.Add(elem->GetFileName(), elem->GetObjName(),
+                    elem->GetDirectory(), elem->GetFirst(),
+                    elem->GetNum(), elem->GetMsd());
+         }
+
+         if (set.GetListOfElements()->GetSize()>0) {
+            TMessage mesg(kPROOF_VALIDATE_DSET);
+            mesg << &set;
+
+            TSlave *sl = dynamic_cast<TSlave*>(sms->At(i));
+            PDB(kGlobal,1) Info("ValidateDSet",
+                                "Sending TDSet with %d elements to slave %s"
+                                " to be validated",
+                                set.GetListOfElements()->GetSize(),
+                                sl->GetOrdinal().Data());
+            sl->GetSocket()->Send(mesg);
+            usedsms.Add(sl);
+         }
+      }
+   }
+
+   PDB(kGlobal,1) Info("ValidateDSet","Calling Collect");
+   Collect(&usedsms);
+   SetDSet(0);
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.21 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.22 2004/06/13 16:26:35 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -52,6 +52,7 @@ private:
    TString     fPasswd;           //encoded passwd info for slaves
    TString     fConfDir;          //directory containing cluster config information
    TString     fConfFile;         //file containing config information
+   TString     fWorkDir;          //directory containing all proof related info
    TString     fSessionDir;       //directory containing session dependent files
    TString     fPackageDir;       //directory containing packages and user libs
    TString     fCacheDir;         //directory containing cache of user files
@@ -64,7 +65,7 @@ private:
    Int_t       fPackageLockId;    //file id of package dir lock
    Int_t       fCacheLockId;      //file id of cache dir lock
    Int_t       fProtocol;         //protocol version number
-   Int_t       fOrdinal;          //slave ordinal number, -1 for master
+   TString     fOrdinal;          //slave ordinal number
    Int_t       fGroupId;          //slave unique id in the active slave group
    Int_t       fGroupSize;        //size of the active slave group
    Int_t       fLogLevel;         //debug logging level
@@ -87,46 +88,51 @@ private:
    Int_t       UnlockCache() { return UnlockDir(fCacheLock); }
    Int_t       LockPackage() { return LockDir(fPackageLock); }
    Int_t       UnlockPackage() { return UnlockDir(fPackageLock); }
+   Int_t       UnloadPackage(const char* package);
+   Int_t       UnloadPackages();
 
 public:
    TProofServ(int *argc, char **argv);
    virtual ~TProofServ();
 
-   TProof       *GetProof() const { return fProof; }
-   const char   *GetService() const { return fService; }
-   const char   *GetConfDir() const { return fConfDir; }
-   const char   *GetConfFile() const { return fConfFile; }
-   const char   *GetUser() const { return fUser; }
-   const char   *GetSessionDir() const { return fSessionDir; }
-   Int_t         GetProtocol() const { return fProtocol; }
-   Int_t         GetOrdinal() const { return fOrdinal; }
-   Int_t         GetGroupId() const { return fGroupId; }
-   Int_t         GetGroupSize() const { return fGroupSize; }
-   Int_t         GetLogLevel() const { return fLogLevel; }
-   TSocket      *GetSocket() const { return fSocket; }
-   Float_t       GetRealTime() const { return fRealTime; }
-   Float_t       GetCpuTime() const { return fCpuTime; }
-   void          GetOptions(int *argc, char **argv);
+   TProof        *GetProof() const { return fProof; }
+   const char    *GetService() const { return fService; }
+   const char    *GetConfDir() const { return fConfDir; }
+   const char    *GetConfFile() const { return fConfFile; }
+   const char    *GetUser() const { return fUser; }
+   const char    *GetWorkDir() const { return fWorkDir; }
+   const char    *GetSessionDir() const { return fSessionDir; }
+   Int_t          GetProtocol() const { return fProtocol; }
+   const TString &GetOrdinal() const { return fOrdinal; }
+   Int_t          GetGroupId() const { return fGroupId; }
+   Int_t          GetGroupSize() const { return fGroupSize; }
+   Int_t          GetLogLevel() const { return fLogLevel; }
+   TSocket       *GetSocket() const { return fSocket; }
+   Float_t        GetRealTime() const { return fRealTime; }
+   Float_t        GetCpuTime() const { return fCpuTime; }
+   void           GetOptions(int *argc, char **argv);
 
-   void          HandleSocketInput();
-   void          HandleUrgentData();
-   void          HandleSigPipe();
-   void          Interrupt() { fInterrupt = kTRUE; }
-   Bool_t        IsMaster() const { return fMasterServ; }
-   Bool_t        IsParallel() const;
+   void           HandleSocketInput();
+   void           HandleUrgentData();
+   void           HandleSigPipe();
+   void           Interrupt() { fInterrupt = kTRUE; }
+   Bool_t         IsMaster() const { return fMasterServ; }
+   Bool_t         IsParallel() const;
+   Bool_t         IsTopMaster() const { return fOrdinal == "0"; }
 
-   void          Run(Bool_t retrn = kFALSE);
+   void           Run(Bool_t retrn = kFALSE);
 
-   void          Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const;
 
-   TObject      *Get(const char *namecycle);
-   TDSetElement *GetNextPacket();
-   void          Reset(const char *dir);
-   Int_t         ReceiveFile(const char *file, Bool_t bin, Long_t size);
-   void          SendLogFile(Int_t status = 0);
-   void          SendStatus();
+   TObject       *Get(const char *namecycle);
+   TDSetElement  *GetNextPacket();
+   void           Reset(const char *dir);
+   Int_t          ReceiveFile(const char *file, Bool_t bin, Long_t size);
+   void           SendLogFile(Int_t status = 0);
+   void           SendStatistics();
+   void           SendParallel();
 
-   void          Terminate(Int_t status);
+   void           Terminate(Int_t status);
 
    static Bool_t      IsActive();
    static TProofServ *This();

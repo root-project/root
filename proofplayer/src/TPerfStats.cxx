@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.1 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.cxx,v 1.2 2004/11/24 07:41:32 brun Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -43,14 +43,14 @@ ClassImp(TPerfStats)
 
 //______________________________________________________________________________
 TPerfEvent::TPerfEvent(TTimeStamp *offset)
-   : fEvtNode(-3), fType(TVirtualPerfStats::kUnDefined), fSlave(0),
+   : fEvtNode("-3"), fType(TVirtualPerfStats::kUnDefined), fSlave(),
      fEventsProcessed(0), fBytesRead(0), fLen(0), fLatency(0.0), fProcTime(0.0), fCpuTime(0.0),
      fIsStart(kFALSE), fIsOk(kFALSE)
 {
    if (gProofServ != 0) {
-      fEvtNode = gProofServ->IsMaster() ? -1: gProofServ->GetOrdinal();
+      fEvtNode = gProofServ->GetOrdinal();
    } else {
-      fEvtNode = -2; // not on a PROOF server
+      fEvtNode = "-2"; // not on a PROOF server
    }
 
    if (offset != 0) {
@@ -101,11 +101,18 @@ void TPerfEvent::Print(Option_t *) const
 //------------------------------------------------------------------------------
 
 //______________________________________________________________________________
-TPerfStats::TPerfStats(Int_t nslaves, TList *input, TList *output)
+TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fEventsHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0)
 {
    // Normal Constructor.
+
+   Int_t nslaves = 0;
+   TVirtualProof *proof = gProofServ->GetProof();
+   TList *l = proof ? proof->GetSlaveInfo() : 0 ;
+   TIter NextSlaveInfo(l);
+   while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(NextSlaveInfo()))
+      if (si->fStatus == TSlaveInfo::kActive) nslaves++;
 
    PDB(kGlobal,1) Info("TPerfStats", "Statistics for %d slave(s)", nslaves);
 
@@ -164,6 +171,19 @@ TPerfStats::TPerfStats(Int_t nslaves, TList *input, TList *output)
       fCpuTimeHist->SetDirectory(0);
       fCpuTimeHist->SetBit(TH1::kCanRebin);
       output->Add(fCpuTimeHist);
+
+      NextSlaveInfo.Reset();
+      Int_t slavebin=1;
+      while (TSlaveInfo *si = dynamic_cast<TSlaveInfo*>(NextSlaveInfo())) {
+         if (si->fStatus == TSlaveInfo::kActive) {
+            fPacketsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fEventsHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fLatencyHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fProcTimeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            fCpuTimeHist->GetXaxis()->SetBinLabel(slavebin, si->GetOrdinal());
+            slavebin++;
+         }
+      }
    }
 }
 
@@ -189,7 +209,7 @@ void TPerfStats::SimpleEvent(EEventType type)
 
 
 //______________________________________________________________________________
-void TPerfStats::PacketEvent(Int_t slave, const char* slavename, const char* filename,
+void TPerfStats::PacketEvent(const char *slave, const char* slavename, const char* filename,
                               Long64_t eventsprocessed, Double_t latency, Double_t proctime,
                               Double_t cputime, Long64_t bytesRead)
 {
@@ -213,17 +233,17 @@ void TPerfStats::PacketEvent(Int_t slave, const char* slavename, const char* fil
    }
 
    if (fPacketsHist != 0) {
-      fPacketsHist->Fill(slave);
+      fPacketsHist->Fill(slave, 1);
       fEventsHist->Fill(slave, eventsprocessed);
-      fLatencyHist->Fill(slave, latency);
-      fProcTimeHist->Fill(slave, proctime);
-      fCpuTimeHist->Fill(slave, cputime);
+      fLatencyHist->Fill(slave, latency, 1);
+      fProcTimeHist->Fill(slave, proctime, 1);
+      fCpuTimeHist->Fill(slave, cputime, 1);
    }
 }
 
 
 //______________________________________________________________________________
-void TPerfStats::FileEvent(Int_t slave, const char *slavename, const char *nodename,
+void TPerfStats::FileEvent(const char *slave, const char *slavename, const char *nodename,
                             const char *filename, Bool_t isStart)
 {
    if (fTrace != 0) {
@@ -340,12 +360,7 @@ void TPerfStats::Start(TList *input, TList *output)
       delete gPerfStats;
    }
 
-   Int_t nslaves = 0;
-   if (gProofServ->IsMaster()) {
-      nslaves = gProofServ->GetProof()->GetParallel();
-   }
-
-   gPerfStats = new TPerfStats(nslaves, input, output);
+   gPerfStats = new TPerfStats(input, output);
 
    gPerfStats->SimpleEvent(TVirtualPerfStats::kStart);
 }

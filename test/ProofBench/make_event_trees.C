@@ -40,7 +40,7 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
    slavemacro << "   Int_t slave_number = -1;"                                            << endl;
    slavemacro << "   Int_t nslaves = 0;"                                                  << endl;
    slavemacro << "   TString hn = gSystem->HostName();"                                   << endl;
-   slavemacro << "   Int_t ord = gProofServ->GetOrdinal();"                               << endl;
+   slavemacro << "   TString ord = gProofServ->GetOrdinal();"                             << endl;
    slavemacro <<                                                                             endl;
    TList* l = gProof->GetSlaveInfo();
    for(Int_t i=0; i<l->GetSize(); i++) {
@@ -48,9 +48,9 @@ Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t file
       if (si->fStatus != TSlaveInfo::kActive) continue;
       slavemacro << "   if (hn == \"";
       slavemacro << si->fHostName;
-      slavemacro << "\") { nslaves++; if (ord == ";
+      slavemacro << "\") { nslaves++; if (ord == \"";
       slavemacro << si->fOrdinal;
-      slavemacro << ") slave_number=nslaves; }" << endl;
+      slavemacro << "\") slave_number=nslaves; }" << endl;
    }
    slavemacro <<                                                                             endl;
    slavemacro << "   if (slave_number >= 0) {"                                            << endl;

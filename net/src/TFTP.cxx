@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.26 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.27 2004/12/02 11:52:28 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -279,8 +279,8 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
       return -1;
    }
 
-   Printf("<TFTP::PutFile>: sending file %s (%lld bytes, starting at %lld)",
-          file, size, restartat);
+   Info("PutFile", "sending file %s (%lld bytes, starting at %lld)",
+        file, size, restartat);
 
    TStopwatch timer;
    timer.Start();
@@ -374,14 +374,14 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
    else
       speed = 0.0;
    if (speed > 524288)
-      Printf("<TFTP::PutFile>: %.3f seconds, %.2f Mbytes per second",
-             t, speed / 1048576);
+      Info("PutFile", "%.3f seconds, %.2f Mbytes per second",
+           t, speed / 1048576);
    else if (speed > 512)
-      Printf("<TFTP::PutFile>: %.3f seconds, %.2f Kbytes per second",
-             t, speed / 1024);
+      Info("PutFile", "%.3f seconds, %.2f Kbytes per second",
+           t, speed / 1024);
    else
-      Printf("<TFTP::PutFile>: %.3f seconds, %.2f bytes per second",
-             t, speed);
+      Info("PutFile", "%.3f seconds, %.2f bytes per second",
+           t, speed);
 
    return Long64_t(size - restartat);
 }
@@ -505,8 +505,8 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
       }
    }
 
-   Printf("<TFTP::GetFile>: getting file %s (%lld bytes, starting at %lld)",
-          localName, size, restartat);
+   Info("GetFile", "getting file %s (%lld bytes, starting at %lld)",
+        localName, size, restartat);
 
    TStopwatch timer;
    timer.Start();
@@ -598,14 +598,14 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    else
       speed = 0.0;
    if (speed > 524288)
-      Printf("<TFTP::GetFile>: %.3f seconds, %.2f Mbytes per second",
-             t, speed / 1048576);
+      Info("GetFile", "%.3f seconds, %.2f Mbytes per second",
+           t, speed / 1048576);
    else if (speed > 512)
-      Printf("<TFTP::GetFile>: %.3f seconds, %.2f Kbytes per second",
-             t, speed / 1024);
+      Info("GetFile", "%.3f seconds, %.2f Kbytes per second",
+           t, speed / 1024);
    else
-      Printf("<TFTP::GetFile>: %.3f seconds, %.2f bytes per second",
-             t, speed);
+      Info("GetFile", "%.3f seconds, %.2f bytes per second",
+           t, speed);
 
    return Long64_t(size - restartat);
 }
@@ -645,7 +645,7 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
       }
    }
 
-   Printf("<TFTP::ChangeDirectory>: %s", mess);
+   Info("ChangeDirectory", "%s", mess);
 
    return 0;
 }
@@ -677,7 +677,7 @@ Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
    }
 
    if (print)
-      Printf("<TFTP::MakeDirectory>: %s", mess);
+      Info("MakeDirectory", "%s", mess);
 
    if (!strncmp(mess,"OK:",3))
       return 1;
@@ -711,7 +711,7 @@ Int_t TFTP::DeleteDirectory(const char *dir) const
       return -1;
    }
 
-   Printf("<TFTP::DeleteDirectory>: %s", mess);
+   Info("DeleteDirectory", "%s", mess);
 
    return 0;
 }
@@ -768,7 +768,7 @@ Int_t TFTP::PrintDirectory() const
       return -1;
    }
 
-   Printf("<TFTP::PrintDirectory>: %s", mess);
+   Info("PrintDirectory", "%s", mess);
 
    return 0;
 }
@@ -799,7 +799,7 @@ Int_t TFTP::RenameFile(const char *file1, const char *file2) const
       return -1;
    }
 
-   Printf("<TFTP::RenameFile>: %s", mess);
+   Info("RenameFile", "%s", mess);
 
    return 0;
 }
@@ -830,7 +830,7 @@ Int_t TFTP::DeleteFile(const char *file) const
       return -1;
    }
 
-   Printf("<TFTP::DeleteFile>: %s", mess);
+   Info("DeleteFile", "%s", mess);
 
    return 0;
 }
@@ -862,7 +862,7 @@ Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
       return -1;
    }
 
-   Printf("<TFTP::ChangePermission>: %s", mess);
+   Info("ChangePermission", "%s", mess);
 
    return 0;
 }
@@ -928,7 +928,7 @@ Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
    }
 
    if (print)
-      Printf("<TFTP::OpenDirectory>: %s", mess);
+      Info("OpenDirectory", "%s", mess);
 
    if (!strncmp(mess,"OK:",3)) {
       fDir = kTRUE;
@@ -963,7 +963,7 @@ void TFTP::FreeDirectory(Bool_t print)
    }
 
    if (print)
-      Printf("<TFTP::FreeDirectory>: %s", mess);
+      Info("FreeDirectory", "%s", mess);
 
    return;
 }
@@ -984,7 +984,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
    }
 
    if (fSocket->Send(kROOTD_DIRENTRY) < 0) {
-      Error("FreeDirectory", "error sending kROOTD_DIRENTRY command");
+      Error("GetDirEntry", "error sending kROOTD_DIRENTRY command");
       return 0;
    }
 
@@ -992,12 +992,12 @@ const char *TFTP::GetDirEntry(Bool_t print)
    char  mess[1024];;
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
-      Error("FreeDirectory", "error receiving dir entry confirmation");
+      Error("GetDirEntry", "error receiving dir entry confirmation");
       return 0;
    }
 
    if (print)
-      Printf("<TFTP::FreeDirectory>: %s", mess);
+      Info("GetDirEntry", "%s", mess);
 
    if (!strncmp(mess,"OK:",3)) {
       strcpy(dirent,mess+3);
@@ -1042,7 +1042,7 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
       return 1;
    }
    if (print)
-      Printf("<TFTP::GetPathInfo>: %s", mess);
+      Info("GetPathInfo", "%s", mess);
 
    Int_t    mode, uid, gid, islink;
    Long_t   id, flags, dev, ino, mtime;
@@ -1113,7 +1113,7 @@ Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
       return kTRUE;
    }
    if (print)
-      Printf("<TFTP::AccessPathName>: %s", mess);
+      Info("AccessPathName", "%s", mess);
 
    if (!strncmp(mess,"OK",2))
       return kFALSE;

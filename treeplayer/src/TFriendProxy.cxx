@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.2 2004/06/28 16:38:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFriendProxy.cxx,v 1.1 2004/07/20 09:40:19 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -30,7 +30,7 @@ namespace ROOT {
    TFriendProxy::TFriendProxy(TBranchProxyDirector *director, TTree *main, Int_t index) :
       fDirector(0,-1), fIndex(index)
    {
-      // Constructor
+      // Constructor.
 
       if (main) {
          TObject *obj = main->GetListOfFriends()->At(fIndex);
@@ -41,7 +41,7 @@ namespace ROOT {
    }
 
    //------------------------------------------------------------------------------------
-   Long64_t TFriendProxy::GetReadEntry() const 
+   Long64_t TFriendProxy::GetReadEntry() const
    {
       return fDirector.GetReadEntry();
    }
@@ -49,8 +49,8 @@ namespace ROOT {
    //------------------------------------------------------------------------------------
    void TFriendProxy::ResetReadEntry()
    {
-      // Refresh the cached read entry number from the original tree
-      
+      // Refresh the cached read entry number from the original tree.
+
       if (fDirector.GetTree()) fDirector.SetReadEntry(fDirector.GetTree()->GetReadEntry());
    }
 

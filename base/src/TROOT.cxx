@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.141 2005/01/18 21:04:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.142 2005/01/25 07:24:16 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -105,6 +105,7 @@
 #include "TObjString.h"
 #include "TVirtualUtilHist.h"
 #include "TAuthenticate.h"
+#include "TVirtualProof.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -932,7 +933,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
    if (strcmp(name,full_string_name)==0
       || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
-      return gROOT->GetClass("string"); 
+      return gROOT->GetClass("string");
    }
    if (TClassEdit::IsSTLCont(name)) {
 
@@ -941,7 +942,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    } else if ( strncmp(name,"std::",5)==0 ) {
 
       return GetClass(name+5,load);
- 
+
    } else if ( strstr(name,"std::") != 0 ) {
 
       // Let's try without the std::
@@ -1357,7 +1358,7 @@ void TROOT::InitSystem()
       gEnv = new TEnv(".rootrc");
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
-      
+
       Int_t zipmode = gEnv->GetValue("Root.ZipMode",0);
       R__SetZipMode(zipmode);
 
@@ -1685,23 +1686,40 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
    // the gProof global. Creating a new TProof object will reset
    // the gProof global. For more on PROOF see the TProof ctor.
 
-   // make sure libProof is loaded and TProof can be created
-   TPluginHandler *h;
-
-   // PROOF depends on TTreePlayer
-   if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
-      h->LoadPlugin();
-   else
+   // make sure libProof and dependents are loaded and TProof can be created,
+   // dependents are loaded via the information in the [system].rootmap file
+   TPluginManager *pm = GetPluginManager();
+   if (!pm) {
+      Error("Proof", "plugin manager not found");
       return 0;
-
-   if ((h = GetPluginManager()->FindHandler("TVirtualProof"))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
-      if (!configfile)
-         return (TVirtualProof *) h->ExecPlugin(1, cluster);
-      return (TVirtualProof *) h->ExecPlugin(2, cluster, configfile);
    }
-   return 0;
+
+   // load regular TProof for client
+   TPluginHandler *h = pm->FindHandler("TVirtualProof", "");
+   if (!h) {
+      Error("Proof", "no plugin found for TVirtualProof");
+      return 0;
+   }
+
+   if (h->LoadPlugin() == -1) {
+      Error("Proof", "plugin for TVirtualProof could not be loaded");
+      return 0;
+   }
+
+   TVirtualProof *proof = 0;
+   if (!configfile)
+      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(1, cluster));
+   else
+      proof = reinterpret_cast<TVirtualProof*>(h->ExecPlugin(2, cluster,
+                                                                configfile));
+
+   if (!proof || !proof->IsValid()) {
+      Error("Proof", "plugin for TVirtualProof could not be executed");
+      delete proof;
+      return 0;
+   }
+
+   return proof;
 }
 
 //______________________________________________________________________________

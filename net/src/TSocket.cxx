@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.26 2004/12/15 17:48:03 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.27 2004/12/16 19:33:38 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -741,18 +741,31 @@ Bool_t TSocket::Authenticate(const char *user)
       SProtocol.ReplaceAll("d",1,"",0);
       TString Opt(TUrl(fUrl).GetOptions());
 
-      if (!strncasecmp(Opt, "M", 1)) {
+      //First letter in Opt describes type of proofserv to invoke
+      if (!strncasecmp(Opt, "S", 1)) {
          Send("slave");
-         Master = kTRUE;
-      } else if (!strncasecmp(Opt, "C", 1)) {
+      } else if (!strncasecmp(Opt, "M", 1)) {
          Send("master");
       } else {
          Warning("Authenticate",
-                 "called by TSlave: unknown option '%s' %s",
-                 Opt.Data()," - assuming Master");
+                 "called by TSlave: unknown option '%c' %s",
+                 Opt[0], " - assuming Slave");
          Send("slave");
+      }
+
+      //Second letter in Opt describes type of proof session we are
+      //This will hopefully not be necessary eventually
+      if (!strncasecmp(Opt.Data()+1, "M", 1)) {
+         Master = kTRUE;
+      } else if (!strncasecmp(Opt.Data()+1, "C", 1)) {
+         Master = kFALSE;
+      } else {
+         Warning("Authenticate",
+                 "called by TSlave: unknown option '%c' %s",
+                 Opt[1], " - assuming Master");
          Master = kTRUE;
       }
+
       fServType = kPROOFD;
    }
    if (gDebug > 2)

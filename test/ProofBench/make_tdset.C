@@ -25,6 +25,8 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    THashList nodelist;
    TArrayI nslaves;
    nodelist.SetOwner();
+   TList msdlist;
+   msdlist.SetOwner();
    TList* l = gProof->GetSlaveInfo();
    for(Int_t i=0 ; i < l->GetSize() ; i++){
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
@@ -35,6 +37,7 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
          nslaves[index]++;
       } else {
          nodelist.Add(new TObjString(si->fHostName.Data()));
+         msdlist.Add(new TObjString(si->fMsd.Data()));
          nslaves.Set(1+nslaves.GetSize());
          nslaves[nslaves.GetSize()-1] = 1;
       }
@@ -43,6 +46,7 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    TDSet *d = new TDSet("TTree","EventTree");
    for(Int_t i=0; i < nodelist.GetSize() ; i++){
       TObjString* node = dynamic_cast<TObjString*>(nodelist.At(i));
+      TObjString* msd = dynamic_cast<TObjString*>(msdlist.At(i));
       for(Int_t j=1; j <= files_per_slave*nslaves[i]; j++) {
 
          TString filestr = "root://";
@@ -54,7 +58,10 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
          filestr += "_";
          filestr += j;
          filestr += ".root";
-         d->Add(filestr);
+         if (msd->String().IsNull())
+            d->Add(filestr);
+         else
+            d->Add(filestr,0,0,0,-1,msd->GetName());
       }
    }
 

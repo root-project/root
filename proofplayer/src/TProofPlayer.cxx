@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.41 2004/12/22 15:16:34 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.42 2004/12/28 20:51:25 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "TMap.h"
 #include "TPerfStats.h"
 #include "TStatus.h"
+#include "TProofLimitsFinder.h"
 
 #include "Api.h"
 
@@ -225,9 +226,9 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Long64_t entry;
    while (fSelStatus->IsOk() && (entry = fEvIter->GetNextEvent()) >= 0 && fSelStatus->IsOk()) {
 
-      if(version == 0) {
+      if (version == 0) {
          PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
-         if(fSelector->ProcessCut(entry)) {
+         if (fSelector->ProcessCut(entry)) {
             PDB(kLoop,3)Info("Process","Call ProcessFill(%lld)", entry);
             fSelector->ProcessFill(entry);
          }
@@ -280,6 +281,12 @@ void TProofPlayer::UpdateAutoBin(const char *name,
    TAutoBinVal *val = (TAutoBinVal*) fAutoBins->FindObject(name);
 
    if ( val == 0 ) {
+      //look for info in higher master
+      if (gProofServ && !gProofServ->IsTopMaster()) {
+         TString key = name;
+         TProofLimitsFinder::AutoBinFunc(key,xmin,xmax,ymin,ymax,zmin,zmax);
+      }
+
       val = new TAutoBinVal(name,xmin,xmax,ymin,ymax,zmin,zmax);
       fAutoBins->Add(val);
    } else {
@@ -372,32 +379,13 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    delete fOutput;
    fOutput = new TList;
 
-   if(fProof->IsMaster()){
+   if (fProof->IsMaster()){
       TPerfStats::Start(fInput, fOutput);
    } else {
       TPerfStats::Setup(fInput);
    }
 
-   // If the filename does not contain "." assume class is compiled in
-   if ( strchr(selector_file,'.') != 0 ) {
-      TString filename = selector_file;
-      TString aclicMode;
-      TString arguments;
-      TString io;
-      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
-
-      PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
-      if ( fProof->SendFile(filename) == -1 ) return -1;
-
-      // NOTE: should we allow more extension?
-      if ( filename.EndsWith(".C") ) {
-         filename.Replace(filename.Length()-1,1,"h");
-         if (!gSystem->AccessPathName(filename,kReadPermission)) {
-            PDB(kSelector,1) Info("Process", "SendFile: %s", filename.Data() );
-            if ( fProof->SendFile(filename) == -1 ) return -1;
-         }
-      }
-   }
+   if(!SendSelector(selector_file)) return -1;
 
    TMessage mesg(kPROOF_PROCESS);
    TString fn(gSystem->BaseName(selector_file));
@@ -437,7 +425,6 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
-      fSelector->Begin(0);
    }
 
    TCleanup clean(this);
@@ -475,6 +462,33 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    return 0;
 }
 
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
+{
+   // Send the selector file to the slave nodes
+
+   // If the filename does not contain "." assume class is compiled in
+   if ( strchr(selector_file,'.') != 0 ) {
+      TString filename = selector_file;
+      TString aclicMode;
+      TString arguments;
+      TString io;
+      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
+
+      PDB(kSelector,1) Info("SendSelector", "Sendfile: %s", filename.Data() );
+      if ( fProof->SendFile(filename) == -1 ) return kFALSE;
+
+      // NOTE: should we allow more extension?
+      if ( filename.EndsWith(".C") ) {
+         filename.Replace(filename.Length()-1,1,"h");
+         if (!gSystem->AccessPathName(filename,kReadPermission)) {
+            PDB(kSelector,1) Info("SendSelector", "SendFile: %s", filename.Data() );
+            if ( fProof->SendFile(filename) == -1 ) return kFALSE;
+         }
+      }
+   }
+   return kTRUE;
+}
 
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
@@ -765,7 +779,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    if ( e != 0 ) {
       PDB(kPacketizer,2)
          Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %lld %lld",
-              slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
+              slave->GetOrdinal().Data(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    } else {
       PDB(kPacketizer,2) Info("GetNextPacket","Done");
@@ -860,6 +874,9 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    gProofServ->GetSocket()->Send(m);
 
    delete fb;
+
+   fFeedbackTimer->Start(500,kTRUE);
+
    return kFALSE; // ignored?
 }
 
@@ -872,4 +889,249 @@ Long64_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
    MayNotUse("DrawSelect");
 
    return -1;
+}
+
+//------------------------------------------------------------------------------
+
+ClassImp(TProofPlayerSuperMaster)
+
+
+//______________________________________________________________________________
+Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file,
+                                          Option_t *option, Long64_t nentries,
+                                          Long64_t first, TEventList * /*evl*/)
+{
+   // Process specified TDSet on PROOF.
+   // Returns -1 in case error, 0 otherwise.
+
+   PDB(kGlobal,1) Info("Process","Enter");
+
+   TProofSuperMaster *proof = dynamic_cast<TProofSuperMaster*>(GetProof());
+   if (!proof) return -1;
+
+   delete fOutput;
+   fOutput = new TList;
+
+   TPerfStats::Start(fInput, fOutput);
+
+   if (!SendSelector(selector_file)) return -1;
+
+   TCleanup clean(this);
+   SetupFeedback();
+
+   if (proof->IsMaster()) {
+
+      // make sure the DSet is valid
+      if (!dset->ElementsValid()) {
+         proof->ValidateDSet(dset);
+         if (!dset->ElementsValid()) {
+            Error("Process", "Could not validate DSet");
+            return -1;
+         }
+      }
+
+      TList msds; // Mass storage domain of submasters and TDSetElements
+                  // This should be a THashList, but THashList::FindObject()
+                  // fails for some reason.
+      msds.SetOwner(); // This will delete TPairs
+
+      TList keyholder; // List to clean up key part of the pairs
+      keyholder.SetOwner();
+      TList valueholder; // List to clean up value part of the pairs
+      valueholder.SetOwner();
+
+      // Construct msd list using the slaves
+      TIter NextSlave(proof->GetListOfActiveSlaves());
+      while (TSlave *sl = dynamic_cast<TSlave*>(NextSlave())) {
+         TList *submasters = 0;
+         TPair *msd = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
+         if (!msd) {
+            submasters = new TList;
+            submasters->SetName(sl->GetMsd());
+            keyholder.Add(submasters);
+            TList *setelements = new TList;
+            setelements->SetName(TString(sl->GetMsd())+"_Elements");
+            valueholder.Add(setelements);
+            msds.Add(new TPair(submasters, setelements));
+         } else {
+            submasters = dynamic_cast<TList*>(msd->Key());
+         }
+         submasters->Add(sl);
+      }
+
+      // Add TDSetElements to msd list
+      Long64_t cur = 0; //start of next element
+      TIter NextElement(dset->GetListOfElements());
+      while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElement())) {
+
+         if (elem->GetNum()<1) continue; // get rid of empty elements
+
+         if (nentries !=-1 && cur>=first+nentries) {
+            // we are done
+            break;
+         }
+
+         if (cur+elem->GetNum()-1<first) {
+            //element is before first requested entry
+            cur+=elem->GetNum();
+            continue;
+         }
+
+         if (cur<first) {
+            //modify element to get proper start
+            elem->SetNum(elem->GetNum()-(first-cur));
+            elem->SetFirst(elem->GetFirst()+first-cur);
+            cur=first;
+         }
+
+         if (nentries==-1 || cur+elem->GetNum()<=first+nentries) {
+            cur+=elem->GetNum();
+         } else {
+            //modify element to get proper end
+            elem->SetNum(first+nentries-cur);
+            cur=first+nentries;
+         }
+
+         TPair *msd = dynamic_cast<TPair*>(msds.FindObject(elem->GetMsd()));
+         if (!msd) {
+            Error("Process", "data requires mass storage domain '%s'"
+                  " which is not accessible in this proof session",
+                  elem->GetMsd());
+            return -1;
+         } else {
+            TList *elements = dynamic_cast<TList*>(msd->Value());
+            elements->Add(elem);
+         }
+      }
+
+      TList usedmasters;
+      TIter NextMsd(msds.MakeIterator());
+      while (TPair *msd = dynamic_cast<TPair*>(NextMsd())) {
+         TList *submasters = dynamic_cast<TList*>(msd->Key());
+         TList *setelements = dynamic_cast<TList*>(msd->Value());
+
+         // distribute elements over the masters
+         Int_t nmasters = submasters->GetSize();
+         Int_t nelements = setelements->GetSize();
+         for (Int_t i=0; i<nmasters; i++) {
+
+            Long64_t nentries = 0;
+            TDSet set(dset->GetType(), dset->GetObjName(),
+                      dset->GetDirectory());
+            for (Int_t j = (i*nelements)/nmasters;
+                       j < ((i+1)*nelements)/nmasters;
+                       j++) {
+               TDSetElement *elem =
+                  dynamic_cast<TDSetElement*>(setelements->At(j));
+               set.Add(elem->GetFileName(), elem->GetObjName(),
+                       elem->GetDirectory(), elem->GetFirst(),
+                       elem->GetNum(), elem->GetMsd());
+               nentries+=elem->GetNum();
+            }
+
+            if (set.GetListOfElements()->GetSize()>0) {
+               TMessage mesg(kPROOF_PROCESS);
+               TString fn(gSystem->BaseName(selector_file));
+               TString opt = option;
+               mesg << &set << fn << fInput << opt << Long64_t(-1) << Long64_t(0);
+
+               TSlave *sl = dynamic_cast<TSlave*>(submasters->At(i));
+               PDB(kGlobal,1) Info("Process",
+                                   "Sending TDSet with %d elements to submaster %s",
+                                   set.GetListOfElements()->GetSize(),
+                                   sl->GetOrdinal().Data());
+               sl->GetSocket()->Send(mesg);
+               usedmasters.Add(sl);
+
+               // setup progress info
+               fSlaves.AddLast(sl);
+               fSlaveProgress.Set(fSlaveProgress.GetSize()+1);
+               fSlaveProgress[fSlaveProgress.GetSize()-1]=0;
+               fSlaveTotals.Set(fSlaveTotals.GetSize()+1);
+               fSlaveTotals[fSlaveTotals.GetSize()-1]=nentries;
+            }
+         }
+      }
+
+      HandleTimer(0);
+      PDB(kGlobal,1) Info("Process","Calling Collect");
+      proof->Collect(&usedmasters);
+      HandleTimer(0);
+
+   }
+
+   StopFeedback();
+
+   PDB(kGlobal,1) Info("Process","Calling Merge Output");
+   MergeOutput();
+
+   TPerfStats::Stop();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t processed)
+{
+
+   Int_t idx = fSlaves.IndexOf(sl);
+   fSlaveProgress[idx] = processed;
+   if (fSlaveTotals[idx] != total)
+      Warning("Progress", "Total events has changed for slave %s", sl->GetName());
+   fSlaveTotals[idx] = total;
+
+   Long64_t tot = 0;
+   for (Int_t i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
+   Long64_t proc = 0;
+   for (Int_t i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+
+   Progress(tot, proc);
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
+{
+
+   // Send progress and feedback to client
+
+   if (fFeedbackTimer == 0) return kFALSE; // timer stopped already
+
+   Long64_t tot = 0;
+   for (Int_t i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
+   Long64_t proc = 0;
+   for (Int_t i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+
+   TMessage m(kPROOF_PROGRESS);
+
+   m << tot << proc;
+
+   // send message to client;
+   gProofServ->GetSocket()->Send(m);
+
+   if (fReturnFeedback)
+      return TProofPlayerRemote::HandleTimer(0);
+   else
+      return kFALSE;
+}
+
+
+//______________________________________________________________________________
+void TProofPlayerSuperMaster::SetupFeedback()
+{
+   if (!gProof->IsMaster()) return; // Client does not need timer
+
+   TProofPlayerRemote::SetupFeedback();
+
+   if (fFeedbackTimer) {
+      fReturnFeedback = kTRUE;
+      return;
+   } else {
+      fReturnFeedback = kFALSE;
+   }
+
+   // setup the timer (for both feedback and progress)
+
+   fFeedbackTimer = new TTimer;
+   fFeedbackTimer->SetObject(this);
+   fFeedbackTimer->Start(500,kFALSE);
 }

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.21 2004/06/25 17:27:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.22 2004/07/02 18:36:57 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -42,7 +42,7 @@ enum EMessageTypes {
    kPROOF_LOGLEVEL,                      //loglevel follows
    kPROOF_LOGFILE,                       //log file length and content follows
    kPROOF_LOGDONE,                       //log file received, status follows
-   kPROOF_STATUS,                        //print status of slave
+   kPROOF_STATUS,                        //print status of slave - (OBSOLETE Message)
    kPROOF_PING,                          //ping slave
    kPROOF_PRINT,                         //ask master to print config
    kPROOF_RESET,                         //reset slave
@@ -61,6 +61,10 @@ enum EMessageTypes {
    kPROOF_STOPPROCESS,                   //stop or abort the current process call
    kPROOF_HOSTAUTH,                      //HostAuth info follows
    kPROOF_GETSLAVEINFO,                  //get slave info from master
+   kPROOF_GETSTATS,                      //get statistics of slaves
+   kPROOF_GETPARALLEL,                   //get number of parallel slaves
+   kPROOF_VALIDATE_DSET,                 //validate a TDSet
+   kPROOF_DATA_READY,                    //ask if the data is ready on nodes
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows

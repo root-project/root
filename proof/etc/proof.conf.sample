@@ -1,7 +1,11 @@
 # PROOF config file. It has a very simple format:
 #
-# master <hostname> [image=<imagename>]
+# master <hostname> [image=<imagename>] [workdir=<workingdirectory>]
 # worker <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
+#                   [workdir=<workingdirectory>]
+# submaster <hostname> [image=<imagename>] [port=<portnumber>]
+#                      [config=<conffilename>]
+# condorworker <virtualmachinename>
 # user <username> on <hostname>
 #
 # For each node in the cluster that can run a master add a "master" line.

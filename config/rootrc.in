@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.91 2004/12/21 17:16:55 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.92 2005/01/20 01:28:42 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -162,14 +162,24 @@ ACLiC.Linkdef:          _linkdef
 # Add additional include directives for ACLiC compilations.
 #ACLiC.IncludePaths:     -I/where/the/includes/are
 
+# PROOF related variables
+#
 # PROOF debug options.
-#Proof.DebugLevel:	0
-#Proof.DebugMask:	-1
-#Proof.StatsHist:	no
-#Proof.StatsTrace:	no
+# Proof.DebugLevel:	0
+# Proof.DebugMask:	-1
+#
+# Proof.StatsHist:	no
+# Proof.StatsTrace:	no
+#
+# Proof.CondorHome:     /opt/condor
+# Proof.CondorConfig:   /opt/condor/etc/condor_config
+#
+# PEAC.GmUrl:           http://somewhere:8080/clarens/
+# PEAC.LmUrl:           http://elsewhere:8080/clarens/
 
-# PROOF related variables.
-Proofd.StaticSlaves:    yes
+# Certificate and key
+# Clarens.CertFile:     $(HOME)/.globus/usercert.pem
+# Clarens.KeyFile:      $(HOME)/.globus/userkey.pem
 
 # Variables related to authentication to rootd and proofd.
 #
@@ -396,13 +406,17 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
-Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
-Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TVirtualProof:  ^condor: TProofCondor Proof        "TProofCondor(const char*,const char*,const char*,Int_t)"
++Plugin.TVirtualProof: ^sm:    TProofSMaster Proof        "TProofSMaster(const char*,const char*,const char*,Int_t)"
++Plugin.TVirtualProof: ^peac:  TPProof       peac         "TPProof(const char*,const char*,const char*,Int_t)"
++Plugin.TVirtualProof:       * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
+Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TDataProgressDialog:  * TDataProgressDialog  peacGui   "TDataProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t)"
 Plugin.TVirtualPadEditor:  GedOld TPadEditorOld GedOld    "TPadEditorOld()"
 +Plugin.TVirtualPadEditor: Ged    TGedEditor    Ged       "TGedEditor(TCanvas*)"
-Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d         "TViewerX3D(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL         "TViewerOpenGL(TVirtualPad*)"
-+Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV         "TViewerOIV(TVirtualPad*)"
+Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL   "TViewerOpenGL(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
 Plugin.TVirtualDragManager: *   TGuiBldDragManager GuiBld "TGuiBldDragManager()"
 Plugin.TGuiBuilder:         *   TRootGuiBuilder    GuiBld "TRootGuiBuilder()"
 Unix.*.Plugin.TVirtualGLImp:  * TX11GL       RGL          "TX11GL()"

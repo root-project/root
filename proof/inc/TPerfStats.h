@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.2 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPerfStats.h,v 1.1 2004/06/13 16:26:35 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TList;
 class TPerfEvent : public TObject {
 
 public:
-   Int_t       fEvtNode;   // node on which the event was generated (-1 is master)
+   TString     fEvtNode;   // node on which the event was generated
    TTimeStamp  fTimeStamp; // time offset from start of run
 
    TVirtualPerfStats::EEventType fType;
@@ -53,7 +53,7 @@ public:
    TString                       fNodeName;
    TString                       fFileName;
    TString                       fFileClass;
-   Int_t                         fSlave;
+   TString                       fSlave;
    Long64_t                      fEventsProcessed;
    Long64_t                      fBytesRead;
    Long64_t                      fLen;
@@ -88,16 +88,16 @@ private:
    TH2D          *fCpuTimeHist;  //!histogram of cpu time spent processing packets
    Long64_t       fBytesRead;    //!track bytes read of main file
 
-   TPerfStats(Int_t nslaves, TList *input, TList *output);
+   TPerfStats(TList *input, TList *output);
 
 public:
    virtual ~TPerfStats() {}
 
    void SimpleEvent(EEventType type);
-   void PacketEvent(Int_t slave, const char *slavename, const char *filename,
+   void PacketEvent(const char *slave, const char *slavename, const char *filename,
                     Long64_t eventsprocessed, Double_t latency,
                     Double_t proctime, Double_t cputime, Long64_t bytesRead);
-   void FileEvent(Int_t slave, const char *slavename, const char *nodename, const char *filename,
+   void FileEvent(const char *slave, const char *slavename, const char *nodename, const char *filename,
                   Bool_t isStart);
 
    void FileOpenEvent(TFile *file, const char *filename, Double_t proctime);

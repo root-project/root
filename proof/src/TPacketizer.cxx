@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.18 2005/01/05 16:51:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.19 2005/01/28 16:33:54 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -596,8 +596,10 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("ValidateFiles", "sent to slave-%d (%s) via %p GETENTRIES on %s %s %s %s",
-                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
+            PDB(kPacketizer,2) Info("ValidateFiles",
+                "sent to slave-%s (%s) via %p GETENTRIES on %s %s %s %s",
+                s->GetOrdinal().Data(), s->GetName(), s->GetSocket(),
+                dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
             // Done
@@ -615,7 +617,7 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          while (TSocket *s = (TSocket*) next()) {
             TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
             if (sl)
-               Info("ValidateFiles", "   slave-%d (%s)", sl->GetOrdinal(), sl->GetName());
+               Info("ValidateFiles", "   slave-%s (%s)", sl->GetOrdinal().Data(), sl->GetName());
          }
          delete act;
       }
@@ -633,14 +635,14 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          // Help! lost a slave?
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         Error("ValidateFiles", "recv failed for slave-%d (%s)",
-               slave->GetOrdinal(), slave->GetName());
+         Error("ValidateFiles", "Recv failed! for slave-%s (%s)",
+               slave->GetOrdinal().Data(), slave->GetName());
          continue;
       }
 
       if ( reply->What() == kPROOF_FATAL ) {
-         Error("ValidateFiles", "kPROOF_FATAL from slave-%d (%s)",
-               slave->GetOrdinal(), slave->GetName());
+         Error("ValidateFiles", "kPROOF_FATAL from slave-%s (%s)",
+               slave->GetOrdinal().Data(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
@@ -657,8 +659,8 @@ void TPacketizer::ValidateFiles(TDSet *dset, TList *slaves)
          continue;
       } else if ( reply->What() != kPROOF_GETENTRIES ) {
          // Help! unexpected message type
-         Error("ValidateFiles", "unexpected message type (%d) from slave-%d (%s)", reply->What(),
-               slave->GetOrdinal(), slave->GetName());
+         Error("ValidateFiles", "unexpected message type (%d) from slave-%s (%s)",
+               reply->What(), slave->GetOrdinal().Data(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
          continue;
@@ -757,12 +759,12 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       // only read new info if available
       if (r->BufferSize() > r->Length()) (*r) >> bytesRead;
 
-      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
-                              sl->GetOrdinal(), sl->GetName(),
+      PDB(kPacketizer,2) Info("GetNextPacket","slave-%s (%s): %lld %7.3lf %7.3lf %7.3lf %lld",
+                              sl->GetOrdinal().Data(), sl->GetName(),
                               numev, latency, proctime, proccpu, bytesRead);
 
       if (gPerfStats != 0) {
-         gPerfStats->PacketEvent(sl->GetOrdinal(), sl->GetName(), slstat->fCurElem->GetFileName(),
+         gPerfStats->PacketEvent(sl->GetOrdinal().Data(), sl->GetName(), slstat->fCurElem->GetFileName(),
                             numev, latency, proctime, proccpu, bytesRead);
       }
 
@@ -785,7 +787,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
    if ( file != 0 && file->IsDone() ) {
       file->GetNode()->DecSlaveCnt();
       if (gPerfStats != 0) {
-         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(), file->GetNode()->GetName(),
+         gPerfStats->FileEvent(sl->GetOrdinal().Data(), sl->GetName(), file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kFALSE);
       }
       file = 0;
@@ -816,7 +818,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       slstat->fCurFile = file;
       file->GetNode()->IncSlaveCnt();
       if (gPerfStats != 0) {
-         gPerfStats->FileEvent(sl->GetOrdinal(), sl->GetName(),
+         gPerfStats->FileEvent(sl->GetOrdinal().Data(), sl->GetName(),
                           file->GetNode()->GetName(),
                           file->GetElement()->GetFileName(), kTRUE);
       }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.7 2003/11/13 23:31:24 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.8 2004/12/07 16:56:15 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -124,32 +124,40 @@ private:
    Long64_t         fFirst;      // first entry to process
    Long64_t         fNum;        // number of entries to process
    const TDSet     *fSet;        // set to which element belongs
+   TString          fMsd;        // mass storage domain name
    TList           *fPfnList;    // physical location information for Grid files
    TIter           *fIterator;   //! iterator on fPfnList
    TDSetElementPfn *fCurrent;    //! current element of fPfnList
+   Bool_t           fValid;      // whether or not the input values are valid
+   Long64_t         fEntries;    // total number of possible entries in file
 
 public:
-   TDSetElement() { fSet = 0;  fPfnList = 0; fIterator = 0; fCurrent  = 0; }
+   TDSetElement() { fSet = 0; fPfnList = 0; fIterator = 0; fCurrent = 0; fValid = kFALSE; }
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
-                const char *dir = 0, Long64_t first = 0, Long64_t num = -1);
+                const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
+                const char *msd = 0);
    virtual ~TDSetElement();
 
    void AddPfn(const char *pfn, const char *se = 0, Long64_t size = -1);
 
-   const char      *GetFileName() const { return fFileName;}
+   const char      *GetFileName() const { return fFileName; }
    TDSetElementPfn *GetFirstPfnElement() const { return fPfnList ? (TDSetElementPfn*)fPfnList->First() : 0; }
    Long64_t         GetFirst() const { return fFirst; }
    void             SetFirst(Long64_t first) { fFirst = first; }
    Long64_t         GetNum() const { return fNum; }
+   const char      *GetMsd() const { return fMsd; }
    void             SetNum(Long64_t num) { fNum = num; }
+   Bool_t           GetValid() const { return fValid; }
    Int_t            GetNumPfnList() const { return fPfnList ? fPfnList->GetSize() : 0; }
    const char      *GetObjName() const;
    const char      *GetDirectory() const;
    void             Reset();
    TDSetElementPfn *Next();
    void             Print(Option_t *options="") const;
+   void             Validate();
+   void             Validate(TDSetElement *elem);
 
-   ClassDef(TDSetElement,1)  // A TDSet element
+   ClassDef(TDSetElement,2)  // A TDSet element
 };
 
 
@@ -177,7 +185,7 @@ public:
 
    virtual Bool_t        Add(const char *file, const char *objname = 0,
                              const char *dir = 0, Long64_t first = 0,
-                             Long64_t num = -1);
+                             Long64_t num = -1, const char *msd = 0);
    virtual Bool_t        Add(TDSet *set);
    virtual void          AddFriend(TDSet *friendset);
    virtual Bool_t        AddQuery(const char *path, const char *file,
@@ -205,6 +213,7 @@ public:
 
    Bool_t                IsTree() const { return fIsTree; }
    Bool_t                IsValid() const { return !fName.IsNull(); }
+   Bool_t                ElementsValid() const;
    const char           *GetType() const { return fName; }
    const char           *GetObjName() const { return fObjName; }
    const char           *GetDirectory() const { return fTitle; }
@@ -225,6 +234,9 @@ public:
    void                  ClearInput();
    TObject              *GetOutput(const char *name);
    TList                *GetOutputList();
+
+   void                  Validate();
+   void                  Validate(TDSet *dset);
 
    ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
 };

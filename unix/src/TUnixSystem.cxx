@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.116 2004/12/15 22:26:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.117 2005/01/06 21:27:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1253,7 +1253,7 @@ int TUnixSystem::Unlink(const char *name)
    // -1 in case of failure.
 
    struct stat finfo;
-   if (stat(name, &finfo) < 0)
+   if (lstat(name, &finfo) < 0)
       return -1;
 
    if (S_ISDIR(finfo.st_mode))

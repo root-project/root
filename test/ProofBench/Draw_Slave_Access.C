@@ -80,6 +80,9 @@ void Draw_Slave_Access(TTree *perfstats) {
       }
    }
 
+   //reset branch address to 0 since address will be invalid after leaving macro
+   perfstats->SetBranchAddress("PerfEvents", 0);
+
    // Draw Canvas
    TCanvas* canvas = new TCanvas("slave_access",
                                  "Number of Slaves Accessing Nodes vs Time");

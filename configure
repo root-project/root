@@ -27,6 +27,7 @@ options="                 \
    enable_asimage         \
    enable_cern            \
    enable_chirp           \
+   enable_clarens         \
    enable_dcache          \
    enable_exceptions      \
    enable_explicitlink    \
@@ -35,6 +36,7 @@ options="                 \
    enable_ldap            \
    enable_mysql           \
    enable_opengl          \
+   enable_peac            \
    enable_pgsql           \
    enable_pythia          \
    enable_pythia6         \
@@ -567,6 +569,7 @@ enable/disable options, prefix with either --enable- or --disable-
    asimage         Image processing support, requires libAfterImage
    cern            CERNLIB usage, build h2root and g2root
    chirp           Chirp support (Condor remote I/O), requires libchirp_client
+   clarens         Clarens RPC support, optionally used by PROOF
    dcache          dCache support, requires libdcap from DESY
    exceptions      Turn on compiler exception handling capability
    explicitlink    Explicitly link with all dependent libraries
@@ -575,6 +578,7 @@ enable/disable options, prefix with either --enable- or --disable-
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
+   peac            PEAC, PROOF Enabled Analysis Center, requires Clarens
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
    pythia6         Pythia6 EG support, requires libPythia6
@@ -2450,6 +2454,55 @@ fi
 
 ######################################################################
 #
+### echo %%% Clarens Support - Third party libraries
+#
+# (See http://www.clarens.org)
+#
+
+checking_msg "Clarens support"
+
+if test ! "x$enable_clarens" = "xno" ; then
+
+    clarensinc=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
+    clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
+
+    if test "x$clarensinc" = "x" || test "x$clarenslibs" = "x"; then
+        enable_clarens="no"
+    fi
+fi
+
+if test "x$enable_clarens" = "xyes" ; then
+    echo "yes"
+else
+    echo "no"
+fi
+
+######################################################################
+#
+### echo %%% PEAC Support - depends on Clarens
+#
+# (See http://www.clarens.org)
+#
+
+checking_msg "PEAC support"
+
+if test ! "x$enable_peac" = "xno" ; then
+
+    if test "x$enable_clarens" = "xno"; then
+        enable_peac="no"
+    fi
+fi
+
+if test "x$enable_peac" = "xyes" ; then
+    buildpeac="yes"
+else
+    buildpeac="no"
+fi
+
+echo "$buildpeac"
+
+######################################################################
+#
 ### echo %%% Debian or Red Hat package list
 #
 # If we're asked to build for a set of RPMs or Debian packages, we
@@ -2673,12 +2726,15 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@asgifincdir@|$asgifincdir|"          \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
+    -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
     -e "s|@cernlibs@|$cernlib|"                 \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
+    -e "s|@clarensinc@|$clarensinc|"            \
+    -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@datadir@|$datadir|"                  \
     -e "s|@dcapincdir@|$dcapincdir|"            \

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.66 2005/01/14 17:11:17 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.67 2005/01/28 16:32:56 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3536,7 +3536,7 @@ int RpdCheckSpecialPass(const char *passwd)
       return 0;
    }
    if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
-       (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+       (st.st_mode & (S_IWGRP | S_IWOTH)) != 0) {
       ErrorInfo("RpdCheckSpecialPass: pass file %s: wrong permissions"
                 " 0%o (should be 0600)", rootdpass, (st.st_mode & 0777));
       ErrorInfo("RpdCheckSpecialPass: %d %d",
@@ -4565,7 +4565,7 @@ int RpdUser(const char *sstr)
       if (stat(rootdpass, &st) != -1) {
 
          if (S_ISREG(st.st_mode) && !S_ISDIR(st.st_mode) &&
-             (st.st_mode & 0777) == (S_IRUSR | S_IWUSR)) {
+             (st.st_mode & (S_IWGRP | S_IWOTH)) == 0) {
              int fid = open(rootdpass, O_RDONLY);
              if (fid != -1) {
                 if (read(fid, specpass, sizeof(specpass) - 1) > 0)

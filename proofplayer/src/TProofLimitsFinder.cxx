@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.cxx,v 1.1 2002/04/19 18:24:01 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TH1.h"
 #include "TMessage.h"
 
+
 ClassImp(TProofLimitsFinder)
 
 //______________________________________________________________________________
@@ -37,13 +38,14 @@ TProofLimitsFinder::~TProofLimitsFinder()
 
 
 //______________________________________________________________________________
-static void AutoBinFunc(TH1 *h, Double_t& xmin, Double_t& xmax,
-                        Double_t& ymin, Double_t& ymax, Double_t& zmin, Double_t& zmax)
+void TProofLimitsFinder::AutoBinFunc(TString& key,
+                                     Double_t& xmin, Double_t& xmax,
+                                     Double_t& ymin, Double_t& ymax,
+                                     Double_t& zmin, Double_t& zmax)
 {
    if ( gProofServ == 0 ) return;
 
    TSocket *s = gProofServ->GetSocket();
-   TString key( h->GetName() );
    TMessage mess(kPROOF_AUTOBIN);
 
    mess << key << xmin << xmax << ymin << ymax << zmin << zmax;
@@ -64,7 +66,8 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 {
    Double_t dummy = 0;
 
-   AutoBinFunc(h, xmin, xmax, dummy, dummy, dummy, dummy);
+   TString key = h->GetName();
+   AutoBinFunc(key, xmin, xmax, dummy, dummy, dummy, dummy);
 
    return THLimitsFinder::FindGoodLimits( h, xmin, xmax);
 }
@@ -75,7 +78,8 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_
 {
    Double_t dummy = 0;
 
-   AutoBinFunc(h, xmin, xmax, ymin, ymax, dummy, dummy);
+   TString key = h->GetName();
+   AutoBinFunc(key, xmin, xmax, ymin, ymax, dummy, dummy);
 
    return THLimitsFinder::FindGoodLimits( h, xmin, xmax, ymin, ymax);
 }
@@ -84,7 +88,9 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_
 //______________________________________________________________________________
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax)
 {
-   AutoBinFunc(h, xmin, xmax, ymin, ymax, zmin, zmax);
+
+   TString key = h->GetName();
+   AutoBinFunc(key, xmin, xmax, ymin, ymax, zmin, zmax);
 
    return THLimitsFinder::FindGoodLimits( h, xmin, xmax, ymin, ymax, zmin, zmax);
 }

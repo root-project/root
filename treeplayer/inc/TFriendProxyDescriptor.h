@@ -1,4 +1,4 @@
-// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.4 2004/06/28 16:38:00 brun Exp $
+// @(#)rooeeplayer:$Name:  $:$Id: TFriendProxyDescriptor.h,v 1.1 2004/07/20 09:40:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -39,7 +39,7 @@ namespace ROOT {
       Bool_t IsDuplicate() { return fDuplicate; }
       void   SetDuplicate() { fDuplicate = kTRUE; }
 
-      ClassDef(TFriendProxyDescriptor,0);     
+      ClassDef(TFriendProxyDescriptor,0);
    };
 }
 

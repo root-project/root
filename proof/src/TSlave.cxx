@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.32 2004/09/24 20:24:50 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.33 2004/10/15 17:10:13 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -27,25 +27,35 @@
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TMessage.h"
+#include "TError.h"
 
 ClassImp(TSlave)
 
 //______________________________________________________________________________
-TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
-               const char *image, TProof *proof)
+TSlave::TSlave(const char *host, Int_t port, const char *ord, Int_t perf,
+               const char *image, TProof *proof, ESlaveType stype,
+               const char *workdir, const char *conffile, const char *msd)
 {
    // Create a PROOF slave object. Called via the TProof ctor.
 
-   fName     = host;
-   fPort     = port;
-   fImage    = image;
-   fWorkDir  = kPROOF_WorkDir;
-   fOrdinal  = ord;
-   fPerfIdx  = perf;
-   fSecContext = 0;
-   fProof    = proof;
-   fSocket   = 0;
-   fInput    = 0;
+   fName         = host;
+   fPort         = port;
+   fImage        = image;
+   fWorkDir      = workdir;
+   fProofWorkDir = workdir;
+   fOrdinal      = ord;
+   fPerfIdx      = perf;
+   fSecContext   = 0;
+   fProof        = proof;
+   fSocket       = 0;
+   fInput        = 0;
+   fBytesRead    = 0;
+   fRealTime     = 0.;
+   fCpuTime      = 0.;
+   fSlaveType    = stype;
+   fStatus       = 0;
+   fParallel     = 0;
+   fMsd          = msd;
 
    // The url contains information about the server type: make sure
    // it is 'proofd' or alike
@@ -60,12 +70,18 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
    // Add information about our status (Client or Master)
    TString iam;
-   if (proof->IsMaster()) {
+   if (proof->IsMaster() && stype == kSlave) {
       iam = "Master";
-      hurl += TString("/?M");
-   } else {
+      hurl += TString("/?SM");
+   } else if (proof->IsMaster() && stype == kMaster) {
+      iam = "Master";
+      hurl += TString("/?MM");
+   } else if (!proof->IsMaster() && stype == kMaster) {
       iam = "Local Client";
-      hurl += TString("/?C");
+      hurl += TString("/?MC");
+   } else {
+      Error("TSlave","Impossible PROOF <-> SlaveType Configuration Requested");
+      Assert(0);
    }
 
    // Open authenticated connection to remote PROOF slave server.
@@ -179,10 +195,10 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          }
 
          TMessage mess;
-         if (!fProof->IsMaster())
-            mess << fUser << pwhash << srppwd << fProof->fConfFile;
+         if (stype == kMaster)
+            mess << fUser << pwhash << srppwd << fOrdinal << TString(conffile);
          else
-            mess << fUser << pwhash << srppwd << fOrdinal;
+            mess << fUser << pwhash << srppwd << fOrdinal << fProofWorkDir;
 
          fSocket->Send(mess);
 
@@ -223,12 +239,24 @@ Int_t TSlave::Compare(const TObject *obj) const
 {
    // Used to sort slaves by performance index.
 
-   TSlave *sl = (TSlave *) obj;
+   const TSlave *sl = dynamic_cast<const TSlave*>(obj);
 
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
-   if (fOrdinal < sl->GetOrdinal()) return 1;
-   if (fOrdinal > sl->GetOrdinal()) return -1;
+   const Char_t *myord = GetOrdinal();
+   const Char_t *otherord = sl->GetOrdinal();
+   while (myord && otherord) {
+      Int_t myval = atoi(myord);
+      Int_t otherval = atoi(otherord);
+      if (myval < otherval) return 1;
+      if (myval > otherval) return -1;
+      myord = strchr(myord, '.');
+      if (myord) myord++;
+      otherord = strchr(otherord, '.');
+      if (otherord) otherord++;
+   }
+   if (myord) return -1;
+   if (otherord) return 1;
    return 0;
 }
 
@@ -237,7 +265,7 @@ void TSlave::Print(Option_t *) const
 {
    // Printf info about slave.
 
-   Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
+   Printf("*** Slave %s  (%s)", fOrdinal.Data(), fSocket ? "valid" : "invalid");
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    if (fSocket) {
@@ -248,8 +276,8 @@ void TSlave::Print(Option_t *) const
       Printf("    Working directory:       %s", GetWorkDir());
       Printf("    Performance index:       %d", GetPerfIdx());
       Printf("    MB's processed:          %.2f", float(GetBytesRead())/(1024*1024));
-      Printf("    MB's sent:               %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
-      Printf("    MB's received:           %.2f", fSocket ? float(fSocket->GetBytesSent())/(1024*1024) : 0.0);
+      Printf("    MB's sent:               %.2f", float(fSocket->GetBytesRecv())/(1024*1024));
+      Printf("    MB's received:           %.2f", float(fSocket->GetBytesSent())/(1024*1024));
       Printf("    Real time used (s):      %.3f", GetRealTime());
       Printf("    CPU time used (s):       %.3f", GetCpuTime());
    }

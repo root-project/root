@@ -173,6 +173,14 @@ endif
 ifeq ($(BUILDXRD),yes)
 MODULES      += xrootd netx
 endif
+ifneq ($(CLARENSINC),)
+ifneq ($(CLARENSLIBS),)
+MODULES      += clarens
+endif
+endif
+ifeq ($(BUILDPEAC),yes)
+MODULES      += peac
+endif
 
 -include MyModules.mk   # allow local modules
 
@@ -181,7 +189,7 @@ MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
                 mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot \
-                xrootd netx
+                xrootd netx clarens peac
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 

@@ -1,4 +1,4 @@
-// $Id: Run_Simple_Test.C,v 1.1 2004/12/17 23:09:32 brun Exp $
+// $Id: Run_Simple_Test.C,v 1.2 2004/12/22 15:16:34 brun Exp $
 //
 //
 
@@ -32,7 +32,7 @@ void Run_Simple_Test()
 
    make_event_trees(data_dir, 20000, 2);
 
-   TDSet *d = make_tdset("/data1/tmp",1);
+   TDSet *d = make_tdset(data_dir, 1);
 
    d->Print("a");
 

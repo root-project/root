@@ -155,6 +155,11 @@ SHADOWLIBDIR   :=
 
 TABLE          := @enable_table@
 
+CLARENSINC     := @clarensinc@
+CLARENSLIBS    := @clarenslibs@
+
+BUILDPEAC      := @buildpeac@
+
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p

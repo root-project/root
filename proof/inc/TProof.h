@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.47 2004/10/15 23:54:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.48 2004/11/24 07:41:32 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -62,13 +62,14 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TPacketizer2;
 class TCondor;
+class TDSet;
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
 // 2 -> 3: package manager enabling protocol changed
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol = 3;             // protocol version number
+const Int_t       kPROOF_Protocol = 4;             // protocol version number
 const Int_t       kPROOF_Port     = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir  = "/usr/local/root";  // default config dir
@@ -80,25 +81,29 @@ const char* const kPROOF_PackageLockFile = "/tmp/proof-package-lock-"; // packag
 
 
 class TSlaveInfo : public TObject {
+
 public:
    enum ESlaveStatus { kActive, kNotActive, kBad };
 
-   Int_t        fOrdinal;      //slave ordinal
+   TString      fOrdinal;      //slave ordinal
    TString      fHostName;     //hostname this slave is running on
+   TString      fMsd;          //mass storage domain slave is in
    Int_t        fPerfIndex;    //relative performance of this slave
    ESlaveStatus fStatus;       //slave status
 
-   TSlaveInfo(Int_t ordinal = 0, const char *host = "", Int_t perfidx = 0)
+   TSlaveInfo(const char *ordinal = "", const char *host = "", Int_t perfidx = 0)
       : fOrdinal(ordinal), fHostName(host), fPerfIndex(perfidx),
         fStatus(kNotActive) { }
 
    const char *GetName() const { return fHostName; }
-   Int_t       GetOrdinal() const { return fOrdinal; }
+   const char *GetOrdinal() const { return fOrdinal; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
 
-   void Print(Option_t *option="") const;
+   Int_t  Compare(const TObject *obj) const;
+   Bool_t IsSortable() const { return kTRUE; }
+   void   Print(Option_t *option="") const;
 
-   ClassDef(TSlaveInfo,1) //basic info on slave
+   ClassDef(TSlaveInfo,2) //basic info on slave
 };
 
 
@@ -112,57 +117,84 @@ friend class TProofPlayerRemote;
 friend class TSlave;
 friend class TPacketizer;
 friend class TPacketizer2;
-friend class TCondor;
 
 private:
+   enum EUrgent {
+      kHardInterrupt = 1,
+      kSoftInterrupt,
+      kShutdownInterrupt
+   };
+   enum EProofCacheCommands {
+      kShowCache = 1,
+      kClearCache = 2,
+      kShowPackages = 3,
+      kClearPackages = 4,
+      kClearPackage = 5,
+      kBuildPackage = 6,
+      kLoadPackage = 7,
+      kShowEnabledPackages = 8,
+      kShowSubCache = 9,
+      kClearSubCache = 10,
+      kShowSubPackages = 11,
+      kDisableSubPackages = 12,
+      kDisableSubPackage = 13,
+      kBuildSubPackage = 14,
+      kUnloadPackage = 15,
+      kDisablePackage = 16,
+      kUnloadPackages = 17,
+      kDisablePackages = 18
+   };
+
    Bool_t          fValid;          //is this a valid proof object
    TString         fMaster;         //name of master server (use "" if this is a master)
-   TString         fConfDir;        //directory containing cluster config information
-   TString         fConfFile;       //file containing config information
    TString         fWorkDir;        //current work directory on remote servers
    TString         fUser;           //user under which to run
-   TString         fImage;          //master's image name
    TString         fUrlProtocol;    //net protocol name
-   Int_t           fPort;           //port we are connected to (proofd = 1093)
    TSecContext    *fSecContext;     //SecContext of the related authentication
-   Int_t           fProtocol;       //remote PROOF server protocol version number
    Int_t           fLogLevel;       //server debug logging level
    Int_t           fStatus;         //remote return status (part of kPROOF_LOGDONE)
-   Int_t           fParallel;       //number of active slaves (only set on client, on server use fActiveSlaves)
    TList          *fSlaveInfo;      //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fMasterServ;     //true if we are a master server
    Bool_t          fSendGroupView;  //if true send new group view
-   TList          *fSlaves;         //list of all slave servers as in config file
    TList          *fActiveSlaves;   //list of active slaves (subset of all slaves)
    TList          *fUniqueSlaves;   //list of all active slaves with unique file systems
-   TList          *fBadSlaves;      //dead slaves (subset of all slaves)
-   TMonitor       *fAllMonitor;     //monitor activity on all valid slave sockets
+   TList          *fNonUniqueMasters; //list of all active masters with a nonunique file system
    TMonitor       *fActiveMonitor;  //monitor activity on all active slave sockets
    TMonitor       *fUniqueMonitor;  //monitor activity on all unique slave sockets
-   Double_t        fBytesRead;      //bytes read by all slaves during the session
+   Long64_t        fBytesRead;      //bytes read by all slaves during the session
    Float_t         fRealTime;       //realtime spent by all slaves during the session
    Float_t         fCpuTime;        //CPU time spent by all slaves during the session
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
    TPluginHandler *fProgressDialog; //progress dialog plugin
    TProofPlayer   *fPlayer;         //current player
-   TCondor        *fCondor;         //proxy for our Condor pool
    TList          *fFeedback;       //List of names to be returned as feedback
+
    struct MD5Mod_t {
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
    };
    typedef std::map<TString, MD5Mod_t> FileMap_t;
    FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
+   TDSet     *fDSet;            //current TDSet being validated
 
+protected:
    enum ESlaves { kAll, kActive, kUnique };
-   enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
-   TProof() { fSlaves = fActiveSlaves = fBadSlaves = 0; fCondor = 0; }
+   TString         fConfFile;       //file containing config information
+   TString         fConfDir;        //directory containing cluster config information
+   TString         fImage;          //master's image name
+   Int_t           fPort;           //port we are connected to (proofd = 1093)
+   Int_t           fProtocol;       //remote PROOF server protocol version number
+   TList          *fSlaves;         //list of all slave servers as in config file
+   TList          *fBadSlaves;      //dead slaves (subset of all slaves)
+   TMonitor       *fAllMonitor;     //monitor activity on all valid slave sockets
+   Bool_t          fDataReady;      //true if data is ready to be analyzed
+   Long64_t        fBytesReady;     //number of bytes staged
+   Long64_t        fTotalBytes;     //number of bytes to be analyzed
+
+private:
    TProof(const TProof &);           // not implemented
    void operator=(const TProof &);   // idem
-
-   Int_t    Init(const char *masterurl, const char *conffile,
-                 const char *confdir, Int_t loglevel);
 
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
@@ -175,11 +207,16 @@ private:
    Int_t    SendPrint(Option_t *option="");
    Int_t    Ping(ESlaves list);
    void     Interrupt(EUrgent type, ESlaves list = kActive);
-   void     AskStatus();
+   void     AskStatistics();
+   void     AskParallel();
    Int_t    GoParallel(Int_t nodes);
    void     RecvLogFile(TSocket *s, Int_t size);
    Int_t    BuildPackage(const char *package);
    Int_t    LoadPackage(const char *package);
+   Int_t    UnloadPackage(const char *package);
+   Int_t    UnloadPackages();
+   Int_t    DisablePackage(const char *package);
+   Int_t    DisablePackages();
 
    Int_t    Broadcast(const TMessage &mess, TList *slaves);
    Int_t    Broadcast(const TMessage &mess, ESlaves list = kActive);
@@ -191,15 +228,12 @@ private:
    Int_t    BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT, ESlaves list = kActive);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, TList *slaves);
    Int_t    BroadcastRaw(const void *buffer, Int_t length, ESlaves list = kActive);
-   Int_t    Collect(TList *slaves);
-   Int_t    Collect(ESlaves list = kActive);
    Int_t    Collect(const TSlave *sl);
    Int_t    Collect(TMonitor *mon);
 
    void     FindUniqueSlaves();
    TSlave  *FindSlave(TSocket *s) const;
    TList   *GetListOfSlaves() const { return fSlaves; }
-   TList   *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TList   *GetListOfUniqueSlaves() const { return fUniqueSlaves; }
    TList   *GetListOfBadSlaves() const { return fBadSlaves; }
    Int_t    GetNumberOfSlaves() const;
@@ -213,8 +247,24 @@ private:
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
 
-   void           SetPlayer(TProofPlayer *player) { fPlayer = player; };
-   TProofPlayer  *GetPlayer() const { return fPlayer; };
+protected:
+   TProof(); // For derived classes to use
+   Int_t    Init(const char *masterurl, const char *conffile,
+                 const char *confdir, Int_t loglevel);
+   virtual Bool_t  StartSlaves();
+   void            SetPlayer(TProofPlayer *player) { fPlayer = player; };
+   TProofPlayer   *GetPlayer() const { return fPlayer; };
+   TPluginHandler *GetProgressDialog() const { return fProgressDialog; };
+   TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
+   TSlave *CreateSlave(const char *host, Int_t port, const char *ord,
+                       Int_t perf, const char *image, const char *workdir);
+   TSlave *CreateSubmaster(const char *host, Int_t port,
+                           const char *ord, const char *image,
+                           const char *conffile, const char *msd);
+   Int_t    Collect(ESlaves list = kActive);
+   Int_t    Collect(TList *slaves);
+   void     SetDSet(TDSet *dset) { fDSet = dset; }
+   virtual void ValidateDSet(TDSet *dset);
 
 public:
    TProof(const char *masterurl, const char *conffile = kPROOF_ConfFile,
@@ -223,9 +273,9 @@ public:
 
    Int_t       Ping();
    Int_t       Exec(const char *cmd);
-   Int_t       Process(TDSet *set, const char *selector, Option_t *option = "",
-                       Long64_t nentries = -1, Long64_t firstentry = 0,
-                       TEventList *evl = 0);
+   Int_t       Process(TDSet *set, const char *selector,
+                       Option_t *option = "", Long64_t nentries = -1,
+                       Long64_t firstentry = 0, TEventList *evl = 0);
    Int_t       DrawSelect(TDSet *set, const char *varexp, const char *selection,
                           Option_t *option = "", Long64_t nentries = -1,
                           Long64_t firstentry = 0);
@@ -246,8 +296,8 @@ public:
    void        ClearCache();
    void        ShowPackages(Bool_t all = kFALSE);
    void        ShowEnabledPackages(Bool_t all = kFALSE);
-   void        ClearPackages();
-   void        ClearPackage(const char *package);
+   Int_t       ClearPackages();
+   Int_t       ClearPackage(const char *package);
    Int_t       EnablePackage(const char *package);
    Int_t       UploadPackage(const char *par, Int_t parallel = 1);
 
@@ -267,7 +317,7 @@ public:
    Int_t       GetParallel() const;
    TList      *GetSlaveInfo();
 
-   Double_t    GetBytesRead() const { return fBytesRead; }
+   Long64_t    GetBytesRead() const { return fBytesRead; }
    Float_t     GetRealTime() const { return fRealTime; }
    Float_t     GetCpuTime() const { return fCpuTime; }
 
@@ -281,12 +331,57 @@ public:
    void        ShowFeedback() const;
    TList      *GetFeedbackList() const;
 
-   void        SetActive(Bool_t active = kTRUE);
+   Bool_t      IsDataReady(Long64_t &totalbytes, Long64_t &bytesready);
+
+   void        SetActive(Bool_t /*active*/ = kTRUE) { }
 
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*
 
    ClassDef(TProof,0)  //PROOF control class
+};
+
+
+class TProofCondor : public TProof {
+
+friend class TCondor;
+
+private:
+   TCondor *fCondor; //proxy for our Condor pool
+   TTimer  *fTimer;  //timer for delayed Condor COD suspend
+
+protected:
+   Bool_t   StartSlaves();
+   TString  GetJobAd();
+
+public:
+   TProofCondor(const char *masterurl, const char *conffile = kPROOF_ConfFile,
+                const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
+   virtual ~TProofCondor();
+   virtual void SetActive() { TProof::SetActive(); }
+   virtual void SetActive(Bool_t active);
+
+   ClassDef(TProofCondor,0) //PROOF control class for slaves allocated by condor
+};
+
+
+class TProofSuperMaster : public TProof {
+
+friend class TProofPlayerSuperMaster;
+
+protected:
+   Bool_t StartSlaves();
+   Int_t  Process(TDSet *set, const char *selector,
+                  Option_t *option = "", Long64_t nentries = -1,
+                  Long64_t firstentry = 0, TEventList *evl = 0);
+   void   ValidateDSet(TDSet *dset);
+
+public:
+   TProofSuperMaster(const char *masterurl, const char *conffile = kPROOF_ConfFile,
+                    const char *confdir = kPROOF_ConfDir, Int_t loglevel = 0);
+   virtual ~TProofSuperMaster() { }
+
+   ClassDef(TProofSuperMaster,0) //PROOF control class for making submasters
 };
 
 #endif

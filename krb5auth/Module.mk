@@ -12,8 +12,15 @@ KRB5AUTHDIRS := $(KRB5AUTHDIR)/src
 KRB5AUTHDIRI := $(KRB5AUTHDIR)/inc
 
 ##### libKrb5Auth #####
-KRB5AUTHH    := $(wildcard $(MODDIRI)/*.h)
-KRB5AUTHS    := $(wildcard $(MODDIRS)/*.cxx)
+KRB5AUTHL    := $(MODDIRI)/LinkDef.h
+KRB5AUTHDS   := $(MODDIRS)/G__Krb5Auth.cxx
+KRB5AUTHDO   := $(KRB5AUTHDS:.cxx=.o)
+KRB5AUTHDH   := $(KRB5AUTHDS:.cxx=.h)
+
+KRB5AUTHH1   := $(patsubst %,$(MODDIRI)/%,TKSocket.h)
+
+KRB5AUTHH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+KRB5AUTHS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 KRB5AUTHO    := $(KRB5AUTHS:.cxx=.o)
 
 KRB5AUTHDEP  := $(KRB5AUTHO:.o=.d)
@@ -31,14 +38,28 @@ INCLUDEFILES += $(KRB5AUTHDEP)
 include/%.h:    $(KRB5AUTHDIRI)/%.h
 		cp $< $@
 
-$(KRB5AUTHLIB): $(KRB5AUTHO) $(MAINLIBS)
+$(KRB5AUTHLIB): $(KRB5AUTHO) $(KRB5AUTHDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libKrb5Auth.$(SOEXT) $@ "$(KRB5AUTHO)" \
+		   "$(SOFLAGS)" libKrb5Auth.$(SOEXT) $@ \
+		   "$(KRB5AUTHO) $(KRB5AUTHDO)" \
 		   "$(KRB5AUTHLIBEXTRA) $(KRB5LIBDIR) $(KRB5LIB) \
 		    $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
 		    $(CRYPTOLIBDIR) $(CRYPTOLIB)"
 
+$(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(KRB5AUTHH1) $(KRB5AUTHL)
+
+$(KRB5AUTHDO):  $(KRB5AUTHDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(KRB5INCDIR) -o $@ -c $<
+
 all-krb5auth:   $(KRB5AUTHLIB)
+
+map-krb5auth:   $(RLIBMAP)
+		$(RLIBMAP) -r $(ROOTMAP) -l $(KRB5AUTHLIB) \
+		   -d $(KRB5AUTHLIBDEP) -c $(KRB5AUTHL)
+
+map::           map-krb5auth
 
 clean-krb5auth:
 		@rm -f $(KRB5AUTHO)

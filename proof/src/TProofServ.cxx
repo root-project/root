@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.78 2004/09/13 22:49:10 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.79 2005/01/05 01:26:24 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -65,6 +65,7 @@
 #include "TProof.h"
 #include "TProofLimitsFinder.h"
 #include "TProofPlayer.h"
+#include "TRegexp.h"
 #include "TROOT.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
@@ -72,6 +73,7 @@
 #include "TSystem.h"
 #include "TTimeStamp.h"
 #include "TUrl.h"
+#include "TPluginManager.h"
 
 #include "compiledata.h"
 
@@ -133,7 +135,7 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
    }
 
    TString node = gProofServ->IsMaster() ? "master" : "slave ";
-   if (node != "master") node += gProofServ->GetOrdinal();
+   node += gProofServ->GetOrdinal();
    char *bp;
 
    if (!location || strlen(location) == 0 ||
@@ -245,7 +247,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    fNcmd            = 0;
    fInterrupt       = kFALSE;
    fProtocol        = 0;
-   fOrdinal         = -1;
+   fOrdinal         = "-1";
    fGroupId         = -1;
    fGroupSize       = 0;
    fLogLevel        = gEnv->GetValue("Proof.DebugLevel",0);
@@ -343,7 +345,43 @@ TProofServ::TProofServ(int *argc, char **argv)
          master += a.GetPort();
       }
 
-      fProof = new TProof(master, fConfFile, fConfDir, fLogLevel);
+      // Get plugin manager to load appropriate TVirtualProof from
+      TPluginManager *pm = gROOT->GetPluginManager();
+      if (!pm) {
+         Error("TProofServ", "no plugin manager found");
+         SendLogFile(-99);
+         Terminate(0);
+      }
+
+      // Find the appropriate handler
+      TPluginHandler *h = pm->FindHandler("TVirtualProof", fConfFile);
+      if (!h) {
+         Error("TProofServ", "no plugin found for TVirtualProof with a"
+                             " config file of '%s'", fConfFile.Data());
+         SendLogFile(-99);
+         Terminate(0);
+      }
+
+      // load the plugin
+      if (h->LoadPlugin() == -1) {
+         Error("TProofServ", "plugin for TVirtualProof could not be loaded");
+         SendLogFile(-99);
+         Terminate(0);
+      }
+
+      // make instance of TProof
+      fProof = reinterpret_cast<TProof*>(h->ExecPlugin(4, master.Data(),
+                                                          fConfFile.Data(),
+                                                          fConfDir.Data(),
+                                                          fLogLevel));
+      if (!fProof || !fProof->IsValid()) {
+         Error("TProofServ", "plugin for TVirtualProof could not be executed");
+         delete fProof;
+         fProof = 0;
+         SendLogFile(-99);
+         Terminate(0);
+      }
+
       SendLogFile();
    }
 }
@@ -383,7 +421,7 @@ Int_t TProofServ::CatMotd()
    }
 
    // get last modification time of the file ~/proof/.prooflast
-   lastname = TString(kPROOF_WorkDir) + "/.prooflast";
+   lastname = TString(GetWorkDir()) + "/.prooflast";
    char *last = gSystem->ExpandPathName(lastname.Data());
    Long64_t size;
    Long_t id, flags, modtime, lasttime;
@@ -592,7 +630,17 @@ void TProofServ::HandleSocketInput()
          break;
 
       case kPROOF_STATUS:
-         SendStatus();
+         Warning("HandleSocketInput:kPROOF_STATUS",
+                 "kPROOF_STATUS message is obsolete");
+         fSocket->Send(fProof->GetParallel(), kPROOF_STATUS);
+         break;
+
+      case kPROOF_GETSTATS:
+         SendStatistics();
+         break;
+
+      case kPROOF_GETPARALLEL:
+         SendParallel();
          break;
 
       case kPROOF_STOP:
@@ -619,7 +667,10 @@ void TProofServ::HandleSocketInput()
             TProofPlayer *p;
 
             if (IsMaster()) {
-               p = new TProofPlayerRemote(fProof);
+               if (fProof->IsA() == TProofSuperMaster::Class())
+                  p = new TProofPlayerSuperMaster(fProof);
+               else
+                  p = new TProofPlayerRemote(fProof);
                fProof->SetPlayer(p);
             } else {
                p = new TProofPlayerSlave(fSocket);
@@ -705,7 +756,7 @@ void TProofServ::HandleSocketInput()
                   st = gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                                      packnam.Data()));
                   if (st)
-                     Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s %s/%s",
+                     Error("HandleSocketInput:kPROOF_CHECKFILE", "failure executing: %s %s/%s",
                            kRM, fPackageDir.Data(), packnam.Data());
                   // find gunzip...
                   char *gunzip = gSystem->Which(gSystem->Getenv("PATH"),kGUNZIP,
@@ -715,12 +766,12 @@ void TProofServ::HandleSocketInput()
                      st = gSystem->Exec(Form(kUNTAR, gunzip, fPackageDir.Data(),
                                         filenam.Data(), fPackageDir.Data()));
                      if (st)
-                        Error("HandleInputSocket:kPROOF_CHECKFILE", "failure executing: %s",
+                        Error("HandleSocketInput:kPROOF_CHECKFILE", "failure executing: %s",
                               Form(kUNTAR, gunzip, fPackageDir.Data(),
                                    filenam.Data(), fPackageDir.Data()));
                      delete [] gunzip;
                   } else
-                     Error("HandleInputSocket:kPROOF_CHECKFILE", "%s not found",
+                     Error("HandleSocketInput:kPROOF_CHECKFILE", "%s not found",
                            kGUNZIP);
                   // check that fPackageDir/packnam now exists
                   if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
@@ -744,15 +795,24 @@ void TProofServ::HandleSocketInput()
                   fSocket->Send(kPROOF_FATAL);
                   err = kTRUE;
                }
+
+               // Note: Originally an UnlockPackage() call was made at the
+               // after the if-else statement below. With multilevel masters,
+               // submasters still check to make sure the package exists with
+               // the correct md5 checksum and need to do a read lock there.
+               // As yet locking is not that sophisicated so the lock must
+               // be released below before the call to fProof->UploadPackage().
                if (!IsMaster() || err) {
                   // delete par file when on slave or in case of error
                   gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
                                 filenam.Data()));
-               } else
+                  UnlockPackage();
+               } else {
                   // forward to slaves
+                  UnlockPackage();
                   fProof->UploadPackage(fPackageDir + "/" + filenam);
+               }
                delete md5local;
-               UnlockPackage();
             } else if (filenam.BeginsWith("+")) {
                // check file in package directory
                filenam = filenam.Strip(TString::kLeading, '+');
@@ -764,6 +824,30 @@ void TProofServ::HandleSocketInput()
                if (md5local && md5 == (*md5local)) {
                   // package already on server, unlock directory
                   UnlockPackage();
+                  fSocket->Send(kPROOF_CHECKFILE);
+                  PDB(kPackage, 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE",
+                          "package %s already on node", filenam.Data());
+                  if (IsMaster())
+                     fProof->UploadPackage(fPackageDir + "/" + filenam);
+               } else {
+                  fSocket->Send(kPROOF_FATAL);
+                  PDB(kPackage, 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE",
+                          "package %s not yet on node", filenam.Data());
+               }
+               delete md5local;
+            } else if (filenam.BeginsWith("=")) {
+               // check file in package directory, do not lock if it is the wrong file
+               filenam = filenam.Strip(TString::kLeading, '=');
+               TString packnam = filenam;
+               packnam.Remove(packnam.Length() - 4);  // strip off ".par"
+               TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
+               LockPackage();
+               TMD5 *md5local = TMD5::ReadChecksum(md5f);
+               UnlockPackage();
+               if (md5local && md5 == (*md5local)) {
+                  // package already on server, unlock directory
                   fSocket->Send(kPROOF_CHECKFILE);
                   PDB(kPackage, 1)
                      Info("HandleSocketInput:kPROOF_CHECKFILE",
@@ -829,17 +913,14 @@ void TProofServ::HandleSocketInput()
 
       case kPROOF_CACHE:
          {
-            // handle here all cache and package requests:
-            // type: 1 = ShowCache, 2 = ClearCache, 3 = ShowPackages,
-            // 4 = ClearPackages, 5 = ClearPackage, 6 = BuildPackage,
-            // 7 = LoadPackage, 8 = ShowEnabledPackages
+            // handle here all cache and package requests
             Int_t  status = 0;
             Int_t  type;
             Bool_t all;  //build;
             TString package, pdir, ocwd;
             (*mess) >> type;
             switch (type) {
-               case 1:
+               case TProof::kShowCache:
                   (*mess) >> all;
                   printf("*** File cache %s:%s ***\n", gSystem->HostName(),
                          fCacheDir.Data());
@@ -848,14 +929,14 @@ void TProofServ::HandleSocketInput()
                   if (IsMaster() && all)
                      fProof->ShowCache(all);
                   break;
-               case 2:
+               case TProof::kClearCache:
                   LockCache();
                   gSystem->Exec(Form("%s %s/*", kRM, fCacheDir.Data()));
                   UnlockCache();
                   if (IsMaster())
                      fProof->ClearCache();
                   break;
-               case 3:
+               case TProof::kShowPackages:
                   (*mess) >> all;
                   printf("*** Package cache %s:%s ***\n", gSystem->HostName(),
                          fPackageDir.Data());
@@ -864,28 +945,33 @@ void TProofServ::HandleSocketInput()
                   if (IsMaster() && all)
                      fProof->ShowPackages(all);
                   break;
-               case 4:
-                  LockPackage();
-                  gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
-                  fEnabledPackages->Delete();
-                  UnlockPackage();
-                  if (IsMaster())
-                     fProof->ClearPackages();
+               case TProof::kClearPackages:
+                  status = UnloadPackages();
+                  if (status == 0) {
+                     LockPackage();
+                     gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
+                     UnlockPackage();
+                     if (IsMaster())
+                        status = fProof->ClearPackages();
+                  }
                   break;
-               case 5:
+               case TProof::kClearPackage:
                   (*mess) >> package;
-                  LockPackage();
-                  // remove package directory and par file
-                  gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
-                                package.Data()));
-                  gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(),
-                                package.Data()));
-                  delete fEnabledPackages->Remove(fEnabledPackages->FindObject(package));
-                  UnlockPackage();
-                  if (IsMaster())
-                     fProof->ClearPackage(package);
+                  status = UnloadPackage(package);
+                  if (status == 0) {
+                     LockPackage();
+                     // remove package directory and par file
+                     gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                                   package.Data()));
+                     if (IsMaster())
+                        gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(),
+                                      package.Data()));
+                     UnlockPackage();
+                     if (IsMaster())
+                        status = fProof->ClearPackage(package);
+                  }
                   break;
-               case 6:
+               case TProof::kBuildPackage:
                   (*mess) >> package;
                   LockPackage();
                   // check that package and PROOF-INF directory exists
@@ -929,9 +1015,9 @@ void TProofServ::HandleSocketInput()
                              "package %s successfully built", package.Data());
                   }
                   break;
-               case 7:
+               case TProof::kLoadPackage:
                   (*mess) >> package;
-                  // always follows on case 6 so no need to check for PROOF-INF
+                  // always follows BuildPackage so no need to check for PROOF-INF
                   pdir = fPackageDir + "/" + package;
 
                   ocwd = gSystem->WorkingDirectory();
@@ -966,13 +1052,18 @@ void TProofServ::HandleSocketInput()
                               "package %s successfully loaded", package.Data());
                   }
                   break;
-               case 8:
+               case TProof::kShowEnabledPackages:
                   (*mess) >> all;
-                  if (IsMaster())
-                     printf("*** Enabled packages ***\n");
-                  else
-                     printf("*** Enabled packages on slave %d on %s\n", fOrdinal,
-                            gSystem->HostName());
+                  if (IsMaster()) {
+                     if (all)
+                        printf("*** Enabled packages on master %s on %s\n",
+                               fOrdinal.Data(), gSystem->HostName());
+                     else
+                        printf("*** Enabled packages ***\n");
+                  } else {
+                     printf("*** Enabled packages on slave %s on %s\n",
+                            fOrdinal.Data(), gSystem->HostName());
+                  }
                   {
                      TIter next(fEnabledPackages);
                      while (TObjString *str = (TObjString*) next())
@@ -980,6 +1071,64 @@ void TProofServ::HandleSocketInput()
                   }
                   if (IsMaster() && all)
                      fProof->ShowEnabledPackages(all);
+                  break;
+               case TProof::kShowSubCache:
+                  (*mess) >> all;
+                  if (IsMaster() && all)
+                     fProof->ShowCache(all);
+                  break;
+               case TProof::kClearSubCache:
+                  if (IsMaster())
+                     fProof->ClearCache();
+                  break;
+               case TProof::kShowSubPackages:
+                  (*mess) >> all;
+                  if (IsMaster() && all)
+                     fProof->ShowPackages(all);
+                  break;
+               case TProof::kDisableSubPackages:
+                  if (IsMaster())
+                     fProof->DisablePackages();
+                  break;
+               case TProof::kDisableSubPackage:
+                  (*mess) >> package;
+                  if (IsMaster())
+                     fProof->DisablePackage(package);
+                  break;
+               case TProof::kBuildSubPackage:
+                  (*mess) >> package;
+                  if (IsMaster())
+                     fProof->BuildPackage(package);
+                  break;
+               case TProof::kUnloadPackage:
+                  (*mess) >> package;
+                  status = UnloadPackage(package);
+                  if (IsMaster() && status == 0)
+                     status = fProof->UnloadPackage(package);
+                  break;
+               case TProof::kDisablePackage:
+                  (*mess) >> package;
+                  LockPackage();
+                  // remove package directory and par file
+                  gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                                package.Data()));
+                  gSystem->Exec(Form("%s %s/%s.par", kRM, fPackageDir.Data(),
+                                package.Data()));
+                  UnlockPackage();
+                  if (IsMaster())
+                     fProof->DisablePackage(package);
+                  break;
+               case TProof::kUnloadPackages:
+                  status = UnloadPackages();
+                  if (IsMaster() && status == 0)
+                     status = fProof->UnloadPackages();
+                  break;
+               case TProof::kDisablePackages:
+                  LockPackage();
+                  gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
+                  UnlockPackage();
+                  if (IsMaster())
+                     fProof->DisablePackages();
                   break;
                default:
                   Error("HandleSocketInput:kPROOF_CACHE", "unknown type %d", type);
@@ -1006,6 +1155,44 @@ void TProofServ::HandleSocketInput()
             }
 
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");
+         }
+         break;
+
+      case kPROOF_VALIDATE_DSET:
+         {
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_VALIDATE_DSET", "Enter");
+
+            TDSet* dset = 0;
+            (*mess) >> dset;
+
+            if (IsMaster()) fProof->ValidateDSet(dset);
+            else dset->Validate();
+
+            TMessage answ(kPROOF_VALIDATE_DSET);
+            answ << dset;
+            fSocket->Send(answ);
+            delete dset;
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_VALIDATE_DSET", "Done");
+            SendLogFile();
+         }
+         break;
+
+      case kPROOF_DATA_READY:
+         {
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_DATA_READY", "Enter");
+            TMessage answ(kPROOF_DATA_READY);
+            if (IsMaster()) {
+               Long64_t totalbytes = 0, bytesready = 0;
+               Bool_t dataready = fProof->IsDataReady(totalbytes, bytesready);
+               answ << dataready << totalbytes << bytesready;
+            } else {
+               Error("HandleSocketInput:kPROOF_DATA_READY",
+                     "This message should not be sent to slaves");
+               answ << kFALSE << Long64_t(0) << Long64_t(0);
+            }
+            fSocket->Send(answ);
+            PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_DATA_READY", "Done");
+            SendLogFile();
          }
          break;
 
@@ -1183,8 +1370,9 @@ Bool_t TProofServ::IsParallel() const
 
    if (IsMaster())
       return fProof->IsParallel();
-   else
-      return kFALSE;
+
+   //kFALSE is returned if we are a slave
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1291,7 +1479,7 @@ void TProofServ::RedirectOutput()
    if (IsMaster()) {
       sprintf(logfile, "%s/master.log", fSessionDir.Data());
    } else {
-      sprintf(logfile, "%s/slave-%d.log", fSessionDir.Data(), fOrdinal);
+      sprintf(logfile, "%s/slave-%s.log", fSessionDir.Data(), fOrdinal.Data());
    }
 
    if ((freopen(logfile, "w", stdout)) == 0)
@@ -1302,6 +1490,11 @@ void TProofServ::RedirectOutput()
 
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
+
+   if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
+      Warning("RedirectOutput", "no way to tell master (or client) where"
+              " to upload packages");
+   }
 }
 
 //______________________________________________________________________________
@@ -1320,6 +1513,8 @@ void TProofServ::Reset(const char *dir)
    if (gDirectory != gROOT) {
       gDirectory->Delete();
    }
+
+   if (IsMaster()) fProof->SendCurrentState();
 }
 
 //______________________________________________________________________________
@@ -1445,7 +1640,7 @@ void TProofServ::SendLogFile(Int_t status)
 
    TMessage mess(kPROOF_LOGDONE);
    if (IsMaster())
-      mess << status << fProof->GetNumberOfActiveSlaves();
+      mess << status << (fProof ? fProof->GetParallel() : 0);
    else
       mess << status << (Int_t) 1;
 
@@ -1453,18 +1648,89 @@ void TProofServ::SendLogFile(Int_t status)
 }
 
 //______________________________________________________________________________
-void TProofServ::SendStatus()
+void TProofServ::SendStatistics()
 {
-   // Send status of slave server to master or client.
+   // Send statistics of slave server to master or client.
 
-   if (!IsMaster()) {
-      TMessage mess(kPROOF_STATUS);
-      TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
-      mess << TFile::GetFileBytesRead() << fRealTime << fCpuTime << workdir;
-      fSocket->Send(mess);
+   Long64_t bytesread = 0;
+   if (IsMaster()) bytesread = fProof->GetBytesRead();
+   else bytesread = static_cast<Long64_t>(TFile::GetFileBytesRead());
+
+   TMessage mess(kPROOF_GETSTATS);
+   TString workdir = gSystem->WorkingDirectory();  // expect TString on other side
+   mess << bytesread << fRealTime << fCpuTime << workdir;
+   if (fProtocol >= 4) mess << TString(gProofServ->GetWorkDir());
+   fSocket->Send(mess);
+}
+
+//______________________________________________________________________________
+void TProofServ::SendParallel()
+{
+   // Send number of parallel nodes to master or client.
+
+   Int_t nparallel = 0;
+   if (IsMaster()) {
+      fProof->AskParallel();
+      nparallel = fProof->GetParallel();
    } else {
-      fSocket->Send(fProof->GetNumberOfActiveSlaves(), kPROOF_STATUS);
+      nparallel = 1;
    }
+
+   fSocket->Send(nparallel, kPROOF_GETPARALLEL);
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::UnloadPackage(const char* package)
+{
+   // Removes link to package in working directory
+   // Removes entry from include path
+   // Removes entry from enabled package list
+   // Does not currently remove entry from interpreter include path
+
+   // remove link to package in working directory
+   if (gSystem->Unlink(package) != 0) {
+      Error("UnloadPackage",
+            "unload of package %s unsuccessful", package);
+      return -1;
+   } else {
+      // remove entry from include path
+
+      TString aclicincpath = gSystem->GetIncludePath();
+      TString cintincpath = gInterpreter->GetIncludePath();
+      // remove interpreter part of gSystem->GetIncludePath()
+      aclicincpath.Remove(aclicincpath.Length() - cintincpath.Length() - 1);
+      // remove package's include path
+      aclicincpath.ReplaceAll(TString(" -I") + package, "");
+      gSystem->SetIncludePath(aclicincpath);
+
+      //TODO reset interpreter include path
+
+      // remove entry from enabled packages list
+      delete fEnabledPackages->Remove(fEnabledPackages->FindObject(package));
+      PDB(kPackage, 1)
+         Info("UnloadPackage",
+              "package %s successfully unloaded", package);
+      return 0;
+   }
+
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::UnloadPackages()
+{
+   // Unloads all enabled packages
+
+   // Iterate over packages and remove each package
+   TIter nextpackage(fEnabledPackages);
+   while (TObjString* objstr = dynamic_cast<TObjString*>(nextpackage()))
+      if (UnloadPackage(objstr->String()) != 0)
+         return -1;
+
+   PDB(kPackage, 1)
+      Info("UnloadPackages",
+           "packages successfully unloaded");
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1538,12 +1804,81 @@ void TProofServ::Setup()
 
    fSocket->Recv(mess);
 
-   if (IsMaster())
-      (*mess) >> fUser >> fPwHash >> fSRPPwd >> fConfFile;
-   else
-      (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal;
+   if (IsMaster()) {
+      if (fProtocol < 4) {
+         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fConfFile;
+         fOrdinal = "0";
+      } else {
+         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal >> fConfFile;
+      }
+      delete mess;
 
-   delete mess;
+      fWorkDir = kPROOF_WorkDir;
+
+      // strip off any prooftype directives
+      TString conffile = fConfFile;
+      conffile.Remove(0, 1 + conffile.Index(":"));
+      // parse config file to find working directory
+      TString fconf;
+      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile.Data());
+      PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
+      if (gSystem->AccessPathName(fconf, kReadPermission)) {
+         fconf.Form("%s/proof/etc/%s", fConfDir.Data(), conffile.Data());
+         PDB(kGlobal,2) Info("Setup", "checking PROOF config file %s", fconf.Data());
+         if (gSystem->AccessPathName(fconf, kReadPermission)) {
+            fconf = "";
+         }
+      }
+
+      if (!fconf.IsNull()) {
+         if (FILE *pconf = fopen(fconf, "r")) {
+            // read the config file looking at node lines
+            char line[1024];
+            TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+            // check for valid master line
+            while (fgets(line, sizeof(line), pconf)) {
+               char word[12][128];
+               if (line[0] == '#') continue;   // skip comment lines
+               int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+                   word[2], word[3], word[4], word[5], word[6],
+                   word[7], word[8], word[9], word[10], word[11]);
+
+               // see if master may run on this node, accept both old "node"
+               // and new "master" lines
+               if (nword >= 2 &&
+                   (!strcmp(word[0], "node") || !strcmp(word[0], "master"))) {
+                  TInetAddress a = gSystem->GetHostByName(word[1]);
+                  if (!host.CompareTo(a.GetHostName()) ||
+                      !strcmp(word[1], "localhost")) {
+                     for (int i = 2; i < nword; i++) {
+
+                        if (!strncmp(word[i], "workdir=", 8))
+                           fWorkDir = word[i]+8;
+
+                     }
+                  }
+               }
+            }
+            fclose(pconf);
+         } else {
+            Error("Setup", "could not open config file %s", fconf.Data());
+            SendLogFile(-99);
+            Terminate(0);
+         }
+      }
+   } else {
+      if (fProtocol < 4) {
+         Int_t ord;
+         (*mess) >> fUser >> fPwHash >> fSRPPwd >> ord;
+         fOrdinal = "0.";
+         fOrdinal += ord;
+         fWorkDir = kPROOF_WorkDir;
+      } else {
+         (*mess) >> fUser >> fPwHash >> fSRPPwd >> fOrdinal >> fWorkDir;
+         if (fWorkDir.IsNull()) fWorkDir = kPROOF_WorkDir;
+      }
+      delete mess;
+   }
 
    // Set Globals for later use
    TAuthenticate::SetGlobalUser(fUser);
@@ -1596,28 +1931,30 @@ void TProofServ::Setup()
    gSystem->Setenv("PATH", bindir);
 #endif
 
-   // goto to the "~/proof" main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(kPROOF_WorkDir);
+   // goto to the main PROOF working directory
+   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
+   fWorkDir = workdir;
+   delete [] workdir;
 
-   if (gSystem->AccessPathName(workdir)) {
-      gSystem->MakeDirectory(workdir);
-      if (!gSystem->ChangeDirectory(workdir)) {
+   if (gSystem->AccessPathName(fWorkDir.Data())) {
+      gSystem->MakeDirectory(fWorkDir.Data());
+      if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
          SysError("Setup", "can not change to PROOF directory %s",
-                  workdir);
+                  fWorkDir.Data());
       }
    } else {
-      if (!gSystem->ChangeDirectory(workdir)) {
-         gSystem->Unlink(workdir);
-         gSystem->MakeDirectory(workdir);
-         if (!gSystem->ChangeDirectory(workdir)) {
+      if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
+         gSystem->Unlink(fWorkDir.Data());
+         gSystem->MakeDirectory(fWorkDir.Data());
+         if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
             SysError("Setup", "can not change to PROOF directory %s",
-                     workdir);
+                     fWorkDir.Data());
          }
       }
    }
 
    // check and make sure "cache" directory exists
-   fCacheDir = workdir;
+   fCacheDir = fWorkDir;
    fCacheDir += TString("/") + kPROOF_CacheDir;
    if (gSystem->AccessPathName(fCacheDir))
       gSystem->MakeDirectory(fCacheDir);
@@ -1626,7 +1963,7 @@ void TProofServ::Setup()
    fCacheLock += fUser;
 
    // check and make sure "packages" directory exists
-   fPackageDir = workdir;
+   fPackageDir = fWorkDir;
    fPackageDir += TString("/") + kPROOF_PackDir;
    if (gSystem->AccessPathName(fPackageDir))
       gSystem->MakeDirectory(fPackageDir);
@@ -1638,14 +1975,13 @@ void TProofServ::Setup()
    TString host = gSystem->HostName();
    if (host.Index(".") != kNPOS)
       host.Remove(host.Index("."));
-   fSessionDir = workdir;
+   fSessionDir = fWorkDir;
    if (IsMaster())
       fSessionDir += "/master-";
-   else {
+   else
       fSessionDir += "/slave-";
-      fSessionDir += fOrdinal;
-      fSessionDir += "-";
-   }
+   fSessionDir += fOrdinal;
+   fSessionDir += "-";
    fSessionDir += host + "-";
    fSessionDir += TTimeStamp().GetSec();
    fSessionDir += "-";
@@ -1660,8 +1996,6 @@ void TProofServ::Setup()
          gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
    }
-
-   delete [] workdir;
 
    // Incoming OOB should generate a SIGURG
    fSocket->SetOption(kProcessGroup, gSystem->GetPid());

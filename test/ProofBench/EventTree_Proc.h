@@ -39,6 +39,7 @@ public :
    TRef            fWebHistogram;
    TH1F            *fH;
    TBits           fTriggerBits;
+   Bool_t          fIsValid;
 
    //Output hist
    TH1F* fPtHist;
@@ -63,6 +64,7 @@ public :
    TBranch        *b_event_fWebHistogram;   //!
    TBranch        *b_fH;   //!
    TBranch        *b_event_fTriggerBits;   //!
+   TBranch        *b_event_fIsValid;   //!
 
    EventTree_Proc(TTree *) { }
    EventTree_Proc() { }
@@ -122,6 +124,7 @@ void EventTree_Proc::Init(TTree *tree)
    fChain->SetBranchAddress("fWebHistogram",&fWebHistogram);
    fChain->SetBranchAddress("fH",&fH);
    fChain->SetBranchAddress("fTriggerBits",&fTriggerBits);
+   fChain->SetBranchAddress("fIsValid",&fIsValid);
 }
 
 Bool_t EventTree_Proc::Notify()
@@ -152,6 +155,7 @@ Bool_t EventTree_Proc::Notify()
    b_event_fWebHistogram = fChain->GetBranch("fWebHistogram");
    b_fH = fChain->GetBranch("fH");
    b_event_fTriggerBits = fChain->GetBranch("fTriggerBits");
+   b_event_fIsValid = fChain->GetBranch("fIsValid");
 
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.22 2004/07/09 01:34:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.23 2004/07/29 10:54:54 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -19,6 +19,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TArrayL
+#include "TArrayL.h"
+#endif
+#ifndef ROOT_TList
+#include "TList.h"
+#endif
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -33,7 +39,6 @@
 #endif
 
 
-class TList;
 class TSelector;
 class TDSet;
 class TDSetElement;
@@ -101,13 +106,15 @@ public:
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TObject *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
+   virtual void      Progress(TSlave *, Long64_t total, Long64_t processed)
+                        { Progress(total, processed); }
    virtual void      Feedback(TList *objs); // *SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
    void              UpdateAutoBin(const char *name,
-                        Double_t& xmin, Double_t& xmax,
-                        Double_t& ymin, Double_t& ymax,
-                        Double_t& zmin, Double_t& zmax);
+                                    Double_t& xmin, Double_t& xmax,
+                                    Double_t& ymin, Double_t& ymax,
+                                    Double_t& zmin, Double_t& zmax);
 
 
    ClassDef(TProofPlayer,0)  // Abstract PROOF player
@@ -136,17 +143,19 @@ private:
    TList              *fFeedbackLists; // intermediate results
    TVirtualPacketizer *fPacketizer;    // transform TDSet into packets for slaves
 
-   virtual Bool_t      HandleTimer(TTimer *timer);
    TList              *MergeFeedback();
 
 protected:
-   virtual void        SetupFeedback();  // specialized setup
-   virtual void        StopFeedback();   // specialized teardown
+   virtual Bool_t  HandleTimer(TTimer *timer);
+   TProof         *GetProof() const { return fProof; }
+   virtual Bool_t  SendSelector(const char *selector_file); //send selector to slaves
+   virtual void    SetupFeedback();  // specialized setup
+   virtual void    StopFeedback();   // specialized teardown
 
 public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0) {}
-   ~TProofPlayerRemote();   // Owns the fOutput list
+   virtual ~TProofPlayerRemote();   // Owns the fOutput list
 
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
@@ -164,11 +173,12 @@ public:
 //------------------------------------------------------------------------
 
 class TProofPlayerSlave : public TProofPlayer {
+
 private:
    TSocket *fSocket;
    TList   *fFeedback;  // List of objects to send updates of
 
-   virtual Bool_t      HandleTimer(TTimer *timer);
+   virtual Bool_t HandleTimer(TTimer *timer);
 
 protected:
    void SetupFeedback();
@@ -178,11 +188,41 @@ public:
    TProofPlayerSlave();
    TProofPlayerSlave(TSocket *socket);
 
-   Long64_t    DrawSelect(TDSet *set, const char *varexp,
+   Long64_t DrawSelect(TDSet *set, const char *varexp,
                        const char *selection, Option_t *option = "",
                        Long64_t nentries = -1, Long64_t firstentry = 0);
 
    ClassDef(TProofPlayerSlave,0)  // PROOF player running on slave server
+};
+
+
+//------------------------------------------------------------------------
+
+class TProofPlayerSuperMaster : public TProofPlayerRemote {
+
+private:
+   TArrayL fSlaveProgress;
+   TArrayL fSlaveTotals;
+   TList   fSlaves;
+   Bool_t  fReturnFeedback;
+
+protected:
+   virtual Bool_t HandleTimer(TTimer *timer);
+   virtual void   SetupFeedback();
+
+public:
+   TProofPlayerSuperMaster(TProof *proof = 0) :
+      TProofPlayerRemote(proof), fReturnFeedback(kFALSE) { }
+   virtual ~TProofPlayerSuperMaster() { }
+
+   virtual Long64_t Process(TDSet *set, const char *selector,
+                            Option_t *option = "", Long64_t nentries = -1,
+                            Long64_t firstentry = 0, TEventList *evl = 0);
+   virtual void  Progress(Long64_t total, Long64_t processed)
+                    { TProofPlayerRemote::Progress(total, processed); }
+   virtual void  Progress(TSlave *sl, Long64_t total, Long64_t processed);
+
+   ClassDef(TProofPlayerSuperMaster,0)  // PROOF player running on super master
 };
 
 #endif

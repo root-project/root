@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.h,v 1.1 2002/04/19 18:23:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofLimitsFinder.h,v 1.2 2003/03/04 17:29:29 rdm Exp $
 // Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #endif
 
 class TH1;
+class TString;
 
 class TProofLimitsFinder : public THLimitsFinder {
 
@@ -34,6 +35,11 @@ public:
    virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
    virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
    virtual Int_t FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
+
+   static void AutoBinFunc(TString& key,
+                           Double_t& xmin, Double_t& xmax,
+                           Double_t& ymin, Double_t& ymax,
+                           Double_t& zmin, Double_t& zmax);
 
    ClassDef(TProofLimitsFinder,0)  //Find and communicate best axis limits
 };

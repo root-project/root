@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.6 2003/09/23 22:06:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.7 2003/10/07 14:03:03 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -26,7 +26,7 @@
 #include "TRegexp.h"
 #include "TProofDebug.h"
 #include "Riostream.h"
-
+#include "TEnv.h"
 
 ClassImp(TCondorSlave)
 ClassImp(TCondor)
@@ -40,11 +40,23 @@ TCondor::TCondor(const char *pool) : fPool(pool), fState(kFree)
 
    fClaims = new TList;
 
-   // hack our path :-/
-   TString path = gSystem->Getenv("PATH");
-   path = "/opt/condor/bin:" + path;
-   gSystem->Setenv("PATH",path);
-   gSystem->Setenv("CONDOR_CONFIG","/opt/condor/etc/condor_config");
+   // Setup Condor
+
+   TString condorHome = gEnv->GetValue("Proof.CondorHome", (char*)0);
+   if (condorHome != "") {
+      TString path = gSystem->Getenv("PATH");
+      path = condorHome + "/bin:" + path;
+      gSystem->Setenv("PATH",path);
+   }
+
+   TString condorConf = gEnv->GetValue("Proof.CondorConfig", (char*)0);
+   if (condorConf != "") {
+      gSystem->Setenv("CONDOR_CONFIG",condorConf);
+   }
+
+   const char *loc = gSystem->Which(gSystem->Getenv("PATH"), "condor_cod",
+                                    kExecutePermission);
+   fValid = (loc != 0);
 }
 
 
@@ -73,11 +85,15 @@ void TCondor::Print(Option_t * opt) const
 
 
 //______________________________________________________________________________
-TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port)
+TCondorSlave *TCondor::ClaimVM(const char *vm, const char *cmd)
 {
    // Claim a VirtualMachine for PROOF usage.
 
-   TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>/dev/null", vm );
+//    TString reinitCmd = "KRB5CCNAME=FILE:/tmp/condor.$$ && /usr/krb5/bin/kinit -F -k -t /etc/cdfcaf.keytab cafuser/cdf/h2caf@FNAL.GOV";
+//    gSystem->Exec(reinitCmd.Data());
+   Int_t port = 0;
+
+   TString claimCmd = Form("condor_cod request -name %s -timeout 10 2>/tmp/error.condor.proof.$$", vm );
 
    PDB(kCondor,2) Info("ClaimVM","command: %s", claimCmd.Data());
    FILE  *pipe = gSystem->OpenPipe(claimCmd, "r");
@@ -105,20 +121,22 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
    }
 
    Int_t r = gSystem->ClosePipe(pipe);
-   PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
+   if (r) {
+      Error("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
+      return 0;
+   } else {
+      PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", claimCmd.Data(), r);
+   }
 
    TString jobad("jobad");
    FILE *jf = gSystem->TempFileName(jobad);
 
    if (jf == 0) return 0;
 
-   fputs("JobUniverse = 5\n", jf); // vanilla
-   fputs("Cmd = \"/usr/local/root/bin/proofd\"\n", jf);
-   fputs("Iwd = \"/tmp\"\n", jf);
-   fputs("In = \"/dev/null\"\n", jf);
-   fprintf(jf, "Out = \"/tmp/proofd.out.%d\"\n", port);
-   fprintf(jf, "Err = \"/tmp/proofd.err.%d\"\n", port);
-   fprintf(jf, "Args = \"-f -p %d -d 3 /usr/local/root\"\n", port);
+   TString str(cmd);
+   str.ReplaceAll("$(Port)", Form("%d", port));
+   fputs(str, jf);
+
    fclose(jf);
 
    TString activateCmd = Form("condor_cod activate -id '%s' -jobad %s",
@@ -137,7 +155,11 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
    }
 
    r = gSystem->ClosePipe(pipe);
-   PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", activateCmd.Data(), r);
+   if (r) {
+      Error("ClaimVM","command: %s returned %d", activateCmd.Data(), r);
+   } else {
+      PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", activateCmd.Data(), r);
+   }
 
    gSystem->Unlink(jobad);
 
@@ -148,11 +170,8 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
    node = node.Remove(0, node.Index("@")+1);
    claim->fHostname = node;
    claim->fPort = port;
-   if ( !GetVmInfo(vm, claim->fImage, claim->fPerfIdx) ) {
-      // assume vm is gone
-      delete claim;
-      return 0;
-   }
+   claim->fPerfIdx = 100; //set performance index to 100 by default
+   claim->fImage = node; //set image to hostname by default
 
    return claim;
 }
@@ -184,7 +203,13 @@ TList *TCondor::GetVirtualMachines() const
    }
 
    Int_t r = gSystem->ClosePipe(pipe);
-   PDB(kCondor,1) Info("GetVirtualMachines","command: %s returned %d", cmd.Data(), r);
+   if (r) {
+      delete l;
+      Error("GetVirtualMachines","command: %s returned %d", cmd.Data(), r);
+      return 0;
+   } else {
+      PDB(kCondor,1) Info("GetVirtualMachines","command: %s returned %d", cmd.Data(), r);
+   }
 
    return l;
 }
@@ -193,34 +218,62 @@ TList *TCondor::GetVirtualMachines() const
 //______________________________________________________________________________
 TList *TCondor::Claim(Int_t n, const char *cmd)
 {
+   // Claim n virtual machines
+   // This function figures out the image and performance index before returning
+   // the list of condor slaves
+
    if (fState != kFree) {
       Error("Claim","not in state Free");
       return 0;
    }
 
    TList *vms = GetVirtualMachines();
-
    TIter next(vms);
    TObjString *vm;
    for(Int_t i=0; i < n && (vm = (TObjString*) next()) != 0; i++ ) {
-      Int_t port = 17000+i; // hard code port for the moment
-      TCondorSlave *claim = ClaimVM(vm->GetName(), cmd, port);
+      TCondorSlave *claim = ClaimVM(vm->GetName(), cmd);
       if (claim != 0) {
-
-         fClaims->Add(claim);
-
+         if ( !GetVmInfo(vm->GetName(), claim->fImage, claim->fPerfIdx) ) {
+            // assume vm is gone
+            delete claim;
+         } else {
+            fClaims->Add(claim);
+            fState = kActive;
+         }
       }
    }
-
-   fState = kActive;
 
    return fClaims;
 }
 
 
 //______________________________________________________________________________
+TCondorSlave *TCondor::Claim(const char *vmname, const char *cmd)
+{
+   // Claim virtual machine with name vmname
+   // This function does not figure out the image and performance index before
+   // returning the condor slave
+
+   if (fState != kFree && fState != kActive) {
+      Error("Claim","not in state Free or Active");
+      return 0;
+   }
+
+   TCondorSlave *claim = ClaimVM(vmname, cmd);
+   if (claim != 0) {
+      fClaims->Add(claim);
+      fState = kActive;
+   }
+
+   return claim;
+}
+
+
+//______________________________________________________________________________
 Bool_t TCondor::SetState(EState state)
 {
+   PDB(kCondor,1) Info("SetState","state: %s",
+                       state == kSuspended ? "kSuspended" : "kActive");
    TIter next(fClaims);
    TCondorSlave *claim;
    while((claim = (TCondorSlave*) next()) != 0) {
@@ -242,7 +295,12 @@ Bool_t TCondor::SetState(EState state)
       }
 
       Int_t r = gSystem->ClosePipe(pipe);
-      PDB(kCondor,1) Info("SetState","command: %s returned %d", cmd.Data(), r);
+      if (r) {
+         Error("SetState","command: %s returned %d", cmd.Data(), r);
+         return kFALSE;
+      } else {
+         PDB(kCondor,1) Info("SetState","command: %s returned %d", cmd.Data(), r);
+      }
    }
 
    fState = state;
@@ -300,7 +358,12 @@ Bool_t TCondor::Release()
       }
 
       Int_t r = gSystem->ClosePipe(pipe);
-      PDB(kCondor,1) Info("Release","command: %s returned %d", cmd.Data(), r);
+      if (r) {
+         Error("Release","command: %s returned %d", cmd.Data(), r);
+         return kFALSE;
+      } else {
+         PDB(kCondor,1) Info("Release","command: %s returned %d", cmd.Data(), r);
+      }
 
       fClaims->Remove(claim);
       delete claim;
@@ -322,7 +385,7 @@ Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
 
    if (!pipe) {
       SysError("GetVmInfo","cannot run command: %s", cmd.Data());
-      return 0;
+      return kFALSE;
    }
 
    TString line;
@@ -337,7 +400,12 @@ Bool_t TCondor::GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const
    }
 
    Int_t r = gSystem->ClosePipe(pipe);
-   PDB(kCondor,1) Info("GetVmInfo","command: %s returned %d", cmd.Data(), r);
+   if (r) {
+      Error("GetVmInfo","command: %s returned %d", cmd.Data(), r);
+      return kFALSE;
+   } else {
+      PDB(kCondor,1) Info("GetVmInfo","command: %s returned %d", cmd.Data(), r);
+   }
 
    return kTRUE;
 }
@@ -369,7 +437,12 @@ TString TCondor::GetImage(const char *host) const
    }
 
    Int_t r = gSystem->ClosePipe(pipe);
-   PDB(kCondor,1) Info("GetImage","command: %s returned %d", cmd.Data(), r);
+   if (r) {
+      Error("GetImage","command: %s returned %d", cmd.Data(), r);
+      return 0;
+   } else {
+      PDB(kCondor,1) Info("GetImage","command: %s returned %d", cmd.Data(), r);
+   }
 
    return image;
 }

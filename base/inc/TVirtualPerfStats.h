@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.h,v 1.2 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.h,v 1.1 2004/06/13 16:26:36 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -48,12 +48,12 @@ public:
 
    virtual void SimpleEvent(EEventType type) = 0;
 
-   virtual void PacketEvent(Int_t slave, const char *slavename, const char *filename,
+   virtual void PacketEvent(const char *slave, const char *slavename, const char *filename,
                             Long64_t eventsprocessed, Double_t latency,
                             Double_t proctime, Double_t cputime,
                             Long64_t bytesRead) = 0;
 
-   virtual void FileEvent(Int_t slave, const char *slavename, const char *nodename,
+   virtual void FileEvent(const char *slave, const char *slavename, const char *nodename,
                           const char *filename, Bool_t isStart) = 0;
 
    virtual void FileOpenEvent(TFile *file, const char *filename, Double_t proctime) = 0;

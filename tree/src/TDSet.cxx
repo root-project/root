@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.11 2004/03/11 11:02:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.12 2004/06/13 16:26:36 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -51,6 +51,7 @@
 #include "TGridResult.h"
 #include "TKey.h"
 #include "TList.h"
+#include "TMap.h"
 #include "TROOT.h"
 #include "TTimeStamp.h"
 #include "TTree.h"
@@ -101,17 +102,30 @@ void TDSetElementMsn::Print(Option_t *) const
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const TDSet *set, const char *file,
                            const char *objname, const char *dir,
-                           Long64_t first, Long64_t num)
+                           Long64_t first, Long64_t num,
+                           const char *msd)
 {
    // Create a TDSet element.
 
    fSet      = set;
    fFileName = file;
-   fFirst    = first;
-   fNum      = num;
+   if (first < 0) {
+      Warning("TDSetElement", "first must be >= 0, %d is not allowed - setting to 0", first);
+      fFirst = 0;
+   } else {
+      fFirst = first;
+   }
+   if (num < -1) {
+      Warning("TDSetElement", "num must be >= -1, %d is not allowed - setting to -1", num);
+      fNum   = -1;
+   } else {
+      fNum   = num;
+   }
+   fMsd      = msd;
    fPfnList  = 0;
    fIterator = 0;
    fCurrent  = 0;
+   fValid    = kFALSE;
 
    if (objname)
       fObjName = objname;
@@ -196,6 +210,7 @@ void TDSetElement::Print(Option_t *opt) const
            << "' obj='" << fObjName
            << "' first=" << fFirst
            << " num=" << fNum
+           << " msd=" << fMsd
            << endl;
    } else
       cout << "\tLFN: " << fFileName << endl;
@@ -204,6 +219,75 @@ void TDSetElement::Print(Option_t *opt) const
 
    while (TDSetElementPfn *pfn = (TDSetElementPfn *) next())
       pfn->Print(opt);
+}
+
+//______________________________________________________________________________
+void TDSetElement::Validate()
+{
+   // Validate by opening the file.
+
+   if (fSet) {
+      Long64_t entries = TDSet::GetEntries(fSet->IsTree(), fFileName,
+                                           fDirectory, fObjName);
+      if (entries < 0) return; // Error should be reported by GetEntries()
+      if (fFirst < entries) {
+         if (fNum == -1) {
+            fNum = entries - fFirst;
+            fValid = kTRUE;
+         } else {
+            if (fNum <= entries - fFirst) {
+               fValid = kTRUE;
+            } else {
+               Error("Validate", "TDSetElement has only %d entries starting"
+                     " with entry %d, while %d were requested",
+                     entries - fFirst, fFirst, fNum);
+            }
+         }
+      } else {
+         Error("Validate", "TDSetElement has only %d entries with"
+               " first entry requested as %d", entries, fFirst);
+      }
+   } else {
+      Error("Validate", "No TDSet associated with TDSetElement"
+            " - cannot figure out type");
+   }
+}
+
+//______________________________________________________________________________
+void TDSetElement::Validate(TDSetElement* elem)
+{
+   // Validate by checking against another element.
+
+   if (!elem || !elem->GetValid()) {
+      Error("Validate", "TDSetElement to validate against is not valid");
+      return;
+   }
+
+   if (!strcmp(GetFileName(), elem->GetFileName()) &&
+       !strcmp(GetDirectory(), elem->GetDirectory()) &&
+       !strcmp(GetObjName(), elem->GetObjName())) {
+      Long64_t entries = elem->fFirst + elem->fNum;
+      if (fFirst < entries) {
+         if (fNum == -1) {
+            fNum = entries - fFirst;
+            fValid = kTRUE;
+         } else {
+            if (fNum <= entries - fFirst) {
+               fValid = kTRUE;
+            } else {
+               Error("Validate", "TDSetElement requests %d entries starting"
+                     " with entry %d, while TDSetElement to validate against"
+                     " has only %d entries", fNum, fFirst, entries);
+            }
+         }
+      } else {
+         Error("Validate", "TDSetElement to validate against has only %d"
+               " entries, but this TDSetElement requested %d as its first"
+               " entry", entries, fFirst);
+      }
+   } else {
+      Error("Validate", "TDSetElements do not refer to same objects");
+   }
 }
 
 //______________________________________________________________________________
@@ -420,7 +504,7 @@ void TDSet::SetDirectory(const char *dir)
 
 //______________________________________________________________________________
 Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
-                  Long64_t first, Long64_t num)
+                  Long64_t first, Long64_t num, const char *msd)
 {
    // Add file to list of files to be analyzed. Optionally with the
    // objname and dir arguments the default, TDSet wide, objname and
@@ -444,7 +528,7 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    // try, if it is a GRID lfn
    if ((GridAdd(file, objname, dir, first, num)) < 1) {
       // could not be resolved with the grid, just take it as it is
-      fElements->Add(new TDSetElement(this, file, objname, dir, first, num));
+      fElements->Add(new TDSetElement(this, file, objname, dir, first, num, msd));
    }
    return kTRUE;
 }
@@ -520,7 +604,7 @@ Bool_t TDSet::Add(TDSet *set)
    TObject *last = set == this ? fElements->Last() : 0;
    while ((el = (TDSetElement*) next())) {
       Add(el->GetFileName(), el->GetObjName(), el->GetDirectory(),
-          el->GetFirst(), el->GetNum());
+          el->GetFirst(), el->GetNum(), el->GetMsd());
       if (el == last) break;
    }
 
@@ -575,7 +659,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
                            const char *objname)
 {
    // Returns number of entries in tree or objects in file. Returns -1 in
-   // case of error
+   // case of error.
 
    Double_t start = 0;
    if (gPerfStats != 0) start = TTimeStamp();
@@ -745,5 +829,80 @@ void TDSet::GridAddElementMsn(TDSetElementPfn *dsepfn)
    } else {
       dseme->Increment();
       dseme->AddData(dsepfn->GetSize());
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TDSet::ElementsValid() const
+{
+   // Check if all elemnts are valid.
+
+   TIter NextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+      if (!elem->GetValid()) return kFALSE;
+   }
+   return kTRUE;
+
+}
+
+//______________________________________________________________________________
+void TDSet::Validate()
+{
+   // Validate the TDSet by opening files.
+
+   TIter NextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+      if (!elem->GetValid()) elem->Validate();
+   }
+
+}
+
+//______________________________________________________________________________
+void TDSet::Validate(TDSet* dset)
+{
+   // Validate the TDSet against another TDSet.
+   // Only validates elements in common from input TDSet.
+
+   THashList BestElements;
+   BestElements.SetOwner();
+   TList NamedHolder;
+   NamedHolder.SetOwner();
+   TIter NextOtherElem(dset->GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextOtherElem())) {
+      if (!elem->GetValid()) continue;
+      TString dir_file_obj = elem->GetDirectory();
+      dir_file_obj += "_";
+      dir_file_obj += elem->GetFileName();
+      dir_file_obj += "_";
+      dir_file_obj += elem->GetObjName();
+      TPair *p = dynamic_cast<TPair*>(BestElements.FindObject(dir_file_obj));
+      if (p) {
+         TDSetElement *prevelem = dynamic_cast<TDSetElement*>(p->Value());
+         Long64_t entries = prevelem->GetFirst()+prevelem->GetNum();
+         if (entries<elem->GetFirst()+elem->GetNum()) {
+            BestElements.Remove(p);
+            BestElements.Add(new TPair(p->Key(), elem));
+            delete p;
+         }
+      } else {
+         TNamed* named = new TNamed(dir_file_obj, dir_file_obj);
+         NamedHolder.Add(named);
+         BestElements.Add(new TPair(named, elem));
+      }
+   }
+
+   TIter NextElem(GetListOfElements());
+   while (TDSetElement *elem = dynamic_cast<TDSetElement*>(NextElem())) {
+      if (!elem->GetValid()) {
+         TString dir_file_obj = elem->GetDirectory();
+         dir_file_obj += "_";
+         dir_file_obj += elem->GetFileName();
+         dir_file_obj += "_";
+         dir_file_obj += elem->GetObjName();
+         if (TPair *p = dynamic_cast<TPair*>(BestElements.FindObject(dir_file_obj))) {
+            TDSetElement* validelem = dynamic_cast<TDSetElement*>(p->Value());
+            elem->Validate(validelem);
+         }
+      }
    }
 }

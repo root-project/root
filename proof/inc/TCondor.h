@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.1 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.2 2003/09/23 08:54:50 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -43,6 +43,7 @@ public:
    Int_t    fPerfIdx;
    TString  fImage;
    TString  fClaimID;
+   TString  fOrdinal;
 
    void        Print(Option_t *option="") const;
 
@@ -53,33 +54,39 @@ public:
 //------------------------------------------------------------------------
 
 class TCondor : public TObject {
-private:
-
+public:
    enum EState { kFree, kSuspended, kActive };
 
-   TString  fPool;      // the condor pool to be accessed
-   EState   fState;     // our claim state
-   TList   *fClaims;    // list of claims we manage
+private:
+
+   Bool_t   fValid;     //access to Condor
+   TString  fPool;      //the condor pool to be accessed
+   EState   fState;     //our claim state
+   TList   *fClaims;    //list of claims we manage
 
 protected:
-   TCondorSlave  *ClaimVM(const char *vm, const char *cmd, Int_t &port);
-   Bool_t         SetState(EState state);
+   TCondorSlave  *ClaimVM(const char *vm, const char *cmd);
 
 public:
    TCondor(const char *pool = "");
    virtual ~TCondor();
 
-   void        Print(Option_t *option="") const;
 
-   TList      *GetVirtualMachines() const;
+   void           Print(Option_t *option="") const;
+   Bool_t         IsValid() const { return fValid; }
 
-   TList      *Claim(Int_t n, const char *cmd);
-   Bool_t      Suspend();
-   Bool_t      Resume();
-   Bool_t      Release();
+   TList         *GetVirtualMachines() const;
 
-   Bool_t      GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const;
-   TString     GetImage(const char *host) const;
+   TList         *Claim(Int_t n, const char *cmd);
+   TCondorSlave  *Claim(const char *vmname, const char *cmd);
+   Bool_t         SetState(EState state);
+   EState         GetState() const {return fState;}
+   Bool_t         Suspend();
+   Bool_t         Resume();
+   Bool_t         Release();
+
+   Bool_t         GetVmInfo(const char *vm, TString &image, Int_t &perfidx) const;
+   TString        GetImage(const char *host) const;
 
 
    ClassDef(TCondor,0)  // Interface to the Condor System

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.10 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.11 2004/11/24 07:41:32 brun Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected:
 public:
    TVirtualProof(const char * /*masterurl*/, const char * /*conffile*/ = 0,
                  const char * /*confdir*/ = 0, Int_t /*loglevel*/ = 0) { }
-   virtual ~TVirtualProof() { }
+   virtual ~TVirtualProof() { Emit("~TVirtualProof()"); }
 
    virtual Int_t       Ping() = 0;
    virtual Int_t       Exec(const char *cmd) = 0;
@@ -74,8 +74,8 @@ public:
    virtual void        ClearCache() = 0;
    virtual void        ShowPackages(Bool_t all = kFALSE) = 0;
    virtual void        ShowEnabledPackages(Bool_t all = kFALSE) = 0;
-   virtual void        ClearPackages() = 0;
-   virtual void        ClearPackage(const char *package) = 0;
+   virtual Int_t       ClearPackages() = 0;
+   virtual Int_t       ClearPackage(const char *package) = 0;
    virtual Int_t       EnablePackage(const char *package) = 0;
    virtual Int_t       UploadPackage(const char *par, Int_t parallel = 1) = 0;
 
@@ -93,13 +93,14 @@ public:
    virtual Int_t       GetParallel() const = 0;
    virtual TList      *GetSlaveInfo() = 0;
 
-   virtual Double_t    GetBytesRead() const = 0;
+   virtual Long64_t    GetBytesRead() const = 0;
    virtual Float_t     GetRealTime() const = 0;
    virtual Float_t     GetCpuTime() const = 0;
 
    virtual Bool_t      IsMaster() const = 0;
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
+   virtual Bool_t      IsDataReady(Long64_t &totalbytes, Long64_t &bytesready) = 0;
 
    virtual void        AddFeedback(const char *name) = 0;
    virtual void        RemoveFeedback(const char *name) = 0;
