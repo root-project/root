@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.66 2002/05/31 01:05:34 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.67 2002/06/08 00:45:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1168,8 +1168,10 @@ TH2F* RooAbsPdf::plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar&
   // top of the returned histogram. The returned TH2F does not contain the contour lines, so please save the canvas to
   // store the results.
 
-  RooFitContext context(&data,this) ;
-  return context.plotNLLContours(var1,var2,n1,n2,n3) ;
+  RooFitContext* cx = fitContext(data) ;
+  TH2F* ret = cx->plotNLLContours(var1,var2,n1,n2,n3) ;
+  delete cx ;
+  return ret ;
 }
 
 
