@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.13 2002/02/07 18:06:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.14 2002/02/12 17:53:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -33,6 +33,11 @@
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
 #endif
+#ifndef ROOT_TMD5
+#include "TMD5.h"
+#endif
+
+#include <map>
 
 
 class TList;
@@ -49,7 +54,6 @@ class TProofPlayer;
 class TProofPlayerRemote;
 class TDSet;
 class TEventList;
-class TTree;  // obsolete
 
 
 // PROOF magic constants
@@ -98,6 +102,12 @@ private:
    Int_t     fLimits;        //used by Limits()
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
    TProofPlayer   *fPlayer;     //current player
+   struct MD5Mod_t {
+      TMD5    fMD5;             //file's md5
+      ULong_t fModtime;         //file's modification time
+   };
+   typedef std::map<TString, MD5Mod_t> FileMap_t;
+   FileMap_t  fFileMap;         //map keeping track of a file's md5 and mod time
 
    enum ESlaves { kAll, kActive, kUnique };
    enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
@@ -112,6 +122,7 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
+   Long_t   CheckFile(const char *file, TList *slaves, TList *sendto);
    Int_t    SendFile(const char *file, Bool_t bin = kTRUE, ESlaves list = kUnique);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);
    Int_t    SendGroupView();
@@ -162,7 +173,6 @@ public:
    virtual ~TProof();
 
    Int_t       Ping();
-   void        Loop(TTree * /*tree*/) { }  // obsolete
    Int_t       Exec(const char *cmd);
    Int_t       Process(TDSet *set, const char *selector, Int_t nentries = -1,
                        Int_t first = 0, TEventList *evl = 0);

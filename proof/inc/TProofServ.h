@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.7 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.8 2002/02/12 17:53:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 
 class TProof;
 class TSocket;
+class TDSetElement;
 
 
 class TProofServ : public TApplication {
@@ -72,41 +73,41 @@ public:
    TProofServ(int *argc, char **argv);
    virtual ~TProofServ();
 
-   const char *GetService() const { return fService.Data(); }
-   const char *GetConfDir() const { return fConfDir.Data(); }
-   const char *GetConfFile() const { return fConfFile.Data(); }
-   const char *GetUser() const { return fUser.Data(); }
-   Int_t       GetProtocol() const { return fProtocol; }
-   Int_t       GetOrdinal() const { return fOrdinal; }
-   Int_t       GetGroupId() const { return fGroupId; }
-   Int_t       GetGroupSize() const { return fGroupSize; }
-   Int_t       GetLogLevel() const { return fLogLevel; }
-   TSocket    *GetSocket() const { return fSocket; }
-   Float_t     GetRealTime() const { return fRealTime; }
-   Float_t     GetCpuTime() const { return fCpuTime; }
-   void        GetOptions(int *argc, char **argv);
+   const char   *GetService() const { return fService.Data(); }
+   const char   *GetConfDir() const { return fConfDir.Data(); }
+   const char   *GetConfFile() const { return fConfFile.Data(); }
+   const char   *GetUser() const { return fUser.Data(); }
+   Int_t         GetProtocol() const { return fProtocol; }
+   Int_t         GetOrdinal() const { return fOrdinal; }
+   Int_t         GetGroupId() const { return fGroupId; }
+   Int_t         GetGroupSize() const { return fGroupSize; }
+   Int_t         GetLogLevel() const { return fLogLevel; }
+   TSocket      *GetSocket() const { return fSocket; }
+   Float_t       GetRealTime() const { return fRealTime; }
+   Float_t       GetCpuTime() const { return fCpuTime; }
+   void          GetOptions(int *argc, char **argv);
 
-   void        HandleSocketInput();
-   void        HandleUrgentData();
-   void        HandleSigPipe();
-   void        Interrupt() { fInterrupt = kTRUE; }
-   Bool_t      IsMaster() const { return fMasterServ; }
-   Bool_t      IsParallel() const;
+   void          HandleSocketInput();
+   void          HandleUrgentData();
+   void          HandleSigPipe();
+   void          Interrupt() { fInterrupt = kTRUE; }
+   Bool_t        IsMaster() const { return fMasterServ; }
+   Bool_t        IsParallel() const;
 
-   void        Run(Bool_t retrn = kFALSE);
+   void          Run(Bool_t retrn = kFALSE);
 
-   void        Print(Option_t *option="") const;
+   void          Print(Option_t *option="") const;
 
-   TObject    *Get(const char *namecycle);
-   Stat_t      GetEntriesProcessed() const { return fEntriesProcessed; }
-   void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
-   Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
-   void        Reset(const char *dir);
-   Int_t       ReceiveFile(const char *file, Bool_t bin, Long_t size);
-   void        SendLogFile(Int_t status = 0);
-   void        SendStatus();
+   TObject      *Get(const char *namecycle);
+   Stat_t        GetEntriesProcessed() const { return fEntriesProcessed; }
+   void          GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
+   TDSetElement *GetNextPacket();
+   void          Reset(const char *dir);
+   Int_t         ReceiveFile(const char *file, Bool_t bin, Long_t size);
+   void          SendLogFile(Int_t status = 0);
+   void          SendStatus();
 
-   void        Terminate(int status);
+   void          Terminate(int status);
 
    static Bool_t      IsActive();
    static TProofServ *This();

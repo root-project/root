@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.15 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.16 2002/02/12 17:53:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -46,7 +46,8 @@ typedef long off_t;
 #include "TError.h"
 #include "TTree.h"
 #include "TProofPlayer.h"
-#include "TDSet.h"
+#include "TDSetProxy.h"
+
 
 
 TProofServ *gProofServ;
@@ -391,21 +392,23 @@ void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vm
 }
 
 //______________________________________________________________________________
-Bool_t TProofServ::GetNextPacket(Int_t &nentries, Stat_t &firstentry)
+TDSetElement *TProofServ::GetNextPacket()
 {
    // Get next range of entries to be processed on this server.
 
+Info("GetNextPacket","Enter");
    fSocket->Send(kPROOF_GETPACKET);
 
    TMessage *mess;
    if (fSocket->Recv(mess) < 0)
-      return kFALSE;
+      return 0;
 
-   (*mess) >> nentries >> firstentry >> fEntriesProcessed;
+   TDSetElement *element;
+   (*mess) >> element;
 
-   if (nentries == -1)
-      return kFALSE;
-   return kTRUE;
+Info("GetNextPacket","Leave");
+
+   return element;
 }
 
 //______________________________________________________________________________
@@ -537,6 +540,10 @@ void TProofServ::HandleSocketInput()
                p = new TProofPlayerSlave(fSocket);
             }
 
+            if (dset->IsA() == TDSetProxy::Class()) {
+               ((TDSetProxy*)dset)->SetProofServ(this);
+            }
+
             TIter next(input);
             for (TObject *obj; (obj = next()); ) {
                Info("Copying: ", obj->GetName());
@@ -547,15 +554,16 @@ void TProofServ::HandleSocketInput()
             p->Process(dset, filename, nentries, first);
 
             // return output!
-::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: SendObject");
+Info("HandleSocketInput","### kPROOF_PROCESS: SendObject");
 
             fSocket->SendObject(p->GetOutputList(), kPROOF_OUTPUTLIST);
 
-::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: SendLogFile");
+Info("HandleSocketInput","### kPROOF_PROCESS: SendLogFile");
 
             SendLogFile();
-::Info("TProofServ::HandleSocketInput","### kPROOF_PROCESS: Done");
+Info("HandleSocketInput","### kPROOF_PROCESS: Done");
 
+            delete dset;
             delete p;
          }
          break;

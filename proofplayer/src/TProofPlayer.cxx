@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.1 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.2 2002/02/12 17:53:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -25,9 +25,10 @@
 #include "TError.h"
 #include "MessageTypes.h"
 #include "TMessage.h"
-#include "TDSet.h"
+#include "TDSetProxy.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "TFile.h"
 
 #include "Api.h"
 
@@ -79,24 +80,21 @@ TList *TProofPlayer::GetOutputList() const
    return fOutput;
 }
 
+//______________________________________________________________________________
 void TProofPlayer::StoreOutput(TList *out)
 {
-   Fatal("TProofPlayer::StoreOutput", "this method must be overridden!");
+   Fatal("StoreOutput", "this method must be overridden!");
 }
-//------------------------------------------------------------------------------
 
-
-ClassImp(TProofPlayerLocal)
 
 //______________________________________________________________________________
-Int_t TProofPlayerLocal::Process(TDSet *dset, const char *selector_file,
+Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                                  Int_t nentries, Int_t first,
                                  TEventList *evl)
 {
-   ::Info("TProofPlayerLocal::Process","Voila!");
+   Info("Process","Voila!");
 
-   // create TSelector
-   delete fSelector; fSelector = 0;
+   delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {
@@ -104,22 +102,93 @@ Int_t TProofPlayerLocal::Process(TDSet *dset, const char *selector_file,
       return -1;
    }
 
-   // create TEventIter
-   TEventIter *evIter = new TEventIterLocal(dset);
-
-   // Init
    fSelector->SetInputList(fInput);
 
-   evIter->Init(fSelector);
+   // fSelector->  0 /* tree */ );   // TODO: the init logic needs to be changed
+   dset->Reset();
 
-   // Loop
-   while (evIter->GetNextEvent(fSelector)) {
 
-      Bool_t stop = fSelector->Process();
-      if (stop) {}  // remove unused warning
+   TEventIter *evIter = 0;
+   TFile      *finp = 0;
+   TString     filename;
+   TDirectory *dir = 0;
+   TString     path;
+   TDSetElement *e;
+   TString     objName;
+   Bool_t      once = kTRUE;
 
-      if (gROOT->IsInterrupted()) break;
+   while ( (e = dset->Next()) ) {
 
+      // Check Filename
+      if ( finp == 0 || filename != e->GetFileName() ) {
+         delete evIter; evIter = 0;
+         if ( dir != finp ) { delete dir; }; dir = 0;
+         delete finp; finp = 0;
+         path = "";
+
+         filename = e->GetFileName();
+         finp = new TFile(filename);
+
+         if ( finp->IsZombie() ) {
+            Error("Process","Cannot open file: %s (%s)",
+               filename.Data(), strerror(finp->GetErrno()) );
+            // cleanup ?
+            return -1;
+         }
+         Info("Process","Opening file: %s", filename.Data() );
+      }
+
+      // Check Directory
+      if ( dir == 0 || path != e->GetDirectory() ) {
+         TDirectory *dirsave = gDirectory;
+         delete evIter; evIter = 0;
+         delete dir;
+
+         path = e->GetDirectory();
+         if ( ! finp->cd(path) ) {
+            Error("Process","Cannot cd to: %s",
+               path.Data() );
+            return -1;
+         }
+         Info("Process","Cd to: %s", path.Data() );
+         dir = gDirectory;
+
+         dirsave->cd();
+      }
+
+
+      // Check Objectname :-/
+      if ( objName != e->GetObjName() ) {
+         delete evIter; evIter = 0;
+         objName = e->GetObjName();
+      }
+
+      // New TEventIter?
+      if ( evIter == 0 ) {
+         evIter = TEventIter::Create(dset, dir, fSelector);
+         if ( evIter == 0 ) {
+            return -1;
+         }
+      }
+
+      if ( !evIter->InitRange( e->GetFirst(), e->GetNum() ) ) {
+         return -1;
+      }
+
+      // Loop over range
+
+      while (evIter->GetNextEvent()) {
+
+         if ( once ) {
+            fSelector->Begin( /* need to change API */ 0);
+            once = kFALSE;
+         }
+
+         Bool_t stop = fSelector->Process();
+         if (stop) {}  // remove unused warning
+
+         if (gROOT->IsInterrupted()) break;
+      }
    }
 
    // Finalize
@@ -131,36 +200,63 @@ Int_t TProofPlayerLocal::Process(TDSet *dset, const char *selector_file,
 }
 
 
+//______________________________________________________________________________
+TDSetElement *TProofPlayer::GetNextPacket(TSlave *slave)
+{
+   MayNotUse("GetNextPacket");
+   return 0;
+}
+
+
+//------------------------------------------------------------------------------
+
+ClassImp(TProofPlayerLocal)
+
+
 //------------------------------------------------------------------------------
 
 ClassImp(TProofPlayerRemote)
 
 
 //______________________________________________________________________________
-TProofPlayerRemote::TProofPlayerRemote(TProof *proof) : fProof(proof)
+TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
 {
+   fProof         = proof;
+   fOutputLists   = 0;
+   fSet           = 0;
+   fElem          = 0;
 }
 
 
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
-   delete fOutput;
+   delete fOutput;      // owns the output list
+   delete fOutputLists;
 }
 
 
 //______________________________________________________________________________
-Int_t TProofPlayerRemote::Process(TDSet *set, const char *selector_file,
+Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                                   Int_t nentries, Int_t first,
                                   TEventList *evl)
 {
 
-::Info("TProofPlayerRemote::Process","Voila!");
+Info("Process","---- Start ----");
 
    TString filename = selector_file;
    filename = filename.Strip(TString::kTrailing,'+');
+Info("Process", "Sendfile: %s", filename.Data() );
    fProof->SendFile(filename);
 
+   if ( filename.EndsWith(".C") ) {
+         filename.ReplaceAll(".C",".h");
+Info("Process", "Sendfile: %s", filename.Data() );
+         fProof->SendFile(filename);
+   }
+
+#if 0
+   ... compiling will get private commands ...
    TString libname = filename;
    Ssiz_t dot_pos = libname.Last('.');
    if ( dot_pos >= 0 )
@@ -179,7 +275,7 @@ Int_t TProofPlayerRemote::Process(TDSet *set, const char *selector_file,
    compileCmd += libname;
    compileCmd += "\")";
    if ( fProof->Exec(compileCmd, TProof::kUnique) == -1 ) {
-      ::Warning("TProofPlayerRemote::Process","Compile failed");
+      Warning("Process","Compile failed");
       return -1;
    }
 
@@ -192,21 +288,31 @@ Int_t TProofPlayerRemote::Process(TDSet *set, const char *selector_file,
    loadCmd += libname;
    loadCmd +=  "\")";
    fProof->Exec(loadCmd, TProof::kActive);
+#endif
 
    TMessage mesg(kPROOF_PROCESS);
    TString fn(selector_file);
 
+   fSet = dset;
+   TDSet *set = dset;
+   if ( fProof->IsMaster() ) {
+Info("Process","Create Proxy DSet");
+      set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
+                        dset->GetDirectory() );
+   }
+
    mesg << set << fn << fInput << nentries << first; // no evl yet
-::Info("TProofPlayerRemote::Process","Broadcast");
+
+Info("Process","Broadcast");
 
    fProof->Broadcast(mesg);
-::Info("TProofPlayerRemote::Process","Collect");
+Info("Process","Collect");
 
    fProof->SetPlayer(this);  // Fix SetPlayer to release current player
    fProof->Collect();
 
 
-::Info("TProofPlayerRemote::Process","Calling Merge Output");
+Info("Process","Calling Merge Output");
    MergeOutput();
 
    return 0;
@@ -216,6 +322,7 @@ Int_t TProofPlayerRemote::Process(TDSet *set, const char *selector_file,
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
 {
+Info("MergeOutput","Enter");
    delete fOutput;
    fOutput = new THashList;
 
@@ -251,28 +358,29 @@ void TProofPlayerRemote::MergeOutput()
    }
 
    delete fOutputLists; fOutputLists = 0;
+Info("MergeOutput","Leave");
 }
 
 
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
-::Info("TProofPlayerRemote::StoreOutput","Enter");
+Info("StoreOutput","Enter");
    TIter next(out);
 
    if (fOutputLists == 0) {
-::Info("TProofPlayerRemote::StoreOutput","Create fOutputLists");
+Info("StoreOutput","Create fOutputLists");
       fOutputLists = new TList;
       fOutputLists->SetOwner();
    }
 
    TObject *obj;
    while( (obj = next()) ) {
-::Info("TProofPlayerRemote::StoreOutput","Find '%s'", obj->GetName() );
+Info("StoreOutput","Find '%s'", obj->GetName() );
 fOutputLists->Print();
       TList *list = (TList *) fOutputLists->FindObject( obj->GetName() );
       if ( list == 0 ) {
-::Info("TProofPlayerRemote::StoreOutput","List not Found", obj->GetName() );
+Info("StoreOutput","List not Found", obj->GetName() );
          list = new TList;
          list->SetName( obj->GetName() );
          list->SetOwner();
@@ -283,9 +391,36 @@ fOutputLists->Print();
 
    out->SetOwner(kFALSE);  // Needed??
    delete out;
-::Info("TProofPlayerRemote::StoreOutput","Done");
+Info("StoreOutput","Leave");
 }
 
+
+
+//______________________________________________________________________________
+TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave)
+{
+   Info("GetNextPacket","Enter");
+
+   if ( fElem == 0 ) {
+
+      // open new file
+      fElem = fSet->Next();
+      if ( fElem == 0 ) {
+         Info("GetNextPacket","Leave (done)");
+         return 0;      // Done
+      }
+      // get number of entries / objects
+
+      // set / check counters
+
+   }
+
+   TDSetElement *e = fElem;
+   fElem = 0;
+
+   Info("GetNextPacket","Leave");
+   return e;
+}
 
 //------------------------------------------------------------------------------
 
@@ -303,55 +438,5 @@ TProofPlayerSlave::TProofPlayerSlave()
 TProofPlayerSlave::TProofPlayerSlave(TSocket *socket)
 {
       fSocket = socket;
-}
-
-
-//______________________________________________________________________________
-Int_t TProofPlayerSlave::Process(TDSet *dset, const char *selector_file,
-                                 Int_t nentries, Int_t first,
-                                 TEventList *evl)
-{
-   Info("TProofPlayerSlave::Process","Voila!");
-
-   // create TSelector
-   delete fSelector; fSelector = 0;
-   fSelector = TSelector::GetSelector(selector_file);
-
-   if ( !fSelector ) {
-      Error("Process", "Cannot load: %s", selector_file );
-      return -1;
-   }
-
-   // create TEventIter
-   TEventIter *evIter = new TEventIterSlave(fSocket);
-
-   // Init
-   fSelector->SetInputList(fInput);
-
-   evIter->Init(fSelector);
-
-   // Loop
-   while (evIter->GetNextEvent(fSelector)) {
-
-      Bool_t stop = fSelector->Process();
-      if (stop) {}  // remove unused warning
-
-      if (gROOT->IsInterrupted()) break;
-
-   }
-
-   // Finalize
-   fSelector->Terminate();
-
-   fOutput = fSelector->GetOutputList();
-   if ( fOutput == 0 ) {
-Info("TProofPlayerSlave::Process","No selector output list??? creating one");
-      fOutput = new TList;
-   } else if ( !strcmp(fOutput->ClassName(),"TList") ) {
-Info("TProofPlayerSlave::Process","Selector output is a %s ??? creating TList", fOutput->ClassName() );
-      fOutput = new TList;
-   }
-
-   return 0;
 }
 

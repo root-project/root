@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.1 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.2 2002/02/12 17:53:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 class TList;
 class TSelector;
 class TDSet;
+class TDSetElement;
+class TSlave;
 class TEventList;
 class TProof;
 class TSocket;
@@ -47,7 +49,7 @@ public:
    virtual Int_t     Process(TDSet *set,
                              const char *selector,
                              Int_t nentries = -1, Int_t first = 0,
-                             TEventList *evl = 0) = 0;
+                             TEventList *evl = 0);
 
    virtual void      AddInput(TObject *inp);
    virtual void      ClearInput();
@@ -55,8 +57,10 @@ public:
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
 
+   virtual TDSetElement *GetNextPacket(TSlave *slave);
 
-   ClassDef(TProofPlayer,1)  // Abstract PROOF player
+
+   ClassDef(TProofPlayer,0)  // Abstract PROOF player
 };
 
 
@@ -67,12 +71,7 @@ class TProofPlayerLocal : public TProofPlayer {
 public:
    TProofPlayerLocal() { }
 
-   Int_t Process(TDSet *set,
-                 const char *selector,
-                 Int_t nentries = -1, Int_t first = 0,
-                 TEventList *evl = 0);
-
-   ClassDef(TProofPlayerLocal,1)  // PROOF player running on client
+   ClassDef(TProofPlayerLocal,0)  // PROOF player running on client
 };
 
 
@@ -81,22 +80,31 @@ public:
 class TProofPlayerRemote : public TProofPlayer {
 
 private:
-   TProof  *fProof;        // Link to associated PROOF session
-   TList   *fOutputLists;  // Results returned by slaves
+   TProof        *fProof;        // Link to associated PROOF session
+   TList         *fOutputLists;  // Results returned by slaves
+
+   // currently here -- for packet generation
+   TDSet         *fSet;          // TDSet to split in packets
+   TDSetElement  *fElem;         // Element currently being processed
+   Double_t       fFirst;
+   Double_t       fNum;
+   Double_t       fCur;
 
 public:
    TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }
    TProofPlayerRemote(TProof *proof);
-  ~TProofPlayerRemote();   // Owns the fOutput list
+   ~TProofPlayerRemote();   // Owns the fOutput list
 
-   Int_t    Process(TDSet *set,
-                    const char *selector,
-                    Int_t nentries = -1, Int_t first = 0,
-                    TEventList *evl = 0);
-   void     StoreOutput(TList *out);   // Adopts the list
-   void     MergeOutput();
+   Int_t Process(TDSet *set,
+                 const char *selector,
+                 Int_t nentries = -1, Int_t first = 0,
+                 TEventList *evl = 0);
+   void  StoreOutput(TList *out);   // Adopts the list
+   void  MergeOutput();
 
-   ClassDef(TProofPlayerRemote,1)  // PROOF player running on master server
+   TDSetElement *GetNextPacket(TSlave *slave);
+
+   ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };
 
 
@@ -110,12 +118,7 @@ public:
    TProofPlayerSlave();
    TProofPlayerSlave(TSocket *socket);
 
-   Int_t  Process(TDSet *set,
-                  const char *selector,
-                  Int_t nentries = -1, Int_t first = 0,
-                  TEventList *evl = 0);
-
-   ClassDef(TProofPlayerSlave,1)  // PROOF player running on slave server
+   ClassDef(TProofPlayerSlave,0)  // PROOF player running on slave server
 };
 
 #endif

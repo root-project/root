@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.3 2002/02/04 21:25:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.4 2002/02/14 16:21:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -55,15 +55,19 @@ private:
    TString      fFileName;   // physical or logical file name
    TString      fObjName;    // name of objects to be analyzed in this file
    TString      fDirectory;  // directory in file where to look for objects
+   Double_t     fFirst;      // first entry to process
+   Double_t     fNum;        // number of entries to process
    const TDSet *fSet;        // set to which element belongs
 
 public:
    TDSetElement() { fSet = 0; }
    TDSetElement(const TDSet *set, const char *file, const char *objname = 0,
-                const char *dir = 0);
+                const char *dir = 0, Double_t first = 0, Double_t num = 9999999);
    virtual ~TDSetElement() { }
 
    const char *GetFileName() const { return fFileName; }
+   Double_t    GetFirst() const { return fFirst; }
+   Double_t    GetNum() const { return fNum ; }
    const char *GetObjName() const;
    const char *GetDirectory() const;
 
@@ -75,9 +79,13 @@ public:
 class TDSet : public TNamed {
 
 private:
-   TString  fObjName;     // name of objects to be analyzed (e.g. TTree name)
-   TList   *fElements;    //-> list of TDSetElements
-   Bool_t   fIsTree;      // true if type is a TTree (or TTree derived)
+   TString        fObjName;   // name of objects to be analyzed (e.g. TTree name)
+   TList         *fElements;  //-> list of TDSetElements
+   Bool_t         fIsTree;    // true if type is a TTree (or TTree derived)
+   TIter         *fIterator;  //! iterator on fElements
+
+protected:
+   TDSetElement  *fCurrent;   //! current element
 
 public:
    TDSet();
@@ -91,16 +99,22 @@ public:
    const char *GetObjName() const { return fObjName; }
    const char *GetDirectory() const { return fTitle; }
 
-   void        Add(const char *file, const char *objname = 0,
-                   const char *dir = 0);
-   void        Add(TDSet *set);
-   void        AddFriend(TDSet *friendset);
+   virtual void        Add(const char *file, const char *objname = 0,
+                           const char *dir = 0, Double_t first = 0,
+                           Double_t num = 9999999);
+   virtual void        Add(TDSet *set);
+   virtual void        AddFriend(TDSet *friendset);
 
-   Bool_t      IsTree() const { return fIsTree; }
-   Bool_t      IsValid() const { return !fName.IsNull(); }
-   TList      *GetListOfElements() const { return fElements; }
+   virtual Bool_t      IsTree() const { return fIsTree; }
+   virtual Bool_t      IsValid() const { return !fName.IsNull(); }
+   virtual TList      *GetListOfElements() const { return fElements; }
+
+   virtual void           Reset();
+   virtual TDSetElement  *Next();
+   TDSetElement          *Current() const { return fCurrent; };
 
    ClassDef(TDSet,1)  // Data set for remote processing (PROOF)
 };
+
 
 #endif

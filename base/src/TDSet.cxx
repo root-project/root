@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.3 2002/02/05 16:10:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.4 2002/02/14 16:21:09 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -49,12 +49,15 @@ ClassImp(TDSet)
 
 //______________________________________________________________________________
 TDSetElement::TDSetElement(const TDSet *set, const char *file,
-                           const char *objname, const char *dir)
+                           const char *objname, const char *dir,
+                           Double_t first, Double_t num)
 {
    // Create a TDSet element.
 
    fSet      = set;
    fFileName = file;
+   fFirst    = first;
+   fNum      = num;
 
    if (objname)
       fObjName = objname;
@@ -91,6 +94,8 @@ TDSet::TDSet()
    fElements = new TList;
    fElements->IsOwner();
    fIsTree = kFALSE;
+   fIterator = 0;
+   fCurrent = 0;
 }
 
 //______________________________________________________________________________
@@ -110,6 +115,8 @@ TDSet::TDSet(const char *type, const char *objname, const char *dir)
 
    fElements = new TList;
    fElements->IsOwner();
+   fIterator = 0;
+   fCurrent = 0;
 
    if (!type || !*type) {
       Error("TDSet", "type name must be specified");
@@ -139,6 +146,7 @@ TDSet::~TDSet()
    // Cleanup.
 
    delete fElements;
+   delete fIterator;
 }
 
 //______________________________________________________________________________
@@ -160,7 +168,8 @@ void TDSet::SetDirectory(const char *dir)
 }
 
 //______________________________________________________________________________
-void TDSet::Add(const char *file, const char *objname, const char *dir)
+void TDSet::Add(const char *file, const char *objname, const char *dir,
+                Double_t first, Double_t num)
 {
    // Add file to list of files to be analyzed. Optionally with the
    // objname and dir arguments the default, TDSet wide, objname and
@@ -171,7 +180,7 @@ void TDSet::Add(const char *file, const char *objname, const char *dir)
       return;
    }
 
-   fElements->Add(new TDSetElement(this, file, objname, dir));
+   fElements->Add(new TDSetElement(this, file, objname, dir, first, num));
 }
 
 //______________________________________________________________________________
@@ -211,3 +220,27 @@ void TDSet::AddFriend(TDSet *friendset)
 }
 
 
+//______________________________________________________________________________
+void TDSet::Reset()
+{
+   // Reset or initialize access to the elements.
+
+   if (!fIterator) {
+      fIterator = new TIter(fElements);
+   } else {
+      fIterator->Reset();
+   }
+}
+
+//______________________________________________________________________________
+TDSetElement *TDSet::Next()
+{
+   // Returns next TDSetElement.
+
+   if (!fIterator) {
+      fIterator = new TIter(fElements);
+   }
+
+   fCurrent = (TDSetElement *) fIterator->Next();
+   return fCurrent;
+}

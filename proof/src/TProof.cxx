@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.15 2002/02/07 18:06:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.16 2002/02/12 17:53:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -828,17 +828,17 @@ Int_t TProof::Collect(TMonitor *mon)
             break;
 
          case kPROOF_GETPACKET:
-/*
-            if (fPlayer) {
-               Int_t  nentries;
-               Stat_t firstentry, processed;
-               sl = FindSlave(s);
-               fPlayer->GetNextPacket(sl, nentries, firstentry, processed);
+            {
+               TDSetElement *elem = 0;
+               if (fPlayer) {
+                  sl = FindSlave(s);
+                  elem = fPlayer->GetNextPacket(sl);
+               }
+
                TMessage answ(kPROOF_GETPACKET);
-               answ << nentries << firstentry << processed;
+               answ << elem;;
                s->Send(answ);
             }
-*/
             break;
 
          case kPROOF_LOGFILE:
@@ -1011,22 +1011,6 @@ void TProof::Limits(TSocket *s, TMessage &mess)
    }
 */
 }
-
-/**************
-//______________________________________________________________________________
-void TProof::Loop(TTree *tree)
-{
-   // Handle message comming from the remote TTree method currently being
-   // executed.
-
-   fLimits = 0;
-   fTree   = tree;
-
-   Collect();
-
-   fTree = 0;
-}
-*************/
 
 //______________________________________________________________________________
 void TProof::MarkBad(TSlave *sl)
@@ -1356,6 +1340,42 @@ Int_t TProof::SendInitialState()
 }
 
 //______________________________________________________________________________
+Long_t TProof::CheckFile(const char *file, TList *slaves, TList *sendto)
+{
+   // Check if a file needs to be send to the slaves. Use the following
+   // algorithm:
+   //   - check if file appears in file map
+   //     - if no get file's md5 and modtime and store in file map, ask
+   //       slave if file exists with specific md5, if yes return 0,
+   //       if no return file's size
+   //     - if yes get file's modtime and check against time in map,
+   //       if modtime not same return size, if modtime is same
+   //       get md5 and compare against md5 in map, if not same return size
+   // Returns size of file in case file needs to be send, returns 0 in case
+   // file is already on remote and -1 in case of error.
+   // The nodes to which the file needs to be send will be added to the
+   // sendto list (if it exists, !=0).
+
+   Long_t id, size, flags, modtime;
+   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
+      Error("CheckFile", "cannot stat file %s", file);
+      return -1;
+   }
+   if (size == 0) {
+      Error("CheckFile", "empty file %s", file);
+      return -1;
+   }
+
+   // check if file is in map
+   FileMap_t::const_iterator it;
+   if ((it = fFileMap.find("aap")) != fFileMap.end())
+      ;
+   //fFileMap
+
+   return size;
+}
+
+//______________________________________________________________________________
 Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 {
    // Send a file to master or slave servers. Returns number of slaves
@@ -1370,6 +1390,11 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 
    if (slaves->GetSize() == 0) return 0;
 
+   TList sendto;
+   Long_t size = CheckFile(file, slaves, &sendto);
+   if (size <= 0)
+      return size;
+
 #ifndef R__WIN32
    Int_t fd = open(file, O_RDONLY);
 #else
@@ -1377,18 +1402,6 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 #endif
    if (fd < 0) {
       SysError("SendFile", "cannot open file %s", file);
-      return -1;
-   }
-
-   Long_t id, size, flags, modtime;
-   if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 1) {
-      Error("SendFile", "cannot get size of file %s", file);
-      close(fd);
-      return -1;
-   }
-   if (size == 0) {
-      Error("SendFile", "empty file %s", file);
-      close(fd);
       return -1;
    }
 

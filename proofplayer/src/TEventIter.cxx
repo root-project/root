@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.1 2002/01/18 14:24:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TEventIter.cxx,v 1.2 2002/02/12 17:53:18 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -18,12 +18,12 @@
 #include "TEventIter.h"
 
 #include "TDSet.h"
-#include "TSelector.h"
 #include "TKey.h"
 #include "TFile.h"
 #include "TCollection.h"
 #include "TError.h"
 #include "TTree.h"
+#include "TSelector.h"
 
 
 //------------------------------------------------------------------------
@@ -34,6 +34,18 @@ ClassImp(TEventIter)
 //______________________________________________________________________________
 TEventIter::TEventIter()
 {
+   fDSet = 0;
+   fDir = 0;
+   fSel = 0;
+   fNum = 0;
+}
+
+
+//______________________________________________________________________________
+TEventIter::TEventIter(TDSet *dset, TDirectory *dir, TSelector *sel)
+   : fDSet(dset), fDir(dir), fSel(sel)
+{
+   fNum = 0;
 }
 
 
@@ -43,255 +55,173 @@ TEventIter::~TEventIter()
 }
 
 
+//______________________________________________________________________________
+TEventIter *TEventIter::Create(TDSet *dset, TDirectory *dir, TSelector *sel)
+{
+   if ( dset->IsTree() ) {
+      return new TEventIterTree(dset, dir, sel);
+   } else {
+      return new TEventIterObj(dset, dir, sel);
+   }
+}
+
+
 //------------------------------------------------------------------------
 
-ClassImp(TEventIterLocal)
+ClassImp(TEventIterObj)
 
 
 //______________________________________________________________________________
-TEventIterLocal::TEventIterLocal()
+TEventIterObj::TEventIterObj()
 {
    // Default ctor.
 
-   fIsTree   = kFALSE;
-
-   fFiles    = 0;
-   fNextFile = 0;
-   fFile     = 0;
-
    fKeys     = 0;
    fNextKey  = 0;
    fObj      = 0;
 
-   fTree     = 0;
 }
 
 //______________________________________________________________________________
-TEventIterLocal::TEventIterLocal(TDSet *dset)
+TEventIterObj::TEventIterObj(TDSet *dset, TDirectory *dir, TSelector *sel)
+   : TEventIter(dset,dir,sel)
 {
-
-   fIsTree = dset->IsTree();
-
-   fFiles = dset->GetListOfElements();
-   fNextFile = new TIter(fFiles);
-   fFile     = 0;
-
-   if ( fIsTree ) {
-      // ...
-   } else {
-      fClassName = dset->GetType();
-   }
-
+   fClassName = dset->GetType();
    fKeys     = 0;
    fNextKey  = 0;
    fObj      = 0;
-
-   fTree     = 0;
-   fMaxEntry = -1;
 }
 
 
 //______________________________________________________________________________
-TEventIterLocal::~TEventIterLocal()
+TEventIterObj::~TEventIterObj()
 {
-   // TODO: check cleanup
-
-   delete fNextFile;
-   delete fFile;
-
-   // delete fKeys; ? who owns it?
+   // delete fKeys ?
    delete fNextKey;
    delete fObj;
-
-   // delete fTree; ? who owns it
 }
 
 
 //______________________________________________________________________________
-Bool_t TEventIterLocal::Init(TSelector *selector)
+Bool_t TEventIterObj::GetNextEvent()
 {
-   if ( fIsTree ) {
-      LoadNextTree();
+   delete fObj; fObj = 0;
+
+   if ( fNum > 0 ) {
+         --fNum;
+         ++fCur;
+         TKey *key = (TKey*) fNextKey->Next();
+         fObj = key->ReadObj();
+         fSel->SetObject( fObj );
+         return kTRUE;
    }
 
-   selector->Begin(fTree);
+   return kFALSE;
+}
+
+
+//______________________________________________________________________________
+Bool_t TEventIterObj::InitRange(Double_t first, Double_t num)
+{
+   // new file / directory?
+
+   if ( fKeys == 0 ) {
+      fKeys = fDir->GetListOfKeys();
+      fNextKey = new TIter(fKeys);
+   }
+
+   fFirst = first;
+   fNum = num;
+   fCur = first-1;
+
+   if ( fFirst >= fKeys->GetSize() ) {
+      Error("TEventIterObj::InitRange","First larger the number of keys");
+      return kFALSE;
+   }
+
+   if ( fFirst + fNum  > fKeys->GetSize() ) {
+      Warning("TEventIterObj::InitRange","Num larger the number of keys");
+      fNum = fKeys->GetSize() - fFirst;
+   }
+
+   // Position the iterator FIXME: should be more efficient?
+   fNextKey->Reset();
+   for( fCur = 0; fCur < fFirst ; fCur++, fNextKey->Next() );
 
    return kTRUE;
-}
-
-
-//______________________________________________________________________________
-Bool_t TEventIterLocal::GetNextEvent(TSelector *selector)
-{
-   Bool_t   ok;
-
-   if ( fIsTree ) {
-         ok = GetNextEventTree(selector);
-   } else {
-         ok = GetNextEventObj(selector);
-   }
-
-   return ok;
-}
-
-
-//______________________________________________________________________________
-Bool_t TEventIterLocal::GetNextEventTree(TSelector *selector)
-{
-
-   if ( fFiles == 0 ) {
-      ::Warning("TEventIterLocal::GetNextEvent", "Not initialized");
-      return kFALSE;
-   }
-
-   while ( kTRUE ) {
-      if ( fMaxEntry == -1 ) {
-
-         Bool_t ok = LoadNextTree();
-
-         if ( !ok ) return kFALSE;
-
-         selector->Notify();
-      }
-
-      if ( ++fEntry < fMaxEntry ) {
-
-         // selector->SetEvent( fIevent );
-
-         fTree->GetEntry(fEntry);
-         return kTRUE;
-
-      }
-
-      // Done with this file
-      fMaxEntry = -1;
-
-   }
-
-}
-
-//______________________________________________________________________________
-Bool_t TEventIterLocal::LoadNextTree()
-{
-   delete fFile; fFile = 0;
-   TDSetElement *elem;
-   if ( (elem = (TDSetElement*) fNextFile->Next()) == 0 ) {
-         // Done with all files
-         return kFALSE;
-   }
-
-   Info("TEventIterLocal::LoadNextTree","Next File: %s", elem->GetFileName());
-
-   // need to do possible grid translation
-
-   fFile = new TFile(elem->GetFileName());
-   if ( fFile->IsZombie() ) {
-      Warning("TEventIterLocal::LoadNextTree","Error opening %s",
-               elem->GetFileName());
-      return kFALSE;
-   }
-
-   if ( elem->GetDirectory() != 0 )
-      fFile->Cd(elem->GetDirectory());
-
-   fTree = (TTree *) fFile->Get(elem->GetObjName());
-
-   fMaxEntry = fTree->GetEntries();
-   fEntry = -1;
-
-   return kTRUE;
-}
-
-
-//______________________________________________________________________________
-Bool_t TEventIterLocal::GetNextEventObj(TSelector *selector)
-{
-   TKey  *next;
-
-   if ( fFiles == 0 ) {
-      ::Warning("TEventIterLocal::GetNextEvent", "Not initialized");
-      return kFALSE;
-   }
-
-   Info("TEventIterLocal::GetNextEventObj","fkeys %p", fKeys );
-   while ( kTRUE ) {
-      if ( fKeys == 0 ) {
-         delete fFile; fFile = 0;
-         TDSetElement *elem;
-         if ( (elem = (TDSetElement*) fNextFile->Next()) == 0 ) {
-               // Done with all files
-               return kFALSE;
-         }
-
-         Info("TEventIterLocal::GetNextEventObj","Next File: %s", elem->GetFileName());
-
-         // need to do possible grid translation
-
-         fFile = new TFile(elem->GetFileName());   // TODO: check result
-
-         // cd to dir
-
-         fKeys = fFile->GetListOfKeys();
-         fNextKey = new TIter(fKeys);
-      }
-
-      if ((next=(TKey*)(*fNextKey)()) ) {
-         next->Print();
-         if ( fClassName != next->GetClassName() )
-            continue;
-
-         delete fObj;
-         fObj = next->ReadObj();
-         selector->SetObject( fObj );
-
-         return kTRUE;
-
-      }
-
-      // Done with this file
-      delete fNextKey; fNextKey = 0;
-      fKeys = 0;
-
-   }
-
 }
 
 
 //------------------------------------------------------------------------
 
-ClassImp(TEventIterSlave)
+ClassImp(TEventIterTree)
 
 
 //______________________________________________________________________________
-TEventIterSlave::TEventIterSlave()
+TEventIterTree::TEventIterTree()
 {
    // Default ctor.
 
-   fSocket = 0;
+   fTree = 0;
+   fNum = 999999999; // TODO: proper max event
+   fFirst = 0;
+   fCur = -1;
 }
 
 //______________________________________________________________________________
-TEventIterSlave::TEventIterSlave(TSocket *socket)
+TEventIterTree::TEventIterTree(TDSet *dset, TDirectory *dir, TSelector *sel)
+   : TEventIter(dset,dir,sel)
 {
-   fSocket = socket;
+   fTreeName = dset->GetObjName();
+   fTree = 0;
+   fNum = 999999999; // TODO: proper max event
+   fFirst = 0;
+   fCur = -1;
 }
 
 
 //______________________________________________________________________________
-TEventIterSlave::~TEventIterSlave()
+TEventIterTree::~TEventIterTree()
 {
+   // delete fTree ?
 }
 
 
 //______________________________________________________________________________
-Bool_t TEventIterSlave::Init(TSelector *selector)
+Bool_t TEventIterTree::GetNextEvent()
 {
+   if ( fNum > 0 ) {
+         --fNum;
+         ++fCur;
+         return kTRUE;
+   }
    return kFALSE;
 }
 
 
 //______________________________________________________________________________
-Bool_t TEventIterSlave::GetNextEvent(TSelector *selector)
+Bool_t TEventIterTree::InitRange(Double_t first, Double_t num)
 {
-   return kFALSE;
+   // New Tree?
+
+   if ( fTree == 0 ) {
+
+      TKey *key;
+      if ( (key = fDir->GetKey(fTreeName)) == 0 ) {
+         Error("InitRange","Cannot find tree \"%s\"",
+               fTreeName.Data());
+         return kFALSE;
+      }
+      Info("TEventIterTree::InitRange","Reading: %s", fTreeName.Data() );
+      fTree = (TTree *) key->ReadObj(); // TODO: check result and type?
+      fSel->Notify( /* fTree */ );  // TODO: change API
+   }
+
+   // TODO: add checks for first and num vs. the tree
+   fFirst = first;
+   fNum = num;
+   fCur = first-1;
+
+   return kTRUE;
 }
+
