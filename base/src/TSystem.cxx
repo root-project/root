@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.19 2001/06/17 23:08:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.20 2001/06/25 12:54:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ const char *gRootDir;
 const char *gProgName;
 const char *gProgPath;
 
-TSystem  *gSystem;
+TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
 
 ClassImp(TProcessEventTimer)
@@ -88,6 +88,9 @@ ClassImp(TSystem)
 TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
 {
    // Create a new OS interface.
+
+   if (gSystem && strcmp(name, "Generic"))
+      Error("TSystem", "only one instance of TSystem allowed");
 
    fOnExitList    = 0;
    fSignalHandler = 0;
