@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.39 2004/01/25 20:33:32 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.40 2004/07/08 14:40:28 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -512,7 +512,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // and group the different menu widgets with respect to eachother.
    fMenuDock = new TGDockableFrame(this);
    AddFrame(fMenuDock, new TGLayoutHints(kLHintsExpandX, 0, 0, 1, 0));
-   fMenuDock->SetWindowName("Guitest Main Menu");
+   fMenuDock->SetWindowName("GuiTest Menu");
 
    fMenuBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
