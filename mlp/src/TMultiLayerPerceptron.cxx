@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.3 2003/08/27 16:06:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.4 2003/08/27 16:11:47 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -391,6 +391,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    // - "+" will skip the randomisation and start from the previous values. 
    // All combinations are available. 
    
+   Int_t i;
    TString opt = option;
    opt.ToLower();
    // Decode options and prepare training.
@@ -422,7 +423,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       Double_t *epoch_axis = new Double_t[nEpoch];
       Double_t *train_residual = new Double_t[nEpoch];
       Double_t *test_residual = new Double_t[nEpoch];
-      for (Int_t i = 0; i < nEpoch; i++) {
+      for (i = 0; i < nEpoch; i++) {
          epoch_axis[i] = i;
          train_residual[i] = 0;
          test_residual[i] = 0;
@@ -450,7 +451,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    Int_t els = fNetwork.GetEntriesFast() + fSynapses.GetEntriesFast();
    Double_t *buffer = new Double_t[els];
    Double_t *dir = new Double_t[els];
-   for (Int_t i = 0; i < els; i++)
+   for (i = 0; i < els; i++)
       buffer[i] = 0;
    TMatrix BFGSH(els, els);
    TMatrix gamma(els, 1);
@@ -485,7 +486,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
             } else {
                Double_t norm = 0;
                Double_t Onorm = 0;
-               for (Int_t i = 0; i < els; i++)
+               for (i = 0; i < els; i++)
                   Onorm += dir[i] * dir[i];
                Double_t prod = 0;
                Int_t idx = 0;
@@ -518,7 +519,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
             } else {
                Double_t norm = 0;
                Double_t Onorm = 0;
-               for (Int_t i = 0; i < els; i++)
+               for (i = 0; i < els; i++)
                   Onorm += dir[i] * dir[i];
                TNeuron *neuron = NULL;
                TSynapse *synapse = NULL;
@@ -597,7 +598,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
          if (!iepoch) {
             Double_t trp = train_residual_plot->GetY()[iepoch];
             Double_t tep = test_residual_plot->GetY()[iepoch];
-            for (Int_t i = 1; i < nEpoch; i++) {
+            for (i = 1; i < nEpoch; i++) {
                train_residual_plot->SetPoint(i, i, trp);
                test_residual_plot->SetPoint(i, i, tep);
             }
@@ -660,14 +661,15 @@ Double_t TMultiLayerPerceptron::GetError(TMultiLayerPerceptron::DataSet set)
    TEventList *list =
        ((set == TMultiLayerPerceptron::kTraining) ? fTraining : fTest);
    Double_t error = 0;
+   Int_t i;
    if (list) {
       Int_t nEvents = list->GetN();
-      for (Int_t i = 0; i < nEvents; i++) {
+      for (i = 0; i < nEvents; i++) {
          error += GetError(list->GetEntry(i));
       }
    } else if (fData) {
       Int_t nEvents = (Int_t) fData->GetEntries();
-      for (Int_t i = 0; i < nEvents; i++) {
+      for (i = 0; i < nEvents; i++) {
          error += GetError(i);
       }
    }
@@ -689,9 +691,10 @@ void TMultiLayerPerceptron::ComputeDEDw()
    while ((neuron = (TNeuron *) itn->Next()))
       neuron->SetDEDw(0.);
    delete itn;
+   Int_t i;
    if (fTraining) {
       Int_t nEvents = fTraining->GetN();
-      for (Int_t i = 0; i < nEvents; i++) {
+      for (i = 0; i < nEvents; i++) {
          GetEntry(fTraining->GetEntry(i));
          its = (TObjArrayIter *) fSynapses.MakeIterator();
          while ((synapse = (TSynapse *) its->Next())) {
@@ -714,7 +717,7 @@ void TMultiLayerPerceptron::ComputeDEDw()
       delete itn;
    } else if (fData) {
       Int_t nEvents = (Int_t) fData->GetEntries();
-      for (Int_t i = 0; i < nEvents; i++) {
+      for (i = 0; i < nEvents; i++) {
          GetEntry(i);
          its = (TObjArrayIter *) fSynapses.MakeIterator();
          while ((synapse = (TSynapse *) its->Next()))
@@ -838,12 +841,13 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
    Int_t prevStop = fNetwork.GetEntriesFast();
    TNeuron *neuron = NULL;
    TSynapse *synapse = NULL;
+   Int_t i,j;
    while (end != -1) {
       Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
-      for (Int_t i = 0; i < num; i++) {
+      for (i = 0; i < num; i++) {
          neuron = new TNeuron;
          fNetwork.AddLast(neuron);
-         for (Int_t j = prevStart; j < prevStop; j++) {
+         for (j = prevStart; j < prevStop; j++) {
             synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
             fSynapses.AddLast(synapse);
          }
@@ -854,10 +858,10 @@ void TMultiLayerPerceptron::BuildHiddenLayers(TString & hidden)
       prevStop = fNetwork.GetEntriesFast();
    }
    Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
-   for (Int_t i = 0; i < num; i++) {
+   for (i = 0; i < num; i++) {
       neuron = new TNeuron;
       fNetwork.AddLast(neuron);
-      for (Int_t j = prevStart; j < prevStop; j++) {
+      for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
          fSynapses.AddLast(synapse);
       }
@@ -880,6 +884,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    char brType;
    TNeuron *neuron;
    TSynapse *synapse;
+   Int_t j;
    while (end != -1) {
       brName = TString(output(beg, end - beg));
       Int_t slashPos = brName.Index("/");
@@ -894,7 +899,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
       }
       neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
       neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
-      for (Int_t j = prevStart; j < prevStop; j++) {
+      for (j = prevStart; j < prevStop; j++) {
          synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
          fSynapses.AddLast(synapse);
       }
@@ -916,7 +921,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
    }
    neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
    neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
-   for (Int_t j = prevStart; j < prevStop; j++) {
+   for (j = prevStart; j < prevStop; j++) {
       synapse = new TSynapse((TNeuron *) fNetwork[j], neuron);
       fSynapses.AddLast(synapse);
    }
@@ -946,6 +951,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
    Double_t *norm = out->GetNormalisation();
    TEventList *events = NULL;
    TString setname;
+   Int_t i;
    if (opt.Contains("train")) {
       events = fTraining;
       setname = "train";
@@ -967,7 +973,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
          hist = new TH2D(setname.Data(), title.Data(), 50, -1, 1, 50, -1, 1);
       hist->Reset();
       Int_t nEvents = fTraining->GetN();
-      for (Int_t i = 0; i < nEvents; i++) {
+      for (i = 0; i < nEvents; i++) {
          GetEntry(fTraining->GetEntry(i));
          hist->Fill(out->GetValue(), (out->GetBranch() - norm[1]) / norm[0]);
       }
@@ -982,7 +988,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
          hist = new TH1D(setname, title, 50, 1, -1);
       hist->Reset();
       Int_t nEvents = fTraining->GetN();
-      for (Int_t i = 0; i < nEvents; i++)
+      for (i = 0; i < nEvents; i++)
          hist->Fill(Result(fTraining->GetEntry(i), index));
       hist->Draw();
       if (opt.Contains("train") && opt.Contains("test")) {
@@ -993,7 +999,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
             hist = new TH1D(setname, title, 50, 1, -1);
          hist->Reset();
          Int_t nEvents = fTest->GetN();
-         for (Int_t i = 0; i < nEvents; i++)
+         for (i = 0; i < nEvents; i++)
             hist->Fill(Result(fTest->GetEntry(i), index));
          hist->Draw("same");
       }
@@ -1216,11 +1222,12 @@ void TMultiLayerPerceptron::MLP_Stochastic(Double_t * buffer)
    
    Int_t nEvents = fTraining->GetN();
    Int_t *index = new Int_t[nEvents];
-   for (Int_t i = 0; i < nEvents; i++)
+   Int_t i;
+   for (i = 0; i < nEvents; i++)
       index[i] = i;
    fEta *= fEtaDecay;
    Shuffle(index, nEvents);
-   for (Int_t i = 0; i < nEvents; i++) {
+   for (i = 0; i < nEvents; i++) {
       GetEntry(fTraining->GetEntry(index[i]));
       // First compute DeDw for all neurons: force calculation before 
       // modifying the weights.
@@ -1353,8 +1360,9 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
    Double_t err2 = GetError(kTraining);
    Double_t err3 = err2;
    Bool_t bingo = false;
+   Int_t icount;
    if (err1 > err2) {
-      for (Int_t icount = 0; icount < 100; icount++) {
+      for (icount = 0; icount < 100; icount++) {
          alpha3 *= fTau;
          MLP_Line(origin, direction, alpha3);
          err3 = GetError(kTraining);
@@ -1373,7 +1381,7 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
          return true;
       }
    } else {
-      for (Int_t icount = 0; icount < 100; icount++) {
+      for (icount = 0; icount < 100; icount++) {
          alpha2 /= fTau;
          MLP_Line(origin, direction, alpha2);
          err2 = GetError(kTraining);
