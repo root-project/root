@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name: TH2Editor  $:$Id: TH2Editor.h,
+// @(#)root/ged:$Name:  $:$Id: TH2Editor.h,
 // Author: Carsten Hof 08/08/04
 
 /*************************************************************************
@@ -63,7 +63,7 @@ protected:
    TGLabel             *fColContLbl;      // No. of Contours Label 1
    TGLabel             *fColContLbl1;     // No. of Contours Label 2   
    Int_t                fTitlePrec;       // font precision level
-   TGHButtonGroup      *fdimgroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
+   TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
    TGCompositeFrame    *f3;               // Frame that contains Histogram Type-ComboBox
@@ -90,8 +90,10 @@ protected:
    TGNumberEntry       *fBarWidth;        // Set bar width of histogram
    TGNumberEntry       *fBarOffset;       // Set bar offset of histogram
    TGCompositeFrame    *fBinXCont;        // Contains the rebin widgets for case 1
-   TGHSlider           *fBinXSlider;      // Slider to set rebinning integer value 
+   TGHSlider           *fBinXSlider;      // Slider to set rebinning x integer value 
    TGNumberEntryField  *fBinXNumberEntry; // Label which shows the rebinned bin number
+   TGHSlider           *fBinYSlider;      // Slider to set rebinning y integer value 
+   TGNumberEntryField  *fBinYNumberEntry; // Label which shows the rebinned bin number
    TGTextButton        *fApply;           // Apply-Button to accept the rebinned histogram
    TGTextButton        *fCancel;          // Cancel-Button to reprobate the rebinned histogram
    TGCompositeFrame    *fBinXCont1;       // Contains the X Rebin Widgets for case 2 
@@ -145,6 +147,11 @@ private:
 	   fP6oldy[3], 
 	   fP7oldy[3], 
 	   fP8oldy[3];
+   TH2                 *fBinHist;         // Cloned histogram for rebin
+   TString              fDrawOpt;         // saves the DrawOption
+   TString              fName;            // saves the Name 
+   Double_t             fOldXOffset;      // saves the old x offset of the histogram
+   Double_t             fOldYOffset;      // saves the old y offset of the histogram
    
    
 public:
@@ -172,10 +179,18 @@ public:
    virtual void DoContLevel1();   
    virtual void DoBarWidth();
    virtual void DoBarOffset();
+   virtual void DoBinPressed();
+   virtual void DoBinMoved();      
+   virtual void DoBinReleased();
+   virtual void DoBinLabel();  
+   virtual void DoApply();
+   virtual void DoCancel();       
    virtual void DoBinReleased1();
    virtual void DoBinMoved1();   
    virtual void DoBinLabel1();  
    virtual void DoOffsetMoved();
+   virtual void DoOffsetReleased();
+   virtual void DoOffsetPressed();
    virtual void DoBinOffset();
    virtual void DoSliderXMoved();
    virtual void DoSliderXPressed();
@@ -186,7 +201,8 @@ public:
    virtual void DoSliderYReleased();      
    virtual void DoYAxisRange();   
    virtual void DoFillColor(Pixel_t);
-   virtual void DoFillPattern(Style_t);
+   virtual void DoFillPattern(Style_t);  
+   Int_t* Dividers(Int_t n);
    ClassDef(TH2Editor,0)  // TH2 editor
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name: TH1Editor.h  $:$Id: TH1Editor.h,
+// @(#)root/ged:$Name:  $:$Id: TH1Editor.h,
 // Author: Carsten Hof 16/08/04
 
 /*************************************************************************
@@ -51,14 +51,13 @@ class TH1Editor : public TGedFrame {
 
 protected:
    TH1                 *fHist;            // histogram object
-   TH1                 *fBinHist;         // Cloned histogram
    TGTab               *fTab;             // Pointer to the Tab Parent
    TGCompositeFrame    *fBin;             // Contains the Binning Widgets
    TGCompositeFrame    *fFit;             // Contains the Fitting Widgets
    TGCompositeFrame    *fStyle;           // Contains the Style Widgets   
    Int_t                fTitlePrec;       // font precision level
    TGTextEntry         *fTitle;           // histogram title input field
-   TGHButtonGroup      *fdimgroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
+   TGHButtonGroup      *fDimGroup;        // Radiobuttongroup to change 2D <-> 3D-Plot
    TGRadioButton       *fDim;             // 2D-Plot RadioButton             
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton    
    TGComboBox	       *fTypeCombo;       // histogram type combo box
@@ -127,9 +126,10 @@ private:
 			fP6old[3], 
 			fP7old[3], 
 			fP8old[3];   
-   TH1                 *fHistClone;       // Clone of the Histogram
+   TH1                 *fBinHist;         // Cloned histogram for rebin
    TString              fDrawOpt;         // saves the DrawOption
    TString              fName;            // saves the Name 
+   Double_t             fOldOffset;       // save the old offset of the histogram
    
 // private methods:    
    TString              GetHistTypeLabel();       // Get the Histogram Type = String which contains the Histogram Draw Option
@@ -167,11 +167,14 @@ public:
    virtual void DoAxisRange();
    virtual void DoBinMoved(Int_t number);
    virtual void DoBinReleased();   
+   virtual void DoBinPressed();      
    virtual void DoBinLabel();
    virtual void DoBinReleased1();
    virtual void DoBinMoved1();   
    virtual void DoBinLabel1();
    virtual void DoOffsetMoved(Int_t num);   
+   virtual void DoOffsetReleased();
+   virtual void DoOffsetPressed();         
    virtual void DoBinOffset();   
    virtual void DoApply();   
    virtual void DoCancel();
