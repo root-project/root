@@ -58,7 +58,7 @@ echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib \$([ -d /sw/lib ] && echo -L/sw/lib)\"" >> __compiledata
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib \`[ -d /sw/lib ] && echo -L/sw/lib\`\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
