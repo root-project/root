@@ -1,5 +1,5 @@
 TEST_TARGETS += scopeTest scopeTest2
-CLEAN_TARGETS += $(ALL_LIBRARIES) output
+CLEAN_TARGETS += $(ALL_LIBRARIES) output *dict*
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
