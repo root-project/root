@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.55 2001/11/14 18:42:36 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.56 2001/11/19 07:23:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -790,7 +790,7 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOp
 
   // Create curve for NLL binding object
   RooCurve* curve= new RooCurve(name, title, nllVar, 
-				plotVar->getPlotMin(), plotVar->getPlotMax(),plotVar->getPlotBins(),
+				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),frame->GetNbinsX(),
 				prec,prec,fixMinToZero) ;
 
   // Add this new curve to the specified plot frame

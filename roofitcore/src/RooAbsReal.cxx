@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.63 2001/11/19 18:03:19 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.64 2001/11/19 19:53:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -201,12 +201,12 @@ void RooAbsReal::printToStream(ostream& os, PrintOption opt, TString indent) con
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
     os << indent << "  Value = " << getVal() << unit << endl;
-    os << indent << "  Plot range is [ " << getPlotMin() << unit << " , "
-       << getPlotMax() << unit << " ]" << endl;
+//     os << indent << "  Plot range is [ " << getPlotMin() << unit << " , "
+//        << getPlotMax() << unit << " ]" << endl;
     if(opt >= Verbose) {
-      os << indent << "  Plot bins = " << getPlotBins();
-      Double_t range= getPlotMax()-getPlotMin();
-      if(range > 0) os << " (" << range/getPlotBins() << unit << "/bin)";
+//       os << indent << "  Plot bins = " << getPlotBins();
+//       Double_t range= getPlotMax()-getPlotMin();
+//       if(range > 0) os << " (" << range/getPlotBins() << unit << "/bin)";
       os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << endl;
     }
   }
@@ -811,7 +811,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     ((RooAbsReal*)negProj)->attachDataSet(*projData) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
-				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+				   frame->GetXaxis()->GetXmin(),frame->GetXaxis()->GetXmax(),frame->GetNbinsX()) ;
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.59 2001/11/19 07:23:55 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.60 2001/11/19 19:53:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -388,8 +388,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   histName.Append(Form("%08x",counter++)) ;
 
   // create the histogram
-  TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getPlotMin(), var1.getPlotMax(), 
-                                                      ny, var2.getPlotMin(), var2.getPlotMax());
+  TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getFitMin(), var1.getFitMax(), 
+                                                      ny, var2.getFitMin(), var2.getFitMax());
   if(!histogram) {
     cout << fName << "::createHistogram: unable to create a new histogram" << endl;
     return 0;

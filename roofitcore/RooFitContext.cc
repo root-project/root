@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.40 2001/11/16 02:23:56 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.41 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -606,10 +606,10 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 	if (par->hasFitMin() && par->hasFitMax()) {
 	  pstep= 0.1*(pmax-pmin);
 	} else {
-	  pstep= 0.1*(par->getPlotMax()-par->getPlotMin()) ;
-	  if (pstep<=0) {
+// 	  pstep= 0.1*(par->getPlotMax()-par->getPlotMin()) ;
+// 	  if (pstep<=0) {
 	    pstep=1 ;
-	  }
+// 	  }
 	}						  
 	if(!estimateSteps && verbose) {
 	  cout << "*** WARNING: no initial error estimate available for "
