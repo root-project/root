@@ -157,7 +157,6 @@ protected:
     Int_t               fMaterial;
     Int_t               fFirstParticle;
     Double_t            fDimX,fDimY,fDimZ;
-    Double_t            fMaxV,fMinV;
     Double_t            fE0;
     Double_t            fB;
 

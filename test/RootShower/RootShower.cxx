@@ -192,10 +192,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fPicDelay      = fRootShowerEnv->GetValue("RootShower.fPicDelay", 100);
     fPicReset      = fRootShowerEnv->GetValue("RootShower.fPicReset", 1);
 
-    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
-    fMaxV /= 3.0;
-    fMinV = -1.0 * fMaxV;
-
     fEventNr = 0;
     fNRun    = 0;
 
@@ -322,7 +318,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
     sel_node->cd();
     fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
     cB->GetView()->SideView();
     cB->Update();
@@ -387,7 +382,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     MapWindow();
     fEvent = new MyEvent();
     fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
-    Initialize(0);
+    Initialize(1);
     gROOT->GetListOfBrowsables()->Add(fEvent,"RootShower Event");
     gSystem->Load("libTreeViewer");
     gRootShower = this;
@@ -893,9 +888,6 @@ void RootShower::Initialize(Int_t set_angles)
     fEventListTree->DeleteChildren(fCurListItem);
     fClient->NeedRedraw(fEventListTree);
 
-    fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
-    fMaxV /= 3.0;
-    fMinV = -1.0 * fMaxV;
     cB->cd();
     cB->SetFillColor(1);
     cB->Clear();
@@ -907,9 +899,9 @@ void RootShower::Initialize(Int_t set_angles)
     sel_node = new TNode("SEL_NODE","SEL_NODE","sel_detect");
     sel_node->cd();
     fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
-    cB->GetView()->SideView();
+    if(set_angles)
+        cB->GetView()->SideView();
     cB->cd();
     cB->Update();
 
@@ -917,9 +909,9 @@ void RootShower::Initialize(Int_t set_angles)
     cA->SetFillColor(1);
     cA->Clear();
     fEvent->GetDetector()->GetGeometry()->Draw();
-    cA->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cA->GetView()->SetPerspective();
-    cA->GetView()->SideView();
+    if(set_angles)
+        cA->GetView()->SideView();
     cA->cd();
     cA->Update();
     fStatusBar->SetText("",1);
@@ -1091,9 +1083,7 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
     cB->cd();
     // draw geometry
     fSelection->Draw();
-    cB->GetView()->SetRange(fMinV,fMinV,fMinV,fMaxV,fMaxV,fMaxV);
     cB->GetView()->SetPerspective();
-    cB->GetView()->SideView();
     cB->cd();
     cB->Update();
     fSelection->cd();
@@ -1135,14 +1125,13 @@ void RootShower::OnOpenFile(const Char_t *filename)
     fHisto_dEdX->Reset();
     tree = (TTree *)f->Get("RootShower");
     if(tree == NULL) return;
-
     branch = tree->GetBranch("Event");
     branch->SetAddress(&fEvent);
     tree->GetEntry(0, 1);
     f->Close();
     // take back detector dimensions for selection geometry
     fEvent->GetDetector()->GetDimensions(&fDimX, &fDimY, &fDimZ);
-    Initialize(0);
+    Initialize(1);
 
     for(i=0;i<=fEvent->GetTotal();i++) {
         gTmpLTI = gEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
