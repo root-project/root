@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.94 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.95 2004/07/09 07:23:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2194,8 +2194,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    testcmd.ReplaceAll("$ExeName",exec);
    testcmd.ReplaceAll("$LinkedLibs",linkLibraries);
    testcmd.ReplaceAll("$BuildDir",build_loc);
-   if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
-   else cmd.ReplaceAll("$Opt",fFlagsOpt);
+   if (mode==kDebug) testcmd.ReplaceAll("$Opt",fFlagsDebug);
+   else testcmd.ReplaceAll("$Opt",fFlagsOpt);
    // ======= Run the build
 
    if (gDebug>3) {
@@ -2204,12 +2204,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    }
 
    Int_t dictResult = gSystem->Exec(rcint);
-   if (dictResult) {
-      if (dictResult) {
-         if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
-         else ::Error("ACLiC","Dictionary generation failed!");
-      }
-   }
+   if (dictResult)
+      if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
+      else ::Error("ACLiC","Dictionary generation failed!");
+
    Bool_t result = !dictResult;
 
    if (result) {
@@ -2223,6 +2221,60 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          else ::Error("ACLiC","Compilation failed!");
       }
       result = !compilationResult;
+   } else {
+      // rootcint failed
+      // compile macro, to check its validity and to inform the user
+      // of (possibly) invalid code
+      ::Info("ACLiC","Invoking compiler to check macro's validity");
+
+      // Need to extract the compiler call from MakeSharedLib.
+      // Assume that the compiler call has $SourceFiles and
+      // $IncludePath, as arguments, and that it's before the last
+      // $ObjectFiles occurrence
+
+      TString line(fMakeSharedLib);
+      TString comp;
+      Ssiz_t posEOL=kNPOS;
+      Ssiz_t posObjFiles=kNPOS;
+      // split cmd into command lines
+      while ((kNPOS!=(posEOL=line.Index(";")) // ";" is end of line
+              || kNPOS!=(posEOL=line.Index("&&"))) // and so is "&&"
+             // stop if we passed through all $ObjectFiles occurrences
+             && kNPOS!=line.Index("$ObjectFiles")) {
+         Ssiz_t posSource=line.Index("$SourceFiles");
+         Ssiz_t posInclude=line.Index("$IncludePath");
+         if (posSource!=kNPOS && posSource<posEOL
+             && posInclude!=kNPOS && posInclude<posEOL)
+            comp=line(0, posEOL);
+
+         line.Remove(0, posEOL+(line(posEOL)==';'?1:2));
+      }
+      if (!comp.Length())
+         ::Info("ACLiC","Cannot extract compiler call from MakeSharedLibs().");
+      else {
+         comp.ReplaceAll("$SourceFiles",filename);
+         comp.ReplaceAll("$ObjectFiles",dictObj);
+         comp.ReplaceAll("$IncludePath",includes);
+         comp.ReplaceAll("$SharedLib",library);
+         comp.ReplaceAll("$LinkedLibs",linkLibraries);
+         comp.ReplaceAll("$LibName",libname);
+         comp.ReplaceAll("$BuildDir",build_loc);
+         if (mode==kDebug) comp.ReplaceAll("$Opt",fFlagsDebug);
+         else comp.ReplaceAll("$Opt",fFlagsOpt);
+
+         if (gDebug>4)  ::Info("ACLiC",comp.Data());
+
+         Int_t compilationResult = gSystem->Exec( comp );
+         if (!compilationResult) {
+            ::Info("ACLiC","The compiler has not found any problem with your macro.\n"
+            "\tProbably your macro uses something rootcint can't parse.\n"
+            "\tCheck http://root.cern.ch/root/Cint.phtml?limitations for Cint's limitations.");
+            TString objfile=filename;
+            Ssiz_t len=objfile.Length();
+            objfile.Replace(len-extension.Length(), len, GetObjExt());
+            gSystem->Unlink(objfile);
+         }
+      }
    }
 
    if ( result ) {
