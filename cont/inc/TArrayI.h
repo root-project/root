@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.13 2002/07/23 11:11:26 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.h,v 1.14 2002/10/30 20:39:50 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,12 +41,11 @@ public:
    void         Adopt(Int_t n, Int_t *array);
    void         AddAt(Int_t i, Int_t idx);
    Int_t        At(Int_t i) const ;
-   void         Copy(TArrayI &array) const {array.Set(fN); for (Int_t i=0;i<fN;i++) array.fArray[i] = fArray[i];}
+   void         Copy(TArrayI &array) const {array.Set(fN); memcpy(array.fArray,fArray,fN*sizeof(Int_t));}
    const Int_t *GetArray() const { return fArray; }
    Int_t       *GetArray() { return fArray; }
    Stat_t       GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
-   void         Reset()           {memset(fArray, 0, fN*sizeof(Int_t));}
-   void         Reset(Int_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
+   void         Reset(Int_t val=0)  {memset(fArray,val, fN*sizeof(Int_t));}
    void         Set(Int_t n);
    void         Set(Int_t n, const Int_t *array);
    Int_t       &operator[](Int_t i);
