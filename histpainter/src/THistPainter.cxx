@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.79 2002/04/08 06:38:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.80 2002/05/04 16:07:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 #include "TGraph.h"
 #include "TGaxis.h"
 #include "TColor.h"
-#include "TLego.h"
+#include "TPainter3dAlgorithms.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom.h"
@@ -2833,10 +2833,13 @@ void THistPainter::PaintH3(Option_t *option)
    char *cmd;
    if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
       cmd = Form("TMarker3DBox::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      gROOT->ProcessLine(cmd);
+   } else if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"iso")) {
+      PaintH3Iso();
    } else {
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
+      gROOT->ProcessLine(cmd);
    }
-   gROOT->ProcessLine(cmd);
 
    //Draw axis
    if (Hoption.Same) return;
@@ -3195,6 +3198,87 @@ Int_t THistPainter::PaintInitH()
 
 
 //______________________________________________________________________________
+void THistPainter::PaintH3Iso()
+{
+   const Double_t ydiff = 1;
+   const Double_t yligh1 = 10;
+   const Double_t qa = 0.15;
+   const Double_t qd = 0.15;
+   const Double_t qs = 0.8;
+   Double_t fmin, fmax;
+   Int_t i, irep;
+   Int_t ncolor = 20;
+   Int_t icol1 = 20;
+   Int_t ic1 = icol1;
+   Int_t ic2 = ic1+ncolor;
+   Int_t ic3 = ic2+ncolor;
+   Double_t rh1 = 20.;
+   Double_t rh2 = 140.;
+   Double_t rh3 = 200.;
+   Double_t rs = 1.;
+   Double_t dd = 1./(2*ncolor);
+
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+   
+   Double_t s[3];
+   s[0] = fH->GetMean();
+   s[1] = 0.5*s[0];
+   s[2] = 1.5*s[1];
+
+   Int_t nx = fH->GetNbinsX();
+   Int_t ny = fH->GetNbinsY();
+   Int_t nz = fH->GetNbinsZ();
+
+   Double_t *x = new Double_t[nx];
+   Double_t *y = new Double_t[ny];
+   Double_t *z = new Double_t[nz];
+
+   for ( i=0 ; i<nx ; i++) x[i] = xaxis->GetBinCenter(i+1);
+   for ( i=0 ; i<ny ; i++) y[i] = yaxis->GetBinCenter(i+1);
+   for ( i=0 ; i<nz ; i++) z[i] = zaxis->GetBinCenter(i+1);
+
+   fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
+   fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
+   fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
+   fYbuf[1] = yaxis->GetBinUpEdge(yaxis->GetLast());
+   fXbuf[2] = zaxis->GetBinLowEdge(zaxis->GetFirst());
+   fYbuf[2] = zaxis->GetBinUpEdge(zaxis->GetLast());
+
+   TColor *acol;
+   Float_t r, g, b;
+   for ( i=0 ; i<ncolor ; i++ ) {
+      TColor::HLStoRGB(rh1, .4+i*dd, rs, r, g, b);
+      acol = gROOT->GetColor(i+icol1);
+      acol->SetRGB(r, g, b);
+      TColor::HLStoRGB(rh2, .4+i*dd, rs, r, g, b);
+      acol = gROOT->GetColor(i+icol1+ncolor);
+      acol->SetRGB(r, g, b);
+      TColor::HLStoRGB(rh3, .4+i*dd, rs, r, g, b);
+      acol = gROOT->GetColor(i+icol1+2*ncolor);
+      acol->SetRGB(r, g, b);
+   }
+
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);                          
+   fLego->InitMoveScreen(-1.1,1.1);
+
+   fLego->LightSource(0, ydiff, 0, 0, 0, irep);
+   fLego->LightSource(1, yligh1, 1, 1, 1, irep);
+   fLego->SurfaceProperty(qa, qd, qs, 1, irep);
+   fmin = ydiff*qa;
+   fmax = ydiff*qa + (yligh1+0.1)*(qd+qs);
+   fLego->SetIsoSurfaceParameters(fmin, fmax, ncolor, ic1, ic2, ic3);
+
+   fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");  
+
+   delete [] x;
+   delete [] y;
+   delete [] z;
+}
+
+
+//______________________________________________________________________________
 void THistPainter::PaintLego(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
@@ -3208,7 +3292,7 @@ void THistPainter::PaintLego(Option_t *)
 //       Possible systems are CYL,POL,SPH,PSR.
 //
 //      See THistPainter::Draw for the list of Lego options.
-//      See TLego for more examples of lego options.
+//      See TPainter3dAlgorithms for more examples of lego options.
 //
 //      See TStyle::SetPalette to change the color palette.
 //      It is suggested to use palette 1 via the call
@@ -3281,7 +3365,7 @@ void THistPainter::PaintLego(Option_t *)
    //   }
    //}
 
-   fLego = new TLego(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
 
 //          Create axis object
 
@@ -3355,17 +3439,17 @@ void THistPainter::PaintLego(Option_t *)
    if (Hoption.Lego == 11 || Hoption.Lego == 12) {
 //      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
 
    if (Hoption.Lego == 12) DefineColorLevels(ndivz);
 
-   fLego->SetLegoFunction(&TLego::LegoFunction);
-   if (Hoption.Lego ==  1) fLego->SetDrawFace(&TLego::DrawFaceRaster2);
-   if (Hoption.Lego == 11) fLego->SetDrawFace(&TLego::DrawFaceMode3);
-   if (Hoption.Lego == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
+   fLego->SetLegoFunction(&TPainter3dAlgorithms::LegoFunction);
+   if (Hoption.Lego ==  1) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster2);
+   if (Hoption.Lego == 11) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode3);
+   if (Hoption.Lego == 12) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
    if (Hoption.System == kPOLAR) {
       if (Hoption.Lego ==  1) fLego->LegoPolar(1,nx,ny,"FB");
       if (Hoption.Lego == 11) fLego->LegoPolar(1,nx,ny,"BF");
@@ -3384,7 +3468,7 @@ void THistPainter::PaintLego(Option_t *)
       if (Hoption.Lego == 12) fLego->LegoSpherical(1,1,nx,ny,"BF");
    } else {
       if (Hoption.Lego ==  1) {
-                              fLego->SetDrawFace(&TLego::DrawFaceMove2);
+                              fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
                               fLego->LegoCartesian(90,nx,ny,"FB");}
       if (Hoption.Lego == 11) fLego->LegoCartesian(90,nx,ny,"BF");
       if (Hoption.Lego == 12) fLego->LegoCartesian(90,nx,ny,"BF");
@@ -3393,13 +3477,13 @@ void THistPainter::PaintLego(Option_t *)
    if (Hoption.Lego == 1 || Hoption.Lego == 11) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
    if (Hoption.System == kCARTESIAN) {
       fLego->InitMoveScreen(-1.1,1.1);
-      fLego->SetDrawFace(&TLego::DrawFaceMove2);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
@@ -4187,7 +4271,7 @@ void THistPainter::PaintSurface(Option_t *)
    //   }
    //}
 
-   fLego = new TLego(fXbuf, fYbuf, Hoption.System);
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
 
@@ -4243,8 +4327,8 @@ void THistPainter::PaintSurface(Option_t *)
    if (Hoption.Surf == 13) {
       DefineColorLevels(ndivz);
       Hoption.Surf = 23;
-      fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
-      fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"BF");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
@@ -4261,7 +4345,7 @@ void THistPainter::PaintSurface(Option_t *)
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
@@ -4288,8 +4372,8 @@ void THistPainter::PaintSurface(Option_t *)
          acol->SetRGB(r,g,b);
       }
       fLego->Spectrum(nbcol, fmin, fmax, icol1, 1, irep);
-      fLego->SetSurfaceFunction(&TLego::GouraudFunction);
-      fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::GouraudFunction);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"BF");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
@@ -4303,9 +4387,9 @@ void THistPainter::PaintSurface(Option_t *)
       } else {
          fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
       }
-      fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
-      if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceRaster1);
-      if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
+      fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
+      if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceRaster1);
+      if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode2);
       if (Hoption.System == kPOLAR) {
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfacePolar(1,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfacePolar(1,nx,ny,"BF");
@@ -4319,7 +4403,7 @@ void THistPainter::PaintSurface(Option_t *)
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceSpherical(1,1,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       } else {
-         if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SurfaceCartesian(90,nx,ny,"FB");
          if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SurfaceCartesian(90,nx,ny,"BF");
       }
@@ -4328,13 +4412,13 @@ void THistPainter::PaintSurface(Option_t *)
    if (Hoption.Surf == 1 || Hoption.Surf == 13) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
-         fLego->SetDrawFace(&TLego::DrawFaceMove1);
+         fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
       }
    }
    if (Hoption.System == kCARTESIAN) {
       fLego->InitMoveScreen(-1.1,1.1);
-      fLego->SetDrawFace(&TLego::DrawFaceMove2);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);

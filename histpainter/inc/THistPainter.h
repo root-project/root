@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.10 2002/03/09 09:49:10 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.11 2002/03/21 16:15:43 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -33,26 +33,26 @@
 #endif
 
 class TGaxis;
-class TLego;
+class TPainter3dAlgorithms;
 class TPaveStats;
 const Int_t kMaxCuts = 16;
 
 class THistPainter : public TVirtualHistPainter {
 
 protected:
-    TH1        *fH;                 //pointer to histogram to paint
-    TAxis      *fXaxis;             //pointer to X axis
-    TAxis      *fYaxis;             //pointer to Y axis
-    TAxis      *fZaxis;             //pointer to Z axis
-    TList      *fFunctions;         //pointer to histogram list of functions
-    TLego      *fLego;              //pointer to a TLego object
-    Double_t   *fXbuf;              //X buffer coordinates
-    Double_t   *fYbuf;              //Y buffer coordinates
-    Int_t       fNcuts;             //Number of graphical cuts
-    Int_t       fCutsOpt[kMaxCuts]; //sign of each cut
-    TCutG      *fCuts[kMaxCuts];    //Pointers to graphical cuts
-    TObjArray  *fStack;             //Pointer to stack of histograms (if any)
-    TPaveStats *fStats;             //Pointer to the current stats pave (if any)
+    TH1                  *fH;                 //pointer to histogram to paint
+    TAxis                *fXaxis;             //pointer to X axis
+    TAxis                *fYaxis;             //pointer to Y axis
+    TAxis                *fZaxis;             //pointer to Z axis
+    TList                *fFunctions;         //pointer to histogram list of functions
+    TPainter3dAlgorithms *fLego;              //pointer to a TPainter3dAlgorithms object
+    Double_t             *fXbuf;              //X buffer coordinates
+    Double_t             *fYbuf;              //Y buffer coordinates
+    Int_t                 fNcuts;             //Number of graphical cuts
+    Int_t                 fCutsOpt[kMaxCuts]; //sign of each cut
+    TCutG                *fCuts[kMaxCuts];    //Pointers to graphical cuts
+    TObjArray            *fStack;             //Pointer to stack of histograms (if any)
+    TPaveStats           *fStats;             //Pointer to the current stats pave (if any)
 
 public:
     THistPainter();
@@ -85,6 +85,7 @@ public:
     virtual void       PaintFunction(Option_t *option);
     virtual void       PaintHist(Option_t *option);
     virtual void       PaintH3(Option_t *option="");
+    virtual void       PaintH3Iso();
     virtual Int_t      PaintInit();
     virtual Int_t      PaintInitH();
     virtual void       PaintLego(Option_t *option);

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.7 2002/03/21 16:15:43 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.80 2002/05/04 16:07:33 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 #include "TROOT.h"
-#include "TLego.h"
+#include "TPainter3dAlgorithms.h"
 #include "TVirtualPad.h"
 #include "THistPainter.h"
 #include "TH1.h"
@@ -46,15 +46,21 @@ const Double_t kRad = 1.74532925199432955e-02;
 #else
 const Double_t kRad = TMath::ATan(1)*Double_t(4)/Double_t(180);
 #endif
+const Double_t kFdel = 0.;
+const Double_t kDel = 0.0001;
+const Int_t kNiso = 4;
+const Int_t kNmaxp = kNiso*13;
+const Int_t kNmaxt = kNiso*12;
+const Int_t kLmax = 12;
 
   R__EXTERN TH1  *gCurrentHist;
   R__EXTERN Hoption_t Hoption;
   R__EXTERN Hparam_t  Hparam;
 
-ClassImp(TLego)
+ClassImp(TPainter3dAlgorithms)
 
 //______________________________________________________________________________
-TLego::TLego(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
+TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Lego default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -72,7 +78,7 @@ TLego::TLego(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
 }
 
 //______________________________________________________________________________
-TLego::TLego(Double_t *rmin, Double_t *rmax, Int_t system)
+TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system)
       : TObject(), TAttLine(1,1,1), TAttFill(1,0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Normal default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -103,7 +109,7 @@ TLego::TLego(Double_t *rmin, Double_t *rmax, Int_t system)
 }
 
 //______________________________________________________________________________
-TLego::~TLego()
+TPainter3dAlgorithms::~TPainter3dAlgorithms()
 {
 //*-*-*-*-*-*-*-*-*-*-*Lego default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
@@ -112,7 +118,7 @@ TLego::~TLego()
    fRaster = 0;
 }
 //______________________________________________________________________________
-void TLego::BackBox(Double_t ang)
+void TPainter3dAlgorithms::BackBox(Double_t ang)
 {
 //*-*-*-*-*-*-*-*-*-*Draw back surfaces of surrounding box*-*-*-*-*-*-*-*-*
 //*-*                =====================================                *
@@ -178,7 +184,7 @@ void TLego::BackBox(Double_t ang)
 
 
 //______________________________________________________________________________
-void TLego::ClearRaster()
+void TPainter3dAlgorithms::ClearRaster()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Clear screen*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        ============
@@ -188,7 +194,7 @@ void TLego::ClearRaster()
 }
 
 //______________________________________________________________________________
-void TLego::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
+void TPainter3dAlgorithms::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
 {
 //*-*-*-*-*-*Set correspondance between function and color levels-*-*-*-*-*
 //*-*        ====================================================         *
@@ -244,7 +250,7 @@ void TLego::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
 
 
 //______________________________________________________________________________
-void TLego::DefineGridLevels(Int_t ndivz)
+void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
 {
    // Define the grid levels drawn in the background of surface and lego plots.
    // The grid levels are aligned on the  Z axis' main tick marks.
@@ -277,7 +283,7 @@ void TLego::DefineGridLevels(Int_t ndivz)
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
+void TPainter3dAlgorithms::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Draw face - 1st variant*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =======================                          *
@@ -365,7 +371,7 @@ void TLego::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, 
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
+void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-Draw face - 2nd option*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                   ======================                            *
@@ -422,7 +428,7 @@ void TLego::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, 
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
+void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Draw face - 3rd option-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ======================                           *
@@ -488,7 +494,8 @@ void TLego::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, 
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
+void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
+                                         Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 1st variant for "MOVING SCREEN" algorithm -*-*-*-*
 //*-*        =====================================================        *
@@ -591,7 +598,7 @@ void TLego::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, 
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
+void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 2nd variant for "MOVING SCREEN" algorithm*-*-*-*-*
 //*-*        =====================================================        *
@@ -674,7 +681,7 @@ void TLego::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, 
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
+void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*-*Draw face - 1st variant for "RASTER SCREEN" algorithm*-*-*-*
 //*-*          =====================================================      *
@@ -775,7 +782,7 @@ void TLego::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
+void TPainter3dAlgorithms::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 2nd variant for "RASTER SCREEN" algorithm*-*-*-*-*
 //*-*        =====================================================        *
@@ -853,7 +860,7 @@ void TLego::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface
 
 
 //______________________________________________________________________________
-void TLego::FillPolygon(Int_t n, Double_t *p, Double_t *f)
+void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 {
 //*-*-*-*-*-*-*-*Fill polygon with function values at vertexes*-*-*-*-*-*-*
 //*-*            =============================================            *
@@ -933,7 +940,7 @@ void TLego::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 }
 
 //______________________________________________________________________________
-void TLego::FillPolygonBorder(Int_t nn, Double_t *xy)
+void TPainter3dAlgorithms::FillPolygonBorder(Int_t nn, Double_t *xy)
 {
 //*-*-*-*-*-*-*Fill a polygon including border ("RASTER SCREEN")*-*-*-*-*-*
 //*-*          =================================================          *
@@ -943,10 +950,10 @@ void TLego::FillPolygonBorder(Int_t nn, Double_t *xy)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t kbit, nbit, step, ymin, ymax, test[12], xcur[12], xnex[12],
-	     i, j, k, n, ibase, t, x, y, xscan[24]	/* was [2][12] */,
-	    yscan, x1[14], y1[14], x2[12], y2[12], ib, nb, dx, dy, iw, nx, xx,
-	     yy, signdx, nstart, xx1, xx2, nxa, nxb;
+    Int_t kbit, nbit, step, ymin, ymax, test[kLmax], xcur[kLmax], xnex[kLmax],
+	     i, j, k, n, ibase, t, x, y, xscan[24]	/* was [2][kLmax] */,
+	     yscan, x1[kLmax+2], y1[kLmax+2], x2[kLmax+2], y2[kLmax+2],
+	     ib, nb, dx, dy, iw, nx, xx, yy, signdx, nstart, xx1, xx2, nxa, nxb;
 
 //*-*-          T R A N S F E R   T O   S C R E E N   C O O R D I N A T E S
 
@@ -1040,7 +1047,7 @@ void TLego::FillPolygonBorder(Int_t nn, Double_t *xy)
     for (yscan = ymin; yscan <= ymax; ++yscan) {
 	nx  = 0;
 	nxa = 0;
-	nxb = 13;
+	nxb = kLmax + 1;
 	for (i = nstart; i <= n; ++i) {
 	    if (y1[i - 1] > yscan) goto L500;
 	    if (y2[i - 1] <= yscan) {
@@ -1123,8 +1130,8 @@ L500:
               xscan[2*nx - 1] = x;
            }
         }
-	if (nxb <= 12) {
-           for (i = nxb; i <= 12; ++i) {
+	if (nxb <= kLmax) {
+           for (i = nxb; i <= kLmax; ++i) {
               ++nx;
               xscan[2*nx - 2] = xscan[2*i - 2];
               xscan[2*nx - 1] = xscan[2*i - 1];
@@ -1171,7 +1178,7 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
+void TPainter3dAlgorithms::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Find level lines for face*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =========================                        *
@@ -1252,7 +1259,9 @@ L340:
 
 
 //______________________________________________________________________________
-void TLego::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1, Double_t f2, Double_t fmin, Double_t fmax, Int_t &kpp, Double_t *pp)
+void TPainter3dAlgorithms::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1,
+                                        Double_t f2, Double_t fmin,
+                                        Double_t fmax, Int_t &kpp, Double_t *pp)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-* Find part of edge *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                       =================                             *
@@ -1419,7 +1428,7 @@ L700:
 
 
 //______________________________________________________________________________
-void TLego::FindVisibleDraw(Double_t *r1, Double_t *r2)
+void TPainter3dAlgorithms::FindVisibleDraw(Double_t *r1, Double_t *r2)
 {
 //*-*-*-*-*-*-*-*-*Find visible parts of line (draw line)-*-*-*-*-*-*-*-*-*
 //*-*              ======================================                 *
@@ -1584,7 +1593,7 @@ void TLego::FindVisibleDraw(Double_t *r1, Double_t *r2)
 
 
 //______________________________________________________________________________
-void TLego::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntmax, Int_t &nt, Double_t *t)
+void TPainter3dAlgorithms::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntmax, Int_t &nt, Double_t *t)
 {
 //*-*-*-*-*-*-*-*Find visible part of a line ("RASTER SCREEN")*-*-*-*-*-*-*
 //*-*            =============================================            *
@@ -1742,7 +1751,7 @@ L300:
 }
 
 //______________________________________________________________________________
-void TLego::FrontBox(Double_t ang)
+void TPainter3dAlgorithms::FrontBox(Double_t ang)
 {
 //*-*-*-*-*-*-*-*Draw forward faces of surrounding box & axes-*-*-*-*-*-*-*
 //*-*            ============================================             *
@@ -1801,7 +1810,7 @@ void TLego::FrontBox(Double_t ang)
 }
 
 //______________________________________________________________________________
-void TLego::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, Double_t *t)
+void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, Double_t *t)
 {
 //*-*-*-*-*-* Find part of surface with luminosity in the corners*-*-*-*-*-*
 //*-*         ===================================================
@@ -1947,7 +1956,7 @@ void TLego::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, Double_t *t)
 
 
 //______________________________________________________________________________
-void TLego::InitMoveScreen(Double_t xmin, Double_t xmax)
+void TPainter3dAlgorithms::InitMoveScreen(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Initialize "MOVING SCREEN" method*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================                  *
@@ -1967,7 +1976,7 @@ void TLego::InitMoveScreen(Double_t xmin, Double_t xmax)
     }
 }
 //______________________________________________________________________________
-void TLego::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny  )
+void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny  )
 {
 //*-*-*Initialize hidden lines removal algorithm (RASTER SCREEN)*-*-*-*-*-*
 //*-*  =========================================================          *
@@ -2022,7 +2031,7 @@ void TLego::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
 
 //______________________________________________________________________________
-void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *vv, Double_t *t)
+void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *vv, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Service function for Legos-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==========================
@@ -2154,7 +2163,7 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *
 }
 
 //______________________________________________________________________________
-void TLego::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
 //*-*-*-*-*-*-*Draw stack of lego-plots in cartesian coordinates*-*-*-*-*-*
 //*-*          =================================================          *
@@ -2323,7 +2332,7 @@ void TLego::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 }
 
 //______________________________________________________________________________
-void TLego::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*-* Draw stack of lego-plots in polar coordinates *-*-*-*-*-*-*
 //*-*           =============================================             *
@@ -2519,7 +2528,7 @@ L300:
 }
 
 //______________________________________________________________________________
-void TLego::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*Draw stack of lego-plots in cylindrical coordinates*-*-*-*-*-*
 //*-*        ===================================================          *
@@ -2725,7 +2734,7 @@ L400:
 }
 
 //______________________________________________________________________________
-void TLego::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*Draw stack of lego-plots spheric coordinates-*-*-*-*-*-*
 //*-*              ============================================           *
@@ -2996,7 +3005,8 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::LightSource(Int_t nl, Double_t yl, Double_t xscr, Double_t yscr, Double_t zscr, Int_t &irep)
+void TPainter3dAlgorithms::LightSource(Int_t nl, Double_t yl, Double_t xscr,
+                                       Double_t yscr, Double_t zscr, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Set light source-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================                               *
@@ -3070,7 +3080,7 @@ L400:
 }
 
 //______________________________________________________________________________
-void TLego::Luminosity(Double_t *anorm, Double_t &flum)
+void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 {
 //*-*-*-*-*-*-*-*-*-*Find surface luminosity at given point *-*-*-*-*-*-*-*
 //*-*                ======================================               *
@@ -3143,7 +3153,7 @@ void TLego::Luminosity(Double_t *anorm, Double_t &flum)
 }
 
 //______________________________________________________________________________
-void TLego::ModifyScreen(Double_t *r1, Double_t *r2)
+void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Modify SCREEN*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        =============                                *
@@ -3201,7 +3211,7 @@ void TLego::ModifyScreen(Double_t *r1, Double_t *r2)
 
 
 //______________________________________________________________________________
-void TLego::SetDrawFace(DrawFaceFunc_t drface)
+void TPainter3dAlgorithms::SetDrawFace(DrawFaceFunc_t drface)
 {
 //*-*-*-*-*-*-*-*-*Store pointer to current algorithm to draw faces *-*-*-*
 //*-*              ================================================       *
@@ -3211,8 +3221,9 @@ void TLego::SetDrawFace(DrawFaceFunc_t drface)
    fDrawFace = drface;
 }
 
+
 //______________________________________________________________________________
-void TLego::SetLegoFunction(LegoFunc_t fun)
+void TPainter3dAlgorithms::SetLegoFunction(LegoFunc_t fun)
 {
 //*-*-*-*-*-*-*-*-*Store pointer to current lego function *-*-*-*-*-*-*-*-*
 //*-*              ======================================                 *
@@ -3222,8 +3233,9 @@ void TLego::SetLegoFunction(LegoFunc_t fun)
    fLegoFunction = fun;
 }
 
+
 //______________________________________________________________________________
-void TLego::SetSurfaceFunction(SurfaceFunc_t fun)
+void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 {
 //*-*-*-*-*-*-*-*-*Store pointer to current surface function*-*-*-*-*-*-*-*
 //*-*              =========================================              *
@@ -3235,7 +3247,19 @@ void TLego::SetSurfaceFunction(SurfaceFunc_t fun)
 
 
 //______________________________________________________________________________
-void TLego::SetColorDark(Color_t color, Int_t n)
+void TPainter3dAlgorithms::SetImplicitFunction(ImplicitFunc_t fun)
+{
+//*-*-*-*-*-*-*-*-*Store pointer to current implicit function *-*-*-*-*-*-*
+//*-*              ==========================================             *
+//*-*                                                                     *
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+   fImplicitFunction = fun;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::SetColorDark(Color_t color, Int_t n)
 {
 //*-*-*-*-*-*-*-*-*Store dark color for stack number n-*-*-**-*-*-*-*-*-*-*
 //*-*              ===================================                    *
@@ -3249,7 +3273,7 @@ void TLego::SetColorDark(Color_t color, Int_t n)
 
 
 //______________________________________________________________________________
-void TLego::SetColorMain(Color_t color, Int_t n)
+void TPainter3dAlgorithms::SetColorMain(Color_t color, Int_t n)
 {
 //*-*-*-*-*-*-*-*-*Store color for stack number n*-*-*-*-*-**-*-*-*-*-*-*-*
 //*-*              ==============================                         *
@@ -3263,7 +3287,7 @@ void TLego::SetColorMain(Color_t color, Int_t n)
 
 
 //______________________________________________________________________________
-void TLego::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
+void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
 {
 //*-*-*-*-*-*-*Decode side visibilities and order along R for sector*-*-*-*
 //*-*          =====================================================      *
@@ -3298,7 +3322,7 @@ void TLego::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv
 
 
 //______________________________________________________________________________
-void TLego::SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Double_t &val)
+void TPainter3dAlgorithms::SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Double_t &val)
 {
 //*-*-*-*-*-*-*Encode side visibilities and order along R for sector*-*-*-*
 //*-*          =====================================================      *
@@ -3342,14 +3366,14 @@ void TLego::SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Doubl
 
 
 //______________________________________________________________________________
-void TLego::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc, Int_t &irep)
+void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Set Spectrum-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =============                                  *
 //*-*                                                                     *
 //*-*    Input: NL   - number of levels                                   *
-//*-*           FMIN - MIN fuction value                                  *
-//*-*           FMAX - MAX fuction value                                  *
+//*-*           FMIN - MIN function value                                 *
+//*-*           FMAX - MAX function value                                 *
 //*-*           IC   - initial color index (for 1st level)                *
 //*-*           IDC  - color index increment                              *
 //*-*                                                                     *
@@ -3408,7 +3432,7 @@ void TLego::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*Draw surface in cartesian coordinate system*-*-*-*-*-*-*
 //*-*              ===========================================            *
@@ -3497,7 +3521,7 @@ void TLego::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t)
+void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Service function for Surfaces*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =============================
@@ -3601,7 +3625,7 @@ void TLego::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t)
 }
 
 //______________________________________________________________________________
-void TLego::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Draw surface in polar coordinates*-*-*-*-*-*-*-*-*
 //*-*                    =================================                *
@@ -3747,7 +3771,7 @@ L300:
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*Draw surface in cylindrical coordinates*-*-*-*-*-*-*-*-*
 //*-*              =======================================                *
@@ -3892,7 +3916,7 @@ L400:
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
+void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw surface in spheric coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ===================================                *
@@ -4080,7 +4104,7 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep)
+void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set surface property coefficients*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================                  *
@@ -4111,3 +4135,1821 @@ void TLego::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs
     fNqs = nnqs;
 }
 
+
+//______________________________________________________________________________
+Double_t TPainter3dAlgorithms::Function3D(Double_t x, Double_t y, Double_t z)
+{
+   // For the time being returns a sphere of radius 1
+   Double_t func;
+   func =  x*x+y*y+z*z-1.;
+   return func;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax, 
+                             Int_t nx, Int_t ny, Int_t nz, const char *chopt)
+{
+   // Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using 
+   // hidden surface removal algorithm "Painter".
+   //
+   //     Input: FUN      - external routine FUN(X,Y,Z)
+   //            RMIN(3)  - min scope coordinates
+   //            RMAX(3)  - max scope coordinates
+   //            NX       - number of steps along X
+   //            NY       - number of steps along Y
+   //            NZ       - number of steps along Z
+   //
+   //            DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
+   //              ICODES(*) - set of codes for this face
+   //                ICODES(1) - 1
+   //                ICODES(2) - 1
+   //                ICODES(3) - 1
+   //              NP        - number of nodes in face
+   //              IFACE(NP) - face
+   //              T(NP)     - additional function (lightness)
+   //
+   //            CHOPT - options: 'BF' - from BACK to FRONT
+   //                             'FB' - from FRONT to BACK
+
+   Int_t ix,    iy,    iz;
+   Int_t ix1,   iy1,   iz1;
+   Int_t ix2,   iy2,   iz2;
+   Int_t incr,  incrx, incry, incrz;
+   Int_t icodes[3], i, i1, i2, k, nnod, ntria;
+   Double_t x1=0, x2=0, y1, y2, z1, z2;
+   Double_t dx, dy, dz;
+   Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w;
+
+   Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
+   Double_t dtria[kNmaxt][6], abcd[kNmaxt][3];
+   Int_t    itria[kNmaxt][3], iorder[kNmaxt];
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("ImplicitFunction", "no TView in current pad");
+      return;
+   }
+   Double_t *tnorm = view->GetTnorm();
+
+   //       D E F I N E   O R D E R   O F   D R A W I N G
+   if (*chopt == 'B' || *chopt == 'b') {
+     incrx = +1;
+     incry = +1;
+     incrz = +1;
+   } else {
+     incrx = -1;
+     incry = -1;
+     incrz = -1;
+   }
+   if (tnorm[8]  < 0.) incrx =-incrx;
+   if (tnorm[9]  < 0.) incry =-incry;
+   if (tnorm[10] < 0.) incrz =-incrz;
+   ix1 = 1;
+   iy1 = 1;
+   iz1 = 1;
+   if (incrx == -1) ix1 = nx;
+   if (incry == -1) iy1 = ny;
+   if (incrz == -1) iz1 = nz;
+   ix2 = nx - ix1 + 1;
+   iy2 = ny - iy1 + 1;
+   iz2 = nz - iz1 + 1;
+   dx  = (rmax[0]-rmin[0]) / nx;
+   dy  = (rmax[1]-rmin[1]) / ny;
+   dz  = (rmax[2]-rmin[2]) / nz;
+
+   //       D R A W   F U N C T I O N
+///   for ( iz=iz1 ; iz<=iz2 ; iz=iz+incrz ) {
+   for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
+      z1     = (iz-1)*dz + rmin[2];
+      z2     = z1 + dz;
+      p[0][2] = z1;
+      p[1][2] = z1;
+      p[2][2] = z1;
+      p[3][2] = z1;
+      p[4][2] = z2;
+      p[5][2] = z2;
+      p[6][2] = z2;
+      p[7][2] = z2;
+///      for ( iy=iy1 ; iy<=iy2 ; iy=iy+incry ) {
+   for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
+         y1      = (iy-1)*dy + rmin[1];
+         y2      = y1 + dy;
+         p[0][1] = y1;
+         p[1][1] = y1;
+         p[2][1] = y2;
+         p[3][1] = y2;
+         p[4][1] = y1;
+         p[5][1] = y1;
+         p[6][1] = y2;
+         p[7][1] = y2;
+         if (incrx == +1) {
+            x2    = rmin[0];
+            pf[1] = (this->*fImplicitFunction)(x2,y1,z1);
+            pf[2] = (this->*fImplicitFunction)(x2,y2,z1);
+            pf[5] = (this->*fImplicitFunction)(x2,y1,z2);
+            pf[6] = (this->*fImplicitFunction)(x2,y2,z2);
+         } else {
+            x1    = rmax[0];
+            pf[0] = (this->*fImplicitFunction)(x1,y1,z1);
+            pf[3] = (this->*fImplicitFunction)(x1,y2,z1);
+            pf[4] = (this->*fImplicitFunction)(x1,y1,z2);
+            pf[7] = (this->*fImplicitFunction)(x1,y2,z2);
+         }
+///         for ( ix=ix1 ; ix<=ix2 ; ix=ix+incrx ) {
+         for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+            icodes[0] = ix;
+            icodes[1] = iy;
+            icodes[2] = iz;
+            if (incrx == +1) {
+               x1     = x2;
+               x2     = x2 + dx;
+               pf[0]  = pf[1];
+               pf[3]  = pf[2];
+               pf[4]  = pf[5];
+               pf[7]  = pf[6];
+               pf[1]  = (this->*fImplicitFunction)(x2,y1,z1);
+               pf[2]  = (this->*fImplicitFunction)(x2,y2,z1);
+               pf[5]  = (this->*fImplicitFunction)(x2,y1,z2);
+               pf[6]  = (this->*fImplicitFunction)(x2,y2,z2);
+            } else {
+               x2     = x1;
+               x1     = x1 - dx;
+               pf[1]  = pf[0];
+               pf[2]  = pf[3];
+               pf[5]  = pf[4];
+               pf[6]  = pf[7];
+               pf[0]  = (this->*fImplicitFunction)(x1,y1,z1);
+               pf[3]  = (this->*fImplicitFunction)(x1,y2,z1);
+               pf[4]  = (this->*fImplicitFunction)(x1,y1,z2);
+               pf[7]  = (this->*fImplicitFunction)(x1,y2,z2);
+            }
+            if (pf[0] >= -kFdel) goto L110;
+            if (pf[1] >= -kFdel) goto L120;
+            if (pf[2] >= -kFdel) goto L120;
+            if (pf[3] >= -kFdel) goto L120;
+            if (pf[4] >= -kFdel) goto L120;
+            if (pf[5] >= -kFdel) goto L120;
+            if (pf[6] >= -kFdel) goto L120;
+            if (pf[7] >= -kFdel) goto L120;
+            goto L510;
+L110:
+            if (pf[1] < -kFdel) goto L120;
+            if (pf[2] < -kFdel) goto L120;
+            if (pf[3] < -kFdel) goto L120;
+            if (pf[4] < -kFdel) goto L120;
+            if (pf[5] < -kFdel) goto L120;
+            if (pf[6] < -kFdel) goto L120;
+            if (pf[7] < -kFdel) goto L120;
+            goto L510;
+L120:
+            p[0][0] = x1;
+            p[1][0] = x2;
+            p[2][0] = x2;
+            p[3][0] = x1;
+            p[4][0] = x1;
+            p[5][0] = x2;
+            p[6][0] = x2;
+            p[7][0] = x1;
+
+            //       F I N D   G R A D I E N T S
+            // Find X-gradient
+            if (ix == 1) {
+               pn[0][0] = (pf[1] - pf[0]) / dx;
+               pn[3][0] = (pf[2] - pf[3]) / dx;
+               pn[4][0] = (pf[5] - pf[4]) / dx;
+               pn[7][0] = (pf[6] - pf[7]) / dx;
+            } else {
+               pn[0][0] = (pf[1] - (this->*fImplicitFunction)(x1-dx,y1,z1)) / (dx + dx);
+               pn[3][0] = (pf[2] - (this->*fImplicitFunction)(x1-dx,y2,z1)) / (dx + dx);
+               pn[4][0] = (pf[5] - (this->*fImplicitFunction)(x1-dx,y1,z2)) / (dx + dx);
+               pn[7][0] = (pf[6] - (this->*fImplicitFunction)(x1-dx,y2,z2)) / (dx + dx);
+            }
+            if (ix == nx) {
+               pn[1][0] = (pf[1] - pf[0]) / dx;
+               pn[2][0] = (pf[2] - pf[3]) / dx;
+               pn[5][0] = (pf[5] - pf[4]) / dx;
+               pn[6][0] = (pf[6] - pf[7]) / dx;
+            } else {
+               pn[1][0] = ((this->*fImplicitFunction)(x2+dx,y1,z1) - pf[0]) / (dx + dx);
+               pn[2][0] = ((this->*fImplicitFunction)(x2+dx,y2,z1) - pf[3]) / (dx + dx);
+               pn[5][0] = ((this->*fImplicitFunction)(x2+dx,y1,z2) - pf[4]) / (dx + dx);
+               pn[6][0] = ((this->*fImplicitFunction)(x2+dx,y2,z2) - pf[7]) / (dx + dx);
+            }
+            // Find Y-gradient
+            if (iy == 1) {
+               pn[0][1] = (pf[3] - pf[0]) / dy;
+               pn[1][1] = (pf[2] - pf[1]) / dy;
+               pn[4][1] = (pf[7] - pf[4]) / dy;
+               pn[5][1] = (pf[6] - pf[5]) / dy;
+            } else {
+               pn[0][1] = (pf[3] - (this->*fImplicitFunction)(x1,y1-dy,z1)) / (dy + dy);
+               pn[1][1] = (pf[2] - (this->*fImplicitFunction)(x2,y1-dy,z1)) / (dy + dy);
+               pn[4][1] = (pf[7] - (this->*fImplicitFunction)(x1,y1-dy,z2)) / (dy + dy);
+               pn[5][1] = (pf[6] - (this->*fImplicitFunction)(x2,y1-dy,z2)) / (dy + dy);
+            }
+            if (iy == ny) {
+               pn[2][1] = (pf[2] - pf[1]) / dy;
+               pn[3][1] = (pf[3] - pf[0]) / dy;
+               pn[6][1] = (pf[6] - pf[5]) / dy;
+               pn[7][1] = (pf[7] - pf[4]) / dy;
+            } else {
+               pn[2][1] = ((this->*fImplicitFunction)(x2,y2+dy,z1) - pf[1]) / (dy + dy);
+               pn[3][1] = ((this->*fImplicitFunction)(x1,y2+dy,z1) - pf[0]) / (dy + dy);
+               pn[6][1] = ((this->*fImplicitFunction)(x2,y2+dy,z2) - pf[5]) / (dy + dy);
+               pn[7][1] = ((this->*fImplicitFunction)(x1,y2+dy,z2) - pf[4]) / (dy + dy);
+            }
+            // Find Z-gradient
+            if (iz == 1) {
+               pn[0][2] = (pf[4] - pf[0]) / dz;
+               pn[1][2] = (pf[5] - pf[1]) / dz;
+               pn[2][2] = (pf[6] - pf[2]) / dz;
+               pn[3][2] = (pf[7] - pf[3]) / dz;
+            } else {
+               pn[0][2] = (pf[4] - (this->*fImplicitFunction)(x1,y1,z1-dz)) / (dz + dz);
+               pn[1][2] = (pf[5] - (this->*fImplicitFunction)(x2,y1,z1-dz)) / (dz + dz);
+               pn[2][2] = (pf[6] - (this->*fImplicitFunction)(x2,y2,z1-dz)) / (dz + dz);
+               pn[3][2] = (pf[7] - (this->*fImplicitFunction)(x1,y2,z1-dz)) / (dz + dz);
+            }
+            if (iz == nz) {
+               pn[4][2] = (pf[4] - pf[0]) / dz;
+               pn[5][2] = (pf[5] - pf[1]) / dz;
+               pn[6][2] = (pf[6] - pf[2]) / dz;
+               pn[7][2] = (pf[7] - pf[3]) / dz;
+            } else {
+               pn[4][2] = ((this->*fImplicitFunction)(x1,y1,z2+dz) - pf[0]) / (dz + dz);
+               pn[5][2] = ((this->*fImplicitFunction)(x2,y1,z2+dz) - pf[1]) / (dz + dz);
+               pn[6][2] = ((this->*fImplicitFunction)(x2,y2,z2+dz) - pf[2]) / (dz + dz);
+               pn[7][2] = ((this->*fImplicitFunction)(x1,y2,z2+dz) - pf[3]) / (dz + dz);
+            }
+            fsurf = 0.;
+            MarchingCube(fsurf, p, pf, pn, nnod, ntria, xyz, grad, itria);
+            if (ntria == 0)   goto L510;
+
+            for ( i=1 ; i<=nnod ; i++ ) {
+	       view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
+               Luminosity(&grad[i-1][0], w);
+               grad[i-1][0] = w;
+            }
+            ZDepth(xyzn, ntria, itria, dtria, abcd, (Int_t*)iorder);
+            if (ntria == 0)   goto L510;
+            incr = 1;
+            if (*chopt == 'B' || *chopt == 'b') incr =-1;
+            i1 = 1;
+            if (incr == -1) i1 = ntria;
+            i2 = ntria - i1 + 1;
+///	    for ( i=i1 ; i<=i2 ; i=i+incr ) {
+            for (i=i1; incr < 0 ? i >= i2 : i <= i2; i += incr) {
+               k      = iorder[i-1];
+               t[0]   = grad[TMath::Abs(itria[k-1][0])-1][0];
+               t[1]   = grad[TMath::Abs(itria[k-1][1])-1][0];
+               t[2]   = grad[TMath::Abs(itria[k-1][2])-1][0];
+               (this->*fDrawFace)(icodes, (Double_t*)xyz, 3, &itria[k-1][0], t);
+            }
+L510:
+            continue;
+         }
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
+                                        Double_t f[8], Double_t g[8][3],
+                                        Int_t &nnod, Int_t &ntria,
+                                        Double_t xyz[][3],
+                                        Double_t grad[][3],
+                                        Int_t itria[][3])
+{
+   // Topological decider for "Marching Cubes" algorithm Find set of triangles
+   // aproximating the isosurface F(x,y,z)=Fiso inside the cube 
+   // (improved version)
+   //
+   // Input: FISO   - function value for isosurface
+   //        P(3,8) - cube vertexes
+   //        F(8)   - function values at the vertexes
+   //        G(3,8) - function gradients at the vertexes
+   //
+   // Output: NNOD       - number of nodes     (maximum 13)
+   //         NTRIA      - number of triangles (maximum 12)
+   //         XYZ(3,*)   - nodes
+   //         GRAD(3,*)  - node normales       (not normalized)
+   //         ITRIA(3,*) - triangles
+   //
+
+   static Int_t irota[24][8] = { { 1,2,3,4,5,6,7,8 }, { 2,3,4,1,6,7,8,5 },
+                                 { 3,4,1,2,7,8,5,6 }, { 4,1,2,3,8,5,6,7 },
+                                 { 6,5,8,7,2,1,4,3 }, { 5,8,7,6,1,4,3,2 },
+                                 { 8,7,6,5,4,3,2,1 }, { 7,6,5,8,3,2,1,4 },
+                                 { 2,6,7,3,1,5,8,4 }, { 6,7,3,2,5,8,4,1 },
+                                 { 7,3,2,6,8,4,1,5 }, { 3,2,6,7,4,1,5,8 },
+                                 { 5,1,4,8,6,2,3,7 }, { 1,4,8,5,2,3,7,6 },
+                                 { 4,8,5,1,3,7,6,2 }, { 8,5,1,4,7,6,2,3 },
+                                 { 5,6,2,1,8,7,3,4 }, { 6,2,1,5,7,3,4,8 },
+                                 { 2,1,5,6,3,4,8,7 }, { 1,5,6,2,4,8,7,3 },
+                                 { 4,3,7,8,1,2,6,5 }, { 3,7,8,4,2,6,5,1 },
+                                 { 7,8,4,3,6,5,1,2 }, { 8,4,3,7,5,1,2,6 }
+                               };
+
+   static Int_t iwhat[21] = { 1,3,5,65,50,67,74,51,177,105,113,58,165,178,
+                              254,252,250,190,205,188,181 };
+
+   Int_t j, i, i1, i2, i3, ir, irt=0, k, k1, k2, incr, icase=0, n;
+   Int_t itr[3];
+
+   nnod  = 0;
+   ntria = 0;
+
+   // F I N D   C O N F I G U R A T I O N   T Y P E
+   for ( i=1; i<=8 ; i++) {
+      fF8[i-1] = f[i-1] - fiso;
+   }
+   for ( ir=1 ; ir<=24 ; ir++ ) {
+      k    = 0;
+      incr = 1;
+      for ( i=1 ; i<=8 ; i++ ) {
+         if (fF8[irota[ir-1][i-1]-1] >= 0.) k = k + incr;
+         incr = incr + incr;
+      }
+      if (k==0 || k==255) return;
+      for ( i=1 ; i<=21 ; i++ ) {
+         if (k != iwhat[i-1]) continue;
+            icase = i;
+            irt   = ir; 
+            goto L200;
+      }
+   }
+
+   // R O T A T E   C U B E
+L200:
+   for ( i=1 ; i<=8 ; i++ ) {
+      k        = irota[irt-1][i-1];
+      fF8[i-1] = f[k-1] - fiso;
+      fP8[i-1][0] = p[k-1][0];
+      fP8[i-1][1] = p[k-1][1];
+      fP8[i-1][2] = p[k-1][2];
+      fG8[i-1][0] = g[k-1][0];
+      fG8[i-1][1] = g[k-1][1];
+      fG8[i-1][2] = g[k-1][2];
+   }
+  
+   // V A R I O U S   C O N F I G U R A T I O N S
+   n = 0;
+   switch ((int)icase) {
+      case 1: 
+      case 15: 
+         MarchingCubeCase00(1, 4, 9, 0, 0, 0, nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 2: 
+      case 16: 
+         MarchingCubeCase00(2, 4, 9, 10, 0, 0, nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 3: 
+      case 17: 
+         MarchingCubeCase03(nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 4: 
+      case 18: 
+         MarchingCubeCase04(nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 5: 
+      case 19: 
+         MarchingCubeCase00(6, 2, 1, 9, 8, 0, nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 6: 
+      case 20: 
+         MarchingCubeCase06(nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 7: 
+      case 21: 
+         MarchingCubeCase07(nnod, ntria, xyz, grad, itria);
+         goto L400;
+      case 8: 
+         MarchingCubeCase00(2, 4, 8, 6, 0, 0, nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 9: 
+         MarchingCubeCase00(1, 4, 12, 7, 6, 10, nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 0: 
+         MarchingCubeCase10(nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 11: 
+         MarchingCubeCase00(1, 4, 8, 7, 11, 10, nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 12: 
+         MarchingCubeCase12(nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 13: 
+         MarchingCubeCase13(nnod, ntria, xyz, grad, itria);
+         goto L500;
+      case 14: 
+         MarchingCubeCase00(1, 9, 12, 7, 6, 2, nnod, ntria, xyz, grad, itria);
+         goto L500;
+   }
+
+   // I F   N E E D E D ,   I N V E R T   T R I A N G L E S
+L400:
+   if (ntria == 0) return;
+   if (icase <= 14) goto L500;
+   for ( i=1; i<=ntria ; i++ ) {
+      i1 = TMath::Abs(itria[i-1][0]);
+      i2 = TMath::Abs(itria[i-1][1]);
+      i3 = TMath::Abs(itria[i-1][2]);
+      if (itria[i-1][2] < 0) i1 =-i1;
+      if (itria[i-1][1] < 0) i3 =-i3;
+      if (itria[i-1][0] < 0) i2 =-i2;
+      itria[i-1][0] = i1;
+      itria[i-1][1] = i3;
+      itria[i-1][2] = i2;
+   }
+
+   // R E M O V E   V E R Y   S M A L L   T R I A N G L E S
+L500:
+   n = n + 1;
+L510: 
+   if (n > ntria) return;
+   for ( i=1 ; i<=3 ; i++ ) {
+      i1 = i;
+      i2 = i + 1;
+      if (i == 3) i2 = 1;
+      k1 = TMath::Abs(itria[n-1][i1-1]);
+      k2 = TMath::Abs(itria[n-1][i2-1]);
+      if (TMath::Abs(xyz[k1-1][0]-xyz[k2-1][0]) > kDel) continue;
+      if (TMath::Abs(xyz[k1-1][1]-xyz[k2-1][1]) > kDel) continue;
+      if (TMath::Abs(xyz[k1-1][2]-xyz[k2-1][2]) > kDel) continue;
+      i3 = i - 1;
+      if (i == 1) i3 = 3;
+      goto L530;
+   }
+   goto L500;
+
+   // R E M O V E   T R I A N G L E
+L530:
+   for ( i=1 ; i<=3 ; i++ ) {
+       itr[i-1] = itria[n-1][i-1];
+       itria[n-1][i-1] = itria[ntria-1][i-1];
+   }
+   ntria = ntria - 1;
+   if (ntria == 0) return;
+   if (itr[i2-1]*itr[i3-1] > 0) goto L510;
+
+   // C O R R E C T   O T H E R   T R I A N G L E S
+   if (itr[i2-1] < 0) {
+      k1 =-itr[i2-1];
+      k2 =-TMath::Abs(itr[i3-1]);
+   }
+   if (itr[i3-1] < 0) {
+      k1 =-itr[i3-1];
+      k2 =-TMath::Abs(itr[i1-1]);
+   }
+   for ( j=1 ; j<=ntria ; j++ ) {
+      for ( i=1 ; i<=3 ; i++ ) {
+         if (itria[j-1][i-1] != k2) continue;
+         i2 = TMath::Abs(itria[j-1][0]);
+         if (i != 3) i2 = TMath::Abs(itria[j-1][i]);
+         if (i2 == k1) itria[j-1][i-1] =-itria[j-1][i-1];
+         goto L560;
+      }
+L560:
+      continue;
+   }
+   goto L510;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3, 
+                                              Int_t k4, Int_t k5, Int_t k6,
+                                              Int_t &nnod, Int_t &ntria,
+                                              Double_t xyz[52][3],
+                                              Double_t grad[52][3],
+                                              Int_t itria[48][3])
+{
+   // Consideration of trivial cases: 1,2,5,8,9,11,14
+   //
+   // Input: K1,...,K6 - edges intersected with isosurface
+   //
+   // Output: the same as for IHMCUB
+
+   static Int_t it[4][4][3] = { { { 1,2, 3 }, { 0,0, 0 }, { 0,0, 0 }, { 0,0, 0 } },
+                                { { 1,2,-3 }, {-1,3, 4 }, { 0,0, 0 }, { 0,0, 0 } },
+                                { { 1,2,-3 }, {-1,3,-4 }, {-1,4, 5 }, { 0,0, 0 } },
+                                { { 1,2,-3 }, {-1,3,-4 }, {-4,6,-1 }, { 4,5,-6 } }
+                              };
+   Int_t it2[4][3], i, j;
+
+   Int_t ie[6];
+
+   // S E T   N O D E S   &   N O R M A L E S
+   ie[0] = k1;
+   ie[1] = k2;
+   ie[2] = k3;
+   ie[3] = k4;
+   ie[4] = k5;
+   ie[5] = k6;
+   nnod  = 6;
+   if (ie[5] == 0) nnod = 5;
+   if (ie[4] == 0) nnod = 4;
+   if (ie[3] == 0) nnod = 3;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   // S E T   T R I A N G L E S
+   ntria = nnod - 2;
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<4 ; j++) { 
+         it2[j][i] = it[ntria-1][j][i];
+      }
+   }
+   MarchingCubeSetTriangles(ntria, it2, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase03(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 3 
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t f0;
+   static Int_t ie[6]     = { 4,9,1, 2,11,3 };
+   static Int_t it1[2][3] = { { 1,2,3 }, { 4,5,6 } };
+   static Int_t it2[4][3] = { { 1,2,-5 }, { -1,5,6 }, { 5,-2,4 }, { -4,2,3 } };
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 6;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  F I N D   C O N F I G U R A T I O N
+   f0 = (fF8[0]*fF8[2]-fF8[1]*fF8[3]) / (fF8[0]+fF8[2]-fF8[1]-fF8[3]);
+   if (f0>=0. && fF8[0]>=0.) goto L100;
+   if (f0<0. && fF8[0]<0.) goto L100;
+   ntria = 2;
+   MarchingCubeSetTriangles(ntria, it1, itria);
+   return;
+
+   //  N O T   S E P A R A T E D   F R O N T   F A C E
+L100:
+   ntria = 4;
+   MarchingCubeSetTriangles(ntria, it2, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 4 
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Int_t irep;
+   static Int_t ie[6]     = { 4,9,1, 7,11,6 };
+   static Int_t it1[2][3] = { { 1,2,3 }, { 4,5,6 } };
+   static Int_t it2[6][3] = { { 1,2,4 }, { 2,3,6 }, { 3,1,5 }, 
+                              { 4,5,1 }, { 5,6,3 }, { 6,4,2 } };
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 6;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+   MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[2], fF8[3], 
+                                  fF8[4], fF8[5], fF8[6], fF8[7], irep);
+   if (irep == 0) {
+     ntria = 2;
+     MarchingCubeSetTriangles(ntria, it1, itria);
+   } else {
+     ntria = 6;
+     MarchingCubeSetTriangles(ntria, it2, itria);
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase06(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 6 
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t f0;
+   Int_t irep;
+
+   static Int_t ie[7]     = { 2,4,9,10, 6,7,11 };
+   static Int_t it1[5][3] = { { 6,7,-1 }, { -6,1,2 }, { 6,2,3 }, { 6,3,-4 }, { -6,4,5 } };
+   static Int_t it2[3][3] = { { 1,2,-3 }, { -1,3,4 }, { 5,6,7 } };
+   static Int_t it3[7][3] = { { 6,7,-1 }, { -6,1,2 }, { 6,2,3 }, { 6,3,-4 }, { -6,4,5 }, 
+                              { 1,7,-5 }, { -1,5,4 } };
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 7;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  F I N D   C O N F I G U R A T I O N
+   f0 = (fF8[1]*fF8[6]-fF8[5]*fF8[2]) / (fF8[1]+fF8[6]-fF8[5]-fF8[2]);
+   if (f0>=0. && fF8[1]>=0.) goto L100;
+   if (f0<0. && fF8[1]<0.) goto L100;
+
+   //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+   MarchingCubeSurfacePenetration(fF8[2], fF8[1], fF8[5], fF8[6],
+                                  fF8[3], fF8[0], fF8[4], fF8[7], irep);
+   if (irep == 1) {
+     ntria = 7;
+     MarchingCubeSetTriangles(ntria, it3, itria);
+   } else {
+     ntria = 3;
+     MarchingCubeSetTriangles(ntria, it2, itria);
+   }
+   return;
+
+   //  N O T   S E P A R A T E D   R I G H T   F A C E
+L100:
+   ntria = 5;
+   MarchingCubeSetTriangles(ntria, it1, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3],
+                               Int_t itria[48][3])
+{
+   // Consider case No 7 
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t f1, f2, f3;
+   Int_t icase, irep;
+   static Int_t ie[9] = { 3,12,4, 1,10,2, 11,6,7 };
+   static Int_t it[9][9][3] = { 
+   {{  1,2,3}, {  4,5,6}, {  7,8,9}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
+   {{  1,2,3}, { 4,9,-7}, { -4,7,6}, { 9,4,-5}, { -9,5,8}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
+   {{  4,5,6}, { 8,3,-1}, { -8,1,7}, { 3,8,-9}, { -3,9,2}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
+   {{-10,2,3}, {10,3,-1}, {-10,1,7}, {10,7,-6}, {-10,6,4}, {10,4,-5}, {-10,5,8}, { 10,8,9}, {10,9,-2}},
+   {{  7,8,9}, { 2,5,-6}, { -2,6,1}, { 5,2,-3}, { -5,3,4}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
+   {{-10,1,2}, {10,2,-3}, {-10,3,4}, { 10,4,5}, {10,5,-8}, {-10,8,9}, {10,9,-7}, {-10,7,6}, {10,6,-1}},
+   {{ 10,2,3}, {10,3,-4}, {-10,4,5}, {10,5,-6}, {-10,6,1}, {10,1,-7}, {-10,7,8}, {10,8,-9}, {-10,9,2}},
+   {{  1,7,6}, { -4,2,3}, {-4,9,-2}, {-9,4,-5}, { -9,5,8}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
+   {{ -1,9,2}, {  1,2,3}, { 1,3,-4}, { 6,-1,4}, {  6,4,5}, { 6,-5,7}, { -7,5,8}, {  7,8,9}, { 7,-9,1}} 
+   };
+
+   Int_t it2[9][3], i, j;
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 9;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  F I N D   C O N F I G U R A T I O N
+   f1 = (fF8[2]*fF8[5]-fF8[1]*fF8[6]) / (fF8[2]+fF8[5]-fF8[1]-fF8[6]);
+   f2 = (fF8[2]*fF8[7]-fF8[3]*fF8[6]) / (fF8[2]+fF8[7]-fF8[3]-fF8[6]);
+   f3 = (fF8[2]*fF8[0]-fF8[1]*fF8[3]) / (fF8[2]+fF8[0]-fF8[1]-fF8[3]);
+   icase = 1;
+   if (f1>=0. && fF8[2] <0.) icase = icase + 1;
+   if (f1 <0. && fF8[2]>=0.) icase = icase + 1;
+   if (f2>=0. && fF8[2] <0.) icase = icase + 2;
+   if (f2 <0. && fF8[2]>=0.) icase = icase + 2;
+   if (f3>=0. && fF8[2] <0.) icase = icase + 4;
+   if (f3 <0. && fF8[2]>=0.) icase = icase + 4;
+   ntria = 5;
+
+   switch ((int)icase) {
+      case 1:  goto L100;
+      case 2:  goto L400;
+      case 3:  goto L400;
+      case 4:  goto L200;
+      case 5:  goto L400;
+      case 6:  goto L200;
+      case 7:  goto L200;
+      case 8:  goto L300;
+   }
+
+L100: 
+   ntria = 3;
+   goto L400;
+
+   //  F I N D   A D D I T I O N A L   P O I N T
+L200:
+   nnod  = 10;
+   ntria = 9;
+
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<9 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeMiddlePoint(9, xyz, grad, it2, &xyz[nnod-1][0], &grad[nnod-1][0]);
+   goto L400;
+
+   //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+L300:
+   MarchingCubeSurfacePenetration(fF8[3], fF8[2], fF8[6], fF8[7],
+                                  fF8[0], fF8[1], fF8[5], fF8[4], irep);
+   if (irep != 2) goto L400;
+///   IHMCTT(NTRIA,IT8,ITRIA)
+   ntria = 9;
+   icase = 9;
+
+   //  S E T   T R I A N G L E S
+L400:
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<9 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeSetTriangles(ntria, it2, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase10(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 10
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t f1, f2;
+   Int_t icase, irep;
+   static Int_t ie[8] = { 1,3,12,9, 5,7,11,10 };
+   static Int_t it[6][8][3] = {
+   {{1,2,-3}, {-1,3,4}, {5,6,-7}, {-5,7,8}, { 0,0,0}, { 0,0,0}, { 0,0,0}, { 0,0,0}},
+   {{ 9,1,2}, { 9,2,3}, { 9,3,4}, { 9,4,5}, { 9,5,6}, { 9,6,7}, { 9,7,8}, { 9,8,1}},
+   {{ 9,1,2}, { 9,4,1}, { 9,3,4}, { 9,6,3}, { 9,5,6}, { 9,8,5}, { 9,7,8}, { 9,2,7}},
+   {{1,2,-7}, {-1,7,8}, {5,6,-3}, {-5,3,4}, { 0,0,0}, { 0,0,0}, { 0,0,0}, { 0,0,0}},
+   {{1,2,-7}, {-1,7,8}, {2,3,-6}, {-2,6,7}, {3,4,-5}, {-3,5,6}, {4,1,-8}, {-4,8,5}},
+   {{1,2,-3}, {-1,3,4}, {2,7,-6}, {-2,6,3}, {7,8,-5}, {-7,5,6}, {8,1,-4}, {-8,4,5}} 
+   };
+   Int_t it2[8][3], i, j;
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 8;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  F I N D   C O N F I G U R A T I O N
+   f1 = (fF8[0]*fF8[5]-fF8[1]*fF8[4]) / (fF8[0]+fF8[5]-fF8[1]-fF8[4]);
+   f2 = (fF8[3]*fF8[6]-fF8[2]*fF8[7]) / (fF8[3]+fF8[6]-fF8[2]-fF8[5]);
+   icase = 1;
+   if (f1 >= 0.) icase = icase + 1;
+   if (f2 >= 0.) icase = icase + 2;
+   if (icase==1 || icase==4) goto L100;
+
+   // D I F F E R E N T    T O P   A N D   B O T T O M
+   nnod  = 9;
+   ntria = 8;
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<8 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeMiddlePoint(8, xyz, grad, it2, &xyz[nnod-1][0], &grad[nnod-1][0]);
+   goto L200;
+
+   //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+L100:
+   MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[5], fF8[4],
+                                  fF8[3], fF8[2], fF8[6], fF8[7], irep);
+   ntria = 4;
+   if (irep == 0) goto L200;
+   //  "B O T T L E   N E C K"
+   ntria = 8;
+   if (icase == 1) icase = 5;
+   if (icase == 4) icase = 6;
+
+   //  S E T   T R I A N G L E S
+L200: 
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<8 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeSetTriangles(ntria, it2, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase12(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 12
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t f1, f2;
+   Int_t icase, irep;
+   static Int_t ie[8] = { 3,12,4, 1,9,8,6,2 };
+   static Int_t it[6][8][3] = {
+   {{ 1,2,3},  {4,5,-6}, {-4,6,8}, { 6,7,8}, { 0,0,0}, { 0,0,0}, { 0,0,0}, { 0,0,0}},
+   {{-9,1,2},  {9,2,-3}, {-9,3,4}, {9,4,-5}, {-9,5,6}, {9,6,-7}, {-9,7,8}, {9,8,-1}},
+   {{9,1,-2},  {-9,2,6}, {9,6,-7}, {-9,7,8}, {9,8,-4}, {-9,4,5}, {9,5,-3}, {-9,3,1}},
+   {{ 3,4,5},  {1,2,-6}, {-1,6,8}, { 6,7,8}, { 0,0,0}, { 0,0,0}, { 0,0,0}, { 0,0,0}},
+   {{ 7,8,6},  {6,8,-1}, {-6,1,2}, {3,1,-8}, {-3,8,4}, { 3,4,5}, {3,5,-6}, {-3,6,2}},
+   {{ 7,8,6},  {6,8,-4}, {-6,4,5}, {3,4,-8}, {-3,8,1}, { 3,1,2}, {3,2,-6}, {-3,6,5}}
+   };
+   Int_t it2[8][3], i, j;
+
+   //  S E T   N O D E S   &   N O R M A L E S
+   nnod = 8;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  F I N D   C O N F I G U R A T I O N
+   f1 = (fF8[0]*fF8[2]-fF8[1]*fF8[3]) / (fF8[0]+fF8[2]-fF8[1]-fF8[3]);
+   f2 = (fF8[0]*fF8[7]-fF8[3]*fF8[4]) / (fF8[0]+fF8[7]-fF8[3]-fF8[4]);
+   icase = 1;
+   if (f1 >= 0.) icase = icase + 1;
+   if (f2 >= 0.) icase = icase + 2;
+   if (icase==1 || icase==4) goto L100;
+
+   //  F I N D   A D D I T I O N A L   P O I N T
+   nnod  = 9;
+   ntria = 8;
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<8 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeMiddlePoint(8, xyz, grad, it2, &xyz[nnod-1][0], &grad[nnod-1][0]);
+   goto L200;
+
+   //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+L100:
+   MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[2], fF8[3],
+                                  fF8[4], fF8[5], fF8[6], fF8[7], irep);
+   ntria = 4;
+   if (irep != 1) goto L200;
+   //  "B O T T L E   N E C K"
+   ntria = 8;
+   if (icase == 1) icase = 5;
+   if (icase == 4) icase = 6;
+
+   //  S E T   T R I A N G L E S
+L200:
+   // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
+   for ( i=0; i<3 ; i++) { 
+      for ( j=0; j<8 ; j++) { 
+         it2[j][i] = it[icase-1][j][i];
+      }
+   }
+   MarchingCubeSetTriangles(ntria, it2, itria);
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeCase13(Int_t &nnod, Int_t &ntria,
+                               Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
+{
+   // Consider case No 13
+   //
+   // Input: see common HCMCUB
+   //
+   // Output: the same as for IHMCUB
+
+   Double_t ff[8];
+   Double_t f1, f2, f3, f4;
+   Int_t nr, nf, i, k, incr, n, kr, icase, irep;
+   static Int_t irota[12][8] = {
+         {1,2,3,4,5,6,7,8}, {1,5,6,2,4,8,7,3}, {1,4,8,5,2,3,7,6},
+         {3,7,8,4,2,6,5,1}, {3,2,6,7,4,1,5,8}, {3,4,1,2,7,8,5,6},
+         {6,7,3,2,5,8,4,1}, {6,5,8,7,2,1,4,3}, {6,2,1,5,7,3,4,8},
+         {8,4,3,7,5,1,2,6}, {8,5,1,4,7,6,2,3}, {8,7,6,5,4,3,2,1} };
+   static Int_t iwhat[8] = { 63,62,54,26,50,9,1,0 };
+   static Int_t ie[12] = { 1,2,3,4,5,6,7,8,9,10,11,12 };
+   static Int_t iface[6][4] = { 
+         {1,2,3,4}, {5,6,7,8}, {1,2,6,5}, {2,6,7,3}, {4,3,7,8}, {1,5,8,4} };
+   static Int_t it1[4][3] = { {1,2,10}, {9,5,8}, {6,11,7}, {3,4,12} };
+   static Int_t it2[4][3] = { {5,6,10}, {1,4,9}, {2,11,3}, {7,8,12} };
+   static Int_t it3[6][3] = { {10,12,-3}, {-10,3,2}, {12,10,-1}, {-12,1,4},
+         {9,5,8}, {6,11,7} };
+   static Int_t it4[6][3] = { {11,9,-1}, {-11,1,2}, {9,11,-3}, {-9,3,4},
+         {5,6,10}, {7,8,12} };
+   static Int_t it5[10][3] = { {13,2,-11}, {-13,11,7}, {13,7,-6}, {-13,6,10},
+         {13,10,1}, {13,1,-4}, {-13,4,12}, {13,12,-3}, {-13,3,2}, {5,8,9} };
+   static Int_t it6[10][3] = { {13,2,-10}, {-13,10,5}, {13,5,-6}, {-13,6,11},
+         {13,11,3}, {13,3,-4}, {-13,4,9}, {13,9,-1}, {-13,1,2}, {12,7,8} };
+   static Int_t it7[12][3] = { {13,2,-11}, {-13,11,7}, {13,7,-6}, {-13,6,10},
+         {13,10,-5}, {-13,5,8}, {13,8,-9}, {-13,9,1},
+         {13,1,-4}, {-13,4,12}, {13,12,-3}, {-13,3,2} };
+   static Int_t it8[6][3] = { {3,8,12}, {3,-2,-8}, {-2,5,-8}, {2,10,-5},
+         {7,6,11}, {1,4,9} };
+   static Int_t it9[10][3] = { {7,12,-3}, {-7,3,11}, {11,3,2}, {6,11,-2}, {-6,2,10},
+         {6,10,5}, {7,6,-5}, {-7,5,8}, {7,8,12}, {1,4,9} };
+   static Int_t it10[10][3] = { {9,1,-10}, {-9,10,5}, {9,5,8}, {4,9,-8}, {-4,8,12},
+         {4,12,3}, {1,4,-3}, {-1,3,2}, {1,2,10}, {7,6,11} };
+
+      nnod = 0;
+      ntria = 0;
+
+   // F I N D   C O N F I G U R A T I O N   T Y P E
+   for ( nr=1 ; nr<=12 ; nr++ ) {
+      k = 0;
+      incr = 1;
+      for ( nf=1 ; nf<=6 ; nf++ ) {
+         f1 = fF8[irota[nr-1][iface[nf-1][0]-1]-1];
+         f2 = fF8[irota[nr-1][iface[nf-1][1]-1]-1];
+         f3 = fF8[irota[nr-1][iface[nf-1][2]-1]-1];
+         f4 = fF8[irota[nr-1][iface[nf-1][3]-1]-1];
+         if ((f1*f3-f2*f4)/(f1+f3-f2-f4) >= 0.) k = k + incr;
+         incr = incr + incr;
+      }
+      for ( i=1 ; i<=8 ; i++ ) {
+          if (k != iwhat[i-1]) continue;
+          icase = i;
+          kr = nr;
+          goto L200;
+      }
+   }
+   Error("MarchingCubeCase13", "configuration is not found");
+   return;
+
+   //  R O T A T E   C U B E
+L200:
+   if (icase==1 || icase==8) goto L300;
+   for ( n=1 ; n<=8 ; n++) {
+      k = irota[kr-1][n-1];
+      ff[n-1] = fF8[k-1];
+      for ( i=1 ; i<=3 ; i++ ) {
+         xyz[n-1][i-1] = fP8[k-1][i-1];
+         grad[n-1][i-1] = fG8[k-1][i-1];
+      }
+   }
+   for ( n=1 ; n<=8 ; n++ ) {
+      fF8[n-1] = ff[n-1];
+      for ( i=1 ; i<=3 ; i++ ) {
+         fP8[n-1][i-1] = xyz[n-1][i-1];
+         fG8[n-1][i-1] = grad[n-1][i-1];
+      }
+   }
+
+   //  S E T   N O D E S   &   N O R M A L E S
+L300:
+   nnod = 12;
+   MarchingCubeFindNodes(nnod, ie, xyz, grad);
+
+   //  V A R I O U S   C O N F I G U R A T I O N S
+   switch ((int)icase) {
+      case 1:
+         ntria = 4;
+         MarchingCubeSetTriangles(ntria, it1, itria);
+         return;
+      case 8:
+         ntria = 4;
+         MarchingCubeSetTriangles(ntria, it2, itria);
+         return;
+      case 2:
+         ntria = 6;
+         MarchingCubeSetTriangles(ntria, it3, itria);
+         return;
+      case 7:
+         ntria = 6;
+         MarchingCubeSetTriangles(ntria, it4, itria);
+         return;
+      case 3:
+         nnod = 13;
+         ntria = 10;
+         MarchingCubeMiddlePoint(9, xyz, grad, it5,
+	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+         MarchingCubeSetTriangles(ntria, it5, itria);
+         return;
+      case 6:
+         nnod = 13;
+         ntria = 10;
+         MarchingCubeMiddlePoint(9, xyz, grad, it6,
+	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+         MarchingCubeSetTriangles(ntria, it6, itria);
+         return;
+      case 5:
+         nnod = 13;
+         ntria = 12;
+         MarchingCubeMiddlePoint(12, xyz, grad, it7,
+	                         &xyz[nnod-1][0], &grad[nnod-1][0]);
+         MarchingCubeSetTriangles(ntria, it7, itria);
+         return;
+      //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
+      case 4:
+         MarchingCubeSurfacePenetration(fF8[2], fF8[3], fF8[0], fF8[1],
+	                                fF8[6], fF8[7], fF8[4], fF8[5], irep);
+         switch ((int)(irep+1)) {
+            case 1:
+               ntria = 6;
+               MarchingCubeSetTriangles(ntria, it8, itria);
+               return;
+            case 2:
+               ntria = 10;
+               MarchingCubeSetTriangles(ntria, it9, itria);
+               return;
+            case 3:
+               ntria = 10;
+               MarchingCubeSetTriangles(ntria, it10, itria);
+         }
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeSetTriangles(Int_t ntria, Int_t it[][3],
+                                                    Int_t itria[48][3])
+{
+   // Set triangles (if parameter IALL=1, all edges will be visible)
+   //
+   // Input: NTRIA   - number of triangles
+   //        IT(3,*) - triangles
+   //
+   // Output: ITRIA(3,*) - triangles
+
+   Int_t n, i, k;
+
+   for ( n=1 ; n<=ntria ; n++ ) {
+      for ( i=1 ; i<=3 ; i++ ) {
+         k = it[n-1][i-1];
+         itria[n-1][i-1] = k;
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][3],
+                                    Double_t grad[52][3],
+                                    Int_t it[][3], Double_t *pxyz,
+                                    Double_t *pgrad)
+{
+   // Find middle point of a polygon
+   //
+   // Input: NNOD      - number of nodes in the polygon
+   //        XYZ(3,*)  - node coordinates
+   //        GRAD(3,*) - node normales
+   //        IT(3,*)   - division of the polygons into triangles
+   //
+   // Output: PXYZ(3)  - middle point coordinates
+   //         PGRAD(3) - middle point normale
+
+   Double_t p[3], g[3];
+   Int_t i, n, k;
+
+   for ( i=1 ; i<=3 ; i++ ) {
+      p[i-1] = 0.;
+      g[i-1] = 0.;
+   }
+   for ( n=1 ; n<=nnod ; n++ ) {
+      k = it[n-1][2];
+      if (k < 0) k =-k;
+      for ( i=1 ; i<=3 ; i++ ) {
+         p[i-1] = p[i-1] + xyz[k-1][i-1];
+         g[i-1] = g[i-1] + grad[k-1][i-1];
+      }
+   }
+   for ( i=1 ; i<=3 ; i++ ) {
+      pxyz[i-1] = p[i-1] / nnod;
+      pgrad[i-1] = g[i-1] / nnod;
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeSurfacePenetration(Double_t a00, Double_t a10,
+                                           Double_t a11, Double_t a01,
+                                           Double_t b00, Double_t b10, 
+                                           Double_t b11, Double_t b01,
+                                           Int_t &irep)
+{
+   // Check for surface penetration ("bottle neck")
+   //
+   // Input: A00,A10,A11,A01 - vertex values for 1st face
+   //        B00,B10,B11,B01 - vertex values for opposite face
+   //
+   // Output: IREP - 1,2 - there is surface penetration
+   //                0   - there is not surface penetration
+
+   Double_t a, b, c, d, s0, s1, s2;
+   Int_t iposa, iposb;
+
+   irep = 0;
+   a = (a11-a01)*(b00-b10) - (a00-a10)*(b11-b01);
+   if (a == 0.) return;
+   b = a01*(b00-b10)-(a11-a01)*b00-(a00-a10)*b01+a00*(b11-b01);
+   c = a00*b01 - a01*b00;
+   d = b*b-4*a*c;
+   if (d <= 0.) return;
+   d = TMath::Sqrt(d);
+   if (TMath::Abs(-b+d) > TMath::Abs(2*a)) return;
+   s1 = (-b+d) / (2*a);
+   if (s1<0. || s1>1.) return;
+   if (TMath::Abs(-b-d) > TMath::Abs(2*a)) return;
+   s2 = (-b-d) / (2*a);
+   if (s2<0. || s2>1.) return;
+
+   //  C A S E   N O   4 ?
+   iposa = 0;
+   if (a00 >= 0) iposa = iposa + 1;
+   if (a01 >= 0) iposa = iposa + 2;
+   if (a10 >= 0) iposa = iposa + 4;
+   if (a11 >= 0) iposa = iposa + 8;
+   if (iposa==6 || iposa==9) goto L100;
+   irep = 1;
+   return;
+
+   //  N O T   C A S E   N O   4
+L100:
+   s0 = (a00-a01) / (a00+a11-a10-a01);
+   if (s1>=s0 && s2<s0) return;
+   if (s1<s0 && s2>=s0) return;
+   irep = 1;
+   if (s1 >= s0) irep = 2;
+
+   //  C A S E S   N O   10, 13 ?
+   iposb = 0;
+   if (b00 >= 0) iposb = iposb + 1;
+   if (b01 >= 0) iposb = iposb + 2;
+   if (b10 >= 0) iposb = iposb + 4;
+   if (b11 >= 0) iposb = iposb + 8;
+   if (iposb!=6 && iposb!=9)  return;
+   s0 = (b00-b01) / (b00+b11-b10-b01);
+   if (iposa != iposb) goto L200;
+   //  C A S E   N O   10
+   if (irep==1 && s1>s0) return;
+   if (irep==2 && s1<s0) return;
+   irep = 0;
+   return;
+   //  C A S E   N O   13
+L200:
+   if (irep==1 && s1<s0) return;
+   if (irep==2 && s1>s0) return;
+   irep = 0;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod, 
+                                  Int_t *ie, Double_t xyz[52][3],
+                                  Double_t grad[52][3])
+{
+   // Find nodes and normales
+   //
+   // Input: NNOD  - number of nodes
+   //        IE(*) - edges which have section node
+   //
+   // Output: XYZ(3,*)  - nodes
+   //         GRAD(3,*) - node normales (not normalized)
+
+   Int_t n, k, i, n1, n2;
+   Double_t t;
+   static Int_t iedge[12][2] = {
+         {1,2}, {2,3}, {3,4}, {4,1}, {5,6}, {6,7}, {7,8}, {8,5}, {1,5}, {2,6}, {3,7}, {4,8} };
+
+   for ( n=1 ; n<=nnod ; n++ ) {
+      k = ie[n-1];
+      if (k < 0) k =-k;
+      n1 = iedge[k-1][0];
+      n2 = iedge[k-1][1];
+      t = fF8[n1-1] / (fF8[n1-1]-fF8[n2-1]);
+      for ( i=1 ; i<=3 ; i++ ) {
+         xyz[n-1][i-1] = (fP8[n2-1][i-1]-fP8[n1-1][i-1])*t + fP8[n1-1][i-1];
+         grad[n-1][i-1] = (fG8[n2-1][i-1]-fG8[n1-1][i-1])*t + fG8[n1-1][i-1];
+      }
+   }
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::ZDepth(Double_t xyz[52][3], Int_t &nface, 
+                                  Int_t iface[48][3], Double_t dface[48][6],
+                                  Double_t abcd[48][3], Int_t *iorder)
+{
+   // Z-depth algorithm for set of triangles
+   //
+   // Input: XYZ(3,*)   - nodes
+   //        NFACE      - number of triangular faces
+   //        IFACE(3,*) - faces (triangles)
+   //
+   // Arrays: DFACE(6,*) - array for min-max scopes
+   //         ABCD(4,*)  - array for face plane equations
+   //
+   // Output: IORDER(*) - face order
+
+   Int_t n, nf, i1, i2, i3, i, icur, k, itst, kface, kf, irep;
+   Int_t nn[3], kk[3];
+   Double_t wmin, wmax, a, b, c, q, zcur;
+   Double_t v[2][3], abcdn[4], abcdk[4];
+
+   //  S E T   I N I T I A L   O R D E R
+   //  I G N O R E   V E R Y   S M A L L   F A C E S
+   //  S E T   M I N - M A X   S C O P E S
+   //  S E T   F A C E   P L A N E   E Q U A T I O N S
+   nf = 0;
+   for ( n=1 ; n<=nface ; n++ ) {
+      i1 = TMath::Abs(iface[n-1][0]);
+      i2 = TMath::Abs(iface[n-1][1]);
+      i3 = TMath::Abs(iface[n-1][2]);
+   //       A R E A   T E S T
+      if (TMath::Abs(xyz[i2-1][0]-xyz[i1-1][0])<=kDel &&
+          TMath::Abs(xyz[i2-1][1]-xyz[i1-1][1])<=kDel &&
+          TMath::Abs(xyz[i2-1][2]-xyz[i1-1][2])<=kDel) continue;
+      if (TMath::Abs(xyz[i3-1][0]-xyz[i2-1][0])<=kDel &&
+          TMath::Abs(xyz[i3-1][1]-xyz[i2-1][1])<=kDel &&
+          TMath::Abs(xyz[i3-1][2]-xyz[i2-1][2])<=kDel) continue;
+      if (TMath::Abs(xyz[i1-1][0]-xyz[i3-1][0])<=kDel &&
+          TMath::Abs(xyz[i1-1][1]-xyz[i3-1][1])<=kDel &&
+          TMath::Abs(xyz[i1-1][2]-xyz[i3-1][2])<=kDel) continue;
+   //       P R O J E C T I O N   T E S T
+      if (TMath::Abs(xyz[i2-1][0]-xyz[i1-1][0])<=kDel &&
+          TMath::Abs(xyz[i2-1][1]-xyz[i1-1][1])<=kDel &&
+          TMath::Abs(xyz[i3-1][0]-xyz[i2-1][0])<=kDel &&
+          TMath::Abs(xyz[i3-1][1]-xyz[i2-1][1])<=kDel &&
+          TMath::Abs(xyz[i1-1][0]-xyz[i3-1][0])<=kDel &&
+          TMath::Abs(xyz[i1-1][1]-xyz[i3-1][1])<=kDel) continue;
+      nf = nf + 1;
+      iorder[nf-1] = n;
+   //       F I N D   M I N - M A X
+      for ( i=1 ; i<=3 ; i++ ) {
+         wmin = xyz[i1-1][i-1];
+         wmax = xyz[i1-1][i-1];
+         if (wmin > xyz[i2-1][i-1]) wmin = xyz[i2-1][i-1];
+         if (wmax < xyz[i2-1][i-1]) wmax = xyz[i2-1][i-1];
+         if (wmin > xyz[i3-1][i-1]) wmin = xyz[i3-1][i-1];
+         if (wmax < xyz[i3-1][i-1]) wmax = xyz[i3-1][i-1];
+         dface[n-1][i-1] = wmin;
+         dface[n-1][i+2] = wmax;
+      }
+   //      F I N D   F A C E   E Q U A T I O N
+      for ( i=1 ; i<=3 ; i++ ) {
+         v[0][i-1] = xyz[i2-1][i-1] - xyz[i1-1][i-1];
+         v[1][i-1] = xyz[i3-1][i-1] - xyz[i2-1][i-1];
+      }
+      a = (v[0][1]*v[1][2] - v[0][2]*v[1][1]);
+      b = (v[0][2]*v[1][0] - v[0][0]*v[1][2]);
+      c = (v[0][0]*v[1][1] - v[0][1]*v[1][0]);
+      q = TMath::Sqrt(a*a+b*b+c*c);
+      if (c < 0.) q =-q;
+      a = a / q;
+      b = b / q;
+      c = c / q;
+      abcd[n-1][0] = a;
+      abcd[n-1][1] = b;
+      abcd[n-1][2] = c;
+      abcd[n-1][3] =-(a*xyz[i1-1][0] + b*xyz[i1-1][1] + c*xyz[i1-1][2]);
+   }
+   nface = nf;
+   if (nf <= 1) return;
+
+   //  S O R T   T R I A N G L E S   A L O N G   Z - M I N
+   for ( icur=2 ; icur<=nface ; icur++ ) {
+      k = iorder[icur-1];
+      zcur = dface[k-1][2];
+      for ( itst=icur-1 ; itst>=1 ; itst-- ) {
+         k = iorder[itst-1];
+         if (zcur < dface[k-1][2]) break;
+         k = iorder[itst-1];
+         iorder[itst-1] = iorder[itst];
+         iorder[itst] = k;
+      }
+   }
+
+   //  Z - D E P T H   A L G O R I T H M
+   kface  = nface;
+L300:
+   if (kface == 1) goto L900;
+   nf = iorder[kface-1];
+   if (nf < 0) nf =-nf;
+   abcdn[0] = abcd[nf-1][0];
+   abcdn[1] = abcd[nf-1][1];
+   abcdn[2] = abcd[nf-1][2];
+   abcdn[3] = abcd[nf-1][3];
+   nn[0] = TMath::Abs(iface[nf-1][0]);
+   nn[1] = TMath::Abs(iface[nf-1][1]);
+   nn[2] = TMath::Abs(iface[nf-1][2]);
+
+   //  I N T E R N A L   L O O P
+   for ( k=kface-1 ; k>=1 ; k-- ) {
+      kf = iorder[k-1];
+      if (kf < 0) kf =-kf;
+      if (dface[nf-1][5] > dface[kf-1][2]+kDel) goto L400;
+      if (iorder[k-1] > 0) goto L900;
+      goto L800;
+
+   //  M I N - M A X   T E S T
+L400:
+      if (dface[kf-1][0] >= dface[nf-1][3]-kDel) goto L800;
+      if (dface[kf-1][3] <= dface[nf-1][0]+kDel) goto L800;
+      if (dface[kf-1][1] >= dface[nf-1][4]-kDel) goto L800;
+      if (dface[kf-1][4] <= dface[nf-1][1]+kDel) goto L800;
+
+   //  K F   B E F O R E   N F ?
+      kk[0] = TMath::Abs(iface[kf-1][0]);
+      kk[1] = TMath::Abs(iface[kf-1][1]);
+      kk[2] = TMath::Abs(iface[kf-1][2]);
+      if (abcdn[0]*xyz[kk[0]-1][0]+abcdn[1]*xyz[kk[0]-1][1]+
+          abcdn[2]*xyz[kk[0]-1][2]+abcdn[3] < -kDel) goto L500;
+      if (abcdn[0]*xyz[kk[1]-1][0]+abcdn[1]*xyz[kk[1]-1][1]+
+          abcdn[2]*xyz[kk[1]-1][2]+abcdn[3] < -kDel) goto L500;
+      if (abcdn[0]*xyz[kk[2]-1][0]+abcdn[1]*xyz[kk[2]-1][1]+
+          abcdn[2]*xyz[kk[2]-1][2]+abcdn[3] < -kDel) goto L500;
+      goto L800;
+
+   //  N F    A F T E R    K F ?
+L500:
+      abcdk[0] = abcd[kf-1][0];
+      abcdk[1] = abcd[kf-1][1];
+      abcdk[2] = abcd[kf-1][2];
+      abcdk[3] = abcd[kf-1][3];
+      if (abcdk[0]*xyz[nn[0]-1][0]+abcdk[1]*xyz[nn[0]-1][1]+
+          abcdk[2]*xyz[nn[0]-1][2]+abcdk[3] > kDel) goto L600;
+      if (abcdk[0]*xyz[nn[1]-1][0]+abcdk[1]*xyz[nn[1]-1][1]+
+          abcdk[2]*xyz[nn[1]-1][2]+abcdk[3] > kDel) goto L600;
+      if (abcdk[0]*xyz[nn[2]-1][0]+abcdk[1]*xyz[nn[2]-1][1]+
+          abcdk[2]*xyz[nn[2]-1][2]+abcdk[3] > kDel) goto L600;
+      goto L800;
+
+   //  E D G E   B Y   E D G E   T E S T
+   //  K F - E D G E S   A G A I N S T   N F
+L600:
+      for ( i=1 ; i<=3 ; i++ ) {
+         i1 = kk[i-1];
+         i2 = kk[0];
+         if (i != 3) i2 = kk[i];
+         TestEdge(kDel, xyz, i1, i2, nn, abcdn, irep);
+	 if ( irep<0 ) goto L700;
+	 if ( irep==0 ) continue;
+	 if ( irep>0 ) goto L800;
+      }
+   //  N F - E D G E S   A G A I N S T   K F
+      for ( i=1 ; i<=3 ; i++ ) {
+         i1 = nn[i-1];
+         i2 = nn[0];
+         if (i != 3) i2 = nn[i];
+         TestEdge(kDel, xyz, i1, i2, kk, abcdk, irep);
+	 if ( irep<0 ) goto L800;
+	 if ( irep==0 ) continue;
+	 if ( irep>0 ) goto L700;
+      }
+      goto L800;
+
+   //  C H A N G E   F A C E   O R D E R
+L700:
+      kf = iorder[k-1];
+      for ( i=k+1 ; i<=kface ; i++ ) {
+         iorder[i-2] = iorder[i-1];
+      }
+      iorder[kface-1] =-kf;
+      if (kf > 0) goto L300;
+      goto L900;
+L800:
+      continue;
+   }
+
+   //  N E X T   F A C E
+L900:
+   if (iorder[kface-1] < 0) iorder[kface-1] =-iorder[kface-1];
+   kface = kface - 1;
+   if (kface > 0) goto L300;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2,
+                     Int_t iface[3], Double_t abcd[4], Int_t &irep)
+{
+   // Test edge against face (triangle)
+   //
+   // Input: DEL      - precision
+   //        XYZ(3,*) - nodes
+   //        I1       - 1-st node of edge
+   //        I2       - 2-nd node of edge
+   //        IFACE(3) - triangular face
+   //        ABCD(4)  - face plane
+   //
+   // Output: IREP:-1 - edge under face
+   //               0 - no decision
+   //              +1 - edge before face
+
+   Int_t k, k1, k2, ixy, i;
+   Double_t a, b, c, d1, d2, dd, xy, tmin, tmax, tmid, x, y, z;
+   Double_t d[3], delta[3], t[2];
+
+   irep  = 0;
+
+   //  F I N D   I N T E R S E C T I O N   P O I N T S
+   delta[0] = xyz[i2-1][0] - xyz[i1-1][0];
+   delta[1] = xyz[i2-1][1] - xyz[i1-1][1];
+   delta[2] = xyz[i2-1][2] - xyz[i1-1][2];
+   if (TMath::Abs(delta[0])<=del && TMath::Abs(delta[1])<=del) return;
+   ixy = 1;
+   if (TMath::Abs(delta[1]) > TMath::Abs(delta[0])) ixy = 2;
+   a = delta[1];
+   b =-delta[0];
+   c =-(a*xyz[i1-1][0] + b*xyz[i1-1][1]);
+   d[0] = a*xyz[iface[0]-1][0] + b*xyz[iface[0]-1][1] + c;
+   d[1] = a*xyz[iface[1]-1][0] + b*xyz[iface[1]-1][1] + c;
+   d[2] = a*xyz[iface[2]-1][0] + b*xyz[iface[2]-1][1] + c;
+   k = 0;
+   for ( i=1 ; i<=3 ; i++ ) {
+      k1 = i;
+      k2 = i + 1;
+      if (i == 3) k2 = 1;
+      if (d[k1-1]>=0. && d[k2-1]>=0.) continue;
+      if (d[k1-1] <0. && d[k2-1] <0.) continue;
+      d1 = d[k1-1] / (d[k1-1] - d[k2-1]);
+      d2 = d[k2-1] / (d[k1-1] - d[k2-1]);
+      xy = d1*xyz[iface[k2-1]-1][ixy-1] - d2*xyz[iface[k1-1]-1][ixy-1];
+      k = k + 1;
+      t[k-1] = (xy-xyz[i1-1][ixy-1]) / delta[ixy-1];
+      if (k == 2) goto L200;
+   }
+   return;
+
+   //  C O M P A R E   Z - D E P T H
+L200:
+   tmin = TMath::Min(t[0],t[1]);
+   tmax = TMath::Max(t[0],t[1]);
+   if (tmin>1. || tmax<0) return;
+   if (tmin < 0.) tmin = 0.;
+   if (tmax > 1.) tmax = 1.;
+   tmid = (tmin + tmax) / 2.;
+   x = delta[0]*tmid + xyz[i1-1][0];
+   y = delta[1]*tmid + xyz[i1-1][1];
+   z = delta[2]*tmid + xyz[i1-1][2];
+   dd = abcd[0]*x + abcd[1]*y + abcd[2]*z + abcd[3];
+   if (dd > del) goto L997;
+   if (dd <-del) goto L998;
+   return;
+
+L997:
+   irep =+1;
+   return;
+L998:
+   irep =-1;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx, 
+                                       Int_t ny, Int_t nz,
+                                       Double_t *x, Double_t *y, Double_t *z, 
+                                       const char *chopt)
+{
+   // Draw set of isosurfaces for a scalar function defined on a grid.
+   //
+   //     Input: NS          - number of isosurfaces
+   //            S(*)        - isosurface values
+   //            NX          - number of slices along X
+   //            NY          - number of slices along Y
+   //            NZ          - number of slices along Z
+   //            X(*)        - slices along X
+   //            Y(*)        - slices along Y
+   //            Z(*)        - slices along Z
+   //            F(NX,NY,NZ) - function values <- Not used, current histo used instead
+   //
+   //            DRFACE(ICODES,XYZ,NP,IFACE,T) - routine for face drawing
+   //              ICODES(1) - isosurface number
+   //              ICODES(2) - isosurface number
+   //              ICODES(3) - isosurface number
+   //              NP        - number of nodes in face
+   //              IFACE(NP) - face
+   //              T(NP)     - additional function (lightness)
+   //
+   //            CHOPT - options: 'BF' - from BACK to FRONT
+   //                             'FB' - from FRONT to BACK
+
+   Double_t p[8][3], pf[8], pn[8][3];
+   Double_t p0[3], p1[3], p2[3], p3[3], t[3];
+   Double_t fsurf, w, d1, d2, df1, df2;
+   Int_t icodes[3];
+   Int_t i, i1, i2, j, ibase, nnod, knod, ntria, ktria, iopt, iready; 
+   Int_t ixcrit, iycrit, izcrit, incrx, incry, incrz, incr;
+   Int_t ix, ix1=0, ix2=0, iy, iy1=0, iy2=0, iz, iz1=0, iz2=0, k, kx, ky, kz, isurf, nsurf;
+   
+   Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
+   Double_t dtria[kNmaxt][6], abcd[kNmaxt][3];
+   Int_t    itria[kNmaxt][3], iorder[kNmaxt], iattr[kNmaxt];
+   
+   static Int_t ind[8][3] = { { 0,0,0 }, { 1,0,0 }, { 1,0,1 }, { 0,0,1 },
+                              { 0,1,0 }, { 1,1,0 }, { 1,1,1 }, { 0,1,1 }
+                            };
+
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("ImplicitFunction", "no TView in current pad");
+      return;
+   }
+
+   nsurf = ns;
+   if (nsurf > kNiso) {
+      Warning("IsoSurface","Number of isosurfaces too large. Increase kNiso");
+   }
+   iopt = 2;
+   if (*chopt == 'B' || *chopt == 'b') iopt = 1;
+
+   //       F I N D   X - , Y - , Z - C R I T I C A L
+   //       This logic works for parallel projection only.
+   //       For central projection another logic should be implemented.
+   p0[0] = x[0];
+   p0[1] = y[0];
+   p0[2] = z[0];
+   view->WCtoNDC(p0, p0);
+   p1[0] = x[nx-1];
+   p1[1] = y[0];
+   p1[2] = z[0];
+   view->WCtoNDC(p1, p1);
+   p2[0] = x[0];
+   p2[1] = y[ny-1];
+   p2[2] = z[0];
+   view->WCtoNDC(p2, p2);
+   p3[0] = x[0];
+   p3[1] = y[0];
+   p3[2] = z[nz-1];
+   view->WCtoNDC(p3, p3);
+   ixcrit = nx;
+   iycrit = ny;
+   izcrit = nz;
+   if (p1[2] < p0[2]) ixcrit = 1;
+   if (p2[2] < p0[2]) iycrit = 1;
+   if (p3[2] < p0[2]) izcrit = 1;
+
+   //       L O O P   A L O N G   G R I D
+   //       This logic works for both (parallel & central) projections.
+   incrx = 1;
+   incry = 1;
+   incrz = 1;
+L110:
+   if (incrz >= 0) {
+      if (iopt == 1) iz1 = 1;
+      if (iopt == 1) iz2 = izcrit-1;
+      if (iopt == 2) iz1 = izcrit;
+      if (iopt == 2) iz2 = nz - 1;
+   } else {
+      if (iopt == 1) iz1 = nz - 1;
+      if (iopt == 1) iz2 = izcrit;
+      if (iopt == 2) iz1 = izcrit-1;
+      if (iopt == 2) iz2 = 1;
+   }
+   for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
+L120:
+      if (incry >= 0) {
+         if (iopt == 1) iy1 = 1;
+         if (iopt == 1) iy2 = iycrit-1;
+         if (iopt == 2) iy1 = iycrit;
+         if (iopt == 2) iy2 = ny - 1;
+      } else {
+         if (iopt == 1) iy1 = ny - 1;
+         if (iopt == 1) iy2 = iycrit;
+         if (iopt == 2) iy1 = iycrit-1;
+         if (iopt == 2) iy2 = 1;
+      }
+      for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
+L130:
+         if (incrx >= 0) {
+            if (iopt == 1) ix1 = 1;
+            if (iopt == 1) ix2 = ixcrit-1;
+            if (iopt == 2) ix1 = ixcrit;
+            if (iopt == 2) ix2 = nx - 1;
+         } else {
+            if (iopt == 1) ix1 = nx - 1;
+            if (iopt == 1) ix2 = ixcrit;
+            if (iopt == 2) ix1 = ixcrit-1;
+            if (iopt == 2) ix2 = 1;
+         }
+         for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+            nnod = 0;
+            ntria = 0;
+            iready = 0;
+	    for ( isurf=1 ; isurf<=nsurf ; isurf++ ) {
+               fsurf = s[isurf-1];
+               if (gCurrentHist->GetBinContent(ix,  iy,  iz)   >= fsurf)
+                   goto L210;
+               if (gCurrentHist->GetBinContent(ix+1,iy,  iz)   >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy+1,iz)   >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy+1,iz)   >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy,  iz+1) >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy,  iz+1) >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy+1,iz+1) >= fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy+1,iz+1) >= fsurf)
+                   goto L220;
+               continue;
+L210:
+               if (gCurrentHist->GetBinContent(ix+1,iy,  iz)   < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy+1,iz)   < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy+1,iz)   < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy,  iz+1) < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy,  iz+1) < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix,  iy+1,iz+1) < fsurf)
+                   goto L220;
+               if (gCurrentHist->GetBinContent(ix+1,iy+1,iz+1) < fsurf)
+                   goto L220;
+               continue;
+
+   //       P R E P A R E   C U B E   ( P A R A L L E P I P E D )
+L220:
+               if (iready !=0) goto L310;
+               iready = 1;
+               for ( i=1 ; i<=8 ; i++ ) {
+                  kx = ix + ind[i-1][0];
+                  ky = iy + ind[i-1][1];
+                  kz = iz + ind[i-1][2];
+                  p[i-1][0] = x[kx-1];
+                  p[i-1][1] = y[ky-1];
+                  p[i-1][2] = z[kz-1];
+                  pf[i-1] = gCurrentHist->GetBinContent(kx,ky,kz);
+   //       F I N D   X - G R A D I E N T
+                  if (kx == 1) {
+                     pn[i-1][0] = (gCurrentHist->GetBinContent(2,ky,kz) -
+                                   gCurrentHist->GetBinContent(1,ky,kz)) /
+                                   (x[1]-x[0]);
+                  } else if (kx == nx) {
+                     pn[i-1][0] = (gCurrentHist->GetBinContent(kx,ky,kz) -
+                                   gCurrentHist->GetBinContent(kx-1,ky,kz)) /
+                                   (x[kx-1]-x[kx-2]);
+                  } else {
+                     d1 = x[kx-1] - x[kx-2];
+                     d2 = x[kx] - x[kx-1];
+                     if (d1 == d2) {
+                        pn[i-1][0] = (gCurrentHist->GetBinContent(kx+1,ky,kz) -
+                                      gCurrentHist->GetBinContent(kx-1,ky,kz)) /
+                                      (d1+d1);
+                     } else {
+                        df1 = gCurrentHist->GetBinContent(kx,ky,kz) -
+                              gCurrentHist->GetBinContent(kx-1,ky,kz);
+                        df2 = gCurrentHist->GetBinContent(kx+1,ky,kz) -
+                              gCurrentHist->GetBinContent(kx,ky,kz);
+                        pn[i-1][0] = (df1*d2*d2+df2*d1*d1)/(d1*d2*d2+d2*d1*d1);
+                     }
+                  }
+   //       F I N D   Y - G R A D I E N T
+                  if (ky == 1) {
+                     pn[i-1][1] = (gCurrentHist->GetBinContent(kx,2,kz) -
+                                   gCurrentHist->GetBinContent(kx,1,kz)) /
+                                   (y[1]-y[0]);
+                  } else if (ky == ny) {
+                     pn[i-1][1] = (gCurrentHist->GetBinContent(kx,ky,kz) -
+                                   gCurrentHist->GetBinContent(kx,ky-1,kz)) /
+                                   (y[ky-1]-y[ky-2]);
+                  } else {
+                     d1 = y[ky-1] - y[ky-2];
+                     d2 = y[ky] - y[ky-1];
+                     if (d1 == d2) {
+                        pn[i-1][1] = (gCurrentHist->GetBinContent(kx,ky+1,kz) -
+                                      gCurrentHist->GetBinContent(kx,ky-1,kz)) /
+                                      (d1+d1);
+                     } else {
+                        df1 = gCurrentHist->GetBinContent(kx,ky,kz) -
+			      gCurrentHist->GetBinContent(kx,ky-1,kz);
+                        df2 = gCurrentHist->GetBinContent(kx,ky+1,kz) -
+			      gCurrentHist->GetBinContent(kx,ky,kz);
+                        pn[i-1][1] = (df1*d2*d2+df2*d1*d1)/(d1*d2*d2+d2*d1*d1);
+                     }
+                  }
+   //       F I N D   Z - G R A D I E N T
+                  if (kz == 1) {
+                     pn[i-1][2] = (gCurrentHist->GetBinContent(kx,ky,2) -
+                                   gCurrentHist->GetBinContent(kx,ky,1)) /
+                                   (z[1]-z[0]);
+                  } else if (kz == nz) {
+                     pn[i-1][2] = (gCurrentHist->GetBinContent(kx,ky,kz) -
+                                   gCurrentHist->GetBinContent(kx,ky,kz-1)) /
+                                   (z[kz-1]-z[kz-2]);
+                  } else {
+                     d1 = z[kz-1] - z[kz-2];
+                     d2 = z[kz] - z[kz-1];
+                     if (d1 == d2) {
+                        pn[i-1][2] = (gCurrentHist->GetBinContent(kx,ky,kz+1) -
+                                      gCurrentHist->GetBinContent(kx,ky,kz-1)) /
+                                      (d1+d1);
+                     } else {
+                        df1 = gCurrentHist->GetBinContent(kx,ky,kz) -
+                              gCurrentHist->GetBinContent(kx,ky,kz-1);
+                        df2 = gCurrentHist->GetBinContent(kx,ky,kz+1) -
+                              gCurrentHist->GetBinContent(kx,ky,kz);
+                        pn[i-1][2] = (df1*d2*d2+df2*d1*d1)/(d1*d2*d2+d2*d1*d1);
+                     }
+                  }
+               }
+
+   //       F I N D   S E T   O F   T R I A N G L E S
+L310:
+               Double_t xyz_tmp[kNmaxp][3], grad_tmp[kNmaxp][3];
+               Int_t itria_tmp[kNmaxt][3], l;
+
+               MarchingCube(s[isurf-1], p, pf, pn, knod, ktria, 
+                            xyz_tmp, grad_tmp, itria_tmp);
+
+               for( l=0 ; l<knod ; l++) {
+                  xyz[nnod+l][0] = xyz_tmp[l][0];
+                  xyz[nnod+l][1] = xyz_tmp[l][1];
+                  xyz[nnod+l][2] = xyz_tmp[l][2];
+                  grad[nnod+l][0] = grad_tmp[l][0];
+                  grad[nnod+l][1] = grad_tmp[l][1];
+                  grad[nnod+l][2] = grad_tmp[l][2];
+               }
+               for( l=0 ; l<ktria ; l++) {
+                  itria[ntria+l][0] = itria_tmp[l][0];
+                  itria[ntria+l][1] = itria_tmp[l][1];
+                  itria[ntria+l][2] = itria_tmp[l][2];
+               }
+
+               for ( i=ntria+1 ; i<=ntria+ktria ; i++ ) {
+		 for ( j=1 ; j<=3 ; j++ ){
+                     ibase = nnod;
+                     if (itria[i-1][j-1] < 0) ibase =-nnod;
+                     itria[i-1][j-1] = itria[i-1][j-1] + ibase;
+                  }
+                  iattr[i-1] = isurf;
+               }
+               nnod = nnod + knod;
+               ntria = ntria + ktria;
+            }
+
+   //       D E P T H   S O R T,   D R A W I N G
+            if (ntria == 0) continue;
+            for ( i=1 ; i<=nnod ; i++ ) {
+               view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
+               Luminosity(&grad[i-1][0], w);
+               grad[i-1][0] = w;
+            }
+            ZDepth(xyzn, ntria, itria, dtria, abcd, (Int_t*)iorder);
+            if (ntria == 0) continue;
+            incr = 1;
+            if (iopt == 1) incr = -1;
+            i1 = 1;
+            if (incr == -1) i1 = ntria;
+            i2 = ntria - i1 + 1;
+            for (i = i1; incr < 0 ? i >= i2 : i <= i2; i += incr) {
+               k = iorder[i-1];
+               t[0] = grad[TMath::Abs(itria[k-1][0])-1][0];
+               t[1] = grad[TMath::Abs(itria[k-1][1])-1][0];
+               t[2] = grad[TMath::Abs(itria[k-1][2])-1][0];
+               icodes[0] = iattr[k-1];
+               icodes[1] = iattr[k-1];
+               icodes[2] = iattr[k-1];
+               DrawFaceGouraudShaded(icodes, xyz, 3, &itria[k-1][0], t);
+            }
+         }
+         incrx = -incrx;
+         if (incrx < 0) goto L130;
+      }
+      incry = -incry;
+      if (incry < 0) goto L120;
+   }
+   incrz = -incrz;
+   if (incrz < 0) goto L110;
+}
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
+                                                 Double_t xyz[][3],
+                                                 Int_t np, Int_t *iface, 
+                                                 Double_t *t)
+{
+   // Draw the faces for the Gouraud Shaded Iso surfaces
+
+   Int_t i, k, irep;
+   Double_t p3[12][3], x[12], y[12];
+   
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("ImplicitFunction", "no TView in current pad");
+      return;
+   }
+
+   if (icodes[0]==1) Spectrum(fNcolor, fFmin, fFmax, fIc1, 1, irep);
+   if (icodes[0]==2) Spectrum(fNcolor, fFmin, fFmax, fIc2, 1, irep);
+   if (icodes[0]==3) Spectrum(fNcolor, fFmin, fFmax, fIc3, 1, irep);
+   for ( i=1 ; i<=np ; i++) {
+      k = iface[i-1];
+      if (k<0) k = -k;
+      view->WCtoNDC(&xyz[k-1][0], &p3[i-1][0]);
+      x[i-1] = p3[i-1][0];
+      y[i-1] = p3[i-1][1];
+   }
+
+   FillPolygon(np, (Double_t *)p3, (Double_t *)t);
+}

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.h,v 1.2 2000/06/13 09:52:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.80 2002/05/04 16:07:33 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TLego
-#define ROOT_TLego
+#ifndef ROOT_TPainter3dAlgorithms
+#define ROOT_TPainter3dAlgorithms
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TLego                                                                //
+// TPainter3dAlgorithms                                                 //
 //                                                                      //
-// Hidden line removal package.                                         //
+// 3D graphics representations package.                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ const Int_t kSPHERICAL   = 4;
 const Int_t kRAPIDITY    = 5;
 
 
-class TLego : public TObject, public TAttLine, public TAttFill {
+class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
 
 private:
    Double_t     fX0;               //
@@ -83,25 +83,37 @@ private:
    Int_t        *fRaster;          //pointer to raster buffer
    Int_t        fJmask[30];        //
    Int_t        fMask[465];        //
+   Double_t     fP8[8][3];         //
+   Double_t     fF8[8];            //
+   Double_t     fG8[8][3];         //
+   Double_t     fFmin;             // IsoSurface minimum function value
+   Double_t     fFmax;             // IsoSurface maximum function value
+   Int_t        fNcolor;           // Number of colours per Iso surface
+   Int_t        fIc1;              // Base colour for the 1st Iso Surface
+   Int_t        fIc2;              // Base colour for the 2nd Iso Surface
+   Int_t        fIc3;              // Base colour for the 3rd Iso Surface
 
 public:
-   typedef void (TLego::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
-   typedef void (TLego::*LegoFunc_t)(Int_t,Int_t,Int_t&,Double_t*,Double_t*,Double_t*);
-   typedef void (TLego::*SurfaceFunc_t)(Int_t,Int_t,Double_t*,Double_t*);
+   typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
+   typedef void (TPainter3dAlgorithms::*LegoFunc_t)(Int_t,Int_t,Int_t&,Double_t*,Double_t*,Double_t*);
+   typedef void (TPainter3dAlgorithms::*SurfaceFunc_t)(Int_t,Int_t,Double_t*,Double_t*);
+   typedef Double_t (TPainter3dAlgorithms::*ImplicitFunc_t)(Double_t,Double_t,Double_t);
 
 private:
    DrawFaceFunc_t  fDrawFace;        //pointer to face drawing function
    LegoFunc_t      fLegoFunction;    //pointer to lego function
    SurfaceFunc_t   fSurfaceFunction; //pointer to surface function
-
+   ImplicitFunc_t  fImplicitFunction; //pointer to implicit function
+   
 public:
-           TLego();
-           TLego(Double_t *rmin, Double_t *rmax, Int_t system=1);
- virtual   ~TLego();
+           TPainter3dAlgorithms();
+           TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system=1);
+ virtual   ~TPainter3dAlgorithms();
    void    BackBox(Double_t ang);
    void    ClearRaster();
    void    ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep);
    void    DefineGridLevels(Int_t ndivz);
+   void    DrawFaceGouraudShaded(Int_t *icodes, Double_t xyz[][3], Int_t np, Int_t *iface, Double_t *t);
    void    DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);
    void    DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);
    void    DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t);
@@ -117,6 +129,8 @@ public:
    void    FindVisibleDraw(Double_t *r1, Double_t *r2);
    void    FrontBox(Double_t ang);
    void    GouraudFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t);
+   void    ImplicitFunction(Double_t *rmin, Double_t *rmax, Int_t nx, Int_t ny, Int_t nz, const char *chopt);
+   void    IsoSurface (Int_t ns, Double_t *s, Int_t nx, Int_t ny, Int_t nz, Double_t *x, Double_t *y, Double_t *z, const char *chopt);
    void    InitMoveScreen(Double_t xmin, Double_t xmax);
    void    InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny);
    void    LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt);
@@ -126,8 +140,23 @@ public:
    void    LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt);
    void    LightSource(Int_t nl, Double_t yl, Double_t xscr, Double_t yscr, Double_t zscr, Int_t &irep);
    void    Luminosity(Double_t *anorm, Double_t &flum);
+   void    MarchingCube(Double_t fiso, Double_t p[8][3], Double_t f[8], Double_t g[8][3], Int_t &nnod, Int_t &ntria, Double_t xyz[][3], Double_t grad[][3], Int_t itria[][3]);
+   void    MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3, Int_t k4, Int_t k5, Int_t k6, Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase03(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase04(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase06(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase07(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase10(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase12(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeCase13(Int_t &nnod, Int_t &ntria, Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3]);
+   void    MarchingCubeSetTriangles(Int_t ntria, Int_t it[][3], Int_t itria[48][3]);
+   void    MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][3], Double_t grad[52][3], Int_t it[][3], Double_t *pxyz, Double_t *pgrad);
+   void    MarchingCubeSurfacePenetration(Double_t a00, Double_t a10, Double_t a11, Double_t a01, Double_t b00, Double_t b10, Double_t b11, Double_t b01, Int_t &irep);
+   void    MarchingCubeFindNodes(Int_t nnod, Int_t *ie, Double_t xyz[52][3], Double_t grad[52][3]);
    void    ModifyScreen(Double_t *r1, Double_t *r2);
    void    SetDrawFace(DrawFaceFunc_t pointer);
+   void    SetImplicitFunction(ImplicitFunc_t pointer);
+   void    SetIsoSurfaceParameters(Double_t fmin, Double_t fmax, Int_t ncolor, Int_t ic1, Int_t ic2, Int_t ic3){fFmin=fmin; fFmax=fmax; fNcolor=ncolor; fIc1=ic1; fIc2=ic2; fIc3=ic3;}
    void    SetLegoFunction(LegoFunc_t pointer);
    void    SetMesh(Int_t mesh=1) {fMesh=mesh;}
    void    SetSurfaceFunction(SurfaceFunc_t pointer);
@@ -142,8 +171,12 @@ public:
    void    SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t);
    void    SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt);
    void    SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep);
+   void    TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2, Int_t iface[3], Double_t abcd[4], Int_t &irep);
+   void    ZDepth(Double_t xyz[52][3], Int_t &nface, Int_t iface[48][3], Double_t dface[48][6], Double_t abcd[48][3], Int_t *iorder);
 
-   ClassDef(TLego,0)   //Hidden line removal package
+   Double_t    Function3D(Double_t x, Double_t y, Double_t z);
+
+   ClassDef(TPainter3dAlgorithms,0)   //Hidden line removal package
 };
 
 #endif
