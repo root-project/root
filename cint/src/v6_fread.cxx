@@ -2923,6 +2923,20 @@ struct G__comment_info *pcomment;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1964
+/***********************************************************************
+* G__eolcallback()
+***********************************************************************/
+typedef void (*G__eolcallback_t) G__P((const char* fname,int linenum));
+G__eolcallback_t G__eolcallback;
+
+void G__set_eolcallback(eolcallback)
+void* eolcallback;
+{
+  G__eolcallback = (G__eolcallback_t)eolcallback;
+}
+#endif
+
 /***********************************************************************
 * G__fgetc()
 *
@@ -2957,6 +2971,9 @@ int G__fgetc()
     }
     G__eof_count=0;
     if(G__dispsource) G__DISPNfgetc();
+#ifndef G__OLDIMPLEMENTATION1964
+    if(G__eolcallback) (*G__eolcallback)(G__ifile.name,G__ifile.line_number);
+#endif
     break;
   case EOF:
     G__EOFfgetc();

@@ -53,7 +53,12 @@ char *str;
 	  ,(0==result->isconst)?'0':'1'
 	  ,result->tagnum
 	  ,(result->obj.i<0)?'M':'P'
-	  ,abs(result->obj.i));
+#ifndef G__OLDIMPLEMENTATION1981
+	  ,abs(result->obj.i)
+#else
+	  ,result->obj.i
+#endif
+	  );
   return(str);
 }
 
@@ -1674,12 +1679,10 @@ char *expression1;
       ebuf1[lenbuf1++]=expression1[ig11];
       break;
     case '*':
-#ifndef G__OLDIMPLEMENTATION581
       if(strncmp(expression1,"new ",4)==0) { 
 	ebuf1[lenbuf1++]=expression1[ig11];
 	break;
       }
-#endif
     case '/':
     case '%':
       if((nest1==0)&&(single_quote==0)&&(double_quote==0)) {

@@ -346,6 +346,8 @@ G__value (*G__GetSpecialObject)();
 **************************************************************************/
 #if defined(G__NONANSI)
 char *G__psep = "/";
+#elif defined(G__CYGWIN)
+const char *G__psep = "/";
 #elif defined(G__WIN32)
 const char *G__psep = "\\";
 #elif defined(__MWERKS__)

@@ -638,9 +638,6 @@ char *expression;
     store_var_type = G__var_type;
     G__var_type='p';
     para.para[0]=G__getexpr(bp); /* generates LD or LD_VAR etc... */
-#ifndef G__OLDIMPLEMENTATION834
-    para.next = (struct G__param*)NULL;
-#endif
     G__var_type = store_var_type;
     if(!G__no_exec_compile) result.ref = pointer; 
     else                    result.ref = 0;

@@ -1,5 +1,5 @@
 ############################################################
-# Automatically created makefile for pthread.dll
+# Automatically created makefile for vector.dll
 ############################################################
 
 # Copying $CINTSYSDIR/MAKEINFO #############################
@@ -73,10 +73,10 @@ INPUTMODELOCK = off
 # Set variables ############################################
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
-		-D_POSIX_C_SOURCE=199506L 
+		-DG__NOALGORITHM 
 CINTSYSDIR = /cygdrive/d/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
-OBJECT     = pthread.dll
+OBJECT     = vector.dll
 OPTION     = $(CCDLLOPT)
 DLLSPEC    =
 LINKSPEC   = -DG__CPPLINK_ON
@@ -85,12 +85,11 @@ LINKSPEC   = -DG__CPPLINK_ON
 CIFC       =
 CIFH       =
 CIFO       =
-CPPIFC     = G__cpp_pthread.C
-CPPIFH     = G__cpp_pthread.h
-CPPIFO     = G__cpp_pthread.o
+CPPIFC     = G__cpp_vector.C
+CPPIFH     = G__cpp_vector.h
+CPPIFO     = G__cpp_vector.o
 
-LIBS       = \
-		-lpthread 
+LIBS       = 
 
 CCOPT      = 
 
@@ -112,9 +111,9 @@ CPPOFILES  =
 RMCPPOFILES = 
 
 CPPHEADER  = \
-		pthd.h 
+		vec.h 
 CPPHEADERCINT  = \
-		pthd.h 
+		vec.h 
 
 CPPSTUB    = 
 CPPSTUBCINT = 
@@ -134,7 +133,7 @@ $(CPPIFO) : $(CPPIFC)
 
 # Create C++ Interface routine ###########################
 $(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint
-	$(CINTSYSDIR)/cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
+	$(CINTSYSDIR)/cint  -w1 -zvector -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
 
 
 # Clean up #################################################
@@ -143,5 +142,5 @@ clean :
 
 # re-makecint ##############################################
 makecint :
-	makecint -mk Makefile -dl pthread.dll -H pthd.h -D_POSIX_C_SOURCE=199506L -l -lpthread -cint -Z0 
+	makecint -mk Makevec -dl vector.dll -DG__NOALGORITHM -H vec.h -cint -Z0 
 

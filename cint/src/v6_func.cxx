@@ -967,9 +967,6 @@ char* funcname;
   int itmp;
 
   fpara.paran=0;
-#ifndef G__OLDIMPLEMENTATION834
-  fpara.next = (struct G__param*)NULL;
-#endif
 #ifndef G__OLDIMPLEMENTATION1472
   fpara.para[0].type = 0;
 #endif
@@ -2343,6 +2340,9 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1570
   int store_cp_asm=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1984
+  int memfuncenvflag=0;
+#endif
 
 
 #ifdef G__DEBUG
@@ -2449,9 +2449,6 @@ int memfunc_flag;
    *       ^
    ******************************************************/
   fpara.paran=0;
-#ifndef G__OLDIMPLEMENTATION834
-  fpara.next = (struct G__param*)NULL;
-#endif
 #ifndef G__OLDIMPLEMENTATION1472
   fpara.para[0].type = 0;
 #endif
@@ -2929,6 +2926,7 @@ int memfunc_flag;
     G__abortbytecode();
 #endif
   }
+  /*DEBUG*/ /* fprintf(stderr,"\nSET %lx=%lx %lx %s\n",G__memberfunc_struct_offset,G__store_struct_offset,store_struct_offset,item); */
   if(G__asm_noverflow&&fpara.paran&&
      G__store_struct_offset!=G__memberfunc_struct_offset) {
 #ifdef G__ASM_DBG
@@ -2936,6 +2934,9 @@ int memfunc_flag;
 #endif
     G__asm_inst[G__asm_cp]=G__SETMEMFUNCENV;
     G__inc_cp_asm(1,0);
+#ifndef G__OLDIMPLEMENTATION1984
+    memfuncenvflag=1;
+#endif
   }
 #ifndef G__OLDIMPLEMENTATION1570
   if(G__asm_noverflow && fpara.paran) {
@@ -2996,13 +2997,22 @@ int memfunc_flag;
 #endif
   /* recover function call environment */
 #ifdef G__ASM
+  /*DEBUG*/ /* fprintf(stderr,"\nREC %lx %lx=%lx %s\n",G__memberfunc_struct_offset,G__store_struct_offset,store_struct_offset,item); */
   if(G__asm_noverflow&&fpara.paran&&
-     G__store_struct_offset!=store_struct_offset) {
+#ifndef G__OLDIMPLEMENTATION1984
+     memfuncenvflag
+#else
+     G__store_struct_offset!=store_struct_offset
+#endif
+     ) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RECMEMFUNCENV\n",G__asm_cp);
 #endif
     G__asm_inst[G__asm_cp]=G__RECMEMFUNCENV;
     G__inc_cp_asm(1,0);
+#ifndef G__OLDIMPLEMENTATION1984
+    memfuncenvflag=0;
+#endif
   }
 #endif
   G__store_struct_offset=store_struct_offset;
@@ -5316,6 +5326,24 @@ int hash;
     return(1);
   }
 
+#ifndef G__OLDIMPLEMENTATION1963
+  if(strcmp(funcname,"G__SetCINTSYSDIR")==0) {
+    if(G__no_exec_compile) return(1);
+    G__SetCINTSYSDIR((char*)G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1964
+  if(strcmp(funcname,"G__set_eolcallback")==0) {
+    if(G__no_exec_compile) return(1);
+    G__set_eolcallback((void*)G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1937
   if(strcmp(funcname,"G__set_history_size")==0) {
     if(G__no_exec_compile) return(1);
@@ -5770,25 +5798,6 @@ int hash;
 
 #endif /* G__SMALLOBJECT */
   
-#if 0
-#ifdef G__GNUREADLINE
-  /*******************************************************************
-   * GNU readline 
-   *******************************************************************/
-  if(strcmp(funcname,"readline")==0) {
-    if(G__no_exec_compile) return(1);
-    G__letint(result7,'C',(long)readline((char *)G__int(libp->para[0])));
-    return(1);
-  }
-  
-  if(strcmp(funcname,"add_history")==0) {
-    if(G__no_exec_compile) return(1);
-    add_history((char *)G__int(libp->para[0]));
-    *result7=G__null;
-    return(1);
-  }
-#endif
-#endif
 
 
   

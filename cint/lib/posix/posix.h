@@ -94,6 +94,7 @@ extern int fcntl(int fd,int cmd,long arg);
 extern int umask(int mask);
 extern DIR* opendir(char *name);
 extern int telldir(DIR* dir);
+extern int fileno(FILE * stream);
 #endif /* __MAKECINT__ */
 
 extern struct dirent *readdir(DIR *dir);
@@ -132,6 +133,7 @@ extern  int closedir(DIR *);
 #else /* defined(G__AIX) */
 extern int closedir(DIR *dirp);
 #endif
+
 
 /********************************************************************
  * sys/stat.h , unistd.h

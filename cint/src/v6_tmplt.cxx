@@ -2823,6 +2823,14 @@ int parent_tagnum;
 	fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
 	const_c = 0;
       }
+#ifndef G__OLDIMPLEMENTATION1980
+      else if(const_c&&(strstr(symbol,"*const")||strstr(symbol,"* const"))) {
+	fsetpos(G__mfp,&const_pos);
+	fprintf(G__mfp,"%s",symbol);
+	fprintf(G__mfp,"%c",const_c); /* printing %c is not perfect */
+	const_c = 0;
+      }
+#endif
       else {
 	if(';'!=c && strcmp("const",symbol)==0) {
 	  const_c = c;

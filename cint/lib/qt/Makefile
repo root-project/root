@@ -1,5 +1,5 @@
 ############################################################
-# Automatically created makefile for pthread.dll
+# Automatically created makefile for qtcint.dll
 ############################################################
 
 # Copying $CINTSYSDIR/MAKEINFO #############################
@@ -71,12 +71,13 @@ INPUTMODELOCK = off
 # End of $CINTSYSDIR/MAKEINFO ##############################
 
 # Set variables ############################################
-IPATH      = $(SYSIPATH) 
-MACRO      = $(SYSMACRO)\
-		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /cygdrive/d/gotom/src/cint
+IPATH      = $(SYSIPATH) \
+		-I/usr/local/qt/include \
+		-I. 
+MACRO      = $(SYSMACRO)
+CINTSYSDIR = /home/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
-OBJECT     = pthread.dll
+OBJECT     = qtcint.dll
 OPTION     = $(CCDLLOPT)
 DLLSPEC    =
 LINKSPEC   = -DG__CPPLINK_ON
@@ -85,12 +86,11 @@ LINKSPEC   = -DG__CPPLINK_ON
 CIFC       =
 CIFH       =
 CIFO       =
-CPPIFC     = G__cpp_pthread.C
-CPPIFH     = G__cpp_pthread.h
-CPPIFO     = G__cpp_pthread.o
+CPPIFC     = G__cpp_qtcint.C
+CPPIFH     = G__cpp_qtcint.h
+CPPIFO     = G__cpp_qtcint.o
 
-LIBS       = \
-		-lpthread 
+LIBS       = 
 
 CCOPT      = 
 
@@ -112,9 +112,15 @@ CPPOFILES  =
 RMCPPOFILES = 
 
 CPPHEADER  = \
-		pthd.h 
+		qtcint.h \
+		qtclasses.h \
+		qtglobals.h \
+		qtfunctions.h 
 CPPHEADERCINT  = \
-		pthd.h 
+		qtcint.h \
+		qtclasses.h \
+		qtglobals.h \
+		qtfunctions.h 
 
 CPPSTUB    = 
 CPPSTUBCINT = 
@@ -134,7 +140,7 @@ $(CPPIFO) : $(CPPIFC)
 
 # Create C++ Interface routine ###########################
 $(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint
-	$(CINTSYSDIR)/cint  -w1 -zpthread -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT  -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
+	$(CINTSYSDIR)/cint  -w1 -zqtcint -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT -p -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)
 
 
 # Clean up #################################################
@@ -143,5 +149,5 @@ clean :
 
 # re-makecint ##############################################
 makecint :
-	makecint -mk Makefile -dl pthread.dll -H pthd.h -D_POSIX_C_SOURCE=199506L -l -lpthread -cint -Z0 
+	makecint -mk Makefile -dl qtcint.dll -p -H qtcint.h qtclasses.h qtglobals.h qtfunctions.h -I/usr/local/qt/include -I. -cint -Z0 
 

@@ -1519,9 +1519,6 @@ char *argv[] ;
     if(G__breaksignal) G__fprinterr(G__serr,"\nCALL main()\n");
     sprintf(temp,"main");
     para.paran=2;
-#ifndef G__OLDIMPLEMENTATION834
-    para.next = (struct G__param*)NULL;
-#endif
     G__letint(&para.para[0],'i',argc-optind);
     para.para[0].tagnum= -1;
     para.para[0].typenum= -1;

@@ -21,10 +21,11 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150117
-#define G__CINTVERSIONSTR  "5.15.117, Jan 4 2004"
+#define G__CINTVERSION      50150122
+#define G__CINTVERSIONSTR  "5.15.122, Feb 1 2004"
 
-
+#define G__ALWAYS
+/* #define G__NEVER */
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
@@ -333,26 +334,6 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #define G__EXPORT
 #endif
 
-#if 0
-#ifdef G__ROOT
-# ifndef __CINT__
-#  if defined(WIN32) && defined(_DLL)
-#   define DllImport   __declspec(dllimport)
-#   define DllExport   __declspec(dllexport)
-#  else
-#   define DllImport 
-#   define DllExport 
-#  endif
-#  ifdef G__CINTBODY
-#   define G__EXTERN   DllExport extern
-#  else
-#   define G__EXTERN   DllImport extern
-#  endif
-# endif
-G__EXTERN short G__othermain;
-G__EXTERN int G__globalcomp;
-#endif
-#endif
 
 #if defined(G__SIGNEDCHAR) 
 typedef signed char G__SIGNEDCHAR_T;
@@ -694,9 +675,6 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
 #define G__MAXFUNCPARA   40  /* Function argument */
-#ifndef G__OLDIMPLEMENTATION834
-#define G__MAXFUNCPARA2  85  /* Function argument */
-#endif
 #define G__MAXVARDIM     10  /* Array dimention */
 #define G__LENPOST       10  /* length of file name extention */
 #define G__MAXBASE       30  /* maximum inheritable class */
@@ -1044,22 +1022,6 @@ struct G__funcentry_VMS {
 };
 #endif
 
-#ifdef G__OLDIMPLEMENTATION834_YET
-/**************************************************************************
-* Supporting unlimited number of function arguments
-**************************************************************************/
-struct G__more_funcarg {
-  char para_reftype[G__MAXFUNCPARA];
-  char para_type[G__MAXFUNCPARA];
-  char para_isconst[G__MAXFUNCPARA];
-  short para_p_tagtable[G__MAXFUNCPARA];
-  short para_p_typetable[G__MAXFUNCPARA];
-  G__value *para_default[G__MAXFUNCPARA];
-  char *para_name[G__MAXFUNCPARA];
-  char *para_def[G__MAXFUNCPARA];
-  struct G__more_funcarg *next;
-};
-#endif
 
 /**************************************************************************
 * structure for ifunc (Interpleted FUNCtion) table
@@ -1092,16 +1054,6 @@ struct G__ifunc_table {
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
-#ifndef G__OLDIMPLEMENTATION834
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA2];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA2];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA2];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA2];
-#else
   char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
   char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
   char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
@@ -1110,7 +1062,6 @@ struct G__ifunc_table {
   G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
   char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
   char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-#endif
 
   /* C or C++ */
   char iscpp[G__MAXIFUNC];
@@ -1143,9 +1094,6 @@ struct G__ifunc_table {
   struct G__comment_info comment[G__MAXIFUNC];
 #endif
 
-#ifdef G__OLDIMPLEMENTATION834_YET
-  struct G__more_funcarg *more_para[G__MAXIFUNC];
-#endif
 #ifndef G__OLDIMPLEMENTATION1706
   struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
   unsigned char          override_ifn[G__MAXIFUNC];
@@ -1192,16 +1140,6 @@ struct G__ifunc_table_VMS {
 
   /* number and type of function parameter */
   /* G__inheritclass() depends on type of following members */
-#ifndef G__OLDIMPLEMENTATION834
-  char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char para_type[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA2];
-  short para_p_tagtable[G__MAXIFUNC][G__MAXFUNCPARA2];
-  short para_p_typetable[G__MAXIFUNC][G__MAXFUNCPARA2];
-  G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char *para_name[G__MAXIFUNC][G__MAXFUNCPARA2];
-  char *para_def[G__MAXIFUNC][G__MAXFUNCPARA2];
-#else
   char para_reftype[G__MAXIFUNC][G__MAXFUNCPARA];
   char para_type[G__MAXIFUNC][G__MAXFUNCPARA];
   char para_isconst[G__MAXIFUNC][G__MAXFUNCPARA];
@@ -1210,7 +1148,6 @@ struct G__ifunc_table_VMS {
   G__value *para_default[G__MAXIFUNC][G__MAXFUNCPARA];
   char *para_name[G__MAXIFUNC][G__MAXFUNCPARA];
   char *para_def[G__MAXIFUNC][G__MAXFUNCPARA];
-#endif
 
   /* C or C++ */
   char iscpp[G__MAXIFUNC];
@@ -1243,9 +1180,6 @@ struct G__ifunc_table_VMS {
   struct G__comment_info comment[G__MAXIFUNC];
 #endif
 
-#ifdef G__OLDIMPLEMENTATION834_YET
-  struct G__more_funcarg *more_para[G__MAXIFUNC];
-#endif
 #ifndef G__OLDIMPLEMENTATION1706
   struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
   unsigned char          override_ifn[G__MAXIFUNC];
@@ -1268,10 +1202,6 @@ struct G__param {
   char parameter[G__MAXFUNCPARA][G__ONELINE];
 #endif
   G__value para[G__MAXFUNCPARA];
-#ifndef G__OLDIMPLEMENTATION834
-  int allparan;
-  struct G__param *next;
-#endif
 #ifndef G__OLDIMPLEMENTATION1530
 #ifdef G__DICTIONARY
   char parameter[G__MAXFUNCPARA][G__ONELINEDICT];
@@ -1738,9 +1668,12 @@ typedef struct {
 /**********************************************
  * PowerPC, AIX and Apple Mac
  * It turned out it is quite difficult if not impossible to support PowerPC.
- * PPC uses registers (general purpose 3-10, floating 1
+ * PPC uses registers for passing arguments (general purpose 3-10, floating 1)
  **********************************************/
-//#define G__VAARG_NOSUPPORT
+#if !defined(__GNUC__)
+/* Looks like gcc3.3 doesn't use registers. */
+#define G__VAARG_NOSUPPORT
+#endif
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 
@@ -1830,6 +1763,10 @@ extern G__EXPORT void G__storelasterror G__P((void));
 extern G__EXPORT void G__set_smartunload G__P((int smartunload));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1207
+extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1210
 typedef int (*G__IgnoreInclude) G__P((const char* fname,const char* expandedfname));
 #endif
@@ -1861,6 +1798,12 @@ extern G__EXPORT int G__fputerr G__P((int c));
 
 #ifndef G__OLDIMPLEMENTATION1731
 extern G__EXPORT void G__SetUseCINTSYSDIR G__P((int UseCINTSYSDIR));
+#endif
+#ifndef G__OLDIMPLEMENTATION1963
+extern G__EXPORT void G__SetCINTSYSDIR G__P((char* cintsysdir));
+#endif
+#ifndef G__OLDIMPLEMENTATION1964
+extern G__EXPORT void G__set_eolcallback G__P((void* eolcallback));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1815

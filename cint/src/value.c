@@ -335,6 +335,9 @@ G__value p;
   }
 
   switch(p.type) {
+#ifndef G__OLDIMPLEMENTATION1982
+  case 'G':
+#endif
   case 'B':
     result.obj.i = (long)(*(unsigned char *)(p.obj.i));
 #ifndef G__OLDIMPLEMENTATION1401

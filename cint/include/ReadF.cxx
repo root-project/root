@@ -57,6 +57,14 @@ void ReadFile::setseparator(const char *separatorin)
   lenseparator = strlen(separator);
 }
 
+#ifndef G__OLDIMPLEMENTATION1960
+void ReadFile::setdelimitor(const char *delimitorin)
+{
+  strcpy(delimitor,delimitorin); 
+  lendelimitor = strlen(delimitor);
+}
+#endif
+
 void ReadFile::setendofline(const char *endoflinein)
 {
   strcpy(endofline,endoflinein); 
@@ -176,7 +184,11 @@ void ReadFile::separatearg(void)
     while(isseparator((c = *p)) && c) ++p;
     if(c) {
       argv[++argc] = p;
+#ifndef G__OLDIMPLEMENTATION1960
+      while(!isseparator((c = *p)) && !isdelimitor(c) && c) ++p;
+#else
       while(!isseparator((c = *p)) && c) ++p;
+#endif
       *p = '\0';
       ++p;
     }
@@ -207,6 +219,21 @@ int ReadFile::isseparator(int c)
   }
   return(0);
 }
+
+#ifndef G__OLDIMPLEMENTATION1960
+/*****************************************************************************
+* isdelimitor()
+*****************************************************************************/
+int ReadFile::isdelimitor(int c)
+{
+  int i;
+  for(i=0;i<lendelimitor;i++) {
+    if(c==delimitor[i]) return(1);
+  }
+  return(0);
+}
+
+#endif
 
 /*****************************************************************************
 * disp()

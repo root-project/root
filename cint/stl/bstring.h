@@ -2488,6 +2488,7 @@ operator+ (const basic_string<charT>& lhs, charT rhs)
     return tmp;
 }
 
+
 template <class charT>
 ostream&
 operator<< (ostream& o, const basic_string<charT>& s) 
@@ -2559,5 +2560,18 @@ template basic_string<char>;
 typedef  basic_string<char>     cstring;
 typedef  basic_string<char>     string;
 //typedef  basic_string<wchar_t>  wstring;
+
+#ifdef __CINT__
+ostream& operator<< (ostream& o, const basic_string<char>& s) {
+  o << s.c_str() ;
+  return o;
+}
+istream& operator>> (istream& o, basic_string<char>& s) {
+  char buf[1000];
+  o >> buf;
+  s = buf;
+  return o;
+}
+#endif
 
 #endif

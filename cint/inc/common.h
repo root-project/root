@@ -7,7 +7,7 @@
  * Description:
  * Common header file for cint parser.
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -256,6 +256,14 @@
 #define G__PARAREFERENCE    1
 #define G__PARAP2P          2
 #define G__PARAP2P2P        3
+
+#ifndef G__OLDIMPLEMENTATION1967
+#define G__PARAREFP2P      102
+#define G__PARAREFP2P2P    103
+
+#define G__PLVL(x)        (x%10)
+#define G__REF(x)         ((x/100)*100)
+#endif
 
 #define G__POINTER2FUNC    0
 #define G__FUNCRETURNP2F   1

@@ -1,5 +1,6 @@
 #ifndef G__VECTOR_DLL
 #pragma include_noerr <vector.dll>
+#pragma include_noerr <vectorbool.dll>
 #endif
 
 #ifdef __MAKECINT__

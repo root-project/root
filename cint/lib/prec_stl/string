@@ -101,7 +101,7 @@ class string {
 		const_iterator();
 		const_iterator(const_pointer _Ptr);
 
-		const_reference operator*() const; 
+		const_reference operator*() const;
 		const_pointer operator->() const;
 		const_iterator& operator++();
 		const_iterator operator++(int);
@@ -138,6 +138,7 @@ class string {
 		iterator();
 		iterator(pointer _ptr);
 		reference operator*() const;
+		//_Tptr operator->() const;
 		pointer operator->() const;
 		iterator& operator++();
 		iterator operator++(int);

@@ -212,6 +212,9 @@ class reverse_iterator<T*> {
 
 #if defined(G__VISUAL) 
 
+/***************************************************************************
+* VC++5.0
+***************************************************************************/
 #if G__MSC_VER<1300
 // VC++5.0 has different symbol names for a few tags
 
@@ -273,7 +276,10 @@ _Iter_cat(const T*) {
     return random_access_iterator_tag();
 }
 
-#else // if G__MSC_VER>=1300 
+/***************************************************************************
+* VC++6.0, VC++7.0?
+***************************************************************************/
+#elif (G__MSC_VER<=1310)
 
 // Many of the MS C++ 7.x class have one additional 
 // typedef
@@ -290,6 +296,48 @@ struct _Int_iterator_tag {};
 // POINTER ITERATOR TAGS
 struct _Nonscalar_ptr_iterator_tag {};
 struct _Scalar_ptr_iterator_tag {};
+
+// TEMPLATE CLASS iterator
+template<class _Category,
+	class _Ty,
+	class _Diff = ptrdiff_t,
+	class _Pointer = _Ty *,
+	class _Reference = _Ty&>
+		struct iterator
+	{	// base type for all iterator classes
+	typedef _Category iterator_category;
+	typedef _Ty value_type;
+	typedef _Diff difference_type;
+	typedef _Diff distance_type;	// retained
+	typedef _Pointer pointer;
+	typedef _Reference reference;
+	};
+
+template<class _Ty,
+	class _Diff,
+	class _Pointer,
+	class _Reference>
+	struct _Bidit
+		: public iterator<bidirectional_iterator_tag, _Ty, _Diff,
+			_Pointer, _Reference>
+	{	// base for bidirectional iterators
+	};
+
+template<class _Ty,
+	class _Diff,
+	class _Pointer,
+	class _Reference>
+	struct _Ranit
+		: public iterator<random_access_iterator_tag, _Ty, _Diff,
+			_Pointer, _Reference>
+	{	// base for random-access iterators
+	};
+
+struct _Outit
+	: public iterator<output_iterator_tag, void, void,
+		void, void>
+	{	// base for output iterators
+	};
 
 // TEMPLATE CLASS iterator_traits
 template<class _Iter>
@@ -394,64 +442,21 @@ template<> struct iterator_traits<_ULONGLONG>
 	};
 #endif /* _LONGLONG */
 
-// TEMPLATE CLASS iterator
-template<class _Category,
-	class _Ty,
-	class _Diff = ptrdiff_t,
-	class _Pointer = _Ty *,
-	class _Reference = _Ty&>
-		struct iterator
-	{	// base type for all iterator classes
-	typedef _Category iterator_category;
-	typedef _Ty value_type;
-	typedef _Diff difference_type;
-	typedef _Diff distance_type;	// retained
-	typedef _Pointer pointer;
-	typedef _Reference reference;
-	};
-
-template<class _Ty,
-	class _Diff,
-	class _Pointer,
-	class _Reference>
-	struct _Bidit
-		: public iterator<bidirectional_iterator_tag, _Ty, _Diff,
-			_Pointer, _Reference>
-	{	// base for bidirectional iterators
-	};
-
-template<class _Ty,
-	class _Diff,
-	class _Pointer,
-	class _Reference>
-	struct _Ranit
-		: public iterator<random_access_iterator_tag, _Ty, _Diff,
-			_Pointer, _Reference>
-	{	// base for random-access iterators
-	};
-
-struct _Outit
-	: public iterator<output_iterator_tag, void, void,
-		void, void>
-	{	// base for output iterators
-	};
-
 
 // TEMPLATE CLASS reverse_iterator
 template<class _RanIt>
 class reverse_iterator
-  : public iterator<typename _RanIt::iterator_category,
-//                    typename iterator_traits<_RanIt>::value_type,
-                    typename _RanIt::value_type,
-		    typename _RanIt::difference_type,
-		    typename _RanIt::pointer,
-		    typename _RanIt::reference>
+  : public iterator<typename iterator_traits<_RanIt>::iterator_category,
+                    typename iterator_traits<_RanIt>::value_type,
+		    typename iterator_traits<_RanIt>::difference_type,
+		    typename iterator_traits<_RanIt>::pointer,
+		    typename iterator_traits<_RanIt>::reference>
 {	// wrap iterator to run it backwards
 public:
   typedef reverse_iterator<_RanIt> _Myt;
-  typedef typename _RanIt::difference_type difference_type;
-  typedef typename _RanIt::pointer pointer;
-  typedef typename _RanIt::reference reference;
+  typedef typename iterator_traits<_RanIt>::difference_type difference_type;
+  typedef typename iterator_traits<_RanIt>::pointer pointer;
+  typedef typename iterator_traits<_RanIt>::reference reference;
   typedef _RanIt iterator_type;
   
   reverse_iterator();
@@ -604,24 +609,31 @@ private:
 
 #ifdef G__OLDIMPLEMENTATION1966
 template<class _Category,
-      class _Ty,
-      class _Diff = ptrdiff_t,
-      class _Pointer = _Ty *,
-      class _Reference = _Ty&>
-              struct iterator
-      {       // base type for all iterator classes
-      typedef _Category iterator_category;
-      typedef _Ty value_type;
-      typedef _Diff difference_type;
-      typedef _Diff distance_type;    // retained
-      typedef _Pointer pointer;
-      typedef _Reference reference;
-      };
+	class _Ty,
+	class _Diff = ptrdiff_t,
+	class _Pointer = _Ty *,
+	class _Reference = _Ty&>
+		struct iterator
+	{	// base type for all iterator classes
+	typedef _Category iterator_category;
+	typedef _Ty value_type;
+	typedef _Diff difference_type;
+	typedef _Diff distance_type;	// retained
+	typedef _Pointer pointer;
+	typedef _Reference reference;
+	};
 #endif
 
-#endif
+/***************************************************************************
+* Unknown VC++ version
+***************************************************************************/
+#else // MSC_VER
 
-#endif
+// not yet
+
+#endif  // MSC_VER
+
+#endif // VISUAL
 
 
 #if (G__GNUC>=3) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)

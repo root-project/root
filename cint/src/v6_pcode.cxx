@@ -66,7 +66,7 @@ int G__asm_step=0;
 /****************************************************************
 * G__doubleM()
 ****************************************************************/
-#if 1
+#ifdef G__ALWAYS
 double G__doubleM(buf)
      G__value *buf;
 {
@@ -371,7 +371,13 @@ long localmem;
   int pinc;
   int size;
   struct G__var_array *var;
+#ifndef G__OLDIMPLEMENTATION1974
+  void (*p2fldst) G__P((G__value*,int*,long,struct G__var_array*,long));
+  void (*p2fop2) G__P((G__value*,G__value*));
+  void (*p2fop1) G__P((G__value*));
+#else
   void (*p2f)();
+#endif
 #ifdef G__ASM_WHOLEFUNC
   long store_struct_offset_localmem;
   struct G__ifunc_table *ifunc;
@@ -445,9 +451,15 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
+      (*p2fldst)(G__asm_stack,&sp,0
+	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#else
       p2f = (void (*)())G__asm_inst[pc+2];
       (*p2f)(G__asm_stack,&sp,0
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#endif
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
@@ -483,9 +495,15 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]]);
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
+      (*p2fldst)(G__asm_stack,&sp,localmem /* temprary */
+	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#else
       p2f = (void (*)())G__asm_inst[pc+2];
       (*p2f)(G__asm_stack,&sp,localmem /* temprary */
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#endif
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
@@ -517,9 +535,15 @@ long localmem;
 		,var->varnamebuf[G__asm_inst[pc+1]],G__store_struct_offset);
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
+      (*p2fldst)(G__asm_stack,&sp,G__store_struct_offset
+	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#else
       p2f = (void (*)())G__asm_inst[pc+2];
       (*p2f)(G__asm_stack,&sp,G__store_struct_offset
 	     ,(struct G__var_array*)G__asm_inst[pc+4],G__asm_inst[pc+1]);
+#endif
       pc+=5;
 #ifdef G__ASM_DBG
       break;
@@ -551,9 +575,15 @@ long localmem;
       G__asm_stack[sp].obj.i = (G__asm_inst[pc+5]&1) ? 
 	*(int*)(G__asm_inst[pc+1]+localmem) : *(int*)G__asm_inst[pc+1];
       G__asm_stack[sp++].type = 'i';
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+2];
+      (*p2fldst)(G__asm_stack,&sp, (G__asm_inst[pc+5]&2)?localmem:0 
+	     ,(struct G__var_array*)G__asm_inst[pc+6],G__asm_inst[pc+3]);
+#else
       p2f = (void (*)())G__asm_inst[pc+2];
       (*p2f)(G__asm_stack,&sp, (G__asm_inst[pc+5]&2)?localmem:0 
 	     ,(struct G__var_array*)G__asm_inst[pc+6],G__asm_inst[pc+3]);
+#endif
       pc+=G__asm_inst[pc+4];
 #ifdef G__ASM_DBG
       break;
@@ -604,6 +634,12 @@ long localmem;
 	break;
       }
       G__asm_stack[sp++].type = 'i';
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fldst = (void (*) G__P((G__value*,int*,long,struct G__var_array*,long)))G__asm_inst[pc+4];
+      (*p2fldst)(G__asm_stack,&sp
+	     ,(G__asm_inst[pc+7]&4) ? localmem : 0
+	     ,(struct G__var_array*)G__asm_inst[pc+8],G__asm_inst[pc+5]);
+#else
       p2f = (void (*)())G__asm_inst[pc+4];
 #ifndef G__OLDIMPLEMENTATION822
       (*p2f)(G__asm_stack,&sp
@@ -613,6 +649,7 @@ long localmem;
       (*p2f)(G__asm_stack,&sp
 	     ,(G__asm_inst[pc+7]&3) ? localmem : 0
 	     ,(struct G__var_array*)G__asm_inst[pc+8],G__asm_inst[pc+5]);
+#endif
 #endif
       pc+=G__asm_inst[pc+6];
 #ifdef G__ASM_DBG
@@ -638,8 +675,13 @@ long localmem;
 		     ,G__asm_stack[sp-2].type,G__asm_stack[sp-2].obj.i
 		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fop2 = (void (*) G__P((G__value*,G__value*)))G__asm_inst[pc+1];
+      (*p2fop2)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
+#else
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1],&G__asm_stack[sp-2]);
+#endif
       pc+=2;
       --sp;
 #ifdef G__ASM_DBG
@@ -666,8 +708,13 @@ long localmem;
 	G__fprinterr(G__serr,"%3x,%d: OP1_OPTIMIZED %c:%d" ,pc,sp 
 		     ,G__asm_stack[sp-1].type,G__asm_stack[sp-1].obj.i);
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      p2fop1 = (void (*) G__P((G__value*)))G__asm_inst[pc+1];
+      (*p2fop1)(&G__asm_stack[sp-1]);
+#else
       p2f = (void (*)())G__asm_inst[pc+1];
       (*p2f)(&G__asm_stack[sp-1]);
+#endif
       pc+=2;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr," -> %c:%d\n",G__asm_stack[sp-1].type
@@ -796,8 +843,13 @@ long localmem;
 			     ,G__asm_inst[pc+4]);
 #endif
 #endif
+#ifndef G__OLDIMPLEMENTATION1974
+      if(!(*(int (*) G__P((int*,int*)))G__asm_inst[pc+1])((int *)G__asm_inst[pc+2]
+					,(int *)G__asm_inst[pc+3])){
+#else
       if(!(*(int (*)())G__asm_inst[pc+1])((int *)G__asm_inst[pc+2]
 					,(int *)G__asm_inst[pc+3])){
+#endif
 	pc=G__asm_inst[pc+4];
       }
       else {
@@ -923,9 +975,6 @@ long localmem;
 #endif
       funcname=(char *)G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+3];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       pfunc = (int (*)())G__asm_inst[pc+4] ;
       for(i=0;i<fpara.paran;i++) {
 	fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
@@ -1236,9 +1285,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1284,9 +1330,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1337,9 +1380,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1399,9 +1439,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1449,9 +1486,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1500,9 +1534,6 @@ long localmem;
 #endif
       G__asm_index=G__asm_inst[pc+1];
       fpara.paran=G__asm_inst[pc+2];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       G__var_type=(char)G__asm_inst[pc+3];
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -1807,9 +1838,6 @@ long localmem;
 #endif
       strcpy(funcnamebuf,(char*)G__asm_inst[pc+1]);
       fpara.paran=G__asm_inst[pc+3];
-#ifndef G__OLDIMPLEMENTATION834
-      fpara.next = (struct G__param*)NULL;
-#endif
       pfunc = (int (*)())G__asm_inst[pc+4] ;
 #ifdef G__OLDIMPLEMENTATION483
       if(fpara.paran)
@@ -2008,14 +2036,9 @@ long localmem;
 #endif
       G__asm_stack[sp-1].typenum = -1;
       G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
-#ifndef G__OLDIMPLEMENTATION1290
       if(G__asm_stack[sp-1].ref==G__asm_stack[sp-1].obj.i)
 	G__asm_stack[sp-1].ref += G__asm_inst[pc+2];
-#endif
       G__asm_stack[sp-1].obj.i += G__asm_inst[pc+2];
-#ifdef G__OLDIMPLEMENTATION1290
-      G__asm_stack[sp-1].ref += G__asm_inst[pc+2];
-#endif
       pc+=3;
 #ifdef G__ASM_DBG
       break;
@@ -2908,6 +2931,23 @@ long ig15;
   buf->obj.d = *(double*)buf->ref;
 }
 
+#ifndef G__OLDIMPLEMENTATION1969
+/*************************************************************************
+* G__nonintarrayindex
+*************************************************************************/
+#ifndef G__OLDIMPLEMENTATION1974
+void G__nonintarrayindex G__P((struct G__var_array*,int));
+#endif
+void G__nonintarrayindex(var,ig15)
+struct G__var_array *var; 
+int ig15;
+{
+  G__fprinterr(G__serr,"Error: %s[] invalud type for array index"
+	       ,var->varnamebuf[ig15]);
+  G__genericerror((char*)NULL);
+}
+#endif
+
 /*************************************************************************
 * G__LD_p1_xxx
 *************************************************************************/
@@ -2918,6 +2958,7 @@ long ig15;
 #ifdef G__TUNEUP_W_SECURITY
 #define G__ASM_GET_INT_P1(casttype,ctype)              \
   G__value *buf= &pbuf[*psp-1];                        \
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ \
   buf->tagnum = -1;                                    \
   buf->type = ctype;                                   \
   buf->typenum = var->p_typetable[ig15];               \
@@ -3045,6 +3086,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+#endif
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = var->type[ig15];
   buf->typenum = var->p_typetable[ig15];
@@ -3068,6 +3112,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+#endif
   buf->tagnum = var->p_tagtable[ig15];
   buf->type = 'u';
   buf->typenum = var->p_typetable[ig15];
@@ -3090,6 +3137,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+#endif
   buf->tagnum = -1;
   buf->type = 'f';
   buf->typenum = var->p_typetable[ig15];
@@ -3112,6 +3162,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *buf= &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); 
+#endif
   buf->tagnum = -1;
   buf->type = 'd';
   buf->typenum = var->p_typetable[ig15];
@@ -3790,6 +3843,7 @@ long ig15;
 #ifdef G__TUNEUP_W_SECURITY
 #define G__ASM_ASSIGN_INT_P1(casttype)                           \
   G__value *val = &pbuf[*psp-1];                                 \
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ \
   if(val->obj.i>var->varlabel[ig15][1])                          \
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  \
   else                                                           \
@@ -3913,6 +3967,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+#endif
   if(val->obj.i>var->varlabel[ig15][1]) {
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
   }
@@ -3942,6 +3999,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -3963,6 +4023,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -3983,6 +4046,9 @@ struct G__var_array *var;
 long ig15;
 {
   G__value *val = &pbuf[*psp-1];
+#ifndef G__OLDIMPLEMENTATION1969
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); 
+#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(val->obj.i>var->varlabel[ig15][1])
     G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);
@@ -6060,7 +6126,7 @@ G__value *pbuf;
   *(double*)pbuf->ref = (double)(--pbuf->obj.d);
 }
 
-#if 0 /* following change rather slowed down */
+#if G__NEVER /* following change rather slowed down */
 /****************************************************************
 * G__OP1_postfixinc_l()
 ****************************************************************/
@@ -9399,7 +9465,7 @@ int *start;
 	G__asm_inst[pc+1] = (long)G__OP1_prefixdec_d;
 	break;
 
-#if 0 /* following change rather slowed down */
+#if G__NEVER /* following change rather slowed down */
       case G__OPR_POSTFIXINC_S:
 	G__asm_inst[pc] = G__OP1_OPTIMIZED;
 	G__asm_inst[pc+1] = (long)G__OP1_postfixinc_s;

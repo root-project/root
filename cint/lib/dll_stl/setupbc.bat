@@ -1,5 +1,6 @@
 del ..\..\stl\string.dll
 del ..\..\stl\vector.dll
+del ..\..\stl\vectorbool.dll
 del ..\..\stl\list.dll
 del ..\..\stl\deque.dll
 del ..\..\stl\map.dll
@@ -13,6 +14,7 @@ del ..\..\stl\stack.dll
 del ..\..\stl\queue.dll
 del ..\..\stl\exception.dll
 del ..\..\stl\stdexcept.dll
+del ..\..\stl\climits.dll
 del G__*
 del *.dll
 
@@ -23,6 +25,10 @@ move string.dll ..\..\stl\string.dll
 makecint -mk Makevec -dl vector.dll -H vec.h  -cint  -Z0
 make.exe -f Makevec 
 move vector.dll ..\..\stl\vector.dll
+
+makecint -mk Makevecbool -dl vectorbool.dll -H vecbool.h  -cint  -Z0
+make.exe -f Makevecbool 
+move vectorbool.dll ..\..\stl\vectorbool.dll
 
 makecint -mk Makelist -dl list.dll -H lst.h  -cint  -Z0
 make.exe -f Makelist 
@@ -73,13 +79,17 @@ makecint -mk Makevary -dl valarray.dll -H vary.h  -cint  -Z0
 make.exe -f Makevary 
 move valarray.dll ..\..\stl\valarray.dll
 
-makecint -mk Makeeh -dl exception.dll -H eh.h -cint  -Z0
+makecint -mk Makeeh -dl exception.dll -H cinteh.h -cint  -Z0
 make.exe -f Makeeh
 move exception.dll ..\..\stl\exception.dll
 
 makecint -mk Makese -dl stdexcept.dll -H se.h -cint  -Z0
 make.exe -f Makese
 move stdexcept.dll ..\..\stl\stdexcept.dll
+
+makecint -mk Makeclimits -dl climits.dll -H clim.h -cint -Z1
+make.exe -f Makeclimits
+move climits.dll ..\..\stl\climits.dll
 
 del G__*
 del Make*

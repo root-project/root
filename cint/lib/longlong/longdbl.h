@@ -7,7 +7,7 @@
  * Description:
  *  Support 'long double' 
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -20,6 +20,8 @@
 
 #ifndef G__LONGDOUBLE_H
 #define G__LONGDOUBLE_H
+
+#include "longlong.h"
 
 //#if !defined(__hpux) && !defined(G__HPUX)
 
@@ -107,6 +109,9 @@ class G__longdouble {
   G__longdouble(double l) { dat = (G__double92)l; }
 #endif
   G__longdouble(const G__longdouble& x) { dat=x.dat; }
+  //G__longdouble(long l=0) { dat = (G__double92)l; }
+  G__longdouble(const G__longlong& x) { dat=x.dat; }
+  G__longdouble(const G__ulonglong& x) { dat=x.dat; }
   ~G__longdouble() {  }
 
   // conversion operator

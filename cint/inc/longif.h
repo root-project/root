@@ -23,6 +23,8 @@ extern void G__cpp_setup_funclongif();
 extern void G__set_cpp_environmentlongif();
 }
 
+
+//#include "longlong.h"
 /* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
@@ -32,7 +34,7 @@ extern void G__set_cpp_environmentlongif();
  * Description:
  *  Support 'long long' 64bit integer in 32bit architecture
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -48,13 +50,19 @@ extern void G__set_cpp_environmentlongif();
 
 #define IOS
 
+#if (defined(__GNUC__)&&(__GNUC__>=3)) || (defined(_MSC_VER)&&(_MSC_VER>=1300))
+#ifndef G__NEWSTDHEADER
+#define G__NEWSTDHEADER
+#endif
+#endif
+
 #ifdef IOS
 #ifdef G__NEWSTDHEADER
 #include <iostream>
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !defined(_MSC_VER)
+#if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 namespace std {} using namespace std;
 #endif
 #endif
@@ -123,6 +131,7 @@ typedef long long G__int64;
 typedef unsigned long long G__uint64;
 
 #endif
+
 
 #ifndef G__OLDIMPLEMENTATION1878
 #ifndef __CINT__
@@ -296,6 +305,7 @@ G__uint64 G__strtoull(const char *nptr, char **endptr, register int base) {
 * long long definition
 * class G__longlong is renamed as 'long long' in cint body
 ************************************************************************/
+class G__ulonglong;
 
 class G__longlong {
  public:
@@ -312,6 +322,7 @@ class G__longlong {
   G__longlong(char l) { dat = (G__int64)l; }
 #endif
   G__longlong(const G__longlong& x) { dat=x.dat; }
+  G__longlong(const G__ulonglong& x) ;
 #if 1
   G__longlong(const char* s) { dat=G__strtoll(s,NULL,10); }
 #endif
@@ -326,9 +337,9 @@ class G__longlong {
 
   // unary operators
   G__longlong& operator++() { ++dat; return(*this); }
-  G__longlong operator++(int dmy) { G__longlong c(dat++); return(c); }
+  G__longlong operator++(int) { G__longlong c(dat++); return(c); }
   G__longlong& operator--() { --dat; return(*this); }
-  G__longlong operator--(int dmy) { G__longlong c(dat--); return(c); }
+  G__longlong operator--(int) { G__longlong c(dat--); return(c); }
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
@@ -404,7 +415,7 @@ inline G__longlong operator%(const G__longlong& a,const G__longlong& b){
   G__longlong c(a.dat%b.dat);
 #else
   G__longlong c;
-  fprintf(stderr,"Limitation: operator%% is deactivated for 'long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'long long'. Delete G__NOMOD in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -479,10 +490,6 @@ inline istream& operator>>(istream& ist,G__longlong& a) {
 }
 #endif
 
-inline int G__ateval(const G__longlong& a) {
-  fprintf(stdout,"(long long)%lld\n",a.dat);
-  return(1);
-}
 
 
 /************************************************************************
@@ -506,6 +513,7 @@ class G__ulonglong {
 #endif
   G__ulonglong(const G__ulonglong& x) { dat=x.dat; }
 #if 1
+  G__ulonglong(const G__longlong& x) { dat=(G__int64)x.dat; }
   G__ulonglong(const char* s) { dat=G__strtoull(s,NULL,10); }
 #endif
   ~G__ulonglong() {  }
@@ -522,9 +530,9 @@ class G__ulonglong {
 
   // unary operators
   G__ulonglong& operator++() { ++dat; return(*this); }
-  G__ulonglong operator++(int dmy) { G__ulonglong c(dat++); return(c); }
+  G__ulonglong operator++(int) { G__ulonglong c(dat++); return(c); }
   G__ulonglong& operator--() { --dat; return(*this); }
-  G__ulonglong operator--(int dmy) { G__ulonglong c(dat--); return(c); }
+  G__ulonglong operator--(int) { G__ulonglong c(dat--); return(c); }
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
@@ -600,7 +608,7 @@ inline G__ulonglong operator%(const G__ulonglong& a,const G__ulonglong& b){
   G__ulonglong c(a.dat%b.dat);
 #else
   G__ulonglong c;
-  fprintf(stderr,"Limitation: operator%% is deactivated for 'unsigned long long'. Delete G__NODIV in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
+  fprintf(stderr,"Limitation: operator%% is deactivated for 'unsigned long long'. Delete G__NOMOD in $CINTSYSDIR/src/longif3.h, longif.h and $CINTSYSDIR/lib/longlong/longlong.h to activate.\n");
 #endif
   return(c);
 }
@@ -647,6 +655,8 @@ inline int operator==(const G__ulonglong& a,const G__ulonglong& b){
   return(a.dat==b.dat);
 }
 
+inline G__longlong::G__longlong(const G__ulonglong& x) { dat=(G__int64)x.dat; }
+
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
 #ifndef G__OLDIMPLEMENTATION1686
@@ -688,10 +698,15 @@ void G__printformatull(char* out,const char* fmt,void *p) {
 }
 
 
+inline int G__ateval(const G__longlong& a) {
+  fprintf(stdout,"(long long)%lld\n",a.dat);
+  return(1);
+}
 inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
 }
+#if 0
 int G__ateval(const char* x) {return(0);}
 int G__ateval(const void* x) {return(0);}
 int G__ateval(double x) {return(0);}
@@ -704,20 +719,22 @@ int G__ateval(unsigned char x) {return(0);}
 int G__ateval(unsigned short x) {return(0);}
 int G__ateval(unsigned int x) {return(0);}
 int G__ateval(unsigned long x) {return(0);}
-
+#endif
 
 #ifdef __MAKECINT__
 #ifndef G__LONGLONGTMP
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
 #endif
+#ifdef G__OLDIMPLEMENTATION1912
 #pragma link C++ function G__ateval;
+#endif
 #endif
 
 
 #endif /* G__LONGLONG_H */
 
-
+//#include "longdbl.h"
 /* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
@@ -727,7 +744,7 @@ int G__ateval(unsigned long x) {return(0);}
  * Description:
  *  Support 'long double' 
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -741,10 +758,18 @@ int G__ateval(unsigned long x) {return(0);}
 #ifndef G__LONGDOUBLE_H
 #define G__LONGDOUBLE_H
 
+//#include "longlong.h"
+
 //#if !defined(__hpux) && !defined(G__HPUX)
 
 #ifndef IOS
 #define IOS
+#endif
+
+#if (defined(__GNUC__)&&(__GNUC__>=3)) || (defined(_MSC_VER)&&(_MSC_VER>=1300))
+#ifndef G__NEWSTDHEADER
+#define G__NEWSTDHEADER
+#endif
 #endif
 
 #ifdef IOS
@@ -753,7 +778,7 @@ int G__ateval(unsigned long x) {return(0);}
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !defined(_MSC_VER)
+#if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 using namespace std;
 #endif
 #endif
@@ -821,6 +846,9 @@ class G__longdouble {
   G__longdouble(double l) { dat = (G__double92)l; }
 #endif
   G__longdouble(const G__longdouble& x) { dat=x.dat; }
+  //G__longdouble(long l=0) { dat = (G__double92)l; }
+  G__longdouble(const G__longlong& x) { dat=x.dat; }
+  G__longdouble(const G__ulonglong& x) { dat=x.dat; }
   ~G__longdouble() {  }
 
   // conversion operator
@@ -828,9 +856,9 @@ class G__longdouble {
 
   // unary operators
   G__longdouble& operator++() { ++dat; return(*this); }
-  G__longdouble operator++(int dmy) { G__longdouble c(dat++); return(c); }
+  G__longdouble operator++(int) { G__longdouble c(dat++); return(c); }
   G__longdouble& operator--() { --dat; return(*this); }
-  G__longdouble operator--(int dmy) { G__longdouble c(dat--); return(c); }
+  G__longdouble operator--(int) { G__longdouble c(dat--); return(c); }
 
   // assignment operators
   G__longdouble& operator=(double x) {dat=(G__double92)x;return(*this);}
@@ -934,7 +962,9 @@ inline int G__ateval(const G__longdouble& a) {
 #define G__LONGLONGTMP
 #pragma link off global G__LONGLONGTMP;
 #endif
+#ifdef G__OLDIMPLEMENTATION1912
 #pragma link C++ function G__ateval;
+#endif
 #endif
 
 //#endif
@@ -942,13 +972,15 @@ inline int G__ateval(const G__longdouble& a) {
 #endif /* G__LONGDBL_H */
 
 
+//#include "lib/longlong/longlong.h"
+
 #ifndef G__MEMFUNCBODY
 #endif
 
 extern G__linked_taginfo G__longifLN_ostream;
 extern G__linked_taginfo G__longifLN_istream;
-extern G__linked_taginfo G__longifLN_G__longlong;
 extern G__linked_taginfo G__longifLN_G__ulonglong;
+extern G__linked_taginfo G__longifLN_G__longlong;
 extern G__linked_taginfo G__longifLN_G__longdouble;
 
 /* STUB derived class for protected member access */

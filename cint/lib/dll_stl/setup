@@ -6,6 +6,7 @@ ALGO=-DG__NOALGORITHM
 #rm ../../stl/iterator.dll 
 rm ../../stl/string.dll 
 rm ../../stl/vector.dll 
+rm ../../stl/vectorbool.dll 
 rm ../../stl/list.dll 
 rm ../../stl/deque.dll 
 rm ../../stl/map.dll 
@@ -19,6 +20,7 @@ rm ../../stl/queue.dll
 rm ../../stl/valarray.dll 
 rm ../../stl/exception.dll 
 rm ../../stl/stdexcept.dll 
+rm ../../stl/climits.dll 
 rm G__*
 
 
@@ -33,6 +35,10 @@ mv string.dll ../../stl/string.dll
 makecint -mk Makevec -dl vector.dll $ALGO -H vec.h  -cint -Z0
 make -f Makevec
 mv vector.dll ../../stl/vector.dll
+
+makecint -mk Makevecbool -dl vectorbool.dll $ALGO -H vecbool.h  -cint -Z0
+make -f Makevecbool
+mv vectorbool.dll ../../stl/vectorbool.dll
 
 makecint -mk Makelist -dl list.dll $ALGO -H lst.h  -cint -Z0
 make -f Makelist 
@@ -78,13 +84,17 @@ makecint -mk Makevary -dl valarray.dll -H vary.h  -cint -Z0
 make -f Makevary
 mv valarray.dll ../../stl/valarray.dll
 
-makecint -mk Makeeh -dl exception.dll -H eh.h -cint -Z0
+makecint -mk Makeeh -dl exception.dll -H cinteh.h -cint -Z0
 make -f Makeeh
 mv exception.dll ../../stl/exception.dll
 
 makecint -mk Makese -dl stdexcept.dll -H se.h -cint -Z0
 make -f Makese
 mv stdexcept.dll ../../stl/stdexcept.dll
+
+makecint -mk Makeclimits -dl climits.dll -H clim.h -cint -Z1
+make -f Makeclimits
+mv climits.dll ../../stl/climits.dll
 
 rm G__*
 rm Make*

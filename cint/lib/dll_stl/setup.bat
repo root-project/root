@@ -1,5 +1,6 @@
 del ..\..\stl\string.dll
 del ..\..\stl\vector.dll
+del ..\..\stl\vectorbool.dll
 del ..\..\stl\list.dll
 del ..\..\stl\deque.dll
 del ..\..\stl\map.dll
@@ -13,6 +14,7 @@ del ..\..\stl\stack.dll
 del ..\..\stl\queue.dll
 del ..\..\stl\exception.dll
 del ..\..\stl\stdexcept.dll
+del ..\..\stl\climits.dll
 del G__*
 del *.dll
 
@@ -23,6 +25,10 @@ move Release\string.dll ..\..\stl\string.dll
 makecint -mk Makevec -dl vector.dll -H vec.h  -cint -Z0
 nmake -f Makevec CFG="vector - Win32 Release"
 move Release\vector.dll ..\..\stl\vector.dll
+
+makecint -mk Makevecbool -dl vectorbool.dll -H vecbool.h  -cint -Z0
+nmake -f Makevecbool CFG="vectorbool - Win32 Release"
+move Release\vectorbool.dll ..\..\stl\vectorbool.dll
 
 makecint -mk Makelist -dl list.dll -H lst.h  -cint -Z0
 nmake -f Makelist CFG="list - Win32 Release"
@@ -73,13 +79,17 @@ makecint -mk Makevary -dl valarray.dll -H vary.h  -cint -Z0
 nmake -f Makevary CFG="valarray - Win32 Release"
 move Release\valarray.dll ..\..\stl\valarray.dll
 
-makecint -mk Makeeh -dl exception.dll -H eh.h -cint  -Z0
+makecint -mk Makeeh -dl exception.dll -H cinteh.h -cint  -Z0
 nmake -f Makeeh CFG="exception - Win32 Release"
 move Release\exception.dll ..\..\stl\exception.dll
 
 makecint -mk Makese -dl stdexcept.dll -H se.h -cint  -Z0
 nmake -f Makese CFG="stdexcept - Win32 Release"
 move Release\stdexcept.dll ..\..\stl\stdexcept.dll
+
+makecint -mk Makeclimits -dl climits.dll -H clim.h -cint -Z1
+nmake -f Makeclimits CFG="climits - Win32 Release"
+move climits.dll ..\..\stl\climits.dll
 
 rem del Release\*
 rem rmdir Release

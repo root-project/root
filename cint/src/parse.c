@@ -532,10 +532,19 @@ G__value *presult;
 #endif
 #ifndef G__OLDIMPLEMENTATION1876
     *pc=G__fgetspace();
+#ifndef G__OLDIMPLEMENTATION1962
+    while(*pc!=';') {
+#else
     while(*pc=='(') {
+#endif
       len = strlen(statement);
       statement[len++] = *pc;
+#ifndef G__OLDIMPLEMENTATION1962
+      *pc = G__fgetstream_newtemplate(statement+len,");");
+      if(*pc==';') break;
+#else
       *pc = G__fgetstream_newtemplate(statement+len,")");
+#endif
       len = strlen(statement);
       statement[len++] = *pc;
       statement[len] = 0; 
@@ -2158,10 +2167,9 @@ void G__free_tempobject()
   int iout=0;
   int store_return;
 #ifndef G__OLDIMPLEMENTATION1596
-   /* The only 2 potential risks of making this a static are
-    * - a destructor indirectly provokes a call to G__free_tempobject
-    * - multi-thread application (but the rest of CINT is not 
-    *   multi-threadable anyway). */
+   /* The only 2 potential risks of making this static are
+    * - a destructor indirectly calls G__free_tempobject
+    * - multi-thread application (but CINT is not multi-threadable anyway). */
   static char statement[G__ONELINE];
 #else
   char statement[G__ONELINE];
@@ -2364,6 +2372,9 @@ int tagnum,typenum;
   
   /* create class object */
   G__p_tempbuf->obj.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
+#ifndef G__OLDIMPLEMENTATION1978
+  G__p_tempbuf->obj.obj.reftype.reftype = G__PARANORMAL;
+#endif
   G__p_tempbuf->obj.type = 'u';
   G__p_tempbuf->obj.tagnum = tagnum;
   G__p_tempbuf->obj.typenum = typenum;

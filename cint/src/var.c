@@ -89,7 +89,6 @@ return(result);
 *  MUST CORRESPOND TO G__letstructp
 **************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION581
 
 #define G__ASSIGN_PVAR(CASTTYPE,CONVFUNC,X)                                  \
 switch(G__var_type) {                                                        \
@@ -180,43 +179,6 @@ default :                                                                    \
   break;                                                                     \
 }
 
-#else
-
-#define G__ASSIGN_PVAR(CASTTYPE,CONVFUNC)                                    \
-switch(G__var_type) {                                                        \
-case 'v': /* *var = expr ;  assign to contents of pointer */                 \
-  *(CASTTYPE *)(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)) \
-	= (CASTTYPE)CONVFUNC(result);                                        \
-    break;                                                                   \
-case 'p': /* var = expr; assign to pointer variable  */                      \
-    if(var->paran[ig15]<=paran) {                                            \
-	if(var->paran[ig15]<paran) {                                         \
- /* if(var->varlabel[ig15][paran+1]==0) {                                    \
-	if((var->varlabel[ig15][paran]==0)&&(paran!=0)) { */                 \
-		address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;  \
-		*(((CASTTYPE *)(*(long *)address))+pp_inc)                   \
-			= (CASTTYPE)CONVFUNC(result);                        \
-	}                                                                    \
-	else {                                                               \
-		*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)  \
-			= G__int(result);                                    \
-	}                                                                    \
-    }                                                                        \
-    else { /* K&R pointer to pointer 'type **a,type *a[]' initialization */  \
-	/*  if(var->p[ig15]!=G__PINVALID) free((void*)var->p[ig15]); */      \
-	    if(var->p[ig15]!=G__PINVALID &&    /* ON457 */                   \
-               G__COMPILEDGLOBAL!=var->statictype[ig15])                     \
-              free((void*)var->p[ig15]);                                     \
-	    var->p[ig15] = result.obj.i;                                     \
-	    var->statictype[ig15]=G__COMPILEDGLOBAL;                         \
-    }                                                                        \
-    break;                                                                   \
-default :                                                                    \
-    G__assign_error(item,&result);                                           \
-    break;                                                                   \
-}
-
-#endif
 
 
 /**************************************************************************
@@ -419,7 +381,6 @@ switch(G__var_type) {                                                        \
 *  get variable 
 **************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION634
 
 #define G__GET_PVAR(CASTTYPE,CONVFUNC,CONVTYPE,TYPE,PTYPE)                    \
 switch(G__var_type) {                                                         \
@@ -533,89 +494,6 @@ default : /* 'p' */                                                           \
    break;                                                                     \
 }                                                                             
 
-#else
-
-#define G__GET_PVAR(CASTTYPE,CONVFUNC,CONVTYPE,TYPE,PTYPE)                    \
-switch(G__var_type) {                                                         \
-case 'v': /* *var; get value */                                               \
-  switch(var->reftype[ig15]) {                                                \
-  case G__PARANORMAL:                                                         \
-   result.ref=(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));  \
-   if(result.ref)                                                             \
-     CONVFUNC(&result,TYPE,(CONVTYPE)(*(CASTTYPE *)(result.ref)));            \
-   break;                                                                     \
-  case G__PARAP2P:                                                            \
-    if(var->paran[ig15]<paran) {                                              \
-      address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;             \
-      result.ref=(*(((long*)(*(long *)address))+pp_inc));                     \
-      if(result.ref)                                                          \
-        CONVFUNC(&result,TYPE,(CONVTYPE)(*(CASTTYPE *)(result.ref)));         \
-    }                                                                         \
-    else {                                                                    \
-      G__letint(&result,PTYPE,                                                \
-      *(long *)(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)));\
-    }                                                                         \
-   break;                                                                     \
-  }                                                                           \
-  break;                                                                      \
-case 'P': /* &var; get pointer to pointer */                                  \
-   if(var->paran[ig15]==paran) { /* must be PPTYPE */                         \
-	  G__letint(&result,PTYPE                                             \
-	     ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));            \
-   }                                                                          \
-   else if(var->paran[ig15]<paran) {                                          \
-	address = G__struct_offset + var->p[ig15]+p_inc*G__LONGALLOC;         \
-        if(G__PARANORMAL==var->reftype[ig15])                                 \
-	  G__letint(&result,PTYPE                                             \
-	      ,(long)((CASTTYPE*)(*(long *)(address))+pp_inc));               \
-        else {                                                                \
-	  G__letint(&result,PTYPE                                             \
-	      ,(long)((long*)(*(long *)(address))+pp_inc));                   \
-          result.obj.reftype.reftype=G__PARAP2P;                              \
-	}                                                                     \
-   }                                                                          \
-   else {                                                                     \
-        G__letint(&result,PTYPE                                               \
-	  ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));               \
-   }                                                                          \
-   break;                                                                     \
-default : /* 'p' */                                                           \
-   if(var->paran[ig15]==paran) {                                              \
-        /* type *p[];  (p[x]); */                                             \
-        result.ref=(long)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC);  \
-	G__letint(&result,PTYPE                                               \
-	 ,*(long *)(result.ref));                                             \
-   }                                                                          \
-   else if(var->paran[ig15]<paran) {                                          \
-        /* type *p[];  p[x][y]; */                                            \
-	address = G__struct_offset + var->p[ig15]+p_inc*G__LONGALLOC;         \
-        if(G__PARANORMAL==var->reftype[ig15]) {                               \
-	  result.ref=(long)((CASTTYPE *)(*(long *)(address))+pp_inc);         \
-	  CONVFUNC(&result,TYPE                                               \
-	      ,(CONVTYPE)(*((CASTTYPE *)(result.ref))));                      \
-	}                                                                     \
-        else if(var->paran[ig15]==paran-1) {                                  \
-          result.ref=(long)((long*)(*(long *)(address))+pp_inc);              \
-	  G__letint(&result,PTYPE                                             \
-	      ,(long)((CASTTYPE*)(*((long*)(result.ref)))));                  \
-	}                                                                     \
-        else  {                                                               \
-          result.ref=(long)((long*)(*(long *)(address))+para[0].obj.i);       \
-       result.ref=(long)((CASTTYPE*)(*((long*)(result.ref)))+para[1].obj.i);  \
-	  CONVFUNC(&result,TYPE,*((CASTTYPE*)(result.ref)));                  \
-	}                                                                     \
-   }                                                                          \
-   else {                                                                     \
-        /* type *p[];  p; */                                                  \
-        result.ref = (long)(&var->p[ig15]);                                   \
-        G__letint(&result,PTYPE                                               \
-	  ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));               \
-   }                                                                          \
-   break;                                                                     \
-}                                                                             
-
-
-#endif
 
 
 /**************************************************************************
@@ -624,7 +502,6 @@ default : /* 'p' */                                                           \
 *  get variable 
 **************************************************************************/
 
-#ifndef G__OLDIMPLEMENTATION1291
 
 #define G__GET_STRUCTPVAR1(SIZE,CONVFUNC,TYPE,PTYPE)                          \
 switch(G__var_type) {                                                         \
@@ -742,91 +619,6 @@ default : /* 'p' */                                                           \
    break;                                                                     \
 }                                                                             
 
-#else
-
-#define G__GET_STRUCTPVAR(SIZE,CONVFUNC,TYPE,PTYPE)                           \
-switch(G__var_type) {                                                         \
-case 'v': /* *var; get value */                                               \
-  switch(var->reftype[ig15]) {                                                \
-  case G__PARANORMAL:                                                         \
-   result.ref=(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));  \
-   if(result.ref)                                                             \
-     CONVFUNC(&result,TYPE,result.ref);                                       \
-   break;                                                                     \
-  case G__PARAP2P:                                                            \
-    if(var->paran[ig15]<paran) {                                              \
-      address = G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC;             \
-      result.ref=(*(((long*)(*(long *)address))+pp_inc));                     \
-      if(result.ref)                                                          \
-        CONVFUNC(&result,TYPE,result.ref);                                    \
-    }                                                                         \
-    else {                                                                    \
-      result.ref=                                                             \
-               (*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)); \
-      G__letint(&result,PTYPE,                                                \
-      *(long *)(*(long *)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC)));\
-    }                                                                         \
-   break;                                                                     \
-  }                                                                           \
-  break;                                                                      \
-case 'P':                                                                     \
-   if(var->paran[ig15]==paran) {                                              \
-	G__letint(&result,PTYPE                                               \
-	   ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));              \
-   }                                                                          \
-   else if(var->paran[ig15]<paran) {                                          \
-	address = G__struct_offset + var->p[ig15]+p_inc*G__LONGALLOC;         \
-        if(G__PARANORMAL==var->reftype[ig15])                                 \
-	  G__letint(&result,PTYPE                                             \
-		      ,(*(long *)(address))+pp_inc*SIZE);                     \
-        else {                                                                \
-	  G__letint(&result,PTYPE                                             \
-	      ,(long)((long*)(*(long *)(address))+pp_inc));                   \
-          result.obj.reftype.reftype=G__PARAP2P;                              \
-	}                                                                     \
-   }                                                                          \
-   else {                                                                     \
-        G__letint(&result,PTYPE                                               \
-	  ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));               \
-   }                                                                          \
-   break;                                                                     \
-default : /* 'p' */                                                           \
-   if(var->paran[ig15]==paran) {                                              \
-        /* type *p[];  (p[x]); */                                             \
-        result.ref=(long)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC);  \
-	G__letint(&result,PTYPE                                               \
-	 ,*(long *)(result.ref));                                             \
-   }                                                                          \
-   else if(var->paran[ig15]<paran) {                                          \
-        /* type *p[];  p[x][y]; */                                            \
-	address = G__struct_offset + var->p[ig15]+p_inc*G__LONGALLOC;         \
-        if(G__PARANORMAL==var->reftype[ig15]) {                               \
-	  result.ref=((*(long *)(address))+pp_inc*SIZE);                      \
-	  CONVFUNC(&result,TYPE,result.ref);                                  \
-	}                                                                     \
-        else if(var->paran[ig15]==paran-1) {                                  \
-          result.ref=(long)((long*)(*(long *)(address))+pp_inc);              \
-	  G__letint(&result,PTYPE                                             \
-	      ,((*((long*)(result.ref)))));                                   \
-	}                                                                     \
-        else  {                                                               \
-          result.ref=(long)((long*)(*(long *)(address))+para[0].obj.i);       \
-          result.ref=(long)((*((long*)(result.ref)))+para[1].obj.i*SIZE);     \
-	  CONVFUNC(&result,TYPE,result.ref);                                  \
-	  paran -= 2;                                                         \
-	}                                                                     \
-   }                                                                          \
-   else {                                                                     \
-        /* type *p[];  p; */                                                  \
-        result.ref = (long)(&var->p[ig15]);                                   \
-        G__letint(&result,PTYPE                                               \
-	  ,(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC));               \
-   }                                                                          \
-   break;                                                                     \
-}                                                                             
-
-
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1135
 /******************************************************************
@@ -2141,19 +1933,9 @@ int ig15;
   }
 #endif
 
-#if 1
   G__redecl(var,ig15);
 #ifndef G__OLDIMPLEMENTATION1720
   if(store_no_exec_compile) G__abortbytecode();
-#endif
-#else
-#ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REDECL\n",G__asm_cp);
-#endif
-  G__asm_inst[G__asm_cp] = G__REDECL;
-  G__asm_inst[G__asm_cp+1]=ig15;
-  G__asm_inst[G__asm_cp+2]=(long)var;
-  G__inc_cp_asm(3,0);
 #endif
 
   G__store_struct_offset=store_struct_offset;
@@ -3269,14 +3051,12 @@ struct G__var_array *varglobal,*varlocal;
 #endif
       case 'U': /* struct,union */
 	if(ig25<paran
-#ifndef G__OLDIMPLEMENTATION1291
 	   && ((
 #ifdef G__OLDIMPLEMENTATION1430
 		1==paran-ig25 &&
 #endif
 		G__PARANORMAL==var->reftype[ig15]) ||
 	       paran-ig25==var->reftype[ig15])
-#endif
 	   ) {
 	  result.tagnum=var->p_tagtable[ig15];
 	  result.typenum=var->p_typetable[ig15];
@@ -5916,7 +5696,6 @@ int pp_inc;
   
   switch(G__var_type) {
   case 'v': 
-#ifndef G__OLDIMPLEMENTATION634
     switch(var->reftype[ig15]) {
     case G__PARANORMAL: 
       if(G__no_exec_compile) 
@@ -5948,13 +5727,6 @@ int pp_inc;
       }
       break;
     }
-#else
-    if(G__no_exec_compile) 
-      G__classassign(G__PVOID ,var->p_tagtable[ig15] ,result);
-    else 
-      G__classassign((*(long*)(G__struct_offset+var->p[ig15]+p_inc*G__LONGALLOC))
-		     ,var->p_tagtable[ig15] ,result);
-#endif
     break;
   case 'p': /* var = expr; assign to pointer variable */
     if(var->paran[ig15]<=paran) {
@@ -5974,7 +5746,6 @@ int pp_inc;
 	  if(0==G__no_exec_compile)
 	    *(((long*)(*(long *)address))+pp_inc) = G__int(result);
 	}
-#ifndef G__OLDIMPLEMENTATION1291
 	else if(var->paran[ig15]==paran-2) {
 	  if(0==G__no_exec_compile) {
 	    address=(long)((long*)(*(long *)(address))+para[0].obj.i);
@@ -6006,7 +5777,6 @@ int pp_inc;
 	    }
 	  }
 	}
-#endif
 	else {
 	  if(0==G__no_exec_compile)
 	    G__classassign(

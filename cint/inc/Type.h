@@ -64,6 +64,8 @@ G__TypeInfo : public G__ClassInfo  {
 
   int Typenum() { return(typenum); }
   int Type() { return(type); }
+  int Reftype() { return(reftype); }
+  int Isconst() { return(isconst); }
  protected:
   long type;
   long typenum;

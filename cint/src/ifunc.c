@@ -2061,13 +2061,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	{
 	  int i,j;
 	  for (i = 0; i < G__MAXIFUNC; i++) {   
-#ifndef G__OLDIMPLEMENTATION834
-	    for (j = 0; j < G__MAXFUNCPARA2; j++) 
-	      G__p_ifunc->next->para_p_tagtable[i][j] = 0;
-#else
 	    for (j = 0; j < G__MAXFUNCPARA; j++)
 	      G__p_ifunc->next->para_p_tagtable[i][j] = 0;
-#endif
 	  }
 	}
 #endif
@@ -2873,9 +2868,31 @@ int func_now;
       ifunc->para_def[func_now][iin] = (char*)NULL;
     }
     if(reftype) {
+#ifndef G__OLDIMPLEMENTATION1967
+      if(isupper(type)&&pointlevel) pointlevel++;
+      if(-1!=typenum && G__newtype.reftype[typenum]>=G__PARAP2P) {
+        pointlevel+=G__newtype.reftype[typenum]-G__PARAP2P+2;
+        type=tolower(type);
+      }
+      switch(pointlevel) {
+      case 0:
+	ifunc->para_type[func_now][iin] = type ;
+	ifunc->para_reftype[func_now][iin] = G__PARAREFERENCE ;
+	break;
+      case 1:
+	ifunc->para_type[func_now][iin] = toupper(type) ;
+	ifunc->para_reftype[func_now][iin] = G__PARAREFERENCE ;
+	break;
+      default:
+	ifunc->para_type[func_now][iin] = toupper(type) ;
+	ifunc->para_reftype[func_now][iin] = pointlevel-2 + G__PARAREFP2P ;
+	break;
+      }
+#else
       if(pointlevel) type = toupper(type);
       ifunc->para_type[func_now][iin] = type ;
       ifunc->para_reftype[func_now][iin] = G__PARAREFERENCE ;
+#endif
     }
     else {
       if(isupper(type)&&pointlevel) pointlevel++;
@@ -3825,7 +3842,6 @@ int formal_isconst;
   return(match);
 }
 
-#ifndef G__OLDIMPLEMENTATION1290
 /***********************************************************************
 * macro 
 **********************************************************************/
@@ -3936,9 +3952,8 @@ int basetagnum,derivedtagnum;
 **********************************************************************/
 #define G__promotiongrade(f,p) G__PROMOTIONMATCH*(G__igrd(f)-G__igrd(p))
 
-static int G__igrd(formal_type,param_type)
+static int G__igrd(formal_type)
 int formal_type;
-int param_type;
 {
   switch(formal_type) {
   case 'g': 
@@ -5877,7 +5892,7 @@ int doconvert;
 #endif
 
   if(!match) {
-#if 0
+#if G__NEVER
     G__genericerror("Error: No appropriate match in the scope");
     *pifn = -1;
 #endif
@@ -5941,7 +5956,6 @@ int doconvert;
   G__funclist_delete(funclist);
   return(p_ifunc);
 }
-#endif
 
 
 /***********************************************************************
@@ -6030,13 +6044,7 @@ int memfunc_flag;
   int local_tagnum=0;
 #endif
 #ifndef G__OLDIMPLEMENTATION1076
-#ifdef G__OLDIMPLEMENTATION1290
-  int store_funcmatch=funcmatch;
-#endif
   struct G__ifunc_table *store_p_ifunc=p_ifunc;
-#ifdef G__OLDIMPLEMENTATION1290
-  int badflag=0;
-#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1312
   int specialflag=0;
@@ -6107,7 +6115,6 @@ int memfunc_flag;
 #endif
 
   /* FROM HERE */
-#ifndef G__OLDIMPLEMENTATION1290
 
   p_ifunc = G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag
 			      ,access,&ifn,0
@@ -6121,234 +6128,6 @@ int memfunc_flag;
     return(1);
   }
 
-#else /* 1290 */
-
-  /*******************************************************
-   * while interpreted function list exists
-   *******************************************************/
-  while(p_ifunc) {
-    while((ipara==0)&&(ifn<p_ifunc->allifunc)) {
-      /* if hash (sum of funcname char) matchs */
-      if(hash==p_ifunc->hash[ifn] &&
-	 strcmp(funcname,p_ifunc->funcname[ifn])==0 
-#ifdef G__OLDIMPLEMENTATION1076
-	 && (p_ifunc->access[ifn]&access)
-#endif
-#ifndef G__OLDIMPLEMENTATION1250
-	 && (G__TRYIMPLICITCONSTRUCTOR!=memfunc_flag ||
-	     0==p_ifunc->isexplicit[ifn])
-#endif
-	 ) {
-#ifdef G__OVERLOADFUNC
-	/**************************************************
-	 * for overloading of function and operator
-	 **************************************************/
-	/**************************************************
-	 * check if parameter type matchs
-	 **************************************************/
-	/* set(reset) match flag ipara temporarily */
-	itemp=0;
-	ipara=1;
-	
-	if(p_ifunc->ansi[ifn]==0) break; /* K&R C style header */
-#ifndef G__OLDIMPLEMENTATION832
-	if(p_ifunc->ansi[ifn]==2) break; /* variable number of args */
-#endif
-	/* main() no overloading */
-	if(G__HASH_MAIN==hash && strcmp(funcname,"main")==0) break; 
-	
-	/* if more actual parameter than formal parameter, unmatch */
-#ifndef G__OLDIMPLEMENTATION1137
-	if(p_ifunc->para_nu[ifn]<libp->paran ||
-	   (p_ifunc->para_nu[ifn]>libp->paran&&
-	    !p_ifunc->para_default[ifn][libp->paran])
-#ifndef G__OLDIMPLEMENTATION1260
-	   || (G__isconst && 0==p_ifunc->isconst[ifn])
-	   || (0==G__isconst && p_ifunc->isconst[ifn] && G__EXACT==funcmatch)
-#endif
-	   ) {
-#else
-	if(p_ifunc->para_nu[ifn]<libp->paran) {
-#endif
-	  ipara=0;
-	  itemp=p_ifunc->para_nu[ifn]; /* end of this parameter */
-	  ++ifn; /* next function */
-	}
-	else {
-	  /* scan each parameter */
-	  while(itemp<p_ifunc->para_nu[ifn]) {
-	    if((G__value*)NULL==p_ifunc->para_default[ifn][itemp] && 
-	       itemp>libp->paran) {
-	      ipara = 0;
-	    }
-#ifndef G__FONS41
-	    else if (p_ifunc->para_default[ifn][itemp] && itemp>=libp->paran) {
-	      ipara = 2; /* I'm not sure what this is, Fons. */
-	    }
-#endif
-	    else {   
-	      ipara=G__param_match(p_ifunc->para_type[ifn][itemp]
-				   ,p_ifunc->para_p_tagtable[ifn][itemp]
-				   ,p_ifunc->para_default[ifn][itemp]
-				   ,libp->para[itemp].type
-				   ,libp->para[itemp].tagnum
-				   ,&(libp->para[itemp])
-				   ,libp->parameter[itemp]
-				   ,funcmatch
-				   ,p_ifunc->para_nu[ifn]-itemp-1
-#ifndef G__OLDIMPLEMENTATION1120
-				   ,p_ifunc->para_reftype[ifn][itemp]
-#endif
-#ifndef G__OLDIMPLEMENTATION1208
-				   ,p_ifunc->para_isconst[ifn][itemp]
-#endif
-#ifndef G__OLDIMPLEMENTATION1250
-				   /* ,p_ifunc->isexplicit[ifn] */
-#endif
-				   );
-	    }
-	    switch(ipara) {
-	    case 2: /* default parameter */
-#ifdef G__ASM_DBG
-	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," default%d %c tagnum%d %d : %c tagnum%d %d\n"
-			,itemp
-			,p_ifunc->para_type[ifn][itemp]
-			,p_ifunc->para_p_tagtable[ifn][itemp]
-			,p_ifunc->para_default[ifn][itemp]
-			,libp->para[itemp].type
-			,libp->para[itemp].tagnum
-			,funcmatch);
-	      }
-#endif
-	      itemp=p_ifunc->para_nu[ifn]; /* end of this parameter */
-	      break;
-	    case 1: /* match this one, next parameter */
-#ifdef G__ASM_DBG
-	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," match%d %c tagnum%d %d : %c tagnum%d %d\n"
-			,itemp
-			,p_ifunc->para_type[ifn][itemp]
-			,p_ifunc->para_p_tagtable[ifn][itemp]
-			,p_ifunc->para_default[ifn][itemp]
-			,libp->para[itemp].type
-			,libp->para[itemp].tagnum
-			,funcmatch);
-	      }
-#endif
-#ifndef G__OLDIMPLEMENTATION1003
-	      if(G__EXACT!=funcmatch)
-		G__warn_refpromotion(p_ifunc,ifn,itemp,libp);
-#endif
-	      ++itemp; /* next function parameter */
-	      break;
-	    case 0: /* unmatch, next function */
-#ifdef G__ASM_DBG
-	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," unmatch%d %c tagnum%d %d : %c tagnum%d %d\n"
-			,itemp
-			,p_ifunc->para_type[ifn][itemp]
-			,p_ifunc->para_p_tagtable[ifn][itemp]
-			,p_ifunc->para_default[ifn][itemp]
-			,libp->para[itemp].type
-			,libp->para[itemp].tagnum
-			,funcmatch);
-	      }
-#endif
-	      itemp=p_ifunc->para_nu[ifn]; 
-	      /* exit from while loop */
-	      break;
-	    }
-	    
-	  } /* end of while(itemp<p_ifunc->para_nu[ifn]) */
-	  if(ipara==0) { /* parameter doesn't match */
-	    ++ifn; /* next function */
-	  }
-	}
-#else
-	/**************************************************
-	 * doesn't check parameter type 
-	 **************************************************/
-	ipara=1;
-#endif
-      }
-      else {  /* funcname doesn't match */
-	++ifn;
-      }
-    }  /* end of while((ipara==0))&&(ifn<p_ifunc->allifunc)) */
-    /******************************************************************
-     * next page of interpreted function list
-     *******************************************************************/
-    if(ifn>=p_ifunc->allifunc) {
-      p_ifunc=p_ifunc->next;
-      ifn=0;
-    }
-    else {
-      break; /* get out from while(p_ifunc) loop */
-    }
-  } /* end of while(p_ifunc) */
-
-
-#ifndef G__OLDIMPLEMENTATION1076
-  /**********************************************************************
-   * another iteration for overloading match
-   **********************************************************************/
-  if(NULL==p_ifunc && store_funcmatch==G__EXACT &&-1!=store_p_ifunc->tagnum) {
-#ifndef G__OLDIMPLEMENTATION1160
-    if(G__EXACT==funcmatch) {
-      int storeX_exec_memberfunc=G__exec_memberfunc;
-      int storeX_memberfunc_tagnum=G__memberfunc_tagnum;
-      G__exec_memberfunc=1;
-      G__memberfunc_tagnum=store_p_ifunc->tagnum;
-      if(G__templatefunc(result7,funcname,libp,hash,funcmatch)==1){
-        G__exec_memberfunc=storeX_exec_memberfunc;
-        G__memberfunc_tagnum=storeX_memberfunc_tagnum;
-        return(1);
-      }
-      G__exec_memberfunc=storeX_exec_memberfunc;
-      G__memberfunc_tagnum=storeX_memberfunc_tagnum;
-    }
-#endif
-    if(funcmatch<G__USERCONV) {
-      ipara=0;
-      ifn = 0;
-      p_ifunc=store_p_ifunc;
-      ++funcmatch;
-      goto next_base; /* I know this is a bad manner */
-    }
-    funcmatch=store_funcmatch;
-  }
-
-  /**********************************************************************
-   * error detection for private or protected member func access
-   **********************************************************************/
-  if(p_ifunc&&0==(p_ifunc->access[ifn]&access)&&!G__isfriend(G__tagnum)) {
-    ++badflag;
-    if(funcmatch<G__USERCONV) {
-      ipara=0;
-      ifn = 0;
-      p_ifunc=store_p_ifunc;
-      ++funcmatch;
-      goto next_base; /* I know this is a bad manner */
-    }
-    p_ifunc=(struct G__ifunc_table*)NULL;
-  }
-  if(NULL==p_ifunc && badflag
-#ifndef G__OLDIMPLEMENTATION1143
-     && G__NOLINK==G__globalcomp
-#endif
-     ) {
-    if(-1==store_p_ifunc->tagnum) 
-      G__fprinterr(G__serr,"Error: %s is private or protected",funcname);
-    else
-      G__fprinterr(G__serr,"Error: %s::%s is private or protected"
-	      ,G__fulltagname(store_p_ifunc->tagnum,1),funcname);
-    G__genericerror((char*)NULL);
-    return(1);
-  }
-#endif
-  
-#endif /* 1290 */
 
   /* TO HERE */
 
@@ -6521,12 +6300,6 @@ asm_ifunc_start:   /* loop compilation execution label */
 #else
   if((FILE*)NULL==(FILE*)p_ifunc->pentry[ifn]->p 
      && 0==p_ifunc->ispurevirtual[ifn]) {
-#endif
-#ifdef G__OLDIMPLEMENTATION1293
-    if(G__EXACT==funcmatch) {
-      return(0);
-    }
-    else 
 #endif
     {
 #ifndef G__OLDIMPLEMENTATION851
@@ -8230,6 +8003,9 @@ int *piexist;
 #ifndef G__OLDIMPLEMENTATION1120
 	   || ifunc_now->para_reftype[allifunc][j]!=ifunc->para_reftype[i][j]
 #endif
+#ifndef G__OLDIMPLEMENTATION1977
+	   || ifunc_now->para_isconst[allifunc][j]!=ifunc->para_isconst[i][j]
+#endif
 	   ) {
 	  break; /* unmatch */
 	}
@@ -8556,9 +8332,6 @@ struct G__param *libp;
   
   libp->paran=0;
   libp->para[0]=G__null;
-#ifndef G__OLDIMPLEMENTATION834
-  libp->next = (struct G__param*)NULL;
-#endif
 
   do {
     c=G__getstream_template(argtype,&p,typenam,endmark);

@@ -467,6 +467,18 @@ char *item;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1963
+/******************************************************************
+* G__SetCINTSYSDIR()
+*
+******************************************************************/
+void G__SetCINTSYSDIR(cintsysdir)
+char *cintsysdir;
+{
+  strcpy(G__cintsysdir,cintsysdir);
+}
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1731
 /******************************************************************
  * G__SetUseCINTSYSDIR()

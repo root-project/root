@@ -7,7 +7,7 @@
  * Description:
  *  Interactive interface
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -269,6 +269,65 @@ void G__UnlockCriticalSection() {
   --lockcount;
   (*G__LeaveCriticalSection)();
   return;
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1968
+/************************************************************************
+* G__autoloading()  com="{  TUnknown x;" ,  "new TUnknown
+************************************************************************/
+int G__autoloading(com)
+char *com;
+{
+  int i=0,j=0;
+  char classname[G__ONELINE];
+  while(com[i] && !isalpha(com[i])) ++i;
+  while(com[i] && (isalnum(com[i]) || '_'==com[i])) classname[j++]=com[i++];
+  classname[j]=0;
+  if(0==strcmp(classname,"new")){
+    j=0;
+    while(com[i] && !isalpha(com[i])) ++i;
+    while(com[i] && (isalnum(com[i]) || '_'==com[i])) classname[j++]=com[i++];
+    classname[j]=0;
+  }
+  if(classname[0] && -1==G__defined_tagname(classname,2)) {
+    char *dllpost = G__getmakeinfo1("DLLPOST");
+    char fname[G__MAXFILENAME];
+    char prompt[G__ONELINE];
+    FILE *fp;
+    sprintf(fname,"%s%s",classname,dllpost);
+#if 1
+    fp=fopen(fname,"r");
+    if(!fp) return 0;
+    else fclose(fp);
+#endif
+    sprintf(prompt,"Will you try loading %s(y/n)? ",fname);
+    strcpy(prompt,G__input(prompt));
+    if(tolower(prompt[0])!='y') return(0);
+    G__security_recover(G__sout); /* QUESTIONABLE */
+    switch(G__loadfile(fname)) {
+    case G__LOADFILE_SUCCESS:
+      fprintf(G__sout,"%s loaded\n",fname);
+      return(1);
+    default:
+      fprintf(G__sout,"Error: failed to load %s\n",fname);
+      return(0);
+    }
+  }
+  return(0);
+}
+
+/************************************************************************
+************************************************************************/
+int (*G__pautoloading) G__P((char*)) = G__autoloading;
+
+/************************************************************************
+* G__set_autoloading
+************************************************************************/
+void G__set_autoloading(p2f)
+int (*p2f) G__P((char*));
+{
+  G__pautoloading = p2f;
 }
 #endif
 
@@ -1344,6 +1403,13 @@ int G__update_stdio()
   return(0);
 }
 
+#define G__OLDIMPLEMENTATION1983
+#ifndef G__OLDIMPLEMENTATION1983
+#ifdef G__WIN32 /*vo*/
+static HANDLE handleout;
+#endif
+#endif
+
 /******************************************************************
 * G__redirectoutput
 ******************************************************************/
@@ -1470,6 +1536,7 @@ char *pipefile;
 	 *                ^0          */
 	*redirect='\0';
 
+
 	/* open redirect file */
 #ifdef G__REDIRECTIO
 	switch(mode) {
@@ -1479,10 +1546,14 @@ char *pipefile;
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 #endif
 	  G__sout = freopen(filename,openmode,G__sout);
-
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
 #endif
+#ifndef G__OLDIMPLEMENTATION1983
+#ifdef G__WIN32 /*vo*/
+	  handleout = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+#endif /* 1983 */
 #ifndef G__OLDIMPLEMENTATION713
 	  G__redirect_on();
 #endif
@@ -1508,6 +1579,11 @@ char *pipefile;
 #endif
 	  G__sout = freopen(filename,openmode,G__sout);
 	  G__serr = freopen(filename,"a",G__serr);
+#ifndef G__OLDIMPLEMENTATION1983
+#ifdef G__WIN32 /*vo*/
+	  handleout = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+#endif /* 1983 */
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
 	  G__redirectcerr(filename);
@@ -1611,6 +1687,11 @@ char *pipefile;
     *sout = (FILE*)NULL;
 #ifndef G__OLDIMPLEMENTATION1723
     G__unredirectcout();
+#endif
+#ifndef G__OLDIMPLEMENTATION1983
+#ifdef G__WIN32 /*vo*/
+    SetStdHandle(STD_OUTPUT_HANDLE, handleout);
+#endif
 #endif
   }
   if(*serr) {
@@ -2326,7 +2407,13 @@ G__value *rslt;
 	int store_othermain=G__othermain;
 	G__scratch_all(); /* To make memory leak check work */
 	if(G__commandline[0]) G__init_cint(G__commandline);
-	else                  G__init_cint("cint");
+	else {
+#ifndef G__OLDIMPLEMENTATION1961
+	  G__init_cint(G__nam);
+#else
+	  G__init_cint("cint");
+#endif
+	}
 	G__othermain=store_othermain;
 #ifndef G__OLDIMPLEMENTATION1094
 	G__init_undo();
@@ -3913,6 +4000,11 @@ G__value *rslt;
 #ifndef G__OLDIMPLEMENTATION1794
           G__command_eval=1 ;
           buf=G__exec_tempfile_fp(ftemp.fp);
+#ifndef G__OLDIMPLEMENTATION1968
+	  if(G__security_error && G__pautoloading && (*G__pautoloading)(com)) {
+	    buf=G__exec_tempfile_fp(ftemp.fp);
+	  }
+#endif
           if(rslt) *rslt = buf;
 	  if(ftemp.fp) fclose(ftemp.fp);
 	  ftemp.fp = (FILE*)NULL;
@@ -3922,6 +4014,11 @@ G__value *rslt;
           G__command_eval=1 ;
 #endif
           buf=G__exec_tempfile(sname);
+#ifndef G__OLDIMPLEMENTATION1968
+	  if(G__security_error && G__autoloading(com)) {
+	    buf=G__exec_tempfile(sname);
+	  }
+#endif
           if(rslt) *rslt = buf;
           remove(sname);
 #endif /* 1794 */
@@ -4010,6 +4107,9 @@ G__value *rslt;
 #ifdef G__ASM
 	G__STORE_ASMENV;
 #endif
+#ifndef G__OLDIMPLEMENTATION1965
+	G__command_eval=1 ;
+#endif
 	store_var_type = G__var_type;
 	G__var_type='p';
 	
@@ -4060,6 +4160,11 @@ G__value *rslt;
 	    num=atoi(syscom);
 	  }
 	  switch(tolower(evalbase[temp1])) {
+#ifndef G__OLDIMPLEMENTATION1979
+          case 'v':
+	    base = 100;
+	    break;
+#endif
 	  case 'x':
 	  case 'h':
 	    base=16;
@@ -4085,6 +4190,13 @@ G__value *rslt;
 	    if(base==0) {
 	      G__valuemonitor(buf,syscom);
 	    }
+#ifndef G__OLDIMPLEMENTATION1979
+	    else if(base==100) {
+	      sprintf(syscom,"{d=%g i=%ld,reftype=%d} type=%c,tag=%d,type=%d,ref=%lx,isconst=%d"
+		      ,buf.obj.d,buf.obj.i,buf.obj.reftype.reftype
+		      ,buf.type,buf.tagnum,buf.typenum,buf.ref,buf.isconst);
+	    }
+#endif
 	    else {
 	      G__getbase(buf.obj.i ,base ,0,evalresult);
 	      sprintf(syscom,"0%c%s" ,evalbase[temp1] ,evalresult);
@@ -4119,6 +4231,11 @@ G__value *rslt;
 	}
 	else {
 	  buf = G__calc_internal(command);
+#ifndef G__OLDIMPLEMENTATION1968
+	  if(G__security_error && G__autoloading(command)) {
+	    buf = G__calc_internal(command);
+	  }
+#endif
 	  if(rslt) *rslt = buf;
 #ifndef G__OLDIMPLEMENTATION696
 	  if((char*)NULL==strstr(command,"G__stepmode(")) G__step=store_step;
@@ -4154,10 +4271,12 @@ G__value *rslt;
 #endif
 	G__var_type = store_var_type;
 	
+#ifdef G__OLDIMPLEMENTATION1965
 	/*****************************************************
 	 * free temp object buffer
 	 *****************************************************/
 	G__free_tempobject();
+#endif
 
 #ifndef G__OLDIMPLEMENTATION850
 	if(buf.type && 0==G__atevaluate(buf)) {
@@ -4167,6 +4286,12 @@ G__value *rslt;
 	  }
 	}
 #endif
+#ifndef G__OLDIMPLEMENTATION1965
+	G__command_eval=0 ;
+	G__free_tempobject();
+#endif
+
+
 #ifdef G__SECURITY
 	*err |= G__security_recover(G__serr);
 #endif

@@ -1046,8 +1046,18 @@ static int G__G__API_36_3_1(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+static int G__G__API_36_4_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__letint(result7,105,(long)((G__TypeInfo*)(G__getstructoffset()))->Reftype());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_36_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__letint(result7,105,(long)((G__TypeInfo*)(G__getstructoffset()))->Isconst());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 // automatic copy constructor
-static int G__G__API_36_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__G__API_36_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__TypeInfo *p;
    void *xtmp = (void*)G__int(libp->para[0]);
@@ -1061,7 +1071,7 @@ static int G__G__API_36_5_1(G__value *result7,G__CONST char *funcname,struct G__
 
 // automatic destructor
 typedef G__TypeInfo G__TG__TypeInfo;
-static int G__G__API_36_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__API_36_8_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -1746,30 +1756,30 @@ static int G__G__API_45_8_0(G__value *result7,G__CONST char *funcname,struct G__
 
 
 /* Setting up global function */
-static int G__G__API__6_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__API__7_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__SetGlobalcomp((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API__7_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,105,(long)G__ForceBytecodecompilation((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])));
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
 static int G__G__API__8_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__setnull(result7);
-      G__InitGetSpecialObject((G__pMethodSpecialObject)G__int(libp->para[0]));
+      G__letint(result7,105,(long)G__ForceBytecodecompilation((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__G__API__9_18(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
-      G__InitGetSpecialValue((G__pMethodSpecialValue)G__int(libp->para[0]));
+      G__InitGetSpecialObject((G__pMethodSpecialObject)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 static int G__G__API__0_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__setnull(result7);
+      G__InitGetSpecialValue((G__pMethodSpecialValue)G__int(libp->para[0]));
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API__1_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitUpdateClassInfo((G__pMethodUpdateClassInfo)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
@@ -2237,10 +2247,12 @@ static void G__setup_memfuncG__TypeInfo(void) {
    G__memfunc_setup("New",298,G__G__API_36_1_1,89,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Typenum",754,G__G__API_36_2_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Type",418,G__G__API_36_3_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("Reftype",735,G__G__API_36_4_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("Isconst",739,G__G__API_36_5_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__TypeInfo",1075,G__G__API_36_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,0,1,1,1,0,"u 'G__TypeInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__TypeInfo",1075,G__G__API_36_7_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,0,1,1,1,0,"u 'G__TypeInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__TypeInfo",1201,G__G__API_36_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   G__memfunc_setup("~G__TypeInfo",1201,G__G__API_36_8_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2448,12 +2460,12 @@ static void G__cpp_setup_global2() {
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__BaseClassInfo_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__TYPEINFOX_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__METHODINFO_H=0",1,(char*)NULL);
-   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__METHODARGINFO_H=0",1,(char*)NULL);
-   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__DATAMEMBER_H=0",1,(char*)NULL);
-   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__CALLFUNC_H=0",1,(char*)NULL);
 }
 
 static void G__cpp_setup_global3() {
+   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__METHODARGINFO_H=0",1,(char*)NULL);
+   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__DATAMEMBER_H=0",1,(char*)NULL);
+   G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__CALLFUNC_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__TYPEDEFINFO_H=0",1,(char*)NULL);
    G__memvar_setup((void*)G__PVOID,112,0,0,-1,-1,-1,1,"G__TOKENINFO_H=0",1,(char*)NULL);
 
@@ -2475,18 +2487,18 @@ static void G__cpp_setup_func0() {
 }
 
 static void G__cpp_setup_func1() {
-   G__memfunc_setup("G__SetGlobalcomp",1585,G__G__API__6_18,105,-1,-1,0,3,1,1,0,
+   G__memfunc_setup("G__SetGlobalcomp",1585,G__G__API__7_18,105,-1,-1,0,3,1,1,0,
 "C - - 0 - funcname C - - 0 - param "
 "i - - 0 - globalcomp",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__ForceBytecodecompilation",2754,G__G__API__7_18,105,-1,-1,0,2,1,1,0,
+   G__memfunc_setup("G__ForceBytecodecompilation",2754,G__G__API__8_18,105,-1,-1,0,2,1,1,0,
 "C - - 0 - funcname C - - 0 - param",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialObject",2257,G__G__API__8_18,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialObject",2257,G__G__API__9_18,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialValue",2167,G__G__API__9_18,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialValue",2167,G__G__API__0_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitUpdateClassInfo",2174,G__G__API__0_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitUpdateClassInfo",2174,G__G__API__1_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
 
    G__resetifuncposition();

@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1954,8 +1954,10 @@ static void G__write_windef_header()
   else
     fprintf(fp,"NAME              \"%s\" WINDOWAPI\n",G__PROJNAME);
   fprintf(fp,"\n");
+#if defined(G__OLDIMPLEMENTATION1971) || !defined(G__VISUAL)
   fprintf(fp,"DESCRIPTION       '%s'\n",G__PROJNAME);
   fprintf(fp,"\n");
+#endif
 #if !defined(G__VISUAL) && !defined(G__CYGWIN)
   fprintf(fp,"EXETYPE           NT\n");
   fprintf(fp,"\n");
@@ -1969,10 +1971,12 @@ static void G__write_windef_header()
 #endif	/* G__VISUAL */
   fprintf(fp,"VERSION           1.0\n");
   fprintf(fp,"\n");
+#if defined(G__OLDIMPLEMENTATION1971) || !defined(G__VISUAL)
   fprintf(fp,"CODE               EXECUTE READ\n");
   fprintf(fp,"\n");
   fprintf(fp,"DATA               READ WRITE\n");
   fprintf(fp,"\n");
+#endif
   fprintf(fp,"HEAPSIZE  1048576,4096\n");
   fprintf(fp,"\n");
 #ifndef G__VISUAL
@@ -3123,7 +3127,7 @@ struct G__ifunc_table *ifunc;
 	  ,G__map_cpp_funcname(tagnum,G__struct.name[tagnum],ifn,ifunc->page));
 #endif /* G__CPPIF_STATIC */
   fprintf(fp," {\n");
-#ifndef G__OLDIMPLEMENTATION713
+#if !defined(G__OLDIMPLEMENTATION713) && !defined(G__BORLAND)
   fprintf(fp,"   %s *p=NULL;\n",G__type2string('u',tagnum,-1,0,0));
 #else
   fprintf(fp,"   %s *p;\n",G__type2string('u',tagnum,-1,0,0));
@@ -3832,13 +3836,25 @@ int isnonpublicnew;
 #ifndef G__SMALLOBJECT
   /* int k,m; */
   int page;
+#define G__OLDIMPLEMENtATION1972
+#ifndef G__OLDIMPLEMENtATION1972
+  char buf1[G__MAXNAME];
+  char buf2[G__MAXNAME];
+  char buf3[G__MAXNAME];
+  char *funcname=buf1;
+  char *temp=buf2;
+  char *dtorname=buf3;
+#else
   char funcname[G__MAXNAME*6];
   char temp[G__MAXNAME*6];
+#endif
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
+#ifdef G__OLDIMPLEMENtATION1972
 #ifndef G__OLDIMPLEMENTATION1423
-  char dtorname[G__ONELINE];
+  char dtorname[G__LONGLINE];
+#endif
 #endif
 
   G__ASSERT( tagnum != -1 );
@@ -3856,6 +3872,16 @@ int isnonpublicnew;
     ifn=0;
     ++page;
   }
+
+#ifndef G__OLDIMPLEMENtATION1972
+  if(strlen(G__struct.name[tagnum])>G__MAXNAME-2) {
+    funcname = (char*)malloc(strlen(G__struct.name[tagnum])+5);
+    dtorname = (char*)malloc(strlen(G__struct.name[tagnum])+5);
+  }
+  if(strlen(G__fulltagname(tagnum,1))>G__MAXNAME-2) {
+    dtorname = (char*)malloc(strlen(G__fulltagname(tagnum,1))+5);
+  }
+#endif
 
   /*********************************************************************
   * default constructor
@@ -4049,6 +4075,7 @@ int isnonpublicnew;
     }
   }
 
+
   /*********************************************************************
   * destructor
   *********************************************************************/
@@ -4225,6 +4252,12 @@ int isnonpublicnew;
       ++page;
     }
   }
+#endif
+
+#ifndef G__OLDIMPLEMENtATION1972
+    if(funcname!=buf1) free((void*)funcname);
+    if(temp!=buf2) free((void*)temp);
+    if(dtorname!=buf3) free((void*)dtorname);
 #endif
 
 #endif
@@ -4993,14 +5026,24 @@ int k;
 	   * identical */
 	}
 	else {
+#if !defined(G__OLDIMPLEMENTATION1976)
+	    fprintf(fp,"libp->para[%d].ref?*(%s)libp->para[%d].ref:*(%s)(&G__Mlong(libp->para[%d]))"
+		    ,k,G__type2string(type,tagnum,typenum,2,isconst) 
+		    ,k,G__type2string(type,tagnum,typenum,2,isconst),k);
+#elif !defined(G__OLDIMPLEMENTATION1973)
+	    fprintf(fp,"libp->para[%d].ref?*(%s)libp->para[%d].ref:*(%s)(&G__Mlong(libp->para[%d]))"
+		    ,k,G__type2string(type,tagnum,typenum,2,isconst&~G__CONSTVAR) 
+		    ,k,G__type2string(type,tagnum,typenum,2,isconst&~G__CONSTVAR),k);
+#else /* 1973 */
 	  fprintf(fp,"libp->para[%d].ref?*(%s**)libp->para[%d].ref:*(%s**)(&G__Mlong(libp->para[%d]))"
 #ifndef G__OLDIMPLEMENTATION1493
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst),k);
-#else
+#else /* 1493 */
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
-#endif
+#endif /* 1493 */
+#endif /* 1973 */
 	  /* above is , in fact, not good. G__type2string returns pointer to
 	   * static buffer. This relies on the fact that the 2 calls are
 	   * identical */
@@ -5015,6 +5058,29 @@ int k;
 #endif
       }
       return;
+
+#ifndef G__OLDIMPLEMENTATION1975
+    case G__PARAREFP2P:
+    case G__PARAREFP2P2P:
+      reftype = G__PLVL(reftype);
+      if(-1!=typenum&&isupper(G__newtype.type[typenum])) {
+	fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
+		  ,k,G__type2string(type,tagnum,typenum,reftype,isconst) 
+		  ,k,G__type2string(type,tagnum,typenum,reftype,isconst) ,k);
+      }
+      else {
+#if !defined(G__OLDIMPLEMENTATION1976)
+	fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
+		,k,G__type2string(type,tagnum,typenum,reftype,isconst) 
+		,k,G__type2string(type,tagnum,typenum,reftype,isconst),k);
+#else
+	fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
+		,k,G__type2string(type,tagnum,typenum,reftype,isconst&~G__CONSTVAR) 
+		,k,G__type2string(type,tagnum,typenum,reftype,isconst&~G__CONSTVAR),k);
+#endif
+      }
+      return;
+#endif /* 1975 */
 
 #ifdef G__OLDIMPLEMENTATION1082
       /* MY MISTAKE, THIS IS NOT THE CASE. TAKE THE ORIGINAL. CINT CAN NOT
@@ -7305,7 +7371,9 @@ char *comment;
   int store_asm_noverflow;
   int store_prerun;
   int store_asm_wholefunction;
+#ifndef G__OLDIMPLEMENTATION1970
   int store_constvar = G__constvar;
+#endif
 #ifndef G__OLDIMPLEMENTATION1284
   int store_def_struct_member = G__def_struct_member;
   int store_tagdefining = G__tagdefining;
@@ -7328,7 +7396,6 @@ char *comment;
   else                      G__static_alloc=1;
   /* G__access = constvar;*/  /* dummy statement to avoid lint error */
 #ifndef G__OLDIMPLEMENTATION645
-
   G__constvar = constvar; /* Not sure why I didn't do this for a long time */
 #endif
   G__access = accessin;
@@ -7355,7 +7422,9 @@ char *comment;
 #ifndef G__OLDIMPLEMENTATION801
   G__reftype=G__PARANORMAL;
 #endif
+#ifndef G__OLDIMPLEMENTATION1970
   G__constvar = store_constvar;
+#endif
   return(0);
 }
 
@@ -7766,7 +7835,10 @@ char *para_name;
   G__p_ifunc->para_type[G__func_now][ifn] = type;
   G__p_ifunc->para_p_tagtable[G__func_now][ifn] = tagnum;
   G__p_ifunc->para_p_typetable[G__func_now][ifn] = typenum;
-#ifndef G__OLDIMPLEMENTATION1191
+#if !defined(G__OLDIMPLEMENTATION1975)
+  G__p_ifunc->para_isconst[G__func_now][ifn] = (reftype_const/10)%10;
+  G__p_ifunc->para_reftype[G__func_now][ifn] = reftype_const-(reftype_const/10%10*10);
+#elif !defined(G__OLDIMPLEMENTATION1191)
   G__p_ifunc->para_reftype[G__func_now][ifn] = reftype_const%10;
   G__p_ifunc->para_isconst[G__func_now][ifn] = reftype_const/10;
 #else

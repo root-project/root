@@ -607,6 +607,10 @@ int type,tagnum,typenum,reftype,isconst;
   /* int p_tagnum[G__MAXBASE]; */
   /* int pt; */
   int i;
+#ifndef G__OLDIMPLEMENTATION1967
+  int ref = G__REF(reftype);
+  reftype = G__PLVL(reftype);
+#endif
 
   string=stringbuf;
   if(isconst&G__CONSTVAR) {
@@ -695,7 +699,13 @@ int type,tagnum,typenum,reftype,isconst;
 	  }
 	}
 	else {
+#ifndef G__OLDIMPLEMENTATION1967
+	  G__type2string(type,tagnum,-1,reftype,isconst);
+	  /* return buffer is static. So, stringbuf is set above */
+	  goto endof_type2string;
+#else
 	  return(G__type2string(type,tagnum,-1,reftype,isconst));
+#endif
 	}
 	break;
 	
@@ -714,7 +724,12 @@ int type,tagnum,typenum,reftype,isconst;
 	} else 
 #endif
 	if(islower(type) || G__newtype.reftype[typenum]>reftype) {
+#ifndef G__OLDIMPLEMENTATION1967
+	  G__type2string(type,tagnum,-1,reftype,isconst);
+	  goto endof_type2string;
+#else
 	  return(G__type2string(type,tagnum,-1,reftype,isconst));
+#endif
 	}
 	else if(G__newtype.reftype[typenum]==reftype) {
 	  reftype = G__PARANORMAL;
@@ -878,6 +893,13 @@ int type,tagnum,typenum,reftype,isconst;
     }
     break;
   }
+
+#ifndef G__OLDIMPLEMENTATION1967
+ endof_type2string:
+  if(ref) {
+    strcat(stringbuf,"&");
+  }
+#endif
 
   return(stringbuf);
 }

@@ -23,6 +23,7 @@ using namespace std;
 
 #pragma link C++ class string;
 #pragma link C++ typedef string::value_type;
+
 #pragma if  (defined (G__VISUAL) && (G__MSC_VER>=1310))
 #pragma link C++ class string::iterator;
 #pragma link C++ class string::const_iterator;
@@ -34,6 +35,7 @@ using namespace std;
 #pragma endif
 #pragma link C++ typedef string::const_iterator;
 #pragma endif
+
 #pragma link C++ typedef string::pointer;
 #pragma link C++ typedef string::const_pointer;
 #pragma link C++ typedef string::reference;

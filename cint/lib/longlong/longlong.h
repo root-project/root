@@ -278,6 +278,7 @@ G__uint64 G__strtoull(const char *nptr, char **endptr, register int base) {
 * long long definition
 * class G__longlong is renamed as 'long long' in cint body
 ************************************************************************/
+class G__ulonglong;
 
 class G__longlong {
  public:
@@ -294,6 +295,7 @@ class G__longlong {
   G__longlong(char l) { dat = (G__int64)l; }
 #endif
   G__longlong(const G__longlong& x) { dat=x.dat; }
+  G__longlong(const G__ulonglong& x) ;
 #if 1
   G__longlong(const char* s) { dat=G__strtoll(s,NULL,10); }
 #endif
@@ -484,6 +486,7 @@ class G__ulonglong {
 #endif
   G__ulonglong(const G__ulonglong& x) { dat=x.dat; }
 #if 1
+  G__ulonglong(const G__longlong& x) { dat=(G__int64)x.dat; }
   G__ulonglong(const char* s) { dat=G__strtoull(s,NULL,10); }
 #endif
   ~G__ulonglong() {  }
@@ -625,6 +628,8 @@ inline int operator==(const G__ulonglong& a,const G__ulonglong& b){
   return(a.dat==b.dat);
 }
 
+inline G__longlong::G__longlong(const G__ulonglong& x) { dat=(G__int64)x.dat; }
+
 #ifdef IOS
 inline ostream& operator<<(ostream& ost,const G__ulonglong& a) {
 #ifndef G__OLDIMPLEMENTATION1686
@@ -674,6 +679,7 @@ inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
 }
+#if 0
 int G__ateval(const char* x) {return(0);}
 int G__ateval(const void* x) {return(0);}
 int G__ateval(double x) {return(0);}
@@ -686,7 +692,7 @@ int G__ateval(unsigned char x) {return(0);}
 int G__ateval(unsigned short x) {return(0);}
 int G__ateval(unsigned int x) {return(0);}
 int G__ateval(unsigned long x) {return(0);}
-
+#endif
 
 #ifdef __MAKECINT__
 #ifndef G__LONGLONGTMP
