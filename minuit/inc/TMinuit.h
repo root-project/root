@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.4 2002/02/13 11:34:40 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.h,v 1.5 2002/11/05 09:54:27 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -188,15 +188,15 @@ public:
  virtual void   DeleteArrays();
  virtual Int_t  Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag);
  virtual Int_t  FixParameter( Int_t parNo );
- TMethodCall   *GetMethodCall() {return fMethodCall;}
- TObject       *GetObjectFit() {return fObjectFit;}
- Int_t          GetMaxIterations() {return fMaxIterations;}
- virtual Int_t  GetNumFixedPars();
- virtual Int_t  GetNumFreePars();
- virtual Int_t  GetNumPars();
- virtual Int_t  GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError );
- virtual TObject *GetPlot() {return fPlot;}
- Int_t          GetStatus() {return fStatus;}
+ TMethodCall   *GetMethodCall() const {return fMethodCall;}
+ TObject       *GetObjectFit() const {return fObjectFit;}
+ Int_t          GetMaxIterations() const {return fMaxIterations;}
+ virtual Int_t  GetNumFixedPars() const;
+ virtual Int_t  GetNumFreePars() const;
+ virtual Int_t  GetNumPars() const;
+ virtual Int_t  GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError ) const;
+ virtual TObject *GetPlot() const {return fPlot;}
+ Int_t          GetStatus() const {return fStatus;}
  virtual Int_t  Migrad();
  virtual void   mnamin();
  virtual void   mnbins(Double_t a1, Double_t a2, Int_t naa, Double_t &bl, Double_t &bh, Int_t &nb, Double_t &bwid);
@@ -238,7 +238,7 @@ public:
  virtual void   mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t *coef2p, Double_t &sdev2p);
  virtual void   mnpint(Double_t &pexti, Int_t i, Double_t &pinti);
  virtual void   mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_t npagwd, Int_t npagln);
- virtual void   mnpout(Int_t iuext, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint);
+ virtual void   mnpout(Int_t iuext, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint) const;
  virtual void   mnprin(Int_t inkode, Double_t fval);
  virtual void   mnpsdf();
  virtual void   mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_t &jl);

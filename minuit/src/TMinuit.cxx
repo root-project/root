@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.22 2002/07/16 17:22:52 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.23 2002/11/05 09:54:27 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -669,7 +669,7 @@ Int_t TMinuit::FixParameter( Int_t parNo)
 }
 
 //______________________________________________________________________________
-Int_t TMinuit::GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError )
+Int_t TMinuit::GetParameter( Int_t parNo, Double_t &currentValue, Double_t &currentError ) const
 {
 // return parameter value and error
      Int_t    err;
@@ -682,7 +682,7 @@ Int_t TMinuit::GetParameter( Int_t parNo, Double_t &currentValue, Double_t &curr
 }
 
 //______________________________________________________________________________
-Int_t TMinuit::GetNumFixedPars()
+Int_t TMinuit::GetNumFixedPars() const
 {
 // returns the number of currently fixed parameters
 
@@ -690,7 +690,7 @@ Int_t TMinuit::GetNumFixedPars()
 }
 
 //______________________________________________________________________________
-Int_t TMinuit::GetNumFreePars()
+Int_t TMinuit::GetNumFreePars() const
 {
 // returns the number of currently free parameters
 
@@ -698,7 +698,7 @@ Int_t TMinuit::GetNumFreePars()
 }
 
 //______________________________________________________________________________
-Int_t TMinuit::GetNumPars()
+Int_t TMinuit::GetNumPars() const
 {
 // returns the total number of parameters that have been defined.
 // (fixed and free)
@@ -6101,7 +6101,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
 } /* mnplot_ */
 
 //______________________________________________________________________________
-void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint)
+void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err, Double_t &xlolim, Double_t &xuplim, Int_t &iuint) const
 {
 //*-*-*-*Provides the user with information concerning the current status*-*-*
 //*-*    ================================================================
