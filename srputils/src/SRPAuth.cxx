@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.7 2003/09/11 23:12:19 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.8 2003/09/12 17:36:35 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -86,12 +86,14 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      sprintf(Options,"%d %d %s",Opt,strlen(usr),usr);
 
 
-     // Now we are ready to send a request to the rootd/proofd daemons to check if we have already
-     // a valid security context and eventually to start a negotiation to get one ...
+     // Now we are ready to send a request to the rootd/proofd 
+     // daemons to check if we have already a valid security context
+     // and eventually to start a negotiation to get one ...
      kind = kROOTD_SRPUSER;
      stat = ReUse;
      int rc = 0;
-     if ((rc = TAuthenticate::AuthExists(auth,(Int_t)TAuthenticate::kSRP,Details,Options,&kind,&stat)) == 1) {
+     if ((rc = TAuthenticate::AuthExists(auth,
+               (Int_t)TAuthenticate::kSRP,Details,Options,&kind,&stat)) == 1) {
        // A valid authentication exists: we are done ...
        if (Options) delete[] Options;
        return 1;
@@ -205,19 +207,13 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        Warning("SRPAuthenticate", "problems recvn RSA key flag: got message %d, flag: %d",kind,gRSAKey);
        gRSAKey = 1;
 
-       // RSA key generation (one per session)
-       if (!TAuthenticate::GetRSAInit()) {
-         auth->GenRSAKeys();
-         TAuthenticate::SetRSAInit();
-       }
+       // Send the key securely
+       TAuthenticate::SendRSAPublicKey(sock);
 
-       if (gDebug > 3) Info("SRPAuthenticate","Sending Local Key:\n '%s'",TAuthenticate::GetRSAPubExport());
-       sock->Send(TAuthenticate::GetRSAPubExport(),kROOTD_RSAKEY);
-
-      // Receive result of the overall process
-      sock->Recv(stat, kind);
-      if (kind == kROOTD_ERR)
-        if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+       // Receive result of the overall process
+       sock->Recv(stat, kind);
+       if (kind == kROOTD_ERR)
+          if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
      }
 
      if (kind == kROOTD_SRPUSER && stat == 1)

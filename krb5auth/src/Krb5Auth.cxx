@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.7 2003/09/25 17:29:23 brun Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.8 2003/09/27 19:06:27 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -50,7 +50,6 @@
 #include "TSocket.h"
 #include "TAuthenticate.h"
 #include "TROOT.h"
-#include "TApplication.h"
 #include "THostAuth.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -117,16 +116,19 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       return -1;
    }
 
-   // To check if interactive session
-   TApplication *lApp = gROOT->GetApplication();
-
    // get our principal from the cache
    krb5_principal client;
    char *ClientPrincipal = StrDup(gSystem->Getenv("DEFAULTUSER"));
    if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
-      if (strstr(lApp->Argv()[1],"proof") == 0) {
+#if 0
+      if (!gROOT->IsProofServ()) {
+#else
+      if (isatty(0) && isatty(1)) {
+#endif
          if (gDebug > 1)
-            Info("Krb5Authenticate","valid credentials not found: try initializing (Principal: %s) ",ClientPrincipal);
+            Info("Krb5Authenticate",
+                 "valid credentials not found: try initializing (Principal: %s) ",
+                      ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
@@ -134,16 +136,28 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             return -1;
 	 }
       } else {
-         Warning("Krb5Authenticate","proofserv: cannot prompt for credentials: returning failure");
+#if 0
+         Warning("Krb5Authenticate",
+                 "proofserv: cannot prompt for credentials, returning failure");
+#else
+         Warning("Krb5Authenticate",
+                 "not a tty: cannot prompt for credentials, returning failure");
+#endif
          gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
    }
 
    if (Krb5CheckCred(context,ccdef,client) != 1) {
-      if (strstr(lApp->Argv()[1],"proof") == 0) {
+#if 0
+      if (!gROOT->IsProofServ()) {
+#else
+      if (isatty(0) && isatty(1)) {
+#endif
          if (gDebug >2)
-            Info("Krb5Authenticate","credentials found have expired: try initializing (Principal: %s) ",ClientPrincipal);
+            Info("Krb5Authenticate",
+                 "credentials found have expired: try initializing (Principal: %s) ",
+                      ClientPrincipal);
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
@@ -151,7 +165,13 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             return -1;
 	 }
       } else {
-         Warning("Krb5Authenticate","proofserv: cannot prompt for credentials: returning failure");
+#if 0
+         Warning("Krb5Authenticate",
+                 "proofserv: cannot prompt for credentials, returning failure");
+#else
+         Warning("Krb5Authenticate",
+                 "not a tty: cannot prompt for credentials, returning failure");
+#endif
          gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
@@ -328,15 +348,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
             Warning("Krb5Auth", "problems recvn RSA key flag: got message %d, flag: %d",type,gRSAKey);
          gRSAKey = 1;
 
-         // RSA key generation (one per session)
-         if (!TAuthenticate::GetRSAInit()) {
-            auth->GenRSAKeys();
-            TAuthenticate::SetRSAInit();
-         }
-
-         // Send key
-         if (gDebug > 3) Info("Krb5Auth","sending Local Key:\n '%s'",TAuthenticate::GetRSAPubExport());
-         sock->Send(TAuthenticate::GetRSAPubExport(),kROOTD_RSAKEY);
+         // Send the key securely
+         TAuthenticate::SendRSAPublicKey(sock);
 
          // returns user + OffSet
          nrec = sock->Recv(retval, type);
@@ -367,7 +380,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       }
 
       // Create and save AuthDetails object
-      TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,OffSet,ReUse,Details,lUser,gRSAKey,Token);
+      TAuthenticate::SaveAuthDetails(auth,(Int_t)TAuthenticate::kKrb5,
+                                     OffSet,ReUse,Details,lUser,gRSAKey,Token);
       det  = Details;
       if (Token) delete[] Token;
       if (lUser) delete[] lUser;
@@ -390,7 +404,8 @@ void Krb5InitCred(char *ClientPrincipal)
    // Checks if there are valid credentials in the cache.
    // If not, tries to initialise them.
 
-   if (gDebug > 2) Info("Krb5InitCred","enter: %s", ClientPrincipal);
+   if (gDebug > 2)
+       Info("Krb5InitCred","enter: %s", ClientPrincipal);
 
    // Get klist output ...
    char cmd[kMAXPATHLEN]= { 0 };
@@ -418,7 +433,9 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal
    Int_t Now = time(0);
    Int_t Valid = -1;
 
-   if (gDebug > 2) Info("Krb5CheckCred","enter: principal '%s@%s'",Principal->data->data,Principal->realm.data);
+   if (gDebug > 2)
+      Info("Krb5CheckCred","enter: principal '%s@%s'",
+            Principal->data->data,Principal->realm.data);
 
    krb5_cc_cursor Cur;
    if ((retval = krb5_cc_start_seq_get(kCont, Cc, &Cur))) {
@@ -430,10 +447,14 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc, krb5_principal Principal
    while (!(retval = krb5_cc_next_cred(kCont, Cc, &Cur, &Creds)) && Valid == -1) {
 
       if (gDebug > 3) {
-         Info("Krb5CheckCred","Creds.server->length: %d",Creds.server->length);
-         Info("Krb5CheckCred","Realms data: '%s' '%s'",Creds.server->realm.data,Principal->realm.data);
-         Info("Krb5CheckCred","Srv data[0]: '%s' ",Creds.server->data[0].data);
-         Info("Krb5CheckCred","Data data: '%s' '%s'",Creds.server->data[1].data,Principal->realm.data);
+         Info("Krb5CheckCred","Creds.server->length: %d",
+               Creds.server->length);
+         Info("Krb5CheckCred","Realms data: '%s' '%s'",
+               Creds.server->realm.data,Principal->realm.data);
+         Info("Krb5CheckCred","Srv data[0]: '%s' ",
+               Creds.server->data[0].data);
+         Info("Krb5CheckCred","Data data: '%s' '%s'",
+               Creds.server->data[1].data,Principal->realm.data);
          Info("Krb5CheckCred","Endtime: %d ",Creds.times.endtime);
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.5 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.cxx,v 1.6 2003/09/23 22:06:44 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -139,7 +139,7 @@ TCondorSlave *TCondor::ClaimVM(const char *vm, const char * /*cmd*/, Int_t &port
    r = gSystem->ClosePipe(pipe);
    PDB(kCondor,1) Info("ClaimVM","command: %s returned %d", activateCmd.Data(), r);
 
-   gSystem->Unlink(jobad.Data());
+   gSystem->Unlink(jobad);
 
    // TODO: get info at the start for all nodes ...
    TCondorSlave *claim = new TCondorSlave;

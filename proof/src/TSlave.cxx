@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.16 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.17 2003/09/12 17:36:35 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TProof.h"
 #include "TSocket.h"
 #include "TSystem.h"
+#include "TEnv.h"
 #include "TROOT.h"
 #include "TAuthenticate.h"
 #include "TMessage.h"
@@ -43,7 +44,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    fWorkDir  = kPROOF_WorkDir;
    fOrdinal  = ord;
    fPerfIdx  = perf;
-   fSecurity = -1;
+   fSecurity = security;
    fProof    = proof;
    fSocket   = 0;
    fInput    = 0;
@@ -70,19 +71,15 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
       fSocket->Recv(ProofdProto, what);
       if (ProofdProto <= 0) {
          Warning("TSlave",
-                 "got negative protocol from proofd (%d) ... may indicate problems",ProofdProto);
+                 "got negative protocol from proofd (%d) ... may indicate problems",
+                  ProofdProto);
          ProofdProto = 7;
          Warning("TSlave", "continuing with ProofdProto: %d)",ProofdProto);
       }
 
       TAuthenticate *auth;
-      if (security == (Int_t) TAuthenticate::kSRP) {
-         auth = new TAuthenticate(fSocket, host, Form("proofs:%d", ProofdProto), "");
-      } else if (security == (Int_t) TAuthenticate::kKrb5) {
-         auth = new TAuthenticate(fSocket, host, Form("proofk:%d", ProofdProto), "");
-      } else {
-         auth = new TAuthenticate(fSocket, host, Form("%s:%d", proof->GetUrlProt(),ProofdProto), "");
-      }
+      auth = new TAuthenticate(fSocket, host,
+                               Form("%s:%d", proof->GetUrlProt(),ProofdProto), "");
 
       // Authenticate to proofd...
       if (!proof->IsMaster()) {
@@ -98,15 +95,15 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                      TAuthenticate::GetAuthMethod(sec), host);
             } else {
                Error("TSlave",
-                     "authentication failed for host %s (method: %d - unknown)", host, sec);
+                     "authentication failed for host %s (method: %d - unknown)",
+                      host, sec);
             }
             delete auth;
             SafeDelete(fSocket);
             return;
          }
-         proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),auth->GetSecurity(),auth->GetDetails());
-         //         proof->fPasswd   = auth->GetPasswd();
-         //         proof->fPwHash   = auth->GetPwHash();
+         proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),
+                                                 auth->GetSecurity(),auth->GetDetails());
          proof->fPasswd   = TAuthenticate::GetGlobalPasswd();
          proof->fPwHash   = TAuthenticate::GetGlobalPwHash();
          proof->fSecurity = auth->GetSecurity();
@@ -144,14 +141,14 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                Error("TSlave", "%s authentication failed for host %s",
                       TAuthenticate::GetAuthMethod(sec), host);
             } else {
-               Error("TSlave", "authentication failed for host %s (method: %d - unknown)", host, sec);
+               Error("TSlave",
+                     "authentication failed for host %s (method: %d - unknown)",
+                      host, sec);
             }
             delete auth;
             SafeDelete(fSocket);
             return;
          }
-         //         fUser = auth->GetRemoteLogin(auth->GetHostAuth(),
-         //                                      auth->GetSecurity(),auth->GetDetails());
 
          proof->fUser     = auth->GetRemoteLogin(auth->GetHostAuth(),
                                                  auth->GetSecurity(),auth->GetDetails());
@@ -173,6 +170,11 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
       // fSecurity is the method successfully tried ...
       fSecurity = auth->GetSecurity();
+
+      char *Sdumm = 0;
+      TString Details = auth->GetDetails();
+      Int_t RemoteOffSet = auth->GetOffSet(auth,fSecurity,Details,&Sdumm);
+      if (Sdumm) delete[] Sdumm;
 
       delete auth;
 
@@ -201,60 +203,48 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          fSocket->Recv(fProtocol, what);
          fProof->fProtocol = fProtocol;   // on master this is the protocol
                                           // of the last slave
-#if 0
-         TMessage mess;
-
-         // if unsecure, send user name and passwd to remote host (use trivial
-         // inverted byte encoding)
-         TString passwd = "";
-         if (fSecurity == TAuthenticate::kClear || fSecurity == TAuthenticate::kRfio) {
-            passwd = fProof->fPasswd;
-            for (int i = 0; i < passwd.Length(); i++) {
-               char inv = ~passwd(i);
-               passwd.Replace(i, 1, inv);
-            }
-         }
-
-         if (!fProof->IsMaster())
-            mess << fProof->fUser << passwd << fProof->fConfFile;
-         else
-            mess << fProof->fUser << passwd << fOrdinal;
-
-         fSocket->Send(mess);
-
-#else
          // send user name to remote host
          // for UsrPwd and SRP methods send also passwd, rsa encoded
          TMessage pubkey;
          TString passwd = "";
          Bool_t  pwhash = kFALSE;
-         if (fSecurity == TAuthenticate::kClear || fSecurity == TAuthenticate::kSRP) {
+         if (!fProof->IsMaster() &&
+            (fSecurity == TAuthenticate::kClear ||
+            (fSecurity == TAuthenticate::kSRP && gEnv->GetValue("Proofd.SendSRPPwd",0)))) {
 
-            // Send public part of RSA key to ProofServ
-            TString PubKey = TAuthenticate::GetRSAPubExport();
-            pubkey << PubKey;
-            fSocket->Send(pubkey);
+            // Send offset to identify remotely the public part of RSA key
+            fSocket->Send(RemoteOffSet,kROOTD_RSAKEY);
 
             passwd = fProof->fPasswd;
             pwhash = fProof->fPwHash;
 
-            // Password should be encoded before sending
-            if (TAuthenticate::SecureSend(fSocket, 1, passwd) == -1) {
-              Warning("TSlave",
+            if (RemoteOffSet > -1) {
+
+               // Password should be encoded before sending
+               if (TAuthenticate::SecureSend(fSocket, 1, passwd) == -1) {
+                   Warning("TSlave",
                       "problems secure-sending pass hash - may result in failures");
-            }
+               }
+
+            } else if (fSecurity == TAuthenticate::kClear) {
+               // Non RSA encoding available: standard passwd inversion
+               for (int i = 0; i < passwd.Length(); i++) {
+                  char inv = ~passwd(i);
+                  passwd.Replace(i, 1, inv);
+               }
+               TMessage mess;
+               mess << passwd;
+               fSocket->Send(mess);
+	    }
 
          } else {
 
-            // Send notification of no key to be sent ...
-            TString PubKey = "None";
-            pubkey << PubKey;
-            fSocket->Send(pubkey);
+            // Send notification of no offset to be sent ...
+            fSocket->Send(-2,kROOTD_RSAKEY);
 
          }
 
          TMessage mess;
-
          if (!fProof->IsMaster())
             mess << fProof->fUser << pwhash << fProof->fConfFile;
          else
@@ -262,7 +252,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
 
          fSocket->Send(mess);
 
-#endif
          // set some socket options
          fSocket->SetOption(kNoDelay, 1);
       }

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: rsalib.c,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsalib.c,v 1.2 2003/08/30 18:24:52 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -35,6 +35,7 @@ static int	enc_siz;		/* encoded blocksize		*/
 					/* clear_siz < enc_siz		*/
 
 int gLog = 0;
+int kMAXT = 100;
 
 rsa_NUMBER rsa_genprim(int len, int prob)
 {
@@ -45,10 +46,12 @@ rsa_NUMBER rsa_genprim(int len, int prob)
 	a_add( &a_one, &a_two, &a_three );
 	a_add( &a_two, &a_two, &a_four );
 
-	init_rnd();
+	/* This is done elsewhere to allow different initialization of
+	   rand seed (GGa - Sep 15, 2003) */
+	/* init_rnd(); */
 
 	do {
-		gen_number( len, &prim );
+	   gen_number( len, &prim );
 	} while ( !prim.n_len );
 
 	a_mult( &prim, &a_two, &prim );
@@ -72,6 +75,7 @@ int rsa_genrsa(rsa_NUMBER p1, rsa_NUMBER p2, rsa_NUMBER *n, rsa_NUMBER *e, rsa_N
 {
 	rsa_NUMBER phi, *max_p;
 	int len;
+	int ii, jj;
 
 	if ( !a_cmp( &p1, &p2) ) return 1;
 
@@ -92,19 +96,29 @@ int rsa_genrsa(rsa_NUMBER p1, rsa_NUMBER p2, rsa_NUMBER *n, rsa_NUMBER *e, rsa_N
 	a_assign( &p1, &phi );
 	a_sub( &p1, &a_one, &p1 );
 
-	init_rnd();
+	/* This is done elsewhere to allow different initialization of
+	   rand seed (GGa - Sep 15, 2003) */
+	/* init_rnd(); */
 
+        ii = 0;
 	do {
-		do {
-			gen_number( len, d );
-		} while (a_cmp( d, max_p) <= 0 || a_cmp( d, &p1) >= 0);
+           ii++;
+           jj = 0;
+	   do {
+              jj++;
+	      gen_number( len, d );
+	   } while (((a_cmp( d, max_p) <= 0 || a_cmp( d, &p1) >= 0)) && jj < kMAXT);
 
-		a_ggt( d, &phi, e );
-	} while ( a_cmp( e, &a_one) );
+	   a_ggt( d, &phi, e );
+	} while ( a_cmp( e, &a_one) && ii < kMAXT);
+
+        if (ii >= kMAXT || jj >= kMAXT)
+	   return  2;
 
 	inv( d, &phi, e );
 
         return 0;
+
 }
 
 

@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.55 2003/08/29 10:41:27 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.56 2003/09/21 21:38:31 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -154,13 +154,14 @@ Rootd.Authentication:   0
 # 4=SSH, 5=UidGid)
 Proofd.Authentication:  0
 Proofd.StaticSlaves:    yes
+Proofd.SendSRPPwd:      0
 
 # Default login name (if not defined is taken from $(HOME))
 # UsrPwd.Login:           qwerty
 # SRP.Login:              qwerty
 # Krb5.Login:             qwerty@LOCAL.DOM.AIN
 # Globus.Login:           cd:~/.globus cf:usercert.pem  kf:userkey.pem  ad:/etc/grid-security/certificates
-# Ssh.Login:              qwerty
+# SSH.Login:              qwerty
 # UidGid.Login:           qwerty
 
 # To be prompted for login information
@@ -168,7 +169,7 @@ Proofd.StaticSlaves:    yes
 # SRP.LoginPrompt:        no
 # Krb5.LoginPrompt:       no
 # Globus.LoginPrompt:     yes
-# Ssh.LoginPrompt:        yes
+# SSH.LoginPrompt:        yes
 # UidGid.LoginPrompt:     no
 
 # To reuse established security context
@@ -176,7 +177,7 @@ UsrPwd.ReUse:         yes
 SRP.ReUse:            yes
 Krb5.ReUse:           no
 Globus.ReUse:         yes
-Ssh.ReUse:            yes
+SSH.ReUse:            yes
 
 # To control password encryption for UsrPwd authentication
 # (secure, but slightly slower)
@@ -191,7 +192,7 @@ Globus.ProxyDuration:    default
 Globus.ProxyKeyBits:     1024
 
 # Path to alternative 'ssh' (to override $PATH if ever needed)
-# Ssh.ExecDir:      /usr/bin
+# SSH.ExecDir:      /usr/bin
 
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.46 2003/09/27 19:06:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.47 2003/09/27 19:50:09 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -915,6 +915,9 @@ void ProofdExec()
 
    // CleanUp authentication table, if needed or required ...
    RpdCheckSession();
+
+   // Init Random machinery ...
+   RpdInitRand();
 
    // Get Host name
    const char *OpenHost = NetRemoteHost();

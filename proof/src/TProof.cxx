@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.55 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.56 2003/09/27 19:08:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -48,13 +48,6 @@
 #include "TEnv.h"
 #include "TPluginManager.h"
 #include "TCondor.h"
-#include "THostAuth.h"
-#include "TApplication.h"
-#ifdef R__GLBS
-#   include <sys/ipc.h>
-#   include <sys/shm.h>
-#endif
-
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
 //______________________________________________________________________________
@@ -204,47 +197,16 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fActiveMonitor = new TMonitor;
    fUniqueMonitor = new TMonitor;
 
-   // Get pointer to list with AuthInfo
-   TList *authInfo = TAuthenticate::GetAuthInfo();
-
-   // Print list of auth info for already loaded info about this host
-   PDB(kGlobal,3) {
-      if (authInfo->GetSize() > 0) {
-         THostAuth *ai;
-         TIter next(authInfo);
-         while ((ai = (THostAuth*) next())) {
-            ai->Print();
-         }
-      } else
-         Info("Init","no HostAuth found ...");
-   }
-
    // If this is a master server, find the config file and start slave
    // servers as specified in the config file
    if (IsMaster()) {
 
-      // set in TProofServ
-      fUser   = TAuthenticate::GetGlobalUser();
-      fPasswd = TAuthenticate::GetGlobalPasswd();
-
-      // Check authentication methods applicability
-      int AuthAvailable[kMAXSEC] = { 0 }, i = 0;
-      char *AuthDet[kMAXSEC] = { 0 };
-      for (i = 0; i < kMAXSEC; i++){
-         if (i == 0 && fUser != "" && fPasswd != "") {
-            AuthAvailable[i] = 1;
-            AuthDet[i] = StrDup(Form("pt:0 ru:0 us:%s", fUser.Data()));
-         } else {
-            AuthAvailable[i] = CheckAuth(i, &AuthDet[i]);
-         }
-         PDB(kGlobal,3)
-            Info("Init","meth:%d avail:%d det:%s", i, AuthAvailable[i], AuthDet[i]);
-      }
-
       char fconf[256];
       sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
+      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
          sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
+         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("Init", "no PROOF config file found");
             return 0;
@@ -259,12 +221,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       if (staticSlaves) {
          FILE *pconf;
          if ((pconf = fopen(fconf, "r"))) {
-
-            // Default security levels and protocols
-            Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kRfio);
-            security = (security >= 0 && security <= kMAXSEC) ? security : -1;
-            if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
-            if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
 
             fConfFile = fconf;
 
@@ -296,14 +252,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                if (nword >= 2 && !strcmp(word[0], "slave")) {
                   int perfidx  = 100;
                   int sport    = fPort;
-                  int nSecs            = 0;
-                  int fSecs[kMAXSEC]   ={0};
-                  char *fDets[kMAXSEC] ={0};
 
                   const char *image = word[1];
                   for (int i = 2; i < nword; i++) {
 
-                     int cSec= -1;
                      if (!strncmp(word[i], "perf=", 5))
                         perfidx = atoi(word[i]+5);
                      if (!strncmp(word[i], "image=", 6))
@@ -311,59 +263,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      if (!strncmp(word[i], "port=", 5))
                         sport = atoi(word[i]+5);
 
-                     if (!strncmp(word[i], "usrpwd", 6)) cSec = (int)TAuthenticate::kClear;
-                     if (!strncmp(word[i], "srp",    3)) cSec = (int)TAuthenticate::kSRP;
-                     if (!strncmp(word[i], "krb5",   4)) cSec = (int)TAuthenticate::kKrb5;
-                     if (!strncmp(word[i], "globus", 6)) cSec = (int)TAuthenticate::kGlobus;
-                     if (!strncmp(word[i], "ssh",    3)) cSec = (int)TAuthenticate::kSSH;
-                     if (!strncmp(word[i], "uidgid", 6)) cSec = (int)TAuthenticate::kRfio;
-
-                     if (cSec != -1) {
-                        if (AuthAvailable[cSec]) {
-                           fSecs[nSecs] = cSec;
-                           fDets[nSecs] = StrDup(AuthDet[cSec]);
-                           nSecs++;
-                           PDB(kGlobal,3)
-                              Info("Init","entry ... %d: sec:%d det:%s",nSecs,fSecs[nSecs-1],fDets[nSecs-1]);
-                        }
-                     }
-                  }
-
-                  // Add also default ... if needed
-                  if (security > -1 && AuthAvailable[security] == 1) {
-                     int newu = 1, i = 0;
-                     for (i = 0; i < nSecs; i++) {
-                        if (fSecs[i] == security) {
-                           newu = 0;
-                           break;
-                        }
-                     }
-                     if (newu == 1) {
-                        fSecs[nSecs] = security;
-                        fDets[nSecs] = StrDup(AuthDet[security]);
-                        nSecs++;
-                        PDB(kGlobal,3)
-                           Info("Init","default ... %d: sec:%d det:%s",nSecs,fSecs[nSecs-1],fDets[nSecs-1]);
-                     }
-                  }
-
-                  // Make sure that UidGid is always in the list
-                  if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
-                     int newu = 1, i = 0;
-                     for (i = 0; i < nSecs; i++) {
-                        if (fSecs[i] == (int)TAuthenticate::kRfio) {
-                           newu = 0;
-                           break;
-                        }
-                     }
-                     if (newu == 1) {
-                        fSecs[nSecs] = (int)TAuthenticate::kRfio;
-                        fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
-                        nSecs++;
-                        PDB(kGlobal,3)
-                           Info("Init","added UidGid ... sec:%d det:%s",
-                                        fSecs[nSecs-1],fDets[nSecs-1]);
-                     }
                   }
 
                   // Get slave FQDN ...
@@ -375,70 +274,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      SlaveFqdn = SlaveAddr.GetHostAddress();
                   }
 
-                  // Check if a HostAuth object for this (host,user) pair already exists
-                  THostAuth *hostAuth =
-                     TAuthenticate::GetHostAuth(SlaveFqdn, fUser);
-
-                  if (hostAuth == 0) {
-                     // Create HostAuth object ...
-                     hostAuth = new THostAuth(SlaveFqdn, fUser, nSecs, fSecs,(char **)fDets);
-                     // ... and add it to the list (static in TAuthenticate)
-                     PDB(kGlobal,3) hostAuth->Print();
-                     authInfo->Add(hostAuth);
-                  } else {
-                     int nold = hostAuth->NumMethods();
-                     int i, j;
-                     for (i = 0; i < nSecs; i++) {
-                        int jm = -1;
-                        for (j = 0; j < nold; j++) {
-                           if (fSecs[i] == hostAuth->GetMethods(j)) {
-                              jm = j;
-                              break;
-                           }
-                        }
-                        if (jm == -1) {
-                           // Add a method ...
-                           hostAuth->AddMethod(fSecs[i], fDets[i]);
-                        } else {
-                          // Set a new details string ...
-                          hostAuth->SetDetails(fSecs[i], fDets[i]);
-                        }
-                     }
-                     // Put them in the order defined in proof.conf
-                     hostAuth->ReOrder(nSecs,fSecs);
-                     PDB(kGlobal,3) hostAuth->Print();
-                  }
-
-                  // 'security' is redefined to make sure of backwards compatibility
-                  Int_t lSecurity = 0;
-                  if (nSecs == 1 && fSecs[0] == (int)TAuthenticate::kSRP)
-                     lSecurity=(int)TAuthenticate::kSRP;
-                  if (nSecs == 1 && fSecs[0] == (int)TAuthenticate::kKrb5)
-                     lSecurity=(int)TAuthenticate::kKrb5;
-
-                  // If 'host' is ourselves, then use rfio (to setup things correctly)
-                  // Check and save the host FQDN ...
-                  static TString LocalFqdn;
-                  if (LocalFqdn == "") {
-                     TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
-                     if (addr.IsValid()) {
-                        LocalFqdn = addr.GetHostName();
-                        if (LocalFqdn == "UnNamedHost")
-                           LocalFqdn = addr.GetHostAddress();
-                     }
-                  }
-                  if (SlaveFqdn == LocalFqdn)
-                     hostAuth->SetFirst((int)TAuthenticate::kRfio);
-
-                  // CleanUp memory
-                  int ks;
-                  for (ks = 0; ks < nSecs; ks++) {
-                     if (fDets[ks]) delete[] fDets[ks];
-                  }
-
                   // create slave server
                   TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
-                                             image, lSecurity, this);
+                                             image, -1, this);
+
                   fSlaves->Add(slave);
                   if (slave->IsValid()) {
                      fAllMonitor->Add(slave->GetSocket());
@@ -473,55 +312,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
          TList *claims = fCondor->Claim(9999, "dummy");
 
-         Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
-         security = (security >= 0 && security <= kMAXSEC) ? security : TAuthenticate::kClear;
-         if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
-         if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
-
-         // If chosen method is not available get first available security method
-         if (AuthAvailable[security] == 0) {
-            security = -1;
-            Int_t i = 0;
-            for ( ; i < kMAXSEC; i++) {
-               if (AuthAvailable[i] == 1) security = i;
-            }
-         }
-
-         int nSecs            = 0;
-         int fSecs[kMAXSEC]   ={0};
-         char *fDets[kMAXSEC] ={0};
-         if (security == -1) {
-            Error("Init", "no available security method found");
-            return 0;
-         } else {
-           fSecs[0] = security;
-           fDets[0] = StrDup(AuthDet[security]);
-           nSecs = 1;
-           PDB(kGlobal,3)
-              Info("Init","Dynamic Slaves: added method:%d det:%s",
-                               fSecs[nSecs-1],fDets[nSecs-1]);
-         }
-
-         // Make sure that UidGid is always in the list
-         if (AuthAvailable[(int)TAuthenticate::kRfio] == 1) {
-            int newu = 1, i = 0;
-            for (i = 0; i < nSecs; i++) {
-               if (fSecs[i] == (int)TAuthenticate::kRfio) {
-                  newu = 0;
-                  break;
-               }
-            }
-            if (newu == 1) {
-               fSecs[nSecs] = (int)TAuthenticate::kRfio;
-               fDets[nSecs] = StrDup(AuthDet[(int)TAuthenticate::kRfio]);
-               nSecs++;
-               PDB(kGlobal,3)
-                  Info("Init","added UidGid ... sec:%d det:%s",
-                               fSecs[nSecs-1],fDets[nSecs-1]);
-            }
-         }
-
-
          TIter next(claims);
          TCondorSlave *c;
          Int_t ord = 0;
@@ -536,54 +326,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                SlaveFqdn = SlaveAddr.GetHostAddress();
             }
 
-            // Check if a HostAuth object for this (host,user) pair already exists
-            THostAuth *hostAuth = TAuthenticate::GetHostAuth(SlaveFqdn, fUser);
-
-            if (hostAuth == 0) {
-               // Create HostAuth object ...
-               //hostAuth = new THostAuth(SlaveFqdn, fUser, security, AuthDet[security]);
-               hostAuth = new THostAuth(SlaveFqdn, fUser, nSecs, fSecs, (char **)fDets);
-               // ... and add it to the list (static in TAuthenticate)
-               if (gDebug > 3) hostAuth->Print();
-               authInfo->Add(hostAuth);
-            } else {
-               int nold = hostAuth->NumMethods();
-               int i, j;
-               for (i = 0; i < nSecs; i++) {
-                  int jm = -1;
-                  for (j = 0; j < nold; j++) {
-                     if (fSecs[i] == hostAuth->GetMethods(j)) {
-                        jm = j;
-                        break;
-                     }
-                  }
-                  if (jm == -1) {
-                     // Add a method ...
-                     hostAuth->AddMethod(fSecs[i], fDets[i]);
-                  } else {
-                    // Set a new details string ...
-                    hostAuth->SetDetails(fSecs[i], fDets[i]);
-                  }
-               }
-               // Put them in the order defined in proof.conf
-               hostAuth->ReOrder(nSecs,fSecs);
-               PDB(kGlobal,3) hostAuth->Print();
-            }
-
-            // CleanUp memory
-            int ks;
-            for (ks = 0; ks < nSecs; ks++) {
-               if (fDets[ks]) delete[] fDets[ks];
-            }
-
-//            } else {
-//               // Add or redefine this method and set it as preferred ...
-//               hostAuth->SetFirst(security,AuthDet[security]);
-//               PDB(kGlobal,3) hostAuth->Print();
-//            }
-
             TSlave *slave = new TSlave(c->fHostname, c->fPort, ord++,
-                                       c->fPerfIdx, c->fImage, security, this);
+                                       c->fPerfIdx, c->fImage, -1, this);
+
             fSlaves->Add(slave);
             if (slave->IsValid()) {
                fAllMonitor->Add(slave->GetSocket());
@@ -593,27 +338,12 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                fBadSlaves->Add(slave);
             }
          }
-
-      }
-
-      // CleanUp memory
-      int ks;
-      for (ks = 0; ks < kMAXSEC; ks++) {
-         if (AuthDet[ks]) delete[] AuthDet[ks];
       }
 
    } else {
 
-      // Default security levels and protocols
-      // These are superseeded by the directives found in the
-      // client's $(HOME)/.rootauthrc
-      Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
-      security = (security >= 0 && security <= kMAXSEC) ? security : -1;
-      if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
-      if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
-
       // create master server
-      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", security, this);
+      TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", -1, this);
 
       if (slave->IsValid()) {
          // check protocol compatability
@@ -2300,145 +2030,4 @@ void TProof::Feedback(TList *objs)
    }
 
    Emit("Feedback(TList *objs)", (Long_t) objs);
-}
-
-//______________________________________________________________________________
-Int_t TProof::CheckAuth(Int_t cSec, char **Det)
-{
-   // Check if the authentication method can be attempted for the client.
-
-   const char sshid[3][20] = { ".ssh/identity", ".ssh/id_dsa", ".ssh/id_rsa" };
-   const char netrc[2][20] = { ".netrc", ".rootnetrc" };
-   Int_t ok          = 0;
-   char *home        = 0;
-   char *infofile    = 0;
-   char *details     = 0;
-   char *user        = 0;
-
-   // Get user logon name
-   UserGroup_t *pw = gSystem->GetUserInfo();
-   if (pw) {
-      user = StrDup(pw->fUser);
-      delete pw;
-   } else {
-      Info("CheckAuth", "not properly logged on (getpwuid unable to find relevant info)!");
-      return ok;
-   }
-
-   // UsrPwd
-   if (cSec == (Int_t) TAuthenticate::kClear) {
-      home = StrDup(getenv("HOME"));
-      infofile = new char[sizeof(home)+25];
-      Int_t i;
-      for (i = 0; i < 2; i++) {
-         sprintf(infofile,"%s/%s",home,netrc[i]);
-         if (!gSystem->AccessPathName(infofile, kReadPermission)) ok = 1;
-      }
-      if (ok == 1) {
-         details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
-         sprintf(details, "pt:0 ru:1 us:%s",user);
-      }
-   }
-
-   // SRP
-   if (cSec == (Int_t) TAuthenticate::kSRP) {
-#ifdef R__SRP
-      ok = 1;
-      details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
-      sprintf(details, "pt:0 ru:1 us:%s",user);
-#endif
-   }
-
-   // Kerberos
-   if (cSec == (Int_t) TAuthenticate::kKrb5) {
-#ifdef R__KRB5
-      ok = 1;
-      details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
-      sprintf(details, "pt:0 ru:1 us:%s",user);
-#endif
-   }
-
-   // Globus
-   if (cSec == (Int_t) TAuthenticate::kGlobus) {
-#ifdef R__GLBS
-      TApplication *lApp = gROOT->GetApplication();
-      if (lApp != 0) {
-         if (!strcmp(gROOT->GetName(), "proofserv")) {
-            // Delegated Credentials
-            int ShmId = (lApp->Argc() == 11) ? atoi(lApp->Argv()[7]) : -1 ;
-            if (ShmId != -1) {
-               struct shmid_ds shm_ds;
-               int rc = shmctl(ShmId, IPC_STAT, &shm_ds);
-               if (rc == 0) ok = 1;
-            }
-            if (ok == 1) {
-               // Build details
-               int  Pcer=0, Pkey=0;
-               char *Cdir, *Ucer, *Ukey, *Adir;
-               // CA dir
-               Adir = StrDup(lApp->Argv()[8]);
-               // Usr Cert
-               Ucer = StrDup(lApp->Argv()[9]);
-               if (strstr(Ucer,"/") != 0) {
-                  Pcer = strlen(Ucer);
-                  while (Ucer[Pcer-1] != '/') { Pcer--; }
-               }
-               // Usr Key
-               Ukey = StrDup(lApp->Argv()[10]);
-               if (strstr(Ukey,"/") != 0) {
-                  Pkey = strlen(Ukey);
-                  while (Ukey[Pkey-1] != '/') { Pkey--; }
-               }
-               // Usr Dir
-               Cdir = new char[strlen(Ucer)+5];
-               strncpy(Cdir,Ucer,Pcer); Cdir[Pcer+1]= '\0';
-               // Create Output
-               details = new char[strlen(Adir)+strlen(Cdir)+strlen(Ucer)+strlen(Ukey)+40];
-               sprintf(details,"pt=0 ru:1 cd:%s cf:%s kf:%s ad:%s",Cdir,Ucer,Ukey,Adir);
-               delete [] Adir; delete [] Ucer; delete [] Ukey; delete [] Cdir;
-            }
-         }
-      }
-#endif
-   }
-
-   // SSH
-   if (cSec == (Int_t) TAuthenticate::kSSH) {
-      home = StrDup(getenv("HOME"));
-      infofile = new char[sizeof(home)+25];
-      int i;
-      for (i = 0; i < 3; i++) {
-         sprintf(infofile,"%s/%s",home,sshid[i]);
-         if (!gSystem->AccessPathName(infofile,kReadPermission)) ok = 1;
-      }
-      if (ok == 1) {
-         details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
-         sprintf(details,"pt:0 ru:1 us:%s",user);
-      }
-   }
-
-   // Rfio
-   if (cSec == (Int_t) TAuthenticate::kRfio) {
-      ok = 1;
-      details = new char[strlen("pt:0 ru:1 us:")+strlen(user)+10];
-      sprintf(details,"pt:0 ru:1 us:%s",user);
-   }
-
-   // Fill output, if relevant ...
-   if (details) { *Det= StrDup(details); delete [] details; }
-
-   // CleanUp remaining stuff ...
-   if (home)     delete [] home;
-   if (infofile) delete [] infofile;
-
-   if (gDebug > 3) {
-      if (ok == 1) {
-         Info("CheckAuth","meth: %d ... is available: details: %s", cSec, *Det);
-      } else {
-         Info("CheckAuth","meth: %d ... is NOT available", cSec);
-      }
-   }
-
-   // return
-   return ok;
 }

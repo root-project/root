@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.4 2003/09/11 23:12:18 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.5 2003/09/24 13:24:31 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -42,6 +42,7 @@ const int  kAUTH_CRYPT_MSK   = 0x2;
 const int  kAUTH_SSALT_MSK   = 0x4;
 const int  kMAXPATHLEN       = 1024;
 const int  kMAXTABSIZE       = 1000000000;
+const int  kMAXRSATRIES      = 100;
 
 // type of authentication method
 enum  ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio };
@@ -169,8 +170,11 @@ void RpdSetAuthTabFile(char *AuthTabFile);
 void RpdSetDebugFlag(int Debug);
 void RpdSetRootLogFlag(int RootLog);
 
+void RpdInitRand();
+int  RpdGenRSAKeys();
 int  RpdGetRSAKeys(char *PubKey, int Opt);
-void RpdSavePubKey(char *PubKey, int OffSet);
+int  RpdRecvClientRSAKey();
+void RpdSavePubKey(char *PubKey, int OffSet, char *User);
 int  RpdSecureSend(char *Str);
 int  RpdSecureRecv(char **Str);
 

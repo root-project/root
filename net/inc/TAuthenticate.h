@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.11 2003/09/12 17:36:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.12 2003/09/16 00:39:23 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -46,6 +46,7 @@ const Int_t       kMAXSECBUF      = 2048;
 const Int_t       kAUTH_REUSE_MSK = 0x1;
 const Int_t       kAUTH_CRYPT_MSK = 0x2;
 const Int_t       kAUTH_SSALT_MSK = 0x4;
+const Int_t       kMAXRSATRIES    = 100;
 
 class TSocket;
 class TAuthenticate;
@@ -77,6 +78,7 @@ private:
    static TString        fgUser;
    static TString        fgPasswd;
    static Bool_t         fgPwHash;      // kTRUE if fgPasswd is a passwd hash
+   static Bool_t         fgSRPPwd;      // kTRUE if fgPasswd is a SRP passwd
    static TString        fgAuthMeth[kMAXSEC];
    static SecureAuth_t   fgSecAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
@@ -90,11 +92,11 @@ private:
    static rsa_KEY_export fgRSAPubExport;
 
    void           SetEnvironment();
-   Bool_t         GetUserPasswd(TString &user, TString &passwd, Bool_t &pwhash);
+   Bool_t         GetUserPasswd(TString &user, TString &passwd, 
+                                Bool_t &pwhash, Bool_t &srppwd);
    Int_t          ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
    Int_t          RfioAuth(TString &user);
    Int_t          SshAuth(TString &user);
-
    char          *GetRandString(Int_t Opt,Int_t Len);
 
    static Int_t   CheckRootAuthrc(const char *Host, char ***user,
@@ -113,7 +115,8 @@ public:
 
    Bool_t             Authenticate();
    Bool_t             CheckNetrc(TString &user, TString &passwd);
-   Bool_t             CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash);
+   Bool_t             CheckNetrc(TString &user, TString &passwd, 
+                                 Bool_t &pwhash, Bool_t &srppwd);
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }
    Bool_t             GetPwHash() const { return fPwHash; }
@@ -157,9 +160,11 @@ public:
    static void        SetGlobusAuthHook(GlobusAuth_t func);
    static GlobusAuth_t GetGlobusAuthHook();
    static const char *GetRSAPubExport();
+   static void        DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n, rsa_NUMBER &d);
    static void        SetRSAPublic(const char *rsapubexport);
    static Int_t       GetRSAInit();
    static void        SetRSAInit();
+   static void        SendRSAPublicKey(TSocket *Socket);
 
    static void        AuthError(const char *where, Int_t error);
    static Int_t       SecureSend(TSocket *Socket, Int_t KeyType, const char *In);

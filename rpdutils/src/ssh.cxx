@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.3 2003/08/30 18:24:52 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.4 2003/09/01 11:30:45 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -77,19 +77,54 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
    struct sockaddr_un servAddr;
    servAddr.sun_family = AF_UNIX;
 
+   int nAtt0 = 0;
+
+tryagain:
    // Determine unique pipe path: try with /tmp/rootdSSH_<random_string>
-   char fsun[] = "/tmp/rootdSSH_XXXXXX";
-   mktemp(fsun);
+   char fsun[25] = {0};
+   if (access("/tmp",W_OK) == 0) {
+      strcpy(fsun, "/tmp/rootdSSH_XXXXXX");
+   } else {
+      strcpy(fsun, "rootdSSH_XXXXXX");
+   }
+   int itmp = mkstemp(fsun);
+   Int_t nAtt = 0;
+   while (itmp == -1 && nAtt < kMAXRSATRIES) {
+      nAtt++;
+      if (gDebug > 0)
+         ErrorInfo("SshToolAllocateSocket: mkstemp failure (nAtt: %d, errno: %d)",
+                   nAtt,errno);
+      itmp = mkstemp(fsun);
+   }
+   if (itmp == -1) {
+      ErrorInfo("SshToolAllocateSocket: mkstemp failed %d times - return",
+                kMAXRSATRIES);
+      return -1;
+   } else {
+      close(itmp);
+      unlink(fsun);
+   }
+   nAtt0++;
    if (gDebug > 2)
-      ErrorInfo("SshToolAllocateSocket: unique pipe name is %s", fsun);
+      ErrorInfo("SshToolAllocateSocket: unique pipe name is %s (try: %d)",
+                 fsun, nAtt0);
 
    // Save path ...
    strcpy(servAddr.sun_path, fsun);
 
    // bind to socket
    if (bind(sd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
-      ErrorInfo("SshToolAllocateSocket: unable to bind to socket %d", sd);
-      return -1;
+      if (errno == EADDRINUSE && nAtt0 < kMAXRSATRIES) {
+         if (gDebug > 2)
+            ErrorInfo
+                ("SshToolAllocateSocket: address in use: try again (try: %d)");
+         goto tryagain;
+      } else {
+         ErrorInfo
+              ("SshToolAllocateSocket: unable to bind to socket %d (errno: %d)",
+                sd, errno);
+         return -1;
+      }
    }
    // Activate listening
    if (listen(sd, 5)) {
@@ -226,12 +261,12 @@ int SshToolGetAuth(int UnixFd)
    int nr = NetRecvRaw(NewUnixFd, SshAuth, 2);
    if (nr != 2) {
       ErrorInfo
-          ("RootdSshAuth: incorrect reception from ssh2rpd: bytes:%d, buffer:%s ",
+          ("SshToolGetAuth: incorrect reception from ssh2rpd: bytes:%d, buffer:%s",
            nr, SshAuth);
    }
    // Check authentication and notify to client
    if (strncmp(SshAuth, "OK", 2) != 0) {
-      ErrorInfo("RootdSshAuth: user did not authenticate to sshd: %s (%d)",
+      ErrorInfo("SshToolGetAuth: user did not authenticate to sshd: %s (%d)",
                 SshAuth, strncmp(SshAuth, "OK", 2));
    } else {
       Auth = 1;

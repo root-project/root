@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.2 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.3 2003/09/07 18:25:46 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -53,12 +53,15 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
 
    fHost = host;
    // Check and save the host FQDN ...
-   TInetAddress addr = gSystem->GetHostByName(fHost);
-   if (addr.IsValid()) {
-      fHost = addr.GetHostName();
-      if (fHost == "UnNamedHost")
-         fHost = addr.GetHostAddress();
+   if (fHost != "default") {
+      TInetAddress addr = gSystem->GetHostByName(fHost);
+      if (addr.IsValid()) {
+         fHost = addr.GetHostName();
+         if (fHost == "UnNamedHost")
+            fHost = addr.GetHostAddress();
+      }
    }
+
    fUser = user;
    if (fUser == "")
       fUser = gSystem->Getenv("USER");
@@ -68,6 +71,7 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
          fUser = u->fUser;
       delete u;
    }
+
    fNumMethods = nmeth;
    fMethods    = new Int_t[nmeth];
    if (authmeth != 0) {

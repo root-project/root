@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.14 2003/09/27 19:06:28 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.15 2003/09/27 19:50:10 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -194,6 +194,10 @@ int  gReUseRequired = -1;
 int  gRSAKey = 0;
 rsa_NUMBER gRSA_n;
 rsa_NUMBER gRSA_d;
+int gRSAInit = 0;
+rsa_KEY gRSAPriKey;
+rsa_KEY gRSAPubKey;
+rsa_KEY_export gRSAPubExport;
 int  gSaltRequired = -1;
 int  gSec = -1;
 int  gTriedMeth[kMAXSEC];
@@ -444,13 +448,22 @@ int RpdCleanupAuthTab(char *Host, int RemId)
                 Host, RemId);
 
    // Open file for update
-   int itab = open(gRpdAuthTab, O_RDWR);
-   if (itab == -1) {
-      ErrorInfo("RpdCleanupAuthTab: error opening %s (errno: %d)",
-                gRpdAuthTab, GetErrno());
-      //     return retval;
-      return -1;
+   int itab = -1;
+   if (access(gRpdAuthTab,F_OK) == 0) {
+
+      itab = open(gRpdAuthTab, O_RDWR);
+      if (itab == -1) {
+         ErrorInfo("RpdCleanupAuthTab: error opening %s (errno: %d)",
+                  gRpdAuthTab, GetErrno());
+         //     return retval;
+         return -1;
+      }
+   } else {
+      if (gDebug > 0)
+         ErrorInfo("RpdCleanupAuthTab: file %s does not exist",gRpdAuthTab);
+      return -3;
    }
+
    // lock tab file
    if (lockf(itab, F_LOCK, (off_t) 1) == -1) {
       ErrorInfo("RpdCleanupAuthTab: error locking %s (errno: %d)",
@@ -1068,7 +1081,8 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                      if (nd > 0) {
                         if (nd > 1 || nnmi > 0) {
                            char *sp = strstr(Host, host);
-                           if (sp == 0 || sp != Host)
+			   if (sp == 0 || (sp != Host &&
+                               sp != (Host+strlen(Host)-strlen(host))))
                               goto next;
                         }
                      }
@@ -1121,15 +1135,20 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             } else {
                strcpy(tmp, cmth);
             }
+
             if (strlen(tmp) > 1) {
-               // Method passed as string: translate it to number
-               const char *pmet = strstr(kMethods, tmp);
-               if (pmet != 0) {
-                  tmet = ((int) (pmet - kMethods)) / 7;
+
+               for (tmet = 0; tmet < kMAXSEC; tmet++) {
+                  if (!strcasecmp(kAuthMeth[tmet],tmp))
+                     break;
+               }
+               if (tmet < kMAXSEC) {
+                  ErrorInfo("RpdCheckAuthAllow: tmet %d", tmet);
                } else {
                   ErrorInfo("RpdCheckAuthAllow: unknown methods %s - ignore", tmp);
                   goto nexti;
                }
+
             } else {
                tmet = atoi(tmp);
             }
@@ -1265,6 +1284,10 @@ int RpdCheckAuthAllow(int Sec, char *Host)
 
       // Use defaults if nothing found
       if (!found) {
+         if (gDebug > 2)
+            ErrorInfo
+            ("RpdCheckAuthAllow: no specific or 'default' entry found: %s",
+             "using system defaults");
          int i;
          for (i = 0; i < gNumAllow; i++) {
             if (Sec == gAllowMeth[i]) {
@@ -1275,6 +1298,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
          }
 
       }
+
    }
    if (gDebug > 2) {
       ErrorInfo
@@ -1414,7 +1438,7 @@ void RpdSendAuthList()
    if (gDebug > 2)
       ErrorInfo("RpdSendAuthList: analyzing (gNumLeft: %d)", gNumLeft);
 
-   // Send Number of methids left
+   // Send Number of methods left
    NetSend(gNumLeft, kROOTD_NEGOTIA);
 
    if (gNumLeft > 0) {
@@ -1550,19 +1574,13 @@ void RpdSshAuth(const char *sstr)
       // Ask for the RSA key
       NetSend(1, kROOTD_RSAKEY);
 
-      EMessageTypes kind;
-      NetRecv(gPubKey, kMAXPATHLEN, kind);
-      if (gDebug > 2)
-         ErrorInfo("RpdSshAuth: got RSA key: (%d) '%s' len: %d", kind,
-                   gPubKey, strlen(gPubKey));
-
-      // Import Key and Determine key type
-      gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-      if (gRSAKey == 0) {
+      // Receive the key securely
+      if (RpdRecvClientRSAKey()) {
          ErrorInfo
              ("RpdSshAuth: could not import a valid key - switch off reuse for this session");
          gReUseRequired = 0;
       }
+
       // Set an entry in the auth tab file for later (re)use, if required ...
       int OffSet = -1;
       char *token = 0;
@@ -1585,7 +1603,7 @@ void RpdSshAuth(const char *sstr)
          if (token) delete[] token;
 
          // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet);
+         RpdSavePubKey(gPubKey, OffSet, gUser);
       }
    } else {
       // Comunicate login user name to client
@@ -1686,19 +1704,13 @@ void RpdKrb5Auth(const char *sstr)
          // Ask for the RSA key
          NetSend(1, kROOTD_RSAKEY);
 
-         EMessageTypes kind;
-         NetRecv(gPubKey, kMAXPATHLEN, kind);
-         if (gDebug > 2)
-            ErrorInfo("RpdKrb5Auth: got RSA key: (%d) '%s' len: %d", kind,
-                      gPubKey, strlen(gPubKey));
-
-         // Import key and determine its type
-         gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-         if (gRSAKey == 0) {
+         // Receive the key securely
+         if (RpdRecvClientRSAKey()) {
             ErrorInfo
                 ("RpdKrb5Auth: could not import a valid key - switch off reuse for this session");
             gReUseRequired = 0;
          }
+
          // Set an entry in the auth tab file for later (re)use, if required ...
          int OffSet = -1;
          char *token = 0;
@@ -1718,12 +1730,12 @@ void RpdKrb5Auth(const char *sstr)
          if (gReUseRequired) {
             if (RpdSecureSend(token) == -1) {
                ErrorInfo
-                   ("RpdKerb5Auth: problems secure-sending token - may result in corrupted token");
+                   ("RpdKrb5Auth: problems secure-sending token - may result in corrupted token");
             }
             if (token) delete[] token;
 
             // Save RSA public key into file for later use by other rootd/proofd
-            RpdSavePubKey(gPubKey, OffSet);
+            RpdSavePubKey(gPubKey, OffSet, gUser);
          }
 
       } else {
@@ -1939,14 +1951,8 @@ void RpdSRPUser(const char *sstr)
             // Ask for the RSA key
             NetSend(1, kROOTD_RSAKEY);
 
-            NetRecv(gPubKey, kMAXPATHLEN, kind);
-            if (gDebug > 2)
-               ErrorInfo("RpdSRPAuth: got RSA key: (%d) '%s' len: %d",
-                         kind, gPubKey, strlen(gPubKey));
-
-            // Import key and determine its type
-            gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-            if (gRSAKey == 0) {
+            // Receive the key securely
+            if (RpdRecvClientRSAKey()) {
                ErrorInfo
                    ("RpdSRPAuth: could not import a valid key - switch off reuse for this session");
                gReUseRequired = 0;
@@ -1969,12 +1975,12 @@ void RpdSRPUser(const char *sstr)
                // Send Token
                if (RpdSecureSend(token) == -1) {
                   ErrorInfo
-                      ("RpdKrb5Auth: problems secure-sending token - may result in corrupted token");
+                      ("RpdSRPUser: problems secure-sending token - may result in corrupted token");
                }
                if (token) delete[] token;
 
                // Save RSA public key into file for later use by other rootd/proofd
-               RpdSavePubKey(gPubKey, OffSet);
+               RpdSavePubKey(gPubKey, OffSet, gUser);
             }
 
          } else {
@@ -2193,7 +2199,7 @@ void RpdPass(const char *pass)
 
       if (gCryptRequired) {
          // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet);
+         RpdSavePubKey(gPubKey, OffSet, gUser);
       }
    }
 }
@@ -2378,7 +2384,12 @@ void RpdGlobusAuth(const char *sstr)
               gShmIdCred);
 
       delete credential;
+   } else {
+      if (gDebug > 2)
+          ErrorInfo("RpdGlobusAuth: no need for delegated credentials (gGlobus: %d)",
+                     gGlobus);
    }
+
    // For Now we set the gUser to the certificate owner using the gridmap file ...
    // Should be understood if this is really necessary ...
    if (getenv("GRIDMAP") == 0) {
@@ -2417,18 +2428,13 @@ void RpdGlobusAuth(const char *sstr)
       // Ask for the RSA key
       NetSend(1, kROOTD_RSAKEY);
 
-      NetRecv(gPubKey, kMAXPATHLEN, kind);
-      if (gDebug > 2)
-         ErrorInfo("RpdGlobusAuth: got RSA key: (%d) '%s' len: %d", kind,
-                   gPubKey, strlen(gPubKey));
-
-      // Import key and determine its type
-      gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-      if (gRSAKey == 0) {
+      // Receive the key securely
+      if (RpdRecvClientRSAKey()) {
          ErrorInfo
              ("RpdGlobusAuth: could not import a valid key - switch off reuse for this session");
          gReUseRequired = 0;
       }
+
       // Store security context and related info for later use ...
       OffSet = -1;
       char *token = 0;
@@ -2457,7 +2463,7 @@ void RpdGlobusAuth(const char *sstr)
          if (token) delete[] token;
 
          // Save RSA public key into file for later use by other rootd/proofd
-         RpdSavePubKey(gPubKey, OffSet);
+         RpdSavePubKey(gPubKey, OffSet, gUser);
       }
    } else {
       // Comunicate login user name to client (and token)
@@ -2558,7 +2564,7 @@ void RpdCleanup(const char *sstr)
 
    // Cleanup Auth tab
    int ns;
-   if ((ns = RpdCleanupAuthTab(Host, rPid)))
+   if ((ns = RpdCleanupAuthTab(Host, rPid)) > 0)
       ErrorInfo("RpdCleanup: %d not properly cleaned", ns);
 
    // Trim Auth Tab file if call via RootdTerm (typically when rootd is shutting down ... )
@@ -2958,18 +2964,13 @@ void RpdUser(const char *sstr)
             // Ask for the RSA key
             NetSend(1, kROOTD_RSAKEY);
 
-            NetRecv(gPubKey, kMAXPATHLEN, kind);
-            if (gDebug > 2)
-               ErrorInfo("RpdUser: got RSA key: (%d) '%s' len: %d", kind,
-                         gPubKey, strlen(gPubKey));
-
-            // Import key and determine its type
-            gRSAKey = RpdGetRSAKeys(gPubKey, 0);
-            if (gRSAKey == 0) {
+            // Receive the key securely
+            if (RpdRecvClientRSAKey()) {
                ErrorInfo
                    ("RpdUser: could not import a valid key - switch off reuse for this session");
                gReUseRequired = 0;
             }
+
             // Determine Salt
             char Salt[20] = { 0 };
             int Slen = 0;
@@ -3020,6 +3021,11 @@ void RpdUser(const char *sstr)
                 kind, (int) kROOTD_PASS);
       return;
    }
+   if (!strncmp(recvbuf,"-1",2)) {
+      if (gDebug > 0)
+         ErrorInfo("RpdUser: client did not send a password - return");
+      return;
+   }
    // Get passwd
    char *passwd = 0;
    if (gAnon == 0 && gClientProtocol > 8 && gCryptRequired) {
@@ -3027,7 +3033,8 @@ void RpdUser(const char *sstr)
       // Receive encrypted pass hash
       if (RpdSecureRecv(&passwd) == -1) {
          ErrorInfo
-             ("RpdUser: problems secure-receiving pass hash - may result in authentication failure ");
+             ("RpdUser: problems secure-receiving pass hash - %s",
+              "may result in authentication failure");
       }
 
    } else {
@@ -3168,7 +3175,7 @@ int RpdGetRSAKeys(char *PubKey, int Opt)
    int KeyType = 0;
 
    if (gDebug > 2)
-      ErrorInfo("RpdGetRSAKeys: enter: file opt '%s' %d ", PubKey, Opt);
+      ErrorInfo("RpdGetRSAKeys: enter: string len: %d, opt %d ", strlen(PubKey), Opt);
 
    if (!PubKey)
       return KeyType;
@@ -3205,14 +3212,14 @@ int RpdGetRSAKeys(char *PubKey, int Opt)
          strncpy(RSA_n_exp, pd1 + 1, l1);
          RSA_n_exp[l1] = 0;
          if (gDebug > 2)
-            ErrorInfo("RpdGetRSAKeys: got RSA_n_exp '%s' ", RSA_n_exp);
+            ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_n_exp", strlen(RSA_n_exp));
          // Now <hex_d>
          int l2 = (int) (pd3 - pd2 - 1);
          char *RSA_d_exp = new char[l2 + 1];
          strncpy(RSA_d_exp, pd2 + 1, l2);
          RSA_d_exp[l2] = 0;
          if (gDebug > 2)
-            ErrorInfo("RpdGetRSAKeys: got RSA_d_exp '%s' ", RSA_d_exp);
+            ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_d_exp", strlen(RSA_d_exp));
 
          rsa_num_sget(&gRSA_n, RSA_n_exp);
          rsa_num_sget(&gRSA_d, RSA_d_exp);
@@ -3232,7 +3239,7 @@ int RpdGetRSAKeys(char *PubKey, int Opt)
 }
 
 //______________________________________________________________________________
-void RpdSavePubKey(char *PubKey, int OffSet)
+void RpdSavePubKey(char *PubKey, int OffSet, char *user)
 {
    // Save RSA public key into file for later use by other rootd/proofd.
 
@@ -3254,7 +3261,20 @@ void RpdSavePubKey(char *PubKey, int OffSet)
 
    if (fKey) {
       fclose(fKey);
-      chmod(PubKeyFile, 0666);
+      //      chmod(PubKeyFile, 0666);
+      chmod(PubKeyFile, 0600);
+
+      if (getuid() == 0) {
+	// Set ownership of the pub key to the user
+
+        struct passwd *pw = getpwnam(user);
+
+        if (chown(PubKeyFile,pw->pw_uid,pw->pw_gid) == -1) {
+           ErrorInfo
+               ("RpdSavePubKey: cannot change ownership of %s (errno: %d)",
+                 PubKeyFile,GetErrno());
+        }
+      }
    }
 }
 
@@ -3282,8 +3302,8 @@ int RpdSecureSend(char *Str)
       Nsen = NetSendRaw(BufTmp, Ttmp);
       if (gDebug > 4)
          ErrorInfo
-             ("RpdSecureSend: Local: sent %d bytes (expected: %d) (buffer '%s')",
-              Nsen, Ttmp, BufTmp);
+             ("RpdSecureSend: Local: sent %d bytes (expected: %d)",
+              Nsen, Ttmp);
    } else {
       ErrorInfo("RpdSecureSend: Unknown key option (%d) - return",
                 gRSAKey);
@@ -3323,7 +3343,7 @@ int RpdSecureRecv(char **Str)
       Nrec = NetRecvRaw(BufTmp, Len);
       rsa_decode(BufTmp, Len, gRSA_n, gRSA_d);
       if (gDebug > 2)
-         ErrorInfo("RpdSecureRecv: Local: decoded string: '%s' ", BufTmp);
+         ErrorInfo("RpdSecureRecv: Local: decoded string is %d bytes long", strlen(BufTmp));
    } else {
       ErrorInfo("RpdSecureRecv: Unknown key option (%d) - return",
                 gRSAKey);
@@ -3333,6 +3353,248 @@ int RpdSecureRecv(char **Str)
    strcpy(*Str, BufTmp);
 
    return Nrec;
+
+}
+
+//______________________________________________________________________________
+int RpdGenRSAKeys()
+{
+   // Generate a valid pair of private/public RSA keys to protect for authentication
+   // token exchange
+   // Returns 1 if a good key pair is not foun after kMAXRSATRIES attempts
+   // Returns 0 if a good key pair is found
+
+   if (gDebug > 2)
+      ErrorInfo("RpdGenRSAKeys: enter");
+
+   // Sometimes some bunch is not decrypted correctly
+   // That's why we make retries to make sure that encryption/decryption works as expected
+   bool NotOk = 1;
+   rsa_NUMBER p1, p2, rsa_n, rsa_e, rsa_d;
+   int l_n, l_e, l_d;
+   char buf[rsa_STRLEN];
+   char buf_n[rsa_STRLEN], buf_e[rsa_STRLEN], buf_d[rsa_STRLEN];
+
+   int NAttempts = 0;
+   int thePrimeLen = 20;
+   int thePrimeExp = 45;   // Prime probability = 1-0.5^thePrimeExp
+   while (NotOk && NAttempts < kMAXRSATRIES) {
+
+      NAttempts++;
+      if (gDebug > 2 && NAttempts > 1) {
+            ErrorInfo("RpdGenRSAKeys: retry no. %d",NAttempts);
+         srand(rand());
+      }
+
+      // Valid pair of primes
+      p1 = rsa_genprim(thePrimeLen, thePrimeExp);
+      p2 = rsa_genprim(thePrimeLen+1, thePrimeExp);
+
+      // Retry if equal
+      int NPrimes = 0;
+      while (rsa_cmp(&p1, &p2) == 0 && NPrimes < kMAXRSATRIES) {
+         NPrimes++;
+         if (gDebug > 2)
+            ErrorInfo("RpdGenRSAKeys: equal primes: regenerate (%d times)",NPrimes);
+         srand(rand());
+         p1 = rsa_genprim(thePrimeLen, thePrimeExp);
+         p2 = rsa_genprim(thePrimeLen+1, thePrimeExp);
+      }
+
+#if 1
+      if (gDebug > 2) {
+         rsa_num_sput(&p1, buf, rsa_STRLEN);
+         ErrorInfo("RpdGenRSAKeys: local: p1: '%s' ", buf);
+         rsa_num_sput(&p2, buf, rsa_STRLEN);
+         ErrorInfo("RpdGenRSAKeys: local: p2: '%s' ", buf);
+      }
+#endif
+      // Generate keys
+      if (rsa_genrsa(p1, p2, &rsa_n, &rsa_e, &rsa_d)) {
+         ErrorInfo("RpdGenRSAKeys: genrsa: unable to generate keys (%d)",NAttempts);
+         continue;
+      }
+
+      // Determine their lengths
+      rsa_num_sput(&rsa_n, buf_n, rsa_STRLEN);
+      l_n = strlen(buf_n);
+      rsa_num_sput(&rsa_e, buf_e, rsa_STRLEN);
+      l_e = strlen(buf_e);
+      rsa_num_sput(&rsa_d, buf_d, rsa_STRLEN);
+      l_d = strlen(buf_d);
+
+#if 1
+      if (gDebug > 2) {
+         ErrorInfo("RpdGenRSAKeys: local: n: '%s' length: %d", buf_n, l_n);
+         ErrorInfo("RpdGenRSAKeys: local: e: '%s' length: %d", buf_e, l_e);
+         ErrorInfo("RpdGenRSAKeys: local: d: '%s' length: %d", buf_d, l_d);
+      }
+#endif
+      if (rsa_cmp(&rsa_n, &rsa_e) <= 0)
+         continue;
+      if (rsa_cmp(&rsa_n, &rsa_d) <= 0)
+         continue;
+
+      // Now we try the keys
+      char Test[2 * rsa_STRLEN] = "ThisIsTheStringTest01203456-+/";
+      Int_t lTes = 31;
+      char *Tdum = RpdGetRandString(0, lTes - 1);
+      strncpy(Test, Tdum, lTes);
+      delete[]Tdum;
+      char buf[2 * rsa_STRLEN];
+      if (gDebug > 3)
+         ErrorInfo("RpdGenRSAKeys: local: test string: '%s' ", Test);
+
+      // Private/Public
+      strncpy(buf, Test, lTes);
+      buf[lTes] = 0;
+
+      // Try encryption with private key
+      int lout = rsa_encode(buf, lTes, rsa_n, rsa_e);
+      if (gDebug > 3)
+         ErrorInfo("GenRSAKeys: local: length of crypted string: %d bytes", lout);
+
+      // Try decryption with public key
+      rsa_decode(buf, lout, rsa_n, rsa_d);
+      buf[lTes] = 0;
+      if (gDebug > 3)
+         ErrorInfo("RpdGenRSAKeys: local: after private/public : '%s' ", buf);
+
+      if (strncmp(Test, buf, lTes))
+         continue;
+
+      // Public/Private
+      strncpy(buf, Test, lTes);
+      buf[lTes] = 0;
+
+      // Try encryption with public key
+      lout = rsa_encode(buf, lTes, rsa_n, rsa_d);
+      if (gDebug > 3)
+         ErrorInfo("RpdGenRSAKeys: local: length of crypted string: %d bytes ",
+              lout);
+
+      // Try decryption with private key
+      rsa_decode(buf, lout, rsa_n, rsa_e);
+      buf[lTes] = 0;
+      if (gDebug > 3)
+         ErrorInfo("RpdGenRSAKeys: local: after public/private : '%s' ", buf);
+
+      if (strncmp(Test, buf, lTes))
+         continue;
+
+      NotOk = 0;
+   }
+
+   if (NotOk) {
+      ErrorInfo("RpdGenRSAKeys: unable to generate good RSA key pair - return");
+      return 1;
+   }
+
+   // Save Private key
+   rsa_assign(&gRSAPriKey.n, &rsa_n);
+   rsa_assign(&gRSAPriKey.e, &rsa_e);
+
+   // Save Public key
+   rsa_assign(&gRSAPubKey.n, &rsa_n);
+   rsa_assign(&gRSAPubKey.e, &rsa_d);
+
+#if 0
+   if (gDebug > 2) {
+      // Determine their lengths
+      ErrorInfo("RpdGenRSAKeys: local: generated keys are:");
+      ErrorInfo("RpdGenRSAKeys: local: n: '%s' length: %d", buf_n, l_n);
+      ErrorInfo("RpdGenRSAKeys: local: e: '%s' length: %d", buf_e, l_e);
+      ErrorInfo("RpdGenRSAKeys: local: d: '%s' length: %d", buf_d, l_d);
+   }
+#endif
+   // Export form
+   gRSAPubExport.len = l_n + l_d + 4;
+   gRSAPubExport.keys = new char[gRSAPubExport.len];
+
+   gRSAPubExport.keys[0] = '#';
+   memcpy(gRSAPubExport.keys + 1, buf_n, l_n);
+   gRSAPubExport.keys[l_n + 1] = '#';
+   memcpy(gRSAPubExport.keys + l_n + 2, buf_d, l_d);
+   gRSAPubExport.keys[l_n + l_d + 2] = '#';
+   gRSAPubExport.keys[l_n + l_d + 3] = 0;
+#if 0
+   if (gDebug > 2)
+      ErrorInfo("RpdGenRSAKeys: local: export pub: '%s'", gRSAPubExport.keys);
+#else
+   if (gDebug > 2)
+      ErrorInfo("RpdGenRSAKeys: local: export pub length: %d bytes", gRSAPubExport.len);
+#endif
+
+   return 0;
+}
+
+//______________________________________________________________________________
+int RpdRecvClientRSAKey()
+{
+   // Generates local public/private RSA key pair
+   // Send request for Client Public Key and Local public key
+   // Receive encoded Client Key
+   // Decode Client public key
+   // NB: key is not saved to file here
+
+   if (gRSAInit == 0) {
+      // Generate Local RSA keys for the session
+      if (RpdGenRSAKeys()) {
+         ErrorInfo("RpdRecvClientRSAKey: unable to generate local keys");
+         return 1;
+      }
+   }
+
+   // Send server public key
+   NetSend(gRSAPubExport.keys, gRSAPubExport.len, kROOTD_RSAKEY);
+
+   // Receive length of message with encode client public key
+   EMessageTypes kind;
+   char BufLen[20];
+   NetRecv(BufLen, 20, kind);
+   int Len = atoi(BufLen);
+   if (gDebug > 3)
+      ErrorInfo("RpdRecvClientRSAKey: got len '%s' %d ", BufLen, Len);
+
+   // Receive and decode encoded public key
+   int Nrec = -1;
+   Nrec = NetRecvRaw(gPubKey, Len);
+   rsa_decode(gPubKey, Len, gRSAPriKey.n, gRSAPriKey.e);
+   if (gDebug > 2)
+      ErrorInfo("RpdRecvClientRSAKey: Local: decoded string is %d bytes long ",
+         strlen(gPubKey));
+
+   // Import Key and Determine key type
+   gRSAKey = RpdGetRSAKeys(gPubKey, 0);
+   if (gRSAKey == 0) {
+      ErrorInfo("RpdRecvClientRSAKey: could not import a valid key");
+      return 2;
+   }
+
+   return 0;
+
+}
+
+//______________________________________________________________________________
+void RpdInitRand()
+{
+   // Init random machine
+
+   int seed = 1;
+   if (!access("/dev/random", R_OK)) {
+      if (gDebug > 2)
+         ErrorInfo("RpdInitRand: taking seed from /dev/random");
+      char brnd[4];
+      FILE *frnd = fopen("/dev/random","r");
+      fread(brnd,1,4,frnd);
+      seed = *((int *)brnd);
+      fclose(frnd);
+   } else {
+      if (gDebug > 2)
+         ErrorInfo("RpdInitRand: /dev/random not available: using time()");
+      seed = time(0);
+   }
+   srand(seed);
 
 }
 

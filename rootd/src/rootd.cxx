@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.63 2003/09/27 19:06:28 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.64 2003/09/27 19:50:10 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1985,6 +1985,9 @@ void RootdLoop()
    // CleanUp authentication table, if needed or required ...
    RpdCheckSession();
 
+   // Init Random machinery ...
+   RpdInitRand();
+
    // Get Host name
    const char *OpenHost = NetRemoteHost();
    strcpy(gOpenHost, OpenHost);
@@ -2129,7 +2132,8 @@ void RootdLoop()
 
       if (gClientProtocol > 8) {
          if (gDebug > 2)
-            ErrorInfo("RootdLoop: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", kind, Meth, gAuth, gNumLeft);
+            ErrorInfo("RootdLoop: here we are: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d", 
+                       kind, Meth, gAuth, gNumLeft);
          // If authentication failure, check if other methods could be tried ...
          if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
             if (gNumLeft > 0) {

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsalib.h,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -33,6 +33,9 @@ int    rsa_decode(char *, int, rsa_NUMBER, rsa_NUMBER);
 /******************
  * nio.h          *
  ******************/
+
+int	rsa_cmp( rsa_NUMBER*, rsa_NUMBER* );
+void	rsa_assign( rsa_NUMBER*, rsa_NUMBER* );
 
 int	rsa_num_sput( rsa_NUMBER*, char*, int );
 int	rsa_num_fput( rsa_NUMBER*, FILE* );

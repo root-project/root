@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.37 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.38 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -141,7 +141,6 @@ private:
    Int_t    Exec(const char *cmd, ESlaves list);
    Int_t    SendCommand(const char *cmd, ESlaves list = kActive);
    Int_t    SendCurrentState(ESlaves list = kActive);
-   Int_t    CheckAuth(Int_t sec, char **det);
    Long_t   CheckFile(const char *file, TSlave *sl);
    Int_t    SendFile(const char *file, Bool_t bin = kTRUE);
    Int_t    SendObject(const TObject *obj, ESlaves list = kActive);

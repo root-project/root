@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.2 2003/09/11 23:12:18 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -321,7 +321,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if (host_subj) delete[] host_subj;
 
    // Receive username used for login or key request info and type of key
-   int nrec = sock->Recv(retval, type);	// returns user
+   int nrec = sock->Recv(retval, type);  // returns user
 
    if (ReUse == 1) {
 
@@ -331,19 +331,11 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
                  type, gRSAKey);
       gRSAKey = 1;
 
-      // RSA key generation (one per session)
-      if (!TAuthenticate::GetRSAInit()) {
-         Auth->GenRSAKeys();
-         TAuthenticate::SetRSAInit();
-      }
-      // Send key
-      if (gDebug > 3)
-         Info("GlobusAuthenticate", "Sending Local Key:\n '%s'",
-              TAuthenticate::GetRSAPubExport());
-      sock->Send(TAuthenticate::GetRSAPubExport(), kROOTD_RSAKEY);
+      // Send the key securely
+      TAuthenticate::SendRSAPublicKey(sock);
 
       // Receive username used for login
-      nrec = sock->Recv(retval, type);	// returns user
+      nrec = sock->Recv(retval, type);  // returns user
    }
 
    if (type != kROOTD_GLOBUS || retval < 1)
@@ -351,7 +343,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
               "problems recvn (user,offset) length (%d:%d bytes:%d)", type,
               retval, nrec);
    char *rfrm = new char[retval + 1];
-   nrec = sock->Recv(rfrm, retval + 1, type);	// returns user
+   nrec = sock->Recv(rfrm, retval + 1, type);  // returns user
    if (type != kMESS_STRING)
       Warning("GlobusAuthenticate",
               "username and offset not received (%d:%d)", type, nrec);
@@ -574,7 +566,7 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
 
    *LocalEnv = 0;
    if (lApp != 0) {
-      if (strstr(lApp->Argv()[1], "proof") != 0) {
+      if (lApp->Argc() > 10 && gROOT->IsProofServ()) {
          // This is PROOF ... either Master or Slave ...
          if (gDebug > 3) {
             Info("GlobusGetLocalEnv",
@@ -795,9 +787,11 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                                           CredHandle)) != GSS_S_COMPLETE) {
 
          // Check if interactive session
-         TApplication *lApp = gROOT->GetApplication();
-         if (strstr(lApp->Argv()[1], "proof") == 0) {
-
+#if 0
+         if (gROOT->IsProofServ()) {
+#else
+         if (isatty(0) && isatty(1)) {
+#endif
             if (gDebug > 3)
                Info("GlobusGetCredHandle",
                     "Failed to acquire credentials: trying to initialize proxies ...");
@@ -849,7 +843,8 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                     "export X509_CERT_DIR=%s; export X509_USER_CERT=%s; export X509_USER_KEY=%s",
                     cerdir, usrcer, usrkey);
 
-            // to execute command to initiate the proxies one needs to source the globus shell environment
+            // to execute command to initiate the proxies one needs
+            // to source the globus shell environment
             char proxyinit[kMAXPATHLEN] = { 0 };
             sprintf(proxyinit,
                     "source $GLOBUS_LOCATION/etc/globus-user-env.sh; %s; grid-proxy-init %s %s %s",
@@ -869,8 +864,13 @@ int GlobusGetCredHandle(int LocalEnv, gss_cred_id_t * CredHandle)
                goto exit;
             }
          } else {
+#if 0
             Warning("GlobusGetCredHandle",
-                    "proofserv: cannot prompt for credentials: returning failure");
+                    "proofserv: cannot prompt for credentials, returning failure");
+#else
+            Warning("GlobusGetCredHandle",
+                    "not a tty: cannot prompt for credentials, returning failure");
+#endif
             retval = 3;
             goto exit;
          }
@@ -923,7 +923,7 @@ int GlobusCheckSecContext(char *Host, char *SubjName)
                                         &Dum2)) != GSS_S_COMPLETE) {
                   GlobusError("GlobusCheckSecContext: gss_inquire_context",
                               MajStat, MinStat, 0);
-                  GlobusUpdateSecContInfo(i);	// delete it from tables ...
+                  GlobusUpdateSecContInfo(i);  // delete it from tables ...
                } else {
                   if (gDebug > 3)
                      Info("GlobusCheckSecContext",
@@ -1090,7 +1090,7 @@ void GlobusSetCertificates(int LocalEnv)
       char *det = 0;
       if (gPrompt) {
          char *dets = 0;
-         if (strstr(lApp->Argv()[1], "proof") == 0) {
+         if (!gROOT->IsProofServ()) {
             dets =
                 Getline(Form
                         (" Local Globus Certificates (%s)\n Enter <key>:<new value> to change: ",
@@ -1100,7 +1100,7 @@ void GlobusSetCertificates(int LocalEnv)
                     "proofserv: cannot prompt for info");
          }
          if (dets && dets[0]) {
-            dets[strlen(dets) - 1] = '\0';	// get rid of \n
+            dets[strlen(dets) - 1] = '\0';  // get rid of \n
             det = new char[strlen(dets)];
             strcpy(det, dets);
          } else
@@ -1263,11 +1263,11 @@ void GlobusCleanup()
    TApplication *lApp = gROOT->GetApplication();
 
    if (lApp != 0) {
-      if (strstr(lApp->Argv()[1], "proof") != 0) {
+      if (lApp->Argc() > 7 && gROOT->IsProofServ()) {
          struct shmid_ds shm_ds;
          int rc;
          // Delegated Credentials
-         gShmIdCred = (lApp->Argc() > 6) ? atoi(lApp->Argv()[7]) : -1;
+         gShmIdCred = atoi(lApp->Argv()[7]);
          if (gShmIdCred != -1) {
             if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
                if ((rc == EINVAL) || (rc == EIDRM)) {
