@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.151 2003/07/06 19:41:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.152 2003/07/17 16:34:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3413,6 +3413,12 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //    T.SetBranchStatus("c",1);
 //    T.setBranchStatus("e",1);
 //    T.GetEntry(i);
+//
+//  WARNING!!
+//  If your Tree has been created in split mode with a parent branch "parent",
+//     T.SetBranchStatus("parent",1);
+//  will not activate the sub-branches of "parent". You should do:
+//     T.SetBranchStatus("parent*",1);
 //
 //  An alternative to this function is to read directly and only
 //  the interesting branches. Example:
