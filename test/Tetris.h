@@ -144,7 +144,7 @@ private:
    Int_t  fFilledLines;    // number of non empty lines in pad
 
    void   AllAboveLinesDown(Int_t line)    // assume that line is empty
-            { for (int i = line; i < fFilledLines+1; i++) MoveOneLineDown(i); }
+            { for (int i = line; i < fFilledLines; i++) MoveOneLineDown(i); }
 
    void   MoveOneLineDown(Int_t line);
    void   RemoveFullLines();
