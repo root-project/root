@@ -355,6 +355,9 @@ if [ -z "$rfio" ]; then
       fi
    done
 fi
+case $arch in
+   linux*) rfio="$rfio -lnsl" ;;
+esac
 echo $rfio
 
 # Check for CERN libs (libpacklib and libkernlib)
