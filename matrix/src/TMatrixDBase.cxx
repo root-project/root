@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.6 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.7 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -205,10 +205,8 @@ void TMatrixDBase::Delete_m(Int_t size,Double_t*& m)
 
   if (m) {
     if (size > kSizeMax)
-    {
       delete [] m;
-      m = 0;
-    }
+    m = 0;
   }       
 }
 
