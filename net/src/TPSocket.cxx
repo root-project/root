@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.3 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.4 2001/02/03 14:36:31 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -300,6 +300,11 @@ Int_t TPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
       sendopt = opt;
    }
 
+   if (nsocks == 1)
+      fSockets[0]->SetOption(kNoBlock, 0);
+   else
+      fSockets[0]->SetOption(kNoBlock, 1);
+
    // setup pointer appropriately for transferring data equally on the
    // parallel sockets
    for (i = 0; i < nsocks; i++) {
@@ -402,6 +407,11 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
       nsocks  = 1;
       recvopt = opt;
    }
+
+   if (nsocks == 1)
+      fSockets[0]->SetOption(kNoBlock, 0);
+   else
+      fSockets[0]->SetOption(kNoBlock, 1);
 
    // setup pointer appropriately for transferring data equally on the
    // parallel sockets
