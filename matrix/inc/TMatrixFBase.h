@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.13 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.14 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixFBase() { SetBit(kStatus); fIsOwner = kTRUE;
+  TMatrixFBase() { fIsOwner = kTRUE;
                    fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixFBase() {}
@@ -111,9 +111,9 @@ public:
 
   virtual void   Clear      (Option_t *option="") = 0;
 
-  inline  void   Invalidate ()       { ResetBit(kStatus); }
-  inline  void   MakeValid  ()       { SetBit(kStatus); }
-  inline  Bool_t IsValid    () const { return TestBit(kStatus); }
+  inline  void   Invalidate ()       { SetBit(kStatus); }
+  inline  void   MakeValid  ()       { ResetBit(kStatus); }
+  inline  Bool_t IsValid    () const { return !TestBit(kStatus); }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
           Bool_t IsSymmetric() const;
 
@@ -171,7 +171,7 @@ public:
 
   virtual TMatrixFBase &Randomize(Float_t alpha,Float_t beta,Double_t &seed);
 
-  ClassDef(TMatrixFBase,2) // Dense Matrix base class (single precision)
+  ClassDef(TMatrixFBase,4) // Dense Matrix base class (single precision)
 };
 
 Float_t TMatrixFBase::SetTol(Float_t newTol)

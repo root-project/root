@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.15 2004/06/09 12:21:23 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.16 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -167,15 +167,14 @@ void TMatrixDSym::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_l
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
 
-  Invalidate();
-
   if (no_rows < 0 || no_cols < 0)
   {
     Error("Allocate","no_rows=%d no_cols=%d",no_rows,no_cols);
+    Invalidate();
     return;
   }
 
-  SetBit(kStatus);
+  MakeValid();
   fNrows   = no_rows;
   fNcols   = no_cols;
   fRowLwb  = row_lwb;
@@ -1087,26 +1086,24 @@ void TMatrixDSym::Streamer(TBuffer &R__b)
   if (R__b.IsReading()) {
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      Clear();
-      TMatrixDBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-      fElements = new Double_t[fNelems];
-      Int_t i;
-      for (i = 0; i < fNrows; i++) {
-        R__b.ReadFastArray(fElements+i*fNcols+i,fNcols-i);
+    Clear();
+    TMatrixDBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
+    fElements = new Double_t[fNelems];
+    Int_t i;
+    for (i = 0; i < fNrows; i++) {
+      R__b.ReadFastArray(fElements+i*fNcols+i,fNcols-i);
+    }
+    // copy to Lower left triangle
+    for (i = 0; i < fNrows; i++) {
+      for (Int_t j = 0; j < i; j++) {
+        fElements[i*fNcols+j] = fElements[j*fNrows+i];
       }
-      if (fNelems <= kSizeMax) {
-        memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
-        delete [] fElements;
-        fElements = fDataStack;
-      }
-
-      // copy to Lower left triangle
-      for (i = 0; i < fNrows; i++) {
-        for (Int_t j = 0; j < i; j++) {
-          fElements[i*fNcols+j] = fElements[j*fNrows+i];
-        }
-      }
-      return;
+    }
+    if (fNelems <= kSizeMax) {
+      memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
+      delete [] fElements;
+      fElements = fDataStack;
+    }
   } else {
     TMatrixDBase::Class()->WriteBuffer(R__b,this);
     // Only write the Upper right triangle

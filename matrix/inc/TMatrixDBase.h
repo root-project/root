@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.14 2004/06/02 15:42:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.15 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -89,7 +89,7 @@ public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-  TMatrixDBase() { SetBit(kStatus); fIsOwner = kTRUE; 
+  TMatrixDBase() { fIsOwner = kTRUE; 
                    fNelems = fNrowIndex = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixDBase() {}
@@ -117,9 +117,9 @@ public:
 
   virtual void   Clear      (Option_t *option="") = 0;
 
-  inline  void   Invalidate ()       { ResetBit(kStatus); }
-  inline  void   MakeValid  ()       { SetBit(kStatus); }
-  inline  Bool_t IsValid    () const { return TestBit(kStatus); }
+  inline  void   Invalidate ()       { SetBit(kStatus); }
+  inline  void   MakeValid  ()       { ResetBit(kStatus); }
+  inline  Bool_t IsValid    () const { return !TestBit(kStatus); }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
   virtual Bool_t IsSymmetric() const;
 
@@ -177,7 +177,7 @@ public:
 
   virtual TMatrixDBase &Randomize(Double_t alpha,Double_t beta,Double_t &seed);
 
-  ClassDef(TMatrixDBase,3) // Matrix base class (double precision)
+  ClassDef(TMatrixDBase,4) // Matrix base class (double precision)
 };
 
 Double_t TMatrixDBase::SetTol(Double_t newTol)

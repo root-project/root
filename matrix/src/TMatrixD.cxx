@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.64 2004/06/09 12:21:23 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.65 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -296,15 +296,14 @@ void TMatrixD::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
   // Allocate new matrix. Arguments are number of rows, columns, row
   // lowerbound (0 default) and column lowerbound (0 default).
 
-  Invalidate();
-
   if (no_rows < 0 || no_cols < 0)
   {
     Error("Allocate","no_rows=%d no_cols=%d",no_rows,no_cols);
+    Invalidate();
     return;
   }
 
-  SetBit(kStatus);
+  MakeValid();
   fNrows   = no_rows;
   fNcols   = no_cols;
   fRowLwb  = row_lwb;
@@ -2040,17 +2039,10 @@ void TMatrixD::Streamer(TBuffer &R__b)
     if (R__v > 2) {
       Clear();
       TMatrixD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-      if (fNelems <= kSizeMax) {
-        memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
-        delete [] fElements;
-        fElements = fDataStack;
-      }
-      return;
-    }
-    //process old version 2
-    if (R__v == 2) {
+    } else if (R__v == 2) { //process old version 2
       Clear();
       TObject::Streamer(R__b);
+      MakeValid();
       R__b >> fNrows;
       R__b >> fNcols;
       R__b >> fNelems;
@@ -2060,19 +2052,18 @@ void TMatrixD::Streamer(TBuffer &R__b)
       Char_t isArray;
       R__b >> isArray;
       if (isArray) R__b.ReadFastArray(fElements,fNelems);
-      if (fNelems <= kSizeMax) {
-        memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
-        delete [] fElements;
-        fElements = fDataStack;
-      }
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
-      return;
+    } else { //====process old versions before automatic schema evolution
+      TObject::Streamer(R__b);
+      MakeValid();
+      fNelems = R__b.ReadArray(fElements);
+      R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
     }
-    //====process old versions before automatic schema evolution
-    TObject::Streamer(R__b);
-    fNelems = R__b.ReadArray(fElements);
-    R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
-    //====end of old versions
+    if (fNelems <= kSizeMax) {
+      memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
+      delete [] fElements;
+      fElements = fDataStack;
+    }
   } else {
     TMatrixD::Class()->WriteBuffer(R__b,this);
   }

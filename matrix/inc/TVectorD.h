@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.34 2004/05/27 13:17:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.35 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -50,7 +50,7 @@ protected:
 
 public:
 
-  TVectorD() { SetBit(TMatrixDBase::kStatus); fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
+  TVectorD() { fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
   explicit TVectorD(Int_t n);
   TVectorD(Int_t lwb,Int_t upb);
   TVectorD(Int_t n,const Double_t *elements);
@@ -73,9 +73,9 @@ public:
   inline          Double_t *GetMatrixArray  ()       { return fElements; }
   inline const    Double_t *GetMatrixArray  () const { return fElements; }
 
-  inline void     Invalidate ()       { ResetBit(TMatrixDBase::kStatus); }
-  inline void     MakeValid  ()       { SetBit(TMatrixDBase::kStatus); }
-  inline Bool_t   IsValid    () const { return TestBit(TMatrixDBase::kStatus); }
+  inline void     Invalidate ()       { SetBit(TMatrixDBase::kStatus); }
+  inline void     MakeValid  ()       { ResetBit(TMatrixDBase::kStatus); }
+  inline Bool_t   IsValid    () const { return !TestBit(TMatrixDBase::kStatus); }
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Double_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Double_t)); }
@@ -148,7 +148,7 @@ public:
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
 
-  ClassDef(TVectorD,2)  // Vector class with double precision
+  ClassDef(TVectorD,3)  // Vector class with double precision
 };
 
 inline       TVectorD &TVectorD::Use           (Int_t n,Double_t *data) { return Use(0,n-1,data); }

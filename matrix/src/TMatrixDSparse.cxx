@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.13 2004/06/09 12:21:23 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.14 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -222,16 +222,15 @@ void TMatrixDSparse::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t co
   // and column lowerbound (0 default), 0 initialization flag and number of non-zero 
   // elements (only relevant for sparse format).
   
-  Invalidate();
-  
   if ( (nr_nonzeros > 0 && (no_rows == 0 || no_cols == 0)) ||
        (no_rows < 0 || no_cols < 0 || nr_nonzeros < 0) )
   { 
     Error("Allocate","no_rows=%d no_cols=%d non_zeros=%d",no_rows,no_cols,nr_nonzeros);
+    Invalidate();
     return;
   }
   
-  SetBit(kStatus);
+  MakeValid();
   fNrows     = no_rows;
   fNcols     = no_cols;
   fRowLwb    = row_lwb;

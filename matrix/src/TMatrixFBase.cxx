@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.12 2004/06/08 08:20:36 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.13 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -1216,17 +1216,12 @@ void TMatrixFBase::Streamer(TBuffer &R__b)
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
     if (R__v > 1) {
       TMatrixFBase::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-      MakeValid();
-      return;
+    } else {
+      Error("TMatrixFBase::Streamer","Unknown version number: %d",R__v);
+      Assert(0);
     }
-    //====process old versions before automatic schema evolution
-    TObject::Streamer(R__b);
-    R__b >> fNrows;
-    R__b >> fNcols;
-    R__b >> fRowLwb;
-    R__b >> fColLwb;
-    R__b.CheckByteCount(R__s,R__c,TMatrixFBase::IsA());
-    //====end of old versions
+    if (R__v < 4)
+      MakeValid();
   } else {
     TMatrixFBase::Class()->WriteBuffer(R__b,this);
   }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.48 2004/06/09 12:21:23 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.49 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -93,10 +93,9 @@ void TVectorD::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
   // Allocate new vector. Arguments are number of rows and row
   // lowerbound (0 default).
 
-  Invalidate();
   Assert(nrows >= 0);
 
-  SetBit(TMatrixDBase::kStatus);
+  MakeValid();
   fNrows   = nrows;
   fRowLwb  = row_lwb;
   fIsOwner = kTRUE;
@@ -1753,21 +1752,25 @@ void TVectorD::Streamer(TBuffer &R__b)
 {
   // Stream an object of class TVectorD.
 
-  if (R__b.IsReading()) {
+  if (R__b.IsReading()) {                                               
     UInt_t R__s, R__c;
     Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
     if (R__v > 1) {
       Clear();
-      TVectorD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
-      if (R__v < 2) MakeValid();
-      return;
+      TVectorD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);          
+    } else { //====process old versions before automatic schema evolution
+      TObject::Streamer(R__b);
+      R__b >> fRowLwb;                                                  
+      fNrows = R__b.ReadArray(fElements);
+      R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
     }
-    //====process old versions before automatic schema evolution
-    TObject::Streamer(R__b);
-    R__b >> fRowLwb;
-    fNrows = R__b.ReadArray(fElements);
-    MakeValid();
-    R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
+    if (fNrows <= kSizeMax) {
+      memcpy(fDataStack,fElements,fNrows*sizeof(Double_t));
+      delete [] fElements;
+      fElements = fDataStack;
+    }
+    if (R__v < 3)
+      MakeValid();
   } else {
     TVectorD::Class()->WriteBuffer(R__b,this);
   }
