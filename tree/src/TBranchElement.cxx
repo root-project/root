@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.61 2001/09/25 07:58:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.62 2001/10/02 16:56:31 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1132,8 +1132,9 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
          //here one should consider the case of a TClonesArray with a class
          //deriving from an abstract class
          //if ((cltop != cl) && (clbase->Property() & kIsAbstract)) return -1;
-         //if (clbase->Property() & kIsAbstract) unroll = -1;
-         if (clbase->Property() & kIsAbstract) return -1;
+         //if (clbase->Property() & kIsAbstract) return -1;
+         if (clbase->Property() & kIsAbstract) unroll = -1;
+         if (unroll < 0 && btype != 31) return -1;
 //printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          else unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
          if (unroll < 0) {
