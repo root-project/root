@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.1 2001/02/21 15:23:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.2 2001/02/21 15:55:26 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
    
 #include "TROOT.h"
 #include "TH1K.h"
@@ -65,14 +66,6 @@ TH1K::TH1K(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 TH1K::~TH1K()
 {
 }
-
-//______________________________________________________________________________
-void   TH1K::Reset(Option_t *option)
-{
-  fNIn   =0; 
-  fReady = 0; 
-  TH1::Reset(option);
-} 
  
 //______________________________________________________________________________
 Int_t TH1K::Fill(Axis_t x)
@@ -140,6 +133,71 @@ Stat_t TH1K::GetBinError(Int_t bin) const
 //*-*          ===================================
    return TMath::Sqrt(((double)(fNIn-fKCur+1))/((fNIn+1)*(fKCur-1)))*GetBinContent(bin);
 }
+
+//______________________________________________________________________________
+void   TH1K::Reset(Option_t *option)
+{
+  fNIn   =0; 
+  fReady = 0; 
+  TH1::Reset(option);
+} 
+
+//______________________________________________________________________________
+void TH1K::SavePrimitive(ofstream &out, Option_t *option)
+{
+    // Save primitive as a C++ statement(s) on output stream out
+
+   //Note the following restrictions in the code generated:
+   // - variable bin size not implemented
+   // - Objects in list of functions not saved (fits)
+   // - Contours not saved
+   
+   char quote = '"';
+   out<<"   "<<endl;
+   out<<"   "<<"TH1 *";
+   
+   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
+                 <<","<<GetXaxis()->GetNbins()
+                 <<","<<GetXaxis()->GetXmin()
+                 <<","<<GetXaxis()->GetXmax()
+                 <<","<<fKOrd;
+
+              out<<");"<<endl;
+   if (fDirectory == 0) {
+      out<<"   "<<GetName()<<"->SetDirectory(0);"<<endl;
+   }
+   if (TestBit(kNoStats)) {
+      out<<"   "<<GetName()<<"->SetStats(0);"<<endl;
+   }
+   if (fOption.Length() != 0) {
+      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
+   }
+   
+   if (fNIn) {
+      out<<"   Float_t Arr[]={"<<endl;
+      for (int i=0; i<fNIn; i++) {
+         out<< fArray[i];
+         if (i != fNIn-1) {out<< ",";} else { out<< "};";}
+         if (i%10 == 9)   {out<< endl;}
+      }
+      out<< endl;
+      out<<"   for(int i=0;i<" << fNIn << ";i++)"<<GetName()<<"->Fill(Arr[i]);"; 
+      out<< endl;
+   }
+   SaveFillAttributes(out,GetName(),0,1001);
+   SaveLineAttributes(out,GetName(),1,1,1);
+   SaveMarkerAttributes(out,GetName(),1,1,1);
+   fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
+   fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
+   fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
+   TString opt = option;
+   opt.ToLower();
+   if (!opt.Contains("nodraw")) {
+      out<<"   "<<GetName()<<"->Draw("
+      <<quote<<option<<quote<<");"<<endl;
+   }
+}
+ 
 
 //______________________________________________________________________________
 static int TH1K_fcompare(const void *f1,const void *f2)

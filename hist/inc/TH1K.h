@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.1 2001/02/10 02:00:42 perev Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.h,v 1.1 2001/02/21 15:23:16 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -38,22 +38,19 @@ public:
     TH1K(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup,Int_t k=0);
     virtual ~TH1K();
 
+    virtual Int_t   Fill(Axis_t x);
+    virtual Int_t   Fill(Axis_t x,Stat_t w){return TH1::Fill(x,w);}
     virtual Stat_t  GetBinContent(Int_t bin) const;
-    virtual Stat_t  GetBinContent(Int_t bin,Int_t) const
-                    {return GetBinContent(bin);}
-    virtual Stat_t  GetBinContent(Int_t bin,Int_t,Int_t) const
-                    {return GetBinContent(bin);}
+    virtual Stat_t  GetBinContent(Int_t bin,Int_t) const {return GetBinContent(bin);}
+    virtual Stat_t  GetBinContent(Int_t bin,Int_t,Int_t) const {return GetBinContent(bin);}
 
     virtual Stat_t  GetBinError(Int_t bin) const;
-    virtual Stat_t  GetBinError(Int_t bin,Int_t) const
-                    {return GetBinError(bin);}
-    virtual Stat_t  GetBinError(Int_t bin,Int_t,Int_t) const
-                    {return GetBinError(bin);}
+    virtual Stat_t  GetBinError(Int_t bin,Int_t) const {return GetBinError(bin);}
+    virtual Stat_t  GetBinError(Int_t bin,Int_t,Int_t) const {return GetBinError(bin);}
     
     
     virtual void    Reset(Option_t *option="");
-    virtual Int_t   Fill(Axis_t x);
-    virtual Int_t   Fill(Axis_t x,Stat_t w){return TH1::Fill(x,w);}
+    virtual void    SavePrimitive(ofstream &out, Option_t *option);
 
     void    SetKOrd(Int_t k){fKOrd=k;}
    
