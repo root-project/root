@@ -1,5 +1,5 @@
 TEST_TARGETS += currentTest
-CLEAN_TARGETS += local_clean
+CLEAN_TARGETS += local_clean $(ALL_LIBRARIES)
 
 #include $(ROOTSYS)/test/Makefile.arch
 
