@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.5 2001/05/29 20:55:28 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.8 2001/05/30 06:03:43 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -280,6 +280,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         nextPos.SetId(positionId);
         if (optMarked && !node->IsMarked()) {
             TVolumeView fakeView(*node,maxDepLevel,&nextPos,iopt,rootVolume);
+            fakeView.DoOwner(kFALSE);
             continue;
         }
 
