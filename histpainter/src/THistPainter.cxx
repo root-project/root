@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.58 2001/12/23 09:10:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.59 2002/01/02 21:46:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 #include "TH2.h"
 #include "TF2.h"
 #include "TF3.h"
-#include "TVirtualPad.h"
+#include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
 #include "TText.h"
@@ -39,7 +39,6 @@
 #include "TObjArray.h"
 #include "Hoption.h"
 #include "Hparam.h"
-
 
 //______________________________________________________________________________
 //   The histogram painter class
@@ -70,8 +69,8 @@ ClassImp(THistPainter)
 //______________________________________________________________________________
 THistPainter::THistPainter()
 {
-//*-*-*-*-*-*-*-*-*-*-*Histogram default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
+//    *-*-*-*-*-*-*-*-*Histogram default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
+//                     =============================
    fH = 0;
    fXaxis = 0;
    fYaxis = 0;
@@ -86,8 +85,8 @@ THistPainter::THistPainter()
 //______________________________________________________________________________
 THistPainter::~THistPainter()
 {
-//*-*-*-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
+//    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//                     ============================
 
    delete [] fXbuf;
    delete [] fYbuf;
@@ -97,17 +96,17 @@ THistPainter::~THistPainter()
 //______________________________________________________________________________
 Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
-//*-*                  ===========================================
-//*-*  Compute the closest distance of approach from point px,py to elements
-//*-*  of an histogram.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  Algorithm:
-//*-*  Currently, this simple model computes the distance from the mouse
-//*-*  to the histogram contour only.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//    *-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
+//                     ===========================================
+//     Compute the closest distance of approach from point px,py to elements
+//     of an histogram.
+//     The distance is computed in pixels units.
+//   
+//     Algorithm:
+//     Currently, this simple model computes the distance from the mouse
+//     to the histogram contour only.
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    const Int_t big = 9999;
    const Int_t kMaxDiff = 7;
@@ -120,9 +119,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
 
-//*-*- return if point is not in the histogram area
+//     return if point is not in the histogram area
 
-//*-*- If a 3-D view exists, check distance to axis
+//     If a 3-D view exists, check distance to axis
    TView *view = gPad->GetView();
    Int_t d1,d2,d3;
    if (view) {
@@ -136,12 +135,13 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       if ( px > puxmin && px < puxmax && py > puymax && py < puymin) return 1;
       return big;
    }
-//*-*- check if point is close to an axis
+//     check if point is close to an axis
    Int_t xyaxis = puxmin - Int_t((puxmax-puxmin)*fYaxis->GetLabelOffset());
    Int_t dyaxis = Int_t(2*(puymin-puymax)*fYaxis->GetLabelSize());
    if (px >= xyaxis-dyaxis && px <= xyaxis && py >puymax && py < puymin) {
       if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
-         gPad->SetSelected(fYaxis);
+         if (gPad->IsVertical()) gPad->SetSelected(fYaxis);
+         else                    gPad->SetSelected(fXaxis);
          return 0;
       }
    }
@@ -150,12 +150,13 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t dxaxis = Int_t((puymin-puymax)*fXaxis->GetLabelSize());
    if (py <= yxaxis+dxaxis && py >= yxaxis && px <puxmax && px > puxmin) {
       if (!strstr(gPad->GetPadPointer()->GetDrawOption(),"same")) {
-         gPad->SetSelected(fXaxis);
+         if (gPad->IsVertical()) gPad->SetSelected(fXaxis);
+         else                    gPad->SetSelected(fYaxis);
          return 0;
        }
     }
 
-//*-* check if point is on the color palette
+//    check if point is on the color palette
    if (strchr(fH->GetDrawOption(),'z') || strchr(fH->GetDrawOption(),'Z')) {
       if (fH->GetDimension() > 1 && py <= puymin && py > puymax) {
          Double_t xup  = gPad->GetUxmax();
@@ -172,7 +173,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          }
       }
    }
-//*-*- if object is 2-D or 3-D return this object
+//     if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
       if ( px > puxmin + delta2
@@ -181,27 +182,51 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
         && py < puymin - delta2) return 1;
    }
 
-//*-*- point is inside histogram area. Find channel number
-   Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
-   Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
-   Double_t binval = fH->GetBinContent(bin);
-   Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
-// special case if more than one bin for the pixel
-   if (binsup-bin>1) {
-      Double_t binvalmin, binvalmax;
-      binvalmin=binval;
-      binvalmax=binval;
-      for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
-         Double_t binvaltmp = fH->GetBinContent(ibin);
-         if (binvalmin>binvaltmp) binvalmin=binvaltmp;
-         if (binvalmax<binvaltmp) binvalmax=binvaltmp;
+//     point is inside histogram area. Find channel number
+   if (gPad->IsVertical()) {
+      Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
+      Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
+      Double_t binval = fH->GetBinContent(bin);
+      Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
+      // special case if more than one bin for the pixel
+      if (binsup-bin>1) {
+         Double_t binvalmin, binvalmax;
+         binvalmin=binval;
+         binvalmax=binval;
+         for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
+            Double_t binvaltmp = fH->GetBinContent(ibin);
+            if (binvalmin>binvaltmp) binvalmin=binvaltmp;
+            if (binvalmax<binvaltmp) binvalmax=binvaltmp;
+         }
+         Int_t pybinmin = gPad->YtoAbsPixel(gPad->YtoPad(binvalmax));
+         Int_t pybinmax = gPad->YtoAbsPixel(gPad->YtoPad(binvalmin));
+         if (py<pybinmax+kMaxDiff/2 && py>pybinmin-kMaxDiff/2) pybin = py;
       }
-      Int_t pybinmin = gPad->YtoAbsPixel(gPad->YtoPad(binvalmax));
-      Int_t pybinmax = gPad->YtoAbsPixel(gPad->YtoPad(binvalmin));
-      if (py<pybinmax+kMaxDiff/2 && py>pybinmin-kMaxDiff/2) pybin = py;
+      if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
+   } else {
+      Double_t y  = gPad->AbsPixeltoY(py);
+      Double_t y1 = gPad->AbsPixeltoY(py+1);
+      Int_t bin      = fXaxis->FindFixBin(gPad->PadtoY(y));
+      Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoY(y1));
+      Double_t binval = fH->GetBinContent(bin);
+      Int_t pxbin    = gPad->XtoAbsPixel(gPad->XtoPad(binval));
+      // special case if more than one bin for the pixel
+      if (binsup-bin>1) {
+         Double_t binvalmin, binvalmax;
+         binvalmin=binval;
+         binvalmax=binval;
+         for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
+            Double_t binvaltmp = fH->GetBinContent(ibin);
+            if (binvalmin>binvaltmp) binvalmin=binvaltmp;
+            if (binvalmax<binvaltmp) binvalmax=binvaltmp;
+         }
+         Int_t pxbinmin = gPad->XtoAbsPixel(gPad->XtoPad(binvalmax));
+         Int_t pxbinmax = gPad->XtoAbsPixel(gPad->XtoPad(binvalmin));
+         if (px<pxbinmax+kMaxDiff/2 && px>pxbinmin-kMaxDiff/2) pxbin = px;
+      }
+      if (TMath::Abs(px - pxbin) <= kMaxDiff) return TMath::Abs(px - pxbin);
    }
-   if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
-//*-*- Loop on the list of associated functions and user objects
+   //     Loop on the list of associated functions and user objects
    TObject *f;
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
@@ -214,10 +239,10 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void THistPainter::DrawPanel()
 {
-//*-*-*-*-*-*-*Display a panel with all histogram drawing options*-*-*-*-*-*
-//*-*          ==================================================
-//*-*
-//*-*   See class TDrawPanelHist for example
+//    *-*-*-*-*Display a panel with all histogram drawing options*-*-*-*-*-*
+//             ==================================================
+//   
+//      See class TDrawPanelHist for example
 
    gCurrentHist = fH;
    if (gPad) {
@@ -247,20 +272,20 @@ void THistPainter::DrawPanel()
 //______________________________________________________________________________
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function is called when a histogram is clicked with the locator
-//*-*
-//*-*  If Left button clicked on the bin top value, then the content of this bin
-//*-*  is modified according to the new position of the mouse when it is released.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//    *-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
+//                     =========================================
+//     This member function is called when a histogram is clicked with the locator
+//   
+//     If Left button clicked on the bin top value, then the content of this bin
+//     is modified according to the new position of the mouse when it is released.
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    static Int_t bin, px1, py1, px2, py2, pyold;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
 
    if (!gPad->IsEditable()) return;
 
-//*-*- come here if we have a lego/surface in the pad
+//     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
    if (view && view->TestBit(kCannotRotate) == 0) {
       view->ExecuteRotateView(event, px, py);
@@ -304,9 +329,9 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if (gROOT->GetEditHistograms()) {
-         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //*-* Draw the old box
+         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the old box
          py2 += py - pyold;
-         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //*-* Draw the new box
+         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the new box
          pyold = py;
       }
 
@@ -349,10 +374,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void THistPainter::FitPanel()
 {
-//*-*-*-*-*-*-*Display a panel with all histogram fit options*-*-*-*-*-*
-//*-*          ==============================================
-//*-*
-//*-*   See class TFitPanel for example
+//    *-*-*-*-*Display a panel with all histogram fit options*-*-*-*-*-*
+//             ==============================================
+//   
+//      See class TFitPanel for example
 
    gCurrentHist = fH;
    if (gPad) {
@@ -403,21 +428,41 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       }
    }
    Int_t binx,biny,binmin,binx1;
-   binx   = fXaxis->FindFixBin(x);
-   binmin = fXaxis->GetFirst();
-   binx1  = fXaxis->FindFixBin(x1);
-// special case if more than 1 bin in x per pixel
-   if (binx1-binx>1 && fH->GetDimension() == 1) {
-      Double_t binval=fH->GetBinContent(binx);
-      Int_t binnear=binx;
-      for (Int_t ibin=binx+1; ibin<binx1; ibin++) {
-         Double_t binvaltmp = fH->GetBinContent(ibin);
-         if (TMath::Abs(y-binvaltmp) < TMath::Abs(y-binval)) {
-            binval=binvaltmp;
-            binnear=ibin;
+   if (gPad->IsVertical()) {
+      binx   = fXaxis->FindFixBin(x);
+      binmin = fXaxis->GetFirst();
+      binx1  = fXaxis->FindFixBin(x1);
+      // special case if more than 1 bin in x per pixel
+      if (binx1-binx>1 && fH->GetDimension() == 1) {
+         Double_t binval=fH->GetBinContent(binx);
+         Int_t binnear=binx;
+         for (Int_t ibin=binx+1; ibin<binx1; ibin++) {
+            Double_t binvaltmp = fH->GetBinContent(ibin);
+            if (TMath::Abs(y-binvaltmp) < TMath::Abs(y-binval)) {
+               binval=binvaltmp;
+               binnear=ibin;
+            }
          }
+         binx = binnear;
       }
-      binx = binnear;
+   } else {
+      x1 = gPad->PadtoY(gPad->AbsPixeltoY(py+1));
+      binx   = fXaxis->FindFixBin(y);
+      binmin = fXaxis->GetFirst();
+      binx1  = fXaxis->FindFixBin(x1);
+      // special case if more than 1 bin in x per pixel
+      if (binx1-binx>1 && fH->GetDimension() == 1) {
+         Double_t binval=fH->GetBinContent(binx);
+         Int_t binnear=binx;
+         for (Int_t ibin=binx+1; ibin<binx1; ibin++) {
+            Double_t binvaltmp = fH->GetBinContent(ibin);
+            if (TMath::Abs(x-binvaltmp) < TMath::Abs(x-binval)) {
+               binval=binvaltmp;
+               binnear=ibin;
+            }
+         }
+         binx = binnear;
+      }
    }
    if (fH->GetDimension() == 1) {
       Double_t integ = 0;
@@ -465,8 +510,8 @@ Bool_t THistPainter::IsInside(Double_t x, Double_t y)
 //______________________________________________________________________________
 Int_t THistPainter::MakeChopt(Option_t *choptin)
 {
-//*-*-*-*-*-*-*-*-*Decode string chopt and fill Hoption structure*-*-*-*-*-*-*
-//*-*              ==============================================
+//    *-*-*-*-*-*-*Decode string chopt and fill Hoption structure*-*-*-*-*-*-*
+//                 ==============================================
 
    char *l;
    char chopt[128];
@@ -480,7 +525,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
 
-//*-* special 2-D options
+//    special 2-D options
    Hoption.List        = 0;
    Hoption.Zscale      = 0;
    Hoption.FrontBox    = 1;
@@ -542,6 +587,24 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
    }
+   l = strstr(chopt,"HBAR");
+   if (l) {
+      Hoption.Hist = 0;
+      Hoption.Bar = 20; strncpy(l,"    ",4);
+      if (l[4] == '1') { Hoption.Bar = 21; l[4] = ' '; }
+      if (l[4] == '2') { Hoption.Bar = 22; l[4] = ' '; }
+      if (l[4] == '3') { Hoption.Bar = 23; l[4] = ' '; }
+      if (l[4] == '4') { Hoption.Bar = 24; l[4] = ' '; }
+   }
+   l = strstr(chopt,"BAR");
+   if (l) {
+      Hoption.Hist = 0;
+      Hoption.Bar = 10; strncpy(l,"   ",3);
+      if (l[3] == '1') { Hoption.Bar = 11; l[3] = ' '; }
+      if (l[3] == '2') { Hoption.Bar = 12; l[3] = ' '; }
+      if (l[3] == '3') { Hoption.Bar = 13; l[3] = ' '; }
+      if (l[3] == '4') { Hoption.Bar = 14; l[3] = ' '; }
+   }
    l = strstr(chopt,"+-");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
    l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
 
@@ -585,13 +648,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 //
 //   if (fSumw2.fN && !Hoption.Error) Hoption.Error = 2;
 
-//*-*   Copy options from current style
+//      Copy options from current style
    Hoption.Logx = gPad->GetLogx();
    Hoption.Logy = gPad->GetLogy();
    Hoption.Logz = gPad->GetLogz();
 
-//*-*-   Check options incompatibilities
-   if (Hoption.Bar) Hoption.Hist = -1;
+//       Check options incompatibilities
+   if (Hoption.Bar  == 1) Hoption.Hist = -1;
    if (Hoption.Same && Hoption.Plus) {
       Error("MakeChopt", "select only one of the options S,+");
       return 0;
@@ -614,8 +677,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 //______________________________________________________________________________
 Int_t THistPainter::MakeCuts(char *choptin)
 {
-//*-*-*-*-*-*-*-*-*Decode string chopt and fill Graphical cuts structure
-//*-*              =====================================================
+//    *-*-*-*-*-*-*Decode string chopt and fill Graphical cuts structure
+//                 =====================================================
 
    fNcuts = 0;
    char *left = (char*)strchr(choptin,'[');
@@ -653,8 +716,8 @@ Int_t THistPainter::MakeCuts(char *choptin)
 //______________________________________________________________________________
 void THistPainter::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*Control routine to paint any kind of histograms*-*-*-*-*-*-*
-//*-*              ===============================================
+//    *-*-*-*-*-*-*Control routine to paint any kind of histograms*-*-*-*-*-*-*
+//                 ===============================================
 //
 // When you call the Draw method of a histogram for the first time (TH1::Draw),
 // it creates a THistPainter object and saves a pointer to painter as a
@@ -902,6 +965,50 @@ void THistPainter::Paint(Option_t *option)
 */
 //End_Html
 //
+//  The BAR options
+//  ===============
+//  When the option "bar" or "hbar" is specified, a bar chart is drawn.
+//   ----Vertical BAR chart: Options "bar","bar0","bar1","bar2","bar3","bar4"
+//  The bar is filled with the histogram fill color
+//  The left side of the bar is drawn with a light fill color
+//  The right side of the bar is drawn with a dark fill color
+//  The percentage of the bar drawn with either the light or dark color
+//    is  0 per cent for option "bar" or "bar0"         
+//    is 10 per cent for option "bar1"
+//    is 20 per cent for option "bar2"
+//    is 30 per cent for option "bar3"
+//    is 40 per cent for option "bar4"
+//
+//  Use TH1::SetBarWidth to control the bar width (default is the bin width)
+//  Use TH1::SetBarOffset to control the bar offset (default is 0)
+//    See example in $ROOTSYS/tutorials/hbars.C
+//Begin_Html
+/*
+<img src="gif/PaintBar.gif">
+*/
+//End_Html
+//
+//   ----Horizontal BAR chart: Options "hbar","hbar0","hbar1","hbar2","hbar3","hbar4"
+//  An horizontal bar is drawn for each bin.
+//  The bar is filled with the histogram fill color
+//  The bottom side of the bar is drawn with a light fill color
+//  The top side of the bar is drawn with a dark fill color
+//  The percentage of the bar drawn with either the light or dark color
+//    is  0 per cent for option "hbar" or "hbar0"         
+//    is 10 per cent for option "hbar1"
+//    is 20 per cent for option "hbar2"
+//    is 30 per cent for option "hbar3"
+//    is 40 per cent for option "hbar4"
+//
+//  Use TH1::SetBarWidth to control the bar width (default is the bin width)
+//  Use TH1::SetBarOffset to control the bar offset (default is 0)
+//    See example in $ROOTSYS/tutorials/hbars.C
+//Begin_Html
+/*
+<img src="gif/PaintBarH.gif">
+*/
+//End_Html
+
 //  The SCATter plot option (default for 2-D histograms)
 // =======================
 //  For each cell (i,j) a number of points proportional to the cell content is drawn.
@@ -1103,6 +1210,9 @@ void THistPainter::Paint(Option_t *option)
 //
 //
 //--------------------------------------------------------------------
+   
+   gPad->SetVertical(kTRUE);
+   
    TH1 *oldhist = gCurrentHist;
    gCurrentHist = fH;
    TH1 *hsave   = fH;
@@ -1145,34 +1255,41 @@ void THistPainter::Paint(Option_t *option)
       gCurrentHist = oldhist;
       return;
    }
+   
+   if (Hoption.Bar >= 20) {PaintBarH(); return;}
 
    if (!PaintInit()) return;  //fill Hparam structure with histo parameters
 
-//*-*-      Picture surround (if new page) and page number (if requested).
-//*-*-      Histogram surround (if not option "Same").
+//          Picture surround (if new page) and page number (if requested).
+//          Histogram surround (if not option "Same").
 
    PaintFrame();
-//*-*------
-//*-*-      Paint histogram axis only
+//    -----
+//          Paint histogram axis only
    if (Hoption.Axis > 0) {
       PaintAxis();
       return;
    }
 
-//*-*------
-//*-*-      do not draw histogram if error bars required
+//    -----
+//          test for options BAR or HBAR
+   if (Hoption.Bar >= 10) {
+      PaintBar();
+   }
+//    -----
+//          do not draw histogram if error bars required
    if (!Hoption.Error) {
       if (Hoption.Hist) PaintHist();
    }
-//*-*------
+//    -----
 
-//*-*-     test for error bars or option E
+//         test for error bars or option E
    if (Hoption.Error || Hoption.Mark) {
       PaintErrors();
       if (Hoption.Hist == 2) PaintHist();
    }
 
-//*-*-     test for associated function
+//         test for associated function
    if (Hoption.Func) {
       Hoption_t hoptsave = Hoption;
       Hparam_t  hparsave = Hparam;
@@ -1182,11 +1299,11 @@ void THistPainter::Paint(Option_t *option)
       Hparam  = hparsave;
    }
 
-   PaintAxis();     //*-* Draw the axes
-   PaintTitle();    //*-* Draw histogram title
-//   PaintFile();     //*-* Draw Current File name corresp to current directory
-//   PaintDate();     //*-* Draw date/time
-     //*-* Draw box with histogram statistics and/or fit parameters
+   PaintAxis();     //    Draw the axes
+   PaintTitle();    //    Draw histogram title
+//   PaintFile();     //    Draw Current File name corresp to current directory
+//   PaintDate();     //    Draw date/time
+     //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
@@ -1204,18 +1321,18 @@ void THistPainter::Paint(Option_t *option)
 //______________________________________________________________________________
 void THistPainter::PaintArrows()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as an arrow plot*-*-*-*-*-*
-//*-*            =================================================
-//*-*
-//*-*    For each cell (i,j) an arrow is drawn
-//*-*    The orientation of the arrow follows the cell gradient
+//    *-*-*-*-*-*Control function to draw a table as an arrow plot*-*-*-*-*-*
+//               =================================================
+//   
+//       For each cell (i,j) an arrow is drawn
+//       The orientation of the arrow follows the cell gradient
 //Begin_Html
 /*
 <img src="gif/PaintArrows.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Style_t linesav   = fH->GetLineStyle();
    Width_t widthsav  = fH->GetLineWidth();
    fH->SetLineStyle(1);
@@ -1296,8 +1413,8 @@ void THistPainter::PaintArrows()
 //______________________________________________________________________________
 void THistPainter::PaintAxis()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw axis of an histogram*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =========================
+//    *-*-*-*-*-*-*-*-*-*Draw axis of an histogram*-*-*-*-*-*-*-*-*-*-*-*-*
+//                       =========================
 //
 //   Assume tx = gPad->GetTickx() and ty = gPad->GetTicky()
 //   by default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
@@ -1320,9 +1437,9 @@ void THistPainter::PaintAxis()
    Double_t aymax = gPad->GetUymax();
    char *cw = 0;
 
-//*-*- X axis
-   ndivx = fH->GetNdivisions("X");
-   ndivy = fH->GetNdivisions("Y");
+//     X axis
+   ndivx = fXaxis->GetNdivisions();
+   ndivy = fYaxis->GetNdivisions();
    if (ndivx > 1000) {
       nx2   = ndivx/100;
       nx1   = TMath::Max(1, ndivx%100);
@@ -1374,7 +1491,7 @@ void THistPainter::PaintAxis()
                      axmax, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl);
    }
-//*-*- Y axis
+//     Y axis
    axis.ImportAxisAttributes(fYaxis);
 
       chopt[0] = 0;
@@ -1431,20 +1548,172 @@ void THistPainter::PaintAxis()
 
 
 //______________________________________________________________________________
+void THistPainter::PaintBar()
+{
+//  Draw a bar chart in a normal pad.
+//     (see PaintBarH to draw a bar chart in a rotated pad)
+// This function is called by THistPainter::Paint when the option "bar"
+// has been specified.
+//
+// A vertical bar is drawn for each bin.
+// The bar is filled with the histogram fill color
+// The left side of the bar is drawn with a light fill color
+// The right side of the bar is drawn with a dark fill color
+// The percentage of the bar drawn with either the light or dark color
+//   is  0 per cent for option "bar" or "bar0"         
+//   is 10 per cent for option "bar1"
+//   is 20 per cent for option "bar2"
+//   is 30 per cent for option "bar3"
+//   is 40 per cent for option "bar4"
+//
+// Use TH1::SetBarWidth to control the bar width (default is the bin width)
+// Use TH1::SetBarOffset to control the bar offset (default is 0)
+//   See example in $ROOTSYS/tutorials/hbars.C
+//Begin_Html
+/*
+<img src="gif/PaintBar.gif">
+*/
+//End_Html
+
+   Int_t bar = Hoption.Bar - 10;
+   Double_t xmin,xmax,ymin,ymax,umin,umax,w;
+   Double_t offset = fH->GetBarOffset();
+   Double_t width  = fH->GetBarWidth();
+   TBox box;
+   Int_t hcolor = fH->GetFillColor();
+   Int_t hstyle = fH->GetFillStyle();
+   box.SetFillColor(hcolor);
+   box.SetFillStyle(hstyle);
+   for (Int_t bin=fXaxis->GetFirst();bin<=fXaxis->GetLast();bin++) {
+      xmin = gPad->XtoPad(fXaxis->GetBinLowEdge(bin));
+      xmax = gPad->XtoPad(fXaxis->GetBinUpEdge(bin));
+      ymin = gPad->GetUymin();
+      ymax = gPad->YtoPad(fH->GetBinContent(bin));
+      if (ymax < gPad->GetUymin()) continue;
+      if (ymax > gPad->GetUymax()) ymax = gPad->GetUymax();
+      w    = (xmax-xmin)*width;
+      xmin += offset*(xmax-xmin);
+      xmax = xmin + w;
+      if (bar < 1) {
+         box.PaintBox(xmin,ymin,xmax,ymax);
+      } else {
+         umin = xmin + bar*(xmax-xmin)/10.;
+         umax = xmax - bar*(xmax-xmin)/10.;
+         box.SetFillColor(hcolor+150); //bright
+         box.PaintBox(xmin,ymin,umin,ymax);
+         box.SetFillColor(hcolor);
+         box.PaintBox(umin,ymin,umax,ymax);
+         box.SetFillColor(hcolor+100); //dark
+         box.PaintBox(umax,ymin,xmax,ymax);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void THistPainter::PaintBarH()
+{
+// Draw a bar char in a rotated pad (X vertical, Y horizontal)
+//     (see PaintBar to draw a bar chart in a normal pad)
+// This function is called by THistPainter::Paint when the option "hbar"
+// has been specified.
+//
+// An horizontal bar is drawn for each bin.
+// The bar is filled with the histogram fill color
+// The bottom side of the bar is drawn with a light fill color
+// The top side of the bar is drawn with a dark fill color
+// The percentage of the bar drawn with either the light or dark color
+//   is  0 per cent for option "hbar" or "hbar0"         
+//   is 10 per cent for option "hbar1"
+//   is 20 per cent for option "hbar2"
+//   is 30 per cent for option "hbar3"
+//   is 40 per cent for option "hbar4"
+//
+// Use TH1::SetBarWidth to control the bar width (default is the bin width)
+// Use TH1::SetBarOffset to control the bar offset (default is 0)
+//   See example in $ROOTSYS/tutorials/hbars.C
+//Begin_Html
+/*
+<img src="gif/PaintBarH.gif">
+*/
+//End_Html
+   
+   gPad->SetVertical(kFALSE);
+   
+   PaintInitH();
+   
+   TAxis *xaxis = fXaxis;
+   TAxis *yaxis = fYaxis;
+   if (!strcmp(xaxis->GetName(),"xaxis")) {
+      fXaxis = yaxis; 
+      fYaxis = xaxis;
+   }
+   
+   PaintFrame();
+   
+   Int_t bar = Hoption.Bar - 20;
+   Double_t xmin,xmax,ymin,ymax,umin,umax,w;
+   Double_t offset = fH->GetBarOffset();
+   Double_t width  = fH->GetBarWidth();
+   TBox box;
+   Int_t hcolor = fH->GetFillColor();
+   Int_t hstyle = fH->GetFillStyle();
+   box.SetFillColor(hcolor);
+   box.SetFillStyle(hstyle);
+   for (Int_t bin=fYaxis->GetFirst();bin<=fYaxis->GetLast();bin++) {
+      ymin = gPad->YtoPad(fYaxis->GetBinLowEdge(bin));
+      ymax = gPad->YtoPad(fYaxis->GetBinUpEdge(bin));
+      xmin = gPad->GetUxmin();
+      xmax = gPad->XtoPad(fH->GetBinContent(bin));
+      if (xmax < gPad->GetUxmin()) continue;
+      if (xmax > gPad->GetUxmax()) xmax = gPad->GetUxmax();
+      w    = (ymax-ymin)*width;
+      ymin += offset*(ymax-ymin);
+      ymax = ymin + w;
+      if (bar < 1) {
+         box.PaintBox(xmin,ymin,xmax,ymax);
+      } else {
+         umin = ymin + bar*(ymax-ymin)/10.;
+         umax = ymax - bar*(ymax-ymin)/10.;
+         box.SetFillColor(hcolor+100); //dark
+         box.PaintBox(xmin,ymin,xmax,umin);
+         box.SetFillColor(hcolor);
+         box.PaintBox(xmin,umin,xmax,umax);
+         box.SetFillColor(hcolor+150); //bright
+         box.PaintBox(xmin,umax,xmax,ymax);
+      }
+   }
+   
+   PaintTitle();
+   PaintAxis();
+   fXaxis = xaxis;
+   fYaxis = yaxis;
+   //    Draw box with histogram statistics and/or fit parameters
+   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+      TIter next(fFunctions);
+      TObject *obj = 0;
+      while ((obj = next())) {
+         if (obj->InheritsFrom(TF1::Class())) break;
+         obj = 0;
+      }
+      PaintStat(gStyle->GetOptStat(),(TF1*)obj);
+   }
+}
+
+//______________________________________________________________________________
 void THistPainter::PaintBoxes()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a box plot*-*-*-*-*-*
-//*-*            ==============================================
-//*-*
-//*-*    For each cell (i,j) a box is drawn.
-//*-*    The size of the box is proportional to the cell content.
+//    *-*-*-*-*-*Control function to draw a table as a box plot*-*-*-*-*-*
+//               ==============================================
+//   
+//       For each cell (i,j) a box is drawn.
+//       The size of the box is proportional to the cell content.
 //Begin_Html
 /*
 <img src="gif/PaintBox.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Style_t fillsav   = fH->GetFillStyle();
    if (fH->GetFillColor() == 0)  fH->SetFillStyle(0);
    fH->TAttLine::Modify();
@@ -1508,20 +1777,20 @@ void THistPainter::PaintBoxes()
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a color plot*-*-*-*-*-*
-//*-*            ================================================
-//*-*
-//*-*    For each cell (i,j) a box is drawn with a color proportional
-//*-*    to the cell content.
-//*-*    The color table used is defined in the current style (gStyle).
-//*-*    The color palette in TStyle can be modified via TStyle::SetPalette.
+//    *-*-*-*-*-*Control function to draw a table as a color plot*-*-*-*-*-*
+//               ================================================
+//   
+//       For each cell (i,j) a box is drawn with a color proportional
+//       to the cell content.
+//       The color table used is defined in the current style (gStyle).
+//       The color palette in TStyle can be modified via TStyle::SetPalette.
 //Begin_Html
 /*
 <img src="gif/PaintCol.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
    Double_t z, xk,xstep, yk, ystep, xlow, xup, ylow, yup;
@@ -1589,36 +1858,36 @@ void THistPainter::PaintColorLevels()
 //______________________________________________________________________________
 void THistPainter::PaintContour()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a contour plot*-*-*-*-*-*
-//*-*            =================================================
-//*-*  Hoption.Contour may have the following values:
-//*-*     1  The contour is drawn with filled colour levels. ("cont")
-//*-*    11  Use colour to distinguish contours. ("cont1")
-//*-*    12  Use line style to distinguish contours. ("cont2")
-//*-*    13  Line style and colour are the same for all contours. ("cont3")
-//*-*    14  same as 1 but uses the "SURF" algorithm ("cont4")
-//*-*
-//*-*  When option "List" is specified together with option "cont",
-//*-*  the points used to draw the contours are saved in the TGraph format
-//*-*  and are accessible in the following way:
-//*-* TObjArray *contours =
-//*-*           gROOT->GetListOfSpecials()->FindObject("contours")
-//*-* Int_t ncontours = contours->GetSize();
-//*-* TList *list = (TList*)contours->At(i); //where i is a contour number
-//*-* list contains a list of TGraph objects. For one given contour, more than
-//*-* one disjoint polyline may be generated. The number of TGraphs per
-//*-* countour is given by list->GetSize().
-//*-* Here we show only the case to access the first graph in the list.
-//*-*    TGraph *gr1 = (TGraph*)list->First();
-//*-*
-//*-*
+//    *-*-*-*-*-*Control function to draw a table as a contour plot*-*-*-*-*-*
+//               =================================================
+//     Hoption.Contour may have the following values:
+//        1  The contour is drawn with filled colour levels. ("cont")
+//       11  Use colour to distinguish contours. ("cont1")
+//       12  Use line style to distinguish contours. ("cont2")
+//       13  Line style and colour are the same for all contours. ("cont3")
+//       14  same as 1 but uses the "SURF" algorithm ("cont4")
+//   
+//     When option "List" is specified together with option "cont",
+//     the points used to draw the contours are saved in the TGraph format
+//     and are accessible in the following way:
+//    TObjArray *contours =
+//              gROOT->GetListOfSpecials()->FindObject("contours")
+//    Int_t ncontours = contours->GetSize();
+//    TList *list = (TList*)contours->At(i); //where i is a contour number
+//    list contains a list of TGraph objects. For one given contour, more than
+//    one disjoint polyline may be generated. The number of TGraphs per
+//    countour is given by list->GetSize().
+//    Here we show only the case to access the first graph in the list.
+//       TGraph *gr1 = (TGraph*)list->First();
+//   
+//   
 //Begin_Html
 /*
 <img src="gif/PaintContour1.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i, j, count, ncontour, icol, n, lj, m, ix, jx, ljfill;
    Int_t itars, mode, ir[4];
@@ -1752,7 +2021,7 @@ void THistPainter::PaintContour()
                n = m;
             }
 
-//*-*- Re-order endpoints
+//     Re-order endpoints
 
             count = 0;
             for (ix=1; ix<=lj-5; ix +=2) {
@@ -1922,9 +2191,9 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
                             Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels)
 {
-//*-*-*-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
-//*-*            ==========================================
-//*-*
+//    *-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
+//               ==========================================
+//   
 
    Bool_t vert;
    Double_t tlen, tdif, elev, diff, pdif, xlen;
@@ -1966,29 +2235,29 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 //______________________________________________________________________________
 void THistPainter::PaintErrors()
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw histogram error bars*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*-
-//*-*-   Draws error bars for the current histogram. The current polymarker
-//*-*-   is drawn at the centre of the errors according to CHOPT:
-//*-*-
-//*-*-   ' ' Coordinates are expressed in histogram coordinates
-//*-*-       (of the last drawn histogram). Error bars are drawn.
-//*-*-   '1' Small lines are drawn at the end of the error bars.
-//*-*-   '2' Error rectangles are drawn.
-//*-*-   '3' A filled area is drawn through the end points of the vertical
-//*-*-       error bars.
-//*-*-   '4' A smoothed filled area is drawn through the end points of the
-//*-*-       vertical error bars.
-//*-*-   '0' Turn off the symbols clipping.
-//*-*-
-//*-*- Note that for all options, the line and fill attributes of the
-//*-*- histogram are used for the errors or errors contours.
+//    *-*-*-*-*-*-*-*-*Draw histogram error bars*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//    
+//       Draws error bars for the current histogram. The current polymarker
+//       is drawn at the centre of the errors according to CHOPT:
+//    
+//       ' ' Coordinates are expressed in histogram coordinates
+//           (of the last drawn histogram). Error bars are drawn.
+//       '1' Small lines are drawn at the end of the error bars.
+//       '2' Error rectangles are drawn.
+//       '3' A filled area is drawn through the end points of the vertical
+//           error bars.
+//       '4' A smoothed filled area is drawn through the end points of the
+//           vertical error bars.
+//       '0' Turn off the symbols clipping.
+//    
+//     Note that for all options, the line and fill attributes of the
+//     histogram are used for the errors or errors contours.
 //Begin_Html
 /*
 <img src="gif/PaintErrors.gif">
 */
 //End_Html
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    const Int_t BASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
@@ -2003,7 +2272,7 @@ void THistPainter::PaintErrors()
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
    Int_t option0, option1, option2, option3, option4, optionE;
-//*-*-_____________________________
+//    _____________________________
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2023,13 +2292,13 @@ void THistPainter::PaintErrors()
    symbolsize  = fH->GetMarkerSize();
    if (errormarker == 1) symbolsize = 0.01;
    sbase       = symbolsize*BASEMARKER;
-//*-*-      set the graphics attributes
+//          set the graphics attributes
 
    fH->TAttLine::Modify();
    fH->TAttFill::Modify();
    fH->TAttMarker::Modify();
 
-//*-*-      initiate the first and last bin
+//          initiate the first and last bin
 
    Double_t factor = Hparam.factor;
    first      = Hparam.xfirst;
@@ -2041,7 +2310,7 @@ void THistPainter::PaintErrors()
    ymax       = gPad->GetUymax();
    bxsize     = 0.01*symbolsize*(xmax-xmin);
 
-//*-*-      initialize the filled area drawing
+//          initialize the filled area drawing
 
    if (option3) {
       xline = new Double_t[2*npoints];
@@ -2054,14 +2323,14 @@ void THistPainter::PaintErrors()
       if2 = 2*npoints;
    }
 
-//*-*-      define the offset of the error bars due to the symbol size
+//          define the offset of the error bars due to the symbol size
 
    s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
    bxsize = 2*xerror*s2x;
    bysize = 2*xerror*s2y;
 
-//*-*-      initialize the first point
+//          initialize the first point
 
    if (fixbin) {
       if (Hoption.Logx) xp = TMath::Power(10,Hparam.xmin) + 0.5*Hparam.xbinsize;
@@ -2077,19 +2346,19 @@ void THistPainter::PaintErrors()
    if (Hoption.Logx) logxmin = TMath::Power(10,Hparam.xmin);
    if (Hoption.Logy) logymin = TMath::Power(10,Hparam.ymin);
 
-//*-*----------------------- Loop over the points---------------------
+//    ---------------------- Loop over the points---------------------
 
    for (k=first; k<=last; k++) {
 
-//*-*-      get the data
+//          get the data
 
-//*-*- xp      = X position of the current point
-//*-*- yp      = Y position of the current point
-//*-*- ex1   = Low X error
-//*-*- ex2   = Up X error
-//*-*- ey1   = Low Y error
-//*-*- ey2   = Up Y error
-//*-*- (xi,yi) = Error bars corrdinates
+//     xp      = X position of the current point
+//     yp      = Y position of the current point
+//     ex1   = Low X error
+//     ex2   = Up X error
+//     ey1   = Low Y error
+//     ey2   = Up Y error
+//     (xi,yi) = Error bars corrdinates
 
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
@@ -2119,7 +2388,7 @@ void THistPainter::PaintErrors()
       yi3 = yp - ey1;
       yi4 = yp + ey2;
 
-//*-*-      take the LOG if necessary
+//          take the LOG if necessary
 
       if (Hoption.Logx) {
          xi1 = TMath::Log10(TMath::Max(xi1,logxmin));
@@ -2134,16 +2403,16 @@ void THistPainter::PaintErrors()
          yi4 = TMath::Log10(TMath::Max(yi4,logymin));
       }
 
-//*-*-      test if error bars are not outside the limits
-//*-*-      otherwise they are truncated
+//          test if error bars are not outside the limits
+//          otherwise they are truncated
 
       xi1 = TMath::Max(xi1,xmin);
       xi2 = TMath::Min(xi2,xmax);
       yi3 = TMath::Max(yi3,ymin);
       yi4 = TMath::Min(yi4,ymax);
 
-//*-*-      test if the marker is on the frame limits. If "Yes", the
-//*-*-      marker will be not drawn and the error bars will be readjusted.
+//          test if the marker is on the frame limits. If "Yes", the
+//          marker will be not drawn and the error bars will be readjusted.
 
       drawmarker = kTRUE;
       if (!option0) {   // <=====Please check
@@ -2157,11 +2426,11 @@ void THistPainter::PaintErrors()
       }
       if (!symbolsize || !errormarker) drawmarker = kFALSE;
 
-//*-*-      draw the error rectangles
+//          draw the error rectangles
 
       if (option2) gPad->PaintBox(xi1,yi3,xi2,yi4);
 
-//*-*-      keep points for fill area drawing
+//          keep points for fill area drawing
 
       if (option3) {
          xline[if1-1] = xi3;
@@ -2172,7 +2441,7 @@ void THistPainter::PaintErrors()
          if2--;
       }
 
-//*-*-      draw the error bars
+//          draw the error bars
 
       if (optionE && drawmarker) {
          if (yi3 < yi1 - s2y) gPad->PaintLine(xi3,yi3,xi4,yi1 - s2y);
@@ -2193,7 +2462,7 @@ void THistPainter::PaintErrors()
          }
       }
 
-//*-*-      draw line at the end of the error bars
+//          draw line at the end of the error bars
 
       if (option1) {
          if (yi3 < yi1-s2y) gPad->PaintLine(xi3 - bxsize,yi3,xi3 + bxsize,yi3);
@@ -2202,7 +2471,7 @@ void THistPainter::PaintErrors()
          if (xi2 > xi3+s2x) gPad->PaintLine(xi2,yi1 - bysize,xi2,yi1 + bysize);
       }
 
-//*-*-      draw the marker
+//          draw the marker
 
       if (drawmarker) gPad->PaintPolyMarker(1, &xi3, &yi1);
 
@@ -2216,7 +2485,7 @@ L30:
       }
    }  //end of for loop
 
-//*-*-      draw the filled area
+//          draw the filled area
 
    if (option3) {
       TGraph graph;
@@ -2241,8 +2510,8 @@ L30:
 //______________________________________________________________________________
 void THistPainter::PaintFrame()
 {
-//*-*-*-*-*-*-*-*-*-*Calculate range and clear pad (canvas)*-*-*-*-*-*-*-*-*-*
-//*-*                ======================================
+//    *-*-*-*-*-*-*-*Calculate range and clear pad (canvas)*-*-*-*-*-*-*-*-*-*
+//                   ======================================
    if (Hoption.Same) return;
 
    RecalculateRange();
@@ -2258,8 +2527,8 @@ void THistPainter::PaintFrame()
 //______________________________________________________________________________
 void THistPainter::PaintFunction()
 {
-//*-*-*-*-*-*-*-*-*-*-*Paint functions associated to an histogram*-*-*-*-*-*-*
-//*-*                  ==========================================
+//    *-*-*-*-*-*-*-*-*Paint functions associated to an histogram*-*-*-*-*-*-*
+//                     ==========================================
 //
 //   An associated function is created by THistPainter::Fit. Note that more than
 //   on fitted function can be associated with one histogram (see THistPainter::Fit).
@@ -2289,8 +2558,8 @@ void THistPainter::PaintFunction()
 //______________________________________________________________________________
 void THistPainter::PaintHist()
 {
-//*-*-*-*-*-*-*-*-*-*Control routine to draw an histogram*-*-*-*-*-*-*-*-*-*-*
-//*-*                ====================================
+//    *-*-*-*-*-*-*-*Control routine to draw an histogram*-*-*-*-*-*-*-*-*-*-*
+//                   ====================================
 
    static char chopth[17];
    static char choptg[5];
@@ -2316,7 +2585,7 @@ void THistPainter::PaintHist()
    gStyle->SetBarOffset(baroffset);
    gStyle->SetBarWidth(barwidth);
 
-//*-*-   Create "LIFE" structure to keep current histogram status
+//       Create "LIFE" structure to keep current histogram status
 
    first = Hparam.xfirst;
    last  = Hparam.xlast;
@@ -2334,7 +2603,7 @@ void THistPainter::PaintHist()
    Double_t logymin = 0;
    if (Hoption.Logy) logymin = TMath::Power(10,ymin);
 
-//*-*-  Loop on histogram bins
+//      Loop on histogram bins
 
    for (j=first; j<=last;j++) {
       c1 = Hparam.factor*fH->GetBinContent(j);
@@ -2346,7 +2615,7 @@ void THistPainter::PaintHist()
       yb = TMath::Min(yb, ymax);
 
       if (Hoption.Plus) {
-//*-*         compute y1, y2
+//            compute y1, y2
          y1 = keepy[j-first];
          y2 = yb;
          if (Hoption.Plus == 1 || Hoption.Plus == -1) {
@@ -2355,7 +2624,7 @@ void THistPainter::PaintHist()
             else
                y2 = y1 +y2*Hoption.Plus;
          }
-//*-*         compute ym1, ym2
+//            compute ym1, ym2
          if (!Hoption.Bar) {
             yadd = Hparam.factor*fH->GetBinContent(j);
             if (Hoption.Logy) ycur = TMath::Power(10,keepy[j-first]);
@@ -2390,10 +2659,10 @@ void THistPainter::PaintHist()
             }
          }
 
-//*-*-           Compute X1 X2
+//               Compute X1 X2
          if (Hoption.Logy && c1 <= 0) continue;
 
-//*-*- Update the current plot
+//     Update the current plot
 
          if (Hoption.Plus == 1 || Hoption.Plus == -1) keepy[j-first-1] = y2;
       }
@@ -2404,7 +2673,7 @@ void THistPainter::PaintHist()
 
    if (Hoption.Plus) return;
 
-//*-*-          Draw histogram according to value of FillStyle and FillColor
+//              Draw histogram according to value of FillStyle and FillColor
 
    if (fixbin) { keepx[0] = Hparam.xmin; keepx[1] = Hparam.xmax; }
    else {
@@ -2415,7 +2684,7 @@ void THistPainter::PaintHist()
       }
    }
 
-//*-*-     Prepare Fill area (systematic with option "Bar").
+//         Prepare Fill area (systematic with option "Bar").
 
    oldhtype = fH->GetFillStyle();
    htype    = oldhtype;
@@ -2426,7 +2695,7 @@ void THistPainter::PaintHist()
    //Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetAbsHNDC() + 0.5);
    Width_t lw = Width_t(fH->GetLineWidth()*gPad->GetWh()/800. + 0.5);
 
-//*-*-     Code option for GrapHist
+//         Code option for GrapHist
 
    if (Hoption.Line) chopth[0] = 'L';
    if (Hoption.Star) chopth[1] = '*';
@@ -2492,7 +2761,7 @@ void THistPainter::PaintHist()
       }
    }
 
-//*-*-     Option LOGX
+//         Option LOGX
 
    if (Hoption.Logx) {
       chopth[9]  = 'G';
@@ -2508,7 +2777,7 @@ void THistPainter::PaintHist()
       }
    }
 
-//*-*-     Draw the histogram
+//         Draw the histogram
 
    TGraph graph;
    graph.SetLineWidth(lw);
@@ -2533,8 +2802,8 @@ void THistPainter::PaintHist()
 //______________________________________________________________________________
 void THistPainter::PaintH3(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Control function to draw a 3-D histogram*-*-*-*-*-*-*-*-*
-//*-*                ========================================
+//    *-*-*-*-*-*-*-*Control function to draw a 3-D histogram*-*-*-*-*-*-*-*-*
+//                   ========================================
 
    char *cmd;
    if (fH->GetDrawOption() && strstr(fH->GetDrawOption(),"box")) {
@@ -2562,8 +2831,8 @@ void THistPainter::PaintH3(Option_t *option)
 //______________________________________________________________________________
 Int_t THistPainter::PaintInit()
 {
-//*-*-*-*-*-*-*Compute histogram parameters used by the drawing routines*-*-*-*
-//*-*          =========================================================
+//    *-*-*-*-*Compute histogram parameters used by the drawing routines*-*-*-*
+//             =========================================================
 
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
@@ -2574,7 +2843,7 @@ Int_t THistPainter::PaintInit()
    if (fH->GetMaximumStored() != -1111) maximum = 1;
    if (fH->GetMinimumStored() != -1111) minimum = 1;
 
-//*-*  Compute X axis parameters
+//     Compute X axis parameters
 
    Int_t last      = fXaxis->GetLast();
    Int_t first     = fXaxis->GetFirst();
@@ -2585,7 +2854,7 @@ Int_t THistPainter::PaintInit()
    Hparam.xmin     = Hparam.xlowedge;
    Hparam.xmax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
 
-//*-*-   if log scale in X, replace xmin,max by the log
+//       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
       if (Hparam.xlowedge <=0 ) {
          Hparam.xlowedge = 0.1*Hparam.xbinsize;
@@ -2602,7 +2871,7 @@ Int_t THistPainter::PaintInit()
       if (Hparam.xlast > last) Hparam.xlast = last;
    }
 
-//*-*  Compute Y axis parameters
+//     Compute Y axis parameters
    Double_t BIGP = TMath::Power(10,32);
    Double_t ymax = -BIGP;
    Double_t ymin = BIGP;
@@ -2641,7 +2910,7 @@ Int_t THistPainter::PaintInit()
       allchan += c1;
    }
 
-//*-*- Take into account maximum , minimum
+//     Take into account maximum , minimum
 
    if (Hoption.Logy && ymin <= 0) {
       if (ymax >= 1) ymin = TMath::Max(.5,ymax*1e-10);
@@ -2677,7 +2946,7 @@ Int_t THistPainter::PaintInit()
       }
    }
 
-//*-*- take into account normalization factor
+//     take into account normalization factor
    Hparam.allchan = allchan;
    Stat_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
@@ -2687,12 +2956,12 @@ Int_t THistPainter::PaintInit()
    ymax = factor*ymax;
    ymin = factor*ymin;
 
-//*-*-----
-//*-*-     For log scales, histogram coordinates are LOG10(ymin) and
-//*-*-     LOG10(ymax). Final adjustment (if not option "Same"
-//*-*-     or "+" for ymax) of ymax and ymin for logarithmic scale, if
-//*-*-     Maximum and Minimum are not defined.
-//*-*-----
+//    ----
+//         For log scales, histogram coordinates are LOG10(ymin) and
+//         LOG10(ymax). Final adjustment (if not option "Same"
+//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+//         Maximum and Minimum are not defined.
+//    ----
    if (Hoption.Logy) {
       if (ymin <=0 || ymax <=0) {
          Error(where, "Cannot set Y axis to log scale");
@@ -2708,20 +2977,20 @@ Int_t THistPainter::PaintInit()
       }
       return 1;
    }
-//*-*-----
-//*-*-     final adjustment of ymin for linear scale.
-//*-*-     if minimum is not set , then ymin is set to zero if >0
-//*-*-     or to ymin - margin if <0.
-//*-*-----
+//    ----
+//         final adjustment of ymin for linear scale.
+//         if minimum is not set , then ymin is set to zero if >0
+//         or to ymin - margin if <0.
+//    ----
    if (!minimum) {
       if (ymin >= 0) ymin = 0;
       else           ymin -= YMARGIN*(ymax-ymin);
    }
-//*-*-----
-//*-*-     final adjustment of YMAXI for linear scale (if not option "Same"):
-//*-*-     decrease histogram height to MAX% of allowed height if HMAXIM
-//*-*-     has not been called.
-//*-*-----
+//    ----
+//         final adjustment of YMAXI for linear scale (if not option "Same"):
+//         decrease histogram height to MAX% of allowed height if HMAXIM
+//         has not been called.
+//    ----
    if (!maximum && !Hoption.Plus) {
       ymax += YMARGIN*(ymax-ymin);
    }
@@ -2730,22 +2999,191 @@ Int_t THistPainter::PaintInit()
    return 1;
 }
 
+//______________________________________________________________________________
+Int_t THistPainter::PaintInitH()
+{
+//    Compute histogram parameters used by the drawing routines
+//    for a rotated pad
+
+   static const char *where = "PaintInitH";
+   Double_t YMARGIN = 0.05;
+   Int_t maximum = 0;
+   Int_t minimum = 0;
+   if (fH->GetMaximumStored() != -1111) maximum = 1;
+   if (fH->GetMinimumStored() != -1111) minimum = 1;
+
+//     Compute X axis parameters
+
+   Int_t last      = fXaxis->GetLast();
+   Int_t first     = fXaxis->GetFirst();
+   Hparam.xlowedge = fXaxis->GetBinLowEdge(first);
+   Hparam.xbinsize = fXaxis->GetBinWidth(first);
+   Hparam.xlast    = last;
+   Hparam.xfirst   = first;
+   Hparam.ymin     = Hparam.xlowedge;
+   Hparam.ymax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
+
+//       if log scale in Y, replace ymin,max by the log
+   if (Hoption.Logy) {
+      if (Hparam.xlowedge <=0 ) {
+         Hparam.xlowedge = 0.1*Hparam.xbinsize;
+         Hparam.ymin  = Hparam.xlowedge;
+      }
+      if (Hparam.ymin <=0 || Hparam.ymax <=0) {
+         Error(where, "cannot set Y axis to log scale");
+         return 0;
+      }
+      Hparam.xfirst= fXaxis->FindFixBin(Hparam.ymin);
+      Hparam.xlast = fXaxis->FindFixBin(Hparam.ymax);
+      Hparam.ymin  = TMath::Log10(Hparam.ymin);
+      Hparam.ymax  = TMath::Log10(Hparam.ymax);
+      if (Hparam.xlast > last) Hparam.xlast = last;
+   }
+
+//     Compute Y axis parameters
+   Double_t BIGP = TMath::Power(10,32);
+   Double_t xmax = -BIGP;
+   Double_t xmin = BIGP;
+   Double_t c1, e1;
+   Double_t xv[1];
+   Double_t fval;
+   Int_t i;
+   TObject *f;
+   TF1 *f1;
+   Stat_t allchan = 0;
+   TIter   next(fFunctions);
+   for (i=first; i<=last;i++) {
+      c1 = fH->GetBinContent(i);
+      xmax = TMath::Max(xmax,c1);
+      xmin = TMath::Min(xmin,c1);
+      if (Hoption.Error) {
+         e1 = fH->GetBinError(i);
+         xmax = TMath::Max(xmax,c1+e1);
+         xmin = TMath::Min(xmin,c1-e1);
+      }
+      if (Hoption.Func) {
+         xv[0] = fXaxis->GetBinCenter(i);
+         while ((f = (TObject*) next())) {
+            if (f->IsA() == TF1::Class()) {
+               f1 = (TF1*)f;
+               if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
+               fval = f1->Eval(xv[0],0,0);
+               xmax = TMath::Max(xmax,fval);
+               if (Hoption.Logy) {
+                  if (fval > 0.3*c1) xmin = TMath::Min(xmin,fval);
+               }
+            }
+         }
+         next.Reset();
+      }
+      allchan += c1;
+   }
+
+//     Take into account maximum , minimum
+
+   if (Hoption.Logx && xmin <= 0) {
+      if (xmax >= 1) xmin = TMath::Max(.5,xmax*1e-10);
+      else           xmin = 0.001*xmax;
+   }
+   Double_t xm = xmin;
+   if (maximum) xmax = fH->GetMaximumStored();
+   if (minimum) xm   = fH->GetMinimumStored();
+   if (Hoption.Logx && xm <= 0) {
+      Error(where, "log scale requested with zero or negative argument (%f)", xm);
+      return 0;
+   }
+   else xmin = xm;
+   if (xmin >= xmax && !Hoption.Plus) {
+      if (Hoption.Logx) {
+         if (xmax > 0) xmin = 0.001*xmax;
+         else {
+            Error(where, "log scale is requested but maximum is less or equal 0 (%f)", xmax);
+            return 0;
+         }
+      }
+      else {
+         if (xmin > 0) {
+            xmin = 0;
+            xmax *= 2;
+         } else if (xmin < 0) {
+            xmax = 0;
+            xmin *= 2;
+         } else {
+            xmin = -1;
+            xmax = 1;
+         }
+      }
+   }
+
+//     take into account normalization factor
+   Hparam.allchan = allchan;
+   Stat_t factor = allchan;
+   if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
+   if (allchan) factor /= allchan;
+   if (factor == 0) factor = 1;
+   Hparam.factor = factor;
+   xmax = factor*xmax;
+   xmin = factor*xmin;
+
+//    ----
+//         For log scales, histogram coordinates are LOG10(ymin) and
+//         LOG10(ymax). Final adjustment (if not option "Same"
+//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+//         Maximum and Minimum are not defined.
+//    ----
+   if (Hoption.Logx) {
+      if (xmin <=0 || xmax <=0) {
+         Error(where, "Cannot set Y axis to log scale");
+         return 0;
+      }
+      xmin = TMath::Log10(xmin);
+      if (!minimum) xmin += TMath::Log10(0.5);
+      xmax = TMath::Log10(xmax);
+      if (!maximum && !Hoption.Plus) xmax += TMath::Log10(2*(0.9/0.95));
+      if (!Hoption.Same) {
+         Hparam.xmin = xmin;
+         Hparam.xmax = xmax;
+      }
+      return 1;
+   }
+//    ----
+//         final adjustment of ymin for linear scale.
+//         if minimum is not set , then ymin is set to zero if >0
+//         or to ymin - margin if <0.
+//    ----
+   if (!minimum) {
+      if (xmin >= 0) xmin = 0;
+      else           xmin -= YMARGIN*(xmax-xmin);
+   }
+//    ----
+//         final adjustment of YMAXI for linear scale (if not option "Same"):
+//         decrease histogram height to MAX% of allowed height if HMAXIM
+//         has not been called.
+//    ----
+   if (!maximum && !Hoption.Plus) {
+      xmax += YMARGIN*(xmax-xmin);
+   }
+   Hparam.xmin = xmin;
+   Hparam.xmax = xmax;
+   return 1;
+}
+
 
 //______________________________________________________________________________
 void THistPainter::PaintLego()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
-//*-*            ===============================================
-//*-*
-//*-*     In a lego plot, cell contents are represented as 3-d boxes.
-//*-*     The height of the box is proportional to the cell content.
-//*-*
-//*-*    A lego plot can be represented in several coordinate systems.
-//*-*    Default system is Cartesian coordinates.
-//*-*    Possible systems are CYL,POL,SPH,PSR.
-//*-*
-//*-*   See THistPainter::Draw for the list of Lego options.
-//*-*   See TLego for more examples of lego options.
+//    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
+//               ===============================================
+//   
+//        In a lego plot, cell contents are represented as 3-d boxes.
+//        The height of the box is proportional to the cell content.
+//   
+//       A lego plot can be represented in several coordinate systems.
+//       Default system is Cartesian coordinates.
+//       Possible systems are CYL,POL,SPH,PSR.
+//   
+//      See THistPainter::Draw for the list of Lego options.
+//      See TLego for more examples of lego options.
 //
 //      See TStyle::SetPalette to change the color palette.
 //      It is suggested to use palette 1 via the call
@@ -2756,8 +3194,8 @@ void THistPainter::PaintLego()
 <img src="gif/PaintLego1.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i;
    Int_t raster = 1;
@@ -2775,7 +3213,7 @@ void THistPainter::PaintLego()
    Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 
-//*-*- Compute the lego limits and instantiate a lego object
+//     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
    fYbuf[0] =  1;
    fXbuf[1] = -1;
@@ -2821,11 +3259,11 @@ void THistPainter::PaintLego()
 
    fLego = new TLego(fXbuf, fYbuf, Hoption.System);
 
-//*-*-      Create axis object
+//          Create axis object
 
    TGaxis *axis = new TGaxis();
 
-//*-*-              Initialize the levels on the Z axis
+//                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
       ndiv = 20;
@@ -2834,7 +3272,7 @@ void THistPainter::PaintLego()
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-//*-*- Initialize colors for the lighting model (option Lego1 only)
+//     Initialize colors for the lighting model (option Lego1 only)
    if (Hoption.Lego == 1) {
          Color_t colormain = fH->GetLineColor();
          fLego->SetColorMain(colormain,0);
@@ -2855,7 +3293,7 @@ void THistPainter::PaintLego()
       }
    }
 
-//*-*- Now ready to draw the lego plot
+//     Now ready to draw the lego plot
    Int_t irep = 0;
 
    view = gPad->GetView();
@@ -2872,7 +3310,7 @@ void THistPainter::PaintLego()
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillStyle(fH->GetFillStyle());
 
-//*-*- Set color/style for back box
+//     Set color/style for back box
    fLego->SetFillStyle(gPad->GetFrameFillStyle());
    fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
@@ -2896,7 +3334,7 @@ void THistPainter::PaintLego()
       }
    }
 
-//*-*-             Initialize the colour levels
+//                 Initialize the colour levels
    if (ndivz >= 100) {
       Warning("PaintLego", "too many color levels, %d, reset to 8", ndivz);
       ndivz = 8;
@@ -2965,9 +3403,9 @@ void THistPainter::PaintLego()
 //______________________________________________________________________________
 void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 {
-//*-*-*-*-*-*-*Draw the axis for legos and surface plots*-*-*-*-*-*-*-*-*-*
-//*-*          =========================================
-//*-*
+//    *-*-*-*-*Draw the axis for legos and surface plots*-*-*-*-*-*-*-*-*-*
+//             =========================================
+//   
 
     static Double_t epsil = 0.001;
 
@@ -2980,7 +3418,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
     Int_t ix1, ix2, iy1, iy2, iz1, iz2;
     Double_t rad;
 
-//*-*-----------------------------------------------------------------------
+//    ----------------------------------------------------------------------
 
 
     TView *view = gPad->GetView();
@@ -3030,7 +3468,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
     Double_t *rmin = view->GetRmin();
     Double_t *rmax = view->GetRmax();
 
-//*-*-             Initialize the axis options
+//                 Initialize the axis options
 
     if (x1[0] > x2[0]) strcpy(chopax, "SDH=+");
     else               strcpy(chopax, "SDH=-");
@@ -3038,14 +3476,14 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
     else               strcpy(chopay, "SDH=-");
     strcpy(chopaz, "SDH+=");
 
-//*-*-             Option LOG is required ?
+//                 Option LOG is required ?
 
     if (Hoption.Logx) strcat(chopax,"G");
     if (Hoption.Logy) strcat(chopay,"G");
     if (Hoption.Logz) strcat(chopaz,"G");
 
-//*-*-          Initialize the number of divisions. If the
-//*-*-          number of divisions is negative, option 'N' is required.
+//              Initialize the number of divisions. If the
+//              number of divisions is negative, option 'N' is required.
 
     ndivx = fXaxis->GetNdivisions();
     ndivy = fYaxis->GetNdivisions();
@@ -3063,13 +3501,13 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	chopaz[6] = 'N';
     }
 
-//*-*-          Set Axis attributes.
-//*-*-          The variable SCALE  rescales the VSIZ
-//*-*-          in order to have the same label size for all angles.
+//              Set Axis attributes.
+//              The variable SCALE  rescales the VSIZ
+//              in order to have the same label size for all angles.
 
     axis->SetLineWidth(1);
 
-//*-*-          X axis drawing
+//              X axis drawing
 
     if (TMath::Abs(x1[0] - x2[0]) >= epsil || TMath::Abs(x1[1] - x2[1]) > epsil) {
         axis->ImportAxisAttributes(fXaxis);
@@ -3081,7 +3519,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	    bmin = rmin[0];
 	    bmax = rmax[0];
 	}
-//*-*-             Option time display is required ?
+//                 Option time display is required ?
         if (fXaxis->GetTimeDisplay()) {
            strcat(chopax,"t");
            if (strlen(fXaxis->GetTimeFormat()) == 0) {
@@ -3094,7 +3532,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
     }
 
-//*-*-          Y axis drawing
+//              Y axis drawing
 
     if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
         axis->ImportAxisAttributes(fYaxis);
@@ -3117,7 +3555,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	    bmin = rmin[1];
 	    bmax = rmax[1];
 	}
-//*-*-             Option time display is required ?
+//                 Option time display is required ?
         if (fYaxis->GetTimeDisplay()) {
            strcat(chopay,"t");
            if (strlen(fYaxis->GetTimeFormat()) == 0) {
@@ -3130,7 +3568,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
     }
 
-//*-*-          Z axis drawing
+//              Z axis drawing
 
     if (TMath::Abs(z1[0] - z2[0]) >= 100*epsil || TMath::Abs(z1[1] - z2[1]) > 100*epsil) {
         axis->ImportAxisAttributes(fZaxis);
@@ -3141,7 +3579,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 	    bmin = rmin[2];
 	    bmax = rmax[2];
 	}
-//*-*-             Option time display is required ?
+//                 Option time display is required ?
         if (fZaxis->GetTimeDisplay()) {
            strcat(chopaz,"t");
            if (strlen(fZaxis->GetTimeFormat()) == 0) {
@@ -3160,8 +3598,8 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
 //______________________________________________________________________________
 void THistPainter::PaintPalette()
 {
-//*-*-*-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
-//*-*            ====================================================
+//    *-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
+//               ====================================================
 
    Double_t xup  = gPad->GetUxmax();
    Double_t x2   = gPad->GetX2();
@@ -3199,20 +3637,20 @@ void THistPainter::PaintPalette()
 //______________________________________________________________________________
 void THistPainter::PaintScatterPlot()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a scatter plot*-*-*-*-*
-//*-*            ==================================================
-//*-*
-//*-*    For each cell (i,j) a number of points proportional to the cell
-//*-*    content is drawn.
-//*-*    A maximum of 500 points per cell is drawn. If the maximum is above 500
-//*-*    contents are normalized to 500.
+//    *-*-*-*-*-*Control function to draw a table as a scatter plot*-*-*-*-*
+//               ==================================================
+//   
+//       For each cell (i,j) a number of points proportional to the cell
+//       content is drawn.
+//       A maximum of 500 points per cell is drawn. If the maximum is above 500
+//       contents are normalized to 500.
 //Begin_Html
 /*
 <img src="gif/PaintScatterPlot.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fH->TAttMarker::Modify();
 
    Int_t k, marker;
@@ -3298,8 +3736,8 @@ void THistPainter::PaintScatterPlot()
 //______________________________________________________________________________
 void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw the statistics box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    =======================
+//    *-*-*-*-*-*-*-*-*-*Draw the statistics box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//                       =======================
 // The type of information printed in the histogram statistics box
 //  can be selected via gStyle->SetOptStat(mode).
 //  The parameter mode can be = iourmen  (default = 0001111)
@@ -3361,7 +3799,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
    if (fit) nlinesf += fit->GetNpar();
 
-//*-*- Pavetext with statistics
+//     Pavetext with statistics
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
       if (stats) delete stats;
@@ -3601,18 +4039,18 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 //______________________________________________________________________________
 void THistPainter::PaintSurface()
 {
-//*-*-*-*-*-*-*-*Control function to draw a table as a surface plot*-*-*-*-*-*
-//*-*            ==================================================
-//*-*
-//*-*     In a surface plot, cell contents are represented as a mesh.
-//*-*     The height of the mesh is proportional to the cell content.
-//*-*
-//*-*    A surface plot can be represented in several coordinate systems.
-//*-*    Default system is Cartesian coordinates.
-//*-*    Possible systems are CYL,POL,SPH,PSR.
-//*-*
-//*-*   See THistPainter::Draw for a list of Surface options
-//*-*  The following picture is generated with option SURF1.
+//    *-*-*-*-*-*Control function to draw a table as a surface plot*-*-*-*-*-*
+//               ==================================================
+//   
+//        In a surface plot, cell contents are represented as a mesh.
+//        The height of the mesh is proportional to the cell content.
+//   
+//       A surface plot can be represented in several coordinate systems.
+//       Default system is Cartesian coordinates.
+//       Possible systems are CYL,POL,SPH,PSR.
+//   
+//      See THistPainter::Draw for a list of Surface options
+//     The following picture is generated with option SURF1.
 //
 //      See TStyle::SetPalette to change the color palette.
 //      It is suggested to use palette 1 via the call
@@ -3623,14 +4061,14 @@ void THistPainter::PaintSurface()
 <img src="gif/PaintSurface1.gif">
 */
 //End_Html
-//*-*  The following picture is generated with option SURF3.
+//     The following picture is generated with option SURF3.
 //Begin_Html
 /*
 <img src="gif/PaintSurface3.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    const Double_t ydiff = 1;
    const Double_t yligh1 = 10;
    const Double_t qa = 0.15;
@@ -3655,7 +4093,7 @@ void THistPainter::PaintSurface()
    Double_t z2c = zmin + (zmax-zmin)*kHMAX;
 
 
-//*-*- Compute the lego limits and instantiate a lego object
+//     Compute the lego limits and instantiate a lego object
    fXbuf[0] = -1;
    fYbuf[0] =  1;
    fXbuf[1] = -1;
@@ -3703,11 +4141,11 @@ void THistPainter::PaintSurface()
    fLego->SetLineColor(fH->GetLineColor());
    fLego->SetFillColor(fH->GetFillColor());
 
-//*-*-      Create axis object
+//          Create axis object
 
    TGaxis *axis = new TGaxis();
 
-//*-*-              Initialize the levels on the Z axis
+//                  Initialize the levels on the Z axis
    Int_t ndiv   = fH->GetContour();
    if (ndiv == 0 ) {
       ndiv = 20;
@@ -3716,7 +4154,7 @@ void THistPainter::PaintSurface()
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-//*-*- Initialize colors for the lighting model
+//     Initialize colors for the lighting model
 //   Color_t colormain = fH->GetFillColor();
 //   if (colormain == 1) colormain = 17; //avoid drawing with black
    //Color_t colordark = colormain + 100;
@@ -3727,11 +4165,11 @@ void THistPainter::PaintSurface()
    if (Hoption.Surf == 13) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
 
-//*-*- Close the surface in case of non cartesian coordinates.
+//     Close the surface in case of non cartesian coordinates.
 
    if (Hoption.System != kCARTESIAN) {nx++; ny++;}
 
-//*-*-             Initialize the colour levels
+//                 Initialize the colour levels
    if (ndivz >= 100) {
       Warning("PaintSurface", "too many color levels, %d, reset to 8", ndivz);
       ndivz = 8;
@@ -3750,7 +4188,7 @@ void THistPainter::PaintSurface()
    delete [] colorlevel;
    delete [] funlevel;
 
-//*-*- Now ready to draw the surface plot
+//     Now ready to draw the surface plot
 
    view = gPad->GetView();
    if (!view) {
@@ -3763,7 +4201,7 @@ void THistPainter::PaintSurface()
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-//*-*- Set color/style for back box
+//     Set color/style for back box
    fLego->SetFillStyle(gPad->GetFrameFillStyle());
    fLego->SetFillColor(gPad->GetFrameFillColor());
    fLego->TAttFill::Modify();
@@ -3776,7 +4214,7 @@ void THistPainter::PaintSurface()
    fLego->SetFillColor(fH->GetFillColor());
    fLego->TAttFill::Modify();
 
-//*-*- Draw the filled contour on top
+//     Draw the filled contour on top
    Int_t icol1 = fH->GetFillColor();
 
    if (Hoption.Surf == 13) {
@@ -3804,9 +4242,9 @@ void THistPainter::PaintSurface()
       }
    }
 
-//*-*- Gouraud Shading surface
+//     Gouraud Shading surface
    if (Hoption.Surf == 14) {
-//*-* Set light sources
+//    Set light sources
       fLego->LightSource(0, ydiff, 0,0,0,irep);
       fLego->LightSource(1, yligh1 ,1,1,1,irep);
       fLego->SurfaceProperty(qa, qd, qs, 1, irep);
@@ -3835,7 +4273,7 @@ void THistPainter::PaintSurface()
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
    }
    else {
-//*-*- Draw the surface
+//     Draw the surface
       fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
       if (Hoption.Surf ==  1 || Hoption.Surf == 13) fLego->SetDrawFace(&TLego::DrawFaceRaster1);
       if (Hoption.Surf == 11 || Hoption.Surf == 12) fLego->SetDrawFace(&TLego::DrawFaceMode2);
@@ -3882,8 +4320,8 @@ void THistPainter::PaintSurface()
 //______________________________________________________________________________
 void THistPainter::PaintTable()
 {
-//*-*-*-*-*-*-*-*-*-*Control function to draw 2-D/3-D tables*-*-*-*-*-*-*-*
-//*-*                =======================================
+//    *-*-*-*-*-*-*-*Control function to draw 2-D/3-D tables*-*-*-*-*-*-*-*
+//                   =======================================
 
    if (!TableInit()) return;  //fill Hparam structure with histo parameters
 
@@ -3900,11 +4338,11 @@ void THistPainter::PaintTable()
    if (Hoption.Lego)    PaintLego();
    if (Hoption.Surf && !Hoption.Contour)    PaintSurface();
 
-   if (!Hoption.Lego && !Hoption.Surf) PaintAxis();     //*-* Draw the axes
+   if (!Hoption.Lego && !Hoption.Surf) PaintAxis();     //    Draw the axes
 
-   PaintTitle();    //*-* Draw histogram title
-//   PaintFile();     //*-* Draw Current File name corresp to current directory
-//   PaintDate();     //*-* Draw date/time
+   PaintTitle();    //    Draw histogram title
+//   PaintFile();     //    Draw Current File name corresp to current directory
+//   PaintDate();     //    Draw date/time
 //   if (!Hoption.Same && !Hoption.Lego && !Hoption.Surf) {
    if (Hoption.Same != 1) {
       TF2 *fit = (TF2*)fFunctions->First();
@@ -3918,21 +4356,21 @@ void THistPainter::PaintTable()
 //______________________________________________________________________________
 void THistPainter::PaintText()
 {
-//*-*-*-*-*-*Control function to draw a table with the bin values*-*-*-*-*-*
-//*-*        ====================================================
-//*-*
-//*-*    For each cell (i,j) the cell content is printed.
-//*-*    The text attributes are:
+//    *-*-*-*Control function to draw a table with the bin values*-*-*-*-*-*
+//           ====================================================
+//   
+//       For each cell (i,j) the cell content is printed.
+//       The text attributes are:
 //*_*      - text font = current TStyle font
-//*-*      - text size = 0.02*padheight*markersize
-//*-*      - text color= marker color
+//         - text size = 0.02*padheight*markersize
+//         - text color= marker color
 //Begin_Html
 /*
 <img src="gif/PaintText.gif">
 */
 //End_Html
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//   
+//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    TText text;
    text.SetTextFont(gStyle->GetTextFont());
    text.SetTextColor(fH->GetMarkerColor());
@@ -3960,8 +4398,8 @@ void THistPainter::PaintText()
 //______________________________________________________________________________
 void THistPainter::PaintTitle()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw the histogram title*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
+//    *-*-*-*-*-*-*-*-*-*Draw the histogram title*-*-*-*-*-*-*-*-*-*-*-*-*
+//                       ========================
    if (Hoption.Same) return;
    Int_t nt = strlen(fH->GetTitle());
    TPaveText *title  = (TPaveText*)gPad->FindObject("title");
@@ -3985,7 +4423,7 @@ void THistPainter::PaintTitle()
              gStyle->GetTitleX()+wt,
              gStyle->GetTitleY(),"blNDC");
 
-//*-*- box with the histogram title
+//     box with the histogram title
    ptitle->SetFillColor(gStyle->GetTitleColor());
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
    ptitle->SetName("title");
@@ -4004,11 +4442,11 @@ void THistPainter::PaintTitle()
 //______________________________________________________________________________
 void THistPainter::RecalculateRange()
 {
-//*-*-*-*-*-*Recompute the histogram range following graphics operations*-*-*
-//*-*        ===========================================================
+//    *-*-*-*Recompute the histogram range following graphics operations*-*-*
+//           ===========================================================
    if (Hoption.Same) return;
 
-//*-*- Compute x,y range
+//     Compute x,y range
    Double_t xmin = Hparam.xmin;
    Double_t xmax = Hparam.xmax;
    Double_t ymin = Hparam.ymin;
@@ -4045,8 +4483,8 @@ void THistPainter::SetHistogram(TH1 *h)
 //______________________________________________________________________________
 Int_t THistPainter::TableInit()
 {
-//*-*-*-*-*-*-*-*-*Initialize various options to draw tables*-*-*-*-*-*-*-*
-//*-*              =========================================
+//    *-*-*-*-*-*-*Initialize various options to draw tables*-*-*-*-*-*-*-*
+//                 =========================================
 
    static const char *where = "TableInit";
 
@@ -4058,7 +4496,7 @@ Int_t THistPainter::TableInit()
    if (fH->GetMaximumStored() != -1111) maximum = 1;
    if (fH->GetMinimumStored() != -1111) minimum = 1;
 
-//*-*------------------  Compute X axis parameters
+//    -----------------  Compute X axis parameters
    first           = fXaxis->GetFirst();
    last            = fXaxis->GetLast();
    Hparam.xlast    = last;
@@ -4068,7 +4506,7 @@ Int_t THistPainter::TableInit()
    Hparam.xmin     = Hparam.xlowedge;
    Hparam.xmax     = fXaxis->GetBinLowEdge(last)+fXaxis->GetBinWidth(last);
 
-//*-*-   if log scale in X, replace xmin,max by the log
+//       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
 //   find the first edge of a bin that is > 0
       if (Hparam.xlowedge <=0 ) {
@@ -4087,7 +4525,7 @@ Int_t THistPainter::TableInit()
       Hparam.xmax  = TMath::Log10(Hparam.xmax);
    }
 
-//*-*------------------  Compute Y axis parameters
+//    -----------------  Compute Y axis parameters
    first           = fYaxis->GetFirst();
    last            = fYaxis->GetLast();
    Hparam.ylast    = last;
@@ -4098,7 +4536,7 @@ Int_t THistPainter::TableInit()
    Hparam.ymin     = Hparam.ylowedge;
    Hparam.ymax     = fYaxis->GetBinLowEdge(last)+fYaxis->GetBinWidth(last);
 
-//*-*-   if log scale in Y, replace ymin,max by the log
+//       if log scale in Y, replace ymin,max by the log
    if (Hoption.Logy) {
       if (Hparam.ylowedge <=0 ) {
          Hparam.ylowedge = fYaxis->GetBinUpEdge(fYaxis->FindFixBin(0.01*Hparam.ybinsize));
@@ -4117,7 +4555,7 @@ Int_t THistPainter::TableInit()
    }
 
 
-//*-*------------------  Compute Z axis parameters
+//    -----------------  Compute Z axis parameters
    Double_t BIGP = TMath::Power(10,32);
    zmax = -BIGP;
    zmin = BIGP;
@@ -4140,7 +4578,7 @@ Int_t THistPainter::TableInit()
       }
    }
 
-//*-*- Take into account maximum , minimum
+//     Take into account maximum , minimum
 
    if (maximum) zmax = fH->GetMaximumStored();
    if (minimum) zmin = fH->GetMinimumStored();
@@ -4162,7 +4600,7 @@ Int_t THistPainter::TableInit()
 //      }
    }
 
-//*-*- take into account normalization factor
+//     take into account normalization factor
    Hparam.allchan = allchan;
    Stat_t factor = allchan;
    if (fH->GetNormFactor() > 0) factor = fH->GetNormFactor();
@@ -4174,12 +4612,12 @@ Int_t THistPainter::TableInit()
    c1 = zmax;
    if (TMath::Abs(zmin) > TMath::Abs(c1)) c1 = zmin;
 
-//*-*-----
-//*-*-     For log scales, histogram coordinates are log10(ymin) and
-//*-*-     log10(ymax). Final adjustment (if not option "Same")
-//*-*-     or "+" for ymax) of ymax and ymin for logarithmic scale, if
-//*-*-     Maximum and Minimum are not defined.
-//*-*-----
+//    ----
+//         For log scales, histogram coordinates are log10(ymin) and
+//         log10(ymax). Final adjustment (if not option "Same")
+//         or "+" for ymax) of ymax and ymin for logarithmic scale, if
+//         Maximum and Minimum are not defined.
+//    ----
    if (Hoption.Logz) {
       if (zmin <= 0) {
          zmin = TMath::Min((Double_t)1, (Double_t)0.001*zmax);
@@ -4191,21 +4629,21 @@ Int_t THistPainter::TableInit()
       if (!maximum && !Hoption.Plus) zmax += TMath::Log10(2*(0.9/0.95));
       goto LZMIN;
    }
-//*-*-----
-//*-*-     final adjustment of YMAXI for linear scale (if not option "Same"):
-//*-*-     decrease histogram height to MAX% of allowed height if HMAXIM
-//*-*-     has not been called.
-//*-*-     MAX% is the value in percent which has been set in HPLSET
-//*-*-     (default is 90%).
-//*-*-----
+//    ----
+//         final adjustment of YMAXI for linear scale (if not option "Same"):
+//         decrease histogram height to MAX% of allowed height if HMAXIM
+//         has not been called.
+//         MAX% is the value in percent which has been set in HPLSET
+//         (default is 90%).
+//    ----
    if (!maximum && !Hoption.Plus) {
       zmax += YMARGIN*(zmax-zmin);
    }
-//*-*-----
-//*-*-     final adjustment of ymin for linear scale.
-//*-*-     if minimum is not set , then ymin is set to zero if >0
-//*-*-     or to ymin - YMARGIN if <0.
-//*-*-----
+//    ----
+//         final adjustment of ymin for linear scale.
+//         if minimum is not set , then ymin is set to zero if >0
+//         or to ymin - YMARGIN if <0.
+//    ----
    if (!minimum) {
       if (zmin >= 0) zmin = 0;
       else           zmin -= YMARGIN*(zmax-zmin);
@@ -4215,7 +4653,7 @@ LZMIN:
    Hparam.zmin = zmin;
    Hparam.zmax = zmax;
 
-//*-*- Set bar offset and width
+//     Set bar offset and width
    Hparam.baroffset = fH->GetBarOffset();
    Hparam.barwidth  = fH->GetBarWidth();
 

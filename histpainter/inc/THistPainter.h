@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.5 2001/07/20 13:49:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.6 2001/12/09 17:33:49 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -68,6 +68,8 @@ public:
     virtual void       Paint(Option_t *option="");
     virtual void       PaintArrows();
     virtual void       PaintAxis();
+    virtual void       PaintBar();
+    virtual void       PaintBarH();
     virtual void       PaintBoxes();
     virtual void       PaintColorLevels();
     virtual void       PaintContour();
@@ -80,6 +82,7 @@ public:
     virtual void       PaintHist();
     virtual void       PaintH3(Option_t *option="");
     virtual Int_t      PaintInit();
+    virtual Int_t      PaintInitH();
     virtual void       PaintLego();
     virtual void       PaintLegoAxis(TGaxis *axis, Double_t ang);
     virtual void       PaintPalette();
