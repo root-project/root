@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.1 2004/10/08 09:07:10 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.2 2004/10/08 09:10:34 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -124,11 +124,6 @@ const Double_t kChiQuant[50]={
 TRobustEstimator::TRobustEstimator(){
   //this constructor should be used in a univariate case:
   //first call this constructor, then - the EvaluateUni(..) fucntion
-
-  // fNvar = 0;
-  //fN=0;
-  //fH=0;
-  //fExact = kFALSE;
 
 }
 
@@ -1156,13 +1151,9 @@ Int_t TRobustEstimator::RDist(TMatrixD &sscp)
 
  Double_t med;
  Double_t chi = kChiMedian[fNvar-1];
- //change that with new root
- if (fN%2==1)
-   med=KOrdStat(fN, fRd.GetMatrixArray(), fN/2, 0);
- else
-   med=0.5*(KOrdStat(fN, fRd.GetMatrixArray(), fN/2-1, 0)+KOrdStat(fN, fRd.GetMatrixArray(), fN/2,0));
- //
-  med/=chi;
+
+ med=TMath::Median(fN, fRd.GetMatrixArray());
+ med/=chi;
  fCovariance*=med;
  fInvcovariance=fCovariance;
  fInvcovariance.Invert();
