@@ -105,8 +105,6 @@ endif
 
 ObjSuf   = o
 
-ROOT_LOC = $(ROOTSYS)
-
 ifeq ($(PLATFORM),win32)
 
 ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
@@ -139,6 +137,9 @@ SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
 endif
 
 ifeq ($(ARCH),linux)
+
+ROOT_LOC = $(ROOTSYS)
+
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
 ifeq ($(ROOTBUILD),debug)
