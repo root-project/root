@@ -823,7 +823,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
 {
   int /* ifn=0, */ iin=0;
   int cin='\0';
-  char paraname[G__ONELINE];
+  char paraname[G__LONGLINE];
   int func_now;
   int iexist;
   struct G__ifunc_table *ifunc;
@@ -914,15 +914,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
       while('*'==funcheader[numstar]) ++numstar;
 #endif
 #ifndef G__OLDIMPLEMENTATION853
-/*
-      if(strlen(funcheader+2)>G__MAXNAME-1) {
+      if(strlen(funcheader+2)>G__LONGLINE-1) {
 	G__fprinterr(G__serr,
 		"Limitation: Function name length overflow strlen(%s)>%d"
-		,funcheader+2,G__MAXNAME-1);
+		,funcheader+2,G__LONGLINE-1);
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME+1]=0;
       }
-*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
       G__savestring(&G__p_ifunc->funcname[func_now],funcheader+numstar);
@@ -962,15 +960,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
     }
     else {
 #ifndef G__OLDIMPLEMENTATION853
-/*
-      if(strlen(funcheader+1)>G__MAXNAME-1) {
+      if(strlen(funcheader+1)>G__LONGLINE-1) {
 	G__fprinterr(G__serr,
 		"Limitation: Function name length overflow strlen(%s)>%d"
-		,funcheader+1,G__MAXNAME-1);
+		,funcheader+1,G__LONGLINE-1);
 	G__genericerror((char*)NULL);
 	funcheader[G__MAXNAME]=0;
       }
-*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
       G__savestring(&G__p_ifunc->funcname[func_now],funcheader+1);
@@ -996,16 +992,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
   else {
     char *pt1;
 #ifndef G__OLDIMPLEMENTATION853
-/*
-    if(strlen(funcheader)>G__MAXNAME-1) {
+    if(strlen(funcheader)>G__LONGLINE-1) {
       funcheader[G__MAXNAME-1]=0;
       G__fprinterr(G__serr,
 	      "Limitation: Function name length overflow strlen(%s)>%d"
-	      ,funcheader,G__MAXNAME-1);
+	      ,funcheader,G__LONGLINE-1);
       G__genericerror((char*)NULL);
       funcheader[G__MAXNAME-1]=0;
     }
-*/
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
     G__savestring(&G__p_ifunc->funcname[func_now],funcheader);
@@ -2195,8 +2189,8 @@ int G__readansiproto(ifunc,func_now)
 struct G__ifunc_table *ifunc;
 int func_now;
 {
-  char paraname[G__ONELINE];
-  char name[G__ONELINE];
+  char paraname[G__LONGLINE];
+  char name[G__LONGLINE];
   int c=0,iin=0;
   int tagnum,typenum,type=0,pointlevel,reftype;
   int isunsigned,isdefault;
@@ -5274,7 +5268,7 @@ int isrecursive;
 	int npara=0;
 	G__gettemplatearglist(pexplicitarg,&call_para
 			      ,deftmpfunc->def_para,&npara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			      ,-1
 #endif
 			      );
@@ -5696,7 +5690,9 @@ int memfunc_flag;
   fpos_t prev_pos /*,temppos */;
   /* paraname[][] is used only for K&R func param. length should be OK */
   char paraname[G__MAXFUNCPARA][G__MAXNAME];
+#ifdef G__OLDIMPLEMENTATION1802
   char temp[G__ONELINE];
+#endif
   int ipara=0;
   int cin='\0';
   int /* ichar=0,*/ itemp=0;
@@ -6895,7 +6891,7 @@ asm_ifunc_start:   /* loop compilation execution label */
   
   store_doingconstruction=G__doingconstruction;
   /**************************************************************
-   * standard C
+   * K&R C
    *
    *   func( para1 ,para2 ,,, )
    *        ^
@@ -6905,6 +6901,9 @@ asm_ifunc_start:   /* loop compilation execution label */
     /* read pass parameters , standard C */
     ipara=0;
     while(cin!=')') {
+#ifndef G__OLDIMPLEMENTATION1802
+      char temp[G__ONELINE];
+#endif
       cin=G__fgetstream(temp,",)");
       if(temp[0]!='\0') {
 	strcpy(paraname[ipara],temp);
@@ -7340,6 +7339,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 	 && result7->tagnum == p_ifunc->p_tagtable[ifn]
 #endif
 	 ) {
+#ifndef G__OLDIMPLEMENTATION1802
+	char temp[G__ONELINE];
+#endif
 	
 	/* don't call copy constructor if returning reference type */
 	if(G__PARANORMAL!=p_ifunc->reftype[ifn]) {
@@ -7383,8 +7385,8 @@ asm_ifunc_start:   /* loop compilation execution label */
 	else {
 	  char buf2[G__ONELINE];
 	  G__valuemonitor(*result7,buf2);
-	    sprintf(temp,"%s(%s)",G__struct.name[p_ifunc->p_tagtable[ifn]]
-		    ,buf2);
+	  sprintf(temp,"%s(%s)",G__struct.name[p_ifunc->p_tagtable[ifn]]
+		  ,buf2);
 	}
 #else
 	if(result7->obj.i<0)

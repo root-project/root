@@ -1858,9 +1858,15 @@ char type;
 	    += G__DOUBLEALLOC - G__struct.size[G__tagnum]%G__DOUBLEALLOC;
 	}
 #ifndef G__OLDIMPLEMENTATION591
+#ifndef G__OLDIMPLEMENTATION1804
+	if(0==G__struct.size[G__tagnum]) {
+	  G__struct.size[G__tagnum] = G__CHARALLOC;
+	}
+#else
 	else if(0==G__struct.size[G__tagnum]) {
 	  G__struct.size[G__tagnum] = G__CHARALLOC;
 	}
+#endif
 #endif
 	
 	G__tagdefining = tagdefining;

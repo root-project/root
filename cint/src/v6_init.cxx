@@ -2326,7 +2326,7 @@ FILE *fp;
 {
   fprintf(fp,"\n");
   fprintf(fp,"cint : C/C++ interpreter  (mailing list 'cint@root.cern.ch')\n");
-  fprintf(fp,"   Copyright(c) : 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
+  fprintf(fp,"   Copyright(c) : 1995~2003 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   fprintf(fp,"   revision     : %s by M.Goto\n\n",G__cint_version());
 
 #ifdef G__DEBUG

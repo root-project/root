@@ -170,7 +170,7 @@ int G__display_friend(fp,friendtag)
 FILE *fp;
 struct G__friendtag* friendtag;
 {
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
   sprintf(msg," friend ");
   if(G__more(fp,msg)) return(1);
   while(friendtag) {
@@ -193,7 +193,7 @@ struct G__ifunc_table *ifunc;
 {
   int i,n;
   char temp[G__ONELINE];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
 
   G__browsing=1;
   
@@ -355,7 +355,18 @@ struct G__ifunc_table *ifunc;
 	 * print out type and name of function and parameters
 	 **********************************************************/
 	/* print out function name */
+#ifndef G__OLDIMPLEMENTATION1803
+	if(strlen(ifunc->funcname[i])>=sizeof(msg)-6) {
+	  strncpy(msg,ifunc->funcname[i],sizeof(msg)-3);
+	  msg[sizeof(msg)-6]=0;
+	  strcat(msg,"...(");
+	}
+	else {
+	  sprintf(msg,"%s(",ifunc->funcname[i]);
+	}
+#else
 	sprintf(msg,"%s(",ifunc->funcname[i]);
+#endif
 	if(G__more(fp,msg)) return(1);
 
 	if(ifunc->ansi[i] && 0==ifunc->para_nu[i]) {
@@ -448,7 +459,7 @@ FILE *fout;
   int temp,temp1;
   struct G__var_array *local;
   char syscom[G__MAXNAME];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
 
   local=G__p_local;
   temp=0;
@@ -569,7 +580,18 @@ FILE *fout;
   while(pconststring->prev) {
     len=strlen(pconststring->string);
     totalsize+=len+1;
+#ifndef G__OLDIMPLEMENTATION1803
+    if(totalsize>=sizeof(msg)-5) {
+      sprintf(msg,"%3d ",len);
+      strncpy(msg+4,pconststring->string,sizeof(msg)-5);
+      msg[sizeof(msg)-1]=0;
+    }
+    else {
+      sprintf(msg,"%3d %s\n",len,pconststring->string);
+    }
+#else
     sprintf(msg,"%3d %s\n",len,pconststring->string);
+#endif
     if(G__more(fout,msg)) return(1);
     pconststring=pconststring->prev;
   }
@@ -591,7 +613,7 @@ char *space;
   struct G__inheritance *baseclass;
   char addspace[50];
   char temp[G__ONELINE];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
 
   baseclass = G__struct.baseclass[tagnum];
 
@@ -721,7 +743,7 @@ int start;
   int i,j;
   struct G__inheritance *baseclass;
   char temp[G__ONELINE];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
   char *p;
 #ifndef G__OLDIMPLEMENTATION1085
   int store_globalcomp;
@@ -933,7 +955,7 @@ int startin;
   int i,j;
   int start,stop;
   char temp[G__ONELINE];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
 
   i=0;
   while(name[i]&&isspace(name[i])) i++;
@@ -1158,7 +1180,7 @@ int G__display_eachtemplatefunc(fout,deftmpfunc)
 FILE *fout;
 struct G__Definetemplatefunc *deftmpfunc;
 {
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
   struct G__Templatearg *def_para;
   struct G__Templatefuncarg *pfuncpara;
   int i;
@@ -1604,7 +1626,7 @@ char *addspace;
 {
   struct G__inheritance *baseclass;
   char space[G__ONELINE];
-  char msg[G__ONELINE];
+  char msg[G__LONGLINE];
   int i;
 
   sprintf(space,"%s  ",addspace);

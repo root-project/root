@@ -78,6 +78,7 @@ default :                                                                 \
 	break;                                                            \
 }                                                                         \
 G__var_type = 'p';                                                        \
+if(vv!=varname)free((void*)varname); /* 1802 */ \
 return(result);                                                           
 
 /**************************************************************************
@@ -2097,7 +2098,12 @@ G__value expression;
 struct G__var_array *varglobal,*varlocal;
 {
   struct G__var_array *var;
+#ifndef G__OLDIMPLEMENTATION1802
+  char vv[G__BUFLEN];
+  char *varname=vv;
+#else
   char varname[G__MAXNAME*2];
+#endif
   char parameter[G__MAXVARDIM][G__ONELINE];
   G__value para[G__MAXVARDIM],result;
   char result7[G__ONELINE];
@@ -2130,6 +2136,7 @@ struct G__var_array *varglobal,*varlocal;
   int store_asm_noverflow;
 #endif
 
+
 #ifdef G__ASM
   if(G__asm_exec) {
     ig15=G__asm_index;
@@ -2146,7 +2153,7 @@ struct G__var_array *varglobal,*varlocal;
     else
       G__struct_offset=G__store_struct_offset;
     result=expression;
-    goto G__exec_asm_letvar;
+    goto exec_asm_letvar;
   }
 #endif
 
@@ -2154,7 +2161,15 @@ struct G__var_array *varglobal,*varlocal;
   parameter[0][0] = '\0';		/* initialize it */
 
 
+#ifndef G__OLDIMPLEMENTATION1802
   lenitem=strlen(item);
+  if(lenitem>G__BUFLEN-10) varname = (char*)malloc(lenitem+20);
+  if(!varname) {
+    G__genericerror("Internal error: malloc, G__letvariable(), varname");
+    return(G__null);
+  }
+#endif
+
 
   switch(item[0]) {
   case '*': /* value of pointer */
@@ -2168,6 +2183,9 @@ struct G__var_array *varglobal,*varlocal;
       result=G__getexpr(item+1);
       G__ASSERT(isupper(result.type)||'u'==result.type);
       para[0]=G__letPvalue(&result,expression);
+#ifndef G__OLDIMPLEMENTATION1802
+      if(vv!=varname) free((void*)varname);
+#endif
       return(para[0]);
     }
     G__handle_var_type(item,ttt);
@@ -2178,10 +2196,16 @@ struct G__var_array *varglobal,*varlocal;
 #ifndef G__OLDIMPLEMENTATION1395
     if(G__CONSTVAR&result.isconst) {
       G__changeconsterror(item,"ignored const");
+#ifndef G__OLDIMPLEMENTATION1802
+      if(vv!=varname) free((void*)varname);
+#endif
       return(result);
     }
 #endif
     para[0]=G__letVvalue(&result,expression);
+#ifndef G__OLDIMPLEMENTATION1802
+    if(vv!=varname) free((void*)varname);
+#endif
     return(para[0]);
   case '&': /* pointer */
     /* should not happen */
@@ -2282,7 +2306,7 @@ struct G__var_array *varglobal,*varlocal;
     ig2++;
   }
   single_quote=0;double_quote=0;paren=0;
-  
+
 #ifndef G__OLDIMPLEMENTATION1013
   if(flag) {
     result = G__letstructmem(store_var_type
@@ -2293,6 +2317,9 @@ struct G__var_array *varglobal,*varlocal;
 			     ,expression
 			     ,flag
 			     );
+#ifndef G__OLDIMPLEMENTATION1802
+    if(vv!=varname) free((void*)varname);
+#endif
     return(result);
   }
 #else
@@ -2304,6 +2331,9 @@ struct G__var_array *varglobal,*varlocal;
 			     ,varglobal
 			     ,expression
 			     );
+#ifndef G__OLDIMPLEMENTATION1802
+    if(vv!=varname) free((void*)varname);
+#endif
     return(result);
   }
 #endif
@@ -2342,6 +2372,9 @@ struct G__var_array *varglobal,*varlocal;
       para[0]=G__getfunction(item,&ig15,G__CALLMEMFUNC);
     else
       para[0]=G__getfunction(item,&ig15,G__TRYNORMAL);
+#ifndef G__OLDIMPLEMENTATION1802
+    if(vv!=varname) free((void*)varname);
+#endif
     if(ig15) {
       para[1]=G__letVvalue(&para[0],expression);
       return(para[1]);
@@ -2548,6 +2581,9 @@ struct G__var_array *varglobal,*varlocal;
 	}
 #endif
         G__genericerror(NULL);
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=varname) free((void*)varname);
+#endif
         return(G__null);
       }
     }
@@ -2647,10 +2683,13 @@ struct G__var_array *varglobal,*varlocal;
 #ifndef G__OLDIMPLEMENTATION797
       G__var_type = 'p';
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+      if(vv!=varname) free((void*)varname);
+#endif
       return(result);
     }
     
-  G__exec_asm_letvar:
+  exec_asm_letvar:
 #endif
 
     /*******************************************************
@@ -2685,6 +2724,9 @@ struct G__var_array *varglobal,*varlocal;
 	var->p[ig15] = G__globalvarpointer;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+      if(vv!=varname) free((void*)varname);
+#endif
       return(result);
     }
     
@@ -2713,6 +2755,9 @@ struct G__var_array *varglobal,*varlocal;
 	if(var->constvar[ig15]&G__LOCKVAR) {
 	  G__lockedvariable(var->varnamebuf[ig15]);
 	  G__var_type='p';
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(result);
 	}
 #endif
@@ -2724,6 +2769,9 @@ struct G__var_array *varglobal,*varlocal;
 	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
 	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
 	  G__var_type='p';
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(result);
 	}
 #else
@@ -2734,6 +2782,9 @@ struct G__var_array *varglobal,*varlocal;
 	    ('v'==G__var_type&&(var->constvar[ig15]&G__CONSTVAR)))) {
 	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
 	  G__var_type='p';
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(result);
 	}
 #endif
@@ -2750,6 +2801,9 @@ struct G__var_array *varglobal,*varlocal;
 	    ('v'==G__var_type&&(constvar&G__CONSTVAR)))) {
 	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
 	  G__var_type='p';
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(result);
 	}
       }
@@ -2837,6 +2891,9 @@ struct G__var_array *varglobal,*varlocal;
 	  }
 	}
 	G__var_type='p';
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=varname) free((void*)varname);
+#endif
 	return(result);
       }
 #endif
@@ -2854,6 +2911,9 @@ struct G__var_array *varglobal,*varlocal;
 	 (ig25<paran&&tolower(var->type[ig15])!='u')) 
 	 && var->reftype[ig15]==G__PARANORMAL) {
 	G__arrayindexerror(ig15,var,item,p_inc);
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=varname) free((void*)varname);
+#endif
 	return(expression);
       }
 
@@ -2864,6 +2924,9 @@ struct G__var_array *varglobal,*varlocal;
 #endif
 	 0==(*(long*)(G__struct_offset+var->p[ig15]))) {
 	G__assign_error(item,&result);
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=varname) free((void*)varname);
+#endif
 	return(G__null);
       }
 #endif
@@ -2881,7 +2944,11 @@ struct G__var_array *varglobal,*varlocal;
 #else
 	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum))) {
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+	  G__CHECK(G__SECURE_POINTER_TYPE,0!=result.obj.i,{if(vv!=varname)free((void*)varname);return(G__null);});
+#else
 	  G__CHECK(G__SECURE_POINTER_TYPE,0!=result.obj.i,return(G__null));
+#endif
 	}
       }
 #else
@@ -2895,16 +2962,29 @@ struct G__var_array *varglobal,*varlocal;
 #else
 	    -1==G__ispublicbase(var->p_tagtable[ig15],result.tagnum))) {
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+	  G__CHECK(G__SECURE_CAST2P,1,{if(vv!=varname)free((void*)varname);return(G__null);});
+#else
 	  G__CHECK(G__SECURE_CAST2P,1,return(G__null));
+#endif
 	}
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+      G__CHECK(G__SECURE_POINTER_AS_ARRAY 
+	       ,(var->paran[ig15]<paran&&isupper(var->type[ig15]))
+	       ,{if(vv!=varname)free((void*)varname);return(G__null);});
+      G__CHECK(G__SECURE_POINTER_ASSIGN
+	       ,var->paran[ig15]>paran||isupper(var->type[ig15])
+	       ,{if(vv!=varname)free((void*)varname);return(G__null);});
+#else
       G__CHECK(G__SECURE_POINTER_AS_ARRAY 
 	       ,(var->paran[ig15]<paran&&isupper(var->type[ig15]))
 	       ,return(G__null));
       G__CHECK(G__SECURE_POINTER_ASSIGN
 	       ,var->paran[ig15]>paran||isupper(var->type[ig15])
 	       ,return(G__null));
+#endif
 #ifdef G__SECURITY
       if(G__security&G__SECURE_GARBAGECOLLECTION &&
 #ifndef G__OLDIMPLEMENTATION545
@@ -2939,6 +3019,9 @@ struct G__var_array *varglobal,*varlocal;
 	finalval= (original&(~mask))
 	  + ((result.obj.i<<var->varlabel[ig15][G__MAXVARDIM-1])&mask);
 	(*(int*)address) = finalval;
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=varname) free((void*)varname);
+#endif
 	return(result);
       }
 #endif
@@ -2973,6 +3056,9 @@ struct G__var_array *varglobal,*varlocal;
 	   paran==var->paran[ig15] && 'p'==G__var_type && 
 	   0==G__struct_offset && 'C'==result.type && result.obj.i) {
 	  var->p[ig15] = result.obj.i;
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(result);
 	}
 	else {
@@ -3065,6 +3151,9 @@ struct G__var_array *varglobal,*varlocal;
 	  G__letint(&result,'u',(result.ref));
 	  G__tryindexopr(&result,para,paran,ig25);
 	  para[0]=G__letVvalue(&result,expression);
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(para[0]);
 	}
 	else {
@@ -3101,6 +3190,9 @@ struct G__var_array *varglobal,*varlocal;
 	  G__letint(&result,'u',result.ref);
 	  G__tryindexopr(&result,para,paran,ig25);
 	  para[0]=G__letVvalue(&result,expression);
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=varname) free((void*)varname);
+#endif
 	  return(para[0]);
 	}
 	else {
@@ -3151,6 +3243,9 @@ struct G__var_array *varglobal,*varlocal;
 #endif
   
   G__var_type = 'p';
+#ifndef G__OLDIMPLEMENTATION1802
+  if(vv!=varname) free((void*)varname);
+#endif
   return(result);
 }
 

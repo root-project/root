@@ -78,7 +78,11 @@ char *exprwithspace;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1802
+  char *exprnospace=(char*)malloc(strlen(exprwithspace)+1);
+#else
   char exprnospace[G__ONELINE];
+#endif
   int iin=0,iout=0,ipunct=0;
   int single_quote=0,double_quote=0;
   G__value result;
@@ -194,6 +198,9 @@ char *exprwithspace;
   G__asm_noverflow = store_asm_noverflow;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1802
+  free((void*)exprnospace);
+#endif
   return(result);
 }
 
@@ -368,10 +375,25 @@ int G__iscastexpr_body(ebuf,lenbuf)
 char *ebuf;
 int lenbuf;
 {
+#ifndef G__OLDIMPLEMENTATION1802
+  int result;
+  char *temp = (char*)malloc(strlen(ebuf)+1);
+  if(!temp) {
+    G__genericerror("Internal error: malloc, G__iscastexpr_body(), temp");
+    return(0);
+  }
+#else
   char temp[G__LONGLINE];
+#endif
   strcpy(temp,ebuf+1);
   temp[lenbuf-2]=0;
+#ifndef G__OLDIMPLEMENTATION1802
+  result = G__istypename(temp);
+  free((void*)temp);
+  return(result);
+#else
   return (G__istypename(temp));
+#endif
   /* using G__istypename() above is questionable. 
    * May need to use G__string2type() for better language compliance */
 }
@@ -917,7 +939,12 @@ char *expression;
   int unaopr[G__STACKDEPTH]; /* unary operator stack */
   int up=0;                    /* unary operator stack pointer */
 
+#ifndef G__OLDIMPLEMENTATION1802
+  char vv[G__BUFLEN];
+  char *ebuf=vv;
+#else
   char ebuf[G__LONGLINE]; /* evaluation buffer */
+#endif
   int lenbuf=0;           /* ebuf pointer */
   int c; /* temp char */
 
@@ -948,6 +975,7 @@ char *expression;
   ******************************************************************/
   length=strlen(expression);
   if(0==length) return(G__null);
+
   
 #ifdef G__OLDIMPLEMENTATION852
   /******************************************************************
@@ -959,6 +987,15 @@ char *expression;
     if(G__asm_noverflow) G__asm_gen_strip_quotation(&defined);
 #endif
     return(defined);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1802
+  if(strlen(expression)>G__BUFLEN-2) 
+    ebuf=(char*)malloc(strlen(expression)+1);
+  if(!ebuf) {
+    G__genericerror("Internal error: malloc, G__getexpr(), ebuf");
+    return(G__null);
   }
 #endif
 
@@ -987,6 +1024,9 @@ char *expression;
     case '(': /* new(arena) type(),  (type)val, (expr) */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)&&
 	 lenbuf==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=ebuf) free((void*)ebuf);
+#endif
 	return(G__new_operator(expression+ig1));
       }
       /* no break here */
@@ -1027,6 +1067,9 @@ char *expression;
     case ' ': /* new type, new (arena) type */
       if((nest==0)&&(single_quote==0)&&(double_quote==0)) {
 	if(lenbuf-inew==3&&strncmp(expression+inew,"new",3)==0) { /* ON994 */
+#ifndef G__OLDIMPLEMENTATION1802
+	  if(vv!=ebuf) free((void*)ebuf);
+#endif
 	  return(G__new_operator(expression+ig1+1));
 	}
 	/* else ignore c, shoud not happen, but not sure */
@@ -1343,7 +1386,13 @@ char *expression;
 	  strncpy(ebuf,expression,ig1);
 	  ebuf[ig1] = '\0';
 	  G__var_type=store_var_type;
+#ifndef G__OLDIMPLEMENTATION1802
+	  vstack[0]= G__letvariable(ebuf,defined,&G__global,G__p_local);
+	  if(vv!=ebuf) free((void*)ebuf);
+	  return(vstack[0]);
+#else
 	  return(G__letvariable(ebuf,defined,&G__global,G__p_local));
+#endif
 	}
 #ifndef G__OLDIMPLEMENTATION994
 	inew=ig1+1;
@@ -1360,7 +1409,13 @@ char *expression;
 	G__RESTORE_ANDOPR
 	G__RESTORE_OROPR
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+        vstack[1]=G__conditionaloperator(vstack[0],expression,ig1,ebuf);
+	if(vv!=ebuf) free((void*)ebuf);
+	return(vstack[1]);
+#else
 	return(G__conditionaloperator(vstack[0],expression,ig1,ebuf));
+#endif
       }
       else ebuf[lenbuf++]=c;
       break;
@@ -1395,6 +1450,9 @@ char *expression;
   G__RESTORE_OROPR
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1802
+  if(vv!=ebuf) free((void*)ebuf);
+#endif
   return(vstack[0]);
 }
 
@@ -1974,7 +2032,11 @@ char *item;
 #ifndef G__FONS81
 	/* append $ to object and try to find it again */
 	if (!G__gettingspecial && item[0] != '$') {
+#ifndef G__OLDIMPLEMENTATION1802
+	  char *sbuf;
+#else
 	  char sbuf[G__LONGLINE];
+#endif
 #ifndef G__OLDIMPLEMENTATION1379
 	  int store_return = G__return;
 	  int store_security_error = G__security_error;
@@ -1983,10 +2045,20 @@ char *item;
 	  /* This fix should be verified very carefully */
 	  if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+	  sbuf = (char*)malloc(strlen(item)+2);
+	  if(!sbuf) {
+	    G__genericerror("Internal error: malloc in G__getitem(),sbuf");
+	    return(G__null);
+	  }
+#endif
 	  sprintf(sbuf, "$%s", item);
 	  G__gettingspecial = 1;
           G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
 	  result3 = G__getitem(sbuf);
+#ifndef G__OLDIMPLEMENTATION1802
+	  free((void*)sbuf);
+#endif
 	  G__gettingspecial = 0;
 #ifndef G__OLDIMPLEMENTATION1379
 #ifndef G__OLDIMPLEMENTATION1420

@@ -193,7 +193,7 @@ struct G__Definedtemplatememfunc *deftmpmemfunc;
     call_para.string=(char*)NULL;
     call_para.next = (struct G__Charlist*)NULL;
     G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			  ,-1
 #endif
 			  );
@@ -1918,7 +1918,7 @@ struct G__Templatearg *def_para;
 **************************************************************************/
 #ifndef G__OLDIMPLEMENTATION664
 int G__gettemplatearglist(paralist,charlist_in,def_para_in ,pnpara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			  ,parent_tagnum
 #endif
 			  )
@@ -1926,7 +1926,7 @@ char *paralist;
 struct G__Charlist *charlist_in;
 struct G__Templatearg *def_para_in;
 int *pnpara;
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 int parent_tagnum;
 #endif
 #else /* ON664 */
@@ -1947,7 +1947,7 @@ int *pnpara;
   int c;
   G__value buf;
   int searchflag=0;
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
   int store_tagdefining,store_def_tagnum;
 #endif
 
@@ -2033,7 +2033,7 @@ int *pnpara;
   /**************************************************************
   * default template argument
   **************************************************************/
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
   store_tagdefining = G__tagdefining;
   store_def_tagnum = G__def_tagnum;
   if(-1!=parent_tagnum) {
@@ -2085,7 +2085,7 @@ int *pnpara;
       def_para=def_para->next;
     }
   }
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
   G__tagdefining = store_tagdefining;
   G__def_tagnum = store_def_tagnum;
 #endif
@@ -2287,13 +2287,13 @@ char *tagnamein;
 #ifndef G__OLDIMPLEMENTATION1503
   if((defarg=
       G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			  ,deftmpclass->parent_tagnum
 #endif
 			    ))) {
 #else
   if(G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			  ,-1
 #endif
 			   )) {
@@ -3651,7 +3651,7 @@ int funcmatch;
 	int npara=0;
 	G__gettemplatearglist(pexplicitarg,&call_para
 			      ,deftmpfunc->def_para,&npara
-#ifndef G__OLDIMPLEMENTATION1780
+#ifndef G__OLDIMPLEMENTATION1800
 			      ,-1
 #endif
 			      );

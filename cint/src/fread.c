@@ -7,7 +7,7 @@
  * Description:
  *  Utility to read source file
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -340,6 +340,9 @@ char *string,*endmark;
       pflag = 0;
 #endif
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1010,6 +1013,9 @@ char *string,*endmark;
       pflag = 0;
 #endif
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1292,6 +1298,9 @@ char *endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1437,6 +1446,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1586,6 +1598,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1802,6 +1817,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1991,6 +2009,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -2594,6 +2615,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
 
     last_was_space = (c == ' ');
@@ -2724,6 +2748,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;

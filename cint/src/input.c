@@ -158,9 +158,9 @@ char *prompt;
       G__input_history(&state,"");
     }
     pchar=readline(prompt);
-    while(pchar&&strlen(pchar)>G__ONELINE-5) {
+    while(pchar&&strlen(pchar)>G__LONGLINE-5) {
       G__fprinterr(G__serr,"!!! User command too long !!! (%d>%d)\n"
-		   ,strlen(pchar),G__ONELINE-5);
+		   ,strlen(pchar),G__LONGLINE-5);
       pchar=readline(prompt);
     }
     if(pchar) strcpy(line,pchar);

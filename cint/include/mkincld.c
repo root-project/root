@@ -96,7 +96,7 @@ char *iden;
   else if(sizeof(type)==sizeof(unsigned long)*2) {                      \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
     fprintf(fp,"  unsigned long l,u;\n");                               \
-    fprintf(fp,"  %s(unsigned long i){l=i;u=0;}\n",ctype);              \
+    fprintf(fp,"  %s(unsigned long i=0){l=i;u=0;}\n",ctype);            \
     fprintf(fp,"  void operator=(unsigned long i){l=i;u=0;}\n");        \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
@@ -122,7 +122,7 @@ char *iden;
   else if(sizeof(type)==sizeof(long)*2) {                               \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
     fprintf(fp,"  long l,u;\n");                                        \
-    fprintf(fp,"  %s(long i){l=i;u=0;}\n",ctype);                       \
+    fprintf(fp,"  %s(long i=0){l=i;u=0;}\n",ctype);                     \
     fprintf(fp,"  void operator=(long i){l=i;u=0;}\n");                 \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
@@ -148,7 +148,7 @@ char *iden;
   else if(sizeof(type)==sizeof(unsigned long)*2) {                      \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
     fprintf(fp,"  unsigned long l,u;\n");                               \
-    fprintf(fp,"  %s(unsigned long i){l=i;u=0;}\n",ctype);              \
+    fprintf(fp,"  %s(unsigned long i=0){l=i;u=0;}\n",ctype);            \
     fprintf(fp,"  void operator=(unsigned long i){l=i;u=0;}\n");        \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \
@@ -174,7 +174,7 @@ char *iden;
   else if(sizeof(type)==sizeof(long)*2) {                               \
     fprintf(fp,"typedef struct %s {\n",ctype);                          \
     fprintf(fp,"  long l,u;\n");                                        \
-    fprintf(fp,"  %s(long i){l=i;u=0;}\n",ctype);                       \
+    fprintf(fp,"  %s(long i=0){l=i;u=0;}\n",ctype);                     \
     fprintf(fp,"  void operator=(long i){l=i;u=0;}\n");                 \
     fprintf(fp,"} %s;\n",ctype);                                        \
     fprintf(fp,"#pragma link off class %s;\n",ctype);                   \

@@ -460,7 +460,9 @@ int isglobal;
 {
   int itemp=0,itemp1=0;
   
+#ifdef G__OLDIMPLEMENTATION1802
   char temp[G__ONELINE];
+#endif
   int store_tagnum;
   long store_struct_offset; /* used to be int */
   int store_return;
@@ -514,6 +516,10 @@ int isglobal;
        * If C++ class, destructor has to be called
        ****************************************************/
       if(var->type[itemp]=='u' && 0==G__ansiheader && 0==G__prerun) {
+#ifndef G__OLDIMPLEMENTATION1802
+	char vv[G__BUFLEN];
+	char *temp=vv;
+#endif
 	
 	store_struct_offset = G__store_struct_offset;
 	G__store_struct_offset = var->p[itemp]; /* duplication */
@@ -523,6 +529,11 @@ int isglobal;
 	
 	store_return=G__return;
 	G__return=G__RETURN_NON;
+
+#ifndef G__OLDIMPLEMENTATION1802
+	if(strlen(G__struct.name[G__tagnum])>G__BUFLEN-5)
+	  temp = (char*)malloc(strlen(G__struct.name[G__tagnum])+5);
+#endif
 	
 	sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
 	if(G__dispsource) {
@@ -551,7 +562,7 @@ int isglobal;
 	    for(i=var->varlabel[itemp][1];i>=0;--i) {
 	      G__store_struct_offset = var->p[itemp]+size*i;
 	      G__globalvarpointer = G__store_struct_offset;
-	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
+	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR);
 	      if(0==itemp1) break;
 	    }
 	    G__globalvarpointer = store_globalvarpointer;
@@ -586,6 +597,9 @@ int isglobal;
 	    if(0==itemp1) break;
 	  }
 	}
+#ifndef G__OLDIMPLEMENTATION1802
+	if(vv!=temp) free((void*)temp);
+#endif
 	G__prerun = store_prerun;
 	
 	G__store_struct_offset = store_struct_offset;

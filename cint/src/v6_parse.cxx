@@ -343,7 +343,7 @@ int G__exec_throw(statement)
 char* statement;
 {
   int iout;
-#ifndef G__OLDIMPLEMENTaTION1281
+#ifndef G__OLDIMPLEMENTATION1281
   char buf[G__ONELINE];
   G__fgetstream(buf,";");
   if(isdigit(buf[0])||'.'==buf[0]) {
@@ -1206,18 +1206,18 @@ int G__pp_command()
 void G__pp_skip(elifskip)
 int elifskip;
 {
-  char G__oneline[G__LONGLINE*2];
-  char G__argbuf[G__LONGLINE*2];
+  char oneline[G__LONGLINE*2];
+  char argbuf[G__LONGLINE*2];
   char *arg[G__ONELINE];
   int argn;
   
-  FILE *G__fp;
+  FILE *fp;
   int nest=1;
   char condition[G__ONELINE];
   char temp[G__ONELINE];
   int i;
   
-  G__fp=G__ifile.fp;
+  fp=G__ifile.fp;
   
   /* elace traced mark */
   if(0==G__nobreak && 0==G__disp_mask&&
@@ -1230,7 +1230,7 @@ int elifskip;
   /********************************************************
    * Read lines until end of conditional compilation
    ********************************************************/
-  while(nest && G__readline(G__fp,G__oneline,G__argbuf,&argn,arg)!=0) {
+  while(nest && G__readline(fp,oneline,argbuf,&argn,arg)!=0) {
     /************************************************
      *  If input line is "abcdefg hijklmn opqrstu"
      *
@@ -1327,10 +1327,10 @@ int elifskip;
 	    strcpy(condition,temp);
 	  }
 #ifndef G__OLDIMPLEMENTATION1459
-          i = strlen (G__oneline) - 1;
-          while (i >= 0 && (G__oneline[i] == '\n' || G__oneline[i] == '\r'))
+          i = strlen (oneline) - 1;
+          while (i >= 0 && (oneline[i] == '\n' || oneline[i] == '\r'))
             --i;
-          if (G__oneline[i] == '\\') {
+          if (oneline[i] == '\\') {
             int len = strlen (condition);
             while (1) {
               G__fgetstream (condition+len, "\n\r");
@@ -2516,7 +2516,11 @@ G__value G__exec_switch()
 ***********************************************************************/
 G__value G__exec_if()
 {
+#ifndef G__OLDIMPLEMENTATION1802
+  char *condition=(char*)malloc(G__LONGLINE);
+#else
   char condition[G__LONGLINE];
+#endif
   G__value result;
   int false=0;
   fpos_t store_fpos;
@@ -2538,11 +2542,18 @@ G__value G__exec_if()
 #else
   G__fgetstream(condition,")");
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1802
+  condition = (char*)realloc((void*)condition,strlen(condition)+10);
+#endif
   
   if(G__breaksignal &&
      G__beforelargestep(condition,&iout,&largestep)>1) {
 #ifndef G__OLDIMPLEMENTATION1672
     G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+    free((void*)condition);
 #endif
     return(G__null);
   }
@@ -2571,6 +2582,9 @@ G__value G__exec_if()
     if(G__return!=G__RETURN_NON) {
 #ifndef G__OLDIMPLEMENTATION1672
       G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+      free((void*)condition);
 #endif
       return(result);
     }
@@ -2651,6 +2665,9 @@ G__value G__exec_if()
 #ifndef G__OLDIMPLEMENTATION1672
 	    G__ifswitch = store_ifswitch;
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+	    free((void*)condition);
+#endif
 	    return(G__null);
 	  }
 	  break;
@@ -2680,6 +2697,9 @@ G__value G__exec_if()
       G__eof=2;
 #ifndef G__OLDIMPLEMENTATION1672
       G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+      free((void*)condition);
 #endif
       return(G__null) ;
     }
@@ -2736,6 +2756,9 @@ G__value G__exec_if()
 #ifndef G__OLDIMPLEMENTATION1672
       G__ifswitch = store_ifswitch;
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+      free((void*)condition);
+#endif
       return(result);
     }
   }
@@ -2762,6 +2785,9 @@ G__value G__exec_if()
 
 #ifndef G__OLDIMPLEMENTATION1672
   G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+  free((void*)condition);
 #endif
   return(result);
 }
@@ -3081,7 +3107,11 @@ char **foraction;
 ***********************************************************************/
 G__value G__exec_while()
 {
+#ifndef G__OLDIMPLEMENTATION1802
+  char *condition = (char*)malloc(G__LONGLINE);
+#else
   char condition[G__LONGLINE];
+#endif
   G__value result;
 #ifndef G__OLDIMPLEMENTATION1672
   int store_ifswitch = G__ifswitch;
@@ -3089,9 +3119,18 @@ G__value G__exec_while()
 #endif
 
   G__fgetstream(condition,")");
+
+#ifndef G__OLDIMPLEMENTATION1802
+  condition = (char*)realloc((void*)condition,strlen(condition)+10);
+#endif
+
   result=G__exec_loop((char*)NULL,condition,0,(char**)NULL);
 #ifndef G__OLDIMPLEMENTATION1672
   G__ifswitch = store_ifswitch;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1802
+  free((void*)condition);
 #endif
   return(result);
 }
@@ -3106,7 +3145,12 @@ G__value G__exec_while()
 G__value G__exec_for()
 {
   /* char forinit[G__ONELINE]; */
+#ifndef G__OLDIMPLEMENTATION1802
+  int condlen;
+  char *condition;
+#else
   char condition[G__LONGLINE];
+#endif
   char foractionbuf[G__ONELINE];
   char *foraction[10];
   char *p;
@@ -3127,6 +3171,10 @@ G__value G__exec_for()
     return(G__null);
   }
 
+#ifndef G__OLDIMPLEMENTATION1802
+  condition=(char*)malloc(G__LONGLINE);
+#endif
+
 #ifndef G__OLDIMPLEMENTATION915
   c=G__fgetstream(condition,";)");
   if(')'==c) {
@@ -3134,12 +3182,20 @@ G__value G__exec_for()
 #ifndef G__OLDIMPLEMENTATION1672
     G__ifswitch = store_ifswitch;
 #endif
+#ifndef G__OLDIMPLEMENTATION1802
+    free((void*)condition);
+#endif
     return(G__null);
   }
 #else
   G__fgetstream(condition,";");
 #endif
   if('\0'==condition[0]) strcpy(condition,"1");
+
+#ifndef G__OLDIMPLEMENTATION1802
+  condlen = strlen(condition);
+  condition = (char*)realloc((void*)condition,condlen+10);
+#endif
 
   p=foractionbuf;
   do {
@@ -3149,6 +3205,9 @@ G__value G__exec_for()
       G__fprinterr(G__serr,"Error: for statement syntax error. ';' needed\n");
 #ifndef G__OLDIMPLEMENTATION1672
       G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+      free((void*)condition);
 #endif
       return(G__null);
     }
@@ -3160,6 +3219,9 @@ G__value G__exec_for()
   result=G__exec_loop((char*)NULL,condition,naction,foraction);
 #ifndef G__OLDIMPLEMENTATION1672
   G__ifswitch = store_ifswitch;
+#endif
+#ifndef G__OLDIMPLEMENTATION1802
+  free((void*)condition);
 #endif
   return(result);
 }
@@ -3302,7 +3364,6 @@ G__value G__exec_statement()
 {
   G__value result;
   char statement[G__LONGLINE];
-  char casepara[G__ONELINE];
   int c;
   char *conststring=NULL;
   int mparen=0;
@@ -3413,6 +3474,7 @@ G__value G__exec_statement()
 	    break;
 	  case 4:
 	    if((mparen==1)&& (strcmp(statement,"case")==0)) {
+	      char casepara[G__ONELINE];
 	      G__fgetstream(casepara,":");
 	      if(G__switch!=0) {
 		int store_no_execXX;
@@ -4832,7 +4894,6 @@ char *pvar_type;
 {
   int c;
   int n;
-  char temp[G__ONELINE];
   char *p;
   fpos_t pos;
   int line;
@@ -4900,6 +4961,7 @@ char *pvar_type;
      * type (*pary)[n]; pointer to array
      *             ^
      ***************************************************************/
+    char temp[G__ONELINE];
     n=0;
     while('['==c) {
       c=G__fgetstream(temp,"]");
@@ -4916,6 +4978,7 @@ char *pvar_type;
     *              ^
     ***************************************************************/
     /* Set newtype for pointer to function */
+    char temp[G__ONELINE];
     line=G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
     if(G__dispsource) G__disp_mask=1000;

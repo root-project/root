@@ -1682,7 +1682,7 @@ char *com;
   }
   /* #define G__OLDIMPLEMENTATION1774 */
 #ifndef G__OLDIMPLEMENTATION1774
-#ifndef G__OLDIMPLEMENTATION1781
+#ifndef G__OLDIMPLEMENTATION1801
   if(nest>0 && '{'!=com[0]) {
     if(0==strncmp(com,"for(",4) || 0==strncmp(com,"for ",4) 
       || 0==strncmp(com,"while(",6) || 0==strncmp(com,"while ",6) 
@@ -1703,7 +1703,7 @@ char *com;
   if(0<nest) return(1);
   if(G__INPUTCXXMODE==G__rootmode && 0==nest && 0==semicolumnattheend
      && '#'!=com[0]
-#ifndef G__OLDIMPLEMENTATION1781
+#ifndef G__OLDIMPLEMENTATION1801
      && 0!=strncmp(com,"for(",4) && 0!=strncmp(com,"for ",4) 
      && 0!=strncmp(com,"while(",6) && 0!=strncmp(com,"while ",6) 
      && 0!=strncmp(com,"do ",3) && 0!=strncmp(com,"do{",3) 
@@ -1841,9 +1841,9 @@ G__value *rslt;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION685
-  if(strlen(line)>G__ONELINE-5) {
+  if(strlen(line)>G__LONGLINE-5) {
     G__fprinterr(G__serr,"!!! User command too long (%d>%d)!!!\n"
-		 ,strlen(line),G__ONELINE-5);
+		 ,strlen(line),G__LONGLINE-5);
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
 #endif

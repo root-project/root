@@ -149,6 +149,12 @@ int G__dlclose G__P((G__SHLHANDLE handle));
   /* Do not know how to force binding at load time */
 # define G__RTLD_NOW 0
 # define G__RTLD_LAZY 0
+/****************************************************
+* Other
+****************************************************/
+#else
+# define G__RTLD_NOW 0
+# define G__RTLD_LAZY 0
 #endif /* G__WIN32 */
 
 #ifdef G__SHAREDLIB

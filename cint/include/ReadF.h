@@ -19,8 +19,8 @@
 #endif
 
 
-#define MAX_LINE_LENGTH  500
-#define MAX_TOKEN        100
+#define MAX_LINE_LENGTH  2048
+#define MAX_TOKEN        512
 #define MAX_SEPARATOR    20
 #define MAX_ENDOFLINE    10
 

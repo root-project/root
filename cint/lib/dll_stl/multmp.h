@@ -46,6 +46,10 @@ using namespace std;
 #pragma link C++ class multimap<string,double>;
 #pragma link C++ class multimap<string,void*>;
 //#pragma link C++ class multimap<string,string>;
+#pragma link off function pair<const string,int>::operator=;
+#pragma link off function pair<const string,long>::operator=;
+#pragma link off function pair<const string,double>::operator=;
+#pragma link off function pair<const string,void*>::operator=;
 #endif
 
 #endif // G__MAP2

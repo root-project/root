@@ -45,7 +45,18 @@ using namespace std;
 #pragma link C++ class map<string,double>;
 #pragma link C++ class map<string,void*>;
 //#pragma link C++ class map<string,string>;
-#endif
+#if defined(G__GNUC) && (G__GNUC>=3)
+#pragma link off class  pair<const string,int>;
+#pragma link off class  pair<const string,long>;
+#pragma link off class  pair<const string,double>;
+#pragma link off class  pair<const string,void*>;
+
+#pragma link off function pair<const string,int>::operator=;
+#pragma link off function pair<const string,long>::operator=;
+#pragma link off function pair<const string,double>::operator=;
+#pragma link off function pair<const string,void*>::operator=;
+#endif // GNUC
+#endif // G__STRING_DLL
 
 #endif // G__MAP2
 

@@ -969,6 +969,13 @@ struct G__funclist {
   struct G__funclist *prev;
 };
 
+#ifndef G__OLDIMPLEMENTATION1782
+/*********************************************************************
+* variable length string buffer
+*********************************************************************/
+#define G__BUFLEN 32
+#endif
+
 /*********************************************************************
 * cint parser function and global variable prototypes
 *********************************************************************/

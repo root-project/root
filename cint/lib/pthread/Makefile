@@ -26,7 +26,7 @@ CPPPREP     = g++ -E -C
 CCDLLOPT    = -fPIC
 LDDLLOPT    = -shared
 # gcc-3.00 has a bug in -O2. Use -O instead. -O2 may be OK for later version
-OPTIMIZE    = -O
+OPTIMIZE    = -O2
 LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic 
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK
 OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
