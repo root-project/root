@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.1 2003/04/14 12:56:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.2 2003/04/14 13:51:37 brun Exp $
 // Author: Miroslav Morhac   11/04/2003
 
 /////////////////////////////////////////////////////////////////////////////
@@ -6091,8 +6091,8 @@ ClassImp(TSpectrum2)
 		for(m=1;m<=nxp2;m++){
 			a=m-1;
 			arg=a*wpwr;
-			wr=cosl(arg);
-			wi=sign*sinl(arg);
+			wr=cos(arg); //was cosl
+			wi=sign*sin(arg); //was sinl
 			for(mxp=nxp;mxp<=num;mxp+=nxp){
 				j1=mxp-nxp+m;
 				j2=j1+nxp2;
