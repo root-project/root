@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.15 2002/12/08 16:58:06 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.16 2003/02/14 19:05:45 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -146,6 +146,12 @@
 
 #define BUF_SIZE    1024        // must match value in C_Getline.c (for bounds checking)
 #define IfDebug(x)  if(gDebug==TTabCom::kDebug) x
+
+#ifdef R__WIN32
+const char kDelim = ';';
+#else
+const char kDelim = ':';
+#endif
 
 
 ClassImp(TTabCom)
@@ -389,7 +395,7 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
       TString line;
       while (file1) {
          line = "";
-         line.ReadLine(file1, kFALSE);	// kFALSE ==> don't skip whitespace
+         line.ReadLine(file1, kFALSE);  // kFALSE ==> don't skip whitespace
          line = line(23, 32000);
 // old way...
 //             if (line.Index("class") >= 0)
@@ -869,17 +875,17 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
 #ifdef R__SSTREAM
       istringstream endings((char *) fignore);
 #else
-      istrstream endings((char *) fignore);	// do i need to make a copy first?
+      istrstream endings((char *) fignore);   // do i need to make a copy first?
 #endif
       TString ending;
 
-      ending.ReadToDelim(endings, ':');
+      ending.ReadToDelim(endings, kDelim);
 
       while (!ending.IsNull()) {
          if (s.EndsWith(ending))
             return kTRUE;
          else
-            ending.ReadToDelim(endings, ':');	// next
+            ending.ReadToDelim(endings, kDelim);   // next
       }
       return kFALSE;
    }
@@ -957,7 +963,7 @@ TString TTabCom::GetSysIncludePath(void)
       if (!token.IsNull()) {
          if (path.Length() > 0)
             path.Append(":");
-         path.Append(token.Data() + 2);	// +2 skips "-I"
+         path.Append(token.Data() + 2); // +2 skips "-I"
       }
    }
 
@@ -1012,7 +1018,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
 
    assert(path1 != 0);
 
-   TContainer *pList = new TContainer;	// maybe use RTTI here? (since its a static function)
+   TContainer *pList = new TContainer;  // maybe use RTTI here? (since its a static function)
 #ifdef R__SSTREAM
    istringstream path((char *) path1);
 #else
@@ -1020,7 +1026,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
 #endif
    TString dirName;
 
-   dirName.ReadToDelim(path, ':');
+   dirName.ReadToDelim(path, kDelim);
 
    while (!dirName.IsNull()) {
       IfDebug(cerr << "NewListOfFilesInPath(): dirName = " << dirName <<
@@ -1029,7 +1035,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
       AppendListOfFilesInDirectory(dirName, pList);
 
       // next
-      dirName.ReadToDelim(path, ':');
+      dirName.ReadToDelim(path, kDelim);
    }
 
    return pList;
@@ -1089,7 +1095,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
          return;
       }
 
-      gErrorIgnoreLevel = old_level;	// resore
+      gErrorIgnoreLevel = old_level;   // resore
       old_level = kNotDefined;
    } else                       // set
    {
@@ -1227,9 +1233,9 @@ Int_t TTabCom::Complete(const TRegexp & re,
          else if (className == "TMethod" || className == "TFunction") {
             TFunction *pFunc = (TFunction *) pObj;
             if (pFunc->GetNargsOpt() == pFunc->GetNargs())
-               appendage = "()";	// all args have default values
+               appendage = "()";   // all args have default values
             else
-               appendage = "("; // user needs to supply some args
+               appendage = "(";    // user needs to supply some args
          } else if (className == "TDataMember") {
             appendage = " ";
          }
@@ -1300,7 +1306,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // ---------------------------------------
    {
       int i = strlen(fBuf);     // old EOL position is i
-      int L = strlen(match) - (loc - start);	// new EOL position will be i+L
+      int L = strlen(match) - (loc - start);    // new EOL position will be i+L
 
       // first check for overflow
       if (strlen(fBuf) + strlen(match) + 1 > BUF_SIZE) {
@@ -1399,7 +1405,7 @@ TTabCom::EContext_t TTabCom::DetermineContext() const
                  << "context=" << context << " "
                  << "RegExp=" << fRegExp[context]
                  << endl);
-         return EContext_t(context);	//* RETURN *//
+         return EContext_t(context);   //* RETURN *//
       }
    }
 
@@ -1459,17 +1465,17 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 #endif
    {
       dir = "";
-      dir.ReadToDelim(str, ':');
+      dir.ReadToDelim(str, kDelim);
       if (dir.IsNull())
          continue;              // ignore blank entries
       newPath.Append(dir);
       if (!newPath.EndsWith("/"))
          newPath.Append("/");
       newPath.Append(newBase);
-      newPath.Append(':');
+      newPath.Append(kDelim);
    }
 
-   return newPath.Strip(TString::kTrailing, ':');
+   return newPath.Strip(TString::kTrailing, kDelim);
 }
 
 Int_t TTabCom::Hook(char *buf, int *pLoc)
@@ -1618,10 +1624,10 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCXX_DirectMember:
    case kCXX_IndirectMember:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;   // save this for later
 
          TClass *pClass;
-         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");	// may be a class, object, or pointer
+         TString name = s3("^[_a-zA-Z][_a-zA-Z0-9]*");  // may be a class, object, or pointer
 
          IfDebug(cerr << endl);
          IfDebug(cerr << "name: " << '"' << name << '"' << endl);
@@ -1679,7 +1685,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
    case kCXX_NewProto:
    case kCXX_ConstructorProto:
       {
-         const EContext_t original_context = context;	// save this for later
+         const EContext_t original_context = context;   // save this for later
 
          // get class
          TClass *pClass;
@@ -1877,9 +1883,9 @@ void TTabCom::InitPatterns(void)
    SetPattern(kSYS_UserName, "~[_a-zA-Z0-9]*$");
    SetPattern(kSYS_EnvVar, "$[_a-zA-Z0-9]*$");
 
-   SetPattern(kCINT_stdout, "; *>>?.*$");	// stdout
-   SetPattern(kCINT_stderr, "; *2>>?.*$");	// stderr
-   SetPattern(kCINT_stdin, "; *<.*$");	// stdin
+   SetPattern(kCINT_stdout, "; *>>?.*$");   // stdout
+   SetPattern(kCINT_stderr, "; *2>>?.*$");  // stderr
+   SetPattern(kCINT_stdin, "; *<.*$");      // stdin
 
    SetPattern(kCINT_Edit, "^ *\\.E .*$");
    SetPattern(kCINT_Load, "^ *\\.L .*$");
@@ -1887,8 +1893,8 @@ void TTabCom::InitPatterns(void)
    SetPattern(kCINT_EXec, "^ *\\.X +[-0-9_a-zA-Z~$./]*$");
 
    SetPattern(kCINT_pragma, "^# *pragma +[_a-zA-Z0-9]*$");
-   SetPattern(kCINT_includeSYS, "^# *include *<[^>]*$");	// system files
-   SetPattern(kCINT_includePWD, "^# *include *\"[^\"]*$");	// local files
+   SetPattern(kCINT_includeSYS, "^# *include *<[^>]*$");        // system files
+   SetPattern(kCINT_includePWD, "^# *include *\"[^\"]*$");      // local files
 
    SetPattern(kCINT_cpp, "^# *[_a-zA-Z0-9]*$");
 
@@ -1955,8 +1961,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // need to make sure "varName" exists
    // because "DetermineClass()" prints clumsy error message otherwise.
-   Bool_t varName_exists = GetListOfGlobals()->Contains(varName) ||	// check in list of globals first.
-       (gROOT->FindObject(varName) != 0);	// then check CINT "shortcut #3"
+   Bool_t varName_exists = GetListOfGlobals()->Contains(varName) || // check in list of globals first.
+       (gROOT->FindObject(varName) != 0);   // then check CINT "shortcut #3"
 
    // not found...
    if (!varName_exists) {
