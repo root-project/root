@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.3 2004/04/22 13:30:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.4 2004/06/15 14:13:20 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -332,14 +332,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    //---- position the dialog relative to the parent's window
 
-   if (t) {
-      int ax, ay;
-      Window_t wdummy;
-      gVirtualX->TranslateCoordinates(t->GetId(), GetParent()->GetId(),
-                                      50, 50, ax, ay, wdummy);
-      Move(ax, ay);
-      SetWMPosition(ax, ay);
-   }
+   CenterOnParent();
 
    //---- make the dialog box non-resizable
 

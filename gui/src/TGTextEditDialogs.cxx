@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.5 2002/09/18 12:22:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.cxx,v 1.6 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -140,23 +140,7 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   // position relative to the parent's window
-   Int_t ax, ay;
-   if (main) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
-      ax = (root_w - fWidth) >> 1;
-      ay = (root_h - fHeight) >> 1;
-   }
-
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    SetWindowName("Search");
    SetIconName("Search");
@@ -352,23 +336,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   // position relative to the parent's window
-   Int_t ax, ay;
-   if (main) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
-      ax = (root_w - fWidth) >> 1;
-      ay = (root_h - fHeight) >> 1;
-   }
-
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    SetWindowName("Print");
    SetIconName("Print");
@@ -503,23 +471,7 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
    MapSubwindows();
    Resize(GetDefaultSize());
 
-   // position relative to the parent's window
-   Int_t ax, ay;
-   if (main) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
-      ax = (root_w - fWidth) >> 1;
-      ay = (root_h - fHeight) >> 1;
-   }
-
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    SetWindowName("Goto");
    SetIconName("Print");

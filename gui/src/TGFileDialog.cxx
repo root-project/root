@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.13 2002/11/22 11:24:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.14 2002/11/25 13:58:19 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -243,18 +243,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    //---- position relative to the parent's window
 
-   if (main) {
-      int      ax, ay;
-      Window_t wdummy;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdummy);
-      if (ax < 0) ax = 10;
-      if (ay < 0) ay = 10;
-      Move(ax, ay);
-      SetWMPosition(ax, ay);
-   }
+   CenterOnParent();
 
    //---- make the message box non-resizable
 
@@ -273,7 +262,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                kMWMInputModeless);
 
    MapWindow();
-   fFc->DisplayDirectory(); 
+   fFc->DisplayDirectory();
    fClient->WaitFor(this);
 }
 
@@ -474,7 +463,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
    } // switch(GET_MSG(msg))
-   
+
    fClient->NeedRedraw(fFc);
    return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.13 2004/06/21 12:42:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.14 2004/08/13 15:12:49 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1013,7 +1013,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    const Int_t kC_X = 175;  // Win95: 177
    const Int_t kC_Y = 180;  // Win95: 189
 
-   Int_t  ax, ay, i;
+   Int_t i;
 
    fRetc = retc;
    fRetColor = color;
@@ -1165,20 +1165,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    //---- position relative to the parent's window
 
-   if (m) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(m->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) m)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) m)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(gClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
-      ax = (root_w - fWidth) >> 1;
-      ay = (root_h - fHeight) >> 1;
-   }
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    //---- make the message box non-resizable
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.4 2004/03/12 00:31:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.5 2004/04/14 14:50:18 brun Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -40,7 +40,7 @@ TRootDialog::TRootDialog(TRootContextMenu *cmenu, const TGWindow *main,
    // Create a method argument prompt dialog.
 
    fMenu   = cmenu;
-   
+
    fOk     = okB;
    fCancel = cancelB;
    fApply  = applyB;
@@ -212,18 +212,7 @@ void TRootDialog::Popup()
    Resize(width, height);
 
    // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
-   gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
-                       (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1,
-                       (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1,
-                       ax, ay, wdum);
-
-   if (ax < 0) ax = 0; 
-   if (ay < 0) ay = 0;
-   
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    // make the message box non-resizable
    SetWMSize(width, height);

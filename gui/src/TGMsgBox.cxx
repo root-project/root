@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.5 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.6 2004/06/16 16:45:29 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -96,7 +96,6 @@ void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
 {
    // Protected, common message dialog box initialization.
 
-   Int_t  ax, ay;
    UInt_t nb, width, height;
 
    fYes = fNo = fOK = fApply = fRetry = fIgnore = fCancel = fClose =
@@ -238,21 +237,7 @@ void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
 
    // position relative to the parent's window
 
-   if (main) {
-      Window_t wdum;
-      gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   } else {
-      UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(fClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
-      ax = (root_w - fWidth) >> 1;
-      ay = (root_h - fHeight) >> 1;
-   }
-
-   Move(ax, ay);
-   SetWMPosition(ax, ay);
+   CenterOnParent();
 
    // make the message box non-resizable
 
