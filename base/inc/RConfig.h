@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.6 2000/10/02 10:44:28 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.7 2000/11/04 17:46:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -76,7 +76,7 @@
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
 #   endif
-#   if __SUNPRO_CC == 0x420
+#   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG     /* to work around a compiler bug */
 #   endif
 #endif
@@ -105,8 +105,7 @@
 #   endif
 #endif
 
-#if defined(__linux) && !defined(__powerpc__) && !defined(__ia64__) && \
-    !defined(__alpha__) && !defined(__sun) && !defined(__sgi)
+#if defined(__linux) && defined(__i386__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
@@ -187,6 +186,9 @@
 #   endif
 #   if __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#   endif
+#   if __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
+#      define R__NEWSTDHEADER    /* has only headers like: iostream without .h */
 #   endif
 #   if defined(__ia64__)       /* gcc 2.9x (MINOR is 9! So above tests fail) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
