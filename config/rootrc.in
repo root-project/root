@@ -58,18 +58,18 @@ Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
 Canvas.AutoExec:            true
 
-# default histogram binnings for TTree::Draw
-Hist.Binning.1D.x: 100
+# Default histogram binnings for TTree::Draw()
+Hist.Binning.1D.x:          100
 
-Hist.Binning.2D.x: 40
-Hist.Binning.2D.y: 40
-Hist.Binning.2D.Prof: 100
+Hist.Binning.2D.x:           40
+Hist.Binning.2D.y:           40
+Hist.Binning.2D.Prof:       100
 
-Hist.Binning.3D.x: 20
-Hist.Binning.3D.y: 20
-Hist.Binning.3D.z: 20
-Hist.Binning.3D.Profx: 100
-Hist.Binning.3D.Profy: 100
+Hist.Binning.3D.x:           20
+Hist.Binning.3D.y:           20
+Hist.Binning.3D.z:           20
+Hist.Binning.3D.Profx:      100
+Hist.Binning.3D.Profy:      100
 
 # THtml specific settings (for more see doc of THtml class)
 Unix.*.Root.Html.SourceDir:  .:src:include
