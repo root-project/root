@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.15 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.16 2001/10/08 05:20:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -30,12 +30,16 @@
 ClassImp(RooMappedCategory)
 
 
-RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut) :
+RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
   RooAbsCategory(name, title), _inputCat("inputCat","Input category",this,inputCat)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
-  _defCat = (RooCatType*) defineType(defOut) ;
+  if (defOutIdx==NoCatIdx) {
+    _defCat = (RooCatType*) defineType(defOut) ;
+  } else {
+    _defCat = (RooCatType*) defineType(defOut,defOutIdx) ;
+  }
 }
 
 
@@ -61,7 +65,7 @@ RooMappedCategory::~RooMappedCategory()
 
 
 
-Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey)
+Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t outIdx)
 {
   // Add mapping rule: any input category state label matching the 'inKeyRegExp'
   // wildcard expression will be mapped to an output state with name 'outKey'
@@ -80,7 +84,13 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey)
 
   // Check if output type exists, if not register
   const RooCatType* outType = lookupType(outKey) ;
-  if (!outType) outType = defineType(outKey) ;
+  if (!outType) {
+    if (outIdx==NoCatIdx) {
+      outType = defineType(outKey) ;
+    } else {
+      outType = defineType(outKey,outIdx) ;
+    }
+  }
   if (!outType) {
     cout << "RooMappedCategory::map(" << GetName() 
 	 << "): ERROR, unable to output type " << outKey << endl ;
