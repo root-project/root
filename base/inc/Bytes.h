@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.12 2003/04/09 20:38:54 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.13 2003/04/11 11:48:10 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -184,7 +184,7 @@ inline void tobuf(char *&buf, ULong64_t x)
 #ifdef R__BYTESWAP
 # if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
      defined(__GNUC__) && __GNUC__ >= 2
-   *((ULong64_t *)buf) = Rbswap_64(x));
+   *((ULong64_t *)buf) = Rbswap_64(x);
 # else
    char *sw = (char *)&x;
    buf[0] = sw[7];
