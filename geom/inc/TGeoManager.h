@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.22 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.23 2003/01/27 18:04:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -237,7 +237,7 @@ public:
    void                   SetTopVolume(TGeoVolume *vol);
    
    //--- geometry queries
-   TGeoNode              *FindNextBoundary(Double_t stepmax=TGeoShape::kBig,const char *path="");
+   TGeoNode              *FindNextBoundary(Double_t stepmax=1e30,const char *path="");
    TGeoNode              *FindNode(Bool_t safe_start=kTRUE);
    TGeoNode              *FindNode(Double_t x, Double_t y, Double_t z);
    TGeoNode              *InitTrack(Double_t *point, Double_t *dir);
