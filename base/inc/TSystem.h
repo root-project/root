@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.37 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.38 2004/04/16 17:03:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -183,8 +183,9 @@ protected:
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
-   virtual const char    *ExpandFileName(const char *fname);
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
+   virtual const char    *ExpandFileName(const char *fname);
+   virtual void           SigAlarmInterruptsSyscall(Bool_t) { }
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");

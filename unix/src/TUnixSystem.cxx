@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.95 2004/04/20 15:17:02 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.96 2004/05/06 16:47:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -570,6 +570,19 @@ void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 
    UnixIgnoreSignal(sig, ignore);
+}
+
+//______________________________________________________________________________
+void TUnixSystem::SigAlarmInterruptsSyscall(Bool_t set)
+{
+   // When the argument is true the SIGALRM signal handler is set so that
+   // interrupted syscalls will not be restarted by the kernel. This is
+   // typically used in case one wants to put a timeout on an I/O operation.
+   // By default interrupted syscalls will always be restarted (for all
+   // signals). This can be controlled for each a-synchronous TTimer via
+   // the method TTimer::SetInterruptSyscall().
+
+   UnixSigAlarmInterruptsSyscall(set);
 }
 
 //______________________________________________________________________________
@@ -2740,7 +2753,7 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
 #  if defined(R__SGI64) || (__GNUG__>=3)
       sigact.sa_handler = sighandler;
-#   else
+#  else
       sigact.sa_handler = (void (*)(...))sighandler;
 #  endif
 #else
@@ -2748,9 +2761,6 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #endif
       sigemptyset(&sigact.sa_mask);
       sigact.sa_flags = 0;
-#if defined(SA_INTERRUPT)       // SunOS
-      sigact.sa_flags |= SA_INTERRUPT;
-#endif
 #if defined(SA_RESTART)
       sigact.sa_flags |= SA_RESTART;
 #endif
@@ -2781,17 +2791,56 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          sigact.sa_handler = SIG_IGN;
 #endif
          sigemptyset(&sigact.sa_mask);
-#if defined(SA_INTERRUPT)       // SunOS
-         sigact.sa_flags = SA_INTERRUPT;
-#else
          sigact.sa_flags = 0;
-#endif
          if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       } else {
          if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       }
+   }
+}
+
+//______________________________________________________________________________
+void TUnixSystem::UnixSigAlarmInterruptsSyscall(Bool_t set)
+{
+   // When the argument is true the SIGALRM signal handler is set so that
+   // interrupted syscalls will not be restarted by the kernel. This is
+   // typically used in case one wants to put a timeout on an I/O operation.
+   // By default interrupted syscalls will always be restarted (for all
+   // signals). This can be controlled for each a-synchronous TTimer via
+   // the method TTimer::SetInterruptSyscall().
+
+   if (gSignalMap[kSigAlarm].handler) {
+      struct sigaction sigact;
+#if defined(R__SUN)
+      sigact.sa_handler = (void (*)())sighandler;
+#elif defined(R__SOLARIS)
+      sigact.sa_handler = sighandler;
+#elif defined(R__KCC)
+      sigact.sa_handler = (sighandlerFunc_t)sighandler;
+#elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
+#  if defined(R__SGI64) || (__GNUG__>=3)
+      sigact.sa_handler = sighandler;
+#  else
+      sigact.sa_handler = (void (*)(...))sighandler;
+#  endif
+#else
+      sigact.sa_handler = sighandler;
+#endif
+      sigemptyset(&sigact.sa_mask);
+      sigact.sa_flags = 0;
+      if (set) {
+#if defined(SA_INTERRUPT)       // SunOS
+         sigact.sa_flags |= SA_INTERRUPT;
+#endif
+      } else {
+#if defined(SA_RESTART)
+         sigact.sa_flags |= SA_RESTART;
+#endif
+      }
+      if (sigaction(gSignalMap[kSigAlarm].code, &sigact, 0) < 0)
+         ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscall", "sigaction");
    }
 }
 
@@ -2828,6 +2877,7 @@ void TUnixSystem::UnixResetSignals()
          sigaction(gSignalMap[sig].code, gSignalMap[sig].oldhandler, 0);
          delete gSignalMap[sig].oldhandler;
          gSignalMap[sig].oldhandler = 0;
+         gSignalMap[sig].handler    = 0;
       }
    }
 }

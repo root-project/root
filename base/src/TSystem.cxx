@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.82 2004/03/24 19:42:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.83 2004/04/16 17:03:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -393,17 +393,31 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
    if (!fTimers) return -1;
 
    TIter next(fTimers);
-   TTimer *t;
+   TTimer *t, *to = 0;
    Long_t  tt, timeout = -1, tnow = Now();
 
    while ((t = (TTimer *)next())) {
       if (t->IsSync() == mode) {
          tt = (long)t->GetAbsTime() - tnow;
          if (tt < 0) tt = 0;
-         if (timeout == -1) timeout = tt;
-         if (tt < timeout) timeout = tt;
+         if (timeout == -1) {
+            timeout = tt;
+            to = t;
+         }
+         if (tt < timeout) {
+            timeout = tt;
+            to = t;
+         }
       }
    }
+
+   if (to && to->IsAsync() && timeout > 0) {
+      if (to->InterruptsSyscall())
+         SigAlarmInterruptsSyscall(kTRUE);
+      else
+         SigAlarmInterruptsSyscall(kFALSE);
+   }
+
    return timeout;
 }
 

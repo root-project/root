@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.15 2003/12/30 13:16:51 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.16 2004/01/28 02:41:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -49,6 +49,7 @@ protected:
                                   Long_t timeout);
    static void         UnixSignal(ESignals sig, SigHandler_t h);
    static const char  *UnixSigname(ESignals sig);
+   static void         UnixSigAlarmInterruptsSyscall(Bool_t set);
    static void         UnixResetSignal(ESignals sig);
    static void         UnixResetSignals();
    static void         UnixIgnoreSignal(ESignals sig, Bool_t ignore);
@@ -99,6 +100,7 @@ public:
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
+   void              SigAlarmInterruptsSyscall(Bool_t set);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
 
