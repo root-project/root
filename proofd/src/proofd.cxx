@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.73 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.74 2005/02/12 02:14:26 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -179,14 +179,15 @@
 #endif
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__) || defined(cygwingcc)
+    defined(__MACH__) || defined(cygwingcc) || defined(__OpenBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
 #define ROOT_SIGNAL_INCLUDED
 #endif
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #ifndef ROOT_SIGNAL_INCLUDED
 #include <signal.h>

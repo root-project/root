@@ -83,6 +83,11 @@ elif [ $PLATFORM = "fbsd" ]; then
          `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
     echo $cmd
     $cmd
+elif [ $PLATFORM = "obsd" ]; then
+    cmd="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB \
+         `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE"
+    echo $cmd
+    $cmd
 elif [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # Look for a fink installation

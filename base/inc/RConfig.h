@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.76 2004/08/02 08:52:53 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.77 2004/10/29 16:07:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -260,6 +260,16 @@
 
 #if defined(__FreeBSD__)
 #   define R__FBSD
+#   define R__UNIX
+#   define R__BYTESWAP
+#   ifndef __i486__
+#      define __i486__       /* turn off if you really want to run on an i386 */
+#   endif
+#   define R__THROWNEWDELETE /* new/delete throw exceptions */
+#endif
+
+#if defined(__OpenBSD__)
+#   define R__OBSD
 #   define R__UNIX
 #   define R__BYTESWAP
 #   ifndef __i486__

@@ -63,6 +63,9 @@ endif
 ifeq ($(PLATFORM),fbsd)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
+ifeq ($(PLATFORM),obsd)
+CINTS2       += $(MODDIRS)/libstrm.cxx
+endif
 ifeq ($(PLATFORM),hpux)
 ifeq ($(ARCH),hpuxia64acc)
 CINTS2       += $(MODDIRS)/accstrm.cxx

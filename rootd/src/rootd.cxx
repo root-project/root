@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.99 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.100 2005/02/12 02:14:26 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -238,7 +238,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #elif defined(linux) || defined(__hpux) || defined(cygwingcc)
 #include <sys/vfs.h>
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/param.h>
 #include <sys/mount.h>
 #else
@@ -247,7 +247,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 
 #if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
     defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
-    defined(__APPLE__) || defined(cygwingcc)
+    defined(__APPLE__) || defined(cygwingcc) || defined(__OpenBSD__)
 #define HAVE_MMAP
 #endif
 
@@ -261,7 +261,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 #endif
-#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__OpenBSD__) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
 #include <sys/file.h>
@@ -292,14 +292,15 @@ static int fcntl_lockf(int fd, int op, off_t off)
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
     defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__) || defined(cygwingcc)
+    defined(__MACH__) || defined(cygwingcc) || defined(__OpenBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
 #define ROOT_SIGNAL_INCLUDED
 #endif
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
+#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__) && \
+    !defined(__OpenBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #ifndef ROOT_SIGNAL_INCLUDED
 #include <signal.h>

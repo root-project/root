@@ -251,6 +251,11 @@ freebsd4)
    auxcflags=
    auxlibs="-lm -lstdc++"
    ;;
+openbsd)
+   # OpenBSD with libc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
+   ;;
 macosx)
    # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`

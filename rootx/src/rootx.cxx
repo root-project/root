@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.14 2004/03/26 17:35:38 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.15 2004/12/06 13:38:53 brun Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -36,7 +36,8 @@
 #define UTMP_NO_ADDR
 #endif
 #if (defined(__alpha) && !defined(__linux)) || defined(_AIX) || \
-    defined(__FreeBSD__) || defined(__Lynx__) || defined(__APPLE__)
+    defined(__FreeBSD__) || defined(__Lynx__) || defined(__APPLE__) || \
+    defined(__OpenBSD__)
 #define UTMP_NO_ADDR
 #endif
 
@@ -198,7 +199,8 @@ static void SetLibraryPath()
    static char msg[4096];
 
 #  if defined(__linux) || defined(__alpha) || defined(__sgi) || \
-      defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__)
+      defined(__sun) || defined(__FreeBSD__) || defined(__APPLE__) || \
+      defined(__OpenBSD__)
    if (getenv("LD_LIBRARY_PATH"))
       sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
                                                 getenv("LD_LIBRARY_PATH"));

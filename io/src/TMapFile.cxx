@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.12 2005/01/19 20:00:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.13 2005/01/19 20:18:20 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -808,7 +808,7 @@ Int_t TMapFile::AcquireSemaphore()
       int intr = 0;
 again:
       if (semop(fSemaphore, &buf, 1) == -1) {
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
          if (TSystem::GetErrno() == EINVAL)
 #else
          if (TSystem::GetErrno() == EIDRM)
@@ -851,7 +851,7 @@ Int_t TMapFile::ReleaseSemaphore()
    if (fSemaphore != -1) {
       struct sembuf buf = { 0, 1, SEM_UNDO };
       if (semop(fSemaphore, &buf, 1) == -1) {
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
          if (TSystem::GetErrno() == EINVAL)
 #else
          if (TSystem::GetErrno() == EIDRM)

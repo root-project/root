@@ -2194,6 +2194,9 @@ void G__platformMacro()
 #ifdef __FreeBSD__   /* FreeBSD */
   sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
 #endif
+#ifdef __OpenBSD__   /* OpenBSD */
+  sprintf(temp,"G__OBSD=%ld",(long)__OpenBSD__); G__add_macro(temp);
+#endif
 #ifdef __hpux        /* HP-UX */
   sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__add_macro(temp);
 #endif

@@ -7,6 +7,10 @@ FreeBSD)
   # Use following line for FreeBSD
   makecint -mk Makefile -dl pthread.dll -H pthd.h -D_THREAD_SAFE -D_POSIX_C_SOURCE=199506L -l -pthread  -cint -Z0
   ;;
+OpenBSD)
+  # Use following line for OpenBSD
+  makecint -mk Makefile -dl pthread.dll -H pthd.h -D_THREAD_SAFE -D_POSIX_C_SOURCE=199506L -l -pthread  -cint -Z0
+  ;;
 QNX)
   # Use following line for QNX
   makecint -mk Makefile -dl pthread.dll -H pthd.h -D_POSIX_C_SOURCE=199506L -l -cint -Z0

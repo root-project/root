@@ -460,6 +460,7 @@ guess_architecture () {
         linux:arm*:*)          arch=linuxarm        ;;
         linux:ppc*:*)          arch=linuxppcegcs    ;;
         linux:i*86:*)          arch=linux           ;;
+        openbsd*:*:*)          arch=openbsd         ;;
         lynx:*:*)              arch=lynxos          ;;
         darwin:power*:*)       arch=macosx          ;;
         irix*:sgi*:*)          arch=sgicc           ;;
@@ -1427,7 +1428,8 @@ if test ! "x$enable_asimage" = "xno" ; then
        /usr/local/include /usr/include /opt/include $finkdir/include
     asjpegincdir=$found_dir
     check_header "png.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include $finkdir/include
+       /usr/local/include /usr/include /usr/local/include/libpng \
+       /opt/include $finkdir/include
     aspngincdir=$found_dir
     check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
        /usr/local/include /usr/include /opt/include $finkdir/include
@@ -2282,7 +2284,7 @@ if test ! "x$enable_krb5" = "xno" ; then
     check_header "krb5.h" "$krb5incdir" /usr/athena/include \
 	    /usr/local/athena/include /usr/kerberos/include \
 	    /usr/krb5/include /usr/local/kerberos/include \
-	    /usr/include /usr/local/include
+	    /usr/include /usr/include/kerberosV /usr/local/include
     if test "x$found_dir" = "x" ; then
 	enable_krb5=no
     else
@@ -2553,7 +2555,7 @@ esac
 ### echo %%% Explicitlink - explicitly link with all dependent libraries
 #
 case $arch in
-freebsd*|aix*|win32*)
+freebsd*|openbsd|aix*|win32*)
     enable_explicitlink="yes"
     ;;
 esac

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.4 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -42,14 +42,15 @@
 #define USE_SIGCHLD
 #endif
 
-#if defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define USE_SIGCHLD
 #define	SIGCLD SIGCHLD
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)  || (defined(__CYGWIN__) && defined(__GNUC__))
+    defined(_AIX) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+    defined(__APPLE__) || defined(__MACH__) || \
+    (defined(__CYGWIN__) && defined(__GNUC__))
 #define USE_SETSID
 #endif
 
@@ -67,7 +68,8 @@ extern ErrorHandler_t gErrSys;
 static void SigChild(int)
 {
    int         pid;
-#if defined(__hpux) || defined(__FreeBSD__) || defined(__APPLE__)
+#if defined(__hpux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+    defined(__APPLE__)
    int status;
 #else
    union wait  status;

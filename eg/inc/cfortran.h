@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: cfortran.h,v 1.2 2001/04/09 09:02:10 rdm Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: cfortran.h,v 1.3 2001/07/25 09:59:49 rdm Exp $ */
 
 /* Few changes made for ROOT. Search for string "ROOT" to see which. */
 
@@ -89,7 +89,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 #if !(defined(mipsFortran)||defined(DECFortran)||defined(vmsFortran)||defined(CONVEXFortran)||defined(PowerStationFortran)||defined(AbsoftUNIXFortran)||defined(AbsoftProFortran)||defined(SXFortran))
 /* If no Fortran compiler is given, we choose one for the machines we know.   */
 #if defined(lynx) || defined(VAXUltrix) || defined(linux) || defined(_HIUX_SOURCE) || \
-    defined(__FreeBSD__) || defined(__APPLE__)
+    defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define f2cFortran    /* Lynx:      Only support f2c at the moment.
                          VAXUltrix: f77 behaves like f2c.
                            Support f2c or f77 with gcc, vcc with f2c.

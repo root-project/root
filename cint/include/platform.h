@@ -118,6 +118,10 @@ typedef struct { } PRINTDLG, *LPPRINTDLG;
 #include <time.h>
 #endif
 
+#ifdef G__OBSD
+#include <time.h>
+#endif
+
 #ifndef G__FBSD
 #define __signed__ 
 #define __const

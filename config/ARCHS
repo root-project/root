@@ -33,6 +33,7 @@ lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc
 macosxxlc            for MacOS X with IBM xl compilers
 mklinux              for MkLinux gcc and glibc
+openbsd              for OpenBSD >= 3.7
 sgicc                for SGI IRIX 6.x CC
 sgicc64              for SGI IRIX 6.x CC 64 bits
 sgiegcs              for SGI IRIX 6.x egcs 1.1.x

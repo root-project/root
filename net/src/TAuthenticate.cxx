@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.68 2005/02/11 18:40:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.69 2005/02/18 14:44:40 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -43,13 +43,14 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <time.h>
-#if !defined(R__WIN32) && !defined(R__MACOSX) && !defined(R__FBSD)
+#if !defined(R__WIN32) && !defined(R__MACOSX) && !defined(R__FBSD) && \
+    !defined(R__OBSD)
 #include <crypt.h>
 #endif
 #ifdef WIN32
 #  include <io.h>
 #endif /* WIN32 */
-#if defined(R__FBSD)
+#if defined(R__FBSD) || defined(R__OBSD)
 #  include <unistd.h>
 #endif
 
@@ -2531,7 +2532,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
             // AFS: we cannot reuse the token because remotely the
             // daemon token must be re-initialized; for PROOF, we
             // just flag the entry as AFS; this allows to skip reusing
-            // but to keep the session key for password forwarding  
+            // but to keep the session key for password forwarding
             fSecContext->SetDetails("AFS authentication");
          return 1;
       } else {
@@ -4654,7 +4655,7 @@ Int_t StdCheckSecCtx(const char *User, TSecContext *Ctx)
    Int_t rc = 0;
 
    if (Ctx->IsActive()) {
-      if (!strcmp(User,Ctx->GetUser()) && 
+      if (!strcmp(User,Ctx->GetUser()) &&
            strncmp("AFS",Ctx->GetDetails(),3))
          rc = 1;
    }
