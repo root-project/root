@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.2 2000/06/05 07:28:47 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.3 2000/10/15 01:28:29 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -74,11 +74,6 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
 //*-* Set the indentity matrix as a extra rotations
     for (i=1;i<15;i++)  fExtraRotMatrix[i] = 0;
     for (i=0;i<16;i+=5) fExtraRotMatrix[i] = 1.0;
-#if 0
-//*-*  Date protection
-    TDatime lock;
-    if (lock.GetDate() > 970530) ::exit(-1);
-#endif
 }
 
 //____________________________________________________________________________
