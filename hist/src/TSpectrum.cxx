@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.16 2003/08/23 00:08:12 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.17 2003/09/03 06:08:34 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
 //   hin:       pointer to the histogram of source spectrum                //
 //   sigma:   sigma of searched peaks, for details we refer to manual      //
 //   threshold: (default=0.05)  peaks with amplitude less than             //
-//       threshold*highest_peak are discarded.                             //
+//       threshold*highest_peak are discarded.  0<threshold<1              //
 //                                                                         //
 //   if option is not equal to "goff" (goff is the default), then          //
 //   a polymarker object is created and added to the list of functions of  //
@@ -160,6 +160,10 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
    if (dimension > 2) {
       Error("Search", "Only implemented for 1-d and 2-d histograms");
       return 0;
+   }
+   if (threshold <=0 || threshold >= 1) {
+      Warning("Search","threshold must 0<threshold<1, threshol=0.05 assumed");
+      threshold = 0.05;
    }
    if (dimension == 1) {
       Int_t size = hin->GetXaxis()->GetNbins();
