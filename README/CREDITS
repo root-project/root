@@ -43,6 +43,10 @@ N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
 
+N: Valerio Filippini
+E: Valerio.Filippini@pv.infn.it
+D: contribution of TGenPhaseSpace class
+
 N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
@@ -66,7 +70,7 @@ D: generator
 
 N: Christian Holm Cristensen
 E: cholm@nbi.dk
-D: contributions to the build system (configure, Makefile.in, config.in) 
+D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
 
 N: Stephan Kluth
