@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.86 2004/05/14 14:49:39 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.87 2004/05/14 17:17:40 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -106,18 +106,12 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-#ifndef R__MACOSX
-   G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
-#endif
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
    fDictPos.ptype = 0;
    fDictPosGlobals.ptype = 0;
 
    ResetAll();
-#ifndef R__MACOSX
-   LoadLibraryMap();
-#endif
 
 #ifndef WIN32
    optind = 1;  // make sure getopt() works in the main program
@@ -167,6 +161,18 @@ Int_t TCint::InitializeDictionaries()
    // by G__init_cint() and G__dlmod().
 
    return G__call_setup_funcs();
+}
+
+//______________________________________________________________________________
+void TCint::EnableAutoLoading()
+{
+   // Enable the automatic loading of shared libraries when a class
+   // is used that is stored in a not yet loaded library. Uses the
+   // information stored in the class/library map (typically
+   // $ROOTSYS/etc/system.rootmap).
+
+   G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
+   LoadLibraryMap();
 }
 
 //______________________________________________________________________________

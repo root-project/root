@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.56 2004/05/10 08:05:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.57 2004/05/10 08:14:10 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -209,6 +209,9 @@ TApplication::TApplication(const char *appClassName,
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();
+
+   // Enable autoloading
+   gInterpreter->EnableAutoLoading();
 
    gROOT->SetLineHasBeenProcessed(); // to allow user to interact with TCanvas's under WIN32
 }

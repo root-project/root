@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.17 2004/04/27 13:15:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.18 2004/05/13 17:47:46 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    void    AddIncludePath(const char *path);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
+   void    EnableAutoLoading();
    void    EndOfLineAction();
    Int_t   GetExitCode() const { return fExitCode; }
    Int_t   GetMore() const { return fMore; }

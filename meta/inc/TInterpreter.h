@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.16 2004/01/21 23:15:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.17 2004/01/27 19:52:47 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
    virtual void     AddIncludePath(const char *path) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
+   virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
    virtual Int_t    GetExitCode() const = 0;
    virtual Int_t    GetMore() const = 0;
