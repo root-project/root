@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.2 2001/11/28 14:43:44 brun Exp $
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -130,7 +130,7 @@ void TExec::Exec(const char *command)
 // if the default command (in the exec title) is empty, an attemp is made
 // to execute the exec name if it contains a "." or a "(", otherwise
 // the command ".x execname.C" is executed.
-// The function returns the result of teh user function/script.
+// The function returns the result of the user function/script.
    
    if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
    else  {
