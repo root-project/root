@@ -11,6 +11,10 @@
   which had a problem with directories more than one level deep.
   (see macro hadd_old.C for this previous implementation).
   
+  The macro from Sven has been enhanced by 
+     Anne-Sylvie Nicollerat <Anne-Sylvie.Nicollerat@cern.ch>
+   to automatically add Trees (via a chain of trees).
+  
   To use this macro, modify the file names in function hadd.
   
   NB: This macro is provided as a tutorial.
@@ -49,9 +53,6 @@ void hadd() {
 }   
 
 void MergeRootfile( TDirectory *target, TList *sourcelist ) {
-// Merge all files from sourcelist into the target directory.
-// The directory level (depth) is determined by the target directory's
-// current level
 
   //  cout << "Target path: " << target->GetPath() << endl;
   TString path( (char*)strstr( target->GetPath(), ":" ) );
@@ -63,8 +64,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
   // loop over all keys in this directory
   TIter nextkey( current_sourcedir->GetListOfKeys() );
-  TKey *key;
-  while ( (key = (TKey*)nextkey()) ) {
+  while ( key = (TKey*)nextkey()) {
 
     // read object from first source file
     first_source->cd( path );
@@ -92,6 +92,22 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
         nextsource = (TFile*)sourcelist->After( nextsource );
       }
+    }
+    else if ( obj->IsA()->InheritsFrom( "TTree" ) ) {
+      
+      // loop over all source files create a chain of Trees "globChain"
+      const char* obj_name= obj->GetName();
+
+      TChain *globChain = new TChain(obj_name);
+      globChain->Add(first_source->GetName());
+      TFile *nextsource = (TFile*)sourcelist->After( first_source );
+      //      const char* file_name = nextsource->GetName();
+      // cout << "file name  " << file_name << endl;
+     while ( nextsource ) {
+     	  
+       globChain->Add(nextsource->GetName());
+       nextsource = (TFile*)sourcelist->After( nextsource );
+     }
 
     } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
       // it's a subdirectory
@@ -108,6 +124,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
       MergeRootfile( newdir, sourcelist );
 
     } else {
+
       // object is of no type that we know or can handle
       cout << "Unknown object type, name: " 
            << obj->GetName() << " title: " << obj->GetTitle() << endl;
@@ -119,7 +136,12 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
     // by "target->Write()" below
     if ( obj ) {
       target->cd();
-      obj->Write( key->GetName() );
+
+      //!!if the object is a tree, it is stored in globChain...
+	if(obj->IsA()->InheritsFrom( "TTree" ))
+	  globChain->Write( key->GetName() );
+	else
+	obj->Write( key->GetName() );
     }
 
   } // while ( ( TKey *key = (TKey*)nextkey() ) )
