@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.8 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.9 2000/08/07 13:34:45 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -448,7 +448,7 @@ void stress5()
    FILE *fp = fopen("stress.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 1134;
+   Int_t nlinesGood = 1160;
    while (fgets(line,255,fp)) {
       nlines++;
    }
@@ -456,7 +456,7 @@ void stress5()
    ntotin  += f.GetBytesRead();
    ntotout += f.GetBytesWritten();
    Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-20 || nlines > nlinesGood+20) OK = kFALSE;
+   if (nlines < nlinesGood-40 || nlines > nlinesGood+40) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
