@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root
+CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
 TEST_TARGETS += arrayDrawTest
