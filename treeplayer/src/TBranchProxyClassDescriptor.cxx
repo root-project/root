@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -93,7 +93,7 @@ namespace ROOT {
 
    UInt_t TBranchProxyClassDescriptor::GetSplitLevel() const { return fSplitLevel; }
 
-   bool TBranchProxyClassDescriptor::IsEqual(const TBranchProxyClassDescriptor* other) {
+   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other) {
       if ( !other ) return false;
       // Purposely do not test on the name!
       if ( strcmp(GetTitle(),other->GetTitle()) ) return false;
@@ -110,7 +110,7 @@ namespace ROOT {
       TIter othnext(&other->fListOfBaseProxies);
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEqual(othdesc) ) return false;
+         if (!desc->IsEquivalent(othdesc) ) return false;
       }
 
       if ( fListOfSubProxies.GetSize() != other->fListOfSubProxies.GetSize() ) return false;
@@ -119,12 +119,12 @@ namespace ROOT {
 
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEqual(othdesc)) return false;
+         if (!desc->IsEquivalent(othdesc)) return false;
       }
       return true;
    }
 
-   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, bool isBase) {
+   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase) {
       if (desc) {
          if (isBase) {
             fListOfBaseProxies.Add(desc);
@@ -174,7 +174,7 @@ namespace ROOT {
       fprintf(hf,"%-*s   %s(TBranchProxyDirector* director,const char *top,const char *mid=0) :",
               offset," ", GetName());
 
-      bool wroteFirst = false;
+      Bool_t wroteFirst = false;
 
       if (fListOfBaseProxies.GetSize()) {
 

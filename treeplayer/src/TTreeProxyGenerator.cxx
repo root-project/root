@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -237,7 +237,7 @@ namespace ROOT {
 
       int count = 0;
       while (existing) {
-         if (! existing->IsEqual( desc )  ) {
+         if (! existing->IsEquivalent( desc )  ) {
             TString newname = desc->GetRawSymbol();
             count++;
             newname += "_";

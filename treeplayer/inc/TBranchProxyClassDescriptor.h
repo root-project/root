@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyClassDescriptor.h,v 1.2 2004/06/25 22:45:41 rdm Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -34,7 +34,7 @@ namespace ROOT {
       TList   fListOfSubProxies;
       TList   fListOfBaseProxies;
       UInt_t  fIsClones;   // 1 for the general case, 2 when this a split clases inside a TClonesArray.
-      bool    fIsLeafList; // true if the branch was constructed from a leaf list.
+      Bool_t  fIsLeafList; // true if the branch was constructed from a leaf list.
 
       UInt_t  fSplitLevel;
 
@@ -62,15 +62,10 @@ namespace ROOT {
       const char* GetRawSymbol() const;
 
       UInt_t GetSplitLevel() const;
-#if !defined(_MSC_VER) || (_MSC_VER>1300)
-      using TObject::IsEqual;
-#else
-      using TNamed::IsEqual;
-#endif
 
-      bool IsEqual(const TBranchProxyClassDescriptor* other);
+      virtual Bool_t IsEquivalent(const TBranchProxyClassDescriptor* other);
 
-      void AddDescriptor(TBranchProxyDescriptor *desc, bool isBase);
+      void AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase);
       Bool_t IsLoaded() const;
       Bool_t IsClones() const;
       UInt_t GetIsClones() const;

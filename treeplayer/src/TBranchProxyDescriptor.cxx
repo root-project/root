@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.h,v 1.1 2004/06/17 17:37:10 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxyDescriptor.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -24,7 +24,7 @@ namespace ROOT {
    TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname, 
                                                   const char *type, 
                                                   const char *branchname, 
-                                                  bool split) :
+                                                  Bool_t split) :
       TNamed(dataname,type),fBranchName(branchname),fIsSplit(split) 
    {
    }
@@ -44,7 +44,7 @@ namespace ROOT {
       return fBranchName.Data(); 
    }
 
-   bool TBranchProxyDescriptor::IsEqual(const TBranchProxyDescriptor *other) 
+   Bool_t TBranchProxyDescriptor::IsEquivalent(const TBranchProxyDescriptor *other) 
    {
       if ( !other ) return false;
       if ( fBranchName != other->fBranchName ) return false;
@@ -54,7 +54,7 @@ namespace ROOT {
       return true;
    }
 
-   bool TBranchProxyDescriptor::IsSplit() const 
+   Bool_t TBranchProxyDescriptor::IsSplit() const 
    { 
       return fIsSplit; 
    }
