@@ -1,0 +1,232 @@
+
+Using Globus certificates to authenticate to a remote rootd/proofd server
+=========================================================================
+
+To use Globus certificates for remote authentication, the Globus Tool Kit
+should  be installed both in client and server machines and ROOT should be
+compiled with  the relevant flags set (see below).
+
+Globus Authentication has been tested for the moment only on Linux.
+
+1) Globus Tool Kit (GTK) Version
+
+   The interface has been developed using GTK version 2.2.3 and tested on
+   machines with version 2.0 and 2.0.21b; it should work with versions 2.x ;
+   however, vanilla versions 2.2.3 and 2.2.4 contain a bug which does not allow
+   to change online  at the same time the user certificate and key files, and
+   therefore to use all the features implemented in ROOT for this kind of
+   authentication. An experimental  patch is provided which however requires
+   access to the GTK source.
+
+
+2) Compiling ROOT with Globus support
+
+   To compile ROOT with Globus support run the 'configure' script with the flag
+   '--enable-globus'; the script expects the variable GLOBUS_LOCATION to be
+   defined and pointing to the location with the 'bin', 'lib' and 'include'
+   dirs for the  GTK . It is definitely better to have this variable defined
+   correctly (especially on the client side); however, for compilation purposes
+   it is possible to force  a specific directory for the GTK running configure
+   with
+
+       --with-globus-dir=<GTK_path>
+
+   The experimental patch mentioned above can be activated with the flag
+
+       --with-globus-patch-dir=<GTK_source>
+
+   where <GTK_source> points to the path containing the source of the GTK .
+
+   While running configure you should get the following printed
+
+ ...
+Checking for openssl/x509.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for openssl/pem.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for globus_gss_assist.h ... <Your_GLOBUS_LOCATION>/include/<flavour>
+Checking for libglobus_gss_assist_<flavour> ... <Your_GLOBUS_LOCATION>/lib
+Checking for libglobus_gssapi_gsi_<flavour> ... <Your_GLOBUS_LOCATION>/lib
+Checking for libssl_<flavour> ... <Your_GLOBUS_LOCATION>/lib
+Checking for libcrypto_<flavour> ... <Your_GLOBUS_LOCATION>/lib
+Checking for globus-user-env.sh ... <Your_GLOBUS_LOCATION>/etc
+Checking for grid-proxy-init ... <Your_GLOBUS_LOCATION>/bin
+Applying experimental patch to globus_gsi_system_config.c
+ ...
+   where <flavour> is either gcc32 or gcc32dbg. The last message appears only
+   if you  have activated the experimental patch mentioned above.
+
+3) Before running, after compilation/installation
+
+   3.1) On the CLIENT side
+
+        Make sure that valid certificates are in the correct places and that
+        valid credentials can be initialized; this can be tested by running
+
+               grid-proxy-init
+
+        and entering the pass phrase; you may have to source the relevant shell
+        file to have this command recognized:
+
+           source $GLOBUS_LOCATION/etc/globus-user-env.csh
+        or
+           source $GLOBUS_LOCATION/etc/globus-user-env.sh .
+
+        If you are sure about you capabilities to get valid credentials, you
+        don't need to initialize them outside the root session, for ROOT checks
+        the  credentials and prompts for the pass phrase if they are missing or
+        invalid.
+
+        There are three files/dirs relevant for proxy initialization:
+
+        a) user certificate file; default is $HOME/.globus/usercert.pem ; can
+           be  changed by setting the variable "X509_USER_CERT" to the full
+           path
+
+        b) user private key file; default is $HOME/.globus/userkey.pem ; can
+           be  changed by setting the variable "X509_USER_KEY" to the full path
+
+        c) directory with certificates of the known Certificate Authorities;
+           default is /etc/grid-security/certificates ; can be changed by
+           setting the variable "X509_CERT_DIR" to the full path.
+
+        All this variables can be changed by the user before running root or
+        during  a root session. Globus authentication can be requested by:
+
+        1) Setting
+
+                Rootd.Authentication   3
+                Proofd.Authentication   3
+
+           in the $HOME/.rootrc file; other parameters can be changed at this
+           level:
+
+          - the proxy duration, in hours
+
+                Globus.ProxyDuration :    <hours>
+
+          - the number of bits to be used for the key (should be a power of 2)
+
+                Globus.ProxyKeyBits:      1024
+
+          - a Globus login defining the relevant files mentioned above:
+
+                Globus.Login:             cd:~/.globus cf:usercert.pem  \
+                                          kf:userkey.pem  ad:certificates
+
+                with the meaning of the different keys being:
+
+                "cd"    defines the directory with the user certificate and
+                        private key; default: $HOME/.globus
+                "cf"    user certificate file (in the dir specified by "cd");
+                        default: usercert.pem
+                "kf"    user key file (in the dir specified by "cd");
+                        default: userkey.pem
+                "ad"    directory with certificates of the known Certificate
+                        Authorities; default: /etc/grid-security/certificates
+
+                Both "cd" and "ad" can be given as absolute paths (starting
+                with '/'), relative to  $HOME (starting with ~/) or relative to
+                $HOME/.globus (in the other cases).
+
+        2) Specifying an entry in .authrootrc (see README.AUTH for more details)
+
+           This allows to be host and user specific and to initialize proxies
+           for two or more  different users in the same session.
+
+        3) During a ROOT session by creating (or modifying) a THostAuth
+           instantiation  (see README.AUTH for more details)
+
+        Upon successful authentication the user is logged on remotely with the
+        user name  specified in the gridmap file on the remote server; if there
+        is no entry is found in  the gridmap corresponding to the client DN, an
+        attempt is made to guess it from the  CN part of the DN.
+
+
+   3.2) On the SERVER side
+
+        The servers rootd/proofd make use of the host certificate ( <CA bla
+        bla>/CN=host/<FQDN>) located by default in
+
+                    /etc/grid-security/hostcert.pem
+
+        and the related private key (default in
+        /etc/grid-security/hostkey.pem). The environment variable
+        X509_USER_CERT should be set to point to this file.
+
+        No proxies are needed for the host certificate.
+
+        Server Configuration file:
+        both daemon servers accept as argument
+
+                    -C <server_globus_conf_file>
+
+        By default this file is looked for in /etc/root/hostcert.conf or in
+        $ROOTSYS/etc/hostcert.conf and it contains record lines specifying
+
+        <certificates_dir>    <host_cert_file>  <host_cert_key> <grid_mapfile>
+
+        Record lines starting with '#' are considered as comments; an example:
+
+        < bof >
+        # This is an example of hostcert.conf ...
+        /etc/grid-security/certificates /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem /etc/grid-security/grid-mapfile
+        < eof >
+
+        There may be as many line as there are valid certificate settings
+        (corresponding to  different Certificates Authorities and potentially
+        to different DN-to-UserName mappings ). When a request for globus
+        authentication arrives, rootd/proofd look among their  own certificates
+        if there is one issued by the same CA which has issued the  client
+        certificate; if the search is successful they communicate the related
+        subject name to the client and setenv the relevant variables using to
+        the chosen  configuration set.
+
+4) Trying out
+
+   Trying to access a remote file should give this on the client side (assuming
+   globus credentials have not been initialized before):
+
+root [1] TFile *f1 = TFile::Open("root://<remote_FQDN>/test.root","read")
+Your identity: /O=Grid/OU=GlobusTest/OU=simpleCA-arthux.cern.ch/OU=cern.ch/CN=qwerty
+Enter GRID pass phrase for this identity:
+Creating proxy ....................... Done
+Your proxy is valid until Wed May 28 02:46:12 2003
+root [2]
+
+   In the /var/log/messages on the server you should get something like ( with -d 3 in 'rootd')
+
+May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2033 -- buf:'11820 -1 2 4 None' (len:17) -- Auth:0
+May 27 12:49:46 pcepsft43 rootd[24031]: RpdDefaultAuthAllow: default list of secure methods available:  4 1 2 3
+May 27 12:49:46 pcepsft43 rootd[24031]: RpdGlobusAuth: user: /O=Grid/OU=GlobusTest/OU=simpleCA-arthux.cern.ch/OU=cern.ch/CN=qwerty   authenticated
+May 27 12:49:46 pcepsft43 rootd[24031]: RpdGlobusAuth: logging as qwerty
+May 27 12:49:46 pcepsft43 rootd[24031]: RootdLogin: user qwerty authenticated (OffSet: -1)
+May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root read' (len:10) -- Auth:1
+
+   The first authentication to a (remotehost,username) entity may be perceived
+   as slow;  this is because a lot of exchanges are need to establish the
+   security context; however,  the security context is kept until is valid, so
+   subsequent access to the same entity  will be much faster (if this is not
+   so, make sure that you do not have set the 'reuse'  flag to '0' or 'no'; see
+   README.AUTH).
+
+   In a PROOF cluster, if the master requires Globus credentials for
+   authentication  to slaves, these are automatically transmitted using a
+   shared memory.
+
+5) If it does not work ...
+
+   Some tips:
+
+   .1) make sure that local and remote times are synchronized within 5 minutes
+   .2) if GlobusAuthenticate is not found and you using /etc/ld.so.conf for
+       shared libraries you may need to run /sbin/ldconfig -v after compilation.
+   .3) Check location of certificate and private key files and certificate
+       directories; make sure they can be read by the root process
+   .4) Make sure that remote node accepts Globus authentication from your
+       local host
+   .5) Recompile with --with-globus-deb and check for more hints in the
+       flow of messages ...
+   .6) mailto: gerardo.ganis@cern.ch.
+
+--------------------------------------------------------------------------------------
+Last update: May 27, 2003
+

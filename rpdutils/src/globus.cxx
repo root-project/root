@@ -1,0 +1,566 @@
+// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
+// Author: Gerardo Ganis    7/4/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// globus                                                               //
+//                                                                      //
+// Set of utilities for rootd/proofd daemon authentication via Globus   //
+// certificates.                                                        //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <pwd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <errno.h>
+
+#include "rpdp.h"
+
+
+
+namespace ROOT {
+
+extern int gDebug;
+
+//--- Globals ------------------------------------------------------------------
+char gHostCertConf[kMAXPATHLEN] = "/etc/root/hostcert.conf"; // Defines certificate location for globus authentication
+
+//______________________________________________________________________________
+void GlbsToolError(char *mess, int majs, int mins, int toks)
+{
+   // Handle error ...
+
+   char *GlbErr;
+
+   if (!globus_gss_assist_display_status_str
+      (&GlbErr, mess, majs, mins, toks)) {
+   } else {
+      GlbErr = new char[kMAXPATHLEN];
+      sprintf(GlbErr, "%s: error messaged not resolved ", mess);
+   }
+   NetSend(kErrFatal, kROOTD_ERR);
+   ErrorInfo("Error: %s (majst=%d,minst=%d,tokst:%d)", GlbErr, majs, mins,
+             toks);
+
+   delete [] GlbErr;
+}
+
+//_________________________________________________________________________
+int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
+{
+   // Load information about available certificates from user specified
+   // sources or from defaults.
+   // Returns number of potentially valid dir/cert/key triplets found.
+
+   int retval = 1;
+   //   char             *hostcertconf_default  = "globusauth/etc/hostcert.conf";
+   //   char             *hostcertconf          = 0;
+   char *certdir_default  = "/etc/grid-security/certificates";
+   char *hostcert_default = "/etc/grid-security/hostcert.pem";
+   char *hostkey_default  = "/etc/grid-security/hostkey.pem";
+   char *gridmap_default  = "/etc/grid-security/grid-mapfile";
+   char dir_def[kMAXPATHLEN] = { 0 }, cert_def[kMAXPATHLEN] = { 0 },
+        key_def[kMAXPATHLEN] = { 0 }, map_def[kMAXPATHLEN]  = { 0 };
+   char *dir_tmp = 0, *cert_tmp = 0, *key_tmp = 0, *map_tmp = 0;
+   bool CertFound = 0;
+   X509 *xcert = 0;
+   FILE *fcert = 0;
+   char *issuer_name = 0;
+
+   if (gDebug > 2)
+      ErrorInfo("GlbsToolCheckCert: enter: %s", ClientIssuerName);
+
+   if (gHostCertConf != 0) {
+      // The user/administrator provided a file ... check if it exists and can be read
+      FILE *fconf = 0;
+      if (!access(gHostCertConf, F_OK) && !access(gHostCertConf, R_OK) &&
+          (fconf = fopen(gHostCertConf, "r")) != 0) {
+         char line[kMAXPATHLEN];
+         if (gDebug > 2)
+            ErrorInfo("GlbsToolLoadCertInfo: reading host cert file %s",
+                      gHostCertConf);
+
+         // ... let's see what it's inside
+         while (fgets(line, sizeof(line), fconf)) {
+            if (line[0] == '#')
+               continue;        // skip comment lines
+            int nw =
+                sscanf(line, "%s %s %s %s", dir_def, cert_def, key_def,
+                       map_def);
+
+            // allow for imcomplete lines ... completion with defaults ...
+            if (nw == 1) {
+               strcpy(cert_def, hostcert_default);
+               strcpy(key_def, hostkey_default);
+               strcpy(map_def, gridmap_default);
+            } else if (nw == 2) {
+               strcpy(key_def, hostkey_default);
+               strcpy(map_def, gridmap_default);
+            } else if (nw == 3) {
+               strcpy(map_def, gridmap_default);
+            }
+            // Expand for test if needed
+            dir_tmp  = GlbsToolExpand(dir_def);
+            cert_tmp = GlbsToolExpand(cert_def);
+            key_tmp  = GlbsToolExpand(key_def);
+            map_tmp  = GlbsToolExpand(map_def);
+            if (gDebug > 2)
+               ErrorInfo
+                   ("GlbsToolLoadCertInfo: testing host cert file map %s %s %s %s",
+                    dir_tmp, cert_tmp, key_tmp, map_tmp);
+
+            // check that the files exist and can be read
+            if (!access(dir_tmp, F_OK) && !access(dir_tmp, R_OK)) {
+               if (!access(cert_tmp, F_OK) && !access(cert_tmp, R_OK)) {
+                  if (!access(key_tmp, F_OK) && !access(key_tmp, R_OK)) {
+                     /// Load certificate
+                     fcert = fopen(cert_tmp, "r");
+                     if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
+                        ErrorInfo
+                            ("GlbsToolCheckCert: unable to load host certificate (%s)",
+                             cert_tmp);
+                        goto goout;;
+                     }
+                     // Get the issuer name
+                     issuer_name =
+                         X509_NAME_oneline(X509_get_issuer_name(xcert), 0,
+                                           0);
+                     if (strstr(issuer_name, ClientIssuerName) != 0) {
+                        CertFound = 1;
+                        if (gDebug > 2)
+                           ErrorInfo
+                               ("GlbsToolCheckCert: Issuer Subject: %s matches",
+                                issuer_name);
+                        fclose(fconf);
+                        goto found;
+                     }
+                  } else {
+                     if (gDebug > 2)
+                        ErrorInfo
+                            ("GlbsToolCheckCert: key file not existing or not readable (%s)",
+                             key_tmp);
+                  }
+               } else {
+                  if (gDebug > 2)
+                     ErrorInfo
+                         ("GlbsToolCheckCert: cert file not existing or not readable (%s)",
+                          cert_tmp);
+               }
+            } else {
+               if (gDebug > 2)
+                  ErrorInfo
+                      ("GlbsToolCheckCert: cert directory not existing or not readable (%s)",
+                       dir_tmp);
+            }
+            if (gDebug > 2)
+               ErrorInfo
+                   ("GlbsToolCheckCert: read cert key map files: %s %s %s %s",
+                    dir_tmp, cert_tmp, key_tmp, map_tmp);
+         }
+         fclose(fconf);
+
+      } else {
+         if (gDebug > 2)
+            ErrorInfo
+                ("GlbsToolLoadCertInfo: host cert conf not existing or not readable (%s)",
+                 gHostCertConf);
+      }
+   } else if (gDebug > 2)
+      ErrorInfo("GlbsToolCheckCert: HOSTCERTCONF undefined");
+   if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolCheckCert: Try to use env definitions or defaults ...");
+
+   // We have not found a goof one: try with these envs definitions or the defaults ...
+   if (getenv("X509_CERT_DIR") != 0) {
+      strcpy(dir_def, getenv("X509_CERT_DIR"));
+   } else
+      strcpy(dir_def, certdir_default);
+   if (getenv("X509_USER_CERT") != 0) {
+      strcpy(cert_def, getenv("X509_USER_CERT"));
+   } else
+      strcpy(cert_def, hostcert_default);
+   if (getenv("X509_USER_KEY") != 0) {
+      strcpy(key_def, getenv("X509_USER_KEY"));
+   } else
+      strcpy(key_def, hostkey_default);
+   if (getenv("GRIDMAP") != 0) {
+      strcpy(map_def, getenv("GRIDMAP"));
+   } else
+      strcpy(map_def, gridmap_default);
+
+   // Expand for test if needed
+   dir_tmp  = GlbsToolExpand(dir_def);
+   cert_tmp = GlbsToolExpand(cert_def);
+   key_tmp  = GlbsToolExpand(key_def);
+   map_tmp  = GlbsToolExpand(map_def);
+
+   if (!access(dir_tmp, F_OK) && !access(dir_tmp, R_OK)) {
+      if (!access(cert_tmp, F_OK) && !access(cert_tmp, R_OK)) {
+         if (!access(key_tmp, F_OK) && !access(key_tmp, R_OK)) {
+            // Load certificate
+            fcert = fopen(cert_tmp, "r");
+            if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
+               ErrorInfo
+                   ("GlbsToolCheckCert: unable to load host certificate (%s)",
+                    cert_tmp);
+               goto goout;
+            }
+            // Get the issuer name
+            issuer_name =
+                X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0);
+            if (strstr(issuer_name, ClientIssuerName) != 0) {
+               CertFound = 1;
+               if (gDebug > 2)
+                  ErrorInfo
+                      ("GlbsToolCheckCert: Issuer Subject: %s matches",
+                       issuer_name);
+               goto found;
+            }
+         } else {
+            ErrorInfo
+                ("GlbsToolCheckCert: default hostkey file not existing or not readable (%s)",
+                 key_tmp);
+            goto goout;
+         }
+      } else {
+         ErrorInfo
+             ("GlbsToolCheckCert: default hostcert file not existing or not readable (%s)",
+              cert_tmp);
+         goto goout;
+      }
+   } else {
+      ErrorInfo
+          ("GlbsToolCheckCert: default cert dirrectory not existing or not readable (%s)",
+           dir_tmp);
+      goto goout;
+   }
+
+ goout:
+   if (dir_tmp)
+      delete[]dir_tmp;
+   if (cert_tmp)
+      delete[]cert_tmp;
+   if (key_tmp)
+      delete[]key_tmp;
+   if (map_tmp)
+      delete[]map_tmp;
+   return 1;
+
+ found:
+   if (CertFound) {
+      // Get the subject name
+      char *subject_name =
+          X509_NAME_oneline(X509_get_subject_name(xcert), 0, 0);
+      if (gDebug > 2) {
+         ErrorInfo("GlbsToolCheckCert: issuer: %s", issuer_name);
+         ErrorInfo("GlbsToolCheckCert: subject: %s", subject_name);
+      }
+      // Send it to the client ...
+      *SubjName = strdup(subject_name);
+      // Mission ok ..
+      retval = 0;
+      // free resources
+      free(issuer_name);
+      free(subject_name);
+      // We have found a valid one ...
+      fclose(fcert);
+
+      // We set the relevant environment variables ...
+      if (setenv("X509_CERT_DIR", dir_def, 1)) {
+         ErrorInfo("GlbsToolCheckCert: unable to set X509_CERT_DIR ");
+         return 1;
+      }
+      if (setenv("X509_USER_CERT", cert_def, 1)) {
+         ErrorInfo("GlbsToolCheckCert: unable to set X509_USER_CERT ");
+         return 1;
+      }
+      if (setenv("X509_USER_KEY", key_def, 1)) {
+         ErrorInfo("GlbsToolCheckCert: unable to set X509_USER_KEY ");
+         return 1;
+      }
+      if (setenv("GRIDMAP", map_def, 1)) {
+         ErrorInfo("GlbsToolCheckCert: unable to set GRIDMAP ");
+      }
+   }
+   return retval;
+}
+
+
+//______________________________________________________________________________
+int GlbsToolCheckContext(int ShmId)
+{
+   // Checks validity of security context exported in shared memory
+   // segment SHmId. Returns 1 if valid, 0 othrwise.
+
+   int retval = 0;
+   OM_uint32 MajStat = 0;
+   OM_uint32 MinStat = 0;
+   gss_ctx_id_t context_handle = GSS_C_NO_CONTEXT;
+   OM_uint32 GssRetFlags = 0;
+   OM_uint32 GlbContLifeTime = 0;
+   int Dum1, Dum2;
+   gss_OID MechType;
+   gss_name_t *TargName = 0, *Name = 0;
+
+   if (gDebug > 2)
+      ErrorInfo("GlbsToolCheckContext: checking contetx in shm : %d",
+                ShmId);
+
+   // retrieve the context from shared memory ...
+   gss_buffer_t databuf = (gss_buffer_t) shmat(ShmId, 0, 0);
+   if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolCheckContext: retrieving info from shared memory: %d",
+           ShmId);
+
+   // Import the security context ...
+   gss_buffer_t SecContExp =
+       (gss_buffer_t) new char[sizeof(gss_buffer_desc) + databuf->length];
+   SecContExp->length = databuf->length;
+   SecContExp->value =
+       (void *) ((char *) SecContExp + sizeof(size_t) + sizeof(void *));
+   void *dbufval =
+       (void *) ((char *) databuf + sizeof(size_t) + sizeof(void *));
+   memmove(SecContExp->value, dbufval, SecContExp->length);
+   if ((MajStat =
+        gss_import_sec_context(&MinStat, SecContExp,
+                               &context_handle)) != GSS_S_COMPLETE) {
+      GlbsToolError("GlbsToolCheckContext: gss_import_sec_context",
+                    MajStat, MinStat, 0);
+   } else if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolCheckContext: GlbsTool Sec Context successfully imported (0x%x)",
+           context_handle);
+
+   delete[]SecContExp;
+
+   // Detach from shared memory segment
+   int rc = shmdt((const void *) databuf);
+   if (rc != 0) {
+      ErrorInfo
+          ("GlbsToolCheckContext: unable to detach from shared memory segment %d (rc=%d)",
+           ShmId, rc);
+   }
+   // Check validity of the retrieved context ...
+   if (context_handle != 0 && context_handle != GSS_C_NO_CONTEXT) {
+      if ((MajStat =
+           gss_inquire_context(&MinStat, context_handle, Name, TargName,
+                               &GlbContLifeTime, &MechType, &GssRetFlags,
+                               &Dum1, &Dum2)) != GSS_S_COMPLETE) {
+         GlbsToolError("GlbsToolCheckContext: gss_inquire_context",
+                       MajStat, MinStat, 0);
+         // mark segment for distruction
+         struct shmid_ds shm_ds;
+         if (!shmctl(ShmId, IPC_RMID, &shm_ds))
+            ErrorInfo
+                ("GlbsToolCheckContext: unable to mark shared memory segment %d for desctruction",
+                 ShmId);
+      } else {
+         if (gDebug > 2)
+            ErrorInfo
+                ("GlbsToolCheckContext: found valid context in shm %d",
+                 ShmId);
+         retval = 1;
+      }
+   }
+
+   return retval;
+}
+
+//______________________________________________________________________________
+int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
+{
+   // Exports a security context for later use and stores in a shared memory
+   // segments. On success returns Id of the allocated shared memory segment,
+   // 0 otherwise.
+
+   OM_uint32 MajStat;
+   OM_uint32 MinStat;
+   key_t shm_key = IPC_PRIVATE;
+   int shm_flg = 0777;
+   struct shmid_ds shm_ds;
+
+   if (gDebug > 2)
+      ErrorInfo("GlbsToolStoreContext: Enter");
+
+   // First we have to prepare the export of the security context
+   gss_buffer_t SecContExp = new gss_buffer_desc;
+   if ((MajStat =
+        gss_export_sec_context(&MinStat, &context_handle,
+                               SecContExp)) != GSS_S_COMPLETE) {
+      GlbsToolError("GlbsToolStoreContext: gss_export_sec_context",
+                    MajStat, MinStat, 0);
+      delete SecContExp;
+      return 0;
+   } else if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolStoreContext: security context prepared for export");
+
+   // This is the size of the needed shared memory segment
+   int shm_size = sizeof(gss_buffer_desc) + SecContExp->length;
+   if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolStoreContext: needed shared memory segment sizes: %d",
+           shm_size);
+
+   // Here we allocate the shared memory segment
+   int ShmId = shmget(shm_key, shm_size, shm_flg);
+   if (ShmId < 0) {
+      ErrorInfo
+          ("GlbsToolStoreContext: while allocating shared memory segment (rc=%d)",
+           ShmId);
+      delete SecContExp;
+      return 0;
+   } else if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolStoreContext: shared memory segment allocated (id=%d)",
+           ShmId);
+
+   // Attach segment to address
+   gss_buffer_t databuf = (gss_buffer_t) shmat(ShmId, 0, 0);
+   if ((int) databuf < 0) {
+      ErrorInfo
+          ("GlbsToolStoreContext: while attaching to shared memory segment (rc=%d)",
+           (int) databuf);
+      delete SecContExp;
+      return 0;
+   }
+   databuf->length = SecContExp->length;
+   databuf->value =
+       (void *) ((char *) databuf + sizeof(size_t) + sizeof(void *));
+   memmove(databuf->value, SecContExp->value, SecContExp->length);
+
+   // Now we can detach from the shared memory segment ... and release memory we don't anylonger
+   int rc = 0;
+   if ((rc = shmdt((const void *) databuf)) != 0) {
+      ErrorInfo
+          ("GlbsToolStoreContext: unable to detach from shared memory segment (rc=%d)",
+           rc);
+   }
+   delete SecContExp;
+
+   // We need to change the ownership of the shared memory segment used
+   // for credential export to allow proofserv to destroy it
+   if (shmctl(ShmId, IPC_STAT, &shm_ds) == -1) {
+      ErrorInfo
+          ("GlbsToolStoreContext: can't get info about shared memory segment %d",
+           ShmId);
+      return 0;
+   }
+   // Get info about user logging in
+   struct passwd *pw = getpwnam(user);
+
+   // Give use ownership of the shared memory segment ...
+   shm_ds.shm_perm.uid = pw->pw_uid;
+   shm_ds.shm_perm.gid = pw->pw_gid;
+   if (shmctl(ShmId, IPC_SET, &shm_ds) == -1) {
+      ErrorInfo
+          ("GlbsToolStoreContext: can't change ownership of shared memory segment %d",
+           ShmId);
+      return 0;
+   }
+   // return shmid to rootd
+   return ShmId;
+}
+
+//______________________________________________________________________________
+int GlbsToolStoreToShm(gss_buffer_t buffer, int *ShmId)
+{
+   // Creates a shm and stores buffer in it.
+   // Returns 0 on success (shm id in ShmId), >0 otherwise.
+
+   key_t shm_key = IPC_PRIVATE;
+   int shm_flg = 0777;
+
+   if (gDebug > 2)
+      ErrorInfo("GlbsToolStoreToShm: Enter: ShmId: %d", ShmId);
+
+   // This is the size of the needed shared memory segment
+   int shm_size = sizeof(gss_buffer_desc) + buffer->length;
+   if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolStoreToShm: needed shared memory segment sizes: %d",
+           shm_size);
+
+   // Here we allocate the shared memory segment
+   int lShmId = shmget(shm_key, shm_size, shm_flg);
+   if (lShmId < 0) {
+      ErrorInfo
+          ("GlbsToolStoreToShm: while allocating shared memory segment (rc=%d)",
+           lShmId);
+      return 1;
+   } else if (gDebug > 2)
+      ErrorInfo
+          ("GlbsToolStoreToShm: shared memory segment allocated (id=%d)",
+           lShmId);
+
+   *ShmId = lShmId;
+
+   // Attach segment to address
+   gss_buffer_t databuf = (gss_buffer_t) shmat(lShmId, 0, 0);
+   if ((int) databuf < 0) {
+      ErrorInfo
+          ("GlbsToolStoreToShm: while attaching to shared memory segment (rc=%d)",
+           (int) databuf);
+      return 2;
+   }
+   databuf->length = buffer->length;
+   databuf->value =
+       (void *) ((char *) databuf + sizeof(size_t) + sizeof(void *));
+   memmove(databuf->value, buffer->value, buffer->length);
+
+   // Now we can detach from the shared memory segment ... and release memory we don't anylonger
+   int rc = 0;
+   if ((rc = shmdt((const void *) databuf)) != 0) {
+      ErrorInfo
+          ("GlbsToolStoreToShm: unable to detach from shared memory segment (rc=%d)",
+           rc);
+   }
+   return 0;
+}
+
+
+//______________________________________________________________________________
+char *GlbsToolExpand(char *file)
+{
+   // Test is expansion is needed and return full path file name
+   // (expanded with $HOME).
+   // Returned string must be 'delete[] ed' by the caller.
+
+   char *fret = 0;
+
+   if (file) {
+
+      if (file[0] == '/' || (!getenv("HOME"))) {
+         fret = new char[strlen(file) + 1];
+         strcpy(fret, file);
+      } else {
+         fret = new char[strlen(file) + strlen(getenv("HOME")) + 2];
+         if (file[0] == '~') {
+            sprintf(fret, "%s/%s", getenv("HOME"), file + 1);
+         } else {
+            sprintf(fret, "%s/%s", getenv("HOME"), file);
+         }
+      }
+
+   }
+   return fret;
+}
+
+} // namespace ROOT
