@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.8 2003/01/06 17:04:51 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeant3.h,v 1.5 2003/01/06 17:20:52 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -71,7 +71,7 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     virtual void  Gsposp(const char *name, Int_t nr, const char *mother,  
                          Double_t x, Double_t y, Double_t z, Int_t irot,
                          const char *konly, Double_t *upar, Int_t np);
-    virtual void  Gsbool(const char* onlyVolName, const char* manyVolName) {}
+    virtual void  Gsbool(const char* /*onlyVolName*/, const char* /*manyVolName*/) {}
   
     
     // functions for drawing
@@ -94,7 +94,7 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     Double_t* CreateDoubleArray(Float_t* array, Int_t size) const;
     void     Vname(const char *name, char *vname) const;
    
-    TGeoMCGeometry(const TGeoMCGeometry& rhs) {}
+    TGeoMCGeometry(const TGeoMCGeometry& rhs);
     TGeoMCGeometry& operator=(const TGeoMCGeometry& rhs) {return (*this);}
 
     static TGeoMCGeometry*  fgInstance; // singleton instance

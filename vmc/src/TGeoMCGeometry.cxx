@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.5 2002/11/15 17:53:14 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: ... 25/06/2002
 
 #include "TGeoMCGeometry.h"
@@ -39,6 +39,16 @@ TGeoMCGeometry::~TGeoMCGeometry()
 //
 // private methods
 //
+
+
+//_____________________________________________________________________________
+TGeoMCGeometry::TGeoMCGeometry(const TGeoMCGeometry &geom)
+  : TVirtualMCGeometry(geom)
+{
+  //
+  // Copy constructor
+  //
+}
 
 //_____________________________________________________________________________
 Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const
@@ -107,8 +117,8 @@ void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_
 
 //_____________________________________________________________________________
 void TGeoMCGeometry::Material(Int_t& kmat, const char* name, Double_t a, Double_t z,
-		       Double_t dens, Double_t radl, Double_t absl, Double_t* buf,
-		       Int_t nwbuf)
+		       Double_t dens, Double_t radl, Double_t absl, Double_t* /*buf*/,
+		       Int_t /*nwbuf*/)
 {
   //
   // Defines a Material
@@ -228,7 +238,7 @@ void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isv
 void TGeoMCGeometry::Medium(Int_t& kmed, const char* name, Int_t nmat, Int_t isvol,
 		     Int_t ifield, Double_t fieldm, Double_t tmaxfd,
 		     Double_t stemax, Double_t deemax, Double_t epsil,
-		     Double_t stmin, Double_t* ubuf, Int_t nbuf)
+		     Double_t stmin, Double_t* /*ubuf*/, Int_t /*nbuf*/)
 {
   //
   //  kmed      tracking medium number assigned
@@ -357,7 +367,7 @@ void  TGeoMCGeometry::Gsdvn2(const char *name, const char *mother, Int_t ndiv,
 } 
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
-		     Int_t iaxis, Int_t numed, Int_t ndvmx) 
+		     Int_t iaxis, Int_t numed, Int_t /*ndvmx*/) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -380,7 +390,7 @@ void  TGeoMCGeometry::Gsdvt(const char *name, const char *mother, Double_t step,
 
 //_____________________________________________________________________________
 void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step,
-		      Int_t iaxis, Double_t c0, Int_t numed, Int_t ndvmx) 
+		      Int_t iaxis, Double_t c0, Int_t numed, Int_t /*ndvmx*/) 
 { 
   //
   // Create a new volume by dividing an existing one
@@ -402,7 +412,7 @@ void  TGeoMCGeometry::Gsdvt2(const char *name, const char *mother, Double_t step
 } 
 
 //_____________________________________________________________________________
-void  TGeoMCGeometry::Gsord(const char *name, Int_t iax) 
+void  TGeoMCGeometry::Gsord(const char * /*name*/, Int_t /*iax*/) 
 { 
   //
   //    Flags volume CHNAME whose contents will have to be ordered 

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.8 2003/01/06 17:04:51 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry
@@ -86,7 +86,7 @@ class TVirtualMCGeometry : public TNamed {
     virtual Int_t NofVolumes() const = 0;
     virtual Int_t VolId2Mate(Int_t id) const = 0;
 
-  private:
+  protected:
     TVirtualMCGeometry(const TVirtualMCGeometry &mc) : TNamed(mc) {}
     TVirtualMCGeometry & operator=(const TVirtualMCGeometry &) {return (*this);}
 
