@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -82,8 +82,8 @@ static GLenum gLightNames[] = {GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
                                GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7};
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glname)
-                   :fColor(), fGLName(glname), fNextT(0)
+TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glname, TObject *obj)
+                   :fColor(), fGLName(glname), fNextT(0), fRealObject(obj)
 {
    if (color) {
       fColor[0] = color[0];
@@ -114,12 +114,6 @@ void TGLSceneObject::Shift(Double_t, Double_t, Double_t)
 }
 
 //______________________________________________________________________________
-TObject *TGLSceneObject::GetRealObject()const
-{
-   return 0;
-}
-
-//______________________________________________________________________________
 void TGLSceneObject::GetColor(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const
 {
    r = Color_t(fColor[0] * 100.f);
@@ -140,11 +134,10 @@ void TGLSceneObject::SetColor(Color_t r, Color_t g, Color_t b, Color_t a)
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
                        UInt_t glname, TObject *realobj)
-               :TGLSceneObject(color, glname),
+               :TGLSceneObject(color, glname, realobj),
                 fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts),
                 fNormals(3 * buff.fNbPols)
 {
-   fRealObj = realobj;
    fColor[3] = 1.f - buff.fTransparency / 100.f;
    fNbPols = buff.fNbPols;
 
@@ -185,7 +178,6 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
       Int_t end = revOrder ? j + 1 : j + segmentCol + 1;
 
       for (; segmentInd != end; segmentInd += shiftInd) {
-//      while (segmentInd > j + 1) {
          seg2 = pols[segmentInd];
          np[0] = segs[seg2 * 3 + 1];
          np[1] = segs[seg2 * 3 + 2];
@@ -209,7 +201,6 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
             ngood = check;
          }
          ++fPolyDesc[sizeInd];
-         //--segmentInd;
       }
       j += segmentCol + 1;
    }
@@ -320,8 +311,8 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t *dest) const
 }
 
 //______________________________________________________________________________
-TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buff, const Float_t *color)
-                  :TGLSceneObject(color),
+TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobj)
+                  :TGLSceneObject(color, glname, realobj),
                    fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts),
                    fStyle(7)
 {
@@ -340,6 +331,7 @@ void TGLPolyMarker::GLDraw()const
    Double_t top_radius = 5.;
    GLUquadric *quadObj = GetQuadric();
 
+   glLoadName(GetGLName());
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
 
    switch (fStyle) {
@@ -431,8 +423,8 @@ void TGLPolyMarker::DrawStars()const
 }
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D &buff, const Float_t *color)
-                :TGLSceneObject(color),
+TGLPolyLine::TGLPolyLine(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobj)
+                :TGLSceneObject(color, glname, realobj),
                  fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts)
 {
 }
@@ -440,6 +432,7 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D &buff, const Float_t *color)
 //______________________________________________________________________________
 void TGLPolyLine::GLDraw()const
 {
+   glLoadName(GetGLName());
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glBegin(GL_LINE_STRIP);
 
@@ -451,7 +444,7 @@ void TGLPolyLine::GLDraw()const
 
 //______________________________________________________________________________
 TGLSimpleLight::TGLSimpleLight(UInt_t glname, UInt_t lightname, const Float_t *pos, Bool_t dir)
-                   :TGLSceneObject(0, glname), fLightName(lightname)
+                   :TGLSceneObject(0, glname, 0), fLightName(lightname)
 {
    glEnable(gLightNames[lightname]);
    fPosition[0] = pos[0];

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.10 2004/09/13 09:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.11 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -36,7 +36,6 @@ class TGVSplitter;
 class TGPopupMenu;
 class TGLEditor;
 class TGLCamera;
-class TGLRender;
 class TBuffer3D;
 class TGMenuBar;
 class TGCanvas;
@@ -44,51 +43,52 @@ class TArcBall;
 
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
 private:
+   TGCompositeFrame  *fMainFrame;
+   TGVerticalFrame   *fV1, *fV2;
+   TGVSplitter       *fSplitter;
+   TGCompositeFrame  *fEdFrame;
+   TGLEditor         *fEditor;
+   TGCanvas          *fCanvasWindow;
+   TGLRenderArea     *fCanvasContainer;
+
+   TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
+   TGLayoutHints     *fCanvasLayout;
+
+   TGMenuBar         *fMenuBar;
+   TGPopupMenu       *fFileMenu, *fModeMenu, *fViewMenu, *fHelpMenu;
+
+   TGLayoutHints     *fMenuBarLayout;
+   TGLayoutHints     *fMenuBarItemLayout;
+   TGLayoutHints     *fMenuBarHelpLayout;
+
+   TGLCamera         *fCamera[4];
+   Double_t          fViewVolume[4];
+   Double_t          fZoom[4];
+   Int_t             fActiveViewport[4];
+
    typedef std::pair<Double_t, Double_t> PDD_t;
+   PDD_t             fRangeX, fRangeY, fRangeZ, fLastPosRot;
+   Double_t          fXc, fYc, fZc;
+   Double_t          fRad;
+
+   Bool_t            fPressed;
+   TArcBall          *fArcBall;
+
+   UInt_t            fNbShapes;
+   TGLRender         fRender;
+   TPoint            fLastPos;
+
    enum EMode{kNav, kPick};
    enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
+   enum EActivePlane{kAPXOY, kAPXOZ, kAPYOZ};
 
-   TGCanvas      *fCanvasWindow;
-   TGLRenderArea *fCanvasContainer;
-   TGLayoutHints *fCanvasLayout;
+   EViews            fConf;
+   EMode             fMode;
+   EActivePlane      fActivePlane;
 
-   TGMenuBar     *fMenuBar;
-   TGPopupMenu   *fFileMenu, *fModeMenu, *fViewMenu, *fHelpMenu;
-   TGLayoutHints *fMenuBarLayout;
-   TGLayoutHints *fMenuBarItemLayout;
-   TGLayoutHints *fMenuBarHelpLayout;
-
-   TGLCamera     *fCamera[4];
-   Double_t      fViewVolume[4];
-   Double_t      fZoom[4];
-   Int_t         fActiveViewport[4];
-
-   Double_t      fXc, fYc, fZc;
-   PDD_t         fRangeX, fRangeY, fRangeZ;
-   Double_t      fRad;
-
-   Bool_t        fPressed;
-   TArcBall      *fArcBall;
-
-   UInt_t        fSelected;
-   UInt_t        fNbShapes;
-   TGLRender     fRender;
-   TPoint        fLastPos;
-
-   EViews        fConf;
-   EMode         fMode;
-////////////XXX//////////////////////////////
-   TGCompositeFrame *fMainFrame;
-   TGCompositeFrame *fEdFrame;
-   TGLEditor        *fEditor;
-
-   TGLSceneObject *fSelectedObj;
+   TGLSceneObject    *fSelectedObj;
    Color_t fRGBA[4];
-   TGVerticalFrame *fV1;
-   TGVerticalFrame *fV2;
-   TGVSplitter *fSplitter;
-   TGLayoutHints *fL1, *fL2, *fL3, *fL4;
-/////////////////////////////////////////////
+
 public:
    TViewerOpenGL(TVirtualPad * pad);
    ~TViewerOpenGL();

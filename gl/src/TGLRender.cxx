@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.cxx,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.4 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -115,7 +115,9 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    RunGLList();
    Int_t hits = glRenderMode(GL_RENDER);
 
-   if (hits > 0) {
+   if (hits < 0) {
+      Error("TGLRender::SelectObject", "selection buffer overflow\n");
+   } else if (hits > 0) {
       objNames.resize(hits);
       for (Int_t i = 0; i < hits; ++i) {
          //object's "depth"
@@ -147,8 +149,6 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
       fSelectedObj = 0;
       fSelectionBox = 0;
       Traverse();
-   } else {
-      Error("TGLRender::SelectObject", "selection buffer overflow\n");
    }
 
    return fSelectedObj;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.5 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -31,9 +31,10 @@ protected:
 private:
    UInt_t fGLName;
    TGLSceneObject *fNextT;
+   TObject *fRealObject;
 
 public:
-   TGLSceneObject(const Float_t *color = 0, UInt_t glname = 0);
+   TGLSceneObject(const Float_t *color = 0, UInt_t glname = 0, TObject *realobj = 0);
 
    virtual Bool_t IsTransparent()const;
    virtual void ResetTransparency(char newval);
@@ -53,7 +54,10 @@ public:
    {
       return fGLName;
    }
-   virtual TObject *GetRealObject()const;
+   TObject *GetRealObject()const
+   {
+      return fRealObject;
+   }
    void GetColor(Color_t &r, Color_t &g, Color_t &b, Color_t &a)const;
    void SetColor(Color_t r, Color_t g, Color_t b, Color_t a);
 private:
@@ -67,7 +71,6 @@ private:
    std::vector<Double_t> fVertices;
    std::vector<Double_t> fNormals;
    std::vector<Int_t> fPolyDesc;
-   TObject *fRealObj;
 
    Bool_t fIsTransparent;
    UInt_t fNbPols;
@@ -84,11 +87,6 @@ public:
    void SetColor(const Float_t *newcolor = 0);
    void Shift(Double_t x, Double_t y, Double_t z);
 
-   TObject *GetRealObject()const
-   {
-      return fRealObj;
-   }
-
 private:
    Int_t CheckPoints(const Int_t *source, Int_t *dest)const;
    static Bool_t Eq(const Double_t *p1, const Double_t *p2)
@@ -103,21 +101,24 @@ private:
    UInt_t fStyle;
 
 public:
-   TGLPolyMarker(const TBuffer3D &buff, const Float_t *color);
+   TGLPolyMarker(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobject);
    void GLDraw()const;
+
 private:
    void DrawStars()const;
 };
-//////////////////////////////////////////////////////////////////////////
+
+
 class TGLPolyLine : public TGLSceneObject {
 private:
    std::vector<Double_t> fVertices;
 
 public:
-   TGLPolyLine(const TBuffer3D &buff, const Float_t *color);
+   TGLPolyLine(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobject);
    void GLDraw()const;
 };
-///////////////////////////////////////////////////////////
+
+
 class TGLSimpleLight : public TGLSceneObject {
 private:
    Float_t fPosition[4];
