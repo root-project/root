@@ -1,4 +1,4 @@
 {
-  gSystem->Load("main_C.dll");
+  gSystem->Load("main_C");
   return foo::run();
 }
