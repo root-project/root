@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.6 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.7 2003/02/07 13:46:48 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -12,6 +12,9 @@
 #ifndef ROOT_TGeoChecker
 #define ROOT_TGeoChecker
 
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
 
 // forward declarations
 class TTree;
