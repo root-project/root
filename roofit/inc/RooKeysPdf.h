@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.rdl,v 1.6 2001/05/31 00:37:31 croat Exp $
+ *    File: $Id: RooKeysPdf.rdl,v 1.1 2001/12/01 00:11:21 croat Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -48,7 +48,7 @@ private:
   Double_t *_weights; //!
   
   enum { _nPoints = 1000 };
-  Double_t _lookupTable[_nPoints];
+  Double_t _lookupTable[_nPoints+1];
   
   Double_t g(Double_t x,Double_t sigma) const;
 
