@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.33 2001/05/11 20:42:50 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.34 2001/05/15 07:53:17 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -207,7 +207,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             TLeafElement *lf = (TLeafElement*)bre->GetListOfLeaves()->At(0);
             //if branch name is of the form fTracks.fCovar[3][4]
             //set the title to fCovar[fTracks_][3][4]
-            char *dim = strstr(fin+1,"[");
+            char *dim = (char*)strstr(fin+1,"[");
             if (dim) {
                Int_t nch = dim-fin-1;
                strncpy(branchname,fin+1,nch);
