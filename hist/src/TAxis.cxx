@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.49 2003/09/23 14:56:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.50 2003/10/06 13:40:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -780,7 +780,18 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
       Error("SetBinLabel","Illegal bin number: %d",bin);
       return;
    }
-   TObjString *obj = new TObjString(label);
+
+   // Check whether this bin already has a label.
+   TIter next(fLabels);
+   TObjString *obj;
+   while ((obj=(TObjString*)next()))
+     if ( obj->GetUniqueID()==(UInt_t)bin ) {
+       // It does. Overwrite it.
+       obj->SetString(label);
+       return;
+     }
+   // It doesn't. Add this new label.
+   obj = new TObjString(label);
    fLabels->Add(obj);
    obj->SetUniqueID((UInt_t)bin);
 }
