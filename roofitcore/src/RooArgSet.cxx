@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.29 2001/08/21 18:53:38 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.30 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -136,12 +136,6 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
   _name(name), TList(), _isCopy(kFALSE)
 {
-  if (other._isCopy) {
-    cout << ClassName() << "::" << GetName() << ": cannot copy the already copied ";
-    other.Print();
-    assert(other._isCopy == kFALSE) ;
-  }
-
   RooTrace::create(this) ;
   if (!name) SetName(other.GetName()) ;
 
