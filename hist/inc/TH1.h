@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.35 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.36 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -183,7 +183,7 @@ public:
     virtual Axis_t   GetBinWidth(Int_t bin) const {return fXaxis.GetBinWidth(bin);}
     virtual Stat_t   GetCellContent(Int_t binx, Int_t biny) const;
     virtual Stat_t   GetCellError(Int_t binx, Int_t biny) const;
-    virtual void     GetCenter(Axis_t *center) {fXaxis.GetCenter(center);}
+    virtual void     GetCenter(Axis_t *center) const {fXaxis.GetCenter(center);}
     TDirectory      *GetDirectory() const {return fDirectory;}
     virtual Stat_t   GetEntries() const;
     virtual TF1     *GetFunction(const char *name) const;
@@ -213,14 +213,14 @@ public:
     virtual Stat_t   GetSumOfWeights() const;
     virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
     virtual Stat_t   GetRMS(Int_t axis=1) const;
-            TAxis   *GetXaxis() {return &fXaxis;}
-            TAxis   *GetYaxis() {return &fYaxis;}
-            TAxis   *GetZaxis() {return &fZaxis;}
+            TAxis   *GetXaxis() const;
+            TAxis   *GetYaxis() const;
+            TAxis   *GetZaxis() const;
     virtual Stat_t   Integral(Option_t *option="") const;
     virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") const {return 0;}
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) const {return 0;}
-    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
+    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
     virtual void     LabelsDeflate(Option_t *axis="X");
     virtual void     LabelsInflate(Option_t *axis="X");
     virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");

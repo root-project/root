@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.36 2002/11/18 21:49:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.37 2002/11/22 13:54:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -863,7 +863,7 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_
 }
         
 //______________________________________________________________________________
-Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
+Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option) const
 {
 //  Statistical test of compatibility in shape between
 //  THIS histogram and h2, using Kolmogorov test.
@@ -884,7 +884,7 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    opt.ToUpper();
    
    Double_t prb = 0;
-   TH1 *h1 = this;
+   TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
    TAxis *xaxis1 = h1->GetXaxis();
    TAxis *xaxis2 = h2->GetXaxis();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.114 2002/11/22 13:54:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.115 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2718,6 +2718,30 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
    return GetBinContent(bin);
 }
 
+//______________________________________________________________________________
+TAxis *TH1::GetXaxis() const
+{
+   // return a pointer to the X axis object
+   
+   return &((TH1*)this)->fXaxis;
+}
+
+
+//______________________________________________________________________________
+TAxis *TH1::GetYaxis() const
+{
+   // return a pointer to the Y axis object
+   
+   return &((TH1*)this)->fYaxis;
+}
+//______________________________________________________________________________
+TAxis *TH1::GetZaxis() const
+{
+   // return a pointer to the Z axis object
+   
+   return &((TH1*)this)->fZaxis;
+}
+
 //___________________________________________________________________________
 void TH1::LabelsDeflate(Option_t *ax)
 {
@@ -4379,7 +4403,7 @@ Stat_t TH1::Integral(Int_t binx1, Int_t binx2, Option_t *option) const
 }
 
 //______________________________________________________________________________
-Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
+Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
 {
 //  Statistical test of compatibility in shape between
 //  THIS histogram and h2, using Kolmogorov test.
@@ -4401,7 +4425,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    opt.ToUpper();
 
    Double_t prb = 0;
-   TH1 *h1 = this;
+   TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
    TAxis *axis1 = h1->GetXaxis();
    TAxis *axis2 = h2->GetXaxis();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.20 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.21 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    virtual Stat_t  Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
    virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
-   virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
+   virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
    virtual Int_t   Merge(TCollection *list);
       TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
       TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
