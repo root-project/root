@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.4 2000/12/13 12:07:59 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.5 2001/02/22 09:43:25 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -75,8 +75,8 @@ enum EMessageTypes {
    kROOTD_SRPA,                          //SRP a follows
    kROOTD_SRPB,                          //SRP b follows
    kROOTD_SRPRESPONSE,                   //SRP final response
-   kROOTD_PUTFILE,
-   kROOTD_GETFILE
+   kROOTD_PUTFILE,                       //store file
+   kROOTD_GETFILE                        //retrieve file
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.2 2001/02/22 13:32:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.3 2001/02/22 14:07:20 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -72,8 +72,10 @@ public:
    TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize);
    virtual ~TFTP();
 
-   void  SetBlockSize(Int_t blockSize);
-   Int_t GetBlockSize() const { return fBlockSize; }
+   void   SetBlockSize(Int_t blockSize);
+   Int_t  GetBlockSize() const { return fBlockSize; }
+   void   SetRestartAt(Seek_t at) { fRestartAt = at; }
+   Seek_t GetRestartAt() const { return fRestartAt; }
 
    Bool_t IsOpen() const { return fSocket ? kTRUE : kFALSE; }
    void   Print(Option_t *opt = "") const;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.4 2001/02/22 14:07:20 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.5 2001/02/22 15:18:56 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TUrl.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
+#include "TError.h"
 
 #if defined(R__UNIX)
 #define HAVE_MMAP
@@ -71,7 +72,7 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize)
    TString s = url;
    if (s.Contains("://")) {
       if (!s.BeginsWith("root")) {
-         Error("TFTP", "url must be of the for \"[root[s]://]host[:port]\"");
+         Error("TFTP", "url must be of the form \"[root[s]://]host[:port]\"");
          MakeZombie();
          return;
       }
@@ -230,7 +231,9 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 {
    // Transfer binary file to remote host. Returns number of bytes
    // sent or < 0 in case of error. Error -1 connection is still
-   // open, error -2 connection has been closed.
+   // open, error -2 connection has been closed. In case of failure
+   // fRestartAt is set to the number of bytes correclty transfered.
+   // Calling PutFile() immediately afterwards will restart at fRestartAt.
 
    if (!IsOpen()) return -1;
 
@@ -255,10 +258,10 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
    if (!remoteName)
       remoteName = file;
 
-   // fRestartAt can be set to restart transmission at specific file offset
+   Long_t restartat = fRestartAt;
 
    if (fSocket->Send(Form("%s %d %ld %ld", remoteName, fBlockSize, size,
-                     (Long_t)fRestartAt), kROOTD_PUTFILE) < 0) {
+                     restartat), kROOTD_PUTFILE) < 0) {
       Error("FilePut", "error sending kROOTD_PUTFILE command");
       close(fd);
       return -1;
@@ -276,8 +279,8 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
    TStopwatch timer;
    timer.Start();
 
-   Seek_t pos = fRestartAt & ~(fBlockSize-1);
-   Int_t skip = fRestartAt - pos;
+   Seek_t pos = restartat & ~(fBlockSize-1);
+   Int_t skip = restartat - pos;
 
 #ifndef HAVE_MMAP
    char *buf = new char[fBlockSize];
@@ -323,6 +326,8 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
       fBytesWrite  += left-skip;
       fgBytesWrite += left-skip;
 
+      fRestartAt = pos;   // bytes correctly sent up till now
+
       pos += left;
       skip = 0;
 
@@ -337,6 +342,8 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
 
    close(fd);
 
+   fRestartAt = 0;
+
    // get acknowlegdement from server that file was stored correctly
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("FilePut", stat);
@@ -345,9 +352,22 @@ Int_t TFTP::PutFile(const char *file, const char *remoteName)
    }
 
    // provide timing numbers
-   //timer.
+   Double_t speed, t = timer.RealTime();
+   if (t > 0)
+      speed = (size - restartat) / t;
+   else
+      speed = 0.0;
+   if (speed > 524288)
+      Info("TFTP::PutFile", "%.3f seconds, %.2f Mbytes per second",
+           t, speed / 1048576);
+   else if (speed > 512)
+      Info("TFTP::PutFile", "%.3f seconds, %.2f Kbytes per second",
+           t, speed / 1024);
+   else
+      Info("TFTP::PutFile", "%.3f seconds, %.2f bytes per second",
+           t, speed);
 
-   return size - fRestartAt;
+   return size - restartat;
 }
 
 //______________________________________________________________________________

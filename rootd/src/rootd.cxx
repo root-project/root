@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.26 2001/02/22 15:18:56 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.27 2001/02/22 15:37:47 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -127,6 +127,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <errno.h>
@@ -233,6 +234,9 @@ int     gAnon              = 0;
 int     gFd                = -1;
 int     gWritable          = 0;
 int     gProtocol          = 4;       // increase when protocol changes
+int     gUploaded          = 0;
+int     gDownloaded        = 0;
+int     gFtp               = 0;
 double  gBytesRead         = 0;
 double  gBytesWritten      = 0;
 char    gUser[64]          = { 0 };
@@ -630,8 +634,24 @@ int RootdIsOpen()
 }
 
 //______________________________________________________________________________
+void RootdCloseFtp()
+{
+   if (gDebug > 0)
+      ErrorInfo("RootdCloseFtp: %d files uploaded, %d files downloaded, rd=%g, wr=%g, rx=%g, tx=%g",
+                gUploaded, gDownloaded, gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+   else
+      ErrorInfo("Rootd: %d files uploaded, %d files downloaded, rd=%g, wr=%g, rx=%g, tx=%g",
+                gUploaded, gDownloaded, gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+}
+
+//______________________________________________________________________________
 void RootdClose()
 {
+   if (gFtp) {
+      RootdCloseFtp();
+      return;
+   }
+
    if (RootdIsOpen()) {
       close(gFd);
       gFd = -1;
@@ -1263,34 +1283,62 @@ void RootdPutFile(const char *msg)
 
    char  file[kMAXPATHLEN];
    long  size, restartatl;
-   int   blocksize;
+   int   blocksize, forceopen = 0;
    off_t restartat;
+
+   gFtp = 1;   // rootd is used for ftp instead of file serving
 
    sscanf(msg, "%s %d %ld %ld", file, &blocksize, &size, &restartatl);
 
+   if (file[0] == '-') {
+      forceopen = 1;
+      strcpy(gFile, file+1);
+   } else
+      strcpy(gFile, file);
+
    restartat = (off_t) restartatl;
 
-   // anon user may not overwrite existing file...
-   // add check here...
+   // anon user may not overwrite existing files...
+   struct stat st;
+   if (!stat(gFile, &st)) {
+      if (gAnon) {
+         Error(kErrNoAccess, "RootdPutFile: anonymous users may not overwrite existing files");
+         return;
+      }
+   } else if (GetErrno() != ENOENT) {
+      Error(kErrFatal, "RootdPutFile: can't check for file presence");
+      return;
+   }
+
+   // remove lock from file
+   if (restartat || forceopen)
+      RootdCloseTab(1);
+
+   // check if file is not in use by somebody and prevent from somebody
+   // using it before upload is completed
+   if (!RootdCheckTab(1)) {
+      Error(kErrFileWriteOpen, "RootdPutFile: file %s already opened in read or write mode", gFile);
+      return;
+   }
 
    // open local file
    int fd;
    if (!restartat)
 #ifndef WIN32
-      fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+      fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 #else
-      fd = open(file, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+      fd = open(gFile, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
                 S_IREAD | S_IWRITE);
 #endif
    else
 #ifndef WIN32
-      fd = open(file, O_WRONLY, 0600);
+      fd = open(gFile, O_WRONLY, 0600);
 #else
-      fd = open(file, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+      fd = open(gFile, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
 
    if (fd < 0) {
-      Error(kErrFileOpen, "RootdPutFile: cannot open file %s", file);
+      Error(kErrFileOpen, "RootdPutFile: cannot open file %s", gFile);
       return;
    }
 
@@ -1304,7 +1352,7 @@ void RootdPutFile(const char *msg)
       double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
 #endif
       if (space < size - restartat) {
-         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", file);
+         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", gFile);
          close(fd);
          return;
       }
@@ -1314,7 +1362,7 @@ void RootdPutFile(const char *msg)
    if (restartat) {
       if (lseek(fd, restartat, SEEK_SET) < 0) {
          Error(kErrRestartSeek, "RootdPutFile: cannot seek to position %d in file %s",
-               restartat, file);
+               restartat, gFile);
          close(fd);
          return;
       }
@@ -1322,6 +1370,9 @@ void RootdPutFile(const char *msg)
 
    // setup ok
    NetSend(0, kROOTD_PUTFILE);
+
+   struct timeval started, ended;
+   gettimeofday(&started, 0);
 
    char *buf = new char[blocksize];
 
@@ -1343,17 +1394,19 @@ void RootdPutFile(const char *msg)
          ResetErrno();
 
       if (siz < 0)
-         ErrorSys(kErrFilePut, "RootdPutFile: error writing to file %s", file);
+         ErrorSys(kErrFilePut, "RootdPutFile: error writing to file %s", gFile);
 
-      if (siz != left)
+      if (siz != int(left-skip))
          ErrorFatal(kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
-                    file, siz, left);
+                    gFile, siz, left);
 
       gBytesWritten += left-skip;
 
       pos += left;
       skip = 0;
    }
+
+   gettimeofday(&ended, 0);
 
    // file stored ok
    NetSend(0, kROOTD_PUTFILE);
@@ -1364,7 +1417,26 @@ void RootdPutFile(const char *msg)
 
    close(fd);
 
-   ErrorInfo("RootdPutFile: uploaded file %s (%ld)", file, size);
+   RootdCloseTab();
+
+   gUploaded++;
+
+   double speed, t;
+   t = (ended.tv_sec + ended.tv_usec / 1000000.0) -
+       (started.tv_sec + started.tv_usec / 1000000.0);
+   if (t > 0)
+      speed = (size - restartat) / t;
+   else
+      speed = 0.0;
+   if (speed > 524288)
+      ErrorInfo("RootdPutFile: uploaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f Mbytes/s)", gFile, size, t, speed / 1048576);
+   else if (speed > 512)
+      ErrorInfo("RootdPutFile: uploaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f Kbytes/s)", gFile, size, t, speed / 1024);
+   else
+      ErrorInfo("RootdPutFile: uploaded file %s (%ld bytes, %.3f seconds, "
+                "%.2f bytes/s)", gFile, size, t, speed);
 }
 
 //______________________________________________________________________________
