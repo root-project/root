@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.2 2000/06/13 11:32:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -164,6 +164,8 @@ public:
    void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
    void              DrawText(Double_t x, Double_t y, const char *text);
    void              DrawTextNDC(Double_t u, Double_t v, const char *text);
+   virtual TObject  *FindObject(const char *name) const;
+   virtual TObject  *FindObject(TObject *obj) const;
    virtual void      UseCurrentStyle();  // *MENU*
    virtual Short_t   GetBorderMode() { return fBorderMode;}
    virtual Short_t   GetBorderSize() { return fBorderSize;}
@@ -204,7 +206,7 @@ public:
    Double_t          GetY2() const { return fY2; }
    TList            *GetListOfPrimitives() {return fPrimitives;}
    TList            *GetListOfExecs() {return fExecs;}
-   virtual TObject  *GetPrimitive(const char *name);
+   virtual TObject  *GetPrimitive(const char *name); //obsolete, use FindObject instead
    virtual TObject  *GetSelected();
    virtual TObject  *GetPadPointer() {return fPadPointer;}
    TVirtualPad      *GetPadSave() const;

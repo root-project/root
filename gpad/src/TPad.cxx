@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.12 2000/08/31 16:59:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.13 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1438,7 +1438,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 //  Compute real pad range taking into account all margins
 //  Use services of TH1F class
 
-   TH1F *hframe = (TH1F*)GetPrimitive("hframe");
+   TH1F *hframe = (TH1F*)FindObject("hframe");
    if (hframe) delete hframe;
    hframe = new TH1F("hframe",title,1000,xmin,xmax);
    hframe->SetBit(TH1::kNoStats);
@@ -2006,14 +2006,17 @@ again:
 }
 
 //______________________________________________________________________________
-void TPad::HideToolTip(Int_t event)
+TObject *TPad::FindObject(const char *name) const
 {
-   // Hide tool tip depending on the event type. Typically tool tips
-   // are hidden when event is not a kMouseEnter and not a kMouseMotion
-   // event.
+   if (fPrimitives) return fPrimitives->FindObject(name);
+   return 0;
+}
 
-   if (event != kMouseEnter && event != kMouseMotion && fTip)
-      gPad->CloseToolTip(fTip);
+//______________________________________________________________________________
+TObject *TPad::FindObject(TObject *) const
+{
+   //not implemented yet
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2080,6 +2083,17 @@ UInt_t TPad::GetWh()
 UInt_t TPad::GetWw()
 {
    return fCanvas->GetWw();
+}
+
+//______________________________________________________________________________
+void TPad::HideToolTip(Int_t event)
+{
+   // Hide tool tip depending on the event type. Typically tool tips
+   // are hidden when event is not a kMouseEnter and not a kMouseMotion
+   // event.
+
+   if (event != kMouseEnter && event != kMouseMotion && fTip)
+      gPad->CloseToolTip(fTip);
 }
 
 //______________________________________________________________________________
@@ -2409,7 +2423,7 @@ void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
    frame->SetY2(ymax);
    if (!glist->FindObject(fFrame)) {
       glist->AddFirst(frame);
-      fFrame->SetBit(kObjInCanvas);
+      fFrame->SetBit(kMustCleanup);
    }
    frame->Paint();
 }
@@ -4194,7 +4208,7 @@ void TPad::UseCurrentStyle()
       obj->UseCurrentStyle();
    }
 
-   TPaveText *stats  = (TPaveText*)GetPrimitive("stats");
+   TPaveText *stats  = (TPaveText*)FindObject("stats");
    if (stats) {
       stats->SetFillColor(gStyle->GetStatStyle());
       stats->SetFillColor(gStyle->GetStatColor());
@@ -4204,7 +4218,7 @@ void TPad::UseCurrentStyle()
       if (!gStyle->GetOptStat()) delete stats;
    }
 
-   TPaveText *title  = (TPaveText*)GetPrimitive("title");
+   TPaveText *title  = (TPaveText*)FindObject("title");
    if (title) {
       title->SetFillColor(gStyle->GetTitleColor());
       title->SetTextFont(gStyle->GetTitleFont());
@@ -4253,9 +4267,9 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    //                            // Create a polyline, then using the context
    //                            // menu item "SetName", change the name
    //                            // of the created TGraph to "ggg"
-   //   c1.GetPrimitive("Arc");  // Set the editor in mode "Arc". Returns
+   //   c1.FindObject("Arc");    // Set the editor in mode "Arc". Returns
    //                            // as soon as a TArc object is created.
-   //   c1.GetPrimitive("lat","Text"); // Set the editor in Text/Latex mode.
+   //   c1.FindObject("lat","Text"); // Set the editor in Text/Latex mode.
    //                            // Create a text object, then Set its name to "lat"
    //
    // The following macro waits for 10 primitives of any type to be created.
@@ -4279,7 +4293,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents()) {
-      obj = GetPrimitive(pname);
+      obj = FindObject(pname);
       if (obj) {
          gROOT->SetEditorMode();
          return obj;
