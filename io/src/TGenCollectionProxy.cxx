@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.2 2004/10/31 14:21:25 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.3 2004/11/01 07:20:18 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -698,9 +698,10 @@ void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
         }
         if ( fVal->fCase&G__BIT_ISPOINTER )  {
           char *addr = ((char*)ptr)+fKey->fSize;
-          //make sure the value address is aligned on 64 bit machines!
+          //make sure the value address is aligned on a word boundary
           long laddr = (long)addr;
-          if (laddr % sizeof(void*) != 0) addr += 4;
+          int offset = laddr % sizeof(void*);
+          addr += offset;
           if (*(void**)addr) (*fVal->fDelete)(*(void**)addr);
         }
         // (*fValue->fDtor)(ptr); No: pair must stay intact !
