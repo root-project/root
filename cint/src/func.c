@@ -1024,7 +1024,11 @@ int memfunc_flag;
   funcname[ig15++]='\0';
 
 #ifndef G__OLDIMPLEMENTATION1657
-  if(strchr(funcname,'.') || strstr(funcname,"->")) {
+  if((strchr(funcname,'.') || strstr(funcname,"->"))
+#ifndef G__OLDIMPLEMENTATION1713
+     && 0!=strncmp(funcname,"operator",8) 
+#endif
+     ) {
     result3=G__null;
     return(result3);
   }
@@ -1064,6 +1068,9 @@ int memfunc_flag;
      * scan '(param1,param2,param3)'
      *****************************************************/
     while(ig15<lenitem) {
+#ifndef G__OLDIMPLEMENTATION1705
+      int tmpltnest=0;
+#endif
       
       /*************************************************
        * scan one parameter upto 'param,' or 'param)'
@@ -1074,7 +1081,11 @@ int memfunc_flag;
       single_quote=0;
       double_quote=0;
       while((((item[ig15]!=',')&&(item[ig15]!=')'))||
-	     (nest>0)||(single_quote>0)||(double_quote>0))&&(ig15<lenitem)) {
+	     (nest>0)||
+#ifndef G__OLDIMPLEMENTATION1705
+	     (tmpltnest>0)||
+#endif
+	     (single_quote>0)||(double_quote>0))&&(ig15<lenitem)) {
 	switch(item[ig15]) {
 	case '"' : /* double quote */
 	  if(single_quote==0) double_quote ^= 1;
@@ -1099,6 +1110,20 @@ int memfunc_flag;
 	  fpara.parameter[fpara.paran][ig35++]=item[ig15++];
 #endif
 	  break;
+#ifndef G__OLDIMPLEMENTATION1705
+	case '<':
+	  if(double_quote==0&&single_quote==0) {
+	    result7[ig35]=0;
+	    if(0==strcmp(result7,"operator") ||
+	       G__defined_templateclass(result7)) ++tmpltnest;
+	  }
+	  break;
+	case '>':
+	  if(double_quote==0&&single_quote==0) {
+	    if(tmpltnest) --tmpltnest;
+	  }
+	  break;
+#endif
 	}
 #ifndef G__OLDIMPLEMENTATION1340
 	result7[ig35++] = item[ig15++];
@@ -2453,10 +2478,15 @@ G__value ap;
 G__value G__va_arg(ap)
 G__value ap;
 {
+#if defined(_MSC_VER) && (_MSC_VER==1300)
+  G__genericerror("Error: You can not use va_arg because of VC++7.0(_MSC_VER==1300) problem");
+  return(G__null);
+#else
   G__va_list *va;
   va = (G__va_list*)ap.ref;
   if(!va || !va->libp) return(G__null);
   return(va->libp->para[va->ip++]);
+#endif
 }
 /******************************************************************
  * G__va_end

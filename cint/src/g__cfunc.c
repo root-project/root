@@ -708,7 +708,11 @@ G__COMPLETIONLIST G__completionlist[] = {
 #if defined(tmpnam) || !defined(G__FUNCPOINTER)
 	{"tmpnam",NULL},
 #else
+#if ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
+	{"tmpnam",NULL},
+#else
 	{"tmpnam",(void (*)())tmpnam},
+#endif
 #endif
 #if defined(tolower) || !defined(G__FUNCPOINTER)
 	{"tolower",NULL},
@@ -3185,7 +3189,21 @@ int hash;
 #ifndef G__OLDIMPLEMENTATION575
     G__CHECKTYPE(0,'C','i');
 #endif
+#if ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
+    {
+      char *p = (char*)G__int(libp->para[0]);
+      if(p) {
+#ifdef P_tmpdir
+	sprintf(p,"%s/XXXXXX",P_tmpdir);
+#else
+	sprintf(p,"/tmp/XXXXXX");
+#endif
+      }
+      G__letint(result7,'C',(long)mkstemp(p));
+    }
+#else
     G__letint(result7,'C',(long)tmpnam((char *)G__int(libp->para[0])));
+#endif
     return(1);
   }
 

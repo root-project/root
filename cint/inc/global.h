@@ -696,6 +696,13 @@ extern int G__last_error;
 
 extern int G__dispmsg;
 
+#ifndef G__OLDIMPLEMENTATION1700
+extern int G__default_link;
+#endif
+
+/* 1713 */
+extern int G__gettingspecial;
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

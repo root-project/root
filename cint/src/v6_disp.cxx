@@ -154,6 +154,26 @@ char* msg;
 }
 #endif /* ON640 */
 
+#ifndef G__OLDIMPLEMENTATION1711
+/***********************************************************************
+* void G__disp_friend
+***********************************************************************/
+int G__display_friend(fp,friendtag)
+FILE *fp;
+struct G__friendtag* friendtag;
+{
+  char msg[G__ONELINE];
+  sprintf(msg," friend ");
+  if(G__more(fp,msg)) return(1);
+  while(friendtag) {
+    sprintf(msg,"%s,",G__fulltagname(friendtag->tagnum,1));
+    if(G__more(fp,msg)) return(1);
+    friendtag = friendtag->next;
+  }
+  return(0);
+}
+#endif
+
 /***********************************************************************
 * void G__listfunc
 ***********************************************************************/
@@ -202,7 +222,11 @@ struct G__ifunc_table *ifunc;
 
       if(fname && strcmp(fname,ifunc->funcname[i])!=0) continue;
       
-      if(ifunc->hash[i] && ifunc->access[i]&access) {
+      if(
+#ifndef G__OLDIMPLEMENTATION1706
+	 ifunc->hash[i] &&
+#endif
+	 ifunc->access[i]&access) {
 	
 	/* print out file name and line number */
 	if(ifunc->pentry[i]->filenum>=0) {
@@ -256,7 +280,10 @@ struct G__ifunc_table *ifunc;
 	  if(G__more(fp,msg)) return(1);
 	}
 	
-	sprintf(msg,"%s ",G__access2string(ifunc->access[i]));
+	if(ifunc->hash[i])
+	  sprintf(msg,"%s ",G__access2string(ifunc->access[i]));
+	else
+	  sprintf(msg,"------- ");
 	if(G__more(fp,msg)) return(1);
 #ifndef G__OLDIMPLEMENTATION1250
 	if(ifunc->isexplicit[i]) {
@@ -379,6 +406,10 @@ struct G__ifunc_table *ifunc;
 	  sprintf(msg," //%s",temp);
 	  if(G__more(fp,msg)) return(1);
 	}
+#ifndef G__OLDIMPLEMENTATION1711
+	if(ifunc->friendtag[i]) 
+	  if(G__display_friend(fp,ifunc->friendtag[i])) return(1);
+#endif
 	if(G__more(fp,"\n")) return(1);
       }
       

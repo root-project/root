@@ -56,10 +56,49 @@ class vector {
   typedef reverse_iterator<iterator>	        reverse_iterator;
   typedef reverse_iterator<const_iterator>      const_reverse_iterator;
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+
+#ifndef G__OLDIMPLEMENTATION1703
+  class iterator {
+   public:
+      iterator();
+      explicit iterator(const pointer& __i) ;
+      // Allow iterator to const_iterator conversion
+      template<typename _Iter> inline iterator(const iterator& __i);
+
+      // Forward iterator requirements
+      reference operator*() const ;
+      pointer operator->() const ;
+      iterator& operator++();
+      iterator operator++(int) ;
+      
+      // Bidirectional iterator requirements
+      iterator& operator--() ;
+      iterator operator--(int) ;
+      
+      // Random access iterator requirements
+      reference operator[](const difference_type& __n) const;
+      iterator& operator+=(const difference_type& __n);
+      iterator operator+(const difference_type& __n) const;
+      iterator& operator-=(const difference_type& __n);
+      iterator operator-(const difference_type& __n) const;
+      const pointer& base() const ;
+  };
+  friend bool operator==(const vector::iterator& x,const vector::iterator& y)const;
+  friend bool operator!=(const vector::iterator& x,const vector::iterator& y)const;
+  friend bool operator<(const vector::iterator& x,const vector::iterator& y)const;
+  friend bool operator>(const vector::iterator& x,const vector::iterator& y)const;
+  friend bool operator<=(const vector::iterator& x,const vector::iterator& y)const;
+  friend bool operator>=(const vector::iterator& x,const vector::iterator& y)const;
+  friend vector::iterator::difference_type operator-(const vector::iterator& x,const vector::iterator& y)const;
+  friend vector::iterator operator+(const vector::iterator::difference_type x,const vector::iterator& y)const;
+  typedef const iterator const_iterator;
+#else /* 1703 */
   typedef vector<T, Allocator> vector_type;
   typedef __gnu_cxx::__normal_iterator<pointer, vector_type> 	iterator;
   typedef __gnu_cxx::__normal_iterator<const_pointer, vector_type>
                                                         const_iterator;
+#endif /* 1703 */
+
 #elif !(G__GNUC>=3 && G__GNUC_MINOR<1)
   typedef T* iterator;
   typedef const T* const_iterator;

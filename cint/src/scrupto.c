@@ -263,6 +263,33 @@ int ifn;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
+#ifndef G__OLDIMPLEMENTATION1706
+    if(ifunc->override_ifunc[i] 
+       && ifunc->override_ifunc[i]->funcname[ifunc->override_ifn[i]][0]) {
+      struct G__ifunc_table *overridden = ifunc->override_ifunc[i];
+      int ior=ifunc->override_ifn[i];
+      overridden->hash[ior] = ifunc->hash[i];
+      overridden->masking_ifunc[ior]=(struct G__ifunc_table*)NULL;
+      overridden->masking_ifn[ior]=0;
+      for(j=ifunc->para_nu[i]-1;j>=0;j--) {
+	if((G__value*)(-1)==overridden->para_default[ior][j] &&
+	   (char*)NULL==overridden->para_def[ior][j]) {
+	  overridden->para_default[ior][j]=ifunc->para_default[i][j];
+	  overridden->para_def[ior][j]=ifunc->para_def[i][j];
+	  ifunc->para_default[i][j]=(G__value*)NULL;
+	  ifunc->para_def[i][j]=(char*)NULL;
+	}
+      }
+    }
+    if(ifunc->masking_ifunc[i]) {
+      struct G__ifunc_table *masking= ifunc->masking_ifunc[i];
+      int ims=ifunc->masking_ifn[i];
+      masking->override_ifunc[ims]=(struct G__ifunc_table*)NULL;
+      masking->override_ifn[ims]=0;
+      ifunc->masking_ifunc[i]=(struct G__ifunc_table*)NULL;
+      ifunc->masking_ifn[i]=0;
+    }
+#endif
 #ifndef G__OLDIMPLEMENTATION1543
     if(ifunc->funcname[i]) {
       free((void*)ifunc->funcname[i]);

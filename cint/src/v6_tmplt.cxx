@@ -20,6 +20,10 @@
 
 #include "common.h"
 
+#define G__OLDIMPLEMENTATION1712
+#ifndef G__OLDIMPLEMENTATION1712
+int G__templatearg_enclosedscope=0;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION691
 /***********************************************************************
@@ -1627,11 +1631,21 @@ char *string;
     strcpy (saveref, p);
     *p = '\0';
     if(-1!=(tagnum=G__defined_tagname(string,1))) {
+#ifndef G__OLDIMPLEMENTATION1712
+      if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
+	++G__templatearg_enclosedscope;
+      }
+#endif
       strcpy(string,G__fulltagname(tagnum,1));
     }
     else if(-1!=(tagnum=G__defined_typename(string))) {
       char type = G__newtype.type[tagnum];
       int ref = G__newtype.reftype[tagnum];
+#ifndef G__OLDIMPLEMENTATION1712
+      if(0==strstr(string,"::") && -1!=G__struct.parent_tagnum[tagnum]) {
+	++G__templatearg_enclosedscope;
+      }
+#endif
       if (G__newtype.tagnum[tagnum] >= 0 &&
 	  G__struct.name[G__newtype.tagnum[tagnum]][0] == '$') {
 	ref = 0;
@@ -2079,6 +2093,9 @@ char *tagnamein;
   }
 
   /* separate and evaluate template argument */
+#ifndef G__OLDIMPLEMENTATION1712
+  G__templatearg_enclosedscope = 0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1503
   if((defarg=
       G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara))) {
@@ -2090,6 +2107,10 @@ char *tagnamein;
      * to find actual tagname. */
 #ifndef G__OLDIMPLEMENTATION1044
     int typenum = -1;
+#ifndef G__OLDIMPLEMENTATION1712
+    int store_templatearg_enclosedscope = G__templatearg_enclosedscope;
+    G__templatearg_enclosedscope=0;
+#endif
     if(-1==G__defined_typename(tagname)) {
       typenum=G__newtype.alltype++;
       G__newtype.type[typenum]='u';
@@ -2108,12 +2129,21 @@ char *tagnamein;
 #ifndef G__OLDIMPLEMENTATION1044
     if(-1!=typenum) {
       G__newtype.tagnum[typenum] = tagnum;
+#ifndef G__OLDIMPLEMENTATION1712
+      if(store_templatearg_enclosedscope) {
+	G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
+      }
+      else {
+	G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+      }
+#else
       G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+#endif
 #ifndef G__OLDIMPLEMENTATION1503
       if(3==defarg) G__struct.defaulttypenum[tagnum] = typenum;
 #endif
     }
-#endif
+#endif /* 1044 */
     G__freecharlist(&call_para);
     return(tagnum);
   }

@@ -420,7 +420,9 @@ extern "C" const char* G__saveconststring(const char* s)
 #ifndef G__OLDIMPLEMENTATION1689
 extern "C" void G__initcxx() 
 {
+#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
   char temp[G__ONELINE];
+#endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
   sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
 #endif

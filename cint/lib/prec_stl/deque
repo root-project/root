@@ -84,7 +84,12 @@ class deque {
     iterator& operator-=(long n);
     T& operator[](long n) ;
   };
-#ifdef G__HPUX
+#if defined(G__HPUX)
+  friend bool operator!=(const deque::iterator& x
+                        ,const deque::iterator& y) const;
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+  friend bool operator==(const deque::iterator& x
+                        ,const deque::iterator& y) const;
   friend bool operator!=(const deque::iterator& x
                         ,const deque::iterator& y) const;
 #endif

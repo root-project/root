@@ -511,6 +511,9 @@ G__value *presult;
     *pc = G__fgetstream_newtemplate(statement+len,")");
     len = strlen(statement);
     statement[len++] = *pc;
+#ifndef G__OLDIMPLEMENTATION1711
+    statement[len] = 0; 
+#endif
 #ifdef G__ASM
     if(G__asm_noverflow) G__asm_clear();
 #endif
@@ -2297,6 +2300,9 @@ int breakcontinue;
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1695
+#ifndef G__OLDIMPLEMENTATION1710
+  *piout=0;
+#endif
   if(G__no_exec_compile) return(0);
   else return(1);
 #else

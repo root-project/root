@@ -634,6 +634,9 @@ int ifn;
   ifn = dictpos->ifn;
   while(ifunc && (ifunc!=hasonlyfunc->ifunc || ifn!=hasonlyfunc->ifn)) {
     ifunc->hash[ifn] = 0;
+#ifndef G__OLDIMPLEMENTATION1706
+    ifunc->funcname[ifn][0] = 0;
+#endif
     if(++ifn>=G__MAXIFUNC) {
       ifunc = ifunc->next;
       ifn = 0;
@@ -962,6 +965,10 @@ char *filenamein;
   int temp;
   int store_macroORtemplateINfile;
   int len;
+#ifndef G__OLDIMPLEMENTATION1705
+  int len1;
+  char *dllpost;
+#endif
   short store_iscpp;
   G__UINT32 store_security;
 #ifndef G__OLDIMPLEMENTATION460
@@ -1714,6 +1721,9 @@ char *filenamein;
 
 #ifdef G__SHAREDLIB
   len = strlen(filename);
+#ifndef G__OLDIMPLEMENTATION1705
+  dllpost = G__getmakeinfo1("DLLPOST");
+#endif
   if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
 	       strcmp(filename+len-3,".dl")==0 ||
 	       strcmp(filename+len-3,".so")==0)) ||
@@ -1721,6 +1731,9 @@ char *filenamein;
 	       strcmp(filename+len-4,".DLL")==0)) ||
 #if defined(R__FBSD)
      (len>strlen(soext) && strcmp(filename+len-strlen(soext), soext)==0) ||
+#endif
+#ifndef G__OLDIMPLEMENTATION1705
+     (len>(len1=strlen(dllpost)) && strcmp(filename+len-len1,dllpost)==0) ||
 #endif
      (len>2&& (strcmp(filename+len-2,".a")==0 ||
 	       strcmp(filename+len-2,".A")==0))
@@ -2266,12 +2279,8 @@ char *badname;
 char* G__tmpnam(name)
 char *name;
 {
+#if defined(G__TMPFILE) 
   const char *appendix="_cint";
-#ifndef G__TMPFILE
-  tmpnam(name);
-  if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
-  return(name);
-#else
   static char tempname[G__MAXFILENAME];
   char *tmp;
   if('\0'==G__tmpdir[0]) {
@@ -2292,6 +2301,15 @@ char *name;
     if(strlen(tempname)<L_tmpnam-6) strcat(tempname,appendix);
     return(tempname);
   }
+#elif ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
+  strcpy(name,"/tmp/cint_XXXXXX");
+  mkstemp(name);
+  return(name);
+#else
+  const char *appendix="_cint";
+  tmpnam(name);
+  if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
+  return(name);
 #endif
 }
 

@@ -913,7 +913,11 @@ void G__define_type()
      * maybe better to change G__defined_type
      */
     G__newtype.type[typenum]=type;
+#ifndef G__OLDIMPLEMENTATION1700
+    G__newtype.globalcomp[typenum]=G__default_link?G__globalcomp:G__NOLINK;
+#else
     G__newtype.globalcomp[typenum]=G__globalcomp;
+#endif
     G__newtype.reftype[typenum]=reftype;
 #ifndef G__OLDIMPLEMENTATION1394
     G__newtype.isconst[typenum] = isconst;
@@ -1399,7 +1403,12 @@ int reftype;
 #endif
     G__newtype.type[G__newtype.alltype]=typein+ispointer;
     G__newtype.tagnum[G__newtype.alltype]=tagnum;
+#ifndef G__OLDIMPLEMENTATION1700
+    G__newtype.globalcomp[G__newtype.alltype]
+      =G__default_link?G__globalcomp:G__NOLINK;
+#else
     G__newtype.globalcomp[G__newtype.alltype]=G__globalcomp;
+#endif
     G__newtype.reftype[G__newtype.alltype]=reftype;
     G__newtype.iscpplink[G__newtype.alltype] = G__NOLINK;
 #ifdef G__FONS_COMMENT

@@ -1243,6 +1243,17 @@ int objsize;
   }
 }
 
+#if (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+#define G__alignof_ppc(objsize)  (objsize>4?16:4)
+#define G__va_rounded_size_ppc(typesize) ((typesize + 3) & ~3)
+#define G__va_align_ppc(AP, objsize)					   \
+     ((((unsigned long)(AP)) + ((G__alignof_ppc(objsize) == 16) ? 15 : 3)) \
+      & ~((G__alignof_ppc(objsize) == 16) ? 15 : 3))
+
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
+
+#endif
+
 /**************************************************************************
  * G__va_arg_put()
  **************************************************************************/
@@ -1276,18 +1287,21 @@ int n;
       j=j2;
     }
     else {
-      j2 = (j - objsize) & (objsize > 4 ? __DW_MASK : __WORD_MASK);
+      j2 = (j2 - objsize) & (objsize > 4 ? 0xfffffff8 : 0xfffffffc );
       j = j2 + ((8 - objsize) % 4);
     }
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
     /* nothing */
-#elif defined(__PPC__) || defined(__ppc__) || defined(_AIX) || defined (__APPLE__)
+
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+    /* nothing */
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
     /* nothing */
 #else
     /* nothing */
 #endif
     
-    G__va_arg_copyvalue(type,(void*)(&pbuf->d[j]),&libp->para[i],objsize);
+    G__va_arg_copyvalue(type,(void*)(&pbuf->x.d[j]),&libp->para[i],objsize);
 
     /* Platform that increments address */
 #if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
@@ -1300,9 +1314,28 @@ int n;
     j += objsize;
     mod = j%G__va_arg_align_size;
     if(mod) j = j-mod+G__va_arg_align_size;
-#elif defined(__PPC__) || defined(__ppc__) || defined(_AIX) || defined (__APPLE__)
-    j =  G__va_align_ppc(j, objsize) + G__va_rounded_size_ppc(objsize);
+
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+    //j =  G__va_align_ppc(j, objsize) + G__va_rounded_size_ppc(objsize);
+#ifdef G__VAARG_PASS_BY_REFERENCE
+    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+#endif
+    j += objsize;
+    mod = j%G__va_arg_align_size;
+    if(mod) j = j-mod+G__va_arg_align_size;
+
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
+#ifdef G__VAARG_PASS_BY_REFERENCE
+    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+#endif
+    j += objsize;
+    mod = j%G__va_arg_align_size;
+    if(mod) j = j-mod+G__va_arg_align_size;
+
 #else
+#ifdef G__VAARG_PASS_BY_REFERENCE
+    if(objsize>G__VAARG_PASS_BY_REFERENCE) objsize=G__VAARG_PASS_BY_REFERENCE;
+#endif
     j += objsize;
     mod = j%G__va_arg_align_size;
     if(mod) j = j-mod+G__va_arg_align_size;

@@ -36,7 +36,9 @@ using namespace std;
 #endif
 
 #if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#ifdef G__OLDIMPLEMENTATION1703
 #pragma link C++ namespace __gnu_cxx;
+#endif
 #endif
 
 

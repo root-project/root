@@ -115,6 +115,7 @@ distance_type(const random_access_iterator<T, Distance>&) {
 template <class T>
 inline ptrdiff_t* distance_type(const T*) { return (ptrdiff_t*)(0); }
 
+
 template <class Container>
 class back_insert_iterator : public output_iterator {
 protected:
@@ -446,6 +447,71 @@ inline T* value_type(const _Randit<T, Distance>&) {
 #endif
 
 #if (G__GNUC>=3)
+
+#if (G__GNUC_MINOR>=1) 
+
+// vector ///////////////////////////////////////////////////////////////
+template <class T> 
+inline random_access_iterator_tag iterator_category(const vector<T>::iterator&)
+  {return random_access_iterator_tag();}
+
+template <class T> 
+inline T* value_type(const vector<T>::iterator&) {return (T*)(0);}
+
+template <class T, class Distance> 
+inline Distance* 
+distance_type(const vector<T>::iterator&) {return (Distance*)(0);}
+
+// list ///////////////////////////////////////////////////////////////
+template <class T> 
+inline bidirectional_iterator_tag iterator_category(const list<T>::iterator&)
+  {return bidirectional_iterator_tag();}
+
+template <class T> 
+inline T* value_type(const list<T>::iterator&) {return (T*)(0);}
+
+template <class T, class Distance> 
+inline Distance* 
+distance_type(const list<T>::iterator&) {return (Distance*)(0);}
+
+// deque ///////////////////////////////////////////////////////////////
+template <class T> 
+inline random_access_iterator_tag iterator_category(const deque<T>::iterator&)
+  {return random_access_iterator_tag();}
+
+template <class T> 
+inline T* value_type(const deque<T>::iterator&) {return (T*)(0);}
+
+template <class T,class Distance>
+inline Distance* 
+distance_type(const deque<T>::iterator&) {return (Distance*)(0);}
+
+// map ///////////////////////////////////////////////////////////////
+template <class Key,class T> 
+inline bidirectional_iterator_tag iterator_category(const map<Key,T>::iterator&)
+  {return bidirectional_iterator_tag();}
+
+template <class Key,class T> 
+inline T* value_type(const map<Key,T>::iterator&) {return (T*)(0);}
+
+template <class Key,class T,class Distance> 
+inline Distance* 
+distance_type(const map<Key,T>::iterator&) {return (Distance*)(0);}
+
+// set ///////////////////////////////////////////////////////////////
+template <class T> 
+inline bidirectional_iterator_tag iterator_category(const set<T>::iterator&)
+  {return bidirectional_iterator_tag();}
+
+template <class T> 
+inline T* value_type(const set<T>::iterator&) {return (T*)(0);}
+
+template <class T,class Distance> 
+inline Distance* 
+distance_type(const set<T>::iterator&) {return (Distance*)(0);}
+
+#endif // (GNUC_MINOR>=1)
+
 // This iterator adapter is 'normal' in the sense that it does not
 // change the semantics of any of the operators of its itererator
 // parameter.  Its primary purpose is to convert an iterator that is

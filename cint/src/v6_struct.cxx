@@ -21,7 +21,6 @@
 #include "common.h"
 
 
-
 #ifndef G__OLDIMPLEMENTATION1087
 /******************************************************************
 * G__check_semicolumn_after_classdef
@@ -784,8 +783,15 @@ int type;
 #ifndef G__OLDIMPLEMENTATION1543
     {
       int ix;
-      for(ix=0;ix<G__MAXIFUNC;ix++) 
+      for(ix=0;ix<G__MAXIFUNC;ix++) {
 	G__struct.memfunc[i]->funcname[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1706
+	G__struct.memfunc[i]->override_ifunc[ix]=(struct G__ifunc_table*)NULL;
+	G__struct.memfunc[i]->override_ifn[ix] = 0;
+	G__struct.memfunc[i]->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	G__struct.memfunc[i]->masking_ifn[ix] = 0;
+#endif
+      }
     }
 #endif
 
@@ -802,7 +808,11 @@ int type;
     
     G__struct.isabstract[i]=0;
     
+#ifndef G__OLDIMPLEMENTATION1700
+    G__struct.globalcomp[i] = G__default_link?G__globalcomp:G__NOLINK;
+#else
     G__struct.globalcomp[i] = G__globalcomp;
+#endif
     G__struct.iscpplink[i] = 0;
 #ifndef G__OLDIMPLEMENTATION1334
     G__struct.protectedaccess[i] = 0;

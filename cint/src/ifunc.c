@@ -753,6 +753,57 @@ char *temp;
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1706 /* High risk change */
+/***********************************************************************
+* void G__dup_friendtag()
+*
+***********************************************************************/
+struct G__friendtag *G__dup_friendtag(orig,add)
+struct G__friendtag *orig;
+struct G__friendtag *add;
+{
+  struct G__friendtag *result = (struct G__friendtag*)NULL;
+  struct G__friendtag *tmp = (struct G__friendtag*)NULL;
+  while(orig) {
+    if(!result) {
+      result=(struct G__friendtag*)malloc(sizeof(struct G__friendtag));
+      tmp=result;
+    }
+    else {
+      tmp->next=(struct G__friendtag*)malloc(sizeof(struct G__friendtag));
+      tmp=tmp->next;
+    }
+    tmp->tagnum=orig->tagnum;
+    orig = orig->next;
+  }
+  /* append 'add', no malloc because it is already malloced for this. */
+  tmp->next=add;
+  return(result);
+}
+
+/***********************************************************************
+* void G__dupappend_friendtag()
+*
+***********************************************************************/
+struct G__friendtag *G__dupappend_friendtag(orig,add)
+struct G__friendtag *orig;
+struct G__friendtag *add;
+{
+  struct G__friendtag *friendtag = orig;
+  if(friendtag) {
+    while(friendtag->next) friendtag=friendtag->next;
+    friendtag->next=(struct G__friendtag*)malloc(sizeof(struct G__friendtag));
+    friendtag = friendtag->next;
+  }
+  else {
+    friendtag=(struct G__friendtag*)malloc(sizeof(struct G__friendtag));
+    orig=friendtag;
+  }
+  friendtag->next=(struct G__friendtag*)NULL;
+  friendtag->tagnum=add->tagnum;
+  return(orig);
+} 
+#endif /* 1706 */
 
 /***********************************************************************
 * void G__make_ifunctable(funcheader)
@@ -782,8 +833,10 @@ char *funcheader;   /* funcheader = 'funcname(' */
   int store_access;
   int paranu;
   int dobody=0;
+#ifdef G__OLDIMPLEMENTATION1706
 #ifdef G__FRIEND
   struct G__friendtag *friendtag;
+#endif
 #endif
 #ifdef G__NEWINHERIT
   int basen;
@@ -819,7 +872,7 @@ char *funcheader;   /* funcheader = 'funcname(' */
   while(G__p_ifunc->next) G__p_ifunc = G__p_ifunc->next;
 #ifndef G__OLDIMPLEMENTATION1404
   if(G__p_ifunc->allifunc==G__MAXIFUNC) {
-    /* This case is used only when compicated template instantiation is done 
+    /* This case is used only when complicated template instantiation is done 
      * during reading argument list 'f(vector<int> &x) { }' */
     G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
     G__p_ifunc->next->allifunc=0;
@@ -830,7 +883,15 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #ifndef G__OLDIMPLEMENTATION1543
     {
       int ix;
-      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->funcname[ix] = (char*)NULL;
+      for(ix=0;ix<G__MAXIFUNC;ix++) {
+	G__p_ifunc->funcname[ix] = (char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1706
+	G__p_ifunc->override_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	G__p_ifunc->override_ifn[ix] = 0;
+	G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	G__p_ifunc->masking_ifn[ix] = 0;
+#endif
+      }
     }
 #endif
   }
@@ -1000,7 +1061,14 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #endif
 #endif
   G__p_ifunc->pentry[func_now] = &G__p_ifunc->entry[func_now];
+#ifndef G__OLDIMPLEMENTATION1700
+  if(-1==G__p_ifunc->tagnum)
+    G__p_ifunc->globalcomp[func_now]=G__default_link?G__globalcomp:G__NOLINK;
+  else
+    G__p_ifunc->globalcomp[func_now]=G__globalcomp;
+#else
   G__p_ifunc->globalcomp[func_now]=G__globalcomp;
+#endif
 #ifdef G__FRIEND
   if(-1==G__friendtagnum) {
     G__p_ifunc->friendtag[func_now]=(struct G__friendtag*)NULL;
@@ -1667,167 +1735,269 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   if(G__ifile.filenum<G__nfile) {
 
-  if(ifunc) {
+    if(ifunc
+#ifndef G__OLDIMPLEMENTATION1706
+       && (ifunc!=G__p_ifunc || iexist!=func_now)
+#endif
+       ) {
 #ifdef G__FRIEND
-    if(G__p_ifunc->friendtag[func_now]) {
-      if(ifunc->friendtag[iexist]) {
-	friendtag=ifunc->friendtag[iexist];
-	while(friendtag->next) friendtag=friendtag->next;
-	friendtag->next = G__p_ifunc->friendtag[func_now];
+#ifndef G__OLDIMPLEMENTATION1706 /* High risk change */
+      if(G__p_ifunc->friendtag[func_now] &&
+	 ((FILE*)G__p_ifunc->entry[func_now].p==(FILE*)NULL) &&
+	 ((FILE*)ifunc->entry[iexist].p!=(FILE*)NULL)) {
+	/* void f() { } 
+	 * friend void f(); <<
+	 * friend void f(); <<
+	 *   In this case, new entity is not used, so don't care about 
+	 *   G__p_ifunc. Most likely, this does not happen in rigid C++. */
+	ifunc->friendtag[iexist] =
+	  G__dupappend_friendtag(ifunc->friendtag[iexist],
+				 G__p_ifunc->friendtag[func_now]);
       }
-      else {
-	ifunc->friendtag[iexist]=G__p_ifunc->friendtag[func_now];
+      else if(ifunc->friendtag[iexist]) {
+	/* friend void f();
+	 * friend void f();  <<
+	 * void f();         <<
+	 * In this case, old entity ifunc is masked and friendtag is left as
+	 * it is. friendtag is copied on new entity G__p_ifunc */
+	G__p_ifunc->friendtag[func_now] =
+	  G__dup_friendtag(ifunc->friendtag[iexist],
+			   G__p_ifunc->friendtag[func_now]);
       }
-    }
-#endif
-    if(((FILE*)G__p_ifunc->entry[func_now].p!=(FILE*)NULL)
-       /* C++ precompiled member function must not be overridden  */
-       && (0==G__def_struct_member || 
-	   G__CPPLINK!=G__struct.iscpplink[G__def_tagnum])) {
-      ifunc->ansi[iexist]=G__p_ifunc->ansi[func_now];
-      if(-1==G__p_ifunc->para_nu[func_now]) paranu=0;
-      else paranu=ifunc->para_nu[iexist];
-#ifndef G__OLDIMPLEMENTATION509
-      if(0==ifunc->ansi[iexist]) 
-	ifunc->para_nu[iexist] = G__p_ifunc->para_nu[func_now];
-#else
-      /* if(0==ifunc->ansi[iexist]) ifunc->para_nu[iexist] = -1; */
-#endif
-      ifunc->type[iexist]=G__p_ifunc->type[func_now];
-      ifunc->p_tagtable[iexist]=G__p_ifunc->p_tagtable[func_now];
-      ifunc->p_typetable[iexist]=G__p_ifunc->p_typetable[func_now];
-      ifunc->reftype[iexist]=G__p_ifunc->reftype[func_now];
-      ifunc->isconst[iexist]|=G__p_ifunc->isconst[func_now];
-#ifndef G__OLDIMPLEMENTATION1250
-      ifunc->isexplicit[iexist]|=G__p_ifunc->isexplicit[func_now];
-#endif
-      for(iin=0;iin<paranu;iin++) {
-	ifunc->para_reftype[iexist][iin]
-	  =G__p_ifunc->para_reftype[func_now][iin];
-	ifunc->para_p_typetable[iexist][iin]
-	  =G__p_ifunc->para_p_typetable[func_now][iin];
-	if(G__p_ifunc->para_default[func_now][iin]) {
-	  G__genericerror("Error: Redefinition of default argument");
-	  free((void*)G__p_ifunc->para_default[func_now][iin]);
-	  free((void*)G__p_ifunc->para_def[func_now][iin]);
+#else /* 1706 */
+      if(G__p_ifunc->friendtag[func_now]) {
+	if(ifunc->friendtag[iexist]) {
+	  friendtag=ifunc->friendtag[iexist];
+	  while(friendtag->next) friendtag=friendtag->next;
+	  friendtag->next = G__p_ifunc->friendtag[func_now];
 	}
-	G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
-	G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
-	if(ifunc->para_name[iexist][iin]) {
+	else {
+	  ifunc->friendtag[iexist]=G__p_ifunc->friendtag[func_now];
+	}
+      }
+#endif /* 1706 */
+#endif
+      if(
+#ifndef G__OLDIMPLEMENTATION1706 /* High risk change */
+	 (((FILE*)G__p_ifunc->entry[func_now].p!=(FILE*)NULL) ||
+	  ((FILE*)ifunc->entry[iexist].p==(FILE*)NULL))
+#else
+	 ((FILE*)G__p_ifunc->entry[func_now].p!=(FILE*)NULL)
+#endif
+	 /* C++ precompiled member function must not be overridden  */
+	 && (0==G__def_struct_member || 
+	     G__CPPLINK!=G__struct.iscpplink[G__def_tagnum])
+	 ) {
+#ifndef G__OLDIMPLEMENTATION1706 /* High risk change */
+	ifunc->hash[iexist] = 0; /* ifunc->hash[iexist]+1; */
+	G__p_ifunc->override_ifunc[func_now] = ifunc;
+	G__p_ifunc->override_ifn[func_now] = (unsigned char)iexist;
+	ifunc->masking_ifunc[iexist] = G__p_ifunc;
+	ifunc->masking_ifn[iexist] = (unsigned char)iexist;
+	paranu = G__p_ifunc->para_nu[func_now];
+	for(iin=0;iin<paranu;iin++) {
+	  if(G__p_ifunc->para_default[func_now][iin]) {
+	    G__genericerror("Error: Redefinition of default argument");
+	    if(-1!=(long)G__p_ifunc->para_default[func_now][iin])
+	      free((void*)G__p_ifunc->para_default[func_now][iin]);
+	    free((void*)G__p_ifunc->para_def[func_now][iin]);
+	    G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
+	    G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
+          }
+          else {
+	    G__p_ifunc->para_default[func_now][iin]
+	      = ifunc->para_default[iexist][iin];
+	    G__p_ifunc->para_def[func_now][iin]
+	      = ifunc->para_def[iexist][iin];
+	    ifunc->para_default[iexist][iin]=(G__value*)(0);
+	    ifunc->para_def[iexist][iin]=(char*)NULL;
+	  }
+	}
+	if(1==ifunc->ispurevirtual[iexist]) {
+	  G__p_ifunc->ispurevirtual[func_now]=ifunc->ispurevirtual[iexist];
+	  if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
+	}
+	else if(1==G__p_ifunc->ispurevirtual[func_now]) {
+	  ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
+	}
+	{
+	  struct G__ifunc_table *store_G__p_ifunc = G__p_ifunc;
+	  G__memfunc_next();
+	  G__p_ifunc = store_G__p_ifunc;
+        }
+#else /* 1706 */
+	ifunc->ansi[iexist]=G__p_ifunc->ansi[func_now];
+	if(-1==G__p_ifunc->para_nu[func_now]) paranu=0;
+	else paranu=ifunc->para_nu[iexist];
+#ifndef G__OLDIMPLEMENTATION509
+	if(0==ifunc->ansi[iexist]) 
+	  ifunc->para_nu[iexist] = G__p_ifunc->para_nu[func_now];
+#else
+	/* if(0==ifunc->ansi[iexist]) ifunc->para_nu[iexist] = -1; */
+#endif
+	ifunc->type[iexist]=G__p_ifunc->type[func_now];
+	ifunc->p_tagtable[iexist]=G__p_ifunc->p_tagtable[func_now];
+	ifunc->p_typetable[iexist]=G__p_ifunc->p_typetable[func_now];
+	ifunc->reftype[iexist]=G__p_ifunc->reftype[func_now];
+	ifunc->isconst[iexist]|=G__p_ifunc->isconst[func_now];
+#ifndef G__OLDIMPLEMENTATION1250
+	ifunc->isexplicit[iexist]|=G__p_ifunc->isexplicit[func_now];
+#endif
+	for(iin=0;iin<paranu;iin++) {
+	  ifunc->para_reftype[iexist][iin]
+	    =G__p_ifunc->para_reftype[func_now][iin];
+	  ifunc->para_p_typetable[iexist][iin]
+	    =G__p_ifunc->para_p_typetable[func_now][iin];
+	  if(G__p_ifunc->para_default[func_now][iin]) {
+	    G__genericerror("Error: Redefinition of default argument");
+	    if(-1!=(long)G__p_ifunc->para_default[func_now][iin])
+	      free((void*)G__p_ifunc->para_default[func_now][iin]);
+	    free((void*)G__p_ifunc->para_def[func_now][iin]);
+	  }
+	  G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
+	  G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
+	  if(ifunc->para_name[iexist][iin]) {
+	    if(G__p_ifunc->para_name[func_now][iin]) {
+	      free((void*)G__p_ifunc->para_name[func_now][iin]);
+	      G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+	    }
+	  }
+	  else {
+	    ifunc->para_name[iexist][iin]=G__p_ifunc->para_name[func_now][iin];
+	    G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+	  }
+	}
+	ifunc->entry[iexist]=G__p_ifunc->entry[func_now];
+#ifndef G__OLDIMPLEMENTATION768
+#ifndef G__PHILIPPE6
+	/* The copy in previous get the wrong tp2f ... let's restore it */
+	ifunc->entry[iexist].tp2f = (void*)ifunc->funcname[iexist];
+#else
+	G__p_ifunc->entry[iexist].tp2f = (void*)G__p_ifunc->funcname[iexist];
+#endif
+#endif
+	ifunc->pentry[iexist]= &ifunc->entry[iexist];
+	if(1==ifunc->ispurevirtual[iexist]) {
+	  ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
+	  if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
+	}
+	else if(1==G__p_ifunc->ispurevirtual[func_now]) {
+	  ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
+	}
+#ifndef G__OLDIMPLEMENTATION1543
+	if((ifunc!=G__p_ifunc || iexist!=func_now) && 
+	   G__p_ifunc->funcname[func_now]) {
+	  free((void*)G__p_ifunc->funcname[func_now]);
+	  G__p_ifunc->funcname[func_now] = (char*)NULL;
+	}
+#endif
+#endif /* 1706 */
+      } /* of if(G__p_ifunc->entry[func_now].p) */
+      else {
+	/* Entry not used, must free allocated default argument buffer */
+	if(1==G__p_ifunc->ispurevirtual[func_now]) {
+	  if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
+	}
+	paranu=G__p_ifunc->para_nu[func_now];
+	for(iin=0;iin<paranu;iin++) {
 	  if(G__p_ifunc->para_name[func_now][iin]) {
 	    free((void*)G__p_ifunc->para_name[func_now][iin]);
 	    G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
 	  }
+	  if(G__p_ifunc->para_default[func_now][iin] && 
+	     (&G__default_parameter)!=G__p_ifunc->para_default[func_now][iin]) {
+	    free((void*)G__p_ifunc->para_default[func_now][iin]);
+	    G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
+	    free((void*)G__p_ifunc->para_def[func_now][iin]);
+	    G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
+	  }
 	}
-	else {
-	  ifunc->para_name[iexist][iin]=G__p_ifunc->para_name[func_now][iin];
-	  G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
-	}
-      }
-      ifunc->entry[iexist]=G__p_ifunc->entry[func_now];
-#ifndef G__OLDIMPLEMENTATION768
-#ifndef G__PHILIPPE6
-      /* The copy in previous get the wrong tp2f ... let's restore it */
-      ifunc->entry[iexist].tp2f = (void*)ifunc->funcname[iexist];
-#else
-      G__p_ifunc->entry[iexist].tp2f = (void*)G__p_ifunc->funcname[iexist];
-#endif
-#endif
-      ifunc->pentry[iexist]= &ifunc->entry[iexist];
-      if(1==ifunc->ispurevirtual[iexist]) {
-	ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
-	if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
-      }
-      else if(1==G__p_ifunc->ispurevirtual[func_now]) {
-	ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
-      }
 #ifndef G__OLDIMPLEMENTATION1543
-      if((ifunc!=G__p_ifunc || iexist!=func_now) && 
-	 G__p_ifunc->funcname[func_now]) {
-	free((void*)G__p_ifunc->funcname[func_now]);
-	G__p_ifunc->funcname[func_now] = (char*)NULL;
-      }
-#endif
-    } /* of if(G__p_ifunc->entry[func_now].p) */
-    else {
-      /* Entry not used, must free allocated default argument buffer */
-      if(1==G__p_ifunc->ispurevirtual[func_now]) {
-	if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
-      }
-      paranu=G__p_ifunc->para_nu[func_now];
-      for(iin=0;iin<paranu;iin++) {
-	if(G__p_ifunc->para_name[func_now][iin]) {
-	  free((void*)G__p_ifunc->para_name[func_now][iin]);
-	  G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+	if((ifunc!=G__p_ifunc || iexist!=func_now) && 
+	   G__p_ifunc->funcname[func_now]) {
+	  free((void*)G__p_ifunc->funcname[func_now]);
+	  G__p_ifunc->funcname[func_now] = (char*)NULL;
 	}
-	if(G__p_ifunc->para_default[func_now][iin] && 
-	   (&G__default_parameter)!=G__p_ifunc->para_default[func_now][iin]) {
-	  free((void*)G__p_ifunc->para_default[func_now][iin]);
-	  G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
-	  free((void*)G__p_ifunc->para_def[func_now][iin]);
-	  G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
-	}
-      }
-#ifndef G__OLDIMPLEMENTATION1543
-      if((ifunc!=G__p_ifunc || iexist!=func_now) && 
-	 G__p_ifunc->funcname[func_now]) {
-	free((void*)G__p_ifunc->funcname[func_now]);
-	G__p_ifunc->funcname[func_now] = (char*)NULL;
-      }
 #endif
-    }
-    G__func_page=ifunc->page;
-    G__func_now = iexist;
-    G__p_ifunc=ifunc;
-  } /* of if(ifunc) */
-  else if((G__p_ifunc->entry[func_now].p || G__p_ifunc->ansi[func_now] ||
-	  G__nonansi_func || 
-	  G__globalcomp<G__NOLINK || G__p_ifunc->friendtag[func_now])
+#ifndef G__OLDIMPLEMENTATION1706
+        G__func_page=ifunc->page;
+        G__func_now = iexist;
+        G__p_ifunc=ifunc;
+#endif /* 1706 */
+      }
+#ifdef G__OLDIMPLEMENTATION1706
+      G__func_page=ifunc->page;
+      G__func_now = iexist;
+      G__p_ifunc=ifunc;
+#endif /* 1706 */
+    } /* of if(ifunc) */
+    else if((G__p_ifunc->entry[func_now].p || G__p_ifunc->ansi[func_now] ||
+	     G__nonansi_func || 
+	     G__globalcomp<G__NOLINK || G__p_ifunc->friendtag[func_now])
 #ifndef G__OLDIMPLEMENTATION1404
-	  /* This block is skipped only when compicated template 
-	   * instantiation is done during reading argument list 
-	   * 'f(vector<int> &x) { }' */
-	  && (store_ifunc_tmp==G__p_ifunc && func_now==G__p_ifunc->allifunc) 
+	    /* This block is skipped only when compicated template 
+	     * instantiation is done during reading argument list 
+	     * 'f(vector<int> &x) { }' */
+#ifdef G__OLDIMPLEMENTATION1706
+	    /* with 1706, do not skip this block with template instantiation
+	     * in function argument. Do not know exactly why... */
+	    && (store_ifunc_tmp==G__p_ifunc && func_now==G__p_ifunc->allifunc) 
 #endif
-	  ) {
-    /* increment allifunc */
-    ++G__p_ifunc->allifunc;
-    
-    /* Allocate and initialize function table list if needed */
-    if(G__p_ifunc->allifunc==G__MAXIFUNC) {
-      G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
-      G__p_ifunc->next->allifunc=0;
-      G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
-      G__p_ifunc->next->page = G__p_ifunc->page+1;
-#ifndef G__OLDIMPLEMENTATION1563
+#endif
+	    ) {
+#ifndef G__OLDIMPLEMENTATION1706
       {
-	int i,j;
-	for (i = 0; i < G__MAXIFUNC; i++) {   
-#ifndef G__OLDIMPLEMENTATION834
-	  for (j = 0; j < G__MAXFUNCPARA2; j++) 
-	    G__p_ifunc->next->para_p_tagtable[i][j] = 0;
-#else
-	  for (j = 0; j < G__MAXFUNCPARA; j++)
-	    G__p_ifunc->next->para_p_tagtable[i][j] = 0;
-#endif
-	}
+	struct G__ifunc_table *store_G__p_ifunc = G__p_ifunc;
+	G__memfunc_next();
+	G__p_ifunc = store_G__p_ifunc;
       }
+#else /* 1706 */
+      /* increment allifunc */
+      ++G__p_ifunc->allifunc;
+      
+      /* Allocate and initialize function table list if needed */
+      if(G__p_ifunc->allifunc==G__MAXIFUNC) {
+	G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+	G__p_ifunc->next->allifunc=0;
+	G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
+	G__p_ifunc->next->page = G__p_ifunc->page+1;
+#ifndef G__OLDIMPLEMENTATION1563
+	{
+	  int i,j;
+	  for (i = 0; i < G__MAXIFUNC; i++) {   
+#ifndef G__OLDIMPLEMENTATION834
+	    for (j = 0; j < G__MAXFUNCPARA2; j++) 
+	      G__p_ifunc->next->para_p_tagtable[i][j] = 0;
+#else
+	    for (j = 0; j < G__MAXFUNCPARA; j++)
+	      G__p_ifunc->next->para_p_tagtable[i][j] = 0;
+#endif
+	  }
+	}
 #endif
 #ifdef G__NEWINHERIT
-      G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
+	G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
-      {
-	int ix;
-	for(ix=0;ix<G__MAXIFUNC;ix++) 
-	  G__p_ifunc->next->funcname[ix]=(char*)NULL;
-      }
+	{
+	  int ix;
+	  for(ix=0;ix<G__MAXIFUNC;ix++) {
+	    G__p_ifunc->next->funcname[ix]=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1706
+	    G__p_ifunc->next->override_ifunc[ix]=(struct G__ifunc_table*)NULL;
+	    G__p_ifunc->next->override_ifn[ix] = 0
+	    G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	    G__p_ifunc->masking_ifn[ix] = 0;
 #endif
-    }
-  }
-  /* else: default parameter does not exists in K&R style 
-   * no need to free default parameter buffer */
-
+	  }
+	}
+#endif
+      }
+#endif /* 1706 */
+    } /* if(ifunc) */
+    /* else: default parameter does not exists in K&R style 
+     * no need to free default parameter buffer */
+    
   } /* of G__ifile.filenum<G__nfile */
   else {
     G__fprinterr(G__serr,"Limitation: Function can not be defined in a command line or a tempfile\n");
@@ -7518,8 +7688,19 @@ int *piexist;
     for(i=0;i<ifunc->allifunc;i++) {
       if('~'==ifunc_now->funcname[allifunc][0] &&
 	 '~'==ifunc->funcname[i][0]) { /* destructor matches with ~ */
+#ifdef G__OLDIMPLEMENTATION1706_YET 
+	/* This change causes problem with virtual func definition */
+	if(ifunc!=ifunc_now || allifunc!=i) {
+	  *piexist = i;
+	  return(ifunc);
+	}
+	else {
+	  return((struct G__ifunc_table*)NULL);
+	}
+#else
 	*piexist = i;
 	return(ifunc);
+#endif
       }
       if(ifunc_now->hash[allifunc]!=ifunc->hash[i] ||
 	 strcmp(ifunc_now->funcname[allifunc],ifunc->funcname[i]) != 0 ||
@@ -7546,8 +7727,19 @@ int *piexist;
 	}
       }
       if(j==paran) { /* all matched */
+#ifdef G__OLDIMPLEMENTATION1706_YET
+	/* This change causes problem with virtual func definition */
+	if(ifunc!=ifunc_now || allifunc!=i) {
+	  *piexist = i;
+	  return(ifunc);
+	}
+	else {
+	  return((struct G__ifunc_table*)NULL);
+	}
+#else
 	*piexist = i;
 	return(ifunc);
+#endif
       }
     }
     ifunc=ifunc->next;
@@ -7704,7 +7896,7 @@ int funcmatch;
 	    case 2: /* default parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," default%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(G__serr," default%d %c tagnum%d %p : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -7719,7 +7911,7 @@ int funcmatch;
 	    case 1: /* match this one, next parameter */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," match%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(G__serr," match%d %c tagnum%d %p : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]
@@ -7738,7 +7930,7 @@ int funcmatch;
 	    case 0: /* unmatch, next function */
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) {
-		G__fprinterr(G__serr," unmatch%d %c tagnum%d %ld : %c tagnum%d %ld\n"
+		G__fprinterr(G__serr," unmatch%d %c tagnum%d %p : %c tagnum%d %d\n"
 			,itemp
 			,p_ifunc->para_type[ifn][itemp]
 			,p_ifunc->para_p_tagtable[ifn][itemp]

@@ -2231,6 +2231,18 @@ int tagnum,typenum;      /* overrides global variables */
 		G__var_type = var_type;
 		G__letvariable(new_name,G__null,&G__global,G__p_local);
 		G__cppconstruct = 0;
+#ifndef G__OLDIMPLEMENTATION1701
+#ifdef G__ASM
+		if(G__asm_noverflow && p_inc>1) {
+#ifdef G__ASM_DBG
+		  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: RESETARYINDEX\n" ,G__asm_cp);
+#endif
+		  G__asm_inst[G__asm_cp]=G__RESETARYINDEX;
+		  G__asm_inst[G__asm_cp+1]= 0;
+		  G__inc_cp_asm(2,0);
+		}
+#endif
+#endif /* 1701 */
 		G__globalvarpointer=G__PVOID;
 #ifndef G__OLDIMPLEMENTATION1073
 		if(G__asm_wholefunction&&G__no_exec_compile) {
@@ -2423,7 +2435,22 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__TEMPLATECLASS
 	    /* G__TEMPLATECLASS Need to evaluate template argument list here */
 #endif
-	    if( temp == strstr(temp,temp1)) flag=1;
+	    if( temp == strstr(temp,temp1)) {
+#ifndef G__OLDIMPLEMENTATION1704
+	      int c,isrc=0;
+	      char buf[G__LONGLINE];
+	      flag=1;
+	      c=G__getstream_template(temp,&isrc,buf,"(");
+	      if('('==c) {
+		c=G__getstream_template(temp,&isrc,buf,")");
+		if(')'==c) {
+		  if(temp[isrc]) flag=0;
+		}
+	      }
+#else
+	      flag=1;
+#endif
+	    }
 	    else if(G__struct.istypedefed[G__tagnum]) {
 	      index=strchr(temp,'(');
 	      if(index) {

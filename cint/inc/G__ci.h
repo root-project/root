@@ -21,14 +21,22 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015056
-#define G__CINTVERSIONSTR  "5.15.56, Sep 4 2002"
+#define G__CINTVERSION      5015058
+#define G__CINTVERSIONSTR  "5.15.58, Sep 16 2002"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
+/* Change 1706, regarding function overriding, is very risky. So, this is
+ * deactivated for now. With this change turned on, loading and unloading 
+ * of interpreted and compiled function can be done more robustly. */
+#define G__OLDIMPLEMENTATION1706
+
+/* Rootcint's default link status has been changed from 5.15.57. 
+ * Define folloing macro if new scheme has problem. */
+/* #define G__OLDIMPLEMENTATION1700 */
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
@@ -638,16 +646,16 @@ typedef int (*G__IgnoreInclude)();
 * Other parameters can be changed while keeping DLL binary compatibility.
 *
 **************************************************************************/
-#ifdef G__LONGBUF 
+#ifdef G__LONGBUF
 #define G__LONGLINE    4096  /* Length of expression */
 #define G__ONELINE     4096  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
-#define G__ONELINE     1024  /* was 256 Length of subexpression,parameter,argument */
+#define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      512  /* was 256 Variable name */
+#define G__MAXNAME      256  /* Variable name */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */
@@ -1092,6 +1100,12 @@ struct G__ifunc_table {
 #ifdef G__OLDIMPLEMENTATION834_YET
   struct G__more_funcarg *more_para[G__MAXIFUNC];
 #endif
+#ifndef G__OLDIMPLEMENTATION1706
+  struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
+  unsigned char          override_ifn[G__MAXIFUNC];
+  struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
+  unsigned char          masking_ifn[G__MAXIFUNC];
+#endif
 };
 
 
@@ -1182,6 +1196,12 @@ struct G__ifunc_table_VMS {
 
 #ifdef G__OLDIMPLEMENTATION834_YET
   struct G__more_funcarg *more_para[G__MAXIFUNC];
+#endif
+#ifndef G__OLDIMPLEMENTATION1706
+  struct G__ifunc_table *override_ifunc[G__MAXIFUNC];
+  unsigned char          override_ifn[G__MAXIFUNC];
+  struct G__ifunc_table *masking_ifunc[G__MAXIFUNC];
+  unsigned char          masking_ifn[G__MAXIFUNC];
 #endif
 };
 #endif
@@ -1602,7 +1622,10 @@ int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 #define G__VAARG_SIZE 1024
 
 typedef struct {
-  char d[G__VAARG_SIZE];
+  union {
+    char d[G__VAARG_SIZE];
+    int i[G__VAARG_SIZE/4];
+  } x;
 } G__va_arg_buf;
 
 
@@ -1619,18 +1642,13 @@ typedef struct {
  *  Args > 8 bytes are passed by reference.  Args > 4 and <= 8 are
  *  right-justified in 8 bytes.  Args <= 4 are right-justified in
  *  4 bytes. 
- *  Because struct is passed by argument and also arguments are located
- *  in decremental order in memory, this platform can not be supported.
  **********************************************/
-#define G__VAARG_NOSUPPORT
+/* #define G__VAARG_NOSUPPORT */
 
 #ifndef G__OLDIMPLEMENTATION1696
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 #endif
-
-#define __WORD_MASK 0xFFFFFFFC
-#define __DW_MASK   0xFFFFFFF8
 
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 /**********************************************
@@ -1644,17 +1662,19 @@ typedef struct {
 #define G__VAARG_PASS_BY_REFERENCE 8
 #endif
 
-#elif defined(__PPC__) || defined(__ppc__) || defined(_AIX) || defined (__APPLE__)
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 /**********************************************
  * PowerPC, AIX and Apple Mac
  **********************************************/
 #define G__VAARG_INC_COPY_N 4
+#define G__VAARG_PASS_BY_REFERENCE 8
 
-#define G__alignof_ppc(objsize)  (objsize>4?16:4)
-#define G__va_rounded_size_ppc(typesize) ((typesize + 3) & ~3)
-#define G__va_align_ppc(AP, objsize)					   \
-     ((((unsigned long)(AP)) + ((G__alignof_ppc(objsize) == 16) ? 15 : 3)) \
-      & ~((G__alignof_ppc(objsize) == 16) ? 15 : 3))
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(__linux)||defined(__linux__))
+/**********************************************
+ * PowerPC, Linux
+ **********************************************/
+#define G__VAARG_INC_COPY_N 4
+#define G__VAARG_PASS_BY_REFERENCE 8
 
 #else
 /**********************************************
@@ -1663,6 +1683,7 @@ typedef struct {
  **********************************************/
 #define G__VAARG_NOSUPPORT
 #define G__VAARG_INC_COPY_N 4
+/* #define G__VAARG_PASS_BY_REFERENCE 8 */
 
 #endif
 

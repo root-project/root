@@ -483,6 +483,17 @@ int G__last_error = 0;
 
 int G__dispmsg = G__DISPALL;
 
+#ifndef G__OLDIMPLEMENTATION1700
+#ifdef G__ROOT
+int G__default_link = 0;
+#else
+int G__default_link = 1;
+#endif
+#endif
+
+/* 1713 */
+int G__gettingspecial = 0;
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

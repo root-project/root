@@ -28,6 +28,12 @@
 #endif
 #endif
 
+
+#ifdef G__OLDIMPLEMENTATION1706
+#define G__OLDIMPLEMENTATION1702
+#define G__OLDIMPLEMENTATION1714
+#endif
+
 #define G__MACROLINK  (-5)
 
 
@@ -1386,6 +1392,9 @@ FILE *hfp;
 	      ) &&
 	     strcmp(memfunc->funcname[ifn],G__struct.name[i])!=0 &&
 	     '~'!=memfunc->funcname[ifn][0]) {
+#ifndef G__OLDIMPLEMENTATION1709
+	    if(memfunc->staticalloc[ifn]) fprintf(hfp,"  static ");
+#endif
 #ifndef G__OLDIMPLEMENTATION1335
 	    fprintf(hfp,"  %s G__PT_%s("
 		    ,G__type2string(memfunc->type[ifn]
@@ -1447,8 +1456,17 @@ FILE *hfp;
       while(memvar) {
 	for(ig15=0;ig15<memvar->allvar;ig15++) {
 	  if(G__PROTECTED==memvar->access[ig15]) {
+#ifndef G__OLDIMPLEMENTATION1709
+	    if(G__AUTO==memvar->statictype[ig15]) 
+	      fprintf(hfp,"  long G__OS_%s(){return((long)(&%s)-(long)this);}\n"
+		      ,memvar->varnamebuf[ig15],memvar->varnamebuf[ig15]);
+	    else
+	      fprintf(hfp,"  static long G__OS_%s(){return((long)(&%s));}\n"
+		      ,memvar->varnamebuf[ig15],memvar->varnamebuf[ig15]);
+#else
 	    fprintf(hfp,"  long G__OS_%s(){return((long)(&%s)-(long)this);}\n"
 		    ,memvar->varnamebuf[ig15],memvar->varnamebuf[ig15]);
+#endif
 	  }
 	}
 	memvar = memvar->next;
@@ -2471,6 +2489,15 @@ FILE *hfp;
 #ifndef G__OLDIMPLEMENTATION1656
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
 #endif
+#ifndef G__OLDIMPLEMENTATION1706
+	    if(0==ifunc->hash[j]) continue;
+#endif
+#ifndef G__OLDIMPLEMENTATION1714
+	    if(-1==ifunc->pentry[j]->line_number
+	       &&0==ifunc->ispurevirtual[j] && ifunc->hash[j] &&
+	       (G__CPPSTUB==ifunc->globalcomp[j]||
+		G__CSTUB==ifunc->globalcomp[j])) continue;
+#endif
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      /* constructor need special handling */
 	      if(0==G__struct.isabstract[i]&&0==isnonpublicnew
@@ -2963,9 +2990,13 @@ struct G__ifunc_table *ifunc;
 #if defined(G__VAARG_COPYFUNC)
 	  fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
-	int i;
-	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
-	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
+	  int i;
+	  for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	    fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+	  int i;
+	  for(i=0;i<100;i++)	
+	    fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
 	  fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -3088,8 +3119,12 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
-	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
+	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+	int i;
+	for(i=0;i<100;i++)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
 	fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -4074,8 +4109,12 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
-	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
+	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+	int i;
+	for(i=0;i<100;i++)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
 	fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -4150,8 +4189,8 @@ struct G__ifunc_table *ifunc;
       fprintf(fp,",libp,%d",k);
 #elif defined(__hpux)
 	int i;
-	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
-	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
+	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
       fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -5661,6 +5700,15 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1656
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
 #endif
+#ifndef G__OLDIMPLEMENTATION1706
+	    if(0==ifunc->hash[j]) continue;
+#endif
+#ifndef G__OLDIMPLEMENTATION1714
+	    if(-1==ifunc->pentry[j]->line_number
+	       &&0==ifunc->ispurevirtual[j] && ifunc->hash[j] &&
+	       (G__CPPSTUB==ifunc->globalcomp[j]||
+		G__CSTUB==ifunc->globalcomp[j])) continue;
+#endif
 	    /* check if constructor */
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      if(G__struct.isabstract[i]) continue;
@@ -6986,7 +7034,91 @@ int isvirtual;
 #endif
 
   /* end */
+
+#ifndef G__OLDIMPLEMENTATION1702
+ {
+   struct G__ifunc_table *ifunc;
+   int iexist;
+   if(-1==G__p_ifunc->tagnum) 
+     ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
+			    ,&G__ifunc,&iexist);
+   else
+     ifunc = G__ifunc_exist(G__p_ifunc,G__func_now
+			    ,G__struct.memfunc[G__p_ifunc->tagnum],&iexist);
+   
+   if(ifunc) {
+#ifndef G__OLDIMPLEMENTATION1706
+     G__p_ifunc->override_ifunc[G__func_now] = ifunc;
+     G__p_ifunc->override_ifn[G__func_now] = (unsigned int)iexist;
+     ifunc->masking_ifunc[iexist] = G__p_ifunc;
+     ifunc->masking_ifn[iexist] = (unsigned char)iexist;
+     ifunc->hash[iexist] = 0; /* ifunc->hash[iexist]+1; */
+     G__memfunc_next();
+#else
+     /* Overriding old function definition */
+     int func_now = G__func_now;
+     int paranu,iin;
+     /* Overriding old function definition */
+     ifunc->ansi[iexist]=G__p_ifunc->ansi[func_now];
+     if(-1==G__p_ifunc->para_nu[func_now]) paranu=0;
+     else paranu=ifunc->para_nu[iexist];
+     if(0==ifunc->ansi[iexist]) 
+       ifunc->para_nu[iexist] = G__p_ifunc->para_nu[func_now];
+     ifunc->type[iexist]=G__p_ifunc->type[func_now];
+     ifunc->p_tagtable[iexist]=G__p_ifunc->p_tagtable[func_now];
+     ifunc->p_typetable[iexist]=G__p_ifunc->p_typetable[func_now];
+     ifunc->reftype[iexist]=G__p_ifunc->reftype[func_now];
+     ifunc->isconst[iexist]|=G__p_ifunc->isconst[func_now];
+     ifunc->isexplicit[iexist]|=G__p_ifunc->isexplicit[func_now];
+     for(iin=0;iin<paranu;iin++) {
+       ifunc->para_reftype[iexist][iin]
+	 =G__p_ifunc->para_reftype[func_now][iin];
+       ifunc->para_p_typetable[iexist][iin]
+	 =G__p_ifunc->para_p_typetable[func_now][iin];
+       if(G__p_ifunc->para_default[func_now][iin]) {
+	 if(-1!=(long)G__p_ifunc->para_default[func_now][iin])
+	   free((void*)G__p_ifunc->para_default[func_now][iin]);
+	 free((void*)G__p_ifunc->para_def[func_now][iin]);
+       }
+       G__p_ifunc->para_default[func_now][iin]=(G__value*)NULL;
+       G__p_ifunc->para_def[func_now][iin]=(char*)NULL;
+       if(ifunc->para_name[iexist][iin]) {
+	 if(G__p_ifunc->para_name[func_now][iin]) {
+	   free((void*)G__p_ifunc->para_name[func_now][iin]);
+	   G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+	 }
+       }
+       else {
+	 ifunc->para_name[iexist][iin]=G__p_ifunc->para_name[func_now][iin];
+	 G__p_ifunc->para_name[func_now][iin]=(char*)NULL;
+       }
+     }
+     ifunc->entry[iexist]=G__p_ifunc->entry[func_now];
+     /* The copy in previous get the wrong tp2f ... let's restore it */
+     ifunc->entry[iexist].tp2f = (void*)ifunc->funcname[iexist];
+     ifunc->pentry[iexist]= &ifunc->entry[iexist];
+     if(1==ifunc->ispurevirtual[iexist]) {
+       ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
+       if(G__tagdefining>=0) --G__struct.isabstract[G__tagdefining];
+     }
+     else if(1==G__p_ifunc->ispurevirtual[func_now]) {
+       ifunc->ispurevirtual[iexist]=G__p_ifunc->ispurevirtual[func_now];
+     }
+     if((ifunc!=G__p_ifunc || iexist!=func_now) && 
+	G__p_ifunc->funcname[func_now]) {
+       free((void*)G__p_ifunc->funcname[func_now]);
+       G__p_ifunc->funcname[func_now] = (char*)NULL;
+     }
+#endif
+   }
+   else {
+     G__memfunc_next();
+   }
+ }
+#else
   G__memfunc_next();
+#endif
+
 #endif
   return(0);
 }
@@ -7157,13 +7289,21 @@ int G__memfunc_next()
     G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
     G__p_ifunc->next->page = G__p_ifunc->page+1;
     G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
-
+    
     /* set next G__p_ifunc */
     G__p_ifunc = G__p_ifunc->next;
 #ifndef G__OLDIMPLEMENTATION1543
     {
       int ix;
-      for(ix=0;ix<G__MAXIFUNC;ix++) G__p_ifunc->funcname[ix] = (char*)NULL;
+      for(ix=0;ix<G__MAXIFUNC;ix++) {
+	G__p_ifunc->funcname[ix] = (char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1706
+	G__p_ifunc->override_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	G__p_ifunc->override_ifn[ix] = 0;
+	G__p_ifunc->masking_ifunc[ix] = (struct G__ifunc_table*)NULL;
+	G__p_ifunc->masking_ifn[ix] = 0;
+#endif
+      }
     }
 #endif
   }
@@ -7404,6 +7544,14 @@ int link_stub;
     G__store_globalcomp = store_globalcomp3;
     G__prerun = store_prerun;
     if(';'!=c) G__fignorestream(";");
+    return;
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1700
+  if(strncmp(buf,"default",3)==0) {
+    c=G__read_setmode(&G__default_link);
+    if('\n'!=c&&'\r'!=c) G__fignoreline();
     return;
   }
 #endif

@@ -47,22 +47,14 @@ char baseaccess;
      G__CPPLINK!=G__struct.iscpplink[to_tagnum]) {
     int warn = 1;
 #ifdef G__ROOT
-    if (!strcmp(G__fulltagname(from_tagnum,1), "TSelector")) 
-      warn = 0;
+    if (!strcmp(G__fulltagname(from_tagnum,1), "TSelector")) warn = 0;
 #endif
     if(G__dispmsg>=G__DISPWARN && warn) {
-#ifndef G__OLDIMPLEMENTATION1368
       G__fprinterr(G__serr,
 		   "Warning: Interpreted class %s derived from"
 		   ,G__fulltagname(to_tagnum,1));
       G__fprinterr(G__serr,
 		   " precompiled class %s",G__fulltagname(from_tagnum,1));
-#else
-      G__fprinterr(G__serr,
-		   "Warning: precompiled class %s ",G__fulltagname(from_tagnum,1));
-      G__fprinterr(G__serr,
-		   "inherited from interpreted class %s",G__fulltagname(to_tagnum,1));
-#endif
       G__printlinenum();
       G__fprinterr(G__serr,"!!!There are some limitations regarding compiled/interpreted class inheritance\n");
     }

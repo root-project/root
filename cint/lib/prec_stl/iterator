@@ -354,6 +354,8 @@ operator+(__normal_iterator<_Iterator, _Container>::difference_type __n,
 { return __normal_iterator<_Iterator, _Container>(__i.base() + __n); }
 
 #else // (G__GNUC_MINOR>=1) 
+
+#ifdef G__OLDIMPLEMENTATION1703
 // for g++ 3.1,3.2
 namespace __gnu_cxx
 {  
@@ -536,6 +538,7 @@ namespace __gnu_cxx
 	    const __normal_iterator<_Iterator, _Container>& __i)
   { return __normal_iterator<_Iterator, _Container>(__i.base() + __n); }
 } // namespace __gnu_cxx
+#endif
 
 #endif // G__GNUC_MINOR
 

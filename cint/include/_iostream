@@ -73,3 +73,10 @@ int G__ateval(const unsigned char x) {return(0);}
 int G__ateval(const unsigned short x) {return(0);}
 int G__ateval(const unsigned int x) {return(0);}
 int G__ateval(const unsigned long x) {return(0);}
+
+#ifdef G__ROOT
+int G__ateval(const TString& x) {
+  std::cout << "(TString " << &x << ")\"" << x << "\"" << std::endl;
+  return(1);
+}
+#endif

@@ -1751,7 +1751,6 @@ char *item;
   G__value reg;
   /* char name[G__MAXNAME], *p; */ /* to handle $xxx.yyy $xxx->yyy */
   /* to prevent recursive calling of G__GetSpecialObject() */
-  static int gettingspecial = 0; 
   
   
   switch(item[0]) {
@@ -1878,7 +1877,7 @@ char *item;
        * put result3
        **************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD '%c' from %lx\n"
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD '%c' from %x\n"
 			     ,G__asm_cp,(char)G__int(result3)
 			     ,G__asm_dt);
 #endif
@@ -1944,7 +1943,7 @@ char *item;
       if(G__GetSpecialObject && G__GetSpecialObject != G__getreserved) {
 #ifndef G__FONS81
 	/* append $ to object and try to find it again */
-	if (!gettingspecial && item[0] != '$') {
+	if (!G__gettingspecial && item[0] != '$') {
 	  char sbuf[G__LONGLINE];
 #ifndef G__OLDIMPLEMENTATION1379
 	  int store_return = G__return;
@@ -1955,10 +1954,10 @@ char *item;
 	  if(G__no_exec_compile && G__asm_noverflow) G__abortbytecode();
 #endif
 	  sprintf(sbuf, "$%s", item);
-	  gettingspecial = 1;
+	  G__gettingspecial = 1;
           G__var_type = store_var_typeB; /* BUG FIX ROOT Special object */
 	  result3 = G__getitem(sbuf);
-	  gettingspecial = 0;
+	  G__gettingspecial = 0;
 #ifndef G__OLDIMPLEMENTATION1379
 #ifndef G__OLDIMPLEMENTATION1420
 	  if(G__const_noerror) {

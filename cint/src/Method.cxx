@@ -398,6 +398,9 @@ int G__MethodInfo::Next()
 {
   if(handle) {
     struct G__ifunc_table *ifunc;
+#ifndef G__OLDIMPLEMENTATION1706
+  nextone:
+#endif
     ifunc = (struct G__ifunc_table*)handle;
     ++index;
     if(ifunc->allifunc<=index) {
@@ -418,6 +421,9 @@ int G__MethodInfo::Next()
       }
     } 
     if(IsValid()) {
+#ifndef G__OLDIMPLEMENTATION1706
+      if(0==ifunc->hash[index]) goto nextone;
+#endif
       type.type=ifunc->type[index];
       type.tagnum=ifunc->p_tagtable[index];
       type.typenum=ifunc->p_typetable[index];

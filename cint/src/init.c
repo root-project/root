@@ -229,7 +229,9 @@ static void G__do_p2fsetup()
     setuplist=setuplist->next;
   }
 #ifndef G__OLDIMPLEMENTATION874
+#ifdef G__OLDIMPLEMENTATION1707
   G__free_p2fsetup();
+#endif
 #endif
 }
 #endif
@@ -992,10 +994,25 @@ char *argv[] ;
     case 'c': /* global compile */
       /* G__CPPLINK1
        * c-1 : create global variable & function information from
-       *      C++ header file
+       *      C++ header file. Default link on for pure cint, off for ROOT
        * c-2 : create global variable & function information from
-       *      C header file   */
+       *      C header file. Default link on for pure cint, off for ROOT
+       * c-10 : create global variable & function information from
+       *      C++ header file. Default link off
+       * c-20 : create global variable & function information from
+       *      C header file. Default link off
+       * c-11 : create global variable & function information from
+       *      C++ header file. Default link on
+       * c-21 : create global variable & function information from
+       *      C header file. Default link on
+       */
       G__globalcomp=atoi(optarg);
+#ifndef G__OLDIMPLEMENTATION1700
+      if(G__globalcomp<=10) {
+	G__default_link = abs(G__globalcomp)%10;
+	G__globalcomp /= 10;
+      }
+#endif
       linkflag=1;
       if(!linkfilename) {
         switch(G__globalcomp) {
@@ -1082,6 +1099,10 @@ char *argv[] ;
       G__more(G__sout,"  -b [line] : set break line\n");
       G__more(G__sout,"* -c -1: make C++ precompiled interface method files\n");
       G__more(G__sout,"* -c -2: make C precompiled interface method files\n");
+      G__more(G__sout,"* -c -10: make C++ precompiled interface method files. Default link off\n");
+      G__more(G__sout,"* -c -20: make C precompiled interface method files. Default link off\n");
+      G__more(G__sout,"* -c -11: make C++ precompiled interface method files. Default link on\n");
+      G__more(G__sout,"* -c -21: make C precompiled interface method files. Default link on\n");
 #ifndef G__OLDIMPLEMENTATION970
       G__more(G__sout,"  -C : copy src to $TMPDIR so that src can be changed during cint run\n");
 #endif

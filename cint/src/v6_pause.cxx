@@ -692,7 +692,7 @@ void G__rewinddictionary()
 #endif
     }
     else {
-      G__fprinterr(G__serr,"!!!Dictionary position not recorvered because G__unloadfile() in macro!!!\n");
+      G__fprinterr(G__serr,"!!!Dictionary position not recorvered because G__unloadfile() is used in the macro!!!\n");
     }
   }
 #ifndef G__OLDIMPLEMENTATION1422
@@ -1074,7 +1074,7 @@ int G__pause()
   char cintname[G__ONELINE];
   char filename[G__ONELINE];
 #endif
-  char command[G__ONELINE];
+  char command[G__LONGLINE];
   char prompt[G__ONELINE];
   int ignore=G__PAUSE_NORMAL;
   int more = 0;
@@ -1262,7 +1262,7 @@ int G__pause()
 ******************************************************************/
 int G__update_stdio()
 {
-  char command[G__ONELINE];
+  char command[G__LONGLINE];
 
 #ifndef G__OLDIMPLEMENTATION713
   G__intp_sout = G__sout;
@@ -1607,8 +1607,8 @@ int  *err;
 G__value *rslt;
 {
   FILE *tempfp;   /* used for input dump file */
-  char command[G__ONELINE];
-  char syscom[G__ONELINE];
+  char command[G__LONGLINE];
+  char syscom[G__LONGLINE];
   char editor[64];
   int temp,temp1,temp2;
   int index = -1;

@@ -119,8 +119,12 @@ void G__CallFunc::SetArgArray(long *p)
     G__MethodArgInfo arginfo;
     arginfo.Init(method);
 #endif
+#ifndef G__OLDIMPLEMENTATION1707
+    para.paran=0;
+#endif
     for(i=0;i<n;i++) {
-      if (p[i]) { 
+#ifndef G__OLDIMPLEMENTATION1707
+      if (p[i]) {
         para.para[i].obj.i = p[i];
         para.para[i].ref = p[i];
         // Following data shouldn't matter, but set just in case
@@ -128,14 +132,30 @@ void G__CallFunc::SetArgArray(long *p)
         arginfo.Next();
         para.para[i].type = arginfo.Type()->Type();
 #else
-        para.para[i].type = 'l';
+	para.para[i].type = 'l';
 #endif
         para.para[i].tagnum = -1;
         para.para[i].typenum = -1;
         para.paran=i+1;
       } else
-         break;
+        break;
+#else /* 1707 */
+      para.para[i].obj.i = p[i];
+      para.para[i].ref = p[i];
+      // Following data shouldn't matter, but set just in case
+#ifndef G__OLDIMPLEMENTATION1220 /* NEEDEDSINCE_FIX1167 */
+      arginfo.Next();
+      para.para[i].type = arginfo.Type()->Type();
+#else
+      para.para[i].type = 'l';
+#endif
+      para.para[i].tagnum = -1;
+      para.para[i].typenum = -1;
+#endif /* 1707 */
     }
+#ifdef G__OLDIMPLEMENTATION1707
+    para.paran=n;
+#endif
   }
   else {
     G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() must be initialized with 'G__CallFunc::SetFunc(G__ClassInfo* cls,char* fname,char* args,long* poffset)' first\n");

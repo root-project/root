@@ -6322,7 +6322,14 @@ int parameter00;
   G__bitfield=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1700
+  if(-1==var->tagnum)
+    var->globalcomp[var->allvar] = G__default_link?G__globalcomp:G__NOLINK;
+  else
+    var->globalcomp[var->allvar] = G__globalcomp;
+#else
   var->globalcomp[var->allvar] = G__globalcomp;
+#endif
   
   /***************************************************
    * store maximum array parameters into var->varlabel[][]
