@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.60 2003/04/13 15:30:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.61 2003/05/06 13:14:47 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -117,6 +117,8 @@ ClassImp(TF1)
 // This also apply to the case of a static class function.
 //
 //------------------------------------------------------------------------
+
+TF1 *TF1::fgCurrent = 0;
 
 //______________________________________________________________________________
 TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
@@ -794,6 +796,8 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 //   InitArgs should be called everytime these addresses change.
 //
 
+   fgCurrent = this;
+   
    if (fType == 0) return TFormula::EvalPar(x,params);
    Double_t result = 0;
    if (fType == 1)  {
@@ -835,6 +839,14 @@ void TF1::FixParameter(Int_t ipar, Double_t value)
    SetParameter(ipar,value);
    if (value != 0) SetParLimits(ipar,value,value);
    else            SetParLimits(ipar,1,1);
+}
+
+
+//______________________________________________________________________________
+TF1 *TF1::GetCurrent()
+{
+// static function returning the current function being processed
+   return fgCurrent;
 }
 
 
@@ -1866,6 +1878,8 @@ void TF1::Paint(Option_t *option)
    Int_t i;
    Double_t xv[1];
 
+   fgCurrent = this;
+   
    TString opt = option;
    opt.ToLower();
    Double_t xmin=fXmin, xmax=fXmax, pmin=fXmin, pmax=fXmax;
@@ -2083,6 +2097,16 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->Draw("
          <<quote<<option<<quote<<");"<<endl;
    }
+}
+
+//______________________________________________________________________________
+void TF1::SetCurrent(TF1 *f1) 
+{
+   // static function setting the current function.
+   // the current function may be accessed in static C-like functions
+   // when fitting or painting a function.
+   
+   fgCurrent = f1;
 }
 
 //______________________________________________________________________________

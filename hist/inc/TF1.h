@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.33 2003/04/13 15:30:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.34 2003/05/06 13:14:46 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -70,7 +70,8 @@ protected:
    Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
-   
+   static TF1   *fgCurrent;   //pointer to current function being processed
+      
 public:
     // TF1 status bits
     enum {
@@ -154,9 +155,11 @@ public:
    virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     Update();
 
+   static  TF1     *GetCurrent();
    static  void     RejectPoint(Bool_t reject=kTRUE);
    static  Bool_t   RejectedPoint();
-   
+   static  void     SetCurrent(TF1 *f1);
+      
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 
