@@ -1,6 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.3 2004/02/19 16:53:51 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.4 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
-// ****It needs more fixes*****
+
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -46,7 +46,7 @@ struct markerDescription_t {
 };
 
 static markerDescription_t  Markers[] = {
-   
+
    {"marker1.xpm", "1", 1},
    {"marker2.xpm", "2", 2},
    {"marker3.xpm", "3", 3},
@@ -91,16 +91,16 @@ TGedMarkerPopup::TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t m
    Pixel_t white;
    gClient->GetColorByName("white", white); // white background
    SetBackgroundColor(white);
-   
+
    SetLayoutManager(new TGTileLayout(this, 1));
-  
+
    for (int i = 0; Markers[i].filename != 0; i++) {
-      AddFrame(b = new TGPictureButton(this, Markers[i].filename, 
-               Markers[i].number, TGButton::GetDefaultGC()(), kSunkenFrame), 
+      AddFrame(b = new TGPictureButton(this, Markers[i].filename,
+               Markers[i].number, TGButton::GetDefaultGC()(), kSunkenFrame),
                new TGLayoutHints(kLHintsLeft, 14, 14, 14, 14));
       b->SetToolTipText(Markers[i].name);
    }
-   
+
    Resize(74, 90);
    MapSubwindows();
 }
@@ -121,7 +121,7 @@ Bool_t TGedMarkerPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
    if (parm2)
       ;              // no warning
-   
+
    return kTRUE;
 }
 
@@ -164,8 +164,8 @@ void TGedMarkerSelect::DoRedraw()
       y = fBorderWidth + 2;  // 1;
       h = fHeight - (fBorderWidth * 2) - 4;  // -3;  // 14
       w = h;
-      if (fState == kButtonDown) { 
-         ++x; ++y; 
+      if (fState == kButtonDown) {
+         ++x; ++y;
       }
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x, y, w - 1, h - 1);
 
@@ -201,8 +201,8 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 void TGedMarkerSelect::SavePrimitive(ofstream &out, Option_t *)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
-   
+
    out <<"   TGedMarkerSelect *";
    out << GetName() << " = new TGedMarkerSelect(" << fParent->GetName()
        << "," << fMarkerStyle << "," << WidgetId() << ");" << endl;
-} 
+}

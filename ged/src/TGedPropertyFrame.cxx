@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.3 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPropertyFrame.cxx,v 1.4 2004/03/22 16:03:20 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 15/08/2003
 
 /*************************************************************************
@@ -40,7 +40,6 @@
 ClassImp(TGedPropertyFrame)
 
 //______________________________________________________________________________
-
 TGedPropertyFrame::TGedPropertyFrame(const TGWindow *p, TCanvas* canvas) :
       TGCompositeFrame(p, 110, 20, 0)
 {
@@ -79,7 +78,7 @@ void TGedPropertyFrame::ConnectToCanvas(TCanvas *c)
    TQObject::Connect(c, "Selected(TPad*,TObject*,Int_t)", "TGedPropertyFrame",
                      this, "SetModel(TPad*,TObject*,Int_t)");
 
-   // re-emit the last Selected() signal to have property frames 
+   // re-emit the last Selected() signal to have property frames
    // of the last selected object in the pad editor when the editor shows up
    c->Selected((TPad *)c->GetSelectedPad(), c->GetSelected(), c->GetEvent());
 }

@@ -1,6 +1,5 @@
-// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGedPatternSelect.h,v 1.2 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
-// **** it needs more fixes ***** 
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -55,7 +54,7 @@ protected:
    const TGWindow  *fMsgWindow;
 
 public:
-   TGedPopup(const TGWindow* p, const TGWindow *m, UInt_t w, UInt_t h, 
+   TGedPopup(const TGWindow* p, const TGWindow *m, UInt_t w, UInt_t h,
              UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGedPopup() { }
 
@@ -76,9 +75,11 @@ protected:
    static TGGC    *fgGC;
    TGToolTip      *fTip;         // tool tip associated with a button
    char            fTipText[5];
-   
+
+   virtual void    DoRedraw();
+
 public:
-   TGedPatternFrame(const TGWindow *p, Style_t pattern, Int_t width = 40, 
+   TGedPatternFrame(const TGWindow *p, Style_t pattern, Int_t width = 40,
                     Int_t height = 20);
    virtual ~TGedPatternFrame() { delete fTip; }
 
@@ -88,7 +89,6 @@ public:
 
    void            SetActive(Bool_t in) { fActive = in; gClient->NeedRedraw(this); }
    Style_t         GetPattern() const { return fPattern; }
-   void            DoRedraw();
    static void     SetFillStyle(TGGC* gc, Style_t fstyle); //set fill style for given GC
 
    ClassDef(TGedPatternFrame,0)  //pattern frame
@@ -107,7 +107,7 @@ public:
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void           SetActive(Int_t newat);
-   Int_t          GetActive() { return fActive; }
+   Int_t          GetActive() const { return fActive; }
 
    ClassDef(TGedPatternSelector,0)  //select pattern frame
 };
@@ -144,7 +144,7 @@ public:
    virtual void   Enable();
    virtual void   Disable();
    virtual void   SetPopup(TGedPopup* p) { fPopup = p; }  // popup will be deleted in destructor.
-   
+
    ClassDef(TGedSelect,0)  //selection check-button
 };
 
@@ -165,7 +165,7 @@ public:
    virtual void   PatternSelected() { Emit("PatternSelected(Style_t)", GetPattern()); }  // *SIGNAL*
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   SavePrimitive(ofstream &out, Option_t *);
-   
+
    ClassDef(TGedPatternSelect,0)  //pattern selection check-button
 };
 

@@ -1,7 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.2 2004/02/19 15:36:45 brun Exp $
-// Author: Marek Biskup ,Ilka  Antcheva 28/07/03
-// ***It nedds more fixes ***
-//
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.h,v 1.3 2004/02/27 01:03:58 rdm Exp $
+// Author: Marek Biskup, Ilka  Antcheva 28/07/03
+
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *

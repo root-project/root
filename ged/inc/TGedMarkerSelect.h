@@ -1,7 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.h,v 1.2 2004/02/22 11:50:29 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   24/07/03
-// **** It needs more fixes ****
-// 
+
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -77,7 +76,7 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(38, 21); }
 
    virtual void MarkerSelected() { Emit("MarkerSelected(Style_t)", GetMarkerStyle()); }  // *SIGNAL*
-  
+
    ClassDef(TGedMarkerSelect,0)  // Marker selection button
 };
 

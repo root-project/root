@@ -1,6 +1,6 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.5 2004/02/26 13:38:37 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.6 2004/03/03 13:17:47 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
-// ****It needs more fixes*****
+
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -54,7 +54,7 @@ ClassImp(TGedPatternPopup)
 ClassImp(TGedPatternSelect)
 
 TGGC* TGedPatternFrame::fgGC = 0;
-   
+
 const char p_bits[26][32] = {
    {
       0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55, 0xaa, 0xaa, 0x55, 0x55,
@@ -85,7 +85,7 @@ const char p_bits[26][32] = {
       0x20, 0x20, 0x40, 0x40, 0x80, 0x80, 0x01, 0x01, 0x02, 0x02, 0x04, 0x04,
       0x08, 0x08, 0x10, 0x10, 0x20, 0x20, 0x40, 0x40, 0x80, 0x80, 0x01, 0x01,
       0x02, 0x02, 0x04, 0x04, 0x08, 0x08, 0x10, 0x10
-   }, //5 
+   }, //5
    {
       0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44,
       0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44, 0x44,
@@ -115,7 +115,7 @@ const char p_bits[26][32] = {
       0x08, 0x08, 0x49, 0x49, 0x2a, 0x2a, 0x1c, 0x1c, 0x2a, 0x2a, 0x49, 0x49,
       0x08, 0x08, 0x00, 0x00, 0x80, 0x80, 0x94, 0x94, 0xa2, 0xa2, 0xc1, 0xc1,
       0xa2, 0xa2, 0x94, 0x94, 0x80, 0x80, 0x00, 0x00
-   }, //11 
+   }, //11
    {
       0x1c, 0x1c, 0x22, 0x22, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x22, 0x22,
       0x1c, 0x1c, 0x00, 0x00, 0xc1, 0xc1, 0x22, 0x22, 0x14, 0x14, 0x14, 0x14,
@@ -189,8 +189,8 @@ const char p_bits[26][32] = {
 };
 
 //______________________________________________________________________________
-TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern, 
-                                   int width, int height) 
+TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern,
+                                   int width, int height)
    : TGFrame(p, width, height, kOwnBackground)
 {
    Pixel_t white;
@@ -198,7 +198,7 @@ TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern,
    SetBackgroundColor(white);
 
    // special case: solid
-   if (pattern == 1001) 
+   if (pattern == 1001)
       SetBackgroundColor(0);     // if solid then black
 
    fPattern = pattern;
@@ -215,12 +215,12 @@ TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern,
       fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "0 - hollow", 1000);
    else // pattern == 1001
       fTip = new TGToolTip(fClient->GetDefaultRoot(), this, "1001 - solid", 1000);
-  
-   AddInput(kEnterWindowMask | kLeaveWindowMask); 
+
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 
    if (!fgGC) {
       GCValues_t gcv;
-      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle | 
+      gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
                   kGCForeground | kGCBackground;
       gcv.fLineStyle  = kLineSolid;
       gcv.fLineWidth  = 0;
@@ -364,7 +364,7 @@ Bool_t TGedPatternSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm
             case kPAT_SELCHANGED:
                switch (parm1) {
                   case kButton1:
-                     SendMessage(fMsgWindow, MK_MSG(kC_PATTERNSEL, 
+                     SendMessage(fMsgWindow, MK_MSG(kC_PATTERNSEL,
                                  kPAT_SELCHANGED), parm1, parm2);
                      break;
                }
@@ -383,8 +383,8 @@ Bool_t TGedPatternSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm
 }
 
 //______________________________________________________________________________
-TGedPopup::TGedPopup(const TGWindow *p, const TGWindow *m, UInt_t w, UInt_t h, 
-                     UInt_t options, Pixel_t back) 
+TGedPopup::TGedPopup(const TGWindow *p, const TGWindow *m, UInt_t w, UInt_t h,
+                     UInt_t options, Pixel_t back)
    : TGCompositeFrame(p, w, h, options, back)
 {
    fMsgWindow = m;
@@ -425,7 +425,7 @@ void TGedPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                          kPointerMotionMask, kNone, kNone, 
+                          kPointerMotionMask, kNone, kNone,
                           fClient->GetResourcePool()->GetGrabCursor());
    gClient->WaitForUnmap(this);
 //   EndPopup();
@@ -475,7 +475,7 @@ TGedPatternPopup::TGedPatternPopup(const TGWindow *p, const TGWindow *m, Style_t
                GetDefaultFrameBackground())
 {
    fCurrentPattern = pattern;
-   
+
    TGedPatternSelector *ps = new TGedPatternSelector(this);
    AddFrame(ps, new TGLayoutHints(kLHintsCenterX, 1, 1, 1, 1));
 
@@ -510,13 +510,13 @@ Bool_t TGedPatternPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 //______________________________________________________________________________
-TGedSelect::TGedSelect(const TGWindow *p, Int_t id) 
+TGedSelect::TGedSelect(const TGWindow *p, Int_t id)
    : TGCheckButton(p, "", id)
 {
    fPopup = 0;
 
    GCValues_t gcv;
-   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle | 
+   gcv.fMask = kGCLineStyle  | kGCLineWidth  | kGCFillStyle |
                kGCForeground | kGCBackground;
    gcv.fLineStyle  = kLineSolid;
    gcv.fLineWidth  = 0;
@@ -526,7 +526,7 @@ TGedSelect::TGedSelect(const TGWindow *p, Int_t id)
    gcv.fBackground = white;
    gcv.fForeground = 0;    // black foreground
    fDrawGC = gClient->GetGC(&gcv, kTRUE);
-   
+
    Enable();
    SetState(kButtonUp);
    AddInput(kButtonPressMask | kButtonReleaseMask);
@@ -535,7 +535,7 @@ TGedSelect::TGedSelect(const TGWindow *p, Int_t id)
 //______________________________________________________________________________
 TGedSelect::~TGedSelect()
 {
-   if (fPopup) 
+   if (fPopup)
       delete fPopup;
    delete fDrawGC;
 }
@@ -660,7 +660,7 @@ void TGedSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 
 
 //______________________________________________________________________________
-TGedPatternSelect::TGedPatternSelect(const TGWindow *p, Style_t pattern, Int_t id) 
+TGedPatternSelect::TGedPatternSelect(const TGWindow *p, Style_t pattern, Int_t id)
    : TGedSelect(p, id)
 {
    fPattern = pattern;
@@ -734,8 +734,8 @@ void TGedPatternSelect::SetPattern(Style_t pattern)
 void TGedPatternSelect::SavePrimitive(ofstream &out, Option_t *)
 {
    // Save the pattern select widget as a C++ statement(s) on output stream out
-   
+
    out <<"   TGedPatternSelect *";
    out << GetName() << " = new TGedPatternSelect(" << fParent->GetName()
        << "," << fPattern << "," << WidgetId() << ");" << endl;
-} 
+}
