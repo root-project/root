@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.14 2001/09/22 10:43:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.15 2001/12/05 21:07:51 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -89,7 +89,7 @@ public:
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
-    static  void      SetMaxMergeSize(Int_t maxsize=1900000);
+    static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
