@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.221 2005/01/12 10:51:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.222 2005/01/12 18:02:28 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -968,59 +968,6 @@ TBranch *TTree::Branch(const char *name, void *address, const char *leaflist,Int
    }
    fBranches.Add(branch);
    return branch;
-}
-
-//______________________________________________________________________________
-TBranch *TTree::Branch(const char *name, TClonesArray **clonesaddress, Int_t bufsize, Int_t splitlevel)
-{
-// Special constructor for TClonesArray.
-// Note that this function is only provided for backward compatibility.
-// The Branch or Bronch methods can automatically detect the case of TClonesArray.
-//
-//
-//    name:    global name of this BranchClones
-//    bufsize: buffersize in bytes of each individual data member buffer
-//    clonesaddress is the address of a pointer to a TClonesArray.
-//
-//    This Tree option is provided in case each entry consists of one
-//    or more arrays of same class objects (tracks, hits,etc).
-//    This function creates as many branches as there are public data members
-//    in the objects pointed by the TClonesArray. Note that these data members
-//    can be only basic data types, not pointers or objects.
-//
-//    BranchClones have the following advantages compared to the two other
-//    solutions (Branch and BranchObject).
-//      - When reading the Tree data, it is possible to read selectively
-//        a subset of one object (may be just one single data member).
-//      - This solution minimizes the number of objects created/destructed.
-//      - Data members of the same type are consecutive in the basket buffers,
-//        therefore optimizing the compression algorithm.
-//      - Array processing notation becomes possible in the query language.
-//
-//    By default the branch buffers are stored in the same file as the Tree.
-//    use TBranch::SetFile to specify a different file
-//
-//    By default the two members of TObject (fBits and fUniqueID) are stored
-//    on individual branches. If the splitlevel > 1, these two branches
-//    will not be created.
-
-   if (clonesaddress == 0) return 0;
-
-   TClonesArray *list = *clonesaddress;
-   if (list == 0) return 0;
-   gTree = this;
-   if (fgBranchStyle == 1) {
-      return Bronch(name,"TClonesArray",clonesaddress,bufsize,splitlevel);
-   }
-   if (splitlevel > 0) {
-      TBranchClones *branch = new TBranchClones(name,clonesaddress,bufsize,-1,splitlevel);
-      fBranches.Add(branch);
-      return branch;
-   } else {
-      TBranchObject *branch = new TBranchObject(name,list->ClassName(),clonesaddress,bufsize,0);
-      fBranches.Add(branch);
-      return branch;
-   }
 }
 
 //______________________________________________________________________________

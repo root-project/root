@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.74 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.75 2005/01/12 10:51:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -160,7 +160,6 @@ public:
     virtual Int_t        Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t        Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize=32000);
-    virtual TBranch     *Branch(const char *name, TClonesArray **clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
 #if !defined(__CINT__)
     virtual TBranch     *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
 #endif
