@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.155 2004/11/26 16:53:05 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.156 2004/12/07 11:14:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3921,20 +3921,20 @@ void TPad::Print(const char *filenam, Option_t *option)
    delete [] filename;
 
 //==============Save pad/canvas as a GIF file==================================
-      TImage::EImageFileTypes gtype = TImage::kUnknown;
-      if (strstr(opt,"gif")) {
-         gtype = TImage::kGif;
-      } else if (strstr(opt,"png")) {
-         gtype = TImage::kPng;
-      } else if (strstr(opt,"jpg")) {
-         gtype = TImage::kJpeg;
-      } else if (strstr(opt,"tiff")) {
-         gtype = TImage::kTiff;
-      } else if (strstr(opt,"xpm")) {
-         gtype = TImage::kXpm;
-      }
+   TImage::EImageFileTypes gtype = TImage::kUnknown;
+   if (strstr(opt,"gif")) {
+      gtype = TImage::kGif;
+   } else if (strstr(opt,"png")) {
+      gtype = TImage::kPng;
+   } else if (strstr(opt,"jpg")) {
+      gtype = TImage::kJpeg;
+   } else if (strstr(opt,"tiff")) {
+      gtype = TImage::kTiff;
+   } else if (strstr(opt,"xpm")) {
+      gtype = TImage::kXpm;
+   }
 
-      if (gtype != TImage::kUnknown) {
+   if (gtype != TImage::kUnknown) {
       if (GetCanvas()->IsBatch()) {
          Printf("Cannot create %s file in batch mode.", opt);
          return;
@@ -3960,7 +3960,6 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
       return;
    }
-
 
 //==============Save pad/canvas as a C++ script==================================
    if (strstr(opt,"cxx")) {
