@@ -1768,6 +1768,7 @@ extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
 extern G__EXPORT int  G__unloadfile G__P((G__CONST char* filename));
 extern G__EXPORT int G__init_cint G__P((G__CONST char* command));
+extern G__EXPORT void G__LockCpp G__P((void));
 extern G__EXPORT void G__scratch_all G__P((void));
 extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));

@@ -2313,6 +2313,18 @@ struct G__ConstStringList* current;
 
 #endif
 
+/**************************************************************************
+* G__LockCpp()
+*
+**************************************************************************/
+void G__LockCpp() 
+{
+  /* Same as option -A */
+  G__cpplock=1;
+  G__iscpp=1;
+}
+
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

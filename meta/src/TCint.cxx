@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.51 2002/02/25 10:52:04 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.52 2002/03/05 10:47:48 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -99,6 +99,9 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
 #ifndef WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif
+   
+   // Make sure that ALL macros are seen as C++.
+   G__LockCpp();
 }
 
 //______________________________________________________________________________
