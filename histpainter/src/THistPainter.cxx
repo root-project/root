@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.61 2002/01/10 07:26:42 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.62 2002/01/18 11:38:28 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4366,6 +4366,9 @@ void THistPainter::PaintText()
 //*_*      - text font = current TStyle font
 //         - text size = 0.02*padheight*markersize
 //         - text color= marker color
+//   By default the format "g" is used. This format can be redefined
+//   by calling gStyle->SetPaintTextFormat
+//
 //Begin_Html
 /*
 <img src="gif/PaintText.gif">
@@ -4382,7 +4385,9 @@ void THistPainter::PaintText()
 
    Double_t x, y, z;
    char value[50];
-
+   char format[32];
+   sprintf(format,"%s%s","%",gStyle->GetPaintTextFormat());
+   
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       y    = fYaxis->GetBinCenter(j);
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
@@ -4391,7 +4396,7 @@ void THistPainter::PaintText()
          if (!IsInside(x,y)) continue;
          z     = fH->GetBinContent(bin);
          if (z <= Hparam.zmin) continue;
-         sprintf(value,"%g",z);
+         sprintf(value,format,z);
          gPad->PaintText(x,y,value);
       }
    }
