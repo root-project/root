@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.1 2000/10/22 19:19:09 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.2 2000/10/29 14:31:48 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -668,7 +668,7 @@ void TestMainFrame::HandleMenu(Int_t id)
          break;
 
       case M_FILE_EXIT:
-         CloseWindow();   // this also terminates theApp
+         CloseWindow();   // terminate theApp no need to use SendCloseMessage()
          break;
 
       case M_TEST_MSGBOX:
@@ -981,16 +981,22 @@ void TestDialog::DoOK()
 {
    printf("\nTerminating dialog: OK pressed\n");
 
-   // Use timer because if we call directly CloseWindow() we will end
-   // up accessing methods of deleted object (like OK button in dialog that
-   // has just been deleted)
-   TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
+   // Send a close message to the main frame. This will trigger the
+   // emission of a CloseWindow() signal, which will then call
+   // TestDialog::CloseWindow(). Calling directly CloseWindow() will cause
+   // a segv since the OK button is still accessed after the DoOK() method.
+   // This works since the close message is handled synchronous (via
+   // message going to/from X server).
+   fMain->SendCloseMessage();
+
+   // The same effect can be obtained by using a singleshot timer:
+   //TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
 }
 
 void TestDialog::DoCancel()
 {
    printf("\nTerminating dialog: Cancel pressed\n");
-   TTimer::SingleShot(50, "TestDialog", this, "CloseWindow()");
+   fMain->SendCloseMessage();
 }
 
 void TestDialog::HandleButtons(Int_t id)
@@ -1253,7 +1259,7 @@ void TestMsgBox::DoClose()
 {
    // Handle Close button.
 
-   TTimer::SingleShot(50, "TestMsgBox", this, "CloseWindow()");
+   fMain->SendCloseMessage();
 }
 
 void TestMsgBox::DoTest()
@@ -1579,8 +1585,11 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
 {
    // Dialog used to test the different supported progress bars.
 
+   fClose = kTRUE;
+
    fMain = new TGTransientFrame(p, main, w, h);
    fMain->Connect("CloseWindow()", "TestProgress", this, "DoClose()");
+   fMain->DontCallClose();
 
    fMain->ChangeOptions((fMain->GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
 
@@ -1654,7 +1663,7 @@ TestProgress::~TestProgress()
    delete fVProg1; delete fVProg2;
    delete fHProg1; delete fHProg2; delete fHProg3;
    delete fHint1; delete fHint2; delete fHint3; delete fHint4; delete fHint5;
-   delete fGO; fGO = 0; // to get cleanly out of the loop in ProcessMessage
+   delete fGO;
    delete fMain;
 }
 
@@ -1667,8 +1676,21 @@ void TestProgress::CloseWindow()
 
 void TestProgress::DoClose()
 {
-   fClose = kTRUE;
-   TTimer::SingleShot(150, "TestProgress", this, "CloseWindow()");
+   // If fClose is false we are still in event processing loop in DoGo().
+   // In that case, set the close flag true and use a timer to call
+   // CloseWindow(). This gives us change to get out of the DoGo() loop.
+   // Note: calling SendCloseMessage() will not work since that will
+   // bring us back here (CloseWindow() signal is connected to this method)
+   // with the fClose flag true, which will cause window deletion while
+   // still being in the event processing loop (since SendCloseMessage()
+   // is directly processed in ProcessEvents() without exiting DoGO()).
+
+   if (fClose)
+      CloseWindow();
+   else {
+      fClose = kTRUE;
+      TTimer::SingleShot(50, "TestProgress", this, "CloseWindow()");
+   }
 }
 
 void TestProgress::DoGo()
@@ -1706,6 +1728,7 @@ void TestProgress::DoGo()
       // if user closed window return
       if (fClose) return;
    }
+   fClose = kTRUE;
 }
 
 
@@ -1814,7 +1837,7 @@ void Editor::DoOK()
 {
    // Handle ok button.
 
-   TTimer::SingleShot(50, "Editor", this, "CloseWindow()");
+   fMain->SendCloseMessage();
 }
 
 void Editor::DoOpen()
@@ -1829,7 +1852,9 @@ void Editor::DoSave()
 
 void Editor::DoClose()
 {
-   TTimer::SingleShot(50, "Editor", this, "CloseWindow()");
+   // Handle close button.
+
+   fMain->SendCloseMessage();
 }
 
 
