@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.23 2000/09/06 17:19:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.24 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -403,6 +403,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
 //    Build a TBranchObject for an object of class classname.
 //    addobj is the address of a pointer to an object of class classname.
 //    IMPORTANT: classname must derive from TObject.
+//    The class dictionary must be available (ClassDef in class header).
 //
 //    This option requires access to the library where the corresponding class
 //    is defined. Accessing one single data member in the object implies
