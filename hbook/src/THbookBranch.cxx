@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.3 2002/04/30 07:26:47 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.4 2002/08/12 19:48:13 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -47,7 +47,7 @@ Int_t THbookBranch::GetEntry(Int_t entry, Int_t getall)
    if (tree->GetType() == 0) {
       return file->GetEntry(entry,tree->GetID(),0,tree->GetX());
    } else {
-      tree->InitBranches();
+      tree->InitBranches(entry);
       return file->GetEntryBranch(entry,tree->GetID());
    }
 }
