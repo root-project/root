@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.cc,v 1.7 2001/09/20 01:41:47 verkerke Exp $
+ *    File: $Id: RooBRArrayPdf.cc,v 1.8 2001/09/24 23:08:55 verkerke Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -9,7 +9,7 @@
  *
  * Copyright (C) 2001 Queen Mary College, Univ London.
  *****************************************************************************/
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // RooBRArrayPdf is an efficient implementation of the total extended likelihood
 // function, L, that is used to calculate branching ratios:
 //

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.11 2001/09/24 23:08:56 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.12 2001/10/03 16:17:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // 
 
 #include <iostream.h>

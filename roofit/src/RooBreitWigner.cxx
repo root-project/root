@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBreitWigner.cc,v 1.2 2001/09/20 01:41:48 verkerke Exp $
+ *    File: $Id: RooBreitWigner.cc,v 1.3 2001/09/24 23:08:55 verkerke Exp $
  * Authors:
  *   AS, Abi Soffer, Colorado State University, abi@slac.stanford.edu
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
@@ -11,7 +11,9 @@
  *
  * Copyright (C) 2001 Colorado State University
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
+
+// -- CLASS DESCRIPTION [PDF] --
+
 
 #include <iostream.h>
 #include <math.h>

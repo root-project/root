@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCBShape.cc,v 1.2 2001/08/02 21:40:04 verkerke Exp $
+ *    File: $Id: RooCBShape.cc,v 1.3 2001/08/23 01:23:35 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -10,8 +10,10 @@
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
 
+// -- CLASS DESCRIPTION [PDF] --
+
+#include "BaBar/BaBar.hh"
 #include <iostream.h>
 #include <math.h>
 
@@ -22,7 +24,7 @@
 ClassImp(RooCBShape)
 
 static const char rcsid[] =
-"$Id: RooCBShape.cc,v 1.2 2001/08/02 21:40:04 verkerke Exp $";
+"$Id: RooCBShape.cc,v 1.3 2001/08/23 01:23:35 verkerke Exp $";
 
 RooCBShape::RooCBShape(const char *name, const char *title,
 		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _sigma,

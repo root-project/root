@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooVoigtian.cc,v 1.2 2001/09/06 22:49:28 schieti Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.3 2001/09/12 21:49:32 verkerke Exp $
  * Authors:
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
  * History:
@@ -12,7 +12,8 @@
  *
  * Copyright (C) 2001 Stanford Linear Accelerator Center
  *****************************************************************************/
-// -- CLASS DESCRIPTION --
+
+// -- CLASS DESCRIPTION [PDF] --
 // RooVoigtian is an efficient implementation of the convolution of a 
 // Breit-Wigner with a Gaussian, making use of the complex error function.
 // RooFitCore provides two algorithms for the evaluation of the complex error 

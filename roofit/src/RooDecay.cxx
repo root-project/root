@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDecay.cc,v 1.1 2001/06/08 05:52:38 verkerke Exp $
+ *    File: $Id: RooDecay.cc,v 1.2 2001/06/09 05:14:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -10,7 +10,7 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-// -- CLASS DESCRIPTION --
+// -- CLASS DESCRIPTION [PDF] --
 // 
 
 #include <iostream.h>

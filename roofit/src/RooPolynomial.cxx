@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooPolynomial.cc,v 1.1 2001/09/26 20:47:50 verkerke Exp $
+ *    File: $Id: RooPolynomial.cc,v 1.2 2001/09/26 21:44:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -11,6 +11,8 @@
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION [PDF] --
 
 #include <iostream.h>
 #include <math.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.2 2001/08/26 17:48:48 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -11,8 +11,10 @@
  *
  * Copyright (C) 2001, Liverpool University
  *****************************************************************************/
-#include "BaBar/BaBar.hh"
 
+// -- CLASS DESCRIPTION [PDF] --
+
+#include "BaBar/BaBar.hh"
 #include "RooFitModels/Roo2DHistPdf.hh"
 
 #include "RooFitCore/RooDataSet.hh"
