@@ -139,7 +139,8 @@ static int G__G__stream_5_3_0(G__value *result7,G__CONST char *funcname,struct G
 }
 
 static int G__G__stream_5_4_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      G__letint(result7,108,(long)((const fpos<mbstate_t>*)(G__getstructoffset()))->operator long());
+   const fpos<mbstate_t>*pos = (const fpos<mbstate_t>*)(G__getstructoffset());
+   G__letint(result7,108,(long)(*pos));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -2023,13 +2024,13 @@ static int G__G__stream__0_16(G__value *result7,G__CONST char *funcname,struct G
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__stream__1_16(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-      {
-        const ostream& obj=operator<<(*(ostream*)libp->para[0].ref,*(streampos*)libp->para[1].ref);
-         result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
-      }
-   return(1 || funcname || hash || result7 || libp) ;
-}
+// static int G__G__stream__1_16(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+//       {
+//         const ostream& obj=operator<<(*(ostream*)libp->para[0].ref,*(streampos*)libp->para[1].ref);
+//          result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+//       }
+//    return(1 || funcname || hash || result7 || libp) ;
+// }
 
 static int G__G__stream__2_16(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       {
@@ -3621,9 +3622,9 @@ static void G__cpp_setup_func1() {
    G__memfunc_setup("operator<<",996,G__G__stream__0_16,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
 "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - g - - 0 - -",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("operator<<",996,G__G__stream__1_16,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
-"u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - u 'fpos<mbstate_t>' 'streampos' 11 - -",(char*)NULL
-,(void*)NULL,0);
+//    G__memfunc_setup("operator<<",996,G__G__stream__1_16,117,G__get_linked_tagnum(&G__G__streamLN_basic_ostreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("ostream"),1,2,1,1,0,
+// "u 'basic_ostream<char,char_traits<char> >' 'ostream' 1 - - u 'fpos<mbstate_t>' 'streampos' 11 - -",(char*)NULL
+// ,(void*)NULL,0);
    G__memfunc_setup("operator>>",1000,G__G__stream__2_16,117,G__get_linked_tagnum(&G__G__streamLN_basic_istreamlEcharcOchar_traitslEchargRsPgR),G__defined_typename("istream"),1,2,1,1,0,
 "u 'basic_istream<char,char_traits<char> >' 'istream' 1 - - c - - 1 - -",(char*)NULL
 ,(void*)NULL,0);
