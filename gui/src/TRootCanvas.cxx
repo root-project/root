@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.28 2004/02/13 17:04:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.29 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -425,13 +425,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetMWMHints(kMWMDecorAll, kMWMFuncAll, kMWMInputModeless);
 
    MapSubwindows();
-
-   fEditorFrame->SetEditable();
-   gPad = Canvas();
-   
-   fEditor = TVirtualPadEditor::LoadEditor();
-   
-   fEditorFrame->SetEditable(0);
+   fEditor = 0; //
  
    // by default status bar, tool bar and pad editor are hidden
    HideFrame(fStatusBar);
@@ -454,8 +448,7 @@ TRootCanvas::~TRootCanvas()
    delete fCanvasContainer;
    delete fCanvasWindow;
 
-   delete fEditor;
-
+   if (fEditor) delete fEditor;
    delete fEditorFrame;
    delete fEditorLayout;
    delete fMainFrame;
@@ -633,6 +626,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   // Handle Edit menu items...
                   case kEditEditor:
                      fCanvas->ToggleEditor();
+                     if (!fEditor) CreateEditor();
                      ShowEditor(fCanvas->GetShowEditor());
                      break;
                   case kEditUndo:
@@ -1011,6 +1005,17 @@ void TRootCanvas::ShowEditor(Bool_t show)
       fMainFrame->HideFrame(fEditorFrame);
       fEditMenu->UnCheckEntry(kEditEditor);
    }
+}
+
+//______________________________________________________________________________
+void TRootCanvas::CreateEditor()
+{
+   // create editor
+
+   fEditorFrame->SetEditable();
+   gPad = Canvas();   
+   fEditor = TVirtualPadEditor::LoadEditor();
+   fEditorFrame->SetEditable(0);
 }
 
 //______________________________________________________________________________

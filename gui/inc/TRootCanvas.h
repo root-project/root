@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.8 2003/11/24 10:51:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.9 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -77,6 +77,7 @@ private:
    Long_t               fLockState;  // indicate drawing lock/unlock state
 
    void     CreateCanvas(const char *name);
+   void     CreateEditor();
 
    Bool_t   HandleContainerButton(Event_t *ev);
    Bool_t   HandleContainerDoubleClick(Event_t *ev);
