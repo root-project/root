@@ -36,6 +36,10 @@ CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 F77           = /opt/SUNWspro/bin/f77
 F77LIBS       = -lM77 -lF77 -lsunmath -lsocket -lnsl
 
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR
+
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm

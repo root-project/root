@@ -59,3 +59,7 @@ CRYPTLIBS     =
 F77           = f77
 F77FLAGS      =
 F77LIBS       = -L/opt/SUNWspro/lib -lM77 -lF77 -lsunmath -lsocket -lnsl
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR

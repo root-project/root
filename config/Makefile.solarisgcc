@@ -34,3 +34,7 @@ CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
 # Fortran:
 
+
+# Override default in Makefile.config
+INSTALL      := cp -pR
+INSTALLDATA  := cp -pR

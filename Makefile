@@ -363,7 +363,7 @@ install:
 	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
-	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`; \
+	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
 	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
 	   echo "Everything already installed..."; \
 	else \
