@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.4 2003/08/31 00:52:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.5 2003/09/02 16:14:52 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1620,12 +1620,7 @@ void RpdKrb5Auth(const char *sstr)
    NetSend(1, kROOTD_KRB5);
    // TAuthenticate will respond to our encouragement by sending krb5
    // authentication through the socket
-#else
-   NetSend(0, kROOTD_KRB5);
-   return;
-#endif
 
-#ifdef R__KRB5
    int retval;
 
    if (gDebug > 2)
@@ -1751,6 +1746,13 @@ void RpdKrb5Auth(const char *sstr)
 
    if (gDebug > 0)
       ErrorInfo("RpdKrb5Auth: user %s authenticated", gUser);
+
+#else
+
+   // no krb5 support
+   if (sstr) { }   // remove compiler warning
+
+   NetSend(0, kROOTD_KRB5);
 
 #endif
 }
