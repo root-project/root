@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.15 2002/02/13 10:13:11 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.16 2002/02/13 11:34:41 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 <P>
 <H2><A NAME=H2Basic-concepts-of-MINUIT.html>Basic concepts of MINUIT</A></H2>
 <P>
-The <A HREF=../minuit/MINUITMAIN.html> MINUIT</A> package acts on a multiparameter Fortran function to which one
+The <A HREF=http://wwwinfo.cern.ch/asdoc/minuit/minmain.html> MINUIT</A> package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
 when an Histogram.Fit command is invoked.
