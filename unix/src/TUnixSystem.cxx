@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.81 2003/12/12 15:13:34 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.82 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1096,9 +1096,15 @@ int TUnixSystem::Unlink(const char *name)
    // -1 in case of failure.
 
 #if defined(R__LINUX)
+ # if( __GNUC__ >= 3)
    struct stat64 finfo;
    if (stat64(name, &finfo) < 0)
       return -1;
+ #else
+   struct stat finfo;
+   if (stat(name, &finfo) < 0)
+      return -1;
+ #endif
 #else
    struct stat finfo;
    if (stat(name, &finfo) < 0)
@@ -2950,8 +2956,13 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
    // not be stat'ed.
 
 #if defined(R__LINUX)
+ # if( __GNUC__ >= 3)
    struct stat64 statbuf;
    if (path != 0 && stat64(path, &statbuf) >= 0) {
+ # else
+   struct stat statbuf;
+   if (path != 0 && stat(path, &statbuf) >= 0) {
+ # endif
 #else
    struct stat statbuf;
    if (path != 0 && stat(path, &statbuf) >= 0) {
