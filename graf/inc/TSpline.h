@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.2 2000/12/10 17:43:45 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -182,10 +182,12 @@ private:
   TSplinePoly5  *fPoly;     // Array of polynomial terms
 
   void BuildCoeff();
-  void BoundaryConditions(const char *opt, Int_t &beg, Int_t&end,
-			  char *&cb1, char *&ce1, char *&cb2, char *&ce2);
+  void BoundaryConditions(const char *opt, Int_t &beg, Int_t &end,
+			  const char *&cb1, const char *&ce1, const char *&cb2,
+                          const char *&ce2);
   void SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-		     char *cb1, char *ce1, char *cb2, char *ce2);
+		     const char *cb1, const char *ce1, const char *cb2,
+                     const char *ce2);
 
 public:
   TSpline5() : fPoly(0) {}

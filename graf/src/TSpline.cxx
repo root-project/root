@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.2 2000/06/13 11:19:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.3 2000/12/10 17:43:45 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -335,17 +335,17 @@ void TSpline3::SetCond(const char *opt)
   //
   // Check the boundary conditions
   //
-  char *b1 = strstr(opt,"b1");
-  char *e1 = strstr(opt,"e1");
-  char *b2 = strstr(opt,"b2");
-  char *e2 = strstr(opt,"e2");
+  const char *b1 = strstr(opt,"b1");
+  const char *e1 = strstr(opt,"e1");
+  const char *b2 = strstr(opt,"b2");
+  const char *e2 = strstr(opt,"e2");
   if (b1 && b2)
-    Error("ctor","Cannot specify first and second derivative at first point");
+    Error("SetCond","Cannot specify first and second derivative at first point");
   if (e1 && e2)
-    Error("ctor","Cannot specify first and second derivative at last point");
-  if(b1) fBegCond=1;
+    Error("SetCond","Cannot specify first and second derivative at last point");
+  if (b1) fBegCond=1;
   else if (b2) fBegCond=2;
-  if(e1) fEndCond=1;
+  if (e1) fEndCond=1;
   else if (e2) fEndCond=2;
 }
 
@@ -750,7 +750,7 @@ TSpline5::TSpline5(const char *title,
   // possibly end point conditions
   //
   Int_t beg, end;
-  char *cb1, *ce1, *cb2, *ce2;
+  const char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -785,7 +785,7 @@ TSpline5::TSpline5(const char *title,
   // values from xmin to xmax and possibly end point conditions
   //
   Int_t beg, end;
-  char *cb1, *ce1, *cb2, *ce2;
+  const char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -819,7 +819,7 @@ TSpline5::TSpline5(const char *title,
   // to interpolate and possibly end point conditions
   //
   Int_t beg, end;
-  char *cb1, *ce1, *cb2, *ce2;
+  const char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -854,7 +854,7 @@ TSpline5::TSpline5(const char *title,
   // and xmax and possibly end point conditions
   //
   Int_t beg, end;
-  char *cb1, *ce1, *cb2, *ce2;
+  const char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -889,7 +889,7 @@ TSpline5::TSpline5(const char *title,
   // point conditions
   //
   Int_t beg, end;
-  char *cb1, *ce1, *cb2, *ce2;
+  const char *cb1, *ce1, *cb2, *ce2;
   fName="Spline5";
   //
   // Check endpoint conditions
@@ -915,8 +915,9 @@ TSpline5::TSpline5(const char *title,
 }
 
 //____________________________________________________________________________
-void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t&end,
-				  char *&cb1,char *&ce1,char *&cb2,char *&ce2)
+void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t &end,
+				  const char *&cb1,const char *&ce1,
+                                  const char *&cb2,const char *&ce2)
 {
   //
   // Check the boundary conditions and the
@@ -946,8 +947,10 @@ void TSpline5::BoundaryConditions(const char *opt,Int_t &beg,Int_t&end,
   }
 }
 
+//____________________________________________________________________________
 void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
-			     char *cb1, char *ce1, char *cb2, char *ce2)
+			     const char *cb1, const char *ce1, const char *cb2,
+                             const char *ce2)
 {
   //
   // Set the boundary conditions at double/triple knots
