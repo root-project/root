@@ -430,6 +430,22 @@ base 	o b j 2
 id 	23
 obj 	102
 
+Writing multiple inherited objects
+base 	o b j 1 
+id 	110
+obj 	101
+base 	o b j 2 
+id 	111
+obj 	102
+Reading multiple inherited objects with old methods
+base 	o b j 1 
+id 	110
+obj 	101
+base 	o b j 2 
+id 	111
+obj 	102
+Reading multiple inherited objects with new methods
+Reading multiple inherited objects with newer methods
 
 StreamerInfo for class: RootCaloHit, version=1
   TObject       BASE            offset=  0 type=66 Basic ROOT object   
@@ -472,17 +488,17 @@ StreamerInfo for class: RootCaloHit, version=1
    i=10, mycellfix       type= 69, offset=136, len=1, method=0
    i=11, mycellvirt      type= 69, offset=140, len=1, method=0
    i=12, mynocellp       type= 69, offset=144, len=1, method=0
-   i=13, myobj           type= 61, offset=148, len=1, method=134560836
-   i=14, myobj2          type= 61, offset=180, len=1, method=134560968
+   i=13, myobj           type= 61, offset=148, len=1, method=134561864
+   i=14, myobj2          type= 61, offset=180, len=1, method=134561984
    i=15, myobjp          type= 69, offset=212, len=1, method=0
    i=16, myobj2p         type= 69, offset=216, len=1, method=0
-   i=17, myobjSt         type= 63, offset=220, len=1, method=134561084
-   i=18, myobj2St        type= 63, offset=224, len=1, method=134561216
-   i=19, mytobjp         type= 64, offset=228, len=1, method=134561336
-   i=20, mytobj2p        type= 64, offset=232, len=1, method=134561424
-   i=21, mytobjSt        type= 63, offset=236, len=1, method=134561512
-   i=22, mytobj2St       type= 63, offset=240, len=1, method=134561632
-   i=23, myobjdp         type= 64, offset=244, len=1, method=134561752
-   i=24, myobj2dp        type= 64, offset=248, len=1, method=134561868
-   i=25, myobjarr        type= 81, offset=252, len=2, method=134561956
-   i=26, myobjarr2       type= 81, offset=316, len=2, method=134562164
+   i=17, myobjSt         type= 63, offset=220, len=1, method=134562100
+   i=18, myobj2St        type= 63, offset=224, len=1, method=134562228
+   i=19, mytobjp         type= 64, offset=228, len=1, method=134562344
+   i=20, mytobj2p        type= 64, offset=232, len=1, method=134562428
+   i=21, mytobjSt        type= 63, offset=236, len=1, method=134562520
+   i=22, mytobj2St       type= 63, offset=240, len=1, method=134562636
+   i=23, myobjdp         type= 64, offset=244, len=1, method=134562752
+   i=24, myobj2dp        type= 64, offset=248, len=1, method=134562860
+   i=25, myobjarr        type= 81, offset=252, len=2, method=134562952
+   i=26, myobjarr2       type= 81, offset=316, len=2, method=134563164

@@ -6,6 +6,12 @@
 
 #pragma link C++ class RootPCtemp<int>+;
 
+#pragma link C++ class RootPCtempObj<TObject>+;
+#pragma link C++ class RootPCtempObj<TObject*>+;
+#pragma link C++ class RootPCtempObj<const TObject>+;
+//#pragma link C++ class RootPCtempObj<const TObject *>+;
+#pragma link C++ class RootPCtempObj<TObject * const>+;
+
 #pragma link C++ class RootData+;
 #pragma link C++ class RootCaloHit+;
 #pragma link C++ class RootPCellID+;
@@ -27,5 +33,7 @@
 
 #pragma link C++ class RootPCobject+;
 #pragma link C++ class RootPCobject2+;
+
+#pragma link C++ class RootPCmisClDef+;
 
 #endif

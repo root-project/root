@@ -72,16 +72,20 @@ int main()
     myobjp2->Write("obj2");
 
     std::cerr << "Reading multiple inherited objects with old methods" << std::endl;
-    TObject* mp = f.Get("obj1");
     myobjp = (RootPCobject*)((void*)f.Get("obj1"));
-    myobjp->Print();
+    //std::cerr << typeid(*myobjp).name() << endl;
+    //myobjp->Print();
     
     myobjp2 = (RootPCobject2*)f.Get("obj2");
+    //std::cerr << typeid(*myobjp2).name() << endl;
     myobjp2->Print();
 
     std::cerr << "Reading multiple inherited objects with new methods" << std::endl;
-    //myobjp = dynamic_cast<RootPCobject *>(f.Get("obj1"));
-    //myobjp->Print();
+    myobjp = dynamic_cast<RootPCobject *>(f.Get("obj1"));
+    myobjp->Print();
+
+    myobjp2 = dynamic_cast<RootPCobject2 *>(f.Get("obj2"));
+    myobjp2->Print();
 
     std::cerr << "Reading multiple inherited objects with newer methods" << std::endl;
     //myobjp = (MyClass*)f.Get("obj1",RootPCobject::Class());

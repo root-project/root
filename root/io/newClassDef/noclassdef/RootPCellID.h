@@ -18,7 +18,7 @@ public:
   RootPCellID(){    
     for(int j=0;j<4;j++) base[j]=0;
   }
-  
+ 
   RootPCellID(const std::string & b, unsigned int i):id(i) {
     for(int j=0;j<4;j++) base[j]=b[j];
   }   
@@ -96,6 +96,17 @@ public:
    void Print() {
      RootPCellID::Print();
      std::cout  << "templated \t" << temp << std::endl;
+   }
+};
+
+template <class T> class RootPCtempObj : public RootPCellID {
+public:
+   RootPCtempObj() : RootPCellID("none",0) {}
+   RootPCtempObj(T n) :  RootPCellID("template",-11) {}
+   T temp;
+   void Print() {
+     RootPCellID::Print();
+     //std::cout  << "templated \t" << temp << std::endl;
    }
 };
 
