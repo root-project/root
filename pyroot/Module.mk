@@ -36,10 +36,6 @@ endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
 
-ifeq ($(PLATFORM),macosx)
-CXXFLAGS     += -Wno-long-double
-endif
-
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
 ALLLIBS     += $(PYROOTLIB)
