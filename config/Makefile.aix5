@@ -84,4 +84,4 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = -lHist -lMatrix -lTree -lGraf -lTreePlayer
 GEOMPAINTERLIBDEP   = $(GEOMLIB)
-GEOMPAINTERLIBEXTRA = -lGeom
+GEOMPAINTERLIBEXTRA = -lGeom -lTree -lGraf3d
