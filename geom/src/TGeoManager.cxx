@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.13 2002/09/28 07:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.14 2002/09/30 20:44:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -499,6 +499,7 @@ void TGeoManager::Init()
    fVisOption = 0;
    fExplodedView = 0;
    fNsegments = 20;
+   fCurrentMatrix = 0;
 
    gROOT->GetListOfGeometries()->Add(this);
 }
@@ -658,9 +659,20 @@ void TGeoManager::CloseGeometry()
       isreadgeom = kTRUE;
    }
    if (isreadgeom) {
-      Voxelize("ALL");
       printf("Building caches for nodes and matrices...\n");
-      BuildCache();
+      if (!fTopNode) {
+         if (!fMasterVolume) {
+            Error("CloseGeometry", "Master volume not streamed");
+            return;
+         }
+         SetTopVolume(fMasterVolume);
+         Voxelize("ALL");
+         if (!fCache) BuildCache();      
+      } else {
+         Warning("CloseGeometry", "top node was streamed!");   
+         Voxelize("ALL");
+         if (!fCache) BuildCache();
+      }   
       printf("### nodes in %s : %i\n", gGeoManager->GetTitle(), fNNodes);
       gROOT->GetListOfBrowsables()->Add(this);
       printf("----------------modeler ready----------------\n");
@@ -2187,7 +2199,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    
    TFile f(filename);
    if (f.IsZombie()) return 0;
-   delete gGeoManager;
+   if (gGeoManager) delete gGeoManager;
    if (name && strlen(name) > 0) {
       gGeoManager = (TGeoManager*)f.Get(name);
       return gGeoManager;

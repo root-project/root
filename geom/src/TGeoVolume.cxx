@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.5 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.6 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -823,7 +823,7 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMaterial *mat)
 TGeoVolumeMulti::~TGeoVolumeMulti()
 {
 // Destructor
-   delete fVolumes;
+   if (fVolumes) delete fVolumes;
 }
 //-----------------------------------------------------------------------------
 void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)

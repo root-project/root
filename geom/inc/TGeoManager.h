@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.5 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.6 2002/09/30 20:44:35 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -87,10 +87,10 @@ private :
    TList                *fMaterials;        //-> list of materials
    TObjArray            *fNodes;            //-> current branch of nodes
    UChar_t              *fBits;             //! bits used for voxelization
-   TGeoVolume           *fCurrentVolume;    // current volume
-   TGeoVolume           *fTopVolume;        // top level volume in geometry
-   TGeoNode             *fCurrentNode;      // current node
-   TGeoNode             *fTopNode;          // top physical node
+   TGeoVolume           *fCurrentVolume;    //! current volume
+   TGeoVolume           *fTopVolume;        //! top level volume in geometry
+   TGeoNode             *fCurrentNode;      //! current node
+   TGeoNode             *fTopNode;          //! top physical node
    TGeoNode             *fLastNode;         //! last searched node
    TGeoNode             *fNextNode;         //! next node that will be crossed
    TGeoVolume           *fMasterVolume;     // master volume

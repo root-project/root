@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.3 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.5 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -82,7 +82,7 @@ public :
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    void                 Print(Option_t *option="") const;
    
-  ClassDef(TGeoMatrix, 0)                 // base geometrical transformation class
+  ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };
 
 

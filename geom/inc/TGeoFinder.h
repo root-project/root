@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoFinder.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   18/01/02
 
 /*************************************************************************
@@ -27,6 +27,7 @@ class TGeoNode;
 
 class TGeoFinder : public TObject
 {
+protected:
    enum EGeoPattern {
       kPatternX         = BIT(15),
       kPatternY         = BIT(16),
@@ -38,7 +39,7 @@ class TGeoFinder : public TObject
       kPatternSphThe    = BIT(22),
       kPatternHoneycomb = BIT(23)
    };
-protected:
+
    TGeoVolume         *fVolume;         // volume to which this finder apply
 
 public :
@@ -55,7 +56,7 @@ public :
 
    virtual TGeoNode   *FindNode(Double_t *point) = 0; 
 
-  ClassDef(TGeoFinder, 0)       // class for tracking inside volumes 
+  ClassDef(TGeoFinder, 1)       // class for tracking inside volumes 
 };
 
 #endif

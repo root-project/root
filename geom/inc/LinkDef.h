@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.4 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.5 2002/09/28 07:27:58 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,7 +16,6 @@
 
 #pragma link C++ global gGeoManager;
 #pragma link C++ global gGeoIdentity;
-#pragma link C++ global gGeoMatrixCache;
 
 #pragma link C++ class TGeoAtt+;
 #pragma link C++ class TGeoBoolNode+;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.3 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -24,7 +24,7 @@ TGeoPatternFinder::TGeoPatternFinder()
 // Default constructor
    fBasicCell  = 0;
    fMatrix     = 0;
-   fCurrent    = 0;
+   fCurrent    = -1;
    fNdivisions = 0;
    fDivIndex   = 0;
    fStep       = 0;
@@ -69,7 +69,6 @@ ClassImp(TGeoPatternX)
 TGeoPatternX::TGeoPatternX()
 {
 // Default constructor
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
@@ -131,7 +130,6 @@ ClassImp(TGeoPatternY)
 TGeoPatternY::TGeoPatternY()
 {
 // Default constructor
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
@@ -193,7 +191,6 @@ ClassImp(TGeoPatternZ)
 TGeoPatternZ::TGeoPatternZ()
 {
 // Default constructor
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
@@ -255,7 +252,6 @@ ClassImp(TGeoPatternParaX)
 TGeoPatternParaX::TGeoPatternParaX()
 {
 // Default constructor
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
@@ -322,7 +318,6 @@ TGeoPatternParaY::TGeoPatternParaY()
 {
 // Default constructor
    fTxy = 0;
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
@@ -399,7 +394,6 @@ TGeoPatternParaZ::TGeoPatternParaZ()
 // Default constructor
    fTxz = 0;
    fTyz = 0;
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
@@ -479,7 +473,6 @@ TGeoPatternTrapZ::TGeoPatternTrapZ()
 // Default constructor
    fTxz = 0;
    fTyz = 0;
-   fMatrix     = new TGeoTranslation(0,0,0);
 }
 //-----------------------------------------------------------------------------
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
@@ -625,7 +618,6 @@ TGeoPatternCylPhi::TGeoPatternCylPhi()
 {
 // Default constructor
    fSinCos = 0;
-   fMatrix     = new TGeoRotation("rotdiv");
 }
 //-----------------------------------------------------------------------------
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)

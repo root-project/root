@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.3 2002/09/27 16:16:05 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -24,8 +24,6 @@
 #include "TGeoVolume.h"
 #endif
 
-// forward declarations
-///class TGeoVolume;
 
 /*************************************************************************
  * TGeoPatternFinder - base finder class for patterns. A pattern is specifying 
@@ -36,7 +34,6 @@
 class TGeoPatternFinder : public TGeoFinder
 {
 protected :
-// data members
    Double_t            fStep;           // division length
    Double_t            fStart;          // starting point
    Double_t            fEnd;            // ending point
@@ -44,7 +41,7 @@ protected :
    Int_t               fNdivisions;     // number of divisions
    Int_t               fDivIndex;       // index of first div. node
    TGeoVolume         *fBasicCell;      // basic volume used for this pattern
-   TGeoMatrix         *fMatrix;         //! generic matrix
+   TGeoMatrix         *fMatrix;         // generic matrix
 
 public:
    // constructors
@@ -65,8 +62,6 @@ public:
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
 
   ClassDef(TGeoPatternFinder, 1)              // patterns to divide volumes
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 
@@ -78,9 +73,6 @@ class TGeoTranslation;
 
 class TGeoPatternX : public TGeoPatternFinder 
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternX();
@@ -96,8 +88,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
 
   ClassDef(TGeoPatternX, 1)              // X division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -107,9 +97,6 @@ public:
 
 class TGeoPatternY : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternY();
@@ -124,8 +111,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
 
   ClassDef(TGeoPatternY, 1)              // Y division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -135,9 +120,6 @@ public:
 
 class TGeoPatternZ : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternZ();
@@ -153,8 +135,6 @@ public:
 //   virtual void        Paint(Option_t *option);
 
   ClassDef(TGeoPatternZ, 1)              // Z division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -164,9 +144,6 @@ public:
 
 class TGeoPatternParaX : public TGeoPatternFinder 
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternParaX();
@@ -182,8 +159,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
 
   ClassDef(TGeoPatternParaX, 1)              // Para X division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -210,8 +185,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point);
 
   ClassDef(TGeoPatternParaY, 1)              // Para Y division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -278,9 +251,6 @@ public:
 
 class TGeoPatternCylR : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternCylR();
@@ -294,8 +264,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
 
   ClassDef(TGeoPatternCylR, 1)              // Cylindrical R division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -321,8 +289,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
 
   ClassDef(TGeoPatternCylPhi, 1)              // Cylindrical phi division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -332,9 +298,6 @@ public:
 
 class TGeoPatternSphR : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternSphR();
@@ -348,8 +311,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
 
   ClassDef(TGeoPatternSphR, 1)              // spherical R division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
@@ -386,9 +347,6 @@ public:
 
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
-private :
-// data members
-
 public:
    // constructors
    TGeoPatternSphPhi();
@@ -402,8 +360,6 @@ public:
    virtual TGeoNode   *FindNode(Double_t *point); 
 
   ClassDef(TGeoPatternSphPhi, 1)              // Spherical phi division pattern
-
-//***** Need to add class and globals to LinkDef.h *****
 };
 
 /*************************************************************************
