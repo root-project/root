@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.82 2002/05/23 14:45:14 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.83 2002/05/29 18:39:44 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1749,9 +1749,13 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 
    Double_t z, xk,xstep, yk, ystep, xcent, ycent, xlow, xup, ylow, yup;
-   Double_t dz = Hparam.zmax - Hparam.zmin;
-   Double_t dxmin = 0.51*(gPad->PixeltoX(1)-gPad->PixeltoX(0));
-   Double_t dymin = 0.51*(gPad->PixeltoY(0)-gPad->PixeltoY(1));
+   Double_t dz  = Hparam.zmax - Hparam.zmin;
+   Double_t ux1 = gPad->PixeltoX(1);
+   Double_t ux0 = gPad->PixeltoX(0);
+   Double_t uy1 = gPad->PixeltoY(1);
+   Double_t uy0 = gPad->PixeltoY(0);
+   Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
+   Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
