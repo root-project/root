@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.7 2002/08/23 14:50:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.8 2002/09/10 12:15:09 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -681,6 +681,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    if (event->fCode == kButton4) {
       //scroll up
       Int_t newpos = pos.fY - page;
+      if (newpos<0) newpos = 0;
       fCanvas->SetVsbPosition(newpos);
       return kTRUE;
    }
