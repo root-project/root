@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.7 2000/10/10 15:17:34 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.8 2000/10/18 12:45:47 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1002,8 +1002,8 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       return;
    }
 
-   char tmpdictname[L_tmpnam];
-   tmpnam(tmpdictname);
+   char tmpdictname[256];
+   sprintf(tmpdictname, "%s_+_+_+rootcinttmp", dictname);
    FILE *tmpdict = fopen(tmpdictname, "w");
    if (!tmpdict) {
       fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
