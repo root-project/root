@@ -106,6 +106,10 @@ N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
 
+N: Alvise Dorigo
+E: alvise.dorigo@pd.infn.it
+D: libNetx, the xrootd client code
+
 N: Pierre-Luc Drouin
 E: pldrouin@physics.carleton.ca
 D: extensions of TFormula and bug fixes
@@ -137,6 +141,10 @@ D: Win95/NT port, OpenGL interface
 N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
+
+N: Fabrizio Furano
+E: furano@pd.infn.it
+D: libNetx, the xrootd client code
 
 N: Gerardo Ganis
 E: Gerardo.Ganis@cern.ch
@@ -171,6 +179,10 @@ N: Andrew Haas
 E: haas@yahoo.com
 D: add support for asymmetric errors in the GraphFitChisquare functions
 D: implement TGraphAsymmErrors::BayesDivide and corresponding functions
+
+N: Andy Hanushevsky
+E: abh@slac.stanford.edu
+D: the eXtended ROOT daemon (xrootd)
 
 N: Robert Hatcher
 E: rhatcher@fnal.gov
