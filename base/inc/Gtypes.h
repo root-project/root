@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Gtypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Gtypes.h,v 1.2 2000/06/13 12:24:55 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,5 +36,11 @@ typedef float     Size_t;        //Attribute size
 
 enum EColor { kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan };
 enum ELineStyle { kSolid = 1, kDashed, kDotted, kDashDotted };
-
+enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
+                   kFullDotSmall=6, kFullDotMedium=7, kFullDotlarge=8,
+                   kFullCircle=20, kFullSquare=21, kFullTriangleUp=22,
+                   kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
+                   kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
+                   kFullStar=29, kOpenStar=30};
+                   
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttMarker.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -33,26 +33,26 @@ ClassImp(TAttMarker)
 //*-*
 //*-*  List of the currently supported markers (screen and PostScript)
 //*-*  ===============================================================
-//*-*      1 : dot
-//*-*      2 : +
-//*-*      3 : *
-//*-*      4 : o (open circle)
-//*-*      5 : x
-//*-*      6 : full circle (small)
-//*-*      7 : full circle (medium)
-//*-*      8 : full circle (large)
+//*-*      1 : dot                     kDot
+//*-*      2 : +                       kPlus
+//*-*      3 : *                       kStar
+//*-*      4 : o                       kCircle
+//*-*      5 : x                       kMultiply
+//*-*      6 : small scalable dot      kFullDotSmall
+//*-*      7 : medium scalable dot     kFullDotMedium
+//*-*      8 : large scalable dot      kFullDotLarge
 //*-*      9 -->19 : dot
-//*-*     20 : full circle
-//*-*     21 : full square
-//*-*     22 : full triangle up
-//*-*     23 : full triangle down
-//*-*     24 : open circle
-//*-*     25 : open square
-//*-*     26 : open triangle up
-//*-*     27 : open diamond
-//*-*     28 : open cross
-//*-*     29 : open star
-//*-*     30 : full star
+//*-*     20 : full circle             kFullCircle
+//*-*     21 : full square             kFullSquare
+//*-*     22 : full triangle up        kFullTriangleUp
+//*-*     23 : full triangle down      kFullTriangleDown
+//*-*     24 : open circle             kOpenCircle
+//*-*     25 : open square             kOpenSquare
+//*-*     26 : open triangle up        kOpenTriangleUp
+//*-*     27 : open diamond            kOpenDiamond
+//*-*     28 : open cross              kOpenCross
+//*-*     29 : open star               kOpenStar
+//*-*     30 : full star               kFullStar
 //*-*
 //Begin_Html
 /*
