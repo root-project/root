@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.7 2002/08/07 10:56:20 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.8 2005/02/08 08:27:10 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -54,6 +54,7 @@ public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
    virtual       ~THashTable();
    void          Add(TObject *obj);
+   virtual void  AddAll(const TCollection *col);
    Float_t       AverageCollisions() const;
    void          Clear(Option_t *option="");
    Int_t         Collisions(const char *name) const;

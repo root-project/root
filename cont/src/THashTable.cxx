@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.8 2002/08/07 10:56:20 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.9 2005/02/08 08:27:10 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -95,6 +95,33 @@ void THashTable::Add(TObject *obj)
    fEntries++;
 
    if (fRehashLevel && AverageCollisions() > fRehashLevel)
+      Rehash(fEntries);
+}
+
+//______________________________________________________________________________
+void THashTable::AddAll(const TCollection *col)
+{
+   // Add all objects from collection col to this collection.
+   // Implemented for more efficient rehashing.
+
+   // Hashing after AddAll can be much more expensive than
+   // hashing before, as we need to add more elements.
+   // We assume an ideal hash, i.e. fUsedSlots==fSize.
+   Int_t sumEntries=fEntries+col->GetEntries();
+   Bool_t rehashBefore=fRehashLevel && (sumEntries > fSize*fRehashLevel);
+   if (rehashBefore)
+      Rehash(sumEntries);
+
+   // prevent Add from Rehashing
+   Int_t saveRehashLevel=fRehashLevel;
+   fRehashLevel=0;
+
+   TCollection::AddAll(col);
+
+   fRehashLevel=saveRehashLevel;
+   // If we didn't Rehash before, we might have to do it
+   // now, due to a non-perfect hash function.
+   if (!rehashBefore && fRehashLevel && AverageCollisions() > fRehashLevel)
       Rehash(fEntries);
 }
 
