@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.24 2002/11/01 20:41:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.25 2002/11/01 21:25:32 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -135,6 +135,13 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
 //*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
 //*-*                ===========================================
 
+   if (obj->IsA()->GetNew()==0) {
+      Warning("TKey","Since %s had no public constructor \n"
+              "\twhich can be called without argument, TSocket objects can not be read\n"
+              "\twith the current library. You would need to add a default constructor\n"
+              "\tbefore attempting to read.",
+              obj->ClassName());
+   }
    Int_t lbuf, nout, noutot, bufmax, nzip;
    fClassName = obj->ClassName();
    fNbytes    = 0;
@@ -146,6 +153,7 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
    fSeekKey   = 0 ; // RDK: Must initialize before calling Streamer()
    fSeekPdir  = 0 ; // RDK: Must initialize before calling Streamer()
+
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
    fBufferRef->MapObject(obj);    //register obj in map in case of self reference

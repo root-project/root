@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.88 2002/11/01 19:12:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.89 2002/11/04 17:22:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -192,7 +192,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
 ClassImp(TClass)
 
 //______________________________________________________________________________
-TClass::TClass() : TDictionary()
+TClass::TClass() : TDictionary(),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0)
 {
    // Default ctor.
 
@@ -217,7 +217,7 @@ TClass::TClass() : TDictionary()
 }
 
 //______________________________________________________________________________
-TClass::TClass(const char *name) : TDictionary()
+TClass::TClass(const char *name) : TDictionary(),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -272,7 +272,7 @@ TClass::TClass(const char *name) : TDictionary()
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-        : TDictionary()
+        : TDictionary(),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -286,7 +286,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, IsAFunc_t isa,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-  : TDictionary()
+  : TDictionary(),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -1420,7 +1420,17 @@ void *TClass::New(Bool_t defConstructor)
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor.
 
-   if (!fClassInfo) {
+   if (fNew) {
+      fgCallingNew = defConstructor;
+      void *p = fNew(0);
+      fgCallingNew = kFALSE;
+      if (!p) {
+        Error("New", "cannot create object of class %s", GetName());
+      }
+      return p;
+   }
+
+   if (!fClassInfo) { 
       // We only have a fake class. Use TStreamerInfo service.
       Bool_t statsave = GetObjectStat();
       SetObjectStat(kFALSE);
@@ -1434,7 +1444,10 @@ void *TClass::New(Bool_t defConstructor)
       SetObjectStat(statsave);
       return pp;
    }
-
+   
+   // We have the class library but did not have the constructor wrapper.
+   // Let's try one last time, using the interpreter.
+   // [This is very unlikely to work, but who knows!]
    fgCallingNew = defConstructor;
    R__LOCKGUARD(gCINTMutex);
    void *p = GetClassInfo()->New();
@@ -1452,6 +1465,14 @@ void *TClass::New(void *arena, Bool_t defConstructor)
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor.
 
+   if (fNew) {
+      fgCallingNew = defConstructor;
+      void *p = fNew(arena);
+      fgCallingNew = kFALSE;
+      if (!p) Error("New", "cannot create object of class %s", GetName());
+      return p;
+   }
+
    if (!fClassInfo) {
       // We only have a fake class. Use TStreamerInfo service.
       TStreamerInfo *sinfo = GetStreamerInfo();
@@ -1462,6 +1483,9 @@ void *TClass::New(void *arena, Bool_t defConstructor)
       return arena;
    }
 
+   // We have the class library but did not have the constructor wrapper.
+   // Let's try one last time, using the interpreter.
+   // [This is very unlikely to work, but who knows!]
    fgCallingNew = defConstructor;
    R__LOCKGUARD(gCINTMutex);
    void *p = GetClassInfo()->New(arena);
@@ -1475,6 +1499,18 @@ void *TClass::New(void *arena, Bool_t defConstructor)
 void TClass::Destructor(void *obj, Bool_t dtorOnly)
 {
    // Explicitely call destructor for object.
+
+   if (dtorOnly) {
+      if (fDestructor) {
+        fDestructor(obj);
+        return;
+      }     
+   } else {
+      if (fDelete) {
+        fDelete(obj);
+        return;
+      }
+   }
 
    if (!fClassInfo) return;
 
@@ -1994,4 +2030,54 @@ void TClass::Streamer(void *object, TBuffer &b)
 
 }
 
+//______________________________________________________________________________
+void TClass::SetNew(ROOT::newFunc_t newFunc) 
+{
+   fNew = newFunc;
+}
+   
+void TClass::SetNewArray(ROOT::newArrFunc_t newArrayFunc)
+{
+   fNewArray = newArrayFunc;
+}
+   
+void TClass::SetDelete(ROOT::delFunc_t deleteFunc)
+{
+   fDelete = deleteFunc;
+}
+   
+void TClass::SetDeleteArray(ROOT::delArrFunc_t deleteArrayFunc)
+{
+   fDeleteArray = deleteArrayFunc;
+}
+   
+void TClass::SetDestructor(ROOT::desFunc_t destructorFunc)
+{
+   fDestructor = destructorFunc;
+}
+   
+ROOT::newFunc_t TClass::GetNew() const
+{
+   return fNew;
+}
+ 
+ROOT::newArrFunc_t TClass::GetNewArray() const 
+{
+   return fNewArray;
+}
+
+ROOT::delFunc_t TClass::GetDelete() const
+{
+   return fDelete;
+}
+
+ROOT::delArrFunc_t TClass::GetDeleteArray() const
+{
+   return fDeleteArray;
+}
+
+ROOT::desFunc_t TClass::GetDestructor() const
+{
+   return fDestructor;
+}
 

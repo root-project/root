@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.1 2002/05/10 21:34:39 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.2 2002/11/01 19:12:09 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -34,7 +34,8 @@ namespace ROOT {
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
-        fVersion(1)
+        fVersion(1),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
    {
       Init(pragmabits);
    }
@@ -47,7 +48,8 @@ namespace ROOT {
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
-        fVersion(version)
+        fVersion(version),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
    {
       Init(pragmabits);
    }
@@ -60,7 +62,8 @@ namespace ROOT {
       : fAction(action), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(0),
-        fVersion(version)
+        fVersion(version),
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
    {
       Init(pragmabits);
    }
@@ -98,6 +101,10 @@ namespace ROOT {
                                           GetImplFileName(),
                                           GetDeclFileLine(),
                                           GetImplFileLine());
+         fClass->SetNew(fNew);
+         fClass->SetNewArray(fNewArray);
+         fClass->SetDelete(fDelete);
+         fClass->SetDeleteArray(fDeleteArray);
       }
       return fClass;
    }
@@ -174,5 +181,63 @@ namespace ROOT {
    {
       return fIsA;
    }
+
+   void TGenericClassInfo::SetNew(newFunc_t newFunc) 
+   {
+      fNew = newFunc;
+      if (fClass) fClass->SetNew(fNew);
+   }
+   
+   void TGenericClassInfo::SetNewArray(newArrFunc_t newArrayFunc)
+   {
+      fNewArray = newArrayFunc;
+      if (fClass) fClass->SetNewArray(fNewArray);
+   }
+   
+   void TGenericClassInfo::SetDelete(delFunc_t deleteFunc)
+   {
+      fDelete = deleteFunc;
+      if (fClass) fClass->SetDelete(fDelete);
+   }
+   
+   void TGenericClassInfo::SetDeleteArray(delArrFunc_t deleteArrayFunc)
+   {
+      fDeleteArray = deleteArrayFunc;
+      if (fClass) fClass->SetDeleteArray(fDeleteArray);
+   }
+   
+   void TGenericClassInfo::SetDestructor(desFunc_t destructorFunc)
+   {
+      fDestructor = destructorFunc;
+      if (fClass) fClass->SetDestructor(fDestructor);
+   }   
+
+   newFunc_t TGenericClassInfo::GetNew() const
+   {
+      return fNew;
+   }
+ 
+   newArrFunc_t TGenericClassInfo::GetNewArray() const 
+   {
+      return fNewArray;
+   }
+
+   delFunc_t TGenericClassInfo::GetDelete() const
+   {
+      return fDelete;
+   }
+
+   delArrFunc_t TGenericClassInfo::GetDeleteArray() const
+   {
+      return fDeleteArray;
+   }
+
+   desFunc_t TGenericClassInfo::GetDestructor() const
+   {
+      return fDestructor;
+   }
+
+   
+ 
 
 }

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.33 2002/08/20 11:25:19 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.34 2002/09/26 19:13:09 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -121,6 +121,12 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
 namespace ROOT {
 
    class TGenericClassInfo;
+   typedef void *(*newFunc_t)(void *);
+   typedef void *(*newArrFunc_t)(Long_t size);
+   typedef void  (*delFunc_t)(void *);
+   typedef void  (*delArrFunc_t)(void *);
+   typedef void  (*desFunc_t)(void *);
+
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
    extern TClass *CreateClass(const char *cname, Version_t id,

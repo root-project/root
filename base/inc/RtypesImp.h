@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.10 2002/08/20 10:51:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.11 2002/08/24 17:17:02 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -41,6 +41,13 @@ namespace ROOT {
          if (show) show(obj, R__insp, R__parent);
       }
    }
+
+  class operatorNewHelper {};
+}
+
+// This is to provide a placement operator new on all platform
+inline void* operator new(size_t size,ROOT::operatorNewHelper* p) {
+  return((void*)p);
 }
 
 #endif

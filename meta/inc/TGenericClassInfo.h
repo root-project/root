@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.1 2002/05/10 21:34:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.2 2002/11/01 19:12:09 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -31,7 +31,12 @@ namespace ROOT {
       IsAFunc_t            fIsA;
       void                *fShowMembers;
       Int_t                fVersion;
-
+      newFunc_t            fNew;
+      newArrFunc_t         fNewArray;
+      delFunc_t            fDelete;
+      delArrFunc_t         fDeleteArray;
+      desFunc_t            fDestructor;
+      
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
@@ -55,20 +60,33 @@ namespace ROOT {
       ~TGenericClassInfo();
 
       const TInitBehavior &GetAction() const;
-      TClass *GetClass();
-      const char *GetClassName() const;
-      const type_info &GetInfo() const;
-      void *GetShowMembers() const;
-      Short_t SetVersion(Short_t version);
-      void SetFromTemplate();
-      Int_t SetImplFile(const char *file, Int_t line);
-      const char *GetDeclFileName() const;
-      Int_t GetDeclFileLine() const;
-      const char *GetImplFileName();
-      Int_t GetImplFileLine();
-      Int_t GetVersion() const;
-      TClass *IsA(const void *obj);
-      IsAFunc_t GetIsA() const;
+      TClass              *GetClass();
+      const char          *GetClassName() const;
+      const char          *GetDeclFileName() const;
+      Int_t                GetDeclFileLine() const;
+      delFunc_t            GetDelete() const;
+      delArrFunc_t         GetDeleteArray() const;
+      desFunc_t            GetDestructor() const;
+      const char          *GetImplFileName();
+      Int_t                GetImplFileLine();
+      const type_info     &GetInfo() const;
+      IsAFunc_t            GetIsA() const;
+      newFunc_t            GetNew() const;
+      newArrFunc_t         GetNewArray() const;
+      void                *GetShowMembers() const;
+      Int_t                GetVersion() const;
+
+      TClass              *IsA(const void *obj);
+
+      void                 SetDelete(delFunc_t deleteFunc);
+      void                 SetDeleteArray(delArrFunc_t deleteArrayFunc);
+      void                 SetDestructor(desFunc_t destructorFunc);
+      void                 SetFromTemplate();
+      Int_t                SetImplFile(const char *file, Int_t line);
+      void                 SetNew(newFunc_t newFunc);
+      void                 SetNewArray(newArrFunc_t newArrayFunc);
+      Short_t              SetVersion(Short_t version);
+      
    };
 
 }

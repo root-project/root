@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.36 2002/11/01 19:12:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.37 2002/11/01 19:58:44 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1608,6 +1608,16 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
       *this << objIdx;
 
    } else {
+
+      // A warning to let the user know it will need to change the class code to 
+      // be able to read this back.
+      if (actualClass->GetNew()==0) {
+         Warning("WriteObjectAny","Since %s had no public constructor \n"
+                 "\twhich can be called without argument, TSocket objects can not be read\n"
+                 "\twith the current library. You would need to add a default constructor\n"
+                 "\tbefore attempting to read.",
+                 actualClass->GetName());
+      }
 
       // reserve space for leading byte count
       UInt_t cntpos = UInt_t(fBufCur-fBuffer);

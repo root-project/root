@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.107 2002/10/23 10:51:22 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.108 2002/11/01 19:12:10 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -418,6 +418,29 @@ bool CheckInputOperator(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
+bool CheckClassDef(G__ClassInfo &cl) 
+{
+   // Return false if the class does not have ClassDef even-though it should.
+
+
+   // Detect if the class has a ClassDef
+   bool hasClassDef = cl.HasMethod("Class_Version");
+
+
+   long offset;
+   const char *proto = "";
+   const char *name = "IsA";
+   
+   G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
+   bool needClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   
+   if (0) fprintf(stderr,"%d %d %s\n",hasClassDef,needClassDef,cl.Fullname());
+   
+   // This check is disabled for now.
+   return true;
+}
+
+//______________________________________________________________________________
 int GetClassVersion(G__ClassInfo &cl)
 {
    // Return the version number of the class or -1
@@ -528,6 +551,158 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
    }
    return 0;
 }
+
+bool HasCustomOperatorNew(G__ClassInfo& cl);
+bool HasDefaultConstructor(G__ClassInfo& cl);
+bool NeedConstructor(G__ClassInfo& cl);
+
+//______________________________________________________________________________
+bool HasCustomOperatorNew(G__ClassInfo& cl)
+{
+   // return true if we can find a custom operator new
+ 
+   // Look for a custom operator new
+   bool custom = false;
+   G__ClassInfo gcl;
+   long offset;
+   const char *name = "operator new";
+   const char *proto = "size_t";
+
+   // first in the global namespace:
+   G__MethodInfo methodinfo = gcl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+
+   // in nested space:
+   gcl = cl.EnclosingSpace();
+   methodinfo = gcl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+
+   // in class 
+   methodinfo = cl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid()) {
+      custom = true;
+   }
+
+   return custom;
+}
+
+//______________________________________________________________________________
+bool HasDefaultConstructor(G__ClassInfo& cl)
+{
+   // return true if we can find an constructor calleable without any arguments
+
+   bool result = true;
+   long offset;
+   const char *proto = "";
+
+   G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto,&offset);
+   if (methodinfo.IsValid()) {
+      /*fprintf(stderr,"found a constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
+               cl.Name(),methodinfo.GetPrototype(),
+               cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
+               methodinfo.NArg(),methodinfo.NDefaultArg());  */
+      // proto = methodinfo.GetPrototype();
+      // if ( proto[strlen(proto)-2]!='(' && error) *error = true;
+      if (methodinfo.NArg()!=methodinfo.NDefaultArg()) result = false;
+
+      if (!(methodinfo.Property() & G__BIT_ISPUBLIC)) {
+         if (!NeedConstructor(cl) ) {
+            // If we do not need the constructor and it is not public,
+            // let's not write the stub (a classical case, is to explictly make the constructor private
+            // and NOT implement it).
+            result = false;
+         } else {
+            // For now we do not try to circunvant the access mode of the constructor.
+            result = false;
+         }
+      }
+   } else {
+       /* fprintf(stderr,"did not find a constructor for %s and %s\n",
+                cl.Name(),
+                cl.HasMethod(cl.Name())? " has constructor " : " has no constructor "); */
+      if (cl.HasMethod(cl.TmpltName())) result = false;
+   }
+
+   // Check for private operator new
+   const char *name = "operator new";
+   proto = "size_t";
+   methodinfo = cl.GetMethod(name,proto,&offset);
+   if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
+      result = false;
+   }
+   
+   return result && !(cl.Property() & G__BIT_ISABSTRACT);
+}
+
+//______________________________________________________________________________
+bool NeedConstructor(G__ClassInfo& cl)
+{
+   bool res= ((GetClassVersion(cl)>0
+               || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+                  && strncmp(cl.FileName(),"prec_stl",8)!=0 ) 
+               ) && !(cl.Property() & G__BIT_ISABSTRACT));
+   return res;
+}
+
+//______________________________________________________________________________
+bool CheckConstructor(G__ClassInfo& cl)
+{
+   // Return false if the constructor configuration is invalid 
+  
+   bool result = true;
+   if (NeedConstructor(cl)) {
+
+      bool custom = HasCustomOperatorNew(cl);
+      if (custom && cl.IsBase("TObject")) {
+         custom = false;
+      }
+      // if (custom) fprintf(stderr,"%s has custom operator new\n",cl.Name());
+
+      result = !HasDefaultConstructor(cl);      
+   }
+
+   // For now we never issue a warning at rootcint time.
+   // There will be a warning at run-time.
+   result = true;
+   
+   if (!result) {
+      //Error(cl.Fullname(), "I/O has been requested but there is no constructor calleable without arguments\n"
+      //      "\tand a custom operator new has been defined.\n"
+      //      "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
+      Warning(cl.Fullname(), "I/O has been requested but is missing an explicit default constructor.\n"
+               "\tEither disable the I/O or add an explicit default constructor.\n",cl.Fullname());
+   }
+
+   return result;
+}
+
+//______________________________________________________________________________
+bool NeedDestructor(G__ClassInfo& cl)
+{
+  
+  long offset;
+  const char *proto = "";
+  string name = "~";
+  name += cl.TmpltName();
+
+  G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
+  
+  // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
+  if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
+     return false;
+  }
+  return true;
+  /* (GetClassVersion(cl)>0
+     || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
+     && strncmp(cl.FileName(),"prec_stl",8)!=0 ) );
+  */
+}
+
+
 
 //______________________________________________________________________________
 bool NeedShadowClass(G__ClassInfo& cl)
@@ -705,6 +880,62 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
    if (current) ti.Init(current);
 
    return ti;
+}
+
+//______________________________________________________________________________
+void WriteAuxFunctions(G__ClassInfo &cl) 
+{
+   // Write the functions that are need for the TGenericClassInfo.
+   // This includes
+   //    IsA
+   //    operator new
+   //    operator new[]
+   //    operator delete
+   //    operator delete[]
+
+   fprintf(fp, "namespace ROOT {\n");
+   
+   fprintf(fp, "   // Return the actual TClass for the object argument\n");
+   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
+   if (!cl.HasMethod("IsA")) {
+      fprintf(fp, "      return gROOT->GetClass(typeid(*(::%s*)obj));\n",cl.Fullname());
+   } else {
+      fprintf(fp, "      return ((::%s*)obj)->IsA();\n",cl.Fullname());
+   }
+   fprintf(fp, "   }\n");
+
+   if (HasDefaultConstructor(cl)) {
+      // write the constructor wrapper only for concrete classes
+      fprintf(fp, "   // Wrappers around operator new\n");
+      fprintf(fp, "   void *new_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      if (HasCustomOperatorNew(cl)) {
+        fprintf(fp, "      return  p ? new(p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
+      } else {
+        fprintf(fp, "      return  p ? new((ROOT::operatorNewHelper*)p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
+      }
+      fprintf(fp, "   }\n");
+      
+      fprintf(fp, "   void *newArray_%s(Long_t size) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      return new ::%s[size];\n",cl.Fullname());
+      fprintf(fp, "   }\n");
+   }
+
+   if (NeedDestructor(cl)) {
+      fprintf(fp, "   // Wrapper around operator delete\n");
+      fprintf(fp, "   void delete_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      delete ((::%s*)p);\n",cl.Fullname());
+      fprintf(fp, "   }\n");
+      
+      fprintf(fp, "   void deleteArray_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      delete [] ((::%s*)p);\n",cl.Fullname());
+      fprintf(fp, "   }\n");
+
+      fprintf(fp, "   void destruct_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      ((::%s*)p)->~%s();\n",cl.Fullname(),cl.TmpltName());
+      fprintf(fp, "   }\n");
+   }
+
+   fprintf(fp, "} // end of namespace ROOT for class %s\n\n",cl.Fullname());
 }
 
 //______________________________________________________________________________
@@ -1391,9 +1622,19 @@ void WriteClassInit(G__ClassInfo &cl)
            G__map_cpp_name((char *)cl.Fullname()));
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
-      fprintf(fp, "   void %s_Dictionary();\n\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void %s_Dictionary();\n",G__map_cpp_name((char *)cl.Fullname()));
 
-   fprintf(fp, "   TClass *%s_IsA(const void*);\n\n",G__map_cpp_name((char *)cl.Fullname()));
+   fprintf(fp, "   TClass *%s_IsA(const void*);\n",G__map_cpp_name((char *)cl.Fullname()));
+   if (HasDefaultConstructor(cl)) {
+      fprintf(fp, "   void *new_%s(void *p = 0);\n",G__map_cpp_name((char *)cl.Fullname()));     
+      fprintf(fp, "   void *newArray_%s(Long_t size);\n",G__map_cpp_name((char *)cl.Fullname()));
+   }
+   if (NeedDestructor(cl)) {
+      fprintf(fp, "   void delete_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "   void deleteArray_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));     
+      fprintf(fp, "   void destruct_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
+   }
+   fprintf(fp, "\n");
 
    fprintf(fp, "   // Function generating the singleton type initializer\n");
 
@@ -1474,6 +1715,15 @@ void WriteClassInit(G__ClassInfo &cl)
 
    fprintf(fp, "&%s_IsA, ", G__map_cpp_name((char *)cl.Fullname()));
    fprintf(fp, "%d);\n", cl.RootFlag());
+   if (HasDefaultConstructor(cl)) {
+      fprintf(fp, "      instance.SetNew(&new_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+   }
+   if (NeedDestructor(cl)) {
+     fprintf(fp, "      instance.SetDelete(&delete_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+     fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+     fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",G__map_cpp_name((char *)cl.Fullname()));
+   }
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "   // Static variable to force the class initialization\n");
@@ -1486,15 +1736,6 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "      ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n",cl.Fullname());
       fprintf(fp, "   }\n\n");
    }
-
-   fprintf(fp, "   // Return the actual TClass for the object argument\n");
-   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
-   if (!cl.HasMethod("IsA") || cl.IsTmplt()) {
-      fprintf(fp, "      return gROOT->GetClass(typeid(*(%s*)obj));\n",cl.Fullname());
-   } else {
-      fprintf(fp, "      return ((%s*)obj)->IsA();\n",cl.Fullname());
-   }
-   fprintf(fp, "   }\n");
 
    fprintf(fp,"}\n\n");
 }
@@ -2342,8 +2583,12 @@ void WriteClassCode(G__ClassInfo &cl)
       }
       if (cl.HasMethod("ShowMembers")) {
          WriteShowMembers(cl);
+         WriteAuxFunctions(cl);
       } else {
-         if (NeedShadowClass(cl)) WriteShowMembers(cl,true);
+         if (NeedShadowClass(cl)) {
+           WriteShowMembers(cl,true);
+         }
+         WriteAuxFunctions(cl);
       }
    }
 }
@@ -3229,8 +3474,15 @@ int main(int argc, char **argv)
                }
             }
          }
+         bool res = CheckConstructor(cl);
+         if (!res) {
+            // has_input_error = true;
+         }
+         res = CheckClassDef(cl);
+         
       }
    }
+
    if (has_input_error) {
       // Be a little bit makefile friendly and remove the dictionary in case of error.
       // We could add an option -k to keep the file even in case of error.
