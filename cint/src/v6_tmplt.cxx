@@ -662,61 +662,7 @@ char *name;
 ***********************************************************************/
 int G__explicit_template_specialization()
 {
-  char buf[G__ONELINE];
-  int cin;
-  int typenum;
-  int tagnum = G__struct.alltag;
-  char *p;
-
-  /* store file position */
-  fpos_t store_pos;
-  int store_line=G__ifile.line_number;
-  fgetpos(G__ifile.fp,&store_pos);
-  G__disp_mask = 1000;
-
-  /* forward proving */
-  cin = G__fgetname_template(buf,":{;");
-  if(strcmp(buf,"class")==0 || strcmp(buf,"struct")==0) {
-    /* template<>  class A<int> { A(A& x); A& operator=(A& x); };
-     *                  ^                      */
-    cin = G__fgetname_template(buf,":{;");
-  }
-  else {
-    /*  template<>  void A<int>::A(A& x) { }
-     *                  ^                      */
-    for(;;) {
-      cin = G__fgetname_template(buf,":{;");
-      if(':'==cin) {
-	break;
-      }
-      if('{'==cin || ';'==cin) {
-	G__genericerror("Error: Syntax error????");
-	break;
-      }
-    }
-  }
-
-  /* Set temporary typedef */
-  p = strchr(buf,'<');
-  if(p) *p=0;
-  typenum = G__search_typename(buf,'u',tagnum,G__PARANORMAL);
-
-  /* restore original file position
-   *  template<>  class A<int> { A(A& x); A& operator=(A& x); };
-   *  template<>  void A<int>::A(A& x) { }
-   *             ^                             */
-  G__disp_mask = 0;
-  fsetpos(G__ifile.fp,&store_pos);
-  G__ifile.line_number = store_line;
-
-  /* Read source */
   G__exec_statement();
-
-  /* discard temporary typedef */
-  G__newtype.name[typenum][0]=0;
-  G__newtype.hash[typenum] = 0;
-  if(G__newtype.alltype==typenum+1) --G__newtype.alltype;
-
   return(0);
 }
 #endif
@@ -754,6 +700,14 @@ void G__declare_template()
   int ismemvar=0;
 #ifndef G__OLDIMPLEMENTATION691
   int isforwarddecl = 0;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1412
+  if(G__MAXFILE-1==G__ifile.filenum) {
+    fprintf(G__serr,"Limitation: template can not be defined in a command line or a tempfile\n");
+    G__genericerror("You need to write it in a source file");
+    return;
+  }
 #endif
 
   /* Set a flag that template or macro is included in the source file,

@@ -126,13 +126,15 @@ int shmctl(int shmid,int cmd,struct shmid_ds *buf);
 
 struct semid_ds;
 
-#if defined(G__GNUC)
+#endif /* __MAKECINT__ */
+
+#if defined(G__GNUC) || defined(__GNUC__)
 union semun {
   int val;
   struct semid_ds *buf;
   unsigned short *array;
 };
-#elif defined(G__HPUX)
+#elif defined(G__HPUX) || defined(__hpux)
 // ???
 #else
 union semun {
@@ -142,6 +144,8 @@ union semun {
 };
 #endif
 
+#ifdef __MAKECINT__
+
 struct sembuf {
   ushort sem_num; // semaphore number
   short sem_op;   // semaphore operation
@@ -149,6 +153,7 @@ struct sembuf {
 };
 
 int semget(key_t key, int nsems,int semflg);
+
 #if defined(G__GNUC)
 int semctl(int semid,int semnum,int cmd,union semun arg);
 #elif defined(G__HPUX)
@@ -156,7 +161,9 @@ int semctl(int semid,int semnum,int cmd,void* x);
 #else
 int semctl(int semid,int semnum,int cmd,union semun arg);
 #endif
+
 int semop(int semid,struct sembuf *sops,unsigned int nsops);
+
 
 
 /**************************************************************************
@@ -174,6 +181,8 @@ int *msgsnd(int msgid,struct msgbuf *msgp,int msgsz,int msgflg);
 int msgrcv(int msgid,struct msgbuf *msgp,int msgsz,long msgtyp,int msgflg);
 int msgctl(int msgid, int cmd,struct msqid_ds *buf);
 
+
+#pragma link off class semun;
 
 #endif /* __MAKECINT__ */
 

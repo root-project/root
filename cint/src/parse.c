@@ -730,6 +730,7 @@ char *statement;
   /***********************************
    * template  <class T> class A { ... };
    * template  A<int>;
+   * template  class A<int>;
    *          ^
    ***********************************/
   if(strcmp(statement,"template")==0){
@@ -748,7 +749,18 @@ char *statement;
     }
     /* template  A<int>; this is a template instantiation */
     tcname[0] = c;
+#ifndef G__OLDIMPLEMENTATION1411
+    c=G__fgetname_template(tcname+1,";");
+    if(strcmp(tcname,"class")==0 ||
+       strcmp(tcname,"struct")==0) {
+      c=G__fgetstream_template(tcname,";");
+    }
+    else if(isspace(c)) {
+      c=G__fgetstream_template(tcname+strlen(tcname),";");
+    }
+#else
     c=G__fgetstream_template(tcname+1,";");
+#endif
     if(!G__defined_templateclass(tcname)) {
       G__instantiate_templateclass(tcname);
     }

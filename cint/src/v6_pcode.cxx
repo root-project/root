@@ -760,7 +760,7 @@ long localmem;
       * 3 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: INCJMP *(int*)0x%x+%d %d\n"
+      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: INCJMP *(int*)0x%x+%d to %x\n"
 			     ,pc,sp ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -2958,6 +2958,278 @@ long ig15;
     buf->obj.d = *(double*)buf->ref;
 }
 
+#ifndef G__OLDIMPLEMENTATION1405
+/*************************************************************************
+* G__LD_pn_xxx
+*************************************************************************/
+
+/****************************************************************
+* G__ASM_GET_INT_PN
+****************************************************************/
+#ifdef G__TUNEUP_W_SECURITY
+#define G__ASM_GET_INT_PN(casttype,ctype)              \
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];\
+  int ary = var->varlabel[ig15][0];                    \
+  int paran = var->paran[ig15];                        \
+  int p_inc=0;                                         \
+  int ig25;                                            \
+  ++(*psp);                                            \
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {\
+    p_inc += ary*G__int(buf[ig25]);                    \
+    ary /= var->varlabel[ig15][ig25+2];                \
+  }                                                    \
+  buf->tagnum = -1;                                    \
+  buf->type = ctype;                                   \
+  buf->typenum = var->p_typetable[ig15];               \
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(casttype); \
+  if(p_inc-1>var->varlabel[ig15][1])                   \
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  \
+  else                                                 \
+    buf->obj.i = *(casttype*)buf->ref
+#else
+#define G__ASM_GET_INT_PN(casttype,ctype)              \
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];\
+  int ary = var->varlabel[ig15][0];                    \
+  int paran = var->paran[ig15];                        \
+  int p_inc=0;                                         \
+  int ig25;                                            \
+  ++(*psp);                                            \
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {\
+    p_inc += ary*G__int(buf[ig25]);                    \
+    ary /= var->varlabel[ig15][ig25+2];                \
+  }                                                    \
+  buf->tagnum = -1;                                    \
+  buf->type = ctype;                                   \
+  buf->typenum = var->p_typetable[ig15];               \
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(casttype); \
+  buf->obj.i = *(casttype*)buf->ref
+#endif
+
+/****************************************************************
+* G__LD_pn_char()
+****************************************************************/
+void G__LD_pn_char(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(char,'c');
+}
+/****************************************************************
+* G__LD_pn_uchar()
+****************************************************************/
+void G__LD_pn_uchar(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(unsigned char,'b');
+}
+/****************************************************************
+* G__LD_pn_short()
+****************************************************************/
+void G__LD_pn_short(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(short,'s');
+}
+/****************************************************************
+* G__LD_pn_ushort()
+****************************************************************/
+void G__LD_pn_ushort(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(unsigned short,'r');
+}
+/****************************************************************
+* G__LD_pn_int()
+****************************************************************/
+void G__LD_pn_int(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(int,'i');
+}
+
+/****************************************************************
+* G__LD_pn_uint()
+****************************************************************/
+void G__LD_pn_uint(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(unsigned int,'h');
+}
+/****************************************************************
+* G__LD_pn_long()
+****************************************************************/
+void G__LD_pn_long(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(long,'l');
+}
+
+/****************************************************************
+* G__LD_pn_ulong()
+****************************************************************/
+void G__LD_pn_ulong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_GET_INT_PN(unsigned long,'k');
+}
+/****************************************************************
+* G__LD_pn_pointer()
+****************************************************************/
+void G__LD_pn_pointer(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = var->type[ig15];
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(long);
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc-1>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    buf->obj.i = *(long*)buf->ref;
+  buf->obj.reftype.reftype=var->reftype[ig15]; /* ?? for G__LD_p1_pointer */
+}
+/****************************************************************
+* G__LD_pn_struct()
+****************************************************************/
+void G__LD_pn_struct(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = var->p_tagtable[ig15];
+  buf->type = 'u';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*G__struct.size[buf->tagnum];
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc-1>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    buf->obj.i = buf->ref;
+}
+/****************************************************************
+* G__LD_pn_float()
+****************************************************************/
+void G__LD_pn_float(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = 'f';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(float);
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc-1>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    buf->obj.d = *(float*)buf->ref;
+}
+/****************************************************************
+* G__LD_pn_double()
+****************************************************************/
+void G__LD_pn_double(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  ++(*psp);
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  buf->tagnum = -1;
+  buf->type = 'd';
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(double);
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc-1>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    buf->obj.d = *(double*)buf->ref;
+}
+#endif /* 1405 */
+
 
 /*************************************************************************
 * G__LD_P10_xxx
@@ -3535,6 +3807,263 @@ long ig15;
             = (double)G__double(pbuf[*psp-2]);
   --(*psp);
 }
+
+#ifndef G__OLDIMPLEMENTATION1406
+/*************************************************************************
+* G__ST_pn_xxx
+*************************************************************************/
+
+/****************************************************************
+* G__ASM_ASSIGN_INT_PN
+****************************************************************/
+#ifdef G__TUNEUP_W_SECURITY
+#define G__ASM_ASSIGN_INT_PN(casttype)                           \
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          \
+  int ary = var->varlabel[ig15][0];                              \
+  int paran = var->paran[ig15];                                  \
+  int p_inc=0;                                                   \
+  int ig25;                                                      \
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         \
+    p_inc += ary*G__int(buf[ig25]);                              \
+    ary /= var->varlabel[ig15][ig25+2];                          \
+  }                                                              \
+  if(p_inc>var->varlabel[ig15][1])                               \
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    \
+  else                                                           \
+    *(casttype*)(var->p[ig15]+offset+p_inc*sizeof(casttype))     \
+            = (casttype)G__int(pbuf[*psp-1])
+#else
+#define G__ASM_ASSIGN_INT_PN(casttype)                           \
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          \
+  int ary = var->varlabel[ig15][0];                              \
+  int paran = var->paran[ig15];                                  \
+  int p_inc=0;                                                   \
+  int ig25;                                                      \
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         \
+    p_inc += ary*G__int(buf[ig25]);                              \
+    ary /= var->varlabel[ig15][ig25+2];                          \
+  }                                                              \
+  *(casttype*)(var->p[ig15]+offset+p_inc*sizeof(casttype))       \
+            = (casttype)G__int(pbuf[*psp-1])
+#endif
+
+/****************************************************************
+* G__ST_p0_char()
+****************************************************************/
+void G__ST_pn_char(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(char);
+}
+/****************************************************************
+* G__ST_pn_uchar()
+****************************************************************/
+void G__ST_pn_uchar(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(unsigned char);
+}
+/****************************************************************
+* G__ST_pn_short()
+****************************************************************/
+void G__ST_pn_short(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(short);
+}
+/****************************************************************
+* G__ST_pn_ushort()
+****************************************************************/
+void G__ST_pn_ushort(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(unsigned short);
+}
+/****************************************************************
+* G__ST_pn_int()
+****************************************************************/
+void G__ST_pn_int(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(int);
+}
+
+/****************************************************************
+* G__ST_pn_uint()
+****************************************************************/
+void G__ST_pn_uint(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(unsigned int);
+}
+/****************************************************************
+* G__ST_pn_long()
+****************************************************************/
+void G__ST_pn_long(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(long);
+}
+
+/****************************************************************
+* G__ST_pn_ulong()
+****************************************************************/
+void G__ST_pn_ulong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__ASM_ASSIGN_INT_PN(unsigned long);
+}
+/****************************************************************
+* G__ST_pn_pointer()
+****************************************************************/
+void G__ST_pn_pointer(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+  if(p_inc>var->varlabel[ig15][1]) {
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  }
+  else {
+    long address = (var->p[ig15]+offset+p_inc*sizeof(long));
+    long newval = G__int(pbuf[*psp-1]);
+    if(G__security&G__SECURE_GARBAGECOLLECTION && address) {
+      if(*(long*)address) {
+	G__del_refcount((void*)(*(long*)address),(void**)address);
+      }
+      if(newval) {
+	G__add_refcount((void*)newval,(void**)address);
+      }
+    }
+    *(long*)(address) = newval;
+  }
+}
+/****************************************************************
+* G__ST_pn_struct()
+****************************************************************/
+void G__ST_pn_struct(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    memcpy((void*)(var->p[ig15]+offset
+		 +p_inc*G__struct.size[var->p_tagtable[ig15]])
+	 ,(void*)pbuf[*psp-1].obj.i,G__struct.size[var->p_tagtable[ig15]]);
+}
+/****************************************************************
+* G__ST_pn_float()
+****************************************************************/
+void G__ST_pn_float(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    *(float*)(var->p[ig15]+offset+p_inc*sizeof(float))
+            = (float)G__double(pbuf[*psp-1]);
+}
+/****************************************************************
+* G__ST_pn_double()
+****************************************************************/
+void G__ST_pn_double(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];
+  int paran = var->paran[ig15];
+  int p_inc=0;
+  int ig25;
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);
+    ary /= var->varlabel[ig15][ig25+2];
+  }
+#ifdef G__TUNEUP_W_SECURITY
+  if(p_inc>var->varlabel[ig15][1])
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);
+  else
+#endif
+    *(double*)(var->p[ig15]+offset+p_inc*sizeof(double))
+            = (double)G__double(pbuf[*psp-1]);
+}
+#endif /* 1406 */
 
 /*************************************************************************
 * G__ST_P10_xxx
@@ -5535,6 +6064,7 @@ int G__asm_clear()
   if(G__asm_dbg) fprintf(G__serr ,"%3x: CL  FILE:%s LINE:%d\n" ,G__asm_cp
 			 ,G__ifile.name ,G__ifile.line_number);
 #endif
+
   if(G__asm_cp<2 || G__CL!=G__asm_inst[G__asm_cp-2]) {
     G__asm_inst[G__asm_cp]=G__CL;
     G__asm_inst[G__asm_cp+1]=G__ifile.line_number;
@@ -6310,6 +6840,39 @@ long *pinst;
   return(done);
 }
 
+#ifndef G__OLDIMPLEMENTATION1405
+/*************************************************************************
+* G__get_LD_pn_p2f()
+*************************************************************************/
+int G__get_LD_pn_p2f(type,pinst)
+int type;
+long *pinst;
+{
+  int done = 1;
+  if(isupper(type)) {
+    if('Z'==type) done=0;
+    else *pinst = (long)G__LD_pn_pointer;
+  }
+  else {
+    switch(type) {
+    case 'b': *pinst = (long)G__LD_pn_uchar; break;
+    case 'c': *pinst = (long)G__LD_pn_char; break;
+    case 'r': *pinst = (long)G__LD_pn_ushort; break;
+    case 's': *pinst = (long)G__LD_pn_short; break;
+    case 'h': *pinst = (long)G__LD_pn_uint; break;
+    case 'i': *pinst = (long)G__LD_pn_int; break;
+    case 'k': *pinst = (long)G__LD_pn_ulong; break;
+    case 'l': *pinst = (long)G__LD_pn_long; break;
+    case 'u': *pinst = (long)G__LD_pn_struct; break;
+    case 'f': *pinst = (long)G__LD_pn_float; break;
+    case 'd': *pinst = (long)G__LD_pn_double; break;
+    default: done=0; break;
+    }
+  }
+  return(done);
+}
+#endif /* 1405 */
+
 /*************************************************************************
 * G__get_LD_P10_p2f()
 *************************************************************************/
@@ -6406,6 +6969,39 @@ long *pinst;
   }
   return(done);
 }
+
+#ifndef G__OLDIMPLEMENTATION1406
+/*************************************************************************
+* G__get_ST_pn_p2f()
+*************************************************************************/
+int G__get_ST_pn_p2f(type,pinst)
+int type;
+long *pinst;
+{
+  int done = 1;
+  if(isupper(type)) {
+    if('Z'==type) done=0;
+    else *pinst = (long)G__ST_pn_pointer;
+  }
+  else {
+    switch(type) {
+    case 'b': *pinst = (long)G__ST_pn_uchar; break;
+    case 'c': *pinst = (long)G__ST_pn_char; break;
+    case 'r': *pinst = (long)G__ST_pn_ushort; break;
+    case 's': *pinst = (long)G__ST_pn_short; break;
+    case 'h': *pinst = (long)G__ST_pn_uint; break;
+    case 'i': *pinst = (long)G__ST_pn_int; break;
+    case 'k': *pinst = (long)G__ST_pn_ulong; break;
+    case 'l': *pinst = (long)G__ST_pn_long; break;
+    case 'u': *pinst = (long)G__ST_pn_struct; break;
+    case 'f': *pinst = (long)G__ST_pn_float; break;
+    case 'd': *pinst = (long)G__ST_pn_double; break;
+    default: done=0; break;
+    }
+  }
+  return(done);
+}
+#endif /* 1406 */
 
 /*************************************************************************
 * G__get_ST_P10_p2f()
@@ -6724,13 +7320,53 @@ long inst;
   G__asm_inst[pc+3] = 0;
   if(0==G__get_LD_p1_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"Error: LD_VAR optimize (7) error %s\n"
+    if(G__asm_dbg) fprintf(G__serr,"Error: LD_VAR optimize (8) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
     G__asm_inst[pc+3] = pointlevel;
   }
 }
+
+#ifndef G__OLDIMPLEMENTATION1405
+/*************************************************************************
+* G__LD_pn_optimize()
+*************************************************************************/
+void G__LD_pn_optimize(var,ig15,pc,inst)
+struct G__var_array *var;
+int ig15;
+int pc;
+long inst;
+{
+  long originst=G__asm_inst[pc];
+  int pointlevel=G__asm_inst[pc+3];
+#ifdef G__ASM_DBG
+  if(G__asm_dbg) {
+    switch(inst) {
+    case G__LDST_VAR_P:
+      fprintf(G__serr,"  G__LD_VAR optimized 8 G__LDST_VAR_P\n");
+      break;
+    case G__LDST_MSTR_P:
+      fprintf(G__serr,"  G__LD_MSTR optimized 8 G__LDST_MSTR_P\n");
+      break;
+    case G__LDST_LVAR_P:
+      fprintf(G__serr,"  G__LD_LVAR optimized 8 G__LDST_LVAR_P\n");
+      break;
+    }
+  }
+#endif
+  G__asm_inst[pc] = inst;
+  G__asm_inst[pc+3] = 0;
+  if(0==G__get_LD_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg) fprintf(G__serr,"Error: LD_VAR optimize (8) error %s\n"
+			   ,var->varnamebuf[ig15]);
+#endif
+    G__asm_inst[pc] = originst;
+    G__asm_inst[pc+3] = pointlevel;
+  }
+}
+#endif /* 1405 */
 
 /*************************************************************************
 * G__LD_P10_optimize()
@@ -6747,13 +7383,13 @@ long inst;
   if(G__asm_dbg) {
     switch(inst) {
     case G__LDST_VAR_P:
-      fprintf(G__serr,"  G__LD_VAR optimized 7 G__LDST_VAR_P\n");
+      fprintf(G__serr,"  G__LD_VAR optimized 9 G__LDST_VAR_P\n");
       break;
     case G__LDST_MSTR_P:
-      fprintf(G__serr,"  G__LD_MSTR optimized 7 G__LDST_MSTR_P\n");
+      fprintf(G__serr,"  G__LD_MSTR optimized 9 G__LDST_MSTR_P\n");
       break;
     case G__LDST_LVAR_P:
-      fprintf(G__serr,"  G__LD_LVAR optimized 7 G__LDST_LVAR_P\n");
+      fprintf(G__serr,"  G__LD_LVAR optimized 9 G__LDST_LVAR_P\n");
       break;
     }
   }
@@ -6763,7 +7399,7 @@ long inst;
   if(0==G__get_LD_P10_p2f(var->type[ig15],&G__asm_inst[pc+2]
 			  ,var->reftype[ig15])) {
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) fprintf(G__serr,"Error: LD_VAR optimize (7) error %s\n"
+    if(G__asm_dbg) fprintf(G__serr,"Error: LD_VAR optimize (9) error %s\n"
 			   ,var->varnamebuf[ig15]);
 #endif
     G__asm_inst[pc] = originst;
@@ -6847,6 +7483,46 @@ long inst;
     G__asm_inst[pc+3] = pointlevel;
   }
 }
+
+#ifndef G__OLDIMPLEMENTATION1406
+/*************************************************************************
+* G__ST_pn_optimize()
+*************************************************************************/
+void G__ST_pn_optimize(var,ig15,pc,inst)
+struct G__var_array *var;
+int ig15;
+int pc;
+long inst;
+{
+  long originst=G__asm_inst[pc];
+  int pointlevel=G__asm_inst[pc+3];
+#ifdef G__ASM_DBG
+  if(G__asm_dbg) {
+    switch(inst) {
+    case G__LDST_VAR_P:
+      fprintf(G__serr,"  G__ST_VAR optimized 10 G__LDST_VAR_P\n");
+      break;
+    case G__LDST_MSTR_P:
+      fprintf(G__serr,"  G__ST_MSTR optimized 10 G__LDST_MSTR_P\n");
+      break;
+    case G__LDST_LVAR_P:
+      fprintf(G__serr,"  G__ST_VAR optimized 10 G__LDST_LVAR_P\n");
+      break;
+    }
+  }
+#endif
+  G__asm_inst[pc+0] = inst;
+  G__asm_inst[pc+3] = 1;
+  if(0==G__get_ST_pn_p2f(var->type[ig15],&G__asm_inst[pc+2])) {
+#ifdef G__ASM_DBG
+    if(G__asm_dbg) fprintf(G__serr,"Warning: ST_VAR optimize error %s\n"
+			   ,var->varnamebuf[ig15]);
+#endif
+    G__asm_inst[pc] = originst;
+    G__asm_inst[pc+3] = pointlevel;
+  }
+}
+#endif
 
 /*************************************************************************
 * G__ST_P10_optimize()
@@ -7694,6 +8370,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
+#ifndef G__OLDIMPLEMENTATION1405
+	else if(paran==var->paran[ig15]) {
+	  G__LD_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
@@ -7795,6 +8476,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
+#ifndef G__OLDIMPLEMENTATION1406
+	else if(paran==var->paran[ig15]) {
+	  G__ST_pn_optimize(var,ig15,pc,G__LDST_VAR_P);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,G__LDST_VAR_P);
 	}
@@ -7840,6 +8526,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,inst);
 	}
+#ifndef G__OLDIMPLEMENTATION1405
+	else if(paran==var->paran[ig15]) {
+	  G__LD_pn_optimize(var,ig15,pc,inst);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
 	}
@@ -7949,6 +8640,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,inst);
 	}
+#ifndef G__OLDIMPLEMENTATION1406
+	else if(paran==var->paran[ig15]) {
+	  G__ST_pn_optimize(var,ig15,pc,inst);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,G__LDST_MSTR_P);
 	}
@@ -7964,7 +8660,7 @@ int *start;
       * 3 next_pc
       ***************************************/
 #ifdef G__ASM_DBG
-      if(G__asm_dbg) fprintf(G__serr,"%3lx: INCJMP *(int*)0x%lx+%d %d\n"
+      if(G__asm_dbg) fprintf(G__serr,"%3lx: INCJMP *(int*)0x%lx+%d to %x\n"
 			     ,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
 			     ,G__asm_inst[pc+3]);
 #endif
@@ -8507,6 +9203,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__LD_p1_optimize(var,ig15,pc,inst);
 	}
+#ifndef G__OLDIMPLEMENTATION1405
+	else if(paran==var->paran[ig15]) {
+	  G__LD_pn_optimize(var,ig15,pc,inst);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__LD_P10_optimize(var,ig15,pc,inst);
 	}
@@ -8564,6 +9265,11 @@ int *start;
 	else if(1==paran && 1==var->paran[ig15]) {
 	  G__ST_p1_optimize(var,ig15,pc,inst);
 	}
+#ifndef G__OLDIMPLEMENTATION1406
+	else if(paran==var->paran[ig15]) {
+	  G__ST_pn_optimize(var,ig15,pc,inst);
+	}
+#endif
 	else if(1==paran && 0==var->paran[ig15] && isupper(var->type[ig15])) {
 	  G__ST_P10_optimize(var,ig15,pc,inst);
 	}
@@ -9411,7 +10117,7 @@ int isthrow;
       * 3 next_pc
       ***************************************/
       if(0==isthrow) {
-	fprintf(fout,"%3x: INCJMP *(int*)0x%lx+%ld %ld\n"
+	fprintf(fout,"%3x: INCJMP *(int*)0x%lx+%ld to %lx\n"
 		,pc ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]
 		,G__asm_inst[pc+3]);
       }

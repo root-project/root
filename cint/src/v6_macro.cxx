@@ -921,7 +921,11 @@ int G__execfuncmacro_noexec (char* macroname)
   }
   
   /* substitute macro if not already done so */
-  if(0==found) {
+  if(0==found
+#ifndef G__OLDIMPLEMENTATION1413
+     || G__MAXFILE-1==G__ifile.filenum
+#endif
+     ) {
     G__transfuncmacro(macroname,deffuncmacro,callfuncmacro,call_pos,p,1,1);
   }
 
@@ -1063,6 +1067,15 @@ char *new_name;
   int hash,i;
   char paralist[G__ONELINE];
   int c;
+
+#ifndef G__OLDIMPLEMENTATION1412
+  if(G__MAXFILE-1==G__ifile.filenum) {
+    fprintf(G__serr,"Limitation: Macro function can not be defined in a command line or a tempfile\n");
+    G__genericerror("You need to write it in a source file");
+    fprintf(G__serr,"Besides, it is recommended to use function template instead\n");
+    return (-1);
+  }
+#endif
 
   /* Set flag that there is a macro or template in the source file,
    * so that this file won't be closed even with -cN option */

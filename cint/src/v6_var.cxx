@@ -3717,6 +3717,9 @@ struct G__var_array *varglobal,*varlocal;
       }
       pp_inc=0;
       ary=var->varlabel[ig15][ig25+3];
+#ifndef G__OLDIMPLEMENTATION1410
+      if(0==ary) ary=1; /* questionable */
+#endif
       while(ig25<paran&&var->varlabel[ig15][ig25+4]) {
 	pp_inc += ary*G__int(para[ig25]);
 	ary /= var->varlabel[ig15][ig25+4];
@@ -6016,7 +6019,6 @@ int parameter00;
     var->varlabel[ig15][ig25-1] = ary;
   }
   G__p2arylabel[0]=0;
-
   
   /************************************************************
    * Finally

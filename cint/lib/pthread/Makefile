@@ -5,8 +5,8 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux2.0RH5.2
-#  Platform dependent information for LINUX 2.0 RedHatH5.2 or later
+# platform/linux2.0RH6.2
+#  Platform dependent information for LINUX 2.0 RedHatH6.2 or later
 #  Redhat-5.2
 ############################################################
 
@@ -25,7 +25,7 @@ CPPPREP     = g++ -E -C
 # Compiler and linker option
 CCDLLOPT    = -fPIC
 LDDLLOPT    = -shared
-OPTIMIZE    = -O
+OPTIMIZE    = -O2
 LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI
 OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 

@@ -465,6 +465,19 @@ int mparen;
     G__var_type='l'-1;
     G__reftype=G__PARAREFERENCE;
   }
+#ifndef G__OLDIMPLEMENTATION1407
+  else if(strchr(name,'*')) {
+    if(strncmp(name,"int*",4)==0)        G__var_type='I'-1;
+    else if(strncmp(name,"char*",5)==0)  G__var_type='C'-1;
+    else if(strncmp(name,"short*",6)==0) G__var_type='S'-1;
+    else if(strncmp(name,"long*",5)==0)  G__var_type='L'-1;
+    if(strstr(name,"******")) G__reftype = G__PARAP2P+4;
+    else if(strstr(name,"*****")) G__reftype = G__PARAP2P+3;
+    else if(strstr(name,"****")) G__reftype = G__PARAP2P+2;
+    else if(strstr(name,"***")) G__reftype = G__PARAP2P+1;
+    else if(strstr(name,"**")) G__reftype = G__PARAP2P;
+  }
+#endif
   else {
     G__var_type='i'-1;
     fsetpos(G__ifile.fp,&pos);

@@ -452,6 +452,10 @@ G__value result3;
   if(G__security_error) return(result3);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1408
+  if(type!=result3.type) result3.ref = 0; /* questionable */
+#endif
+
   switch(type) {
   case 'd':
     G__letdouble(&result3,type ,(double)G__double(result3));

@@ -203,20 +203,14 @@ int hash; /* not use */
   int store_asm_index; /* maybe unneccessary */
   int store_tagnum;
   long localmem;
-#ifndef G__OLDIMPLEMENTATION507
+#ifdef G__OLDIMPLEMENTATION1403
   struct G__input_file store_ifile;
 #endif
-#ifndef G__OLDIMPLEMENTATION517
   int store_exec_memberfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION518
   long store_memberfunc_struct_offset;
   int store_memberfunc_tagnum;
-#endif
-#ifndef G__OLDIMPLEMENTATION542
 #define G__LOCALBUFSIZE 32
   char localbuf[G__LOCALBUFSIZE];
-#endif
 #ifndef G__OLDIMPLEMENTATION1016
   struct G__var_array *var;
 #endif
@@ -255,16 +249,12 @@ int hash; /* not use */
   store_asm_dt  = G__asm_dt ;
   store_asm_index  = G__asm_index ;
   store_tagnum = G__tagnum;
-#ifndef G__OLDIMPLEMENTATION507
+#ifdef G__OLDIMPLEMENTATION1403
   store_ifile = G__ifile;
 #endif
-#ifndef G__OLDIMPLEMENTATION517
   store_exec_memberfunc = G__exec_memberfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION518
   store_memberfunc_struct_offset=G__memberfunc_struct_offset;
   store_memberfunc_tagnum=G__memberfunc_tagnum;
-#endif
 
   /* set new bytecode environment */
   G__asm_inst = bytecode->pinst;
@@ -272,30 +262,34 @@ int hash; /* not use */
   G__asm_name = bytecode->asm_name;
   G__asm_name_p = 0;
   G__tagnum = bytecode->var->tagnum;
-#ifndef G__OLDIMPLEMENTATION507
   G__asm_noverflow = 0; /* bug fix */
+#ifdef G__OLDIMPLEMENTATION1403
   G__ifile.filenum = bytecode->ifunc->pentry[bytecode->ifn]->filenum;
   G__ifile.line_number = bytecode->ifunc->pentry[bytecode->ifn]->line_number;
   strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
 #endif
-#ifndef G__OLDIMPLEMENTATION517
   if(bytecode->ifunc->tagnum>=0) G__exec_memberfunc = 1;
   else                           G__exec_memberfunc = 0;
-#endif
-#ifndef G__OLDIMPLEMENTATION518
   G__memberfunc_struct_offset=G__store_struct_offset;
   G__memberfunc_tagnum=G__tagnum;
-#endif
 
+#ifndef G__OLDIMPLEMENTATION1402
+  /* copy constant buffer */
+  {
+    int nx = bytecode->stacksize;
+    int ny = G__MAXSTACK-nx;
+    for(i=0;i<nx;i++) asm_stack_g[ny+i] = bytecode->pstack[i];
+  }
+#else
   /* copy constant buffer */
   memcpy((void*)(&asm_stack_g[G__MAXSTACK-bytecode->stacksize])
 	 ,(void*)bytecode->pstack,bytecode->stacksize*sizeof(G__value));
+#endif
 
   /* copy arguments to stack in reverse order */
   for(i=0;i<libp->paran;i++) {
     int j=libp->paran-i-1;
     G__asm_stack[j] = libp->para[i];
-#ifndef G__OLDIMPLEMENTATION1167
     if(0==G__asm_stack[j].ref || 
        (G__PARAREFERENCE==var->reftype[i]&&var->type[i]!=libp->para[i].type)){
       if(var) {
@@ -340,75 +334,15 @@ int hash; /* not use */
 	if(i>=var->allvar) var=var->next;
       }
     }
-#else
-    if(0==G__asm_stack[j].ref) {
-#ifndef G__OLDIMPLEMENTATION1016
-      if(var) {
-	switch(var->type[i]) {
-	case 'f':
-	  G__Mfloat(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.fl);
-	  break;
-	case 'd':
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.d);
-	  break;
-	case 'c':
-	  G__Mchar(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.ch);
-	  break;
-	case 's':
-	  G__Mshort(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.sh);
-	  break;
-	case 'i':
-	  G__Mint(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.in);
-	  break;
-	case 'l':
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
-	  break;
-	case 'b':
-	  G__Muchar(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.uch);
-	  break;
-	case 'r':
-	  G__Mushort(libp->para[i]);
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.ush);
-	  break;
-	case 'h':
-	  /* G__Muint(libp->para[i]); */
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
-	  break;
-	case 'k':
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
-	  break;
-	case 'u':
-	  G__asm_stack[j].ref=libp->para[i].obj.i;
-	  break;
-	default:
-	  G__asm_stack[j].ref=(long)(&libp->para[i].obj.i);
-	  break;
-	}
-	if(i>=var->allvar) var=var->next;
-      }
-#else
-      G__asm_stack[j].ref=(long)(&libp->para[i].obj);
-#endif
-    }
-#endif
   }
 
   /* allocate local memory */
-#ifndef G__OLDIMPLEMENTATION542
   if(bytecode->varsize>G__LOCALBUFSIZE) 
     localmem = (long)malloc(bytecode->varsize);
   else 
     localmem=(long)localbuf;
-#else
-  localmem = (long)malloc(bytecode->varsize);
-#endif
 
-#if defined(G__DUMPFILE) 
+#ifdef G__DUMPFILE 
   if(G__dumpfile!=NULL) {
     int ipara;
     char resultx[G__ONELINE];
@@ -442,11 +376,7 @@ int hash; /* not use */
 #endif
 
   /* free local memory */
-#ifndef G__OLDIMPLEMENTATION542
   if(bytecode->varsize>G__LOCALBUFSIZE) free((void*)localmem);
-#else
-  free((void*)localmem);
-#endif
 
 #ifdef G__ASM_DBG
   if(G__asm_dbg||G__dispsource) {
@@ -485,16 +415,12 @@ int hash; /* not use */
   G__asm_dt  = store_asm_dt ;
   G__asm_index  = store_asm_index ;
   G__tagnum = store_tagnum;
-#ifndef G__OLDIMPLEMENTATION507
+#ifdef G__OLDIMPLEMENTATION1403
   G__ifile = store_ifile;
 #endif
-#ifndef G__OLDIMPLEMENTATION517
   G__exec_memberfunc = store_exec_memberfunc;
-#endif
-#ifndef G__OLDIMPLEMENTATION518
   G__memberfunc_struct_offset=store_memberfunc_struct_offset;
   G__memberfunc_tagnum=store_memberfunc_tagnum;
-#endif
 
   return(0);
 }
@@ -768,6 +694,9 @@ char *temp;
      strcmp(temp,"struct")==0||
      strcmp(temp,"union")==0||
      strcmp(temp,"enum")==0||
+#ifndef G__OLDIMPLEMENTATION1414
+     strcmp(temp,"register")==0||
+#endif
      -1!=G__defined_typename(temp)||
      -1!=G__defined_tagname(temp,2)||
      G__defined_templateclass(temp)) {
@@ -816,17 +745,18 @@ char *funcheader;   /* funcheader = 'funcname(' */
   struct G__inheritance *baseclass;
 #endif
   int isvoid=0;
-  
+
   /*****************************************************
    * to get type of function parameter
    *****************************************************/
   int iin2;
   fpos_t temppos;
   int store_line_number;  /* bug fix 3 mar 1993 */
-  
   int store_def_struct_member;
   struct G__ifunc_table *store_ifunc;
-  
+#ifndef G__OLDIMPLEMENTATION1404
+  struct G__ifunc_table *store_ifunc_tmp;
+#endif
   
   /* system check */
   G__ASSERT(G__prerun);
@@ -842,7 +772,19 @@ char *funcheader;   /* funcheader = 'funcname(' */
   
   /* Get to the last page of interpreted function list */
   while(G__p_ifunc->next) G__p_ifunc = G__p_ifunc->next;
-  
+#ifndef G__OLDIMPLEMENTATION1404
+  if(G__p_ifunc->allifunc==G__MAXIFUNC) {
+    /* This case is used only when compicated template instantiation is done 
+     * during reading argument list 'f(vector<int> &x) { }' */
+    G__p_ifunc->next=(struct G__ifunc_table *)malloc(sizeof(struct G__ifunc_table));
+    G__p_ifunc->next->allifunc=0;
+    G__p_ifunc->next->next=(struct G__ifunc_table *)NULL;
+    G__p_ifunc->next->page = G__p_ifunc->page+1;
+    G__p_ifunc->next->tagnum = G__p_ifunc->tagnum;
+    G__p_ifunc = G__p_ifunc->next;
+  }
+  store_ifunc_tmp = G__p_ifunc;
+#endif
   
   /* set funcname to G__p_ifunc */
   G__func_now=G__p_ifunc->allifunc;
@@ -1253,7 +1195,18 @@ char *funcheader;   /* funcheader = 'funcname(' */
       if(G__dispsource) G__disp_mask=1000;
       fsetpos(G__ifile.fp,&temppos);
       G__ifile.line_number = store_line_number; 
+#ifndef G__OLDIMPLEMENTATION1404
+      ++G__p_ifunc->allifunc;
+#endif
       G__readansiproto(G__p_ifunc,func_now);
+#ifndef G__OLDIMPLEMENTATION1404
+      if(store_ifunc_tmp!=G__p_ifunc || func_now!=G__p_ifunc->allifunc) {
+	/* This is the normal case. This block is skipped only when 
+	 * compicated template instantiation is done during reading 
+	 * argument list 'f(vector<int> &x) { }' */
+	--G__p_ifunc->allifunc;
+      }
+#endif
       cin=')';
       if(G__dispsource) G__disp_mask=0;
     }
@@ -1664,9 +1617,16 @@ char *funcheader;   /* funcheader = 'funcname(' */
     G__func_now = iexist;
     G__p_ifunc=ifunc;
   } /* of if(ifunc) */
-  else if(G__p_ifunc->entry[func_now].p || G__p_ifunc->ansi[func_now] ||
+  else if((G__p_ifunc->entry[func_now].p || G__p_ifunc->ansi[func_now] ||
 	  G__nonansi_func || 
-	  G__globalcomp<G__NOLINK || G__p_ifunc->friendtag[func_now]) {
+	  G__globalcomp<G__NOLINK || G__p_ifunc->friendtag[func_now])
+#ifndef G__OLDIMPLEMENTATION1404
+	  /* This block is skipped only when compicated template 
+	   * instantiation is done during reading argument list 
+	   * 'f(vector<int> &x) { }' */
+	  && (store_ifunc_tmp==G__p_ifunc && func_now==G__p_ifunc->allifunc) 
+#endif
+	  ) {
     /* increment allifunc */
     ++G__p_ifunc->allifunc;
     
@@ -1686,7 +1646,8 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
   } /* of G__ifile.filenum<G__nfile */
   else {
-    G__genericerror("Limitation: Can not define body of function in tempfile");
+    fprintf(G__serr,"Limitation: Function can not be defined in a command line or a tempfile\n");
+    G__genericerror("You need to write it in a source file");
   }
   
   if(dobody) {
@@ -3493,6 +3454,12 @@ int recursive;
 	  break;
 #endif
 	case 'Y':
+#ifndef G__OLDIMPLEMENTATION1409
+	  if(G__PARANORMAL==param_reftype) {
+	    funclist->p_rate[i] = G__STDCONVMATCH;
+	  }
+	  break;
+#endif
 #ifdef G__OLDIMPLEMENTATION1219
 	case 'Q': /* questionable */
 #endif
@@ -3566,6 +3533,12 @@ int recursive;
 	  }
 	  break;
 	case 'Y':
+#ifndef G__OLDIMPLEMENTATION1409
+	  if(G__PARANORMAL==param_reftype) {
+	    funclist->p_rate[i] = G__STDCONVMATCH;
+	  }
+	  break;
+#endif
 	case 'Q': /* questionable */
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
