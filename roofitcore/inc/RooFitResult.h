@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.9 2002/05/16 01:14:44 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.10 2002/05/16 19:26:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -18,10 +18,10 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooDirItem.hh"
+#include "RooFitCore/RooArgList.hh"
 
 class TMatrix ;
 class RooArgSet ;
-class RooArgList ;
 class RooPlot;
 typedef RooArgSet* pRooArgSet ;
 
@@ -32,7 +32,7 @@ public:
   RooFitResult(const char* name=0, const char* title=0) ;
   virtual ~RooFitResult() ;
 
-  static RooFitResult* lastMinuitFit() ;
+  static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;

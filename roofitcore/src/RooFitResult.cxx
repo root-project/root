@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.13 2002/05/16 01:14:44 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.14 2002/05/16 19:26:58 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -486,8 +486,26 @@ void RooFitResult::fillCorrMatrix()
 
 
 
-RooFitResult* RooFitResult::lastMinuitFit() 
+RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList) 
 {
+  // Verify length of supplied varList
+  if (varList.getSize()>0 && varList.getSize()!=gMinuit->fNu) {
+    cout << "RooFitResult::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl 
+	 << "                             or match the number of variables of the last fit (" << gMinuit->fNu << ")" << endl ;
+    return 0 ;
+  }
+
+  // Verify that all members of varList are of type RooRealVar
+  TIterator* iter = varList.createIterator() ;
+  RooAbsArg* arg  ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dynamic_cast<RooRealVar*>(arg)) {
+      cout << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
+      return 0 ;
+    }
+  }
+  delete iter ;
+
   RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
 
   // Extract names of fit parameters from MINUIT 
@@ -507,11 +525,33 @@ RooFitResult* RooFitResult::lastMinuitFit()
     Double_t xerr = gMinuit->fWerr[l-1];
     Double_t xval = gMinuit->fU[i-1] ;
 
+    RooRealVar* var ;
+    if (varList.getSize()==0) {
+
+      if ((xlo<xhi) && !isConst) {
+	var = new RooRealVar(varName,varName,xval,xlo,xhi) ;
+      } else {
+	var = new RooRealVar(varName,varName,xval) ;
+      }
+      var->setConstant(isConst) ;
+    } else {
+
+      var = (RooRealVar*) varList.at(i-1)->Clone() ;
+      var->setConstant(isConst) ;
+      var->setVal(xval) ;
+      if (xlo<xhi) {
+	var->setFitRange(xlo,xhi) ;
+      }
+      if (varName.CompareTo(var->GetName())) {
+	cout << "RooFitResult::lastMinuitFit: fit parameter '" << varName 
+	     << "' stored in variable '" << var->GetName() << "'" << endl ;
+      }
+
+    }
+
     if (isConst) {
-      RooRealVar* var = new RooRealVar(varName,varName,xval) ;
       constPars.addOwned(*var) ;
     } else {
-      RooRealVar* var = new RooRealVar(varName,varName,xval,xlo,xhi) ;
       var->setError(xerr) ;
       floatPars.addOwned(*var) ;
     }
