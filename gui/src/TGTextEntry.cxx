@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.10 2001/08/21 17:33:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.11 2001/08/27 11:07:55 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -887,6 +887,7 @@ void TGTextEntry::CopyText() const
    if (HasMarkedText() && GetEchoMode() == kNormal) {
       if (!fgClipboardText) fgClipboardText = new TString();
       *fgClipboardText = GetMarkedText();  // assign
+      gVirtualX->SetPrimarySelectionOwner(fId);
    }
 }
 
@@ -897,7 +898,12 @@ void TGTextEntry::Paste()
    // previous marked text.
    // See also CopyText() Cut().
 
-   if (fgClipboardText) Insert(fgClipboardText->Data());
+   if (gVirtualX->GetPrimarySelectionOwner() == kNone) {
+      // No primary selection, so use the buffer
+      if (fgClipboardText) Insert(fgClipboardText->Data());
+   } else {
+      gVirtualX->ConvertPrimarySelection(fId, fClipboard, 0);
+   }
 }
 
 //______________________________________________________________________________
@@ -1412,6 +1418,38 @@ Bool_t TGTextEntry::HandleSelection(Event_t *event)
    // Handle text selection event.
 
    PastePrimary((Window_t)event->fUser[0], (Atom_t)event->fUser[3], kTRUE);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGTextEntry::HandleSelectionRequest(Event_t *event)
+{
+   // Handle request to send current clipboard contents to requestor window.
+
+   Event_t reply;
+   char   *buffer;
+   Long_t  len;
+
+   reply.fType    = kSelectionNotify;
+   reply.fTime    = event->fTime;
+   reply.fUser[0] = event->fUser[0];     // requestor
+   reply.fUser[1] = event->fUser[1];     // selection
+   reply.fUser[2] = event->fUser[2];     // target
+   reply.fUser[3] = event->fUser[3];     // property
+
+   len = 0;
+   if (fgClipboardText) len = fgClipboardText->Length();
+   buffer = new char[len+1];
+   if (fgClipboardText) strcpy (buffer, fgClipboardText->Data());
+   buffer[len] = '\0';
+
+   gVirtualX->ChangeProperty((Window_t) event->fUser[0], (Atom_t) event->fUser[3],
+                             (Atom_t) event->fUser[2], (UChar_t*) buffer,
+                             (Int_t) len);
+   delete [] buffer;
+
+   gVirtualX->SendEvent((Window_t)event->fUser[0], &reply);
+
    return kTRUE;
 }
 
