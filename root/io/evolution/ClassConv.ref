@@ -2,3 +2,7 @@
 Processing ClassConvReadNew.cxx...
 Warning in <TClass::TClass>: no dictionary for class Inside is available
 TopLevel value is 44
+
+Processing ClassConvReadOther.cxx...
+Warning in <TClass::TClass>: no dictionary for class MyLib::Inside is available
+TopLevel value is 44

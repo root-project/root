@@ -27,14 +27,18 @@ readold.log: MyClassOld_cxx.$(DllSuf) data.root
 readnew.log: MyClass_C.$(DllSuf) data.root
 	$(CMDECHO) root.exe -q -b -l readnew.C > readnew.log 2>&1
 
-ClassConv.root: ClassConvOld_cxx.$(DllSuf)
+ClassConv.root: ClassConvOld_cxx.$(DllSuf)  ClassConvWriteOld.cxx
 	$(CMDECHO) root.exe -q -b -l ClassConvWriteOld.cxx > ClassConvWriteOld.log
 
-ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root
+ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root ClassConvReadOld.cxx 
 	$(CMDECHO) root.exe -q -b -l ClassConvReadOld.cxx > ClassConvReadOld.log
 
-ClassConv.log: ClassConv.root ClassConvNew_cxx.$(DllSuf) ClassConvReadOld.log
+ClassConvNew.root: ClassConvNew_cxx.$(DllSuf) ClassConvWriteNew.cxx
+	$(CMDECHO) root.exe -q -b -l ClassConvWriteNew.cxx > ClassConvWriteNew.log
+
+ClassConv.log: ClassConv.root ClassConvNew.root ClassConvNew_cxx.$(DllSuf)  ClassConvOther_cxx.$(DllSuf) ClassConvReadOld.log
 	$(CMDECHO) root.exe -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
+	$(CMDECHO) root.exe -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1 
 
 typedef.root : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l typedefWrite.C+ > typedefWrite.log
