@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.2 2001/01/16 16:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.3 2001/01/18 09:44:12 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
     virtual void     FillBasket(TBuffer &b);
     TMethodCall     *GetMethodCall(const char *name);
     virtual Double_t GetValue(Int_t i=0) const;
-    virtual char    *GetValuePointer() const { return fAbsAddress; }
+    virtual void    *GetValuePointer() const { return fAbsAddress; }
     virtual void     PrintValue(Int_t i=0) const;
     virtual void     ReadBasket(TBuffer &b);
     virtual void     SetAddress(void *add=0);
