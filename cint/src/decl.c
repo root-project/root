@@ -42,7 +42,15 @@ char *new_name;
   int cin;
   int store_def_struct_member,store_tagdefining;
 
+#ifndef G__PHILIPPE12
+  cin=G__fgetvarname(new_name,"&,;=():}");
+  if (cin=='&') {
+    strcat(new_name,"&");
+    cin = ' ';
+  }
+#else
   cin=G__fgetvarname(new_name,",;=():}");
+#endif
 
 
   /*********************************************************
@@ -87,6 +95,11 @@ char *new_name;
     else if(strcmp(new_name,"&")==0 || strcmp(new_name,"*")==0) {
       cin=G__fgetvarname(new_name+1,",;=():");
     }
+#ifndef G__PHILIPPE11
+    else if(strcmp(new_name,"&*")==0 || strcmp(new_name,"*&")==0) {
+      cin=G__fgetvarname(new_name+2,",;=():");
+    } 
+#endif
 
     if(strcmp(new_name,"double")==0) {
       cin=G__fgetvarname(new_name,",;=():");
@@ -253,6 +266,9 @@ char *new_name;
 #endif
       if(strcmp(new_name,"operator")==0 ||
 	 strcmp(new_name,"*operator")==0||
+#ifndef G__PHILIPPE11
+	 strcmp(new_name,"*&operator")==0||
+#endif
 	 strcmp(new_name,"&operator")==0) {
 	/* read real name */
 	cin=G__fgetstream(temp1,"(");
@@ -369,6 +385,23 @@ char *new_name;
     }
     return(cin);
   }
+#ifndef G__PHILIPPE11
+  else if((strncmp(new_name,"&*operator",10)==0 ||
+	   strncmp(new_name,"*&operator",10)==0) &&
+	  (G__isoperator(new_name[10]) || '\0'==new_name[10])) {
+    if('='==cin) {
+      fseek(G__ifile.fp,-1,SEEK_CUR);
+      if(G__dispsource) G__disp_mask=1;
+      cin=G__fgetstream(new_name+strlen(new_name),"(");
+    }
+    else if('('==cin && '\0'==new_name[10]) {
+      cin=G__fignorestream(")");
+      cin=G__fignorestream("(");
+      strcpy(new_name+10,"()");
+    }
+    return(cin);
+  }  
+#endif
 
   return(cin);
 
@@ -1385,6 +1418,7 @@ int tagnum,typenum;      /* overrides global variables */
 	do {
 	  G__def_tagnum = G__defined_tagname(new_name+i,0) ;
 #ifndef G__PHILIPPE9
+          /* protect against a non defined tagname */
           if (G__def_tagnum<0) {
             /* Hopefully restore all values! */
             G__decl=store_decl;
@@ -1431,6 +1465,7 @@ int tagnum,typenum;      /* overrides global variables */
 #ifdef G__OLDIMPLEMENTATION1306
 	case ';':
 #endif
+          /* PHILIPPE17: the following is fixed in 1306! */
 	  /* static class object member must call constructor 
 	   * TO BE IMPLEMENTED */
 #ifndef G__OLDIMPLEMENtATION1296
@@ -1827,8 +1862,14 @@ int tagnum,typenum;      /* overrides global variables */
 	if(G__CPPLINK!=G__struct.iscpplink[tagnum]) {
 	  /* allocate memory area for constructed object by interpreter */
 	  G__var_type = var_type;
+#ifndef G__OLDIMPLEMENTATION1349
+	  G__decl_obj=1;
+#endif
 	  G__store_struct_offset=G__int(G__letvariable(new_name,reg,&G__global
 						       ,G__p_local));
+#ifndef G__OLDIMPLEMENTATION1349
+	  G__decl_obj=0;
+#endif
 #ifndef G__OLDIMPLEMENTATION1073
 	  if(0==G__store_struct_offset &&
 	     G__asm_wholefunction && G__asm_noverflow) {
@@ -2603,7 +2644,18 @@ char *new_name;
   
   /* getting size */
   if(islower(var->type[ig15])) {
+#ifndef G__OLDIMPLEMENTATION1329
+    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+      char store_var_type = G__var_type;
+      size=G__Lsizeof(G__newtype.name[buf.typenum]);
+      G__var_type = store_var_type;
+    }
+    else {
+      size=G__sizeof(&buf);
+    }
+#else
     size=G__sizeof(&buf);
+#endif
   }
   else {
     buf.type='L'; /* pointer assignement handled as long */
@@ -2700,10 +2752,23 @@ char *new_name;
   /**********************************************************
    * initialize remaining object to 0
    **********************************************************/
+#ifndef G__OLDIMPLEMENTATION1329
+  {
+    int initnum = var->varlabel[ig15][1];
+    if(-1!=buf.typenum && G__newtype.nindex[buf.typenum]) {
+      initnum /= size;
+    }
+    for(i=pinc+1;i<=initnum;i++) {
+      buf.obj.i=var->p[ig15]+size*i;
+      G__letvalue(&buf,G__null);
+    }
+  }
+#else
   for(i=pinc+1;i<=var->varlabel[ig15][1];i++) {
     buf.obj.i=var->p[ig15]+size*i;
     G__letvalue(&buf,G__null);
   }
+#endif
   
   /**********************************************************
    * read upto next , or ;

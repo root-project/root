@@ -384,7 +384,7 @@ G__UINT32 category;
       return(1);
     }
     if(category&G__SECURE_BUFFER_SIZE) {
-      G__genericerror("Bad source code");
+      G__genericerror("Limitation: Statement too long");
       G__security_error |= G__DANGEROUS;
     }
     if(category&G__SECURE_STACK_DEPTH) {

@@ -21,12 +21,17 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014040
-#define G__CINTVERSIONSTR  "5.14.40, May 21 2000"
+#define G__CINTVERSION 5014044
+#define G__CINTVERSIONSTR  "5.14.44, Jul 18 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* If you use old g++ and having problem compiling dictionary with 
+ * true pointer to function with const return value, define following
+ * macro to workaround the problem. */
+/* #define G__OLDIMPLEMENTATION1328 */
 
 /* Define G__CONSTNESSFLAG for activating function overloading by
  * object constness. */
@@ -741,6 +746,7 @@ extern G__value G__null;
 #define G__PAUSE_NORMAL          0
 #define G__PAUSE_IGNORE          1
 #define G__PAUSE_STEPOVER        3
+#define G__PAUSE_ERROR_OFFSET 0x10
 
 /* return value of G__interpretedp2f() */
 #define G__NOSUCHFUNC              0
@@ -1201,6 +1207,9 @@ struct G__tagtable {
   G__SIGNEDCHAR_T globalcomp[G__MAXSTRUCT];
   G__SIGNEDCHAR_T iscpplink[G__MAXSTRUCT];
   char isabstract[G__MAXSTRUCT];
+#ifndef G__OLDIMPLEMENTATION1334
+  char protectedaccess[G__MAXSTRUCT];
+#endif
 
   int  line_number[G__MAXSTRUCT];
   short filenum[G__MAXSTRUCT];
@@ -1430,6 +1439,8 @@ extern G__EXPORT int G__get_no_exec_compile G__P((void));
 extern G__EXPORT void G__setdebugcond G__P((void));
 extern G__EXPORT int G__init_process_cmd G__P((void));
 extern G__EXPORT int G__process_cmd G__P((char *line,char *prompt,int *more));
+extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
+extern G__EXPORT G__value G__exec_text G__P((char *text));
 extern G__EXPORT void G__setothermain G__P((int othermain));
 extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
 extern G__EXPORT int G__main G__P((int argc,char **argv));
@@ -1457,8 +1468,7 @@ extern G__value (*G__GetSpecialObject) G__P((char *name,void *ptr));
 #else
 extern G__value (*G__GetSpecialObject) G__P((char *name));
 #endif
-void G__security_recover G__P((FILE *fout));
-extern int G__process_cmd G__P((char *line, char *prompt, int *more));
+int G__security_recover G__P((FILE *fout));
 extern G__EXPORT void G__add_setup_func G__P((char *libname, G__incsetup func));
 extern G__EXPORT void G__remove_setup_func G__P((char *libname));
 extern int  G__call_setup_funcs G__P((void));
@@ -1594,7 +1604,7 @@ extern G__EXPORT void G__setautoconsole G__P((int autoconsole));
 extern G__EXPORT int G__AllocConsole G__P(());
 extern G__EXPORT int G__FreeConsole G__P(());
 extern G__EXPORT int G__getcintready G__P(());
-extern G__EXPORT void G__security_recover G__P((FILE* fout));
+extern G__EXPORT int G__security_recover G__P((FILE* fout));
 extern G__EXPORT void G__breakkey G__P((int signame));
 extern G__EXPORT int G__tracemode G__P((int tracemode));
 extern G__EXPORT int G__stepmode G__P((int stepmode));

@@ -548,7 +548,15 @@ void G__define_type()
       c=G__fgetstream(typename,";,[");
     }
     else {
+#ifndef G__OLDIMPLEMENTATION1347
+      char ltemp1[G__LONGLINE];
+      c = G__fgetstream(ltemp1,";,[");
+      if('('==ltemp1[0]) {
+	type = 'q';
+      }
+#else
       c = G__fignorestream(";,[");
+#endif
     }
   }
 
@@ -807,8 +815,15 @@ void G__define_type()
 	  do {
 	    c=G__fgetstream(memname,"=,}");
 	    if(c=='=') {
+#ifndef G__OLDIMPLEMENTATION1337
+	      char store_var_type = G__var_type;
+	      G__var_type = 'p';
+#endif
 	      c=G__fgetstream(val,",}");
 	      enumval=G__getexpr(val);
+#ifndef G__OLDIMPLEMENTATION1337
+	      G__var_type = store_var_type;
+#endif
 	    }
 	    else {
 	      enumval.obj.i++;
@@ -1268,6 +1283,9 @@ int len;
   int refrewind = -2;
   fpos_t pos;
   int line;
+#ifndef G__PHILIPPE14
+  char store_typename[G__LONGLINE];  
+#endif
 
   if(G__prerun&&'~'==typename[0]) {
     G__var_type = 'y';
@@ -1286,6 +1304,11 @@ int len;
 
   fgetpos(G__ifile.fp,&pos);
   line=G__ifile.line_number;
+#ifndef G__PHILIPPE14
+  /* this is not the fastest to insure proper unwinding in case of 
+     error, but it is the simpliest :( */
+  strcpy(store_typename,typename);
+#endif
 
   /*************************************************************
    * check if this is a declaration or not
@@ -1345,7 +1368,19 @@ int len;
      *     ^<<^      */
     fsetpos(G__ifile.fp,&pos);
     G__ifile.line_number=line;
+#ifndef G__PHILIPPE14
+    /* the following fseek is now potentialy wrong (because of fake_space!) */
+    fseek(G__ifile.fp,-1,SEEK_CUR);
+    cin = G__fgetc();
+    if (cin=='*') {
+      /* we have a fake space */
+      fseek(G__ifile.fp,refrewind,SEEK_CUR);
+    } else {
+      fseek(G__ifile.fp,refrewind-1,SEEK_CUR);
+    }
+#else
     fseek(G__ifile.fp,refrewind-1,SEEK_CUR);
+#endif
     if(G__dispsource) G__disp_mask=2;
   }
   else if(len>1 && '*'==typename[len-1]) {
@@ -1387,6 +1422,12 @@ int len;
       }
       else {
 	/* if not found, return */
+#ifndef G__PHILIPPE14
+        /* Restore properly the previous state! */
+        fsetpos(G__ifile.fp,&pos);
+        G__ifile.line_number = line;
+        strcpy(typename,store_typename);
+#endif  
 	G__tagnum = store_tagnum;
 	G__typenum = store_typenum;
 	G__reftype=G__PARANORMAL;

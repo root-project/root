@@ -233,6 +233,15 @@ void G__ClassInfo::SetGlobalcomp(int globalcomp)
     G__struct.globalcomp[tagnum] = globalcomp;
   }
 }
+#ifndef G__OLDIMPLEMENTATION1334
+///////////////////////////////////////////////////////////////////////////
+void G__ClassInfo::SetProtectedAccess(int protectedaccess)
+{
+  if(IsValid()) {
+    G__struct.protectedaccess[tagnum] = protectedaccess;
+  }
+}
+#endif
 ///////////////////////////////////////////////////////////////////////////
 #ifndef G__OLDIMPLEMENTATION1218_YET
 int G__ClassInfo::IsValid()
@@ -687,20 +696,19 @@ void* G__ClassInfo::New()
     }
     else {
       // Interpreted class,struct
-      struct G__StoreEnv env;
       long store_struct_offset;
       long store_tagnum;
       char temp[G__ONELINE];
       int known=0;
       p = malloc(G__struct.size[tagnum]);
-      G__stubstoreenv(&env,p,tagnum);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
-      G__store_struct_offset = (long)p;
+#ifndef G__PHILIPPE16
       G__tagnum = tagnum;
+#endif
+      G__store_struct_offset = (long)p;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
-      G__stubrestoreenv(&env);
       G__store_struct_offset = store_struct_offset;
       G__tagnum = (int)store_tagnum;
     }
@@ -765,14 +773,85 @@ void* G__ClassInfo::New(int n)
       p = malloc(G__struct.size[tagnum]*n);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
-      G__store_struct_offset = (long)p;
+#ifndef G__PHILIPPE16
       G__tagnum = tagnum;
+#endif
+      G__store_struct_offset = (long)p;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       for(i=0;i<n;i++) {
 	G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
 	if(!known) break;
 	G__store_struct_offset += G__struct.size[tagnum];
       }
+      G__store_struct_offset = store_struct_offset;
+      G__tagnum = (int)store_tagnum;
+    }
+    return(p);
+  }
+  else {
+    return((void*)NULL);
+  }
+}
+///////////////////////////////////////////////////////////////////////////
+void* G__ClassInfo::New(void *arena)
+{
+  if(IsValid()) {
+#ifdef G__OLDIMPLEMENTATION1218
+    long property;
+#endif
+    void *p;
+    G__value buf=G__null;
+#ifndef G__OLDIMPLEMENTATION1218
+    if (!class_property) Property();
+    if(class_property&G__BIT_ISCPPCOMPILED) {
+#else
+    property = Property();
+    if(property&G__BIT_ISCPPCOMPILED) {
+#endif
+      // C++ precompiled class,struct
+      struct G__param para;
+      G__InterfaceMethod defaultconstructor;
+      para.paran=0;
+#ifndef G__OLDIMPLEMENTATION1218
+      if(!G__struct.rootspecial[tagnum]) CheckValidRootInfo();
+#else
+      CheckValidRootInfo();
+#endif
+      defaultconstructor
+	=(G__InterfaceMethod)G__struct.rootspecial[tagnum]->defaultconstructor;
+      if(defaultconstructor) {
+	G__setgvp((long)arena);
+	(*defaultconstructor)(&buf,(char*)NULL,&para,0);
+	G__setgvp((long)G__PVOID);
+	p = (void*)G__int(buf);
+      }
+      else {
+	p = (void*)NULL;
+      }
+    }
+#ifndef G__OLDIMPLEMENTATION1218
+    else if(class_property&G__BIT_ISCCOMPILED) {
+#else
+    else if(property&G__BIT_ISCCOMPILED) {
+#endif
+      // C precompiled class,struct
+      p = arena;
+    }
+    else {
+      // Interpreted class,struct
+      long store_struct_offset;
+      long store_tagnum;
+      char temp[G__ONELINE];
+      int known=0;
+      p = arena;
+      store_tagnum = G__tagnum;
+      store_struct_offset = G__store_struct_offset;
+#ifndef G__PHILIPPE16
+      G__tagnum = tagnum;
+#endif
+      G__store_struct_offset = (long)p;
+      sprintf(temp,"%s()",G__struct.name[tagnum]);
+      G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
       G__store_struct_offset = store_struct_offset;
       G__tagnum = (int)store_tagnum;
     }

@@ -664,6 +664,9 @@ int type;
     
     G__struct.globalcomp[i] = G__globalcomp;
     G__struct.iscpplink[i] = 0;
+#ifndef G__OLDIMPLEMENTATION1334
+    G__struct.protectedaccess[i] = 0;
+#endif
 
     G__struct.line_number[i] = -1;
     G__struct.filenum[i] = -1;

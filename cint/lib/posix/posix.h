@@ -160,7 +160,7 @@ extern char *getcwd(char *buf,size_t size);
 
 extern long int sysconf(int name);
 
-#if defined(__SUNPRO_C) || defined(G__SUNPRO_C)
+#if defined(__SUNPRO_C) || defined(G__SUNPRO_C) || defined(__GNUC__) || defined(G__GNUC)
 extern int putenv(char *string);
 #else
 extern int putenv(const char *string);

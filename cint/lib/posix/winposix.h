@@ -10,7 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef __CINT__
+typedef unsigned long DWORD;
+typedef void* HANDLE;
+#else
 #include <windows.h>
+#endif
 
 /****************************************************************
 * struct definition
@@ -42,13 +47,17 @@ typedef struct dirent {
   off_t d_off;               /* offset to this dirent */
   unsigned short d_reclen;   /* length of d_name */
   char d_name[NAME_MAX+1];   /* file name */
+#ifndef __CINT__
   LPWIN32_FIND_DATA pwindir; /* Orignial extention */
+#endif
 } dirent;
 
 typedef struct DIR {
   char dirname[NAME_MAX];
   HANDLE h;
+#ifndef __CINT__
   WIN32_FIND_DATA windir;
+#endif
   dirent posixdir;
 } DIR;
 

@@ -836,6 +836,9 @@ G__COMPLETIONLIST G__completionlist[] = {
 	{"G__optimizemode",NULL},
 	{"G__getoptimizemode",NULL},
 	{"G__clearerror",NULL},
+	{"G__calc",NULL},
+	{"G__exec_text",NULL},
+	{"G__exec_tempfile",NULL},
 
 	{(char *)NULL,NULL }
 };
@@ -3557,6 +3560,7 @@ void G__list_sut(fp) FILE *fp; {
    fprintf(fp,"   int G__breakline(int line);\n");
    fprintf(fp,"   int G__stepmode(int on_off);\n");
    fprintf(fp,"   [anytype] G__calc(char *expression);\n");
+   fprintf(fp,"   [anytype] G__exec_text(char *text);\n");
    fprintf(fp,"   [anytype] G__exec_tempfile(char *file);\n");
    fprintf(fp,"   int G__loadfile(char *file);\n");
    fprintf(fp,"   int G__unloadfile(char *file);\n");

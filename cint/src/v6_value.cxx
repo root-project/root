@@ -446,6 +446,17 @@ G__value *p,result;
   if(G__no_exec_compile) {
     return(result);
   }
+#ifndef G__OLDIMPLEMENTATION1329
+  if(-1!=p->typenum && G__newtype.nindex[p->typenum]) {
+    char store_var_type = G__var_type;
+    int size = G__Lsizeof(G__newtype.name[p->typenum]);
+    G__var_type = store_var_type;
+    if('C'==result.type && strlen((char*)result.obj.i)<size)
+      size = strlen((char*)result.obj.i)+1;
+    memcpy((void*)p->obj.i,(void*)result.obj.i,size);
+    return(result);
+  }
+#endif
   switch(p->type) {
   case 'B':
     *(unsigned char *)(p->obj.i)=(unsigned char)G__int(result);

@@ -5634,8 +5634,13 @@ int *start;
    *     -1      next_pc                                 6
    * G__asm_cp   RTN                                     RTN
    *******************************************************/
-  if((G__asm_inst[*start]==G__LD_VAR||
-      G__asm_inst[*start]==G__LD_MSTR) &&  /* 1 */
+  if((G__asm_inst[*start]==G__LD_VAR
+      || (G__asm_inst[*start]==G__LD_MSTR
+#ifndef G__OLDIMPLEMENTATION1333
+	  && !G__asm_wholefunction
+#endif
+      )) 
+     &&  /* 1 */
      G__asm_inst[*start+5]==G__LD      &&
      G__asm_inst[*start+7]==G__CMP2    &&
      G__asm_inst[*start+9]==G__CNDJMP  &&
@@ -5705,9 +5710,17 @@ int *start;
    * G__asm_cp   RTN                                     RTN
    *******************************************************/
   else if((G__asm_inst[*start]==G__LD_VAR||
-	   G__asm_inst[*start]==G__LD_MSTR) &&  /* 1 */
+	   (G__asm_inst[*start]==G__LD_MSTR
+#ifndef G__OLDIMPLEMENTATION1333
+	    && !G__asm_wholefunction
+#endif
+	    )) &&  /* 1 */
 	  (G__asm_inst[*start+5]==G__LD_VAR||
-	   G__asm_inst[*start+5]==G__LD_MSTR) &&  /* 1 */
+	   (G__asm_inst[*start+5]==G__LD_MSTR
+#ifndef G__OLDIMPLEMENTATION1333
+	    && !G__asm_wholefunction
+#endif
+	   )) &&  /* 1 */
 	  G__asm_inst[*start+10]==G__CMP2    &&
 	  G__asm_inst[*start+12]==G__CNDJMP  &&
 #ifndef G__OLDIMPLEMENTATION1021
@@ -5785,7 +5798,11 @@ int *start;
      G__asm_cond_cp != G__asm_cp-2 &&
 #endif
      (G__LD_VAR==G__asm_inst[G__asm_cp-9]||
-      G__LD_MSTR==G__asm_inst[G__asm_cp-9]) &&
+      (G__LD_MSTR==G__asm_inst[G__asm_cp-9]
+#ifndef G__OLDIMPLEMENTATION1333
+       && !G__asm_wholefunction
+#endif
+      )) &&
 #ifndef G__OLDIMPLEMENTATION1021
      G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-5])->type[G__asm_inst[G__asm_cp-8]])) {
 #else
@@ -5865,7 +5882,11 @@ int *start;
 	  G__asm_cond_cp != G__asm_cp-2 &&
 #endif
 	  (G__LD_VAR==G__asm_inst[G__asm_cp-11]||
-	   G__LD_MSTR==G__asm_inst[G__asm_cp-11]) &&
+	   (G__LD_MSTR==G__asm_inst[G__asm_cp-11]
+#ifndef G__OLDIMPLEMENTATION1333
+	    && !G__asm_wholefunction
+#endif
+	    )) &&
 #ifndef G__OLDIMPLEMENTATION1021
 	  G__isInt(((struct G__var_array*)G__asm_inst[G__asm_cp-7])->type[G__asm_inst[G__asm_cp-10]]))  {
 #else
@@ -5938,7 +5959,11 @@ int *start;
 	  ((G__asm_inst[G__asm_cp-7]==G__ST_VAR&&
 	    G__asm_inst[G__asm_cp-16]==G__LD_VAR) ||
 	   (G__asm_inst[G__asm_cp-7]==G__ST_MSTR&&
-	    G__asm_inst[G__asm_cp-16]==G__LD_MSTR)) &&
+	    G__asm_inst[G__asm_cp-16]==G__LD_MSTR
+#ifndef G__OLDIMPLEMENTATION1333
+	    && !G__asm_wholefunction
+#endif
+	   )) &&
 	  G__asm_inst[G__asm_cp-9]==G__OP2     &&
 	  G__asm_inst[G__asm_cp-11]==G__LD     &&
 	  G__asm_inst[G__asm_cp-15]==G__asm_inst[G__asm_cp-6] && /* 2 */
@@ -6020,6 +6045,9 @@ long *pinst;
   int done = 1;
   if(isupper(type)) {
     if('Z'==type) done=0;
+#ifndef G__OLDIMMPLEMENTATION1341
+    else if('P'==type || 'O'==type) *pinst = (long)G__LD_p0_double; 
+#endif
     else *pinst = (long)G__LD_p0_pointer;
   }
   else {

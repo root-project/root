@@ -545,6 +545,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -748,6 +751,9 @@ char *string,*endmark;
       pflag = 0;
 #endif
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;
@@ -1996,6 +2002,9 @@ char *string,*endmark;
     
     if(ignoreflag==0) {
       string[i++] = c ;
+#ifndef G__OLDIMPLEMENTATION1331
+      G__CHECK(G__SECURE_BUFFER_SIZE,i>=G__LONGLINE,return(EOF));
+#endif
     }
     
   } while(flag==0) ;

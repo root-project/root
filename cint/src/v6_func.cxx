@@ -277,6 +277,20 @@ G__value *presult3;
       flag=1;
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1332
+    else if(strcmp(funcname,"bool")==0 && 'u'==libp->para[0].type) {
+      char ttt[G__ONELINE];
+      int xtype = 'u';
+      int xreftype = 0;
+      int xisconst = 0;
+      int xtagnum = G__defined_tagname("bool",2);
+      *presult3 = libp->para[0];
+      G__fundamental_conversion_operator(xtype,xtagnum ,-1 ,xreftype,xisconst
+				       ,presult3,ttt);
+      flag=1;
+      return(flag);
+    }
+#endif
     break;
   case 5:
     if(strcmp(funcname,"short")==0) {
@@ -599,7 +613,12 @@ int memfunc_flag;
 {
   G__value result3;
   char funcname[G__MAXNAME*2];
+#ifndef G__OLDIMPLEMENTATION1340
+  int overflowflag=0;
+  char result7[G__LONGLINE];
+#else
   char result7[G__ONELINE];
+#endif
   int ig15,ig35,ipara;
   int lenitem,nest=0;
   int single_quote=0,double_quote=0;
@@ -750,16 +769,32 @@ int memfunc_flag;
 	  if((double_quote==0)&& (single_quote==0)) nest--;
 	  break;
 	case '\\':
+#ifndef G__OLDIMPLEMENTATION1340
+	  result7[ig35++] = item[ig15++];
+#else
 	  fpara.parameter[fpara.paran][ig35++]=item[ig15++];
+#endif
 	  break;
 	}
+#ifndef G__OLDIMPLEMENTATION1340
+	result7[ig35++] = item[ig15++];
+#else
 	fpara.parameter[fpara.paran][ig35++]=item[ig15++];
+#endif
 #ifndef G__OLDIMPLEMENtATION1036
 	if(ig35>=G__ONELINE-1) {
+#ifndef G__OLDIMPLEMENTATION1340
+	  if(result7[0]=='"') {
+#else
 	  if(fpara.parameter[fpara.paran][0]=='"') {
+#endif
 	    G__value bufv;
 	    char bufx[G__LONGLINE];
+#ifndef G__OLDIMPLEMENTATION1340
+	    strncpy(bufx,result7,G__ONELINE-1);
+#else
 	    strncpy(bufx,fpara.parameter[fpara.paran],G__ONELINE-1);
+#endif
 	    while((((item[ig15]!=',')&&(item[ig15]!=')'))||
 		   (nest>0)||(single_quote>0)||
 		   (double_quote>0))&&(ig15<lenitem)) {
@@ -792,17 +827,40 @@ int memfunc_flag;
 	    }
 	    bufx[ig35]=0;
 	    bufv = G__strip_quotation(bufx);
+#ifndef G__OLDIMPLEMENTATION1340
+	    sprintf(result7,"(char*)(%ld)",bufv.obj.i);
+#else
 	    sprintf(fpara.parameter[fpara.paran],"(char*)(%ld)",bufv.obj.i);
+#endif
+#ifndef G__OLDIMPLEMENTATION1340
+	    ig35=strlen(result7)+1;
+#else
 	    ig35=strlen(fpara.parameter[fpara.paran])+1;
+#endif
 	    break;
 	  }
+#ifndef G__OLDIMPLEMENTATION1340
+	  else if(ig35>G__LONGLINE-1) {
+	    fprintf(G__serr
+               ,"Limitation: length of one function argument be less than %d"
+		    ,G__LONGLINE);
+	    G__genericerror((char*)NULL);
+	    fprintf(G__serr,"Use temp variable as workaround.\n");
+	    *known3=1;
+	    return(G__null);
+	  }
+#endif
 	  else {
+#ifndef G__OLDIMPLEMENTATION1340
+	    overflowflag=1;
+#else
 	    fprintf(G__serr
     ,"Limitation: length of one function argument be less than %d",G__ONELINE);
 	    G__genericerror((char*)NULL);
 	    fprintf(G__serr,"Use temp variable as workaround.\n");
 	    *known3=1;
 	    return(G__null);
+#endif
 	  }
 	}
 #endif
@@ -850,10 +908,28 @@ int memfunc_flag;
        * set null char to parameter list buffer.
        *************************************************/
       ig15++;
+#ifndef G__OLDIMPLEMENTATION1340
+      result7[ig35]='\0';
+      if(ig35<G__ONELINE) {
+	strcpy(fpara.parameter[fpara.paran],result7);
+      }
+      else {
+      }
+      fpara.parameter[++fpara.paran][0]='\0';
+#else
       fpara.parameter[fpara.paran++][ig35]='\0';
       fpara.parameter[fpara.paran][0]='\0';
+#endif
     }
   }
+
+#ifndef G__OLDIMPLEMENTATION1340
+  if(castflag==1&&0==funcname[0] /* &&overflowflag */) {
+    result3=G__getexpr(result7);
+    *known3 = 1;
+    return(result3);
+  }
+#endif
   
   /***************************************************************
    * member access by (xxx)->xxx , (xxx).xxx
@@ -966,7 +1042,11 @@ int memfunc_flag;
    ***************************************************************/
 #ifndef G__OLDIMPLEMENTATION1221
   if(strlen(fpara.parameter[0])==0) {
-    if(fpara.paran>1) {
+    if(fpara.paran>1 
+#ifndef G__OLDIMPLEMENTATION1346
+       && ')'==item[strlen(item)-1]
+#endif
+       ) {
       fprintf(G__serr,"Warning: Empty arg%d",1);
       G__printlinenum();
     }
@@ -1634,7 +1714,11 @@ int memfunc_flag;
     i=0;
     while(i<G__struct.alltag) {
       if((G__struct.hash[i]==classhash)&&
-	 (strcmp(G__struct.name[i],funcname)==0)) {
+	 (strcmp(G__struct.name[i],funcname)==0)
+#ifndef G__OLDIMPLEMENTATION1332
+	  &&'e'!=G__struct.type[i]
+#endif
+	 ) {
 	store_struct_offset=G__store_struct_offset;
 	
 	/* questionable part */
@@ -1665,8 +1749,13 @@ int memfunc_flag;
 	else {
 	  G__store_struct_offset= G__PVOID;
 	}
+#ifndef G__OLDIMPLEMENTATION1341
+	G__incsetup_memfunc(G__tagnum);
+#endif
 	for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+#ifdef G__OLDIMPLEMENTATION1341
 	  G__incsetup_memfunc(G__tagnum);
+#endif
 	  *known3=G__interpret_func(&result3,funcname
 				    ,&fpara,hash
 				    ,G__struct.memfunc[G__tagnum]
@@ -1715,6 +1804,61 @@ int memfunc_flag;
 	
 	G__store_struct_offset=store_struct_offset;
 	if(0 == *known3) {
+#ifndef G__OLDIMPLEMENTATION1341
+	  if(-1 != i && fpara.paran==1 && -1 != fpara.para[0].tagnum) {
+	    long store_struct_offset = G__store_struct_offset;
+	    long store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+	    int store_memberfunc_tagnum = G__memberfunc_tagnum;
+	    int store_exec_memberfunc = G__exec_memberfunc;
+	    store_tagnum = G__tagnum;
+	    G__inc_cp_asm(-3,0);
+	    G__pop_tempobject();
+	    G__tagnum = fpara.para[0].tagnum;
+	    G__store_struct_offset = fpara.para[0].obj.i;
+#ifdef G__ASM
+	    if(G__asm_noverflow) {
+	      G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	      G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	      G__inc_cp_asm(2,0);
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+		fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+		fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	      }
+#endif
+	    }
+#endif
+	    sprintf(funcname,"operator %s",G__fulltagname(i,1));
+	    G__hash(funcname,hash,i);
+	    G__incsetup_memfunc(G__tagnum);
+	    fpara.paran = 0;
+	    for(funcmatch=G__EXACT;funcmatch<=G__USERCONV;funcmatch++) {
+	      *known3=G__interpret_func(&result3,funcname
+					,&fpara,hash
+					,G__struct.memfunc[G__tagnum]
+					,funcmatch
+					,G__TRYMEMFUNC);
+	      if(*known3) {
+#ifdef G__ASM
+		if(G__asm_noverflow) {
+		  G__asm_inst[G__asm_cp] = G__POPSTROS;
+		  G__inc_cp_asm(1,0);
+#ifdef G__ASM_DBG
+		  if(G__asm_dbg) 
+		    fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp-1);
+#endif
+		}
+#endif
+		break;
+	      }
+	    }
+	    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+	    G__memberfunc_tagnum = store_memberfunc_tagnum;
+	    G__exec_memberfunc = store_exec_memberfunc;
+	    G__tagnum=store_tagnum;
+	    G__store_struct_offset = store_struct_offset;
+	  }
+#endif /* 1341 */
 #ifndef G__OLDIMPLEMENTATION641
 	  /* omitted constructor, return uninitialized object */
 	  *known3 = 1;
@@ -2619,7 +2763,6 @@ int hash;
     return(1);
   }
   
-
   if(1093==hash&&strcmp(funcname,"G__loadfile")==0) {
     if(G__no_exec_compile) return(1);
 #ifndef G__OLDIMPLEMENTATION575
@@ -2715,6 +2858,7 @@ int hash;
     return(1);
   }
 
+
   /*********************************************************************
   * low priority 2
   *********************************************************************/
@@ -2795,6 +2939,31 @@ int hash;
     G__CHECKNONULL(0,'C');
 #endif
     *result7=G__exec_tempfile((char *)G__int(libp->para[0]));
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1348
+  if(1230==hash&&strcmp(funcname,"G__exec_text")==0) {
+    if(G__no_exec_compile) return(1);
+    G__CHECKNONULL(0,'C');
+    G__storerewindposition();
+    *result7=G__exec_text((char *)G__int(libp->para[0]));
+    G__security_recover(G__serr);
+    return(1);
+  }
+
+  if(1431==hash&&strcmp(funcname,"G__process_cmd")==0) {
+    if(G__no_exec_compile) return(1);
+    G__CHECKNONULL(0,'C');
+    G__CHECKNONULL(1,'C');
+    G__CHECKNONULL(2,'I');
+    G__storerewindposition();
+    *result7 = G__null;
+    G__letint(result7,'i',G__process_cmd((char*)G__int(libp->para[0])
+					  ,(char*)G__int(libp->para[1])
+					  ,(int*)G__int(libp->para[2])));
+    G__security_recover(G__serr);
     return(1);
   }
 #endif

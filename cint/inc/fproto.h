@@ -73,7 +73,6 @@ void G__asm_cast G__P((int type,G__value *buf));
 void G__setdebugcond G__P((void));
 int G__findposition G__P((char *string,struct G__input_file view,int *pline,int *pfnum));
 int G__findfuncposition G__P((char *func,int *pline,int *pfnum));
-G__value G__exec_tempfile G__P((char *file));
 int G__beforelargestep G__P((char *statement,int *piout,int *plargestep));
 void G__afterlargestep G__P((int *plargestep));
 void G__EOFfgetc G__P((void));

@@ -63,6 +63,9 @@ class G__ClassInfo {
   struct G__friendtag* GetFriendInfo(); 
 #endif
   void SetGlobalcomp(int globalcomp);
+#ifndef G__OLDIMPLEMENTATION1334
+  void SetProtectedAccess(int protectedaccess);
+#endif
 #ifdef G__OLDIMPLEMENTATION1218_YET
   int IsValid() { return 0<=tagnum && tagnum<G__struct.alltag ? 1 : 0; }
 #else
@@ -103,6 +106,7 @@ class G__ClassInfo {
   int Version();
   void *New();
   void *New(int n);
+  void *New(void *arena);
   int InstanceCount(); 
   void ResetInstanceCount();
   void IncInstanceCount();

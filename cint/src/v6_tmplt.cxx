@@ -1672,6 +1672,9 @@ int parent_tagnum;
   fpos_t const_pos;
   char const_c = 0;
 #endif
+#ifndef G__PHILIPPE13
+  int store_memberfunc_tagnum;
+#endif
 
   /*******************************************************************
    * open macro and template substitution file and get ready for
@@ -1779,6 +1782,9 @@ int parent_tagnum;
 	}
 #ifndef G__OLDIMPLEMENTATION923
         if(strcmp("new",symbol)==0) isnew=1;
+#ifndef G__PHILIPPE13
+        if(strcmp("operator",symbol)==0) isnew=1;
+#endif
 	if(G__templatesubstitute(symbol,callpara,def_para,templatename
 				 ,tagname,c,npara,isnew) && '>'!=c) {
 #else
@@ -1942,6 +1948,9 @@ int parent_tagnum;
 #ifndef G__OLDIMPLEMENTATION1043
   store_reftype=G__reftype;
 #endif
+#ifndef G__PHILIPPE13
+  store_memberfunc_tagnum = G__memberfunc_tagnum;
+#endif
 
   G__prerun=1;
   G__tagnum = -1;
@@ -1952,6 +1961,9 @@ int parent_tagnum;
   G__def_tagnum = parent_tagnum;
   G__tagdefining = parent_tagnum;
   G__def_struct_member = (parent_tagnum != -1);
+#ifndef G__PHILIPPE13
+  if(G__exec_memberfunc) G__memberfunc_tagnum = parent_tagnum;
+#endif
 #else
   /* template instantiation only in namespace scope */
   if(-1!=G__tagdefining && 'n'!=G__struct.type[G__tagdefining]) {
@@ -2021,6 +2033,9 @@ int parent_tagnum;
 #endif
 #ifndef G__OLDIMPLEMENTATION1043
   G__reftype=store_reftype;
+#endif
+#ifndef G__PHILIPPE13
+  G__memberfunc_tagnum = store_memberfunc_tagnum;
 #endif
 
   /* restore input file */

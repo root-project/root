@@ -2890,6 +2890,10 @@ G__value G__exec_statement()
 #ifndef G__OLDIMPLEMENTATION439
   int commentflag=0;
 #endif
+#ifndef G__PHILIPPE12
+  int add_fake_space = 0;
+  int fake_space = 0;
+#endif
 
   fgetpos(G__ifile.fp,&start_pos);
   start_line=G__ifile.line_number;
@@ -2900,7 +2904,15 @@ G__value G__exec_statement()
   result=G__null;
 
   while(1) {
-    c=G__fgetc();
+#ifndef G__PHILIPPE12
+    fake_space = 0;
+    if (add_fake_space && !double_quote && !single_quote) {
+      c = ' ';
+      add_fake_space = 0;
+      fake_space = 1;
+    } else 
+#endif
+      c=G__fgetc();
 
 /*#define G__OLDIMPLEMENTATION781*/
 #ifndef G__OLDIMPLEMENTATION781
@@ -3157,7 +3169,11 @@ G__value G__exec_statement()
 	    /* char**, char*&, int**, int*& */
 	    statement[iout-2]='\0';
 	    iout-=2;
-	    fseek(G__ifile.fp,-3,SEEK_CUR);
+#ifndef G__PHILIPPE12
+            if (fake_space) fseek(G__ifile.fp,-2,SEEK_CUR);
+            else 
+#endif
+	      fseek(G__ifile.fp,-3,SEEK_CUR);
 	    if(G__dispsource) G__disp_mask=2;
 	  }
 	  
@@ -3631,7 +3647,16 @@ G__value G__exec_statement()
               spaceflag = 0;
             }
             /* Allow for spaces before a scope operator. */
+#ifndef G__OLDIMPLEMENTATION1343
+	    if(!strchr(statement,'.') && !strstr(statement,"->")) {
+	      namespace_tagnum = G__defined_tagname(statement,2);
+	    }
+	    else {
+	      namespace_tagnum = -1;
+	    }
+#else
             namespace_tagnum = G__defined_tagname(statement,2);
+#endif
 #ifndef G__PHILIPPE8
             if (((namespace_tagnum!=-1) && (G__struct.type[namespace_tagnum]=='n'))
 		||(strcmp(statement,"std")==0)) {
@@ -4134,8 +4159,19 @@ G__value G__exec_statement()
       else {
 	statement[iout++] = c ;
 	spaceflag |= 1;
+#ifndef G__PHILIPPE12
+	if(!double_quote && !single_quote) add_fake_space = 1;
+#endif
       }
       break;
+
+#ifndef G__PHILIPPE12
+    case '&' :  /* this cut a symbols! */
+      statement[iout++] = c ;
+      spaceflag |= 1;
+      if(!double_quote && !single_quote) add_fake_space = 1;
+      break;
+#endif
       
     case ':' :
       statement[iout++] = c ;
@@ -4174,6 +4210,9 @@ G__value G__exec_statement()
 	if(s) ++s;
 	else  s=statement;
 	if((1==spaceflag||2==spaceflag) && 
+#ifndef G__PHILIPPE15
+           (G__no_exec==0)&& 
+#endif
 	   (('~'==statement[0] && G__defined_templateclass(s+1)) ||
 	    G__defined_templateclass(s))) {
 #else
