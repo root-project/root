@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.161 2005/01/19 07:52:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.162 2005/02/07 17:23:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3625,6 +3625,7 @@ void TTreeFormula::ResetDimensions() {
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) {
          TCutG *gcut = (TCutG*)fMethods.At(i);
+         if (!gcut) continue;
          TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
          TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
 
