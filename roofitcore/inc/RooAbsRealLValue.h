@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.30 2005/02/24 22:36:06 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.31 2005/02/25 14:22:52 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,6 +60,14 @@ public:
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
   virtual Bool_t inRange(const char* name) const ;
+
+  // Backward compatibility functions
+  Int_t getFitBins() const ;
+  Int_t numFitBins() const ;
+  Double_t getFitMin() const ;
+  Double_t getFitMax() const ;
+  Bool_t hasFitMin() const ;
+  Bool_t hasFitMax() const ;
 
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const { return kTRUE ; }
   virtual Double_t jacobian() const { return 1 ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.51 2005/02/23 15:09:57 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.52 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -868,26 +868,5 @@ void RooRealVar::removeFitRange()
   removeRange() ;
 }
 
-Double_t RooRealVar::getFitMin() const 
-{
-  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
-  return getMin() ;
-}
 
-Double_t RooRealVar::getFitMax() const 
-{
-  cout << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
-  return getMax() ;
-}
 
-Bool_t RooRealVar::hasFitMin() const 
-{
-  cout << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
-  return hasMin() ;
-}
-
-Bool_t RooRealVar::hasFitMax() const 
-{
-  cout << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
-  return hasMax() ;
-}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.rdl,v 1.44 2005/02/23 15:09:59 wverkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.45 2005/02/25 14:23:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -64,20 +64,6 @@ public:
   inline void setMax(Double_t value) { setMax(0,value) ; }
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
 
-  // Compatibility functions
-  void setFitBins(Int_t nBins) ;
-  void setFitMin(Double_t value) ;
-  void setFitMax(Double_t value) ;
-  void setFitRange(Double_t min, Double_t max) ;
-  void removeFitMin() ;
-  void removeFitMax() ;
-  void removeFitRange() ;
-  Double_t getFitMin() const ;
-  Double_t getFitMax() const ;
-  Bool_t hasFitMin() const ;
-  Bool_t hasFitMax() const ;
-
-
   void setBins(Int_t nBins) { setBinning(RooUniformBinning(getMin(),getMax(),nBins)) ; } 
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
@@ -91,6 +77,15 @@ public:
   inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
   inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
  
+  // Backward compatibility functions
+  void setFitBins(Int_t nBins) ;
+  void setFitMin(Double_t value) ;
+  void setFitMax(Double_t value) ;
+  void setFitRange(Double_t min, Double_t max) ;
+  void removeFitMin() ;
+  void removeFitMax() ;
+  void removeFitRange() ;
+
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(std::ostream& os, Bool_t compact) const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.38 2005/02/24 22:36:06 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.39 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -842,3 +842,39 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   return histogram;
 }
 
+
+Double_t RooAbsRealLValue::getFitMin() const 
+{
+  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMin()" << endl ;
+  return getMin() ;
+}
+
+Double_t RooAbsRealLValue::getFitMax() const 
+{
+  cout << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
+  return getMax() ;
+}
+
+Bool_t RooAbsRealLValue::hasFitMin() const 
+{
+  cout << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
+  return hasMin() ;
+}
+
+Bool_t RooAbsRealLValue::hasFitMax() const 
+{
+  cout << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
+  return hasMax() ;
+}
+
+Int_t RooAbsRealLValue::getFitBins() const
+{
+  cout << "WARNING getFitBins() IS OBSOLETE, PLEASE USE getBins()" << endl ;
+  return hasMax() ;
+}
+
+Int_t RooAbsRealLValue::numFitBins() const
+{
+  cout << "WARNING numFitBins() IS OBSOLETE, PLEASE USE numBins()" << endl ;
+  return hasMax() ;
+}
