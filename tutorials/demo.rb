@@ -1,4 +1,6 @@
-require 'libRuby'
+#to run this demo, do
+#  on Unix:    ruby -r../lib/libRuby demo.rb
+#  on Windows: ruby -r../bin/libRuby demo.rb
 
 # This macro generates a Controlbar menu: To see the 
 # output, click begin_html <a href="gif/demos.gif" >here</a> end_html
@@ -43,7 +45,7 @@ bar.AddButton('hsum', 'TRuby::Exec("load \'hsum.rb\'");',
 bar.AddButton('hstack', 'TRuby::Exec("load \'hstack.rb\'");',
     'Using stacked histograms')
 
-bar.AddButton('ntuple', 'TRuby::Exec("load \'ntuple1.rb\'");',
+bar.AddButton('ntuple1', 'TRuby::Exec("load \'ntuple1.rb\'");',
     'Using ntuples')
 
 bar.AddButton('latex', 'TRuby::Exec("load \'latex.rb\'");',
