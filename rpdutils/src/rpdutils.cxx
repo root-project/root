@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.2 2003/08/29 17:23:32 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -1142,7 +1142,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             }
             if (strlen(tmp) > 1) {
                // Method passed as string: translate it to number
-               char *pmet = strstr(kMethods, tmp);
+               const char *pmet = strstr(kMethods, tmp);
                if (pmet != 0) {
                   tmet = ((int) (pmet - kMethods)) / 7;
                } else {
