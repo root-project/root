@@ -87,8 +87,8 @@
 #           The first line defines as default method SSH, this is equivalent
 #           of setting:
 #
-#              Rootd.Authentication    4
-#              Proofd.Authentication   4
+#              Rootd.Authentication:    4
+#              Proofd.Authentication:   4
 #
 #           in the .rootc file.
 #
