@@ -1075,8 +1075,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
                (char*)NULL!=strchr(funcheader,'>') ) { 
        /* we might have operator< <> or operator< <double> 
           with the space missing */
+       char *pt2;
+       pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        pt1 = funcheader + strlen( "operator<" );
-       char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
        if ( *(pt2+2)=='<' ) {
           /* we have operator<< <...> */
           ++pt2;
