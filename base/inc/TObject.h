@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.19 2002/04/08 15:06:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.20 2002/07/04 12:39:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    TObject &operator=(const TObject &rhs);
    virtual ~TObject();
 
-   void                AppendPad(Option_t *option="");
+   virtual void        AppendPad(Option_t *option="");
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
