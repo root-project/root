@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.1 2001/10/01 10:29:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.2 2001/11/28 14:47:03 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -34,12 +34,15 @@ class TFile;
 class TProcessID : public TNamed {
 
 protected:
-   Int_t       fCount;          //!Reference count to this object (from TFile)
-   TObjArray  *fObjects;        //!Array pointing to the referenced objects
+   Int_t              fCount;     //!Reference count to this object (from TFile)
+   TObjArray         *fObjects;   //!Array pointing to the referenced objects
    
-public:
+   static TProcessID *fgPID;      //Pointer to current session ProcessID
+   static TObjArray  *fgPIDs;     //Table of ProcessIDs
+   static UInt_t      fgNumber;   //Referenced objects count
+  
+  public:
    TProcessID();
-   TProcessID(UShort_t pid);
    TProcessID(const TProcessID &ref);
    virtual ~TProcessID();
    Int_t            DecrementCount();
@@ -50,8 +53,15 @@ public:
    void             PutObjectWithID(TObject *obj, UInt_t uid=0);
    virtual void     RecursiveRemove(TObject *obj);
    
+   static TProcessID  *AddProcessID();
+   static UInt_t       AssignID(TObject *obj);
+   static void         Cleanup();
    static TProcessID  *ReadProcessID(UShort_t pidf , TFile *file);
-      
+   static UShort_t     WriteProcessID(TProcessID *pid , TFile *file);
+   static TProcessID  *GetProcessID(UShort_t pid);
+   static  UInt_t      GetObjectCount();
+   static  void        SetObjectCount(UInt_t number);
+         
    ClassDef(TProcessID,1)  //Process Unique Identifier in time and space
 };
 
