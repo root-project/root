@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.16 2002/01/27 17:23:19 rdm Exp $
+// @(#)root/rfio:$Name: v3-03-05 $:$Id: TRFIOFile.cxx,v 1.17 2002/04/09 10:42:56 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -262,7 +262,7 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    switch (whence) {
    case SEEK_SET:
       if (offset == fOffset)
-         return 0;
+         return offset;
       else
          fOffset = offset;
       break;

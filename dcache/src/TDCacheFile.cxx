@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.1 2002/01/27 17:21:22 rdm Exp $
+// @(#)root/dcache:$Name: v3-03-05 $:$Id: TDCacheFile.cxx,v 1.2 2002/03/25 16:43:16 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -377,7 +377,7 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    switch (whence) {
    case SEEK_SET:
       if (offset == fOffset)
-         return 0;
+         return offset;
       else
          fOffset = offset;
       break;
