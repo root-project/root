@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.23 2004/02/18 20:13:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.24 2004/07/08 17:18:08 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,6 +116,7 @@ protected:
    virtual void  HideToolTip(Int_t event);
    void          PaintBorder(Color_t color, Bool_t tops);
    virtual void  PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light);
+   void          PaintDate();
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
    virtual void  SetBatch(Bool_t batch=kTRUE);
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.134 2004/07/08 17:18:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.135 2004/07/09 09:00:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1513,9 +1513,9 @@ void TPad::DrawCrosshair()
    // Root > c1.SetCrosshair();
    // When moving the mouse in the canvas, a crosshair is drawn
    //
-   // if the canvas fCrosshair = 1 , the crosshair spans the full canvas 
+   // if the canvas fCrosshair = 1 , the crosshair spans the full canvas
    // if the canvas fCrosshair > 1 , the crosshair spans only the pad
-    
+
    if (gPad->GetEvent() == kMouseEnter) return;
 
    TPad *cpad = (TPad*)gPad;
@@ -2415,7 +2415,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    //do not highlight when printing on Postscript
    if (gVirtualPS && gVirtualPS->TestBit(kPrintingPS)) return;
-   
+
    if (color <= 0) return;
 
    AbsCoordinates(kTRUE);
@@ -2507,7 +2507,9 @@ void TPad::Paint(Option_t *option)
    if (fPadView3D)
        fPadView3D->PaintBeginModel(option);
 //   else
+
    PaintBorder(GetFillColor(), kTRUE);
+   PaintDate();
 
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    TObject *obj;
@@ -2560,12 +2562,12 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    TAttFill::Modify();
    Color_t light;
    Color_t dark;
-   if (color == 0) { 
-      light = 0;    
-      dark  = 0;             
+   if (color == 0) {
+      light = 0;
+      dark  = 0;
    } else if (color <= 50 && color != 0) {
-      light = color + 150;   
-      dark  = color + 100;   
+      light = color + 150;
+      dark  = color + 100;
    } else {
       Float_t r, g, b, h, l, s;
       TColor *c = gROOT->GetColor(color);
@@ -2646,6 +2648,37 @@ void TPad::PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t b
 }
 
 //______________________________________________________________________________
+void TPad::PaintDate()
+{
+   // Paint the current date and time if the option date is on
+
+   if (fCanvas == this && gStyle->GetOptDate()) {
+      TDatime dt;
+      const char *dates;
+      if (gStyle->GetOptDate() < 10) {
+         //by default use format like "Wed Sep 25 17:10:35 2002"
+         dates = dt.AsString();
+      } else if (gStyle->GetOptDate() < 20) {
+         //use ISO format like 2002-09-25
+         char iso[16];
+         strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
+         dates = iso;
+      } else {
+         //use ISO format like 2002-09-25 17:10:35
+         dates = dt.AsSQLString();
+      }
+      TText tdate(gStyle->GetDateX(),gStyle->GetDateY(),dates);
+      tdate.SetTextSize( gStyle->GetAttDate()->GetTextSize());
+      tdate.SetTextFont( gStyle->GetAttDate()->GetTextFont());
+      tdate.SetTextColor(gStyle->GetAttDate()->GetTextColor());
+      tdate.SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
+      tdate.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
+      tdate.SetNDC();
+      tdate.Paint();
+   }
+}
+
+//______________________________________________________________________________
 void TPad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
 //*-*-*-*-*-*-*-*-*-*Paint histogram/graph frame*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -2678,7 +2711,7 @@ void TPad::PaintModified()
    fPadPaint = 1;
    cd();
    if (IsModified() || IsTransparent()) {
-      if ((fFillStyle < 3026) && (fFillStyle > 3000)) { 
+      if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
          Int_t px1 = XtoPixel(fX1);
          Int_t px2 = XtoPixel(fX2);
          Int_t py1 = YtoPixel(fY1);
@@ -2695,30 +2728,8 @@ void TPad::PaintModified()
        PaintBorder(GetFillColor(), kTRUE);
    }
 
-   if (fCanvas == this && gStyle->GetOptDate()) {
-      TDatime dt;
-      const char *dates;
-      if (gStyle->GetOptDate() < 10) {
-         //by default use format like "Wed Sep 25 17:10:35 2002"
-         dates = dt.AsString();
-      } else if (gStyle->GetOptDate() < 20) {
-         //use ISO format like 2002-09-25
-         char iso[16];
-         strncpy(iso,dt.AsSQLString(),10); iso[10] = 0;
-         dates = iso;
-      } else {
-         //use ISO format like 2002-09-25 17:10:35
-         dates = dt.AsSQLString();
-      }
-      TText tdate(gStyle->GetDateX(),gStyle->GetDateY(),dates);
-      tdate.SetTextSize( gStyle->GetAttDate()->GetTextSize());
-      tdate.SetTextFont( gStyle->GetAttDate()->GetTextFont());
-      tdate.SetTextColor(gStyle->GetAttDate()->GetTextColor());
-      tdate.SetTextAlign(gStyle->GetAttDate()->GetTextAlign());
-      tdate.SetTextAngle(gStyle->GetAttDate()->GetTextAngle());
-      tdate.SetNDC();
-      tdate.Paint();
-   }
+   PaintDate();
+
    TList *pList = GetListOfPrimitives();
    TObjOptLink *lnk = 0;
    if (pList) lnk = (TObjOptLink*)pList->FirstLink();
@@ -2761,7 +2772,7 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
 // if option[0] = 's' the box is forced to be paint with style=0
-   
+
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
       Int_t px2 = XtoPixel(x2);
@@ -3191,7 +3202,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 //*-*-*-*-*-*-*-*-*Paint polyline in CurrentPad World coordinates*-*-*-*-*-*-*
 //*-*              ==============================================
 //  If option[0] == 'C' no clipping
-   
+
    if (n < 2) return;
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
@@ -3602,7 +3613,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 //
 //  The "Preview" option allows to generate a preview (in the TIFF format) within
 //  the Encapsulated Postscript file. This preview can be used by programs like
-//  MSWord to visualize the picture on screen. The "Preview" option relies on the 
+//  MSWord to visualize the picture on screen. The "Preview" option relies on the
 //  epstool command (http://www.cs.wisc.edu/~ghost/gsview/epstool.htm).
 //  Example:
 //     canvas->Print("example.eps","Preview");
@@ -3664,7 +3675,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    // line below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if ((psname[0] == '.') && (strchr(psname,'/') == 0)) sprintf(psname,"%s%s",GetName(),filename);
    delete [] filename;
-   
+
 //==============Save pad/canvas as a GIF file==================================
       if (strstr(opt,"gif")) {
       if (GetCanvas()->IsBatch()) {
@@ -4559,7 +4570,7 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 Bool_t TPad::HasCrosshair() const
 {
    // return kTRUE if the crosshair has been activated (via SetCrosshair)
-   
+
    return (Bool_t)GetCrosshair();
 }
 
@@ -4568,7 +4579,7 @@ Int_t TPad::GetCrosshair() const
 {
    // return the crosshair type (from the mother canvas)
    // crosshair type = o means no crosshair
-   
+
    if (this == (TPad*)fCanvas) return fCrosshair;
    return fCanvas->GetCrosshair();
 }
@@ -4579,7 +4590,7 @@ void TPad::SetCrosshair(Int_t crhair)
    // set crosshair active/inactive
    // if crhair != 0, a crosshair will be drawn in the pad and its subpads
    //
-   // if the canvas crhair = 1 , the crosshair spans the full canvas 
+   // if the canvas crhair = 1 , the crosshair spans the full canvas
    // if the canvas crhair > 1 , the crosshair spans only the pad
 
    fCrosshair = crhair;
