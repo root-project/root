@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -170,7 +170,7 @@ friend class  TBtInnerNode;
 private:
    Int_t      fNofKeysInTree;   // number of keys in TBtree
    TObject   *fKey;             // key
-   TBtNode   *fTree;            // sub-tree
+   TBtNode   *fTree;            //! sub-tree
 
 public:
    TBtItem();
