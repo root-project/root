@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.14 2000/11/22 20:57:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.15 2000/11/23 08:15:39 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1251,7 +1251,7 @@ UInt_t TClass::GetCheckSum() const
 }
 
 //______________________________________________________________________________
-void TClass::SetStreamer(const char *name, char *p)
+void TClass::SetStreamer(const char *name, Streamer_t p)
 {
 // store pointer to function to Stream non basic member name
    

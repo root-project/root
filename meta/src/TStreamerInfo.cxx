@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.12 2000/11/28 09:07:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.13 2000/11/30 08:32:22 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -27,12 +27,9 @@
 #include "TFile.h"
 #include "TArrayC.h"
 
-
 Int_t   TStreamerInfo::fgCount = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
-
-typedef void (*Streamer_t)(TBuffer &, char*);
 
 ClassImp(TStreamerInfo)
 
@@ -131,7 +128,7 @@ void TStreamerInfo::Build()
 
    while((dm=(TDataMember*)nextd())) {
       if (!dm->IsPersistent()) continue;
-      char *streamer = 0;
+      Streamer_t streamer = 0;
       offset = GetDataMemberOffset(dm,streamer);
       if (offset == kMissing) continue;
 
@@ -336,7 +333,7 @@ void TStreamerInfo::BuildOld()
       TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
       if (dm && dm->IsPersistent()) {
          TDataType *dt = dm->GetDataType();
-         char *streamer = 0;
+         Streamer_t streamer = 0;
          Int_t offset = GetDataMemberOffset(dm,streamer);
          element->SetOffset(offset);
          element->Init(fClass);
@@ -666,7 +663,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, char *&streamer)
+Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer)
 {
    // Compute data member offset
    // return pointer to the Streamer function if one exists

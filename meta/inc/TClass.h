@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.7 2000/11/21 20:43:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.8 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -132,7 +132,7 @@ public:
    Int_t          Size() const;
    TStreamerInfo *SetStreamerInfo(Int_t version, const char *info="");
    Long_t         Property() const;
-   void           SetStreamer(const char *name, char *p);
+   void           SetStreamer(const char *name, Streamer_t p);
    Int_t          WriteBuffer(TBuffer &b, void *pointer, const char *info="");
    
    static Bool_t  IsCallingNew();

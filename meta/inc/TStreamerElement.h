@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.5 2000/11/24 14:40:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.6 2000/11/28 09:07:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -40,7 +40,7 @@ protected:
    Int_t         fOffset;          //!element offset in class
    Int_t         fNewType;         //!new element type when reading
    TString       fTypeName;        //Data type name of data member
-   char         *fStreamer;        //!pointer to element Streamer      
+   Streamer_t    fStreamer;        //!pointer to element Streamer      
    TMethodCall  *fMethod;          //!pointer to TMethodCall
 public:
 
@@ -56,7 +56,7 @@ public:
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) {return fMaxIndex[i];}
    virtual ULong_t  GetMethod() {return ULong_t(fStreamer);}
-   char            *GetStreamer() {return fStreamer;}
+   Streamer_t       GetStreamer() {return fStreamer;}
    Int_t            GetSize() {return fSize;}
    Int_t            GetNewType() {return fNewType;}
    Int_t            GetType() {return fType;}
@@ -68,7 +68,7 @@ public:
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
    virtual void     SetOffset(Int_t offset) {fOffset=offset;}
-   virtual void     SetStreamer(char *streamer);
+   virtual void     SetStreamer(Streamer_t streamer);
    virtual void     SetSize(Int_t dsize) {fSize = dsize;}
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}
    virtual void     SetType(Int_t dtype) {fType = dtype;}

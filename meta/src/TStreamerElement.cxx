@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.4 2000/11/22 15:47:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.5 2000/11/28 09:07:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -109,7 +109,7 @@ void TStreamerElement::SetMaxIndex(Int_t dim, Int_t max)
 }
 
 //______________________________________________________________________________
-void TStreamerElement::SetStreamer(char *streamer)
+void TStreamerElement::SetStreamer(Streamer_t streamer)
 {
    //set pointer to Streamer function for this element
 
