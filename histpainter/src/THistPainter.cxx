@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.113 2003/01/13 13:53:55 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.114 2003/01/14 18:19:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -79,8 +79,8 @@ THistPainter::THistPainter()
    fYaxis = 0;
    fZaxis = 0;
    fFunctions = 0;
-   fXbuf  = new Double_t[kNMAX];
-   fYbuf  = new Double_t[kNMAX];
+   fXbuf  = 0;
+   fYbuf  = 0;
    fNcuts = 0;
    fStack = 0;
 }
@@ -91,8 +91,6 @@ THistPainter::~THistPainter()
 //    *-*-*-*-*-*-*-*-*Histogram default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                     ============================
 
-   delete [] fXbuf;
-   delete [] fYbuf;
 }
 
 
@@ -1241,6 +1239,8 @@ void THistPainter::Paint(Option_t *option)
 
    if (!MakeChopt(option)) return; //check options and fill Hoption structure
 
+   fXbuf  = new Double_t[kNMAX];
+   fYbuf  = new Double_t[kNMAX];
    if (fH->GetDimension() > 2) {
       PaintH3(option);
       fH->SetMinimum(minsav);
@@ -1253,6 +1253,7 @@ void THistPainter::Paint(Option_t *option)
          Hparam  = hparsave;
       }
       gCurrentHist = oldhist;
+      delete [] fXbuf; delete [] fYbuf;
       return;
    }
    TView *view = gPad->GetView();
@@ -1274,12 +1275,20 @@ void THistPainter::Paint(Option_t *option)
          Hparam  = hparsave;
       }
       gCurrentHist = oldhist;
+      delete [] fXbuf; delete [] fYbuf;
       return;
    }
 
-   if (Hoption.Bar >= 20) {PaintBarH(option); return;}
+   if (Hoption.Bar >= 20) {PaintBarH(option); 
+      delete [] fXbuf; delete [] fYbuf;
+      return;
+   }
 
-   if (!PaintInit()) return;  //fill Hparam structure with histo parameters
+//fill Hparam structure with histo parameters
+   if (!PaintInit()) {
+      delete [] fXbuf; delete [] fYbuf;
+      return;
+   }
 
 //          Picture surround (if new page) and page number (if requested).
 //          Histogram surround (if not option "Same").
@@ -1289,6 +1298,7 @@ void THistPainter::Paint(Option_t *option)
 //          Paint histogram axis only
    if (Hoption.Axis > 0) {
       PaintAxis();
+      delete [] fXbuf; delete [] fYbuf;
       return;
    }
 
@@ -1322,8 +1332,6 @@ void THistPainter::Paint(Option_t *option)
 
    PaintAxis();     //    Draw the axes
    PaintTitle();    //    Draw histogram title
-//   PaintFile();     //    Draw Current File name corresp to current directory
-//   PaintDate();     //    Draw date/time
      //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -1336,6 +1344,7 @@ void THistPainter::Paint(Option_t *option)
    }
    fH->SetMinimum(minsav);
    gCurrentHist = oldhist;
+   delete [] fXbuf; delete [] fYbuf;
 
 }
 
