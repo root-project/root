@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.16 2001/02/02 11:24:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.17 2001/02/06 10:50:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -109,8 +109,9 @@ Bool_t TStreamerElement::IsOldFormat(const char *newTypeName)
    //dm->GetTypeName instead of dm->GetFullTypename
    //if this case is detected, the element type name is modified
    
-   if (!IsaPointer()) return kFALSE;
-   if (!strstr(newTypeName,fTypeName.Data())) return kFALSE;
+   //if (!IsaPointer()) return kFALSE;
+   //if (!strstr(newTypeName,fTypeName.Data())) return kFALSE;
+   if (!strstr(fTypeName.Data(),newTypeName)) return kFALSE;
    fTypeName = newTypeName;
    return kTRUE;   
 }
