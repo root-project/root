@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.144 2005/03/10 17:57:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.145 2005/03/11 15:32:13 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -462,9 +462,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
+   fBrowsables->Add(fProofs, "PROOF Sessions");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
-   fBrowsables->Add(fProofs, "PROOF Sessions");
 
    atexit(CleanUpROOTAtExit);
 
