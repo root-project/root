@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.9 2001/06/26 12:27:45 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.10 2001/07/15 18:01:39 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -496,6 +496,7 @@ TetrisBoard::TetrisBoard(Float_t xlow, Float_t ylow,Float_t xup,Float_t yup) :
 
    fBoard = new TetrisBoxPtr[fWidth*fHeight];
    fIsDropped = kTRUE;
+   fFilledLines = 0;
 }
 
 void TetrisBoard::Clear(Option_t *)
