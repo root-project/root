@@ -7846,11 +7846,12 @@ int link_stub;
 #ifdef G__ROOT
       if(G__dispmsg>=G__DISPERR) {
 	G__fprinterr(G__serr,"Error: link requested for unknown class %s",buf);
+	G__genericerror((char*)NULL);
 #else
       if(G__dispmsg>=G__DISPNOTE) {
 	G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
-#endif
 	G__printlinenum();
+#endif
       }
     }
 #endif
@@ -8102,11 +8103,12 @@ int link_stub;
 #ifdef G__ROOT
       if(G__dispmsg>=G__DISPERR) {
 	G__fprinterr(G__serr,"Error: link requested for unknown function %s",buf);
+	G__genericerror((char*)NULL);
 #else
       if(G__dispmsg>=G__DISPNOTE) {
 	G__fprinterr(G__serr,"Note: link requested for unknown function %s",buf);
-#endif
 	G__printlinenum();
+#endif
       }
     }
 #endif
@@ -8325,11 +8327,12 @@ int link_stub;
 #ifdef G__ROOT
       if(G__dispmsg>=G__DISPERR) {
 	G__fprinterr(G__serr,"Error: link requested for unknown typedef %s",buf);
+	G__genericerror((char*)NULL);
 #else
       if(G__dispmsg>=G__DISPNOTE) {
 	G__fprinterr(G__serr,"Note: link requested for unknown typedef %s",buf);
-#endif
 	G__printlinenum();
+#endif
       }
     }
 #endif
@@ -8555,11 +8558,12 @@ int link_stub;
 #ifdef G__ROOT
       if(G__dispmsg>=G__DISPERR) {
 	G__fprinterr(G__serr,"Error: link requested for unknown srcfile %s",buf);
+	G__genericerror((char*)NULL);
 #else
       if(G__dispmsg>=G__DISPNOTE) {
 	G__fprinterr(G__serr,"Note: link requested for unknown srcfile %s",buf);
-#endif
 	G__printlinenum();
+#endif
       }
     }
 #endif

@@ -157,6 +157,14 @@ public:
 	// work around for destroy(copy(last, end(), first), finish);
 	finish = finish - (last - first); 
     }
+    void resize(size_type __new_size, const T& __x) {
+      if (__new_size < size()) 
+        erase(begin() + __new_size, end());
+      else
+        insert(end(), __new_size - size(), __x);
+    }
+    void resize(size_type __new_size) { resize(__new_size, T()); }
+    void clear() { erase(begin(), end()); }
 };
 
 template <class T>

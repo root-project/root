@@ -38,7 +38,7 @@ static ofstream  *G__redirected_cout;
 static ofstream  *G__redirected_cerr;
 static ifstream  *G__redirected_cin;
 /********************************************************************
- * G__redirectcout
+ * G__unredirectcout
  ********************************************************************/
 extern "C" void G__unredirectcout() {
   if(G__store_cout) {
@@ -68,7 +68,7 @@ extern "C" void G__redirectcout(const char* filename) {
 #endif
 }
 /********************************************************************
- * G__redirectcerr
+ * G__unredirectcerr
  ********************************************************************/
 extern "C" void G__unredirectcerr() {
   if(G__store_cerr) {

@@ -21,6 +21,7 @@
 #include "common.h"
 
 
+
 #ifdef G__MULTIBYTE
 /***********************************************************************
 * G__CodingSystem()
@@ -473,8 +474,16 @@ char *string,*endmark;
     case '<':
 #ifndef G__OLDIMPLEMENTATION608
       if((single_quote==0)&&(double_quote==0)) {
+#ifndef G__OLDIMPLEMENTATION1721
+	string[i]=0;
+        if(G__defined_templateclass(pp)) ++nest;
+	inew=i+1;
+#endif
 	pp = string+i+1;
       }
+#endif
+#ifndef G__OLDIMPLEMENTATION1721
+      break;
 #endif
     case '{':
     case '(':
@@ -557,7 +566,7 @@ char *string,*endmark;
       break;
 
     case EOF:
-      G__unexpectedEOF("G__fgetstream_new():2");
+      G__unexpectedEOF("G__fgetstream_newtemplate():2");
 #ifndef G__OLDIMPLEMENTATION789
       string[i] = '\0';
 #endif
@@ -679,8 +688,15 @@ char *string,*endmark;
     case '<':
 #ifndef G__OLDIMPLEMENTATION608
       if((single_quote==0)&&(double_quote==0)) {
+#ifdef G__OLDIMPLEMENTATION1721_YET
+	string[i]=0;
+        if(G__defined_templateclass(pp)) ++nest;
+#endif
 	pp = string+i+1;
       }
+#endif
+#ifdef G__OLDIMPLEMENTATION1721_YET
+      break;
 #endif
     case '{':
     case '(':

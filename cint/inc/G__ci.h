@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015059
-#define G__CINTVERSIONSTR  "5.15.59, Sep 23 2002"
+#define G__CINTVERSION      5015060
+#define G__CINTVERSIONSTR  "5.15.60, Sep 29 2002"
 
 
 /**********************************************************************
@@ -61,7 +61,7 @@
 /* #define G__OLDIMPLEMENTATION1649 */
 
 /* Define following macro in order to disable iostream I/O redirection */
-#define G__OLDIMPLEMENTATION1635
+/* #define G__OLDIMPLEMENTATION1635 */
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */

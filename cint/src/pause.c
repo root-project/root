@@ -20,6 +20,9 @@
 
 #include "common.h"
 
+/* 1723 is not needed because freopen deals with both stdout and cout */
+#define G__OLDIMPLEMENTATION1723
+
 #ifndef G__OLDIMPLEMENTATION1635
 extern void G__redirectcout G__P((const char* filename)) ;
 void G__unredirectcout() ;
@@ -39,9 +42,12 @@ extern void G__unredirectcin() ;
 
 extern void G__setcopyflag G__P((int flag));
 
-#define G__NUM_STDIN  0
-#define G__NUM_STDOUT 1
-#define G__NUM_STDERR 2
+#define G__NUM_STDIN   0
+#define G__NUM_STDOUT  1
+#define G__NUM_STDERR  2
+#ifndef G__OLDIMPLEMENTATION1722
+#define G__NUM_STDBOTH 3
+#endif
 
 struct G__store_env {
   struct G__var_array *var_local;
@@ -1339,6 +1345,16 @@ char *pipefile;
        ((char*)NULL==paren||redirect>paren) &&
        ((char*)NULL==blacket||redirect>blacket)) {
 
+#ifndef G__OLDIMPLEMENTATION1722
+      /* check if redirect both mode
+       *   cint> command >& filename
+       *                 ^^          */
+      if('&'==(*(redirect+1))) {
+	mode=G__NUM_STDBOTH;
+	++j;
+      }
+#endif
+
       /* get filename to redirect 
        *    cint> command > filename
        *                  ^ -------- */
@@ -1363,6 +1379,7 @@ char *pipefile;
 	keyword[i] = '\0';
       }
 
+
       /* check if append mode
        *   cint> command >> filename 
        *                 ^^          */
@@ -1378,6 +1395,11 @@ char *pipefile;
       /* check if stderr 
        *   cint> command 2> filename 
        *                 ^^          */
+#ifndef G__OLDIMPLEMENTATION1722
+      if(mode==G__NUM_STDBOTH) {
+      }
+      else 
+#endif
       if('2'==(*redirect)) {
 	--redirect;
 	mode=G__NUM_STDERR; /* stderr */
@@ -1403,6 +1425,9 @@ char *pipefile;
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 #endif
 	  G__sout = freopen(filename,openmode,G__sout);
+#ifndef G__OLDIMPLEMENTATION1723
+	  G__redirectcout(filename);
+#endif
 #ifndef G__OLDIMPLEMENTATION713
 	  G__redirect_on();
 #endif
@@ -1413,7 +1438,29 @@ char *pipefile;
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
 #endif
 	  G__serr = freopen(filename,openmode,G__serr);
+#ifndef G__OLDIMPLEMENTATION1723
+	  G__redirectcerr(filename);
+#endif
 	  break;
+#ifndef G__OLDIMPLEMENTATION1722
+	case G__NUM_STDBOTH: /* stdout + stderr */
+	  *psout = G__sout;
+	  *pserr = G__serr;
+#ifndef G__WIN32
+	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
+#endif
+	  G__sout = freopen(filename,openmode,G__sout);
+	  G__serr = freopen(filename,"a",G__serr);
+#ifndef G__OLDIMPLEMENTATION1723
+	  G__redirectcout(filename);
+	  G__redirectcerr(filename);
+#endif
+#ifndef G__OLDIMPLEMENTATION713
+	  G__redirect_on();
+#endif
+	  break;
+#endif /* 1722 */
 	}
 #else
 	switch(mode) {
@@ -1425,6 +1472,14 @@ char *pipefile;
 	  *pserr = G__serr;
 	  G__serr = fopen(filename,openmode);
 	  break;
+#ifndef G__OLDIMPLEMENTATION1722
+	case G__NUM_STDERR: /* stderr */
+	  *psout = G__sout;
+	  *pserr = G__serr;
+	  G__sout = fopen(filename,openmode);
+	  G__serr = fopen(filename,"a");
+	  break;
+#endif
 	}
 	G__update_stdio(); /* update stdout,stderr,stdin in interpreter */
 #endif
@@ -1467,6 +1522,9 @@ char *pipefile;
 	if (!strlen(stdinsav)) strcpy(stdinsav,ttyname(STDIN_FILENO));
 #endif
 	G__sin = freopen(filename,"r",G__sin);
+#ifndef G__OLDIMPLEMENTATION1723
+	G__redirectcin(filename);
+#endif
       }
     }
   }
@@ -1494,6 +1552,9 @@ char *pipefile;
     G__sout = freopen(stdoutsav,"w",G__sout);
 #endif
     *sout = (FILE*)NULL;
+#ifndef G__OLDIMPLEMENTATION1723
+    G__unredirectcout();
+#endif
   }
   if(*serr) {
 #ifdef G__WIN32
@@ -1502,6 +1563,9 @@ char *pipefile;
     G__serr = freopen(stderrsav,"w",G__serr);
 #endif
     *serr = (FILE*)NULL;
+#ifndef G__OLDIMPLEMENTATION1723
+    G__unredirectcerr();
+#endif
   }
   if(*sin) {
 #ifdef G__WIN32
@@ -1510,6 +1574,9 @@ char *pipefile;
     *sin = freopen(stdinsav,"r",*sin);
 #endif
     *sin = (FILE*)NULL;
+#ifndef G__OLDIMPLEMENTATION1723
+    G__unredirectcin();
+#endif
   }
 #else /* G__REDIRECTIO */
   int flag=0; 
@@ -2194,6 +2261,53 @@ G__value *rslt;
       }
     }
 
+#ifndef G__OLDIMPLEMENTATION1722
+    else if(strncmp(">&",com,2)==0 || strncmp(">>&",com,3)==0) {
+      if(strncmp(">>&",com,3)==0) index=3;
+      else                        index=2;
+      while(isspace(command[index])&&command[index]!='\0') index++;
+      if((*(command+index))) {
+	if(G__sout!=G__stdout) {
+	  fprintf(G__stdout,"Old save file closed\n");
+	  fclose(G__sout);
+	}
+	if(G__serr!=G__stderr && G__serr!=G__sout) {
+	  fprintf(G__stdout,"Old save file closed\n");
+	  fclose(G__serr);
+	}
+	if(strncmp(">>",com,2)!=0) {
+	  G__sout=fopen(command+index,"w");
+	  fclose(G__sout);
+	}
+	G__serr=G__sout=fopen(command+index,"a");
+	G__redirectcout(command+index);
+	G__redirectcerr(command+index);
+	if(G__sout) {
+	  fprintf(G__stdout,"Output will be saved in file %s! ('>&' to display on screen)\n" 
+		 ,command+index);
+	}
+	else {
+	  G__sout = G__stdout;
+	  G__serr = G__stderr;
+	  fprintf(G__stdout,"Can not open file %s\n",command+index);
+	}
+      }
+      else {
+	if(G__sout && G__sout!=G__stdout) {
+	  G__unredirectcout();
+	  G__unredirectcerr();
+	  fclose(G__sout);
+	}
+	G__sout = G__stdout;
+	G__serr = G__stderr;
+	fprintf(G__stdout,"Output will be displayed on screen!\n");
+      }
+#ifndef G__OLDIMPLEMENTATION713
+      G__update_stdio();
+#endif
+    }
+#endif /* 1722 */
+
     else if(strncmp(">",com,1)==0) {
       if(strncmp(">>",com,2)==0) index=2;
       else                       index=1;
@@ -2667,10 +2781,11 @@ G__value *rslt;
       G__more(G__sout,"Dump:        n [file]  : create new readline dumpfile and start dump\n");
       G__more(G__sout,"             y [file]  : append readline dump to [file]\n");
       G__more(G__sout,"             z         : stop readline dump\n");
-      G__more(G__sout,"             < [file]  : execute readline dumpfile\n");
+      G__more(G__sout,"             < [file]  : input redirection from [file](execute command dump)\n");
 #endif
-      G__more(G__sout,"             > [file]  : output redirect to [file]\n");
-      G__more(G__sout,"             2> [file] : error redirect to [file]\n");
+      G__more(G__sout,"             > [file]  : output redirection to [file]\n");
+      G__more(G__sout,"             2> [file] : error redirection to [file]\n");
+      G__more(G__sout,"             >& [file] : output&error redirection to [file]\n");
 #ifndef G__ROOT
       G__more(G__sout,"             .         : switch command input mode\n");
 #endif
