@@ -20,7 +20,7 @@ if [ ! -d "$2" ] ; then
 	#mktest $2
 	selection=
 	until [ "$selection" = "0" ]; do
-	    echo "1 - Create $2"
+	    echo "1 - Create $2 and add test '$1'"
 	    echo "0 - exit"
 	    echo ""
 	    echo -n "Enter selection: "
