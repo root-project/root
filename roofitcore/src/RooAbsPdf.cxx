@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.79 2003/04/09 01:33:57 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.80 2003/04/28 20:42:37 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -433,15 +433,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
 
 
-const RooIntegratorConfig* RooAbsPdf::getNormIntConfig() const 
-{
-  const RooIntegratorConfig* config = getSpecialNormIntConfig() ;
-  if (config) return config ;
-  return getDefaultNormIntConfig() ;
-}
-
-
-const RooIntegratorConfig* RooAbsPdf::getDefaultNormIntConfig() const 
+RooIntegratorConfig* RooAbsPdf::defaultNormIntConfig() const 
 {
   if (!_defaultNormIntConfig) {
     _defaultNormIntConfig = new RooIntegratorConfig ;
@@ -450,7 +442,7 @@ const RooIntegratorConfig* RooAbsPdf::getDefaultNormIntConfig() const
 }
 
 
-const RooIntegratorConfig* RooAbsPdf::getSpecialNormIntConfig() const 
+RooIntegratorConfig* RooAbsPdf::specialNormIntConfig() const 
 {
   return _specNormIntConfig ;
 }
@@ -462,6 +454,14 @@ void RooAbsPdf::setDefaultNormIntConfig(const RooIntegratorConfig& config)
     delete _defaultNormIntConfig ;
   }
   _defaultNormIntConfig = new RooIntegratorConfig(config) ;
+}
+
+
+const RooIntegratorConfig* RooAbsPdf::getNormIntConfig() const 
+{
+  const RooIntegratorConfig* config = specialNormIntConfig() ;
+  if (config) return config ;
+  return defaultNormIntConfig() ;
 }
 
 

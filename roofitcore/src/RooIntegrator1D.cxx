@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooIntegrator1D.cc,v 1.17 2002/09/05 04:33:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -95,12 +95,17 @@ Bool_t RooIntegrator1D::initialize()
     cout << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
     return kFALSE;
   }
-  // check that the function is one dimensional
-  if(_function->getDimension() != 1) {
-    cout << "RooIntegrator1D::initialize: cannot integrate function of dimension "
-	 << _function->getDimension() << endl;
-    return kFALSE;
-  }
+
+//   // check that the function is one dimensional
+//   if(_function->getDimension() != 1) {
+//     cout << "RooIntegrator1D::initialize: cannot integrate function of dimension "
+// 	 << _function->getDimension() << endl;
+//     return kFALSE;
+//   }
+
+  // Allocate coordinate buffer size after number of function dimensions
+  _x = new Double_t[_function->getDimension()] ;
+
 
   // Allocate workspace for numerical integration engine
   _h= new Double_t[_maxSteps + 2];
@@ -118,6 +123,7 @@ RooIntegrator1D::~RooIntegrator1D()
   if(_s) delete[] _s;
   if(_c) delete[] _c;
   if(_d) delete[] _d;
+  if(_x) delete[] _x;
 }
 
 Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
@@ -151,9 +157,16 @@ Bool_t RooIntegrator1D::checkLimits() const {
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 }
 
-Double_t RooIntegrator1D::integral() 
+Double_t RooIntegrator1D::integral(const Double_t *yvec) 
 {
   assert(isValid());
+
+  // Copy yvec to xvec if provided
+  if (yvec) {
+    Int_t i ; for (i=0 ; i<_function->getDimension()-1 ; i++) {
+      _x[i+1] = yvec[i] ;
+    }
+  }
 
   Int_t j;
   _h[1]=1.0;
@@ -191,7 +204,7 @@ Double_t RooIntegrator1D::addMidpoints(Int_t n)
 
   if(n == 1) {
     Double_t xmid= 0.5*(_xmin + _xmax);
-    return (_savedResult= _range*integrand(&xmid));
+    return (_savedResult= _range*integrand(xvec(xmid)));
   }
   else {
     for(it=1, j=1; j < n-1; j++) it*= 3;
@@ -200,9 +213,9 @@ Double_t RooIntegrator1D::addMidpoints(Int_t n)
     ddel= del+del;
     x= _xmin + 0.5*del;
     for(sum= 0, j= 1; j <= it; j++) {
-      sum+= integrand(&x);
+      sum+= integrand(xvec(x));
       x+= ddel;
-      sum+= integrand(&x);
+      sum+= integrand(xvec(x));
       x+= del;
     }      
     return (_savedResult= (_savedResult + _range*sum/tnm)/3.);
@@ -221,7 +234,7 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 
   if (n == 1) {
     // use a single trapezoid to cover the full range
-    return (_savedResult= 0.5*_range*(integrand(&_xmin) + integrand(&_xmax)));
+    return (_savedResult= 0.5*_range*(integrand(xvec(_xmin)) + integrand(xvec(_xmax))));
   }
   else {
     // break the range down into several trapezoids using 2**(n-2)
@@ -230,7 +243,7 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
     tnm= it;
     del= _range/tnm;
     x= _xmin + 0.5*del;
-    for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(&x);
+    for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(xvec(x));
     return (_savedResult= 0.5*(_savedResult + _range*sum/tnm));
   }
 }

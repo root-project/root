@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.89 2002/11/19 02:42:12 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.90 2003/01/13 22:54:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -311,7 +311,7 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 
 
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset) const 
+RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooIntegratorConfig* cfg) const 
 {
   TString name(GetName()) ;
   TString title(GetTitle()) ;
@@ -348,7 +348,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   name.Append("]") ;
 
   title.Prepend("Integral of ") ;
-  return new RooRealIntegral(name,title,*this,iset,nset) ;
+  return new RooRealIntegral(name,title,*this,iset,nset,cfg) ;
 }
 
 

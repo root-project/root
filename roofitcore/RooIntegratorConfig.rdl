@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooIntegratorConfig.rdl,v 1.4 2002/09/05 04:33:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,9 @@ public:
   Int_t maxSteps1D() const { return _maxSteps ; }
   Double_t epsilonRel1D() const { return _epsRel ; }
   Double_t epsilonAbs1D() const { return _epsAbs ; }
+
+  // 2D accessors
+  Bool_t useMCFor2D() const { return _useMCFor2D ; }
   
   // MC accessors
   RooMCIntegrator::SamplingMode samplingModeMC() const { return _mode ; }
@@ -47,6 +50,10 @@ public:
   void setMaxSteps1D(Int_t maxSteps) { _maxSteps = maxSteps ; }
   void setEpsilonAbs1D(Double_t eps) { _epsAbs = eps ; }
   void setEpsilonRel1D(Double_t eps) { _epsRel = eps ; }
+  
+  // 2D modifiers
+  void setUseMCFor2D(Bool_t flag) { _useMCFor2D = flag ; }
+
 
   // MC modifiers
   void setSamplingModeMC(RooMCIntegrator::SamplingMode mode) { _mode = mode ; }
@@ -64,6 +71,9 @@ protected:
   Int_t _maxSteps ;
   Double_t _epsAbs ;
   Double_t _epsRel ;
+
+  // 2D integrator ;
+  Bool_t _useMCFor2D ;
 
   // MC Integrator
   RooMCIntegrator::SamplingMode _mode ;

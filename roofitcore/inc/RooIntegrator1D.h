@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooIntegrator1D.rdl,v 1.13 2002/09/05 04:33:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,7 +34,8 @@ public:
   virtual ~RooIntegrator1D();
 
   virtual Bool_t checkLimits() const;
-  virtual Double_t integral() ;
+  virtual Double_t integral() { return integral(0) ; }
+  virtual Double_t integral(const Double_t *yvec) ;
 
   Bool_t setLimits(Double_t xmin, Double_t xmax);
 
@@ -67,6 +68,10 @@ protected:
   Double_t *_c ;                       //! do not persist
   Double_t *_d ;                       //! do not persist
   Double_t _savedResult;               //! do not persist
+
+  Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
+
+  Double_t *_x ; //! do not persist
 
   ClassDef(RooIntegrator1D,0) // 1-dimensional numerical integration engine
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.65 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.66 2003/01/14 00:07:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -142,8 +142,8 @@ public:
   inline Bool_t isSelectedComp() const { return _selectComp || _globalSelectComp ; }
 
   const RooIntegratorConfig* getNormIntConfig() const ;
-  const RooIntegratorConfig* getDefaultNormIntConfig() const ;
-  const RooIntegratorConfig* getSpecialNormIntConfig() const ;
+  RooIntegratorConfig* defaultNormIntConfig() const ;
+  RooIntegratorConfig* specialNormIntConfig() const ;
   static void setDefaultNormIntConfig(const RooIntegratorConfig& config) ;
   void setNormIntConfig() ;
   void setNormIntConfig(const RooIntegratorConfig& config) ;

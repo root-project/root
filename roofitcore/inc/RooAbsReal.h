@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.54 2002/09/05 04:33:09 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.55 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,6 +29,7 @@ class RooAbsFunc;
 class RooAbsCategoryLValue ;
 class RooCategory ;
 class RooLinkedList ;
+class RooIntegratorConfig ;
 
 class TH1;
 class TH1F;
@@ -69,7 +70,9 @@ public:
   virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset) const { return createIntegral(iset,&nset) ; }
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0) const ;  
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooIntegratorConfig& cfg) const { return createIntegral(iset,&nset,&cfg) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooIntegratorConfig& cfg) const { return createIntegral(iset,0,&cfg) ; }
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooIntegratorConfig* cfg=0) const ;  
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.67 2002/11/27 07:27:52 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.68 2003/01/14 00:07:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,8 @@
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooInvTransform.hh"
 #include "RooFitCore/RooSuperCategory.hh"
+#include "RooFitCore/RooIntegrator2D.hh"
+#include "RooFitCore/RooIntegratorConfig.hh"
 
 ClassImp(RooRealIntegral) 
 ;
@@ -471,6 +473,8 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
   // Chose a suitable RooAbsIntegrator implementation
   if(_numIntegrand->getDimension() == 1) {
+
+    // --- 1D integration ---
     if(RooNumber::isInfinite(_numIntegrand->getMinLimit(0)) ||
        RooNumber::isInfinite(_numIntegrand->getMaxLimit(0))) {
       if (_iconfig) {
@@ -486,9 +490,24 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 	_numIntEngine= new RooIntegrator1D(*_numIntegrand);
       }
     }
-  }
-  else {
+
+  } else if (_numIntegrand->getDimension()==2 && _iconfig && _iconfig->useMCFor2D()==kFALSE) {
+
+    cout << "RooRealIntegral::initNumIntegrator(" << GetName() 
+	 << ") WARNING: Evaluation may be slow: integral contains 2D numeric integration over " ;
+    _intList.Print("1") ;
+
+    // --- 2D integration ---
+    if (_iconfig) {
+      _numIntEngine= new RooIntegrator2D(*_numIntegrand,*_iconfig);
+    } else {
+      _numIntEngine= new RooIntegrator2D(*_numIntegrand);
+    }    
+
+  } else {
     // let the constructor check that the domain is finite
+
+    // --- >=2D integration (MC)---
 
     cout << "RooRealIntegral::initNumIntegrator(" << GetName() 
 	 << ") WARNING: Evaluation may be slow: integral contains " << _intList.getSize() << "D Monte Carlo integration over " ;

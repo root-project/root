@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooIntegratorConfig.cc,v 1.5 2002/09/05 04:33:35 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,9 @@ RooIntegratorConfig::RooIntegratorConfig()
   _epsRel = 1e-6 ;
   _epsAbs = 1e-6 ;
 
+  // 2D integrator
+  _useMCFor2D = kFALSE ;
+
   // MC Integrator
   _mode = RooMCIntegrator::Importance ;
   _genType = RooMCIntegrator::QuasiRandom ;
@@ -39,7 +42,7 @@ RooIntegratorConfig::RooIntegratorConfig()
   _alpha = 1.5  ;
   _nRefineIter = 5  ;
   _nRefinePerDim = 1000 ;
-  _nIntegratePerDim = 5000 ;
+  _nIntegratePerDim = 5000 ;  
 }
 
 RooIntegratorConfig::~RooIntegratorConfig()
@@ -53,6 +56,10 @@ RooIntegratorConfig::RooIntegratorConfig(const RooIntegratorConfig& other)
   _maxSteps = other._maxSteps ;
   _epsRel = other._epsRel ;
   _epsAbs = other._epsAbs ;
+
+
+  // 2D integrator
+  _useMCFor2D = other._useMCFor2D ;
 
   // MC Integrator
   _mode = other._mode ;
