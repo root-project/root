@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.8 2003/07/10 11:19:49 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.9 2003/07/11 09:01:34 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
       // Ugh, no PNFS support
       if (create || recreate || update) {
-         Error("TDCacheFile", "Without PNFS support only reading access is allowed.");
+         Error("TDCacheFile", "without PNFS support only reading access is allowed.");
          goto zombie;
       }
       fname = path;
@@ -413,11 +413,11 @@ Int_t TDCacheFile::SysStat(Int_t fd, Long_t *id, Long_t *size,
    // provide as much information as possible, but not everything can
    // really be done correctly.
 
-   if (!strncmp(GetName(), DCAP_PREFIX, DCAP_PREFIX_LEN)) {
+   if (!strncmp(fRealName, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
       // Ugh, no PNFS support.
 
       // Try to provide a unique id
-      *id = ::Hash(GetName());
+      *id = ::Hash(fRealName);
 
       // Funny way of checking the file size, isn't it?
       Seek_t offset = fOffset;

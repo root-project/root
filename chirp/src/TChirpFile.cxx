@@ -298,7 +298,7 @@ Int_t TChirpFile::SysStat(Int_t fd, Long_t *id, Long_t *size,
 {
    // FIXME: chirp library doesn't (yet) provide any stat() capabilities.
 
-   *id = ::Hash(GetName());
+   *id = ::Hash(fRealName);
 
    Seek_t offset = fOffset;
    *size = SysSeek(fd, 0, SEEK_END);
