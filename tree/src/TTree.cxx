@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.84 2001/07/18 16:12:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.85 2001/07/19 08:59:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1025,9 +1025,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       delobj = kTRUE;
    }
    //build the StreamerInfo if first time for the class
+   Bool_t optim = TStreamerInfo::CanOptimize();
    if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
-   TStreamerInfo::Optimize(kTRUE);
+   TStreamerInfo::Optimize(optim);
 
    // create a dummy top level  branch object
    Int_t id = -1;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.54 2001/08/02 15:28:23 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.55 2001/08/09 10:13:40 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -167,6 +167,16 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
       } else if (!strcmp(element->GetTypeName(),"TClonesArray") || !strcmp(element->GetTypeName(),"TClonesArray*")) {
          Bool_t ispointer = !strcmp(element->GetTypeName(),"TClonesArray*");
+         TClonesArray *clones;
+         if (ispointer) {
+            char **ppointer = (char**)(pointer);
+            clones = (TClonesArray*)(*ppointer);
+         } else {
+            clones = (TClonesArray*)pointer;
+         }
+         if (!clones) return; // TClonesArray must exist
+         clm = clones->GetClass();
+         if (!clm) return;
          // ===> Create a leafcount
          TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
          leaf->SetBranch(this);
@@ -178,16 +188,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          fBaskets.Add(basket);
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
-         TClonesArray *clones;
-         if (ispointer) {
-            char **ppointer = (char**)(pointer);
-            clones = (TClonesArray*)(*ppointer);
-         } else {
-            clones = (TClonesArray*)pointer;
-         }
-         if (!clones) return; // TClonesArray must exist
-         clm = clones->GetClass();
-         if (!clm) return;
          //check that the contained objects class name is part of the element title
          //This name is mandatory when reading the Tree later on and
          //the parent class with the pointer to the TClonesArray is not available.
@@ -561,11 +561,12 @@ TStreamerInfo *TBranchElement::GetInfo()
   //return pointer to TStreamerinfo object for the class of this branch
   //rebuild the info if not yet done
 
+   Bool_t optim = TStreamerInfo::CanOptimize();
    if (fInfo) {
       if (!fInfo->GetOffsets()) {
          TStreamerInfo::Optimize(kFALSE);
          fInfo->Compile();
-         TStreamerInfo::Optimize(kTRUE);
+         TStreamerInfo::Optimize(optim);
       }
       return fInfo;
    }
@@ -576,7 +577,7 @@ TStreamerInfo *TBranchElement::GetInfo()
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
       }
-      TStreamerInfo::Optimize(kTRUE);
+      TStreamerInfo::Optimize(optim);
    }
    return fInfo;
 }
@@ -1089,9 +1090,10 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 // unroll base classes and loop on all elements of class cl
 
    if (cl == TObject::Class() && cltop->CanIgnoreTObjectStreamer()) return 0;
+   Bool_t optim = TStreamerInfo::CanOptimize();
    if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *info = fTree->BuildStreamerInfo(cl);
-   TStreamerInfo::Optimize(kTRUE);
+   TStreamerInfo::Optimize(optim);
    if (!info) return 0;
    TClass *clbase;
    Int_t ndata = info->GetNdata();
