@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.8 2000/11/07 07:19:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.1 2000/11/24 16:21:00 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -2258,7 +2258,7 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
 
 
 //____________________________________________________________________
-void TMultiDimFit::FindParameterization(Option_t *option="") 
+void TMultiDimFit::FindParameterization(Option_t *option) 
 {
   // Find the parameterization 
   // 
@@ -2276,7 +2276,7 @@ void TMultiDimFit::FindParameterization(Option_t *option="")
 }
 
 //____________________________________________________________________
-void TMultiDimFit::Fit(Option_t *option="") 
+void TMultiDimFit::Fit(Option_t *option) 
 {
   // Try to fit the found parameterisation to the test sample. 
   // 
@@ -2934,7 +2934,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option="")
+void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)
 {
   // Generate the file <classname>MDF.cxx which contains the
   // implementation of the method:
@@ -3303,8 +3303,9 @@ void TMultiDimFit::MakeRealCode(const char *filename,
           << "gPower[] = {" << flush; 
   for (i = 0; i < fNCoefficients; i++) {
     for (j = 0; j < fNVariables; j++) {
-      outFile << (j != 0 ? flush : endl) << "  " 
-	      << fPowers[fPowerIndex[i] * fNVariables + j] 
+      if (j != 0) outFile << flush << "  ";
+      else        outFile << endl << "  ";
+      outFile << fPowers[fPowerIndex[i] * fNVariables + j] 
 	      << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",") 
 	      << flush;
     }
