@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.6 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.7 2001/03/11 22:47:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -135,10 +135,11 @@ public:
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
+   void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
+   void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
    BOOL              HandleConsoleEvent();
-   void              IgnoreInterrupt(Bool_t ignore = kTRUE);
 
    //---- Processes --------------------------------------------
    int               Exec(const char *shellcmd);

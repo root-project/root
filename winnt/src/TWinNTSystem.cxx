@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.14 2001/02/17 11:44:16 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.15 2001/03/10 18:40:36 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -578,13 +578,6 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 }
 
 //______________________________________________________________________________
-void TWinNTSystem::IgnoreInterrupt(Bool_t ignore)
-{
-   // Ignore the interrupt signal if ignore == kTRUE else restore previous
-   // behaviour. Typically call ignore interrupt before writing to disk.
-}
-
-//______________________________________________________________________________
 void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 {
    // Add a signal handler to list of system signal handlers.
@@ -603,11 +596,25 @@ TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
    // Remove a signal handler from list of signal handlers.
 
    int sig = h->GetSignal();
-   if (sig = kSigInterrupt){
+   if (sig = kSigInterrupt) {
 //*-*  Remove a  handler to the list of the console handlers
         SetConsoleCtrlHandler((PHANDLER_ROUTINE)ConsoleSigHandler,FALSE);
-}
+   }
    return TSystem::RemoveSignalHandler(h);
+}
+
+//______________________________________________________________________________
+void TWinNTSystem::ResetSignal(ESignals sig, Bool_t reset)
+{
+   // If reset is true reset the signal handler for the specified signal
+   // to the default handler, else restore previous behaviour.
+}
+
+//______________________________________________________________________________
+void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
+{
+   // If ignore is true ignore the specified signal, else restore previous
+   // behaviour.
 }
 
 //______________________________________________________________________________

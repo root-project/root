@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.24 2001/04/06 14:17:42 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.25 2001/05/08 13:43:55 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -416,38 +416,24 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::IgnoreInterrupt(Bool_t ignore)
+void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
-   // Ignore the interrupt signal if ignore == kTRUE else restore previous
-   // behaviour. Typically call ignore interrupt before writing to disk.
+   // If reset is true reset the signal handler for the specified signal
+   // to the default handler, else restore previous behaviour.
 
-   static Bool_t ignoreInt = kFALSE;
-   static struct sigaction oldsigact;
+   if (reset)
+      UnixResetSignal(sig);
+   else
+      UnixSignal(sig, SigHandler);
+}
 
-   if (ignore != ignoreInt) {
-      ignoreInt = ignore;
-      if (ignore) {
-         struct sigaction sigact;
-#if defined(R__SUN)
-         sigact.sa_handler = (void (*)())SIG_IGN;
-#elif defined(R__SOLARIS)
-         sigact.sa_handler = (void (*)(int))SIG_IGN;
-#else
-         sigact.sa_handler = SIG_IGN;
-#endif
-         sigemptyset(&sigact.sa_mask);
-#if defined(SA_INTERRUPT)       // SunOS
-         sigact.sa_flags = SA_INTERRUPT;
-#else
-         sigact.sa_flags = 0;
-#endif
-         if (sigaction(SIGINT, &sigact, &oldsigact) < 0)
-            ::SysError("TUnixSystem::IgnoreInterrupt", "sigaction");
-      } else {
-         if (sigaction(SIGINT, &oldsigact, 0) < 0)
-            ::SysError("TUnixSystem::IgnoreInterrupt", "sigaction");
-      }
-   }
+//______________________________________________________________________________
+void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
+{
+   // If ignore is true ignore the specified signal, else restore previous
+   // behaviour.
+
+   UnixIgnoreSignal(sig, ignore);
 }
 
 //______________________________________________________________________________
@@ -2002,11 +1988,60 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 }
 
 //______________________________________________________________________________
+void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
+{
+   // If ignore is true ignore the specified signal, else restore previous
+   // behaviour.
+
+   static Bool_t ignoreSig[kMAXSIGNALS] = { kFALSE };
+   static struct sigaction oldsigact[kMAXSIGNALS];
+
+   if (ignore != ignoreSig[sig]) {
+      ignoreSig[sig] = ignore;
+      if (ignore) {
+         struct sigaction sigact;
+#if defined(R__SUN)
+         sigact.sa_handler = (void (*)())SIG_IGN;
+#elif defined(R__SOLARIS)
+         sigact.sa_handler = (void (*)(int))SIG_IGN;
+#else
+         sigact.sa_handler = SIG_IGN;
+#endif
+         sigemptyset(&sigact.sa_mask);
+#if defined(SA_INTERRUPT)       // SunOS
+         sigact.sa_flags = SA_INTERRUPT;
+#else
+         sigact.sa_flags = 0;
+#endif
+         if (sigaction(gSignalMap[sig].code, &sigact, &oldsigact[sig]) < 0)
+            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
+      } else {
+         if (sigaction(gSignalMap[sig].code, &oldsigact[sig], 0) < 0)
+            ::SysError("TUnixSystem::UnixIgnoreInterrupt", "sigaction");
+      }
+   }
+}
+
+//______________________________________________________________________________
 const char *TUnixSystem::UnixSigname(ESignals sig)
 {
    // Return the signal name associated with a signal.
 
    return gSignalMap[sig].signame;
+}
+
+//______________________________________________________________________________
+void TUnixSystem::UnixResetSignal(ESignals sig)
+{
+   // Restore old signal handler for specified signal.
+
+   if (gSignalMap[sig].oldhandler) {
+      // restore old signal handler
+      sigaction(gSignalMap[sig].code, gSignalMap[sig].oldhandler, 0);
+      delete gSignalMap[sig].oldhandler;
+      gSignalMap[sig].oldhandler = 0;
+      gSignalMap[sig].handler    = 0;
+   }
 }
 
 //______________________________________________________________________________

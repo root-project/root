@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.16 2001/04/23 08:04:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.17 2001/04/23 08:33:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"
-#include "TSysEvtHandler.h"
 #include "TROOT.h"
 #include "TBrowser.h"
 #include "TString.h"
@@ -411,12 +410,30 @@ TFileHandler *TSystem::RemoveFileHandler(TFileHandler *h)
 }
 
 //______________________________________________________________________________
-void TSystem::IgnoreInterrupt(Bool_t)
+void TSystem::ResetSignal(ESignals /*sig*/, Bool_t /*reset*/)
 {
-   // Ignore the interrupt signal if ignore == kTRUE else restore previous
+   // If reset is true reset the signal handler for the specified signal
+   // to the default handler, else restore previous behaviour.
+
+   AbstractMethod("ResetSignal");
+}
+
+//______________________________________________________________________________
+void TSystem::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
+{
+   // If ignore is true ignore the specified signal, else restore previous
+   // behaviour.
+
+   AbstractMethod("IgnoreSignal");
+}
+
+//______________________________________________________________________________
+void TSystem::IgnoreInterrupt(Bool_t ignore)
+{
+   // If ignore is true ignore the interrupt signal, else restore previous
    // behaviour. Typically call ignore interrupt before writing to disk.
 
-   AbstractMethod("IgnoreInterrupt");
+   IgnoreSignal(kSigInterrupt, ignore);
 }
 
 //---- Processes ---------------------------------------------------------------
@@ -823,7 +840,8 @@ void TSystem::Setenv(const char*, const char*)
 void TSystem::Unsetenv(const char *name)
 {
    // Unset environment variable.
-   Setenv(name, 0);
+
+   Setenv(name, "");
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.11 2001/04/23 08:04:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.12 2001/04/23 08:33:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -207,9 +207,11 @@ public:
    //---- Handling of system events
    virtual void            AddSignalHandler(TSignalHandler *sh);
    virtual TSignalHandler *RemoveSignalHandler(TSignalHandler *sh);
+   virtual void            ResetSignal(ESignals sig, Bool_t reset = kTRUE);
+   virtual void            IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
+   virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
-   virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
 
    //---- Time & Date
    virtual TTime           Now();
