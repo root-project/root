@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.2 2002/05/23 14:04:23 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.3 2002/05/27 15:46:56 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -295,7 +295,11 @@ Int_t TAlien::Cd(const char *dir)
    // it goes to the home directory. Returns -1 in case of failure,
    // 0 otherwise.
 
-   if (AlienCd(dir) == -1) {
+   const char *d = "";
+   if (dir)
+      d = dir;
+
+   if (AlienCd(d) == -1) {
       Error("Cd", "error making %s the current working directory", dir);
       return -1;
    }
