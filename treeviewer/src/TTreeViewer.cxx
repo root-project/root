@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.34 2003/11/05 13:24:46 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.35 2003/11/10 10:48:43 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2562,5 +2562,6 @@ void TTreeViewer::DoRefresh()
 {
    // This slot is called when button REFR is clicked
 
-   Printf("Refresh button is clicked");
+   Printf("Updating Tree from the file");
+   fTree->Refresh();
 }

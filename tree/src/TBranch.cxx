@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.59 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.60 2003/07/04 16:16:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -618,6 +618,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
 //*-*      ====================================================
 
    static Int_t nerrors = 0;
+//printf("GetBasket called, basketnumber=%d, fWritebasket=%d\n",basketnumber,fWriteBasket);
 
       // reference to an existing basket in memory ?
    if (basketnumber <0 || basketnumber > fWriteBasket) return 0;
@@ -635,6 +636,7 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
+//printf("reading fBasketBytes[%d]=%d\n",basketnumber,fBasketBytes[basketnumber]);
    }
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
    if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
@@ -661,6 +663,8 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    fBaskets[basketnumber] = basket;
    if (fNBasketRAM < kMaxRAM) fBasketRAM[fNBasketRAM] = basketnumber;
    fNBasketRAM++;
+//printf("Branch:%s, getBasket:%d, basket=%x\n",GetName(),basketnumber,basket);
+//basket->Dump();
    return basket;
 }
 
@@ -720,6 +724,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
 //     We have found the basket containing this entry.
 //     make sure basket buffers are in memory.
    TBasket *basket = (TBasket*)fBaskets.UncheckedAt(fReadBasket);
+//printf("here fReadBasket=%d, basket=%x\n",fReadBasket,basket);
    if (!basket) {
       basket = GetBasket(fReadBasket);
       if (!basket) return -1;
@@ -1037,6 +1042,46 @@ void TBranch::ReadLeaves(TBuffer &b)
   }
 }
 
+//______________________________________________________________________________
+void TBranch::Refresh(TBranch *b)
+{
+//  refresh this branch using new information in b
+//  This function is called by TTree::Refresh
+   
+   printf("Refreshing branch:%s\n",GetName());
+   fEntryOffsetLen = b->fEntryOffsetLen;
+   fWriteBasket    = b->fWriteBasket;
+   fEntryNumber    = b->fEntryNumber;
+   fMaxBaskets     = b->fMaxBaskets;
+   fEntries        = b->fEntries;
+   fTotBytes       = b->fTotBytes;
+   fZipBytes       = b->fZipBytes;
+   fReadBasket     = -1;
+   fNBasketRAM     = 0;
+   //delete [] fBasketRAM;
+   delete [] fBasketBytes;
+   delete [] fBasketEntry;
+   delete [] fBasketSeek;
+   //fBasketRAM   = new Int_t[fNBasketRAM];
+   fBasketBytes = new Int_t[fMaxBaskets];
+   fBasketEntry = new Int_t[fMaxBaskets];
+   fBasketSeek  = new Int_t[fMaxBaskets];
+   Int_t i;
+   for (i=0;i<fNBasketRAM;i++) fBasketRAM[i] = -1;
+   for (i=0;i<fMaxBaskets;i++) {
+      fBasketBytes[i] = 0; //b->fBasketBytes[i];
+      fBasketEntry[i] = b->fBasketEntry[i];
+      fBasketSeek[i]  = b->fBasketSeek[i];
+   }
+   fBaskets.Delete();
+   Int_t nbaskets = b->fBaskets.GetSize();
+   fBaskets.Expand(nbaskets);
+   //for (i=0;i<nbaskets;i++) {
+   //   TBasket *basket = (TBasket*)fBaskets.UncheckedAt(i);
+//printf("Branch:%s, getting basket %d, basket=%x, seek=%d\n",GetName(),i,basket,fBasketSeek[i]);
+   //}
+}
+   
 //______________________________________________________________________________
 void TBranch::Reset(Option_t *)
 {

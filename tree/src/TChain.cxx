@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.84 2003/09/15 15:49:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.85 2003/11/01 10:48:18 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -583,8 +583,9 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 //     getall = 1 : get all branches
 //
 // return the total number of bytes read
+// o bytes read indicates a failure.
 
-   if (LoadTree(entry) < 0) return 0;
+   if (LoadTree(entry) < 0 || fTree==0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
 }
 

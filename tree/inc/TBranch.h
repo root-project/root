@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.18 2003/04/30 16:29:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.19 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -147,6 +147,7 @@ public:
     virtual void     Print(Option_t *option="") const;
     virtual void     ReadBasket(TBuffer &b);
     virtual void     ReadLeaves(TBuffer &b);
+    virtual void     Refresh(TBranch *b);
     virtual void     Reset(Option_t *option="");
     virtual void     ResetAddress();
     virtual void     ResetReadEntry() {fReadEntry = -1;}

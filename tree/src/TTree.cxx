@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.163 2003/10/07 15:45:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.164 2003/11/03 14:10:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3282,6 +3282,38 @@ TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *op
    if (fPlayer) return fPlayer->Query(varexp,selection,option,nentries,firstentry);
    return 0;
 }
+
+//______________________________________________________________________________
+void TTree::Refresh()
+{
+//  Refresh contents of this Tree and his branches from the current
+//  Tree status on its file
+   
+   printf("Refreshing Tree:%s from file%s\n",GetName(),GetDirectory()->GetName());
+   if (!fDirectory) return;
+   fDirectory->ReadKeys();
+   fDirectory->GetList()->Remove(this);
+   TTree *tree = (TTree*)fDirectory->Get(GetName());
+   if (!tree) return;
+   //copy info from tree header into this Tree
+   fEntries      = tree->fEntries;
+   fTotBytes     = tree->fTotBytes;
+   fZipBytes     = tree->fZipBytes;
+   fSavedBytes   = tree->fSavedBytes;
+   fTotalBuffers = tree->fTotalBuffers;
+      
+   //loop on all branches and update them
+   Int_t nleaves = fLeaves.GetEntriesFast();
+   for (Int_t i=0;i<nleaves;i++)  {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      TBranch *branch = (TBranch*)leaf->GetBranch();
+      branch->Refresh(tree->GetBranch(branch->GetName()));
+   }
+   
+   fDirectory->GetList()->Remove(tree);
+   fDirectory->GetList()->Add(this);
+   delete tree;
+   }
 
 //______________________________________________________________________________
 void TTree::RemoveFriend(TTree *oldFriend)
