@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.0 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.4 2000/09/06 09:29:20 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -18,26 +18,49 @@
 // New folders can be dynamically added or removed to/from a folder.
 // The folder hierarchy can be visualized via the TBrowser.
 //
+// The Root folders hierarchy can be seen as a whiteboard where objects
+// are posted. Other classes/tasks can access these objects by specifying
+// only a string pathname. This whiteboard facility greatly improves the
+// modularity of an application, minimizing the class relationship problem
+// that penalizes large applications.
+//
+// If we assume a sets of tasks T1, T2, T3, T4, etc (could be TTask objects),
+// each task may be one or more classes with strong relationships in the
+// form of data member pointers. This is an efficient way of communication.
+// However, one has interest to minimize direct coupling between tasks
+// in the form of direct pointers. One better uses the naming and search
+// service provided by the Root folders hierarchy. This makes the tasks
+// loosely coupled and also greatly facilitates I/O operations.
+// In a client/server environment, this mechanism facilitates the access
+// to any kind of object in //root stores running on different processes.
+//
 // A TFolder is created by invoking the TFolder constructor. It is placed
-// inside an existing folder via the TFolder::Add method.
+// inside an existing folder via the TFolder::AddFolder method.
 // One can search for a folder or an object in a folder using the FindObject
 // method. FindObject analyzes the string passed as its argument and searches
 // in the hierarchy until it finds an object or folder matching the name.
 //
+// When a folder is deleted, its reference from the parent folder and
+// possible other folders is deleted.
+//
+// If a folder has been declared the owner of its objects/folders via
+// TFolder::SetOwner, then the contained objects are deleted when the
+// folder is deleted. By default, a folder does not own its contained objects.
+//
 // Standard Root objects are automatically added to the folder hierarchy.
 // For example, the following folders exist:
-//   //root/files      with the list of currently connected Root files
-//   //root/classes    with the list of active classes
-//   //root/geometries with active geometries
-//   //root/canvases   with the list of active canvases
-//   //root/styles     with the list of graphics styles
-//   //root/colors     with the list of active colors
+//   //root/Files      with the list of currently connected Root files
+//   //root/Classes    with the list of active classes
+//   //root/Geometries with active geometries
+//   //root/Canvases   with the list of active canvases
+//   //root/Styles     with the list of graphics styles
+//   //root/Colors     with the list of active colors
 //
 // For example, if a file "myFile.root" is added to the list of files, one can
 // retrieve a pointer to the corresponding TFile object with a statement like:
-//   TFile *myFile = (TFile*)gROOT->FindObject("//root/files/myFile.root");
+//   TFile *myFile = (TFile*)gROOT->FindObject("//root/Files/myFile.root");
 // The above statement can be abbreviated to:
-//   TFile *myFile = (TFile*)gROOT->FindObject("/files/myFile.root");
+//   TFile *myFile = (TFile*)gROOT->FindObject("/Files/myFile.root");
 // or even to:
 //   TFile *myFile = (TFile*)gROOT->FindObject("myFile.root");
 // In this last case, the TROOT::FindObject function will scan the folder hierarchy
@@ -70,31 +93,7 @@ TFolder::TFolder() : TNamed()
 // default constructor used by the Input functions
 //
    fFolders = 0;
-}
-
-//______________________________________________________________________________
-TFolder::TFolder(const char *name, const char *title, TCollection *collection)
-           : TNamed(name, title)
-{
-// Create a new Folder
-//
-//  A new folder with name,title is created.
-//  To add this folder to another folder, use the Add function.
-//  if (collection is non NULL, the pointer fFolders is set to the existing
-//  collection, otherwise a default collection (Tlist) is created
-//  Note that the folder name cannot contain slashes.
-//
-   if (strchr(name,'/')) {
-      ::Error("TFolder::TFolder","folder name cannot contain a slash", name);
-      return;
-   }
-   if (strlen(GetName()) == 0) {
-      ::Error("TFolder::TFolder","folder name cannot be \"\"");
-      return;
-   }
-
-   if (collection) fFolders = collection;
-   else            fFolders = new TList();
+   fIsOwner = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -125,7 +124,7 @@ TFolder::~TFolder()
 //______________________________________________________________________________
 void TFolder::Add(TObject *obj)
 {
-   // Add object to this folder. obj must be a TObject or a TFolder
+// Add object to this folder. obj must be a TObject or a TFolder
 
    if (obj == 0 || fFolders == 0) return;
    fFolders->Add(obj);
@@ -136,9 +135,28 @@ TFolder *TFolder::AddFolder(const char *name, const char *title, TCollection *co
 {
 // Create a new folder and add it to the list of folders of this folder
 // return a pointer to the created folder
-
-   TFolder *folder = new TFolder(name,title,collection);
+// Note that a folder can be added to several folders
+//
+// if (collection is non NULL, the pointer fFolders is set to the existing
+// collection, otherwise a default collection (Tlist) is created
+// Note that the folder name cannot contain slashes.
+   
+   if (strchr(name,'/')) {
+      ::Error("TFolder::TFolder","folder name cannot contain a slash", name);
+      return 0;
+   }
+   if (strlen(GetName()) == 0) {
+      ::Error("TFolder::TFolder","folder name cannot be \"\"");
+      return 0;
+   }
+   TFolder *folder = new TFolder();
+   folder->SetName(name);
+   folder->SetTitle(title);
+   if (!fFolders) fFolders = new TList(); //only true when gROOT creates its 1st folder
    fFolders->Add(folder);
+
+   if (collection) folder->fFolders = collection;
+   else            folder->fFolders = new TList();
    return folder;
 }
 
@@ -151,11 +169,11 @@ void TFolder::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TFolder::Clear(Option_t *)
+void TFolder::Clear(Option_t *option)
 {
 // Delete all objects from a folder list
 
-   if (fFolders) fFolders->Clear();
+   if (fFolders) fFolders->Clear(option);
 
 }
 
@@ -175,11 +193,13 @@ TObject *TFolder::FindObject(const char *name) const
 // this folder.
 // name may be of the forms:
 //   A, specify a full pathname starting at the top ROOT folder
+//     //root/xxx/yyy/name
+//
+//   B, specify a pathname starting with a single slash. //root is assumed
 //     /xxx/yyy/name
 //
-//   B, Specify a pathname relative to this folder
+//   C, Specify a pathname relative to this folder
 //     xxx/yyy/name
-//     yyy/name
 //     name
    
    if (name == 0) return 0;
@@ -196,6 +216,22 @@ TObject *TFolder::FindObject(const char *name) const
    } else {
       return fFolders->FindObject(name);
    }
+}
+
+//______________________________________________________________________________
+TObject *TFolder::FindObjectAny(const char *name) const
+{
+// return a pointer to the first object with name starting at this folder
+   
+   TIter next(fFolders);
+   TObject *obj;
+   TFolder *folder;
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TFolder::Class())) continue;
+      folder = (TFolder*)obj;
+      return folder->FindObjectAny(name);
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -240,6 +276,9 @@ const char *TFolder::GetPath() const
 void TFolder::ls(Option_t *option)
 {
 // List folder contents
+//   if option contains "dump",  the Dump function of contained objects is called
+//   if option contains "print", the Print function of contained objects is called
+//   By default the ls function of contained objects is called.
 //  Indentation is used to identify the folder tree
 //
 //  The <regexp> will be used to match the name of the objects.
@@ -250,9 +289,10 @@ void TFolder::ls(Option_t *option)
 
    TString opta = option;
    TString opt  = opta.Strip(TString::kBoth);
-   TString reg = "*";
-   reg = opt;
-
+   opt.ToLower();
+   TString reg  = opt;
+   Bool_t dump  = opt.Contains("dump");
+   Bool_t print = opt.Contains("print");
    TRegexp re(reg, kTRUE);
 
    TObject *obj;
@@ -260,17 +300,11 @@ void TFolder::ls(Option_t *option)
    while ((obj = (TObject *) nextobj())) {
       TString s = obj->GetName();
       if (s.Index(re) == kNPOS) continue;
-      obj->ls(option);
+      if (dump)      obj->Dump();
+      else if(print) obj->Print(option);
+      else           obj->ls(option);
    }
    TROOT::DecreaseDirLevel();
-}
-
-//______________________________________________________________________________
-void TFolder::Print(Option_t *option)
-{
-// Invoke the Print function of all objects/folders in this folder
-
-   fFolders->ForEach(TObject,Print)(option);
 }
 
 //______________________________________________________________________________
@@ -282,13 +316,10 @@ void TFolder::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TFolder::SetCollection(TCollection *collection)
+void TFolder::Remove(TObject *obj)
 {
-// Set the collection of folders pointing to collection
-// if fFolders points to an existing collection, the previous collection
-// is deleted.
+// Remove object from this folder. obj must be a TObject or a TFolder
 
-   if (fFolders) fFolders->Delete();
-   delete fFolders;
-   fFolders = collection;
+   if (obj == 0 || fFolders == 0) return;
+   fFolders->Remove(obj);
 }
