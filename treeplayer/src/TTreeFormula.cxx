@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.34 2001/04/27 07:09:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.35 2001/04/27 17:29:36 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1340,8 +1340,18 @@ Int_t TTreeFormula::GetNdata()
       if (leaf->GetLeafCount()) {
          TLeaf* leafcount = leaf->GetLeafCount();
          TBranch *branch = leafcount->GetBranch();
-         branch->GetEntry(fTree->GetReadEntry());
-         size = leaf->GetLen() / leaf->GetLenStatic();
+         if (leaf->IsA() == TLeafElement::Class()) {
+            //if branchcount address not yet set, GetEntry will set the address
+            // read branchcount value
+            if (!branch->GetAddress()) branch->GetEntry(fTree->GetReadEntry());
+            else branch->TBranch::GetEntry(fTree->GetReadEntry());
+            //read this branch
+            leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+            size = leaf->GetNdata();
+         } else {
+            branch->GetEntry(fTree->GetReadEntry());
+            size = leaf->GetLen() / leaf->GetLenStatic();
+         }
          if (fIndexes[i][0]==-1) {
             // Case where the index is not specified AND the 1st dimension has a variable
             // size.
