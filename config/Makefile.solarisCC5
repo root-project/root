@@ -55,6 +55,3 @@ F77LIBS       = -lM77 -lF77 -lsunmath
 # Override default in Makefile.config
 INSTALL      := cp -pR
 INSTALLDATA  := cp -pR
-
-# Extras
-XMLLIBEXTRA    := -liconv

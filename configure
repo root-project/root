@@ -1561,6 +1561,7 @@ if test ! "x$enable_xml" = "xno" ; then
     else
         case $platform in
             linux*|win32gcc) xmllib="$xmllib -lpthread" ;;
+            solaris)         xmllib="$xmllib -liconv" ;;
         esac
     fi
 fi
