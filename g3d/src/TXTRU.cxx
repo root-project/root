@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.15 2004/09/14 15:15:46 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.16 2004/09/14 15:56:15 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -427,10 +427,10 @@ void TXTRU::Paint(Option_t *option)
        fZOrdering    == kUncheckedZ     ) CheckOrdering();
        
    Int_t NbPnts = fNz*fNxy;
-   Int_t NbSegs = (2*fNz-1)*fNxy;  // (Nz-1)*Nxy along z + Nz outlines
-   Int_t NbPols = (fNz-1)*fNxy+2;  // (Nz-1)*Nxy + 2 endcaps
-
-   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 2*(2+fNxy) + (fNz-1)*fNxy*(2+4));
+   Int_t NbSegs = fNxy*(2*fNz-1);
+   Int_t NbPols = fNxy*(fNz-1)+2;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs,
+                                            6*(NbPols-2)+2*(2+fNxy));
    if (!buff) return;
 
    buff->fType = TBuffer3D::kXTRU;
@@ -441,7 +441,7 @@ void TXTRU::Paint(Option_t *option)
    buff->fNbSegs = NbSegs;
    buff->fNbPols = NbPols;
    // In case of option "size" it is not necessary to fill the buffer
-   if (buff->fOption == TBuffer3D::kSIZE) {
+   if (strstr(option,"size")) {
       buff->Paint(option);
       return;
    }
@@ -455,95 +455,60 @@ void TXTRU::Paint(Option_t *option)
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
-   // Create overall structure, fill in counts of points,segments,polygons
-   //    float *points :=    x0, y0, z0, x1, y1, z1, ..... ..... ....
-   //      int *segs   :=    c0, p0, q0, c1, p1, q1, ..... ..... ....
-   //      int *polys  :=    c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn
-   //   where :  (xi,yi,zi) for the i-th 3-space point
-   //            cx is a color
-   //            (pj,qj) is a pair of point indices that form a segment
-   //            nk is the number of sides to the polygon
-   //            (s0k,s1k,...snk) are the edge segments of the polygon
+   Int_t i,j;
+   Int_t indx, indx2, k;
+   indx = indx2 = 0;
+   for (i=0; i<fNz; i++) {
+      // loop Z planes
+      indx2 = i*fNxy;
+      // loop polygon segments
+      for (j=0; j<fNxy; j++) {
+         k = (j+1)%fNxy;
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+k;
+      }
+   } // total: fNz*fNxy polygon segments
+   for (i=0; i<fNz-1; i++) {
+      // loop Z planes
+      indx2 = i*fNxy;
+      // loop polygon segments
+      for (j=0; j<fNxy; j++) {
+         k = j + fNxy;
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+k;
+      }
+   } // total (fNz-1)*fNxy lateral segments
 
-   // Segments
-   int ioff = 0;
-   int ip, iq;
-   int iz = 0;
-   for (iz=0; iz<fNz; iz++) {
-   // for each layer first connect segments in x-y outline
-      int ipt = 0;
-      for (ipt=0; ipt<fNxy; ipt++) {
-         ip = iz*fNxy + ipt;
-         iq = iz*fNxy + ((ipt==fNxy-1) ? 0 : ipt+1);
-         buff->fSegs[ioff]   = c;
-         buff->fSegs[ioff+1] = ip;
-         buff->fSegs[ioff+2] = iq;
-         ioff += 3;
+   indx = 0;
+
+   // fill lateral polygons
+   for (i=0; i<fNz-1; i++) {
+      indx2 = i*fNxy;
+      for (j=0; j<fNxy; j++) {
+      k = (j+1)%fNxy;
+      buff->fPols[indx++] = c+j%3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = indx2+j;
+      buff->fPols[indx++] = fNz*fNxy+indx2+k;
+      buff->fPols[indx++] = indx2+fNxy+j;
+      buff->fPols[indx++] = fNz*fNxy+indx2+j;
       }
-   // then for all but the last layer connect to the next layer
-      if (iz < fNz-1) {
-         for (int ipt=0; ipt<fNxy; ipt++) {
-            ip =     iz*fNxy + ipt;
-            iq = (iz+1)*fNxy + ipt;
-            buff->fSegs[ioff]   = c;
-            buff->fSegs[ioff+1] = ip;
-            buff->fSegs[ioff+2] = iq;
-            ioff += 3;
-         }
-      }
+   } // total (fNz-1)*fNxy polys
+   buff->fPols[indx++] = c+2;
+   buff->fPols[indx++] = fNxy;
+   indx2 = 0;
+   for (j = fNxy - 1; j >= 0; --j) {
+      buff->fPols[indx++] = indx2+j;
    }
 
-   // Polygons:
-   // The polygons with z depth are 4-sided and there are fNxy of them
-   // for each pair of z's; the two end faces that slice z are fNxy sided.
-   // Each polygon needs nside+2 words allocated.
-   // If c is a color, then c+1,c+2,c+3 are shades of same color.
-   // Make the "ends" (z slices) color c;
-   // for the "sides" step through c+1,c+2,c+3
-   // if fNxy is even then everything if fine
-   // if fNxy is odd then we want to ensure that first and last
-   // don't have same color ...punt for now....
-
-   ioff = 0;
-
-   // do first endcap
-   buff->fPols[ioff]   = c;
-   buff->fPols[ioff+1] = fNxy;
-   ioff +=2;
-   int iseg=0;
-   for (iseg=0; iseg<fNxy; iseg++) {
-      buff->fPols[ioff] = iseg;
-      ioff++;
-   }
-
-   int is1, is2, is3, is4, cadd;
-   cadd = 1;
-   iz=0;
-   for (iz=0; iz<fNz-1; iz++) {  // fNz-1 because last z section
-      for (int iseg=0; iseg<fNxy; iseg++) {
-         is1 = 2*iz*fNxy + iseg;
-         is2 = is1 + fNxy + 1 - fNxy*(iseg==fNxy);
-         is3 = 2*(iz+1)*fNxy + iseg;
-         is4 = is1 + fNxy;
-         buff->fPols[ioff]   = c + cadd;
-         buff->fPols[ioff+1] = 4;
-         buff->fPols[ioff+2] = is1;
-         buff->fPols[ioff+3] = is2;
-         buff->fPols[ioff+4] = is3;
-         buff->fPols[ioff+5] = is4;
-         ioff += 6;
-         cadd++;
-         if (cadd==4) cadd=1;
-      }
-   }
-
-   // do last endcap
-   buff->fPols[ioff]   = c;
-   buff->fPols[ioff+1] = fNxy;
-   ioff +=2;
-   int jseg=0;
-   for (jseg=0; jseg<fNxy; jseg++,ioff++) {
-      buff->fPols[ioff] = jseg + 2*(fNz-1)*fNxy;
+   buff->fPols[indx++] = c;
+   buff->fPols[indx++] = fNxy;
+   indx2 = (fNz-1)*fNxy;
+ 
+   for (j=0; j<fNxy; j++) {
+      buff->fPols[indx++] = indx2+j;
    }
 
    // Paint gPad->fBuffer3D
