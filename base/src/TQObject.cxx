@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.23 2002/09/14 00:28:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.24 2002/09/16 12:49:02 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1464,7 +1464,7 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
-#ifndef R__ACC
+#if !defined(R__ACC) && !defined(__DECCXX_VER)
 
    G__load_text(RQ_OBJECT_STRING);
 
@@ -1472,6 +1472,7 @@ void TQObject::LoadRQ_OBJECT()
 
    // Work around for aCC Error 131: "base/src/TQObject.cxx", line 1467 # The
    // string literal created with the '#' operator is too long.
+   // Idem for cxx on Alpha/TRUE64
    char rqh[128];
 # ifdef ROOTINCDIR
    sprintf(rqh, "%s/RQ_OBJECT.h", ROOTINCDIR);
