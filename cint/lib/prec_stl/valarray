@@ -68,7 +68,7 @@ template<class T> class valarray {
   // _lib.valarray.unary_ unary operators:
   valarray<T> operator+() const;
   valarray<T> operator-() const;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(G__GNUC>=3)
   valarray<T> operator~() const;
   valarray<T> operator!() const;
 #endif
@@ -81,7 +81,7 @@ template<class T> class valarray {
   valarray<T>& operator/= (const valarray<T>&);
   valarray<T>& operator+= (const valarray<T>&);
   valarray<T>& operator-= (const valarray<T>&);
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !defined(G__GNUC)
   valarray<T>& operator%= (const T&);
   valarray<T>& operator^= (const T&);
   valarray<T>& operator&= (const T&);
@@ -108,12 +108,14 @@ template<class T> class valarray {
 #endif
   valarray<T> shift (int) const;
   valarray<T> cshift(int) const;
+#ifdef G__WIN32
 #ifdef __CINT__
   valarray<T> apply(T (*func)(T)) const;
   valarray<T> apply(T (*func)(const T&)) const;
 #else
   valarray<T> apply(T func(T)) const;
   valarray<T> apply(T func(const T&)) const;
+#endif
 #endif
   void resize(size_t sz, T c = T());       
 

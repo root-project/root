@@ -21,13 +21,14 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015049
-#define G__CINTVERSIONSTR  "5.15.49, July 2 2002"
+#define G__CINTVERSION      5015050
+#define G__CINTVERSIONSTR  "5.15.50, July 7 2002"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL

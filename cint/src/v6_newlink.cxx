@@ -62,6 +62,9 @@ static int G__privateaccess = 0;
 **************************************************************************/
 /* #define G__BUILTIN */
 
+#if !defined(G__DECCXX) && !defined(G__BUILTIN) && !defined(__hpux) && !defined(G__ROOT)
+#define G__DEFAULTASSIGNOPR
+#endif
 
 #if !defined(G__DECCXX) && !defined(G__BUILTIN)
 #define G__N_EXPLICITDESTRUCTOR
@@ -712,7 +715,10 @@ void G__gen_cpplink()
 	algoflag |= 2;
       }
     }
-    if(algoflag&1) fprintf(hfp,"#include <algorithm>\n");
+    if(algoflag&1) {
+      fprintf(hfp,"#include <algorithm>\n");
+      if(G__ignore_stdnamespace) fprintf(hfp,"using namespace std;\n");
+    }
     else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
   }
 #endif
@@ -2451,7 +2457,6 @@ FILE *hfp;
 	      continue;
 	    }
 	    else {
-#define G__DEFAULTASSIGNOPR
 #ifdef G__DEFAULTASSIGNOPR
 	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
 		++isassignmentoperator;

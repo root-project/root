@@ -3848,7 +3848,7 @@ int hash;
 #ifndef G__OLDIMPLEMENTATION564
   if(strcmp(funcname,"G__setbreakpoint")==0) {
     if(G__no_exec_compile) return(1);
-    G__letint(result7,'i',(long)G__setbreakpoint((char*)G__int(libp->para[0]),(char*)G__int(libp->para[0])));
+    G__letint(result7,'i',(long)G__setbreakpoint((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])));
     return(1);
   }
 #endif

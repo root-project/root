@@ -202,15 +202,6 @@ static int G__ios_basecLcLInit_Init_2_0(G__value *result7,G__CONST char *funcnam
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-// automatic assignment operator
-static int G__ios_basecLcLInit_operatoreQ_3_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   ios_base::Init *dest = (ios_base::Init*)(G__getstructoffset());
-   *dest = (*(ios_base::Init*)libp->para[0].ref);
-   const ios_base::Init& obj = *dest;
-   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
 
 /* char_traits<char> */
 static int G__char_traitslEchargR_assign_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -331,15 +322,6 @@ static int G__char_traitslEchargR_wAchar_traitslEchargR_6_1(G__value *result7,G_
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
-   return(1 || funcname || hash || result7 || libp) ;
-}
-
-// automatic assignment operator
-static int G__char_traitslEchargR_operatoreQ_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
-   char_traits<char> *dest = (char_traits<char>*)(G__getstructoffset());
-   *dest = (*(char_traits<char>*)libp->para[0].ref);
-   const char_traits<char>& obj = *dest;
-   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -2573,8 +2555,6 @@ static void G__setup_memfuncios_basecLcLInit(void) {
    G__memfunc_setup("Init",404,G__ios_basecLcLInit_Init_0_0,105,G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLInit),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
    G__memfunc_setup("Init",404,G__ios_basecLcLInit_Init_2_0,(int)('i'),G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLInit),-1,0,1,1,1,0,"u 'ios_base::Init' - 11 - -",(char*)NULL,(void*)NULL,0);
-   // automatic assignment operator
-   G__memfunc_setup("operator=",937,G__ios_basecLcLInit_operatoreQ_3_0,(int)('u'),G__get_linked_tagnum(&G__G__streamLN_ios_basecLcLInit),-1,1,1,1,1,0,"u 'ios_base::Init' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2615,8 +2595,6 @@ static void G__setup_memfuncchar_traitslEchargR(void) {
    G__memfunc_setup("char_traits<char>",1708,G__char_traitslEchargR_char_traitslEchargR_5_1,(int)('i'),G__get_linked_tagnum(&G__G__streamLN_char_traitslEchargR),-1,0,1,1,1,0,"u 'char_traits<char>' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~char_traits<char>",1834,G__char_traitslEchargR_wAchar_traitslEchargR_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
-   // automatic assignment operator
-   G__memfunc_setup("operator=",937,G__char_traitslEchargR_operatoreQ_7_1,(int)('u'),G__get_linked_tagnum(&G__G__streamLN_char_traitslEchargR),-1,1,1,1,1,0,"u 'char_traits<char>' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
