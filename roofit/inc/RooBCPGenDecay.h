@@ -9,8 +9,8 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
-#ifndef ROO_RAREBCP_DECAY
-#define ROO_RAREBCP_DECAY
+#ifndef ROO_BCPGEN_DECAY
+#define ROO_BCPGEN_DECAY
 
 #include "RooFitCore/RooConvolutedPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
