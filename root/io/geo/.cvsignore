@@ -1,1 +1,12 @@
  *.log *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+maketar \
+alice_all.C alice_itsd.C alice.root \
+atlas_all.C atlas_cryo.C atlas.root \
+cms_cmse.C cms.root \
+ams.C ams_all.C \
+btev.C btev_all.C \
+gem.C gem_all.C \
+hades_all.C hades.root \
+phenix.C phenix_all.C \
+lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root
+unpack.last
