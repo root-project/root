@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += testTable
+TEST_TARGETS += operatorLessThanTemplate testTable
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -30,6 +30,10 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 	@echo the problem exist when BYTECODE is \#defined in TTable.cxx
 else
- 	$(TestDiff)
+	$(TestDiff)
 endif
 
+operatorLessThanTemplate.log: operatorLessThanTemplate_C.$(DllSuf)
+
+operatorLessThanTemplate:  operatorLessThanTemplate.log
+	$(TestDiff)
