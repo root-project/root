@@ -37,6 +37,27 @@ ClassImp(TDecompLU)
 ///////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
+TDecompLU::TDecompLU(Int_t nrows)
+{
+  fSign = 1.0;
+  fNIndex = nrows;
+  fIndex = new Int_t[fNIndex];
+  fLU.ResizeTo(nrows,nrows);
+}
+
+//______________________________________________________________________________
+TDecompLU::TDecompLU(Int_t row_lwb,Int_t row_upb)
+{
+  const Int_t nrows = row_upb-row_lwb+1;
+  fSign = 1.0;
+  fNIndex = nrows;
+  fIndex = new Int_t[fNIndex];
+  fRowLwb = row_lwb;
+  fColLwb = row_lwb;
+  fLU.ResizeTo(nrows,nrows);
+}
+
+//______________________________________________________________________________
 TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 {
   Assert(a.IsValid());
@@ -46,8 +67,8 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
     return;
   }
 
+  fStatus = kMatrixSet;
   fImplicitPivot = implicit;
-  fCondition = -1.0;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -73,6 +94,9 @@ TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 //______________________________________________________________________________
 Int_t TDecompLU::Decompose()
 {
+  if ( !( fStatus & kMatrixSet ) )
+    return kFALSE;
+
   Int_t nrZeros = 0;
   Int_t ok;
   if (fImplicitPivot)
@@ -146,7 +170,7 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kInit;
+  fStatus = kMatrixSet;
   fCondition = -1.0;
 
   fSign = 1.0;

@@ -41,6 +41,8 @@ public :
   enum {kWorkMax = 100}; // size of work array
 
   TDecompQRH() {}
+  TDecompQRH(Int_t nrows,Int_t ncols);
+  TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TDecompQRH(const TMatrixD &m,Double_t tol = 0.0); // be careful for slicing in operator=
   TDecompQRH(const TDecompQRH &another);
   virtual ~TDecompQRH() {}

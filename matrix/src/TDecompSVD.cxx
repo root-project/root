@@ -37,6 +37,35 @@
 ClassImp(TDecompSVD)
 
 //______________________________________________________________________________
+TDecompSVD::TDecompSVD(Int_t nrows,Int_t ncols)
+{
+  if (nrows < ncols) {
+    Error("TDecompSVD(Int_t,Int_t","matrix rows should be >= columns");
+    return;
+  }
+  fU.ResizeTo(nrows,ncols);
+  fSig.ResizeTo(ncols);
+  fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
+}
+
+//______________________________________________________________________________
+TDecompSVD::TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+{
+  const Int_t nrows = row_upb-row_lwb+1;
+  const Int_t ncols = col_upb-col_lwb+1;
+
+  if (nrows < ncols) {
+    Error("TDecompSVD(Int_t,Int_t,Int_t,Int_t","matrix rows should be >= columns");
+    return;
+  }
+  fRowLwb = row_lwb;
+  fColLwb = col_lwb;
+  fU.ResizeTo(nrows,ncols);
+  fSig.ResizeTo(ncols);
+  fV.ResizeTo(nrows,ncols); // In the end we only need the nColxnCol part
+}
+
+//______________________________________________________________________________
 TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
 {
   Assert(a.IsValid());
@@ -45,7 +74,7 @@ TDecompSVD::TDecompSVD(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fCondition = -1.0;
+  fStatus = kMatrixSet;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -72,6 +101,9 @@ TDecompSVD::TDecompSVD(const TDecompSVD &another): TDecompBase(another)
 //______________________________________________________________________________
 Int_t TDecompSVD::Decompose()
 {
+  if ( !( fStatus & kMatrixSet ) )
+    return kFALSE;
+
   const Int_t nCol   = this->GetNcols();
   const Int_t rowLwb = this->GetRowLwb();
   const Int_t colLwb = this->GetColLwb();
@@ -497,7 +529,7 @@ void TDecompSVD::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kInit;
+  fStatus = kMatrixSet;
   fCondition = -1.0;
 
   fRowLwb = a.GetRowLwb();

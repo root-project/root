@@ -137,7 +137,9 @@ TDecompBase::TDecompBase()
   fTol       = DBL_EPSILON;
   fDet1      = 0;
   fDet2      = 0;
-  fCondition = 0;
+  fCondition = -1.0;
+  fRowLwb    = 0;
+  fColLwb    = 0;
 }
 
 //______________________________________________________________________________

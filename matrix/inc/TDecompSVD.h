@@ -45,6 +45,8 @@ public :
   enum {kWorkMax = 100}; // size of work array
 
   TDecompSVD() {}
+  TDecompSVD(Int_t nrows,Int_t ncols);
+  TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TDecompSVD(const TMatrixD &m,Double_t tol = 0.0);
   TDecompSVD(const TDecompSVD &another);
   virtual ~TDecompSVD() {}

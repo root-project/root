@@ -39,6 +39,8 @@ protected :
 public :
 
   TDecompLU() {fSign = 0; fIndex = 0; fNIndex = 0;}
+  explicit TDecompLU(Int_t nrows);
+  TDecompLU(Int_t row_lwb,Int_t row_upb);
   TDecompLU(const TMatrixD &m,Double_t tol = 0.0,Int_t implicit = 1);
   TDecompLU(const TDecompLU &another);
   virtual ~TDecompLU() {if (fIndex) delete [] fIndex; fIndex = 0; }

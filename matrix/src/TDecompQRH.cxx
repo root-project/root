@@ -31,6 +31,50 @@
 ClassImp(TDecompQRH)
 
 //______________________________________________________________________________
+TDecompQRH::TDecompQRH(Int_t nrows,Int_t ncols)
+{
+  if (nrows < ncols) {
+    Error("TDecompQRH(Int_t,Int_t","matrix rows should be >= columns");
+    return;
+  }
+
+  fQ.ResizeTo(nrows,ncols);
+  fR.ResizeTo(ncols,ncols);
+  if (nrows <= ncols) {
+    fW.ResizeTo(nrows);
+    fUp.ResizeTo(nrows);
+  } else {
+    fW.ResizeTo(ncols);
+    fUp.ResizeTo(ncols);
+  }
+}
+
+//______________________________________________________________________________
+TDecompQRH::TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+{
+  const Int_t nrows = row_upb-row_lwb+1;
+  const Int_t ncols = col_upb-col_lwb+1;
+
+  if (nrows < ncols) {
+    Error("TDecompQRH(Int_t,Int_t,Int_t,Int_t","matrix rows should be >= columns");
+    return;
+  }
+
+  fRowLwb = row_lwb;
+  fColLwb = col_lwb;
+
+  fQ.ResizeTo(nrows,ncols);
+  fR.ResizeTo(ncols,ncols);
+  if (nrows <= ncols) {
+    fW.ResizeTo(nrows);
+    fUp.ResizeTo(nrows);
+  } else {
+    fW.ResizeTo(ncols);
+    fUp.ResizeTo(ncols);
+  }
+}
+
+//______________________________________________________________________________
 TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
 {
   Assert(a.IsValid());
@@ -39,6 +83,7 @@ TDecompQRH::TDecompQRH(const TMatrixD &a,Double_t tol)
     return;
   }
 
+  fStatus = kMatrixSet;
   fCondition = a.Norm1();
   fTol = a.GetTol();
   if (tol > 0.0)
@@ -75,6 +120,9 @@ Int_t TDecompQRH::Decompose()
 // First fR is returned in upper triang of fQ and diagR. fQ returned in
 // 'u-form' in lower triang of fQ and fW, the latter containing the
 //  "Householder betas".
+
+  if ( !( fStatus & kMatrixSet ) )
+    return kFALSE;
 
   const Int_t nRow   = this->GetNrows();
   const Int_t nCol   = this->GetNcols();
@@ -143,7 +191,7 @@ void TDecompQRH::SetMatrix(const TMatrixD &a)
     return;
   }
 
-  fStatus = kInit;
+  fStatus = kMatrixSet;
   fCondition = a.Norm1();
 
   fRowLwb = a.GetRowLwb();

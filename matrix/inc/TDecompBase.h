@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.3 2004/02/04 17:12:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.4 2004/02/12 13:03:00 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected :
   virtual const TMatrixD &GetDecompMatrix() const = 0;
 
 public :
-  enum EMatrixDecompStat { kInit=0,kDecomposed=1,kDetermined=2,kCondition=4,kSingular=8 };
+  enum EMatrixDecompStat { kInit=0,kMatrixSet=1,kDecomposed=2,kDetermined=4,kCondition=8,kSingular=16 };
   enum {kWorkMax = 100}; // size of work array's in several routines
 
   TDecompBase();

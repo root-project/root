@@ -27,11 +27,28 @@
 ClassImp(TDecompChol)
 
 //______________________________________________________________________________
+TDecompChol::TDecompChol(Int_t nrows)
+{
+  fA.ResizeTo(nrows,nrows);
+  fU.ResizeTo(nrows,nrows);
+}
+
+//______________________________________________________________________________
+TDecompChol::TDecompChol(Int_t row_lwb,Int_t row_upb)
+{
+  const Int_t nrows = row_upb-row_lwb+1;
+  fRowLwb = row_lwb;
+  fColLwb = row_lwb;
+  fA.ResizeTo(nrows,nrows);
+  fU.ResizeTo(nrows,nrows);
+}
+
+//______________________________________________________________________________
 TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
 {
   Assert(a.IsValid());
 
-  fCondition = -1.0;
+  fStatus = kMatrixSet;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -53,7 +70,7 @@ TDecompChol::TDecompChol(const TMatrixD &a,Double_t tol)
     return;
   }
 
-  fCondition = -1.0;
+  fStatus = kMatrixSet;
   fTol = a.GetTol();
   if (tol > 0)
     fTol = tol;
@@ -74,6 +91,9 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 //______________________________________________________________________________
 Int_t TDecompChol::Decompose()
 {
+  if ( !( fStatus & kMatrixSet ) )
+    return kFALSE;
+
   const Int_t     n  = fA.GetNrows();
   const Double_t *pA = fA.GetMatrixArray();
         Double_t *pU = fU.GetMatrixArray();
@@ -135,7 +155,7 @@ void TDecompChol::SetMatrix(const TMatrixDSym &a)
     return;
   } 
   
-  fStatus = kInit;
+  fStatus = kMatrixSet;
   fCondition = -1.0;
     
   fRowLwb = a.GetRowLwb();
