@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.21 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.22 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -37,6 +37,7 @@ protected:
     Double_t    fYmin;            //Lower limit in Y (if set)
     Double_t    fYmax;            //Upper limit in Y (if set)
     Bool_t      fScaling;         //!True when TProfile::Scale is called
+static Bool_t   fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
    virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w);
@@ -64,6 +65,7 @@ public:
     virtual void    Add(TF1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, Double_t c1=1);
     virtual void    Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+    static  void    Approximate(Bool_t approx=kTRUE);
             void    BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
     virtual void    Copy(TObject &hnew) const;
     virtual void    Divide(TF1 *h1, Double_t c1=1);

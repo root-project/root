@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.38 2003/04/17 07:55:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.39 2003/05/11 15:36:08 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -14,6 +14,8 @@
 #include "TF1.h"
 #include "THLimitsFinder.h"
 #include "Riostream.h"
+
+Bool_t TProfile::fgApproximate = kFALSE;
 
 ClassImp(TProfile)
 
@@ -344,6 +346,21 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    }
 }
 
+
+//______________________________________________________________________________
+void TProfile::Approximate(Bool_t approx)
+{
+//     static function
+// set the fgApproximate flag. When the flag is true, the function GetBinError
+// will approximate the bin error with the average profile error on all bins
+// in the following situation only
+//  - the number of bins in the profile is less than 1002
+//  - the bin number of entries is small ( <5)
+//  - the estimated bin error is extremely small compared to the bin content
+//  (see TProfile::GetBinError)
+   
+   fgApproximate = approx;
+}
 
 //______________________________________________________________________________
 Int_t TProfile::BufferEmpty(Bool_t deleteBuffer)
@@ -762,6 +779,8 @@ Stat_t TProfile::GetBinError(Int_t bin) const
 //   when a TProfile is projected (ProjectionX). The previous algorithm
 //   generated a N^2 problem when projecting a TProfile with a large number of 
 //   bins (eg 100000).
+// - in version 3.05/06, a new static function TProfile::Approximate
+//   is introduced to enable or disable (default) the approximation.
 // 
 // Ideas for improvements of this algorithm are welcome. No suggestions
 // received since our call for advice to roottalk in Jul 2002.
@@ -786,7 +805,7 @@ Stat_t TProfile::GetBinError(Int_t bin) const
    //if (eprim <= 0) {   test in version 2.25/03
    //if (test < 1.e-4) { test in version 3.01/06
    //if (test < 1.e-4 || eprim2 < 1e-6) { test in version 3.03/09
-   if (fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) { //3.04
+   if (fgApproximate && fNcells <=1002 && (test < 1.e-4 || eprim2 < 1e-6)) { //3.04
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
