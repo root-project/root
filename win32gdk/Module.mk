@@ -11,15 +11,17 @@ WIN32GDKDIR  := $(MODDIR)
 WIN32GDKDIRS := $(WIN32GDKDIR)/src
 WIN32GDKDIRI := $(WIN32GDKDIR)/inc
 
-GDKVERS      := gdk/src/gdk
-GDKDIRS      := $(MODDIR)/$(GDKVERS)
-GDKDIRI      := $(MODDIR)/$(GDKVERS)
+GDKVERS      := gdk/src
+GDKDIRS      := $(MODDIR)/$(GDKVERS)/gdk
+GDKDIRI      := $(MODDIR)/$(GDKVERS)/gdk
+GLIBDIRI     := $(MODDIR)/$(GDKVERS)/glib
 
 ##### gdk-1.3.dll #####
 GDKDLLA      := $(GDKDIRS)/gdk-1.3.dll
 GDKLIBA      := $(GDKDIRS)/gdk-1.3.lib
 GDKDLL       := bin/gdk-1.3.dll
 GDKLIB       := $(LPATH)/gdk-1.3.lib
+GDKSRC       := $(wildcard $(GDKDIRS)/*.c) $(wildcard $(GDKDIRS)/win32/*.c)
 
 ##### libWin32gdk #####
 WIN32GDKL    := $(MODDIRI)/LinkDef.h
@@ -66,13 +68,12 @@ $(GDKLIB):      $(GDKLIBA)
 $(GDKDLL):      $(GDKLIBA)
 		cp $(GDKDLLA) $@
 
-$(GDKLIBA):
-		@(if [ ! -r $@ ]; then \
-			echo "*** Building $@..."; \
-			cd $(GDKDIRS); \
-			unset MAKEFLAGS; \
-			nmake -nologo -f makefile.msc; \
-		fi)
+$(GDKLIBA):     $(GDKSRC)
+		@(echo "*** Building $@..."; \
+		  cd $(GDKDIRS); \
+		  unset MAKEFLAGS; \
+		  nmake -nologo -f makefile.msc; \
+		  nmake -nologo -f makefile.msc)
 
 $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPELIB) $(GDKLIB) $(GDKDLL) \
                 $(MAINLIBS) $(WIN32GDKLIBDEP)
@@ -87,8 +88,7 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMP)
 
 $(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPELIB)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) \
-		   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) \
-		   -I$(WIN32GDKDIR)/gdk/src/glib \
+		   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) -I$(GLIBDIRI) \
 		   -o $@ -c $<
 
 all-win32gdk:   $(WIN32GDKLIB)
@@ -111,6 +111,5 @@ distclean::     distclean-win32gdk
 ##### extra rules #####
 $(WIN32GDKO1): %.o: %.cxx $(FREETYPELIB)
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) \
-	   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) \
-	   -I$(WIN32GDKDIR)/gdk/src/glib \
+	   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) -I$(GLIBDIRI) \
 	   -o $@ -c $<
