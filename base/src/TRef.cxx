@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.2 2001/10/05 16:26:44 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.3 2001/11/20 09:32:54 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -88,7 +88,10 @@
 #include "TProcessID.h"
 #include "TFile.h"
 #include "TObjArray.h"
+#include "TExec.h"
 #include "TSystem.h"
+#include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 
 ClassImp(TRef)
 
@@ -134,8 +137,29 @@ TObject *TRef::GetObject() const
    Long_t uid = (Long_t)GetUniqueID();
    if (uid == 0) return obj;
    if (!TestBit(1)) return (TObject*)(uid + (Long_t)gSystem);
+   
+   //Try to find the object from the map of the corresponding PID
    if (!fPID) return 0;
    obj = fPID->GetObjectWithID(uid);
+   
+   //if object not found, then exec action if an action exists
+   if (!obj) {
+      //execid starts at bit 8 on 8 bits
+      Int_t execid = TestBits(0xff00) >> 8;
+      if (execid > 0) {
+          TObjArray *lexecs = (TObjArray*)gROOT->FindObjectAny("Execs");
+          if (lexecs) {
+             TExec *exec = (TExec*)lexecs->At(execid-1);
+             if (exec) {
+                exec->Exec();
+                //check again in the PID map
+                obj = fPID->GetObjectWithID(uid);
+             }  
+          }  
+      }
+   }
+   
+   //if object is found, mark the bit to speed up next calls
    if (obj) {
       ((TRef*)this)->ResetBit(1);
       uid = (Long_t)obj - (Long_t)gSystem;
@@ -187,6 +211,8 @@ void TRef::Streamer(TBuffer &R__b)
       SetBit(1,1);
       SetUniqueID((UInt_t)uid);
       fPID = TProcessID::ReadProcessID(pidf,gFile);
+      Int_t execid = TStreamerInfo::GetCurrentElement()->GetUniqueID();
+      if (execid) SetBit(execid << 8);
    } else {
       pidf = 0;
       uid = (Long_t)GetUniqueID();

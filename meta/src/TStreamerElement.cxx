@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.35 2001/10/03 16:43:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.36 2001/10/15 16:02:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 #include "TDataType.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
+#include "TFolder.h"
+#include "TExec.h"
+#include "TObjArray.h"
 
 const Int_t kMaxLen = 512;
 static char gIncludeName[kMaxLen];
@@ -233,6 +236,38 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         //check if element is a TRef or TRefArray
+         if (strncmp(fTypeName.Data(),"TRef",4) == 0) {
+            //check if an Exec is specified in the comment field
+            char *action = (char*)strstr(GetTitle(),"EXEC:");
+            if (action) {
+               char caction[512];
+               strcpy(caction,action+5);
+               char *blank = (char*)strchr(caction,' ');
+               if (blank) *blank = 0;
+               //we have found the Exec name in the comment
+               //now search in the list of Execs the Exec number
+               TObject *obj = gROOT->FindObjectAny("Execs");
+               if (!obj) {
+                  //we create a TObjArray to support all Execs and
+                  //we add it to the ROOT Folder structure under /Execs
+                  obj = new TObjArray(10);
+                  gROOT->GetRootFolder()->AddFolder("Execs","List of Execs",(TObjArray*)obj);
+               }
+               if (obj->InheritsFrom(TObjArray::Class())) {
+                  TObjArray *lexecs = (TObjArray*)obj;
+                  TObject *ex = lexecs->FindObject(caction);
+                  if (!ex) {
+                     //we register this Exec to the list of Execs.
+                     ex = new TExec(caction,"");
+                     lexecs->Add(ex);
+                  }
+                  //we save the Exec index as the uniqueid of this STreamerElement
+                  Int_t index = lexecs->IndexOf(ex);
+                  SetUniqueID(index+1);
+               }
+            }
+         }
          return;
       }
       //====process old versions before automatic schema evolution
