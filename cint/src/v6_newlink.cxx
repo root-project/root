@@ -6426,7 +6426,7 @@ FILE *fp;
 					,ifunc->para_reftype[j][k]
 					,ifunc->para_isconst[j][k]));
 	      }
-	      fprintf(fp,"))(%s::%s)"
+	      fprintf(fp,"))(&%s::%s)"
 		      ,G__fulltagname(ifunc->tagnum,1),ifunc->funcname[j]);
 #else
 	      fprintf(fp,",(void*)%s::%s"
