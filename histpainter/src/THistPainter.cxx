@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.50 2001/10/15 09:46:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.51 2001/10/24 13:47:25 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -157,8 +157,8 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
     }
 
 //*-* check if point is on the color palette
-   if (strcmp(fH->GetDrawOption(),"colz") == 0 || strcmp(fH->GetDrawOption(),"COLZ") == 0) {
-      if (py <= puymin && py > puymax) {
+   if (strchr(fH->GetDrawOption(),'z') || strchr(fH->GetDrawOption(),'Z')) {
+      if (fH->GetDimension() > 1 && py <= puymin && py > puymax) {
          Double_t xup  = gPad->GetUxmax();
          Double_t x2   = gPad->GetX2();
          Double_t xr   = 0.05*(x2 - gPad->GetX1());
@@ -168,7 +168,8 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          Int_t xzaxis = gPad->XtoAbsPixel(xmax);
          if (TMath::Abs(px-xzaxis) < kMaxDiff) {
             gPad->SetSelected(fZaxis);
-            return 0;
+            fZaxis->SetBit(TAxis::kPalette);
+            return 0; 
          }
       }
    }
