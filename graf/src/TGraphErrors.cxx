@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.3 2000/08/31 17:05:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.4 2000/10/12 13:26:12 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -188,14 +188,21 @@ Double_t TGraphErrors::GetErrorY(Int_t i)
 //______________________________________________________________________________
 void TGraphErrors::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*Draw this TGraphErrors with its current attributes*-*-*-*-*
-//*-*              ==================================================
-
+   // Paint this TGraphErrors with its current attributes
+   //
+   // by default horizonthal and vertical small lines are drawn at
+   // the end of the error bars. if option "z" or "Z" is specified,
+   // these lines are not drawn.
+   
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize;
    Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
+
+   Bool_t endLines = kTRUE;
+   if (strchr(option,'z')) endLines = kFALSE;
+   if (strchr(option,'Z')) endLines = kFALSE;
 
    TGraph::Paint(option);
 
@@ -230,27 +237,27 @@ void TGraphErrors::Paint(Option_t *option)
       xl2 = gPad->XtoPad(fX[i] - ex);
       if (xl1 > xl2) {
          gPad->PaintLine(xl1,y,xl2,y);
-         gPad->PaintLine(xl2,y-ty,xl2,y+ty);
+         if (endLines) gPad->PaintLine(xl2,y-ty,xl2,y+ty);
       }
       xr1 = x + s2x*cx;
       xr2 = gPad->XtoPad(fX[i] + ex);
       if (xr1 < xr2) {
          gPad->PaintLine(xr1,y,xr2,y);
-         gPad->PaintLine(xr2,y-ty,xr2,y+ty);
+         if (endLines) gPad->PaintLine(xr2,y-ty,xr2,y+ty);
       }
       yup1 = y + s2y*cy;
       yup2 = gPad->YtoPad(fY[i] + ey);
       if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
       if (yup2 > yup1) {
          gPad->PaintLine(x,yup1,x,yup2);
-         gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+         if (endLines) gPad->PaintLine(x-tx,yup2,x+tx,yup2);
       }
       ylow1 = y - s2y*cy;
       ylow2 = gPad->YtoPad(fY[i] - ey);
       if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
       if (ylow2 < ylow1) {
          gPad->PaintLine(x,ylow1,x,ylow2);
-         gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+         if (endLines) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
       }
    }
    gPad->ResetBit(kClipFrame);
