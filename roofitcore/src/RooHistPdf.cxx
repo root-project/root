@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooHistPdf.cc,v 1.7 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.8 2002/05/01 23:08:32 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -86,6 +86,9 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
   if ((allVars.getSize()==_depList.getSize()) && 
       matchArgs(allVars,analVars,_depList)) return 1000 ;
 
+  // WVE -- disable partial analytical integrals for the moment, not working correctly
+  return 0 ;
+
   // Find subset of _depList that integration is requested over
   RooArgSet* allVarsSel = (RooArgSet*) allVars.selectCommon(_depList) ;
   if (allVarsSel->getSize()==0) {
@@ -125,7 +128,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code) const
   // Partial integration scenario, retrieve set of variables, calculate partial sum
   RooArgSet* intSet = 0;
   _codeReg.retrieve(code-1,intSet) ;
-  
+
   return _dataHist->sum(*intSet,_depList,kFALSE) ;
 }
 
