@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.2 2000/05/19 08:50:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.3 2000/05/29 06:19:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -167,8 +167,8 @@ public:
     virtual TObjArray       *GetListOfBranches()  {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()    {return &fLeaves;}
     virtual Int_t     GetMaxEntryLoop() {return fMaxEntryLoop;}
-    virtual Float_t   GetMaximum(const char *columname);
-    virtual Float_t   GetMinimum(const char *columname);
+    virtual Double_t  GetMaximum(const char *columname);
+    virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetMaxVirtualSize() {return fMaxVirtualSize;}
     virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
     TVirtualTreePlayer  *GetPlayer();
@@ -185,9 +185,9 @@ public:
     TTreeFormula     *GetVar2() {return GetPlayer()->GetVar2();}
     TTreeFormula     *GetVar3() {return GetPlayer()->GetVar3();}
     TTreeFormula     *GetVar4() {return GetPlayer()->GetVar4();}
-    virtual Float_t  *GetV1()   {return GetPlayer()->GetV1();}
-    virtual Float_t  *GetV2()   {return GetPlayer()->GetV2();}
-    virtual Float_t  *GetV3()   {return GetPlayer()->GetV3();}
+    virtual Double_t *GetV1()   {return GetPlayer()->GetV1();}
+    virtual Double_t *GetV2()   {return GetPlayer()->GetV2();}
+    virtual Double_t *GetV3()   {return GetPlayer()->GetV3();}
     virtual Double_t *GetW()    {return GetPlayer()->GetW();}
     virtual Stat_t    GetTotBytes() {return fTotBytes;}
     virtual Stat_t    GetZipBytes() {return fZipBytes;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.5 2000/05/31 06:36:33 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.6 2000/06/08 08:01:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1239,7 +1239,7 @@ TLeaf *TTree::GetLeaf(const char *name)
 
 
 //______________________________________________________________________________
-Float_t TTree::GetMaximum(const char *columname)
+Double_t TTree::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
@@ -1247,10 +1247,10 @@ Float_t TTree::GetMaximum(const char *columname)
    TLeaf *leaf = GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
-   Float_t cmax = -FLT_MAX; //in float.h
+   Double_t cmax = -FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Float_t val = leaf->GetValue();
+      Double_t val = leaf->GetValue();
       if (val > cmax) cmax = val;
    }
    return cmax;
@@ -1258,7 +1258,7 @@ Float_t TTree::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Float_t TTree::GetMinimum(const char *columname)
+Double_t TTree::GetMinimum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
@@ -1266,10 +1266,10 @@ Float_t TTree::GetMinimum(const char *columname)
    TLeaf *leaf = GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
-   Float_t cmin = FLT_MAX; //in float.h
+   Double_t cmin = FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Float_t val = leaf->GetValue();
+      Double_t val = leaf->GetValue();
       if (val < cmin) cmin = val;
    }
    return cmin;
@@ -1834,9 +1834,9 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
    
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
   Int_t n = gTree->GetSelectedRows();
-  Float_t  *data1   = gTree->GetV1();
-  Float_t  *data2   = gTree->GetV2();
-  Float_t  *data3   = gTree->GetV3();
+  Double_t  *data1 = gTree->GetV1();
+  Double_t  *data2 = gTree->GetV2();
+  Double_t  *data3 = gTree->GetV3();
   Double_t *weight = gTree->GetW();
   Double_t logEpsilon = -230;   // protect against negative probabilities
   Double_t logL = 0.0, prob;

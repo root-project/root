@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -99,7 +99,7 @@ const char *TLeafI::GetTypeName() const
 
 
 //______________________________________________________________________________
-Float_t TLeafI::GetValue(Int_t i)
+Double_t TLeafI::GetValue(Int_t i)
 {
 //*-*-*-*-*-*-*-*Returns current value of leaf*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            =============================

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.2 2000/06/08 08:02:02 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -320,16 +320,16 @@ TObjArray *TChain::GetListOfLeaves()
 }
 
 //______________________________________________________________________________
-Float_t TChain::GetMaximum(const char *columname)
+Double_t TChain::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Float_t theMax = -FLT_MAX;  //in float.h
+   Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
-      Float_t curmax = fTree->GetMaximum(columname);;
+      Double_t curmax = fTree->GetMaximum(columname);;
       if (curmax > theMax) theMax = curmax;
    }
    return theMax;
@@ -337,16 +337,16 @@ Float_t TChain::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Float_t TChain::GetMinimum(const char *columname)
+Double_t TChain::GetMinimum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Float_t theMin = FLT_MAX; //in float.h
+   Double_t theMin = FLT_MAX; //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
-      Float_t curmin = fTree->GetMinimum(columname);;
+      Double_t curmin = fTree->GetMinimum(columname);;
       if (curmin < theMin) theMin = curmin;
    }
    return theMin;
