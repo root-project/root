@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.165 2003/11/12 07:23:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.166 2003/11/12 09:06:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -599,7 +599,7 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
 }
 
 //______________________________________________________________________________
-void TTree::AutoSave()
+void TTree::AutoSave(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*AutoSave tree header every fAutoSave bytes*-*-*-*-*-*
 //*-*                  ==========================================
@@ -625,25 +625,75 @@ void TTree::AutoSave()
 //   in UPDATE mode.
 //   The Tree will be recovered at the status corresponding to the last AutoSave.
 //
-//   One can also call gDirectory->SaveSelf() after a call to TTree::AutoSave.
+//   if option contains "SaveSelf", gDirectory->SaveSelf() is called.
 //   This allows another process to analyze the Tree while the Tree is being filled.
+// 
+//   By default the previous header is deleted after having written the new header.
+//   if option contains "Overwrite", the previous Tree header is deleted
+//   before written the new header. This option is slightly faster, but
+//   the default option is safer in case of a problem (disk quota exceeded)
+//   when writing the new header.
 //
+//   How to write a Tree in one process and view it from another process
+//   ===================================================================
+//   The following two scripts illustrate how to do this.
+//   The script treew.C is executed by process1, treer.C by process2
+//
+//   ----- script treew.C
+//   void treew() {
+//     TFile f("test.root","recreate");
+//     TNtuple *ntuple = new TNtuple("ntuple","Demo","px:py:pz:random:i");
+//     Float_t px, py, pz;
+//     for ( Int_t i=0; i<10000000; i++) {
+//        gRandom->Rannor(px,py);
+//        pz = px*px + py*py;
+//        Float_t random = gRandom->Rndm(1);
+//        ntuple->Fill(px,py,pz,random,i);
+//        if (i%1000 == 1) ntuple->AutoSave("SaveSelf");
+//     }
+//   }
+//
+//   ----- script treer.C
+//   void treer() {
+//      TFile f("test.root");
+//      TTree *ntuple = (TTree*)f.Get("ntuple");
+//      TCanvas c1;
+//      Int_t first = 0;
+//      while(1) {
+//         if (first == 0) ntuple->Draw("px>>hpx", "","",10000000,first);
+//         else            ntuple->Draw("px>>+hpx","","",10000000,first);
+//         first = (Int_t)ntuple->GetEntries();
+//         c1.Update();
+//         gSystem->Sleep(1000); //sleep 1 second
+//         ntuple->Refresh();
+//      }
+//   }
+      
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return;
    if (gDebug > 0) {
       printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
    }
+   TString opt = option;
+   opt.ToLower();
    fSavedBytes = fTotBytes;
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
-   Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
-   if (wOK && key) {
-      key->Delete();
-      delete key;
+   if (opt.Contains("overwrite")) {
+      Write("",TObject::kOverwrite);
+   } else {
+      Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
+      if (wOK && key) {
+         key->Delete();
+         delete key;
+      }
    }
    // save StreamerInfo
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
+   
+   if (opt.Contains("saveself")) fDirectory->SaveSelf();
+   
    dirsav->cd();
 }
 
