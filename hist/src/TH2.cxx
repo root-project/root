@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.5 2000/06/28 14:35:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.6 2000/06/28 15:16:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -651,7 +651,6 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
    if (binx1 < 0) binx1 = 0;
    if (binx2 > nbinsx+1) binx2 = nbinsx+1;
    if (binx2 < binx1)    binx2 = nbinsx;
@@ -700,10 +699,14 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
    Double_t prb = 0;
    TH1 *h1 = this;
    if (h2 == 0) return 0;
-   TAxis *axis1 = h1->GetXaxis();
-   TAxis *axis2 = h2->GetXaxis();
-   Int_t ncx1   = axis1->GetNbins();
-   Int_t ncx2   = axis2->GetNbins();
+   TAxis *xaxis1 = h1->GetXaxis();
+   TAxis *xaxis2 = h2->GetXaxis();
+   TAxis *yaxis1 = h1->GetYaxis();
+   TAxis *yaxis2 = h2->GetYaxis();
+   Int_t ncx1   = xaxis1->GetNbins();
+   Int_t ncx2   = xaxis2->GetNbins();
+   Int_t ncy1   = yaxis1->GetNbins();
+   Int_t ncy2   = yaxis2->GetNbins();
 
      // Check consistency of dimensions
    if (h1->GetDimension() != 2 || h2->GetDimension() != 2) {
@@ -711,8 +714,145 @@ Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
       return 0;
    }
 
-   printf(" NOT YET IMPLEMENTED\n");
-   return 0;
+     // Check consistency in number of channels
+   if (ncx1 != ncx2) {
+      Error("KolmogorovTest","Number of channels in X is different, %d and %d\n",ncx1,ncx2);
+      return 0;
+   }
+   if (ncy1 != ncy2) {
+      Error("KolmogorovTest","Number of channels in Y is different, %d and %d\n",ncy1,ncy2);
+      return 0;
+   }
+    
+     // Check consistency in channel edges
+   Bool_t afunc1 = kFALSE;
+   Bool_t afunc2 = kFALSE;
+   Double_t difprec = 1e-5;
+   Double_t diff1 = TMath::Abs(xaxis1->GetXmin() - xaxis2->GetXmin());
+   Double_t diff2 = TMath::Abs(xaxis1->GetXmax() - xaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along X");
+      return 0;
+   }
+   diff1 = TMath::Abs(yaxis1->GetXmin() - yaxis2->GetXmin());
+   diff2 = TMath::Abs(yaxis1->GetXmax() - yaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along Y");
+      return 0;
+   }
+
+   //   Should we include Uflows, Oflows?
+   Int_t ibeg = 1;
+   if (opt.Contains("U") || opt.Contains("L")) ibeg = 0;
+   Int_t iend = ncx1;
+   if (opt.Contains("O") || opt.Contains("R")) iend = ncx1+1;
+   Int_t jbeg = 1;
+   if (opt.Contains("U") || opt.Contains("B")) jbeg = 0;
+   Int_t jend = ncy1;
+   if (opt.Contains("O") || opt.Contains("T")) jend = ncy1+1;
+   
+   Int_t i,j;
+   Double_t hsav;
+   Double_t sum1  = 0;
+   Double_t tsum1 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         hsav = h1->GetCellContent(i,j);
+         tsum1 += hsav;
+         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum1 += hsav;
+      }
+   }
+   Double_t sum2  = 0;
+   Double_t tsum2 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         hsav = h2->GetCellContent(i,j);
+         tsum2 += hsav;
+         if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum2 += hsav;
+      }
+   }
+
+   //    Check that both scatterplots contain events
+   if (sum1 == 0) {
+      Error("KolmogorovTest","Integral is zero for h1=%s\n",h1->GetName());
+      return 0;
+   }
+   if (sum2 == 0) {
+      Error("KolmogorovTest","Integral is zero for h2=%s\n",h2->GetName());
+      return 0;
+   }
+
+   //    Check that scatterplots are not weighted or saturated
+   Double_t num1 = h1->GetEntries();
+   Double_t num2 = h2->GetEntries();
+   if (num1 != tsum1) {
+      Warning("KolmogorovTest","Saturation or weighted events for h1=%s, num1=%g, tsum1=%g\n",h1->GetName(),num1,tsum1);
+   }
+   if (num2 != tsum2) {
+      Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
+   }
+
+   //   Find first Kolmogorov distance for scatterplots
+   Double_t s1 = 1/sum1;
+   Double_t s2 = 1/sum2;
+   Double_t dfmax = 0;
+   Double_t rsum1=0, rsum2=0;
+   for (i=ibeg;i<=iend;i++) {
+      for (j=jbeg;j<=jend;j++) {
+         rsum1 += s1*h1->GetCellContent(i,j);
+         rsum2 += s2*h2->GetCellContent(i,j);
+         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+      }
+   }
+
+   //   Find second Kolmogorov distance for scatterplots
+   Double_t dfmax2 = dfmax = 0;
+   rsum1=0, rsum2=0;
+   for (j=jbeg;j<=jend;j++) {
+      for (i=ibeg;i<=iend;i++) {
+         rsum1 += s1*h1->GetCellContent(i,j);
+         rsum2 += s2*h2->GetCellContent(i,j);
+         dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+      }
+   }
+
+   //    Get Kolmogorov probability for scatterplot
+   Double_t factnm;
+   if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
+   else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
+   else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
+   Double_t z  = dfmax*factnm;
+   Double_t z2 = dfmax2*factnm;
+   
+   prb = TMath::KolmogorovProb(0.5*(z+z2));
+
+   Double_t prb1=0, prb2=0;
+   Double_t resum1, resum2, chi2, d12;
+   if (opt.Contains("N")) { //Combine probabilities for shape and normalization,
+      prb1   = prb;
+      resum1 = sum1; if (afunc1) resum1 = 0;
+      resum2 = sum2; if (afunc2) resum2 = 0;
+      d12    = sum1-sum2;
+      chi2   = d12*d12/(resum1+resum2);
+      prb2   = TMath::Prob(chi2,1);
+      //     see Eadie et al., section 11.6.2
+      if (prb > 0 && prb2 > 0) prb = prb*prb2*(1-TMath::Log(prb*prb2));
+      else                     prb = 0;
+   }
+
+   //    debug printout
+   if (opt.Contains("D")) {
+      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+      printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
+      printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
+      if (opt.Contains("N")) 
+      printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+   }
+      // This numerical error condition should never occur:
+   if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
+   if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+
+   return prb;
 }   
    
 //______________________________________________________________________________
