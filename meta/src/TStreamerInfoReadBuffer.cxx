@@ -280,11 +280,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
                   b >> pidf;
                   TFile* file = (TFile*)b.GetParent();
                   TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
-                  TObject *obj = (TObject*)(arr[k]/*+eoffset*/); //VP Unclear???
-                  UInt_t gpid = pid->GetUniqueID();
-                  UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
-                  obj->SetUniqueID(uid);
-                  if (pid) pid->PutObjectWithID(obj);
+                  if (pid!=0) {
+                     TObject *obj = (TObject*)(arr[k]+eoffset); 
+                     UInt_t gpid = pid->GetUniqueID();
+                     UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
+                     obj->SetUniqueID(uid);
+                     pid->PutObjectWithID(obj);
+                  }
                }
             }
          }
