@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.3 2004/11/02 21:51:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.4 2004/11/03 16:13:38 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -116,7 +116,13 @@ public:
     * @version 1.0
     * @date    10/10/2004
     */
-  template <class T> struct Type : public Address<TYPENAME T::const_reference> {
+  template <class T> struct Type 
+ #ifdef R__KCC
+  : public Address<TYPENAME T::value_type&> 
+ #else 
+  : public Address<TYPENAME T::const_reference> 
+ #endif 
+  {
     typedef T                      Cont_t;
     typedef typename T::iterator   Iter_t;
     typedef typename T::value_type Value_t;
@@ -145,7 +151,7 @@ public:
       e->size  = c->size();
       if ( 0 == e->size ) return e->start = 0;
 #ifdef R__KCC
-      TYPENAME T::reference ref = *(e->iter());
+      TYPENAME T::value_type& ref = *(e->iter());
 #else
       TYPENAME T::const_reference ref = *(e->iter());
 #endif
@@ -158,7 +164,7 @@ public:
       // TODO: Need to find something for going backwards....
       if ( e->iter() == c->end() ) return 0;
 #ifdef R__KCC
-      TYPENAME T::reference ref = *(e->iter());
+      TYPENAME T::value_type& ref = *(e->iter());
 #else
       TYPENAME T::const_reference ref = *(e->iter());
 #endif
