@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.41 2002/11/05 11:37:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.42 2003/02/20 22:36:10 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1554,9 +1554,11 @@ L110:
                      Int_t alig  = textaxis->GetTextAlign();
                      Int_t aligh = alig/10;
                      Int_t aligv = alig%10;
-                     if (aligh == 1) XexpT = XX + 0.70*pixels/padw;
-                     if (aligh == 2) XexpT = XX + 0.60*pixels/padw;
-                     if (aligh == 3) XexpT = XX + 0.01*pixels/padw;
+				 Float_t labsft = 1.;
+				 if (OptionLeft && X0 == X1) labsft = 1.8;
+                     if (aligh == 1) XexpT = XX + labsft*0.70*pixels/padw;
+                     if (aligh == 2) XexpT = XX + labsft*0.60*pixels/padw;
+                     if (aligh == 3) XexpT = XX + labsft*0.01*pixels/padw;
                      if (aligv == 1) YexpT = YY + 0.60*pixels/padh;
                      if (aligv == 2) YexpT = YY + 0.30*pixels/padh;
                      if (aligv == 3) YexpT = YY + 0.01*pixels/padh;
