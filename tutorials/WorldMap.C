@@ -28,7 +28,7 @@ public:
       kUK=44, kUA=380, kBR=55
     };
 
-   WorldMap(const char* picName="worldmap.xpm");
+   WorldMap(const char* picName="worldmap.jpg");
    virtual ~WorldMap() {}
 
    virtual void Show() { fMain->MapRaised(); }
