@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.10 2001/10/19 06:56:51 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.11 2001/10/19 21:32:20 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -81,7 +81,7 @@ protected:
 
   // Column structure definition
   RooArgSet _vars;         // Dimensions of this data set
-  RooArgSet _cachedVars ;  // External variables cached with this data set
+  RooArgSet _cachedVars ;  //! External variables cached with this data set
 
   TIterator *_iterator;    //! Iterator over dimension variables
   TIterator *_cacheIter ;  //! Iterator over cached variables

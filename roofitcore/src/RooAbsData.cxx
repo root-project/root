@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.10 2001/10/08 05:20:11 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.11 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -32,8 +32,7 @@ RooAbsData::RooAbsData()
 
 RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& vars) :
   TNamed(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), 
-  _doDirtyProp(kTRUE)
-
+  _doDirtyProp(kTRUE) 
 {
   // Constructor from a set of variables. Only fundamental elements of vars
   // (RooRealVar,RooCategory etc) are stored as part of the dataset

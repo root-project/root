@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.57 2001/10/13 21:53:18 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.58 2001/10/19 06:56:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -58,8 +58,8 @@ RooAbsArg::RooAbsArg() : TNamed(), _attribList(),
 
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
-  cout << "RooAbsArg::ctor WARNING: default ctor called" << endl ;
-  assert(0) ;
+//   cout << "RooAbsArg::ctor WARNING: default ctor called" << endl ;
+//   assert(0) ;
 
   RooTrace::create(this) ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinkedList.cc,v 1.1 2001/10/17 05:03:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -77,5 +77,34 @@ void RooLinkedList::swapWithNext(RooLinkedListElem* elemB)
     _last = elemB ;
   }
   return ;
+}
+
+
+void RooLinkedList::Streamer(TBuffer &b)
+{
+  if (b.IsReading()) {
+    Version_t v = b.ReadVersion();
+    TObject::Streamer(b);
+
+    Int_t size ;
+    RooAbsArg* arg ;
+
+    b >> size ;
+    while(size--) {
+      b >> arg ;
+      Add(arg) ;      
+    }
+
+  } else {
+    b.WriteVersion(RooLinkedList::IsA());
+    TObject::Streamer(b);
+    b << _size ;
+
+    RooLinkedListElem* ptr(_first) ;
+    while(ptr) {
+      b << ptr->_arg ;
+      ptr = ptr->_next ;
+    } 
+  }
 }
 

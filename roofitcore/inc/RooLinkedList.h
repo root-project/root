@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinkedList.rdl,v 1.1 2001/10/17 05:03:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -12,10 +12,11 @@
 #ifndef ROO_LINKED_LIST
 #define ROO_LINKED_LIST
 
+#include "TObject.h"
 #include "RooFitCore/RooLinkedListElem.hh"
 class RooLinkedListIter ;
 
-class RooLinkedList  {
+class RooLinkedList : public TObject {
 public:
   // Constructor
   RooLinkedList() : 
@@ -91,7 +92,7 @@ public:
 
   TIterator* MakeIterator(Bool_t dir) const ;
 
-  void Clear() {
+  void Clear(Option_t *o=0) {
     RooLinkedListElem* elem(_first) ;
     while(elem) {
       RooLinkedListElem* next = elem->_next ;
@@ -103,7 +104,7 @@ public:
     _size = 0 ;
   }
 
-  void Delete() {
+  void Delete(Option_t *o=0) {
     RooLinkedListElem* elem(_first) ;
     while(elem) {
       RooLinkedListElem* next = elem->_next ;
@@ -116,7 +117,7 @@ public:
     _size = 0 ;
   }
   
-  RooAbsArg* FindObject(const char* name) const {
+  RooAbsArg* find(const char* name) const {
     RooLinkedListElem* ptr(_first) ;
     while(ptr) {
       if (!strcmp(ptr->_arg->GetName(),name)) {
@@ -151,10 +152,8 @@ public:
     }    
   }
 
-
   void Sort(Bool_t ascend) ;
 
-  
 protected:  
 
   friend class RooLinkedListIter ;
@@ -172,9 +171,9 @@ protected:
     return 0 ;
   }
     
-  Int_t _size ;               //  Current size of list
-  RooLinkedListElem* _first ; //! Link to first element of list
-  RooLinkedListElem* _last ;  //! Link to last element of list
+  Int_t _size ;                //  Current size of list
+  RooLinkedListElem*  _first ; //! Link to first element of list
+  RooLinkedListElem*  _last ;  //! Link to last element of list
 
   ClassDef(RooLinkedList,1) // TList with extra support for Option_t associations
 };

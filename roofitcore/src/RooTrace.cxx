@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.cc,v 1.4 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.5 2001/10/08 05:20:23 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,8 @@
 #include <iomanip.h>
 
 ClassImp(RooTrace)
+ClassImp(RooPad)
+ClassImp(RooPadTable)
 ;
 
 

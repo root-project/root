@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.11 2001/10/17 05:03:57 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.12 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -505,7 +505,7 @@ RooAbsArg *RooAbsCollection::find(const char *name) const
   // Find object with given name in list. A null pointer 
   // is returned if no object with the given name is found
 
-  return (RooAbsArg*) _list.FindObject(name);
+  return (RooAbsArg*) _list.find(name);
 }
 
 

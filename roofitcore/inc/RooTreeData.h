@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.8 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.9 2001/10/19 21:32:22 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -117,6 +117,7 @@ protected:
 
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points
+  mutable Bool_t _defCtor ;//! Was object constructed with default ctor?
 
   // Column structure definition
   RooArgSet _truth;        // Truth variables   

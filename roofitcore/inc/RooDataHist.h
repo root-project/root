@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.5 2001/10/04 01:44:33 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.6 2001/10/12 01:48:45 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -23,7 +23,6 @@ class RooAbsCategory ;
 class Roo1DTable ;
 class RooPlot;
 class RooFitContext ;
-class RooHistArray ;
 class RooArgSet ;
 
 class RooDataHist : public RooTreeData {

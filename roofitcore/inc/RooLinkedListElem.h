@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinkedListElem.rdl,v 1.1 2001/10/17 05:03:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -14,6 +14,10 @@
 
 #include "Rtypes.h"
 #include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooLinkedListElem.hh"
+
+class RooLinkedListElem ;
+class TBuffer ;
 
 class RooLinkedListElem {
 public:
@@ -41,19 +45,18 @@ public:
 protected:
   friend class RooLinkedList ;
   friend class RooLinkedListIter ;
-  RooLinkedListElem* _prev ; //! Link to previous element in list
-  RooLinkedListElem* _next ; //! Link to next element in list
-  RooAbsArg* _arg ;          //! Link to contents
-
-private:
-  
-  // Forbidden
-  RooLinkedListElem(const RooLinkedListElem&) ;
+  RooLinkedListElem* _prev ; // Link to previous element in list
+  RooLinkedListElem* _next ; // Link to next element in list
+  RooAbsArg* _arg ;          // Link to contents
 
 protected:
 
-  ClassDef(RooLinkedListElem,1)
+  // Forbidden
+  RooLinkedListElem(const RooLinkedListElem&) ;
+
+  ClassDef(RooLinkedListElem,0)
 } ;
+
 
 
 #endif

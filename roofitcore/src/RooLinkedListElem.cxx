@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinkedListElem.cc,v 1.1 2001/10/17 05:03:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -13,7 +13,12 @@
 // -- CLASS DESCRIPTION [AUX] ---
 // RooLinkedListElem is an link element for the RooLinkedList class
 
+#include "TBuffer.h"
 #include "RooFitCore/RooLinkedListElem.hh"
+
 
 ClassImp(RooLinkedListElem) 
 ;
+
+
+

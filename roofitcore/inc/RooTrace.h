@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTrace.rdl,v 1.4 2001/08/09 01:02:15 verkerke Exp $
+ *    File: $Id: RooTrace.rdl,v 1.5 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,6 +41,8 @@ public:
 protected:
   static char _fil ;
   char _pad[size] ;
+
+  ClassDef(RooPad,0) 
 } ;
 
 typedef RooPad* pRooPad ;
@@ -62,6 +64,8 @@ protected:
   Int_t _lfm ; // Lowest free mark
   pRooPad _padA[size] ;  
   pTObject _refA[size] ;
+
+  ClassDef(RooPadTable,0)
 } ;
 
 
@@ -89,7 +93,7 @@ public:
 
 protected:
 
-  ClassDef(RooTrace,1) // Memory tracer utility for RooFitTools objects
+  ClassDef(RooTrace,0) // Memory tracer utility for RooFitTools objects
 };
 
 
