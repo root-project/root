@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.6 2000/08/18 21:51:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.7 2000/08/23 17:01:20 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -670,12 +670,20 @@ const char *TCint::TypeName(const char *typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
 
-   static char t[64];
-   char *s;
-   if (!strstr(typeDesc, "(*)(") && (s = (char*)strchr(typeDesc, ' ')))
-      strcpy(t, s+1);
-   else
-      strcpy(t, typeDesc);
+   static char t[1024];
+   char *s, *template_start;
+   if (!strstr(typeDesc, "(*)(")) {
+      s = (char*)strchr(typeDesc, ' ');
+      template_start = (char*)strchr(typeDesc, '<');
+      // s is the position of the second 'word' (if any)
+      // except in the case of templates where there will be a space
+      // just before any closing '>': eg.
+      //    TObj<std::vector<UShort_t,__malloc_alloc_template<0> > >*
+      if (s && (template_start==0 || (s < template_start)) )
+         strcpy(t, s+1);
+      else
+         strcpy(t, typeDesc);
+   }
 
    int l = strlen(t);
    while (l > 0 && t[l-1] == '*') t[--l] = 0;
