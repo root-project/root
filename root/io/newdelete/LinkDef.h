@@ -20,6 +20,7 @@
 #pragma link C++ class TDefault+;
 #pragma link C++ class TNormal+;
 #pragma link C++ class TPartialDefault+;
+#pragma link C++ class TPrivateDefaultConstructor+;
 
 #pragma link C++ function Classes;
 

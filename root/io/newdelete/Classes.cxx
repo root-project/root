@@ -46,7 +46,7 @@ bool Classes() {
 
   
   TNormal m;
-  m.s = new TSocket("localhost","ftp");
+  m.s = new TPrivateDefaultConstructor(1);
   TFile file("sock.root","RECREATE");
   m.s->Write();
   m.Write();

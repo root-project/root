@@ -140,10 +140,18 @@ public:
   ClassDef(TPartialDefault,0);
 };
 
+class TPrivateDefaultConstructor : public TObject {
+private:
+   TPrivateDefaultConstructor() {};
+public:
+   TPrivateDefaultConstructor(int) {};
+   ClassDef(TPrivateDefaultConstructor,1); 
+};
+
 class TNormal  : public TObject{
 public:
   int a;
-  TSocket *s;
+  TPrivateDefaultConstructor *s;
   TNormal() : a(0) {};
   TNormal(int aa) : a(aa) {};
 
