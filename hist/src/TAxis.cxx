@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.59 2004/07/03 20:37:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.60 2004/08/24 12:59:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -954,6 +954,15 @@ void TAxis::SetRangeUser(Axis_t ufirst, Axis_t ulast)
 //  Set the viewing range for the axis from ufirst to ulast (in user coordinates)
 //  To set a range using the axis bin numbers, use TAxis::SetRange.
 
+   if (!strstr(GetName(),"xaxis")) {
+      TH1 *hobj = (TH1*)GetParent();
+      if ((hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) 
+       || (hobj->GetDimension() == 1 && strstr(GetName(),"yaxis"))) {
+         hobj->SetMinimum(ufirst);
+         hobj->SetMaximum(ulast);
+         return;
+      }
+   }
    SetRange(FindBin(ufirst),FindBin(ulast));
 }
 
