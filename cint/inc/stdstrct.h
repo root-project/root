@@ -10,6 +10,7 @@
 #include <math.h>
 #include <string.h>
 #define G__ANSIHEADER
+#define G__DICTIONARY
 #include "G__ci.h"
 extern void G__c_setup_tagtableG__stdstrct();
 extern void G__c_setup_typetableG__stdstrct();

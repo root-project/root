@@ -961,6 +961,9 @@ char *filenamein;
 #if defined(R__FBSD)
   char soext[]=SOEXT;
 #endif
+#ifndef G__OLDIMPLEMENTATION1536
+  char hdrprop = G__NONCINTHDR;
+#endif
   char filename[G__ONELINE];
   strcpy(filename,filenamein);
 
@@ -1222,8 +1225,12 @@ char *filenamein;
 	{
 	  struct G__ConstStringList* sysdir = G__SystemIncludeDir;
 	  while(sysdir) {
-	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0)
+	    if(strncmp(sysdir->string,G__ifile.name,sysdir->hash)==0) {
 	      G__globalcomp=G__NOLINK;
+#ifndef G__OLDIMPLEMENTATION1536
+	      hdrprop = G__CINTHDR;
+#endif
+	    }
 	    sysdir = sysdir->prev;
 	  }
 	}
@@ -1249,6 +1256,9 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
+#ifndef G__OLDIMPLEMENTATION1536
+	hdrprop = G__CINTHDR;
+#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1270,6 +1280,9 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1536
+	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1312,6 +1325,9 @@ char *filenamein;
 	  G__gen_linksystem(filename);
 	}
 #endif
+#ifndef G__OLDIMPLEMENTATION1536
+	hdrprop = G__CINTHDR;
+#endif
 	G__globalcomp=G__NOLINK;
       }
       if(G__ifile.fp) break;
@@ -1333,6 +1349,9 @@ char *filenamein;
 	  G__globalcomp=G__store_globalcomp;
 	  G__gen_linksystem(filename);
 	}
+#endif
+#ifndef G__OLDIMPLEMENTATION1536
+	hdrprop = G__CINTHDR;
 #endif
 	G__globalcomp=G__NOLINK;
       }
@@ -1375,41 +1394,44 @@ char *filenamein;
        /**********************************************
        * try $ROOTSYS[include]
        **********************************************/
-   if('\0'!=G__cintsysdir[0]) {
-/*   sprintf(G__ifile.name,getenv("ROOTSYS"));
-     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-     sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
-
-     G__ifile.fp = fopen(G__ifile.name,"r");
-     /*G__globalcomp=G__store_globalcomp;*/
-   }
-   if(G__ifile.fp) break;
-
+      if('\0'!=G__cintsysdir[0]) {
+	/*  sprintf(G__ifile.name,getenv("ROOTSYS"));
+	    sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+	sprintf(G__ifile.name,"%s[include]%s",getenv("ROOTSYS"),filename);
+	
+	G__ifile.fp = fopen(G__ifile.name,"r");
+	/*G__globalcomp=G__store_globalcomp;*/
+      }
+      if(G__ifile.fp) break;
+      
        /**********************************************
        * try $ROOTSYS[cint.include]
        **********************************************/
-   if('\0'!=G__cintsysdir[0]) {
-/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
-     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
-     sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
-
-     G__ifile.fp = fopen(G__ifile.name,"r");
-     G__globalcomp=G__NOLINK;
+      if('\0'!=G__cintsysdir[0]) {
+	/*   sprintf(G__ifile.name,"%s",G__cintsysdir);
+	     sprintf(&G__ifile.name[strlen(G__ifile.name)-1],".include]%s",filename);*/
+	sprintf(G__ifile.name,"%s[include]%s",G__cintsysdir,filename);
+	
+	G__ifile.fp = fopen(G__ifile.name,"r");
+#ifndef G__OLDIMPLEMENTATION1536
+	hdrprop = G__CINTHDR;
+#endif
+	G__globalcomp=G__NOLINK;
       }
-   if(G__ifile.fp) break;
-
+      if(G__ifile.fp) break;
+      
        /**********************************************
        * try sys$common:[decc$lib.reference.decc$rtldef..]
        **********************************************/
 
-   sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
-   printf("Trying to open %s\n",G__ifile.name,"r");
-
-   G__ifile.fp = fopen(G__ifile.name,"r");
-   G__globalcomp=G__store_globalcomp;
-
-   if(G__ifile.fp) break;
-
+      sprintf(G__ifile.name,"sys$common:decc$lib.reference.decc$rtdef]%s",filename);
+      printf("Trying to open %s\n",G__ifile.name,"r");
+      
+      G__ifile.fp = fopen(G__ifile.name,"r");
+      G__globalcomp=G__store_globalcomp;
+      
+      if(G__ifile.fp) break;
+      
 #endif  /*G__VMS*/
 
       /**********************************************
@@ -1565,6 +1587,10 @@ char *filenamein;
     else {
       fentry=null_entry;
     }
+
+#ifndef G__OLDIMPLEMENTATION1536
+    G__srcfile[fentry].hdrprop = hdrprop;
+#endif
 
 #ifdef G__SECURITY
     store_security = G__security;

@@ -802,6 +802,11 @@ typedef unsigned long G__UINT32 ;
 typedef void (*G__DLLINIT)();
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1536
+#define G__NONCINTHDR   0x01
+#define G__CINTHDR      0x10
+#endif
+
 struct G__filetable {
   FILE *fp;
   int hash;
@@ -820,6 +825,9 @@ struct G__filetable {
 #endif
 #ifndef G__OLDIMPLEMENTATION1273
   struct G__dictposition *hasonlyfunc;
+#endif
+#ifndef G__OLDIMPLEMENTATION1536
+  char hdrprop;
 #endif
 };
 

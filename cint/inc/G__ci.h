@@ -21,15 +21,15 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014090
-#define G__CINTVERSIONSTR  "5.14.90, May 27 2001"
+#define G__CINTVERSION      5015002
+#define G__CINTVERSIONSTR  "5.15.02, June 2 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
 /* Delete following macro for DLL binary compatibility improvement */
-#define G__OLDIMPLEMENTATION1530
+/* #define G__OLDIMPLEMENTATION1530 */
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */
@@ -569,16 +569,24 @@ typedef int (*G__IgnoreInclude)();
 /**************************************************************************
 * Table and variable size
 *
-* It would be nice if G__MAXFUNCPARA, G__MAXSTRUCT and G__MAXTYPEDEF
-* are improved.
+* CAUTION:
+*  Among constants below, changing following parameter cause DLL binary
+* incompatibility. 
+*
+*    G__MAXFUNCPARA
+*
+* Other parameters can be changed while keeping DLL binary compatibility.
+*
 **************************************************************************/
 #ifdef G__LONGBUF
 #define G__LONGLINE    4096  /* Length of expression */
 #define G__ONELINE     4096  /* Length of subexpression,parameter,argument */
+#define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
+#define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      128  /* Variable name */
 #endif
 #define G__MAXFILE     2000  /* Max interpreted source file */
@@ -1119,7 +1127,11 @@ struct G__param {
   struct G__param *next;
 #endif
 #ifndef G__OLDIMPLEMENTATION1530
+#ifdef G__DICTIONARY
+  char parameter[G__MAXFUNCPARA][G__ONELINEDICT];
+#else
   char parameter[G__MAXFUNCPARA][G__ONELINE];
+#endif
 #endif
 };
 

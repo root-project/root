@@ -821,6 +821,10 @@ void G__define_type()
     G__newtype.comment[typenum].filenum = -1;
 #endif
     G__newtype.nindex[typenum]=nindex;
+#ifdef G__TYPEDEFFPOS
+    G__newtype.filenum[typenum] = G__ifile.filenum;
+    G__newtype.linenum[typenum] = G__ifile.line_number;
+#endif
     if(nindex) {
       G__newtype.index[typenum]
 	=(int*)malloc((size_t)(G__INTALLOC*nindex));

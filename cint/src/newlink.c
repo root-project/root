@@ -943,7 +943,7 @@ FILE *fp;
     fprintf(fp,"#define G__MULTITHREADLIBCINTC\n");
 #endif
   fprintf(fp,"#define G__ANSIHEADER\n");
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
   fprintf(fp,"#define G__DICTIONARY\n");
 #endif
 #if defined(__hpux) && !defined(G__ROOT)
@@ -1023,7 +1023,7 @@ FILE *fp;
     fprintf(fp,"#define G__MULTITHREADLIBCINTCPP\n");
 #endif
   fprintf(fp,"#define G__ANSIHEADER\n");
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC) || !defined(G__OLDIMPLEMENTATION1530)
   fprintf(fp,"#define G__DICTIONARY\n");
 #endif
 #if defined(__hpux) && !defined(G__ROOT)
@@ -6700,6 +6700,9 @@ int globalcomp;
 * #pragma link C++ defined_in classname;
 * #pragma link C   defined_in classname;
 * #pragma link off defined_in classname;
+* #pragma link C++ defined_in [class|struct|namespace] classname;
+* #pragma link C   defined_in [class|struct|namespace] classname;
+* #pragma link off defined_in [class|struct|namespace] classname;
 *
 * #pragma link C++ typedef TypeName;      can use regexp
 * #pragma link C   typedef TypeName;      can use regexp
@@ -6908,7 +6911,11 @@ int link_stub;
 #endif /* 1257 */
     len = strlen(buf);
     p2 = strchr(buf,'[');
+#ifndef G__OLDIMPLEMENTATION1538
+    p = strrchr(buf,'*');
+#else
     p = strchr(buf,'*');
+#endif
     if(len&&p&&(p2||'*'==buf[len-1]||('>'!=buf[len-1]&&'-'!=buf[len-1]))) p=p;
     else p=(char*)NULL;
 #else
@@ -6958,13 +6965,17 @@ int link_stub;
 	}
       }
       free(re);
-#else
+#else /* G__REGEXP */
       *p='\0';
       hash=strlen(buf);
       for(i=0;i<G__struct.alltag;i++) {
 	if('$'==G__struct.name[i][0]) os=1;
 	else                          os=0;
-	if(strncmp(buf,G__struct.name[i]+os,hash)==0) {
+	if(strncmp(buf,G__struct.name[i]+os,hash)==0
+#ifndef G__OLDIMPLEMENTATION1538
+	   || ('*'==buf[0]&&strstr(G__struct.name[i],buf+1))
+#endif
+	   ) {
 	  G__struct.globalcomp[i] = globalcomp;
 #ifndef G__OLDIKMPLEMENTATION1334
 	  G__struct.protectedaccess[i] = protectedaccess;
@@ -6976,7 +6987,7 @@ int link_stub;
 	  if('e'==G__struct.type[i]) G__pragmalinkenum(i,globalcomp);
 	}
       }
-#endif
+#endif /* G__REGEXP */
     } /* if(p) */
     else {
 #ifdef G__OLDIMPLEMENtATION1257
@@ -7149,7 +7160,11 @@ int link_stub;
 #endif
 
     /* search for wildcard character */
+#ifndef G__OLDIMPLEMENTATION1538
+    p = strrchr(buf,'*');
+#else
     p = strchr(buf,'*');
+#endif
 
     /* in case of operator*  */
     if(strncmp(buf,"operator",8)==0) p = (char*)NULL;
@@ -7213,7 +7228,7 @@ int link_stub;
 	ifunc = ifunc->next;
       }
       free(re);
-#else
+#else /* G__REGEXP */
       *p='\0';
       hash=strlen(buf);
 #ifndef G__OLDIMPLEMENTATION1309
@@ -7223,7 +7238,10 @@ int link_stub;
 #endif
       while(ifunc) {
 	for(i=0;i<ifunc->allifunc;i++) {
- 	  if(strncmp(buf,ifunc->funcname[i],hash)==0
+ 	  if((strncmp(buf,ifunc->funcname[i],hash)==0
+#ifndef G__OLDIMPLEMENTATION1538
+	      || ('*'==buf[0]&&strstr(ifunc->funcname[i],buf+1)))
+#endif
 #ifndef G__OLDIMPLEMENTATION1534
 	     && (-1==ifunc->para_p_tagtable[i][1] ||
 		 strncmp(G__struct.name[ifunc->para_p_tagtable[i][1]]
@@ -7239,7 +7257,7 @@ int link_stub;
 	}
 	ifunc = ifunc->next;
       }
-#endif
+#endif /* G__REGEXP */
     }
     else {
 #ifndef G__OLDIMPLEMENTATION1309
@@ -7278,7 +7296,11 @@ int link_stub;
   *************************************************************************/
   else if(strncmp(buf,"global",3)==0) {
     c = G__fgetname_template(buf,";\n\r");
+#ifndef G__OLDIMPLEMENTATION1538
+    p = strrchr(buf,'*');
+#else
     p = strchr(buf,'*');
+#endif
     if(p) {
 #if defined(G__REGEXP)
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
@@ -7318,13 +7340,17 @@ int link_stub;
 	var=var->next;
       }
       free(re);
-#else
+#else /* G__REGEXP */
       *p = '\0';
       hash = strlen(buf);
       var = &G__global;
       while(var) {
 	for(i=0;i<var->allvar;i++) {
-	  if(strncmp(buf,var->varnamebuf[i],hash)==0) {
+	  if(strncmp(buf,var->varnamebuf[i],hash)==0
+#ifndef G__OLDIMPLEMENTATION1538
+	     || ('*'==buf[0]&&strstr(var->varnamebuf[i],buf+1))
+#endif
+	     ) {
 	    var->globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
@@ -7334,7 +7360,7 @@ int link_stub;
 	}
 	var=var->next;
       }
-#endif
+#endif /* G__REGEXP */
     }
     else {
       G__hash(buf,hash,i);
@@ -7369,7 +7395,11 @@ int link_stub;
   *************************************************************************/
   else if(strncmp(buf,"typedef",3)==0) {
     c = G__fgetname_template(buf,";\n\r");
+#ifndef G__OLDIMPLEMENTATION1538
+    p = strrchr(buf,'*');
+#else
     p = strchr(buf,'*');
+#endif
     if(p) {
 #if defined(G__REGEXP)
       regstat=regcomp(&re,buf,REG_EXTENDED|REG_NOSUB);
@@ -7413,11 +7443,15 @@ int link_stub;
 	}
       }
       free(re);
-#else
+#else /* G__REGEXP */
       *p='\0';
       hash=strlen(buf);
       for(i=0;i<G__newtype.alltype;i++) {
-	if(strncmp(buf,G__newtype.name[i],hash)==0) {
+	if(strncmp(buf,G__newtype.name[i],hash)==0
+#ifndef G__OLDIMPLEMENTATION1538
+	   || ('*'==buf[0]&&strstr(G__newtype.name[i],buf+1))
+#endif
+	   ) {
 	  G__newtype.globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1527
 	  if(-1!=G__newtype.tagnum[i] && 
@@ -7430,7 +7464,7 @@ int link_stub;
 #endif
 	}
       }
-#endif
+#endif /* G__REGEXP */
     }
     else {
       i = G__defined_typename(buf);
@@ -7461,14 +7495,36 @@ int link_stub;
   *************************************************************************/
 #ifndef G__PHILIPPE2
   else if(strncmp(buf,"defined_in",3)==0) {
+#ifndef G__OLDIMPLEMENTATION1537
+    fpos_t pos;
+    int tagflag = 0;
+#endif
     int ifile;
     struct stat statBufItem;  
     struct stat statBuf;  
 #ifdef G__WIN32
     char fullItem[_MAX_PATH], fullIndex[_MAX_PATH];
 #endif
+#ifndef G__OLDIMPLEMENTATION1537
+    fgetpos(G__ifile.fp,&pos);
+    c = G__fgetname(buf,";\n\r");
+    if(strcmp(buf,"class")==0||strcmp(buf,"struct")==0||
+	strcmp(buf,"namespace")==0) {
+      if(isspace(c)) c = G__fgetstream_template(buf,";\n\r<>");
+      tagflag = 1;
+    }
+    else {
+      fsetpos(G__ifile.fp,&pos);
+      c = G__fgetstream_template(buf,";\n\r<>");
+    }
+#else
     c = G__fgetstream_template(buf,";\n\r<>");
-    if ( 0 == stat( buf, & statBufItem ) ) {
+#endif
+    if ( 
+#ifndef G__OLDIMPLEMENTATION1537
+	0==tagflag &&
+#endif
+	0 == stat( buf, & statBufItem ) ) {
 #ifdef G__WIN32
       _fullpath( fullItem, buf, _MAX_PATH );      
 #endif
@@ -7532,6 +7588,7 @@ int link_stub;
       }
     }
 #ifndef G__OLDIMPLEMENTATION1243
+    /* #pragma link [C|C++|off] defined_in [class|struct|namespace] name; */
     if(!done) {
       int parent_tagnum = G__defined_tagname(buf,2);
       int j,flag;
@@ -7544,10 +7601,19 @@ int link_stub;
 	    if(G__struct.parent_tagnum[j]==parent_tagnum) flag=1;
 	    j = G__struct.parent_tagnum[j];
 	  }
-	  if(flag) {
-	    G__struct.globalcomp[i]=globalcomp;
-	  }
+	  if(flag) G__struct.globalcomp[i]=globalcomp;
 	}
+#ifndef G__OLDIMPLEMENTATION1537
+	for(i=0;i<G__newtype.alltype;i++) {
+	  flag = 0;
+	  j = G__newtype.parent_tagnum[i];
+	  do {
+	    if(j == parent_tagnum) flag = 1;
+	    j = G__struct.parent_tagnum[j];
+	  } while(-1 != j);
+	  if(flag) G__newtype.globalcomp[i] = globalcomp;
+	}
+#endif
       }
     }
 #endif
@@ -7624,30 +7690,67 @@ int link_stub;
   else if(strncmp(buf,"all",2)==0) {
     c = G__fgetname_template(buf,";\n\r");
     if(strncmp(buf,"class",3)==0) {
-      for(i=0;i<G__struct.alltag;i++) G__struct.globalcomp[i] = globalcomp;
+      for(i=0;i<G__struct.alltag;i++) {
+#ifndef G__OLDIMPLEMENTATION1536
+	if(G__NOLINK==globalcomp ||
+	   (G__NOLINK==G__struct.iscpplink[i] && 
+	    (-1!=G__struct.filenum[i] && 
+	     0==(G__srcfile[G__struct.filenum[i]].hdrprop&G__CINTHDR))))
+	  G__struct.globalcomp[i] = globalcomp;
+#else
+	G__struct.globalcomp[i] = globalcomp;
+#endif
+      }
     }
     else if(strncmp(buf,"function",3)==0) {
       ifunc = &G__ifunc;
       while(ifunc) {
-	for(i=0;i<ifunc->allifunc;i++) ifunc->globalcomp[i] = globalcomp;
+	for(i=0;i<ifunc->allifunc;i++) {
+#ifndef G__OLDIMPLEMENTATION1536
+	if(G__NOLINK==globalcomp ||
+	   (0<=ifunc->pentry[i]->filenum &&
+	    0==(G__srcfile[ifunc->pentry[i]->filenum].hdrprop&G__CINTHDR)))
+	  ifunc->globalcomp[i] = globalcomp;
+#else
+	ifunc->globalcomp[i] = globalcomp;
+#endif
+	}
 	ifunc = ifunc->next;
       }
     }
     else if(strncmp(buf,"global",3)==0) {
       var = &G__global;
       while(var) {
-	for(i=0;i<var->allvar;i++) var->globalcomp[i] = globalcomp;
+	for(i=0;i<var->allvar;i++) {
+#ifndef G__OLDIMPLEMENTATION1536
+	  if(G__NOLINK==globalcomp ||
+	     (0<=var->filenum[i] &&
+	      0==(G__srcfile[var->filenum[i]].hdrprop&G__CINTHDR)))
+	    var->globalcomp[i] = globalcomp;
+#else
+	  var->globalcomp[i] = globalcomp;
+#endif
+	}
 	var = var->next;
       }
     }
 #ifndef G__OLDIMPLEMENTATION528
     else if(strncmp(buf,"typedef",3)==0) {
       for(i=0;i<G__newtype.alltype;i++) {
-	G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1536
+	if(G__NOLINK==globalcomp ||
+	   (G__NOLINK==G__newtype.iscpplink[i] &&
+	    0<=G__newtype.filenum[i] &&
+	    0==(G__srcfile[G__newtype.filenum[i]].hdrprop&G__CINTHDR))) {
+#endif
+	  G__newtype.globalcomp[i] = globalcomp;
 #ifndef G__OLDIMPLEMENTATION1527
-	if(-1!=G__newtype.tagnum[i] && 
-	   '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
-	  G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	  if((-1!=G__newtype.tagnum[i] && 
+	      '$'==G__struct.name[G__newtype.tagnum[i]][0])) {
+	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	  }
+#endif
+#ifndef G__OLDIMPLEMENTATION1536
 	}
 #endif
       }
