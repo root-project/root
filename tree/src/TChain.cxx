@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.66 2003/04/09 14:30:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.67 2003/06/02 10:36:05 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -558,6 +558,18 @@ Int_t TChain::GetEntry(Int_t entry, Int_t getall)
 
    if (LoadTree(entry) < 0) return 0;
    return fTree->GetEntry(fReadEntry,getall);
+}
+
+
+//______________________________________________________________________________
+TFile *TChain::GetFile() const
+{
+//  Return a pointer to the current file.
+//  if no file is connected, the first file is automatically loaded.
+   
+   if (fFile) return fFile;
+   ((TChain*)this)->LoadTree(0); //force reading first entry
+   return fFile;
 }
 
 
