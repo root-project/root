@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.35 2001/02/23 15:29:36 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.36 2001/02/24 14:49:04 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -407,9 +407,9 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
          fprintf(fp, "      {\n");
          fprintf(fp, "         for (Int_t R__l = 0; R__l < %d; R__l++) {\n",len);
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "            R__b << %s[R__l]->size();\n", m.Name());
+            fprintf(fp, "            R__b << int(%s[R__l]->size());\n", m.Name());
          else
-            fprintf(fp, "            R__b << %s[R__l].size();\n", m.Name());
+            fprintf(fp, "            R__b << int(%s[R__l].size());\n", m.Name());
          fprintf(fp, "            %s<%s >::iterator R__k;\n", stlc, TemplateArg(m).Name());
          if (m.Property() & G__BIT_ISPOINTER)
             fprintf(fp, "            for (R__k = %s[R__l]->begin(); R__k != %s[R__l]->end(); ++R__k)\n",
@@ -527,9 +527,9 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          // create write code
          fprintf(fp, "      {\n");
          if (m.Property() & G__BIT_ISPOINTER)
-            fprintf(fp, "         R__b << (*%s)->size();\n", m.Name());
+            fprintf(fp, "         R__b << int((*%s)->size());\n", m.Name());
          else
-            fprintf(fp, "         R__b << %s.size();\n", m.Name());
+            fprintf(fp, "         R__b << int(%s.size());\n", m.Name());
          char tmparg[512];
          strcpy(tmparg,m.Type()->Name());
          int lenarg = strlen(tmparg);
