@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.10 2002/10/22 07:43:12 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.11 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -108,7 +108,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
    Double_t theta,phi;
    Double_t dw, dwmin, dx, dy, dz;
    Int_t ist1, ist2, ifound;
-   TGeoNode *node;
+   //TGeoNode *node;
    for (i=0; i<nrays; i++) {
       if (n10) {
          if ((i%n10) == 0) printf("%i percent\n", Int_t(100*i/nrays));
@@ -153,7 +153,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
       dz = array1[3*ist1+2]-array2[3*ist2+2];
       dw = dx*dir[0]+dy*dir[1]+dz*dir[2];
       fGeom->SetCurrentPoint(&array1[3*ist1]);
-      node = fGeom->FindNode();
+      fGeom->FindNode();
 //      printf("%i : %s (%g, %g, %g)\n", ist1, fGeom->GetPath(), 
 //             array1[3*ist1], array1[3*ist1+1], array1[3*ist1+2]);
       if (TMath::Abs(dw)<1E-4) {
@@ -174,7 +174,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
       
       while ((ist1<nelem1-1) && (ist2<nelem2)) {
          fGeom->SetCurrentPoint(&array1[3*ist1+3]);
-         node = fGeom->FindNode();
+         fGeom->FindNode();
 //         printf("%i : %s (%g, %g, %g)\n", ist1+1, fGeom->GetPath(), 
 //                array1[3*ist1+3], array1[3*ist1+4], array1[3*ist1+5]);
          
@@ -207,7 +207,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                } else {
                // extra boundary found on way back   
                   fGeom->SetCurrentPoint(&array2[3*ist2]);
-                  node = fGeom->FindNode();
+                  fGeom->FindNode();
      	          pm = (TPolyMarker3D*)pma->At(2);
 	          pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
                   printf("   extra boundary %i :  %s found at DCLOSE=%f\n", ist2, fGeom->GetPath(), dw);
@@ -218,7 +218,7 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
                if (!ifound) {
                   // point ist1+1 not found on way back
                   fGeom->SetCurrentPoint(&array1[3*ist1+3]);
-                  node = fGeom->FindNode();
+                  fGeom->FindNode();
 	          pm = (TPolyMarker3D*)pma->At(1);
 	          pm->SetNextPoint(array2[3*ist1+3], array2[3*ist1+4], array2[3*ist1+5]);
                   printf("boundary missed on way back\n");
@@ -711,7 +711,8 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    }   
 //   fGeom->CdTop();
    Double_t *point = fGeom->GetCurrentPoint();
-   TGeoNode *startnode, *endnode, *node;
+   //TGeoNode *startnode, *endnode, *node;
+   TGeoNode *endnode;
    Bool_t is_entering;
    Double_t step, forward;
    Double_t dir[3];
@@ -719,11 +720,11 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
    dir[1] = diry;
    dir[2] = dirz;
    fGeom->InitTrack(start, &dir[0]);
-   startnode = fGeom->GetCurrentNode();
-   if (fGeom->IsOutside()) startnode=0;
+   fGeom->GetCurrentNode();
+   //if (fGeom->IsOutside()) startnode=0;
 //   if (startnode) printf("Startnode : %s\n", startnode->GetName());
 //   else printf("Startnode : OUTSIDE\n");
-   node = fGeom->FindNextBoundary();
+   fGeom->FindNextBoundary();
    step = fGeom->GetStep();
 //   if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
 //   else      printf("---next : OUTSIDE at step=%f\n", step);
@@ -779,8 +780,8 @@ void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double
          nelem++;   
          is_entering = kTRUE;
       }
-      startnode = endnode;    
-      node = fGeom->FindNextBoundary();
+      //startnode = endnode;    
+      fGeom->FindNextBoundary();
       step = fGeom->GetStep();
     //  if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
     //  else      printf("---next : OUTSIDE at step=%f\n", step);
