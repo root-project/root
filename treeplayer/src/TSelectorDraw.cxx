@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.25 2004/03/09 15:57:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.26 2004/04/20 08:45:11 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1224,10 +1224,7 @@ void TSelectorDraw::TakeEstimate()
       }
 
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         UInt_t statbit = h2->TestBit(TH1::kNoStats);
-         h2->SetBit(TH1::kNoStats);
-         h2->DrawCopy(fOption.Data());
-         if (statbit) h2->SetBit(TH1::kNoStats);
+         h2->Draw(fOption.Data());
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill);
@@ -1278,7 +1275,7 @@ void TSelectorDraw::TakeEstimate()
       }
       if (fAction == 3) return;
       if (!strstr(fOption.Data(),"same") && !strstr(fOption.Data(),"goff")) {
-         h3->DrawCopy(fOption.Data());
+         h3->Draw(fOption.Data());
          gPad->Update();
       } else {
          rmin[0] = fVmin[2]; rmin[1] = fVmin[1]; rmin[2] = fVmin[0];
