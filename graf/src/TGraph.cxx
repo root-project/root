@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.87 2002/11/30 10:36:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.88 2002/12/02 18:50:02 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3272,14 +3272,14 @@ void TGraph::SetEditable(Bool_t editable)
 void TGraph::SetMaximum(Double_t maximum)
 {
    fMaximum = maximum;
-   if (fHistogram)  fHistogram->SetMaximum(maximum);
+   GetHistogram()->SetMaximum(maximum);
 }
 
 //______________________________________________________________________________
 void TGraph::SetMinimum(Double_t minimum)
 {
    fMinimum = minimum;
-   if (fHistogram) fHistogram->SetMinimum(minimum);
+   GetHistogram()->SetMinimum(minimum);
 }
 
 //______________________________________________________________________________
