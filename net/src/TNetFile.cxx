@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.25 2002/01/07 09:08:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.26 2002/02/15 14:07:13 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -42,13 +42,15 @@
 // On machines with AFS rootd will authenticate using AFS (if it was    //
 // compiled with AFS support).                                          //
 //                                                                      //
-// If the protocol was specified as "roots" a secure authetication      //
+// If the protocol is specified as "roots" a secure authetication       //
 // method will be used. The secure method uses the SRP, Secure Remote   //
 // Passwords, package. SRP uses a so called "asymmetric key exchange    //
 // protocol" in which no passwords are ever send over the wire. This    //
 // protocol is safe against all known security attacks. For more see:   //
 // Begin_Html <a href=http://root.cern.ch/root/NetFile.html>NetFile</a> //
 // End_Html                                                             //
+// If the protocol is specified as "rootk" kerberos5 will be used for   //
+// authentication.
 //                                                                      //
 // The rootd daemon lives in the directory $ROOTSYS/bin. It can be      //
 // started either via inetd or by hand from the command line (no need   //
@@ -67,6 +69,7 @@
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TSysEvtHandler.h"
+#include "TEnv.h"
 #include "Bytes.h"
 
 // Must match order of ERootdErrors enum defined in rootd.h
@@ -105,8 +108,9 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 {
    // Create a NetFile object. A net file is the same as a TFile
    // except that it is being accessed via a rootd server. The url
-   // argument must be of the form: root[s]://host.dom.ain/file.root.
-   // When protocol is "roots" try using secure authentication.
+   // argument must be of the form: root[s|k]://host.dom.ain/file.root.
+   // When protocol is "roots" try using SRP authentication.
+   // When protocol is "rootk" try using kerberos5 authentication.
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TNetFile
    // object. Use IsZombie() to see if the file is accessable.
@@ -115,7 +119,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // option argument with an "-", e.g.: "-recreate". Do this only
    // in cases when you are very sure nobody else is using the file.
    // To bypass the writelock on a file, to allow the reading of a file
-   // that is being written by another process, explicitely specifiy the
+   // that is being written by another process, explicitely specify the
    // "+read" option ("read" being the default option).
    // The netopt argument can be used to specify the size of the tcp window in
    // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
@@ -215,12 +219,17 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    }
 
    // Authenticate to remote rootd server
-   sec = !strcmp(fUrl.GetProtocol(), "roots") ?
-         TAuthenticate::kSRP : TAuthenticate::kNormal;
+   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
+   if (!strcmp(fUrl.GetProtocol(), "roots"))
+      sec = TAuthenticate::kSRP;
+   if (!strcmp(fUrl.GetProtocol(), "rootk"))
+      sec = TAuthenticate::kKrb5;
    auth = new TAuthenticate(fSocket, fUrl.GetHost(), "rootd", sec);
    if (!auth->Authenticate()) {
       if (sec == TAuthenticate::kSRP)
-         Error("TNetFile", "secure authentication failed for host %s", fUrl.GetHost());
+         Error("TNetFile", "SRP authentication failed for host %s", fUrl.GetHost());
+      else if (sec == TAuthenticate::kKrb5)
+         Error("TNetFile", "Krb5 authentication failed for host %s", fUrl.GetHost());
       else
          Error("TNetFile", "authentication failed for host %s", fUrl.GetHost());
       delete auth;

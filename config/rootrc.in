@@ -120,6 +120,12 @@ Rint.History:            $(HOME)/.root_hist
 # try to locate a custom linkdef file when generating the dictionary.
 ACLiC.Linkdef:          _linkdef
 
+# Default authentication method for rootd (0=clear, 1=SRP, 2=Krb5)
+Rootd.Authentication:   0
+
+# Default authentication method for proofd (0=clear, 1=SRP, 2=Krb5)
+Proofd.Authentication:  0
+
 # Plugin library handlers
 +Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache

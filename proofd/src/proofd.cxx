@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.24 2002/02/06 18:27:40 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.25 2002/03/13 01:48:52 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -8,6 +8,33 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+/* Parts of this file are copied from the MIT krb5 distribution and
+ * are subject to the following license:
+ *
+ * Copyright 1990,1991 by the Massachusetts Institute of Technology.
+ * All Rights Reserved.
+ *
+ * Export of this software from the United States of America may
+ *   require a specific license from the United States Government.
+ *   It is the responsibility of any person or organization contemplating
+ *   export to obtain such a license before exporting.
+ *
+ * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+ * distribute this software and its documentation for any purpose and
+ * without fee is hereby granted, provided that the above copyright
+ * notice appear in all copies and that both that copyright notice and
+ * this permission notice appear in supporting documentation, and that
+ * the name of M.I.T. not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission.  Furthermore if you modify this software you must label
+ * your software as modified software and not distribute it in such a
+ * fashion that it might be confused with the original M.I.T. software.
+ * M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ *
+ */
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -76,6 +103,9 @@
 //  SRP is described at: http://srp.stanford.edu/.                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+// Protocol changes (see gProtocol):
+// 6: added support for kerberos5 authentication
 
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -174,6 +204,13 @@ extern "C" {
 }
 #endif
 
+#ifdef R__KRB5
+#include <krb5.h>
+#include <string>
+extern krb5_deltat krb5_clockskew;
+extern "C" int krb5_net_write(krb5_context, int, const char *, int);
+#endif
+
 #include "proofdp.h"
 
 
@@ -190,10 +227,15 @@ int  gPort                  = 0;
 int  gDebug                 = 0;
 int  gSockFd                = -1;
 int  gAuth                  = 0;
+int  gProtocol              = 6;       // increase when protocol changes
 char gUser[64]              = { 0 };
 char gPasswd[64]            = { 0 };
 char gConfDir[kMAXPATHLEN]  = { 0 };
 
+#ifdef R__KRB5
+krb5_keytab  gKeytab        = 0;      // to allow specifying on the command line
+krb5_context gKcontext;
+#endif
 
 //--- Machine specific routines ------------------------------------------------
 
@@ -215,6 +257,51 @@ static int setresuid(uid_t r, uid_t e, uid_t)
 
 
 //--- Proofd routines ----------------------------------------------------------
+
+//______________________________________________________________________________
+void ProofdProtocol()
+{
+   // Return proofd protocol version id.
+
+   NetSend(gProtocol, kROOTD_PROTOCOL);
+}
+
+//______________________________________________________________________________
+void ProofdLogin()
+{
+   // Authentication was successful, set user environment.
+
+   struct passwd *pw = getpwnam(gUser);
+
+   gAuth = 1;
+
+   if (chdir(pw->pw_dir) == -1)
+      ErrorFatal("ProofdLogin: can't change directory to %s", pw->pw_dir);
+
+   if (getuid() == 0) {
+
+      // set access control list from /etc/initgroup
+      initgroups(gUser, pw->pw_gid);
+
+      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
+         ErrorFatal("ProofdLogin: can't setgid for user %s", gUser);
+
+      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
+         ErrorFatal("ProofdLogin: can't setuid for user %s", gUser);
+
+   }
+
+   char *home = new char[6+strlen(pw->pw_dir)];
+   sprintf(home, "HOME=%s", pw->pw_dir);
+   putenv(home);
+
+   umask(022);
+
+   NetSend(gAuth, kROOTD_AUTH);
+
+   if (gDebug > 0)
+      ErrorInfo("ProofdLogin: user %s authenticated", gUser);
+}
 
 //______________________________________________________________________________
 void ProofdUser(const char *user)
@@ -239,6 +326,72 @@ void ProofdUser(const char *user)
    strcpy(gUser, user);
 
    NetSend(gAuth, kROOTD_AUTH);
+}
+
+//______________________________________________________________________________
+void ProofdKrb5Auth()
+{
+   // Authenticate via Kerberos.
+
+#ifdef R__KRB5
+   NetSend(1, kROOTD_KRB5);
+   // TAuthenticate will respond to our encouragement by sending krb5
+   // authentication through the socket
+#else
+   NetSend(0, kROOTD_KRB5);
+   return;
+#endif
+
+#ifdef R__KRB5
+   int retval;
+
+   // get service principal
+   krb5_principal server;
+   if ((retval = krb5_sname_to_principal(gKcontext, 0, "proofd",
+                                         KRB5_NT_SRV_HST, &server)))
+      ErrorFatal("while generating service name (%s): %s",
+                 "proofd", error_message(retval));
+
+   // listen for authentication from the client
+   krb5_auth_context auth_context = 0;
+   krb5_ticket *ticket;
+   char proto_version[100] = "krootd_v_1";
+   int sock = gSockFd;
+   if ((retval = krb5_recvauth(gKcontext, &auth_context, (krb5_pointer)&sock,
+                               proto_version, server,
+                               0,
+                               gKeytab,    // default gKeytab is 0
+                               &ticket)))
+      ErrorFatal("recvauth failed--%s", error_message(retval));
+
+   // get client name
+   char *cname;
+   if ((retval = krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname)))
+      ErrorFatal("unparse failed: %s", error_message(retval));
+   using std::string;
+   string user = cname;
+   free(cname);
+   string reply = "authenticated as ";
+   reply += user;
+
+   NetSend(reply.c_str(), kMESS_STRING);
+
+   krb5_auth_con_free(gKcontext, auth_context);
+
+   // set user name
+   user = user.erase(user.find("@"));        // cut off realm
+   string::size_type pos = user.find("/");   // see if there is an instance
+   if (pos != string::npos)
+      user = user.erase(pos);                // drop the instance
+   NetSend(user.c_str(), kMESS_STRING);
+
+   strncpy(gUser, user.c_str(), 64);
+
+   if (gDebug > 0)
+      ErrorInfo("ProofdKrb5Auth: user %s authenticated", gUser);
+
+   ProofdLogin();
+#endif
 }
 
 //______________________________________________________________________________
@@ -360,34 +513,10 @@ void ProofdSRPUser(const char *user)
    if (!t_serververify(ts, cbuf)) {
       // authentication successful
 
-      gAuth = 1;
-
-      if (chdir(pw->pw_dir) == -1)
-         ErrorFatal("ProofdSRPUser: can't change directory to %s", pw->pw_dir);
-
-      if (getuid() == 0) {
-
-         // set access control list from /etc/initgroup
-         initgroups(gUser, pw->pw_gid);
-
-         if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-            ErrorFatal("ProofdSRPUser: can't setgid for user %s", gUser);
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-            ErrorFatal("ProofdSRPUser: can't setuid for user %s", gUser);
-
-      }
-
-      char *home = new char[6+strlen(pw->pw_dir)];
-      sprintf(home, "HOME=%s", pw->pw_dir);
-      putenv(home);
-
-      umask(022);
-
-      NetSend(gAuth, kROOTD_AUTH);
-
       if (gDebug > 0)
          ErrorInfo("ProofdSRPUser: user %s authenticated", gUser);
+
+      ProofdLogin();
 
    } else
       ErrorFatal("ProofdSRPUser: authentication failed for user %s", gUser);
@@ -442,8 +571,7 @@ int ProofdCheckSpecialPass(const char *passwd)
 //______________________________________________________________________________
 void ProofdPass(const char *pass)
 {
-   // Check user's password, if ok, change to user's id and to user's directory.
-   // Almost identical to RootdPass().
+   // Check user's password.
 
    char   passwd[64];
    char  *passw;
@@ -475,8 +603,10 @@ void ProofdPass(const char *pass)
 
    pw = getpwnam(gUser);
 
-   if (ProofdCheckSpecialPass(passwd))
-      goto skipauth;
+   if (ProofdCheckSpecialPass(passwd)) {
+      ProofdLogin();
+      return;
+   }
 
 #ifdef R__AFS
    afs_auth = !ka_UserAuthenticateGeneral(
@@ -514,35 +644,7 @@ void ProofdPass(const char *pass)
    }  // afs_auth
 #endif
 
-skipauth:
-   gAuth = 1;
-
-   if (chdir(pw->pw_dir) == -1)
-      ErrorFatal("ProofdPass: can't change directory to %s", pw->pw_dir);
-
-   if (getuid() == 0) {
-
-      // set access control list from /etc/initgroup
-      initgroups(gUser, pw->pw_gid);
-
-      if (setresgid(pw->pw_gid, pw->pw_gid, 0) == -1)
-         ErrorFatal("ProofdPass: can't setgid for user %s", gUser);
-
-      if (setresuid(pw->pw_uid, pw->pw_uid, 0) == -1)
-         ErrorFatal("ProofdPass: can't setuid for user %s", gUser);
-
-   }
-
-   char *home = new char[6+strlen(pw->pw_dir)];
-   sprintf(home, "HOME=%s", pw->pw_dir);
-   putenv(home);
-
-   umask(022);
-
-   NetSend(gAuth, kROOTD_AUTH);
-
-   if (gDebug > 0)
-      ErrorInfo("ProofdPass: user %s authenticated", gUser);
+   ProofdLogin();
 }
 
 //______________________________________________________________________________
@@ -567,6 +669,12 @@ void Authenticate()
             break;
          case kROOTD_PASS:
             ProofdPass(recvbuf);
+            break;
+         case kROOTD_KRB5:
+            ProofdKrb5Auth();
+            break;
+         case kROOTD_PROTOCOL:
+            ProofdProtocol();
             break;
          default:
             ErrorFatal("Authenticate: received bad opcode %d", kind);
@@ -782,6 +890,15 @@ int main(int argc, char **argv)
 
    ErrorInit(argv[0]);
 
+#ifdef R__KRB5
+   const char *kt_fname;
+
+   int retval = krb5_init_context(&gKcontext);
+   if (retval)
+      ErrorFatal("%s while initializing krb5",
+                 error_message(retval));
+#endif
+
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
          switch (*s) {
@@ -815,6 +932,20 @@ int main(int argc, char **argv)
                }
                tcpwindowsize = atoi(*++argv);
                break;
+
+#ifdef R__KRB5
+            case 'S':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "-S requires a path to your keytab\n");
+                  ErrorFatal("-S requires a path to your keytab\n");
+               }
+               kt_fname = *++argv;
+               if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
+                  ErrorFatal("%s while resolving keytab file %s",
+                             error_message(retval), kt_fname);
+               break;
+#endif
 
             default:
                if (!gInetdFlag)
@@ -860,4 +991,10 @@ int main(int argc, char **argv)
       // parent waits for another client to connect
 
    }
+
+#ifdef R__KRB5
+   // never called... needed?
+   krb5_free_context(gKcontext);
+#endif
+
 }

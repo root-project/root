@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.18 2002/03/15 17:23:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.19 2002/03/17 00:26:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 #include "TH1.h"
 #include "TProofPlayer.h"
 #include "TDSet.h"
+#include "TEnv.h"
 
 
 TProof *gProof = 0;
@@ -161,8 +162,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    fMaster        = u->GetHost();
    fPort          = u->GetPort();
-   fSecurity      = !strcmp(u->GetProtocol(), "proofs") ?
-                    TAuthenticate::kSRP : TAuthenticate::kNormal;
    fConfDir       = confdir;
    fConfFile      = conffile;
    fWorkDir       = gSystem->WorkingDirectory();
@@ -175,6 +174,11 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fStatus        = 0;
    fParallel      = 0;
    fPlayer        = 0;
+   fSecurity      = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
+   if (!strcmp(u->GetProtocol(), "proofs"))
+      fSecurity = TAuthenticate::kSRP;
+   if (!strcmp(u->GetProtocol(), "proofk"))
+      fSecurity = TAuthenticate::kKrb5;
 
    delete u;
 
@@ -238,7 +242,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             if (nword >= 2 && !strcmp(word[0], "slave")) {
                int perfidx  = 100;
                int sport    = fPort;
-               int security = TAuthenticate::kNormal;
+               int security = gEnv->GetValue("Proofd.Authentication",
+                                             TAuthenticate::kClear);
                const char *image = word[1];
                for (int i = 2; i < nword; i++) {
                   if (!strncmp(word[i], "perf=", 5))
@@ -249,6 +254,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      sport = atoi(word[i]+5);
                   if (!strncmp(word[i], "srp", 3))
                      security = TAuthenticate::kSRP;
+                  if (!strncmp(word[i], "krb5", 3))
+                     security = TAuthenticate::kKrb5;
                }
                // create slave server
                TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,

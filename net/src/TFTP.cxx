@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.10 2002/02/03 18:40:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.11 2002/02/26 18:02:19 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #include "TUrl.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
+#include "TEnv.h"
 #include "TError.h"
 
 #if defined(R__UNIX)
@@ -126,12 +127,17 @@ again:
    Recv(fProtocol, kind);
 
    // Authenticate to remote rootd server
-   sec = !strcmp(url.GetProtocol(), "roots") ?
-         TAuthenticate::kSRP : TAuthenticate::kNormal;
+   sec = gEnv->GetValue("Rootd.Authentication", TAuthenticate::kClear);
+   if (!strcmp(url.GetProtocol(), "roots"))
+      sec = TAuthenticate::kSRP;
+   if (!strcmp(url.GetProtocol(), "rootk"))
+      sec = TAuthenticate::kKrb5;
    auth = new TAuthenticate(fSocket, url.GetHost(), "rootd", sec);
    if (!auth->Authenticate()) {
       if (sec == TAuthenticate::kSRP)
-         Error("TFTP", "secure authentication failed for host %s", url.GetHost());
+         Error("TFTP", "SRP authentication failed for host %s", url.GetHost());
+      else if (sec == TAuthenticate::kKrb5)
+         Error("TFTP", "Krb5 authentication failed for host %s", url.GetHost());
       else
          Error("TFTP", "authentication failed for host %s", url.GetHost());
       delete auth;

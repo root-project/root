@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.19 2002/03/16 18:36:52 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.20 2002/03/17 00:26:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -610,8 +610,12 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             if (IsMaster()) {
                if (clsnam == "TNetFile") {
                   TUrl url(filenam);
-                  Int_t sec = !strcmp(url.GetProtocol(), "roots") ?
-                              TAuthenticate::kSRP : TAuthenticate::kNormal;
+                  Int_t sec = gEnv->GetValue("Rootd.Authentication",
+                                             TAuthenticate::kClear);
+                  if (!strcmp(url.GetProtocol(), "roots"))
+                     sec = TAuthenticate::kSRP;
+                  if (!strcmp(url.GetProtocol(), "rootk"))
+                     sec = TAuthenticate::kKrb5;
                   TAuthenticate auth(0, url.GetHost(), "rootd", sec);
                   TString user, passwd;
                   if (auth.CheckNetrc(user, passwd))

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.7 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.8 2001/01/26 16:41:27 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -74,7 +74,9 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          // - interactive
          if (!auth->Authenticate()) {
             if (fSecurity == TAuthenticate::kSRP)
-               Error("TSlave", "secure authentication failed for host %s", host);
+               Error("TSlave", "SRP authentication failed for host %s", host);
+            else if (fSecurity == TAuthenticate::kKrb5)
+               Error("TSlave", "Krb5 authentication failed for host %s", host);
             else
                Error("TSlave", "authentication failed for host %s", host);
             delete auth;

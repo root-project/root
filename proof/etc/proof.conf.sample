@@ -2,7 +2,7 @@
 #
 # node <hostname> [image=<imagename>]
 # slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
-#                  [srp]
+#                  [srp | krb5]
 # user <username> on <hostname>
 #
 # For each unique node in the cluster add a "node" line.
@@ -24,6 +24,7 @@
 # to authenticate to the slaves. If this flag is set it is necessary that
 # on the master server there is a file ~/.rootnetrc with the needed login
 # information and that on the slaves the file ~/.srootdpass exists.
+# Krb5 is used to tell PROOF to use Kerberos5 to authenticate the slaves.
 # 
 # Users can be redirected to have their master server run on a predetermined
 # node. For that use the "user" line.

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.4 2000/12/02 15:51:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.5 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -94,9 +94,9 @@ TUrl::TUrl(const char *url)
       *s = sav;
       if (!fProtocol.CompareTo("http"))
          fPort = 80;
-      else if (!fProtocol.CompareTo("proof") || !fProtocol.CompareTo("proofs"))
+      else if (fProtocol.Index("proof") == 0)
          fPort = 1093;
-      else if (!fProtocol.CompareTo("root") || !fProtocol.CompareTo("roots"))
+      else if (fProtocol.Index("root") == 0)
          fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))
          fPort = 20;

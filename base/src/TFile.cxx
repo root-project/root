@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.54 2002/02/25 07:38:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.55 2002/02/25 11:26:13 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1632,10 +1632,10 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    // plugin library handler has been registered with the plugin manager
    // (for the plugin manager see the TPluginManager class). The returned
    // type of TFile depends on the file name. If the file starts with
-   // "root:" or "roots:" a TNetFile object will be returned, with "http:"
-   // a TWebFile, with "file:" a local TFile, etc. (see the list of TFile
-   // plugin handlers for regular axpressions that will be checked) and
-   // as last a local file will be tried.
+   // "root:", "roots:" or "rootk:" a TNetFile object will be returned,
+   // with "http:" a TWebFile, with "file:" a local TFile, etc. (see the
+   // list of TFile plugin handlers for regular axpressions that will be
+   // checked) and as last a local file will be tried.
    // Before opening a file via TNetFile a check is made to see if the URL
    // specifies a local file. If that is the case the file will be opened
    // via a normal TFile. To force the opening of a local file via a
@@ -1646,7 +1646,8 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    TPluginHandler *h;
    TFile *f = 0;
 
-   if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6)) {
+   if (!strncmp(name, "root:", 5) || !strncmp(name, "roots:", 6) ||
+       !strncmp(name, "rootk:", 6)) {
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
