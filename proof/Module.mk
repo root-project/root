@@ -25,12 +25,32 @@ PROOFDEP     := $(PROOFO:.o=.d) $(PROOFDO:.o=.d)
 
 PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 
+##### libProofGui #####
+PROOFGUIDS   := $(MODDIRS)/G__ProofGui.cxx
+PROOFGUIDO   := $(PROOFGUIDS:.cxx=.o)
+PROOFGUIDH   := $(PROOFGUIDS:.cxx=.h)
+
+PROOFGUIH    := $(MODDIRI)/TProofProgressDialog.h
+PROOFGUIS    := $(MODDIRS)/TProofProgressDialog.cxx
+PROOFGUIO    := $(PROOFGUIS:.cxx=.o)
+
+PROOFGUIDEP  := $(PROOFGUIO:.o=.d) $(PROOFGUIDO:.o=.d)
+
+PROOFGUILIB  := $(LPATH)/libProofGui.$(SOEXT)
+
+# remove GUI files from PROOF files
+PROOFH       := $(filter-out $(PROOFGUIH),$(PROOFH))
+PROOFS       := $(filter-out $(PROOFGUIS),$(PROOFS))
+PROOFO       := $(filter-out $(PROOFGUIO),$(PROOFO))
+PROOFDEP     := $(filter-out $(PROOFGUIDEP),$(PROOFDEP))
+
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFH))
-ALLLIBS     += $(PROOFLIB)
+ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFGUIH))
+ALLLIBS     += $(PROOFLIB) $(PROOFGUILIB)
 
 # include all dependency files
-INCLUDEFILES += $(PROOFDEP)
+INCLUDEFILES += $(PROOFDEP) $(PROOFGUIDEP)
 
 ##### local rules #####
 include/%.h:    $(PROOFDIRI)/%.h
@@ -48,14 +68,29 @@ $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMP)
 $(PROOFDO):     $(PROOFDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-proof:      $(PROOFLIB)
+$(PROOFGUILIB): $(PROOFGUIO) $(PROOFGUIDO) $(MAINLIBS) $(PROOFGUILIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libProofGui.$(SOEXT) $@ \
+		   "$(PROOFGUIO) $(PROOFGUIDO)" \
+		   "$(PROOFGUILIBEXTRA)"
+
+$(PROOFGUIDS):  $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(PROOFGUIH)
+
+$(PROOFGUIDO):  $(PROOFGUIDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+
+all-proof:      $(PROOFLIB) $(PROOFGUILIB)
 
 clean-proof:
-		@rm -f $(PROOFO) $(PROOFDO)
+		@rm -f $(PROOFO) $(PROOFDO) $(PROOFGUIO) $(PROOFGUIDO)
 
 clean::         clean-proof
 
 distclean-proof: clean-proof
-		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB)
+		@rm -f $(PROOFDEP) $(PROOFDS) $(PROOFDH) $(PROOFLIB) \
+		   $(PROOFGUIDEP) $(PROOFGUIDS) $(PROOFGUIDH) \
+		   $(PROOFGUILIB)
 
 distclean::     distclean-proof

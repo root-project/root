@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.31 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.32 2003/03/18 16:13:10 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -51,6 +51,7 @@ class TMessage;
 class TSocket;
 class TMonitor;
 class TSignalHandler;
+class TPluginHandler;
 class TSlave;
 class TProofServ;
 class TProofInputHandler;
@@ -110,8 +111,9 @@ private:
    Double_t  fBytesRead;     //bytes read by all slaves during the session
    Float_t   fRealTime;      //realtime spent by all slaves during the session
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
-   TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
-   TProofPlayer   *fPlayer;     //current player
+   TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
+   TPluginHandler *fProgressDialog; // progress dialog plugin
+   TProofPlayer   *fPlayer;         //current player
    struct MD5Mod_t {
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time

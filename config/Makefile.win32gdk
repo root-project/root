@@ -85,6 +85,8 @@ HTMLLIBDEP          = $(GRAFLIB)
 HTMLLIBEXTRA        = lib/libGraf.lib
 PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
+PROOFGUILIBDEP      = $(PROOFLIB) $(GUILIB)
+PROOFGUILIBEXTRA    = lib/libProof.lib lib/libGui.lib
 TREEPLAYERLIBDEP    = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libGraf3d.lib \
                       lib/libGraf.lib lib/libHist.lib

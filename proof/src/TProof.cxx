@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.39 2003/03/18 14:29:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.40 2003/03/18 16:13:11 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@
 #include "TProofPlayer.h"
 #include "TDSet.h"
 #include "TEnv.h"
+#include "TPluginManager.h"
 
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
@@ -162,21 +163,22 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    else
       u = new TUrl(Form("proof://%s", masterurl));
 
-   fMaster        = u->GetHost();
-   fPort          = u->GetPort();
-   fConfDir       = confdir;
-   fConfFile      = conffile;
-   fWorkDir       = gSystem->WorkingDirectory();
-   fLogLevel      = loglevel;
-   fProtocol      = kPROOF_Protocol;
-   fMasterServ    = fMaster == "__master__" ? kTRUE : kFALSE;
-   fSendGroupView = kTRUE;
-   fImage         = fMasterServ ? "" : "<local>";
-   fIntHandler    = 0;
-   fStatus        = 0;
-   fParallel      = 0;
-   fPlayer        = 0;
-   fSecurity      = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
+   fMaster         = u->GetHost();
+   fPort           = u->GetPort();
+   fConfDir        = confdir;
+   fConfFile       = conffile;
+   fWorkDir        = gSystem->WorkingDirectory();
+   fLogLevel       = loglevel;
+   fProtocol       = kPROOF_Protocol;
+   fMasterServ     = fMaster == "__master__" ? kTRUE : kFALSE;
+   fSendGroupView  = kTRUE;
+   fImage          = fMasterServ ? "" : "<local>";
+   fIntHandler     = 0;
+   fProgressDialog = 0;
+   fStatus         = 0;
+   fParallel       = 0;
+   fPlayer         = 0;
+   fSecurity       = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
    if (!strcmp(u->GetProtocol(), "proofs"))
       fSecurity = TAuthenticate::kSRP;
    if (!strcmp(u->GetProtocol(), "proofk"))
@@ -303,9 +305,17 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             Error("Init", "not allowed to connect to PROOF master server");
             return 0;
          }
+
          slave->SetInputHandler(new TProofInputHandler(this, slave->GetSocket()));
+
          fIntHandler = new TProofInterruptHandler(this);
          fIntHandler->Add();
+
+         if (!gROOT->IsBatch()) {
+            if ((fProgressDialog = gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
+               if (fProgressDialog->LoadPlugin() == -1)
+                  fProgressDialog = 0;
+         }
       } else {
          delete slave;
          Error("Init", "failed to connect to a PROOF master server");
@@ -588,7 +598,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 //______________________________________________________________________________
 Int_t TProof::GetParallel() const
 {
-   // Returns number of slave active in parallel mode. Returns 0 in case
+   // Returns number of slaves active in parallel mode. Returns 0 in case
    // there are no active slaves.
 
    if (!IsValid()) return 0;
@@ -1125,9 +1135,12 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
 
+   if (fProgressDialog)
+      fProgressDialog->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
+                                  first, nentries);
+
    return fPlayer->Process(set, selector, option, nentries, first, evl);
 }
-
 
 //______________________________________________________________________________
 Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, Option_t *option,
@@ -1141,7 +1154,6 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
 
    return fPlayer->DrawSelect(set, varexp, selection, option, nentries, first);
 }
-
 
 //______________________________________________________________________________
 void TProof::AddInput(TObject *obj)

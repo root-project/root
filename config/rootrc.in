@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.41 2003/01/22 11:23:03 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.42 2003/03/10 14:57:11 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -165,6 +165,7 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
+Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
