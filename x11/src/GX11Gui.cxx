@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.27 2002/12/02 18:50:12 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.28 2003/01/20 08:44:47 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -313,6 +313,10 @@ Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
    if (fColormap && !(xmask & CWColormap)) {
       xmask |= CWColormap;
       xattr.colormap = fColormap;
+   }
+   if ((Window)parent == fRootWin && fRootWin != fVisRootWin) {
+      xmask |= CWBorderPixel;
+      xattr.border_pixel = fBlackPixel;
    }
 
    return (Window_t) XCreateWindow(fDisplay, (Window) parent, x, y,
@@ -1099,6 +1103,12 @@ Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
 
    MapPictureAttributes(attr, xpmattr);
 
+   // make sure pixel depth of pixmap is the same as in the visual
+   if ((Drawable) id == fRootWin && fRootWin != fVisRootWin) {
+      xpmattr.valuemask |= XpmDepth;
+      xpmattr.depth = fDepth;
+   }
+
    Int_t res = XpmReadFileToPixmap(fDisplay, id, (char*)filename,
                                    (Pixmap*)&pict, (Pixmap*)&pict_mask, &xpmattr);
 
@@ -1135,6 +1145,12 @@ Bool_t TGX11::CreatePictureFromData(Drawable_t id, char **data, Pixmap_t &pict,
    XpmAttributes xpmattr;
 
    MapPictureAttributes(attr, xpmattr);
+
+   // make sure pixel depth of pixmap is the same as in the visual
+   if ((Drawable) id == fRootWin && fRootWin != fVisRootWin) {
+      xpmattr.valuemask |= XpmDepth;
+      xpmattr.depth = fDepth;
+   }
 
    Int_t res = XpmCreatePixmapFromData(fDisplay, id, data, (Pixmap*)&pict,
                                        (Pixmap*)&pict_mask, &xpmattr);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.19 2003/01/20 08:44:46 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.20 2003/03/15 14:21:39 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -483,7 +483,7 @@ TGClient::TGClient(const char *dpyName)
    TGScrollBar::fgBckgndPixmap =
    checkered = gVirtualX->CreatePixmap(fRoot->GetId(),
                      (const char *)gray_bits, gray_width, gray_height,
-                     fBackColor, fHilite, root_attr.fDepth);
+                     fBackColor, fHilite, gVirtualX->GetDepth());
 
    gval.fMask = kGCForeground | kGCBackground | kGCTile |
                 kGCFillStyle  | kGCGraphicsExposures;
