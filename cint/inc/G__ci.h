@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014076
-#define G__CINTVERSIONSTR  "5.14.76, Feb 10 2001"
+#define G__CINTVERSION      5014077
+#define G__CINTVERSIONSTR  "5.14.77, Feb 20 2001"
 
 
 /**********************************************************************
@@ -705,6 +705,7 @@ typedef struct {
 **************************************************************************/
 #define G__USERHEADER 1
 #define G__SYSHEADER  2
+
 
 /* #define G__ANSI */
 

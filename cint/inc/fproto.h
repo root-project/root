@@ -739,7 +739,7 @@ void G__DeleteConstStringList G__P((struct G__ConstStringList* current));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1485
-int G__fprinterr (char* fmt,...);
+int G__fprinterr G__P((char* fmt,...));
 int G__fputerr G__P((int c));
 #endif
 
