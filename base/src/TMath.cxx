@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.28 2002/08/17 18:42:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.29 2002/10/10 17:08:52 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1356,6 +1356,8 @@ Bool_t TMath::IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t
 {
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   // NOTE that the polygon must be a closed polygon (1st and last point
+   // must be identical)
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
@@ -1375,6 +1377,8 @@ Bool_t TMath::IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y)
 {
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   // NOTE that the polygon must be a closed polygon (1st and last point
+   // must be identical)
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
@@ -1394,6 +1398,8 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
 {
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
+   // NOTE that the polygon must be a closed polygon (1st and last point
+   // must be identical)
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
