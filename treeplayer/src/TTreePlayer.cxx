@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.6 2000/06/16 10:48:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.7 2000/07/03 10:11:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -253,6 +253,7 @@
 #include "Foption.h"
 #include "TTreeResult.h"
 #include "TTreeRow.h"
+#include "Api.h"
 
 R__EXTERN Foption_t Foption;
 
@@ -2051,6 +2052,37 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries,
 //      file.so is loaded.
 
 
+   //Interpret/compile filename via CINT
+   char localname[256];
+   sprintf(localname,".L %s",filename);
+   gROOT->ProcessLine(localname);
+   
+   //loop on all classes known to CINT to find the class on filename
+   //that derives from TSelector
+   strcpy(localname,filename);
+   char *dot = strchr(localname,'.');
+   if (dot) dot[0] = 0;
+
+   G__ClassInfo cl;
+   Bool_t OK = kFALSE;
+   while (cl.Next()) {
+      if (strcmp(cl.Name(),localname)) continue;
+      if (cl.IsBase("TSelector")) OK = kTRUE;
+      break;
+   }
+   if (!OK) {
+      Error("Process","file:%s does not have a valid class deriving from TSelector",filename);
+      return -1;
+   } 
+   printf("Fullname=%s\n",cl.Fullname());
+   printf("FileName=%s\n",cl.FileName());
+   printf("DefFile=%s\n",cl.DefFile());
+   printf("ImpFile=%s\n",cl.ImpFile());
+   
+   // we can now create an instance of the class
+   printf("Creating an instance of :%s\n",cl.Name());
+   TObject *selector = (TObject*)cl.New();
+   
    printf("NOT YET IMPLEMENTED\n");
    return -1;
 }
