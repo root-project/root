@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.4 2001/08/09 01:02:15 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.5 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -89,7 +89,6 @@ RooSimFitContext::~RooSimFitContext()
   Int_t i ;
   for (i=0 ; i<_nCtx ; i++) {
     if (_ctxArray[i]) delete _ctxArray[i] ;
-    cout << "RooSimFitContext::dtor deleting sub-dset = " << _dsetArray[i] << endl ;
     if (_dsetArray[i]) delete _dsetArray[i] ;
   }
 

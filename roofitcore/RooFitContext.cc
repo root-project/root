@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.15 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.16 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -442,8 +442,8 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
 
   // Be quiet during the setup
   arglist[0] = -1;
-//_theFitter->ExecuteCommand("SET PRINT",arglist,1);
-//_theFitter->ExecuteCommand("SET NOWARNINGS",arglist,0);
+  _theFitter->ExecuteCommand("SET PRINT",arglist,1);
+  _theFitter->ExecuteCommand("SET NOWARNINGS",arglist,0);
 
   // Tell MINUIT to use our global glue function
   _theFitter->SetFCN(RooFitGlue);

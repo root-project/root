@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.8 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.9 2001/08/10 22:22:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -59,10 +59,10 @@ RooConvolutedPdf::~RooConvolutedPdf()
     TIterator* iter = _convSet.MakeIterator() ;
     RooAbsArg* arg ;
     while (arg = (RooAbsArg*)iter->Next()) {
-      cout << "RooConvolutedPdf::dtor deleting convolution " << arg->GetName() << endl ;
       _convSet.remove(*arg) ;
       delete arg ;
     }
+    delete iter ;
   }
 
   // Delete all basis functions we created 

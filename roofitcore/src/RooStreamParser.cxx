@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.5 2001/05/17 00:43:16 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.6 2001/07/31 05:54:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,7 +44,7 @@ RooStreamParser::RooStreamParser(istream& is) :
   // Constructor
 }
 
-RooStreamParser::RooStreamParser(istream& is, TString errorPrefix) : 
+RooStreamParser::RooStreamParser(istream& is, const TString& errorPrefix) : 
   _is(is), _prefix(errorPrefix), _punct("()[]<>|/\\:?.,=+-&^%$#@!`~")
 {
   // Constructor with error message prefix
@@ -57,7 +57,7 @@ RooStreamParser::~RooStreamParser()
 }
 
 
-void RooStreamParser::setPunctuation(TString punct) 
+void RooStreamParser::setPunctuation(const TString& punct) 
 {
   // Change list of punctuation characters
   _punct = punct ;
@@ -83,12 +83,19 @@ TString RooStreamParser::readToken()
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
   Bool_t first(kTRUE), quotedString(kFALSE) ;
   char buffer[1024], c, cnext, cprev=' ' ;
-  Int_t bufptr=0 ;
+  Int_t bufptr(0) ;
 
   //Ignore leading newline
   if (_is.peek()=='\n') _is.get(c) ;
 
   while(1) {
+    // Buffer overflow protection
+    if (bufptr>=1020) {
+      cout << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
+      break ;
+    }
+
+    // Read next char
     _is.get(c) ;
 
     // Terminate at EOF, EOL or trouble
@@ -200,7 +207,7 @@ TString RooStreamParser::readLine()
   if (_is.peek()=='\n') _is.get(c) ;
 
   // Read till end of line
-  _is.getline(buffer,1024,'\n') ;
+  _is.getline(buffer,1023,'\n') ;
 
   // Chop eventual comments
   char *pcomment = strstr(buffer,"//") ;
@@ -230,7 +237,7 @@ void RooStreamParser::zapToEnd()
 }
 
 
-void RooStreamParser::putBackToken(TString& token) 
+void RooStreamParser::putBackToken(const TString& token) 
 {
   // Put back given token in stream buffer
 
@@ -247,10 +254,10 @@ void RooStreamParser::putBackToken(TString& token)
 }
 
 
-Bool_t RooStreamParser::expectToken(TString expected, Bool_t zapOnError) 
+Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError) 
 {
   // Read a token and check if it matches the given expected value
-  TString token=readToken() ;
+  TString token(readToken()) ;
 
   Bool_t error=token.CompareTo(expected) ;
   if (error && !_prefix.IsNull()) {
@@ -265,18 +272,18 @@ Bool_t RooStreamParser::expectToken(TString expected, Bool_t zapOnError)
 Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t zapOnError) 
 {
   // Read a token and convert it to a Double_t
-  TString token=readToken() ;
+  TString token(readToken()) ;
   if (token.IsNull()) return kTRUE ;
   return convertToDouble(token,value) ;
   
 }
 
 
-Bool_t RooStreamParser::convertToDouble(TString token, Double_t& value) 
+Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value) 
 {
   // Convert given string to a double
   char* endptr(0) ;
-  const char* data=token ;
+  const char* data=token.Data() ;
   value = strtod(data,&endptr) ;
   Bool_t error = (endptr-data!=token.Length()) ;
 
@@ -291,17 +298,17 @@ Bool_t RooStreamParser::convertToDouble(TString token, Double_t& value)
 Bool_t RooStreamParser::readInteger(Int_t value, Bool_t zapOnError) 
 {
   // Read a token and convert it to an Int_t
-  TString token=readToken() ;
+  TString token(readToken()) ;
   if (token.IsNull()) return kTRUE ;
   return convertToInteger(token,value) ;
 }
 
 
-Bool_t RooStreamParser::convertToInteger(TString token, Int_t& value) 
+Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value) 
 {
   // Convert given string to an Int_t
   char* endptr(0) ;
-  const char* data=token ;
+  const char* data=token.Data() ;
   value = strtol(data,&endptr,10) ;
   Bool_t error = (endptr-data!=token.Length()) ;
 
@@ -316,19 +323,23 @@ Bool_t RooStreamParser::convertToInteger(TString token, Int_t& value)
 Bool_t RooStreamParser::readString(TString& value, Bool_t zapOnError) 
 {
   // Read a string token
-  TString token=readToken() ;
+  TString token(readToken()) ;
   if (token.IsNull()) return kTRUE ;
   return convertToString(token,value) ;
 }
 
 
-Bool_t RooStreamParser::convertToString(TString token, TString& string) 
+Bool_t RooStreamParser::convertToString(const TString& token, TString& string) 
 {
   // Convert given token to a string (i.e. remove eventual quotation marks)
 
   // Transport to buffer 
   char buffer[1024],*ptr ;
-  strcpy(buffer,token) ;
+  strncpy(buffer,token.Data(),1023) ;
+  if (token.Length()>=1023) {
+    cout << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
+    buffer[1023]=0 ;
+  }
   int len = strlen(buffer) ;
 
   // Remove trailing quote if any

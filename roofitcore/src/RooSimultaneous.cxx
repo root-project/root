@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.5 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.6 2001/08/09 01:02:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,6 +35,7 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   while (proxy=(RooRealProxy*)pIter->Next()) {
     _pdfProxyList.Add(new RooRealProxy(proxy->GetName(),this,*proxy)) ;
   }
+  delete pIter ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.5 2001/08/09 01:02:13 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.6 2001/08/10 22:22:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -136,7 +136,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
 RooAddModel::~RooAddModel()
 {
   // Destructor
-  cout << "RooAddModel::dtor(" << GetName() << "," << this << ") _basis= " << _basis << ", isCopy = " << (_isCopy?"T":"F") << endl ;
 
   // If we are a non-copied convolution object, we own the component convolutions
   TList ownedList ;
@@ -146,6 +145,7 @@ RooAddModel::~RooAddModel()
     while (modelProxy=((RooRealProxy*)mIter->Next())) {
       ownedList.Add(modelProxy->absArg()) ;
     }
+    delete mIter ;
   }
 
   delete _coefProxyIter ;
@@ -159,8 +159,6 @@ RooAddModel::~RooAddModel()
 
   // Delete owned objects only after referring proxies have been deleted
   if (_basis && !_isCopy) {
-    cout << "RooAddModel::dtor(" << GetName() << ") deleting owned components" << endl ;
-    ownedList.Print() ;
     ownedList.Delete() ;
   }
 }
