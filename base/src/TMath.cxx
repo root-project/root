@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.19 2002/02/18 18:09:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.20 2002/03/29 18:02:47 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1666,7 +1666,6 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
 
    const UChar_t *uc = (const UChar_t *) txt;
    ULong_t u = 0, uu = 0;
-   UShort_t *s = (UShort_t *) &u;
    Int_t i, idx;
 
    for (i = 0; i < ntxt; i++) {
@@ -1676,10 +1675,13 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
    }
    if (i & 3) u ^= uu;
 
+   UShort_t s0 = UShort_t((u & 0xFFFF0000l) >> 16);
+   UShort_t s1 = UShort_t((u & 0xFFFF));
+
    u *= 1879048201;      // prime number
-   s[0] += s[1];
+   s0 += s1;
    u *= 1979048191;      // prime number
-   s[1] ^= s[0];
+   s1 ^= s0;
    u *= 2079048197;      // prime number
 
    return u;
