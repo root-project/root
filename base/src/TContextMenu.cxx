@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.2 2001/05/24 16:23:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TContextMenu.cxx,v 1.3 2001/11/28 15:58:13 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TToggle.h"
+#include "TClassMenuItem.h"
 
 
 ClassImp(TContextMenu)
@@ -52,11 +53,12 @@ TContextMenu::TContextMenu(const char *name, const char *title)
 {
    // Create a context menu.
 
-   fSelectedObject = 0;
-   fSelectedMethod = 0;
-   fBrowser        = 0;
-   fSelectedPad    = 0;
-   fSelectedCanvas = 0;
+   fSelectedObject   = 0;
+   fSelectedMethod   = 0;
+   fBrowser          = 0;
+   fSelectedPad      = 0;
+   fSelectedCanvas   = 0;
+   fSelectedMenuItem = 0;
 
    fContextMenuImp = gGuiFactory->CreateContextMenuImp(this, name, title);
 }
@@ -68,9 +70,10 @@ TContextMenu::~TContextMenu()
 
    delete fContextMenuImp;
 
-   fSelectedMethod = 0;
-   fSelectedObject = 0;
-   fContextMenuImp = 0;
+   fSelectedMethod   = 0;
+   fSelectedObject   = 0;
+   fSelectedMenuItem = 0;
+   fContextMenuImp   = 0;
 }
 
 //______________________________________________________________________________
@@ -83,6 +86,8 @@ void TContextMenu::Action(TObject *object, TMethod *method)
 
    if (method) {
       SetMethod( method );
+      SetSelectedMenuItem(0);
+      SetCalledObject(object);
 
       if (method->GetListOfMethodArgs()->First())
           fContextMenuImp->Dialog(object, method);
@@ -102,6 +107,103 @@ void TContextMenu::Action(TObject *object, TMethod *method)
           //Execute( object, method, (TObjArray *)NULL );
 #endif
 #endif
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TContextMenu::Action(TClassMenuItem *menuitem)
+{
+   // Action to be performed when this menu item is selected.
+   // If the selected method requires arguments we popup an
+   // automatically generated dialog, otherwise the method is
+   // directly executed.
+
+   TObject* object;
+   TMethod* method;
+
+   SetSelectedMenuItem( menuitem );
+
+   // Get the object to be called
+   if (menuitem->IsCallSelf()) object=fSelectedObject;
+   else object=menuitem->GetCalledObject();
+
+   if (object) {
+      // If object deleted, remove from popup and return
+      if (!(object->TestBit(kNotDeleted))) {
+         menuitem->SetType(TClassMenuItem::kPopupSeparator);
+         menuitem->SetCall(0,"");
+         return;
+      }
+
+      method = object->IsA()->GetMethodWithPrototype(menuitem->GetFunctionName(),menuitem->GetArgs());
+
+   }
+//    if (!menuitem->IsCallSelf()) {
+//       funproto = menuitem->GetFunctionName();
+//       funproto = funproto + "(" + menuitem->GetArgs() + ")";
+//    }
+
+   // calling object, call the method directly
+   if (object) {
+      if (method) {
+         SetMethod( method );
+         SetCalledObject( object );
+
+         if ((method->GetListOfMethodArgs()->First()
+                            && menuitem->GetSelfObjectPos() < 0 ) ||
+              method->GetListOfMethodArgs()->GetSize() > 1)
+            fContextMenuImp->Dialog(object, method);
+         else {
+            if (menuitem->GetSelfObjectPos() < 0) {
+#ifndef WIN32
+               Execute(object, method, "");
+#else
+                // It is a workaround of the "Dead lock under Windows
+                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
+                              "(TMethod *)0x%lx,(TObjArray *)0);",
+                              (Long_t)this,(Long_t)object,(Long_t)method);
+                //Printf("%s", cmd);
+                gROOT->ProcessLine(cmd);
+                //Execute( object, method, (TObjArray *)NULL );
+#endif
+             } else {
+#ifndef WIN32
+               Execute(object, method, Form("(TObject*)0x%lx",(Long_t)fSelectedObject));
+#else
+                // It is a workaround of the "Dead lock under Windows
+                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
+                              "(TMethod *)0x%lx,(TObjArray *)0);",
+                              (Long_t)this,(Long_t)object,(Long_t)method);
+                //Printf("%s", cmd);
+                gROOT->ProcessLine(cmd);
+                //Execute( object, method, (TObjArray *)NULL );
+#endif
+             }
+         }
+      }
+
+   } else {
+      // Calling a standalone global function
+      TFunction* function = gROOT->GetGlobalFunctionWithPrototype(
+                               menuitem->GetFunctionName());
+                               //menuitem->GetArgs());
+      if (function) {
+         SetMethod(function);
+         SetCalledObject(0);
+         if ( (function->GetNargs() && menuitem->GetSelfObjectPos() < 0) ||
+               function->GetNargs() > 1) {
+            fContextMenuImp->Dialog(0,function);
+         } else {
+            char* cmd;
+            if (menuitem->GetSelfObjectPos() < 0) {
+               cmd = Form("%s();", menuitem->GetFunctionName());
+            } else {
+              cmd = Form("%s((TObject*)0x%lx);",
+                     menuitem->GetFunctionName(), (Long_t)fSelectedObject);
+            }
+            gROOT->ProcessLine(cmd);
+         }
       }
    }
 }
@@ -160,7 +262,7 @@ Char_t *TContextMenu::CreateArgumentTitle(TMethodArg *argument)
 }
 
 //______________________________________________________________________________
-Char_t *TContextMenu::CreateDialogTitle( TObject *object, TMethod *method )
+Char_t *TContextMenu::CreateDialogTitle( TObject *object, TFunction *method )
 {
    // Create title for dialog box retrieving argument values.
 
@@ -168,6 +270,8 @@ Char_t *TContextMenu::CreateDialogTitle( TObject *object, TMethod *method )
 
    if (object && method)
       sprintf(methodTitle, "%s::%s", object->ClassName(), method->GetName());
+   else if (!object && method)
+      sprintf(methodTitle, "%s", method->GetName());
    else
       *methodTitle = 0;
 
@@ -197,11 +301,11 @@ Char_t *TContextMenu::CreatePopupTitle(TObject *object)
 }
 
 //______________________________________________________________________________
-void TContextMenu::Execute( TObject *object, TMethod *method, const Char_t *params )
+void TContextMenu::Execute( TObject *object, TFunction *method, const Char_t *params )
 {
    // Execute method with specified arguments for specified object.
 
-   if (object && method) {
+   if (method) {
       TVirtualPad *savedPad = 0;
 
       gROOT->SetSelectedPrimitive(object);
@@ -212,7 +316,12 @@ void TContextMenu::Execute( TObject *object, TMethod *method, const Char_t *para
 
       gROOT->SetFromPopUp(kTRUE);
 //      if (fSelectedCanvas) fSelectedCanvas->GetPadSave()->cd();
-      object->Execute((char *) method->GetName(), params);
+      if (object) {
+         object->Execute((char *) method->GetName(), params);
+      } else {
+         char *cmd = Form("%s(%s);", method->GetName(),params);
+         gROOT->ProcessLine(cmd);
+      }
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave()->TestBit(kNotDeleted))
          fSelectedCanvas->GetPadSave()->Modified();
       if (fSelectedPad && fSelectedPad->TestBit(kNotDeleted))

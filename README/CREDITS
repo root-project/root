@@ -48,6 +48,7 @@ D: interface to X3D
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
 D: LinuxPPC support, contribution to the User's Guide
+D: Customizable context menus
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov

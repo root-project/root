@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.cxx,v 1.2 2001/12/20 10:19:26 rdm Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 
 #include "TRootDialog.h"
 #include "TRootContextMenu.h"
+#include "TContextMenu.h"
+#include "TClassMenuItem.h"
 #include "TList.h"
 #include "TGLabel.h"
 #include "TGTextEntry.h"
@@ -94,13 +96,22 @@ const char *TRootDialog::GetParameters()
    TObjString   *str;
    TObject      *obj;
 
+   Int_t selfobjpos;
+   if (fMenu->GetContextMenu()->GetSelectedMenuItem())
+      selfobjpos = fMenu->GetContextMenu()->GetSelectedMenuItem()->GetSelfObjectPos();
+   else
+      selfobjpos = -1;
+
    params[0] = 0;
    TIter next(fWidgets);
+   Int_t nparam = 0;
 
    while ((obj = next())) {        // first element is label, skip...
       if (obj->IsA() != TGLabel::Class()) break;
       obj = next();                // get either TGTextEntry or TGComboBox
       str = (TObjString *) next(); // get type string
+
+      nparam++;
 
       const char *type = str->GetString().Data();
       const char *data = 0;
@@ -109,6 +120,14 @@ const char *TRootDialog::GetParameters()
          data = ((TGTextEntry *) obj)->GetBuffer()->GetString();
 
       // TODO: Combobox...
+
+      // if necessary, replace the selected object by it's address
+      if (selfobjpos == nparam-1) {
+         if (params[0]) strcat(params, ",");
+         sprintf(param,"(TObject*)0x%lx",
+               (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+         strcat(params,param);
+      }
 
       if (params[0]) strcat(params, ",");
       if (data) {
@@ -121,6 +140,15 @@ const char *TRootDialog::GetParameters()
 
       strcat(params, param);
    }
+
+// if selected object is the last argument, have to insert it here
+   if (selfobjpos == nparam) {
+      if (params[0]) strcat(params, ",");
+      sprintf(param,"(TObject*)0x%lx",
+            (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+      strcat(params,param);
+   }
+
    return params;
 }
 

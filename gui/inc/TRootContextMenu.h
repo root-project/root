@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
 
    virtual void DisplayPopup(Int_t x, Int_t y);
    virtual void Dialog(TObject *object, TMethod *method);
+   virtual void Dialog(TObject *object, TFunction *function);
    TRootDialog *GetDialog() const { return fDialog; };
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

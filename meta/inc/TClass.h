@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.18 2001/12/02 16:50:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.19 2002/01/16 21:13:38 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
    UInt_t            fCheckSum;        //checksum of data members and base classes
    Version_t         fClassVersion;    //Class version Identifier
    G__ClassInfo     *fClassInfo;       //pointer to CINT class info class
+   TList            *fClassMenuList;   //list of class menu items
 
    TMethod          *GetClassMethod(Long_t faddr);
    TMethod          *GetClassMethod(const char*name, const char* signature);
@@ -113,13 +114,14 @@ public:
    UInt_t         GetInstanceCount() const { return fInstanceCount; }
    UInt_t         GetHeapInstanceCount() const { return fOnHeap; }
    void           GetMenuItems(TList *listitems);
+   TList         *GetMenuList() const { return fClassMenuList; }
    TMethod       *GetMethod(const char *method, const char *params);
    TMethod       *GetMethodWithPrototype(const char *method, const char *proto);
    TMethod       *GetMethodAny(const char *method);
    TMethod       *GetMethodAllAny(const char *method);
    Int_t          GetNdata();
    Int_t          GetNmethods();
-   TObjArray     *GetStreamerInfos() const {return fStreamerInfo;}
+   TObjArray     *GetStreamerInfos() const { return fStreamerInfo; }
    TStreamerInfo *GetStreamerInfo(Int_t version=0);
    ULong_t        Hash() const { return fName.Hash(); }
    void           IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
@@ -127,12 +129,14 @@ public:
    Bool_t         InheritsFrom(const TClass *cl) const;
    Bool_t         IsFolder() const {return kTRUE;}
    Bool_t         IsLoaded() const;
+   void           MakeCustomMenuList();
    void          *New(Bool_t defConstructor = kTRUE);
    void          *New(void *arena, Bool_t defConstructor = kTRUE);
    void           Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    Int_t          ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t          ReadBuffer(TBuffer &b, void *pointer);
    void           ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
+   void           ResetMenuList();
    Int_t          Size() const;
    TStreamerInfo *SetStreamerInfo(Int_t version, const char *info="");
    void           SetUnloaded();

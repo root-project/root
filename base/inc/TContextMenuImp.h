@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TContextMenuImp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 class TContextMenu;
 class TObject;
 class TMethod;
+class TFunction;
 
 
 class TContextMenuImp {
@@ -42,12 +43,14 @@ public:
 
    virtual TContextMenu *GetContextMenu() const { return fContextMenu; }
 
+   virtual void Dialog(TObject *object, TFunction *function);
    virtual void Dialog(TObject *object, TMethod *method);
    virtual void DisplayPopup(Int_t x, Int_t y);
 
    ClassDef(TContextMenuImp,0) //Context sensitive popup menu implementation
 };
 
+inline void TContextMenuImp::Dialog(TObject *, TFunction *) { }
 inline void TContextMenuImp::Dialog(TObject *, TMethod *) { }
 inline void TContextMenuImp::DisplayPopup(Int_t, Int_t) { }
 
