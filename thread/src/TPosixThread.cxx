@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.9 2004/12/10 12:13:33 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.10 2004/12/14 15:06:18 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -154,7 +154,8 @@ Int_t TPosixThread::CleanUp(void **main)
 {
    // Default thread cleanup routine.
 
-   Info("Cleanup", "cleanup 0x%lx", (Long_t)*main);
+   if (gDebug > 0)
+      Info("Cleanup", "cleanup 0x%lx", (Long_t)*main);
    while (!CleanUpPop(main, 1)) { }
    return 0;
 }
