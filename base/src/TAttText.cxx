@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.3 2000/08/16 14:33:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.4 2000/10/19 17:28:31 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,10 +51,13 @@ ClassImp(TAttText)
 //*-*             precision = 0 fast hardware fonts (steps in the size)
 //*-*             precision = 1 scalable and rotatable hardware fonts (see below)
 //*-*             precision = 2 scalable and rotatable hardware fonts
+//*-*             precision = 3 scalable and rotatable hardware fonts. Text size
+//*-*                           is given in pixels.
 //*-*    size  : Character size expressed in percentage of the current pad height
 //*-*            The textsize in pixels (say charheight) will be:
 //*-*             charheight = textsize*canvas_height if current pad is horizontal.
 //*-*             charheight = textsize*canvas_width  if current pad is vertical.
+//*-*             charheight = number of pixels if font precision is greater than 2
 //*-*
 //*-* Font quality and speed
 //*-* ======================
@@ -169,6 +172,7 @@ void TAttText::Modify()
       Float_t tsize;
       if (wh < hh)  tsize = fTextSize*wh;
       else          tsize = fTextSize*hh;
+      if (fTextFont%10 > 2) tsize = fTextSize;
 
 #ifndef WIN32
 again:
@@ -331,4 +335,20 @@ void TAttText::SetTextAttributes()
    gROOT->ProcessLine(Form("R__atttext->UpdateTextAttributes(%d,%f,%d,%d,%f);"
                            "R__atttext->Show();",fTextAlign,fTextAngle,
                            fTextColor,fTextFont,fTextSize));
+}
+
+//______________________________________________________________________________
+void TAttText::SetTextSizePixels(Int_t npixels)
+{
+// Set the text size in pixels.
+// If the font precision is greater than 2, the text size is set to npixels,
+// otherwise the text size is computed as a per cent of the pad size.
+
+   if (fTextFont%10 > 2) {
+      fTextSize = Float_t(npixels);
+   } else {
+      if (!gPad) return;
+      Float_t dy = gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(npixels);
+      fTextSize = dy/(gPad->GetY2() - gPad->GetY1());
+   }
 }
