@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.19 2003/11/28 08:48:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.20 2003/11/28 12:09:50 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1534,16 +1534,16 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
             outext[i]=0;
             
 #ifdef R__WIN32
-            if (strchr(outext, '\\')) {
+            if (strchr(outext,'\\')) {
                TString name = TString(outext);
                name.ReplaceAll('\\','/');
                text = name.Data();
-			   out << "   " << GetName() << "->AddEntry(" << quote
-			       << text << quote << "," << mentry->GetEntryId();
+               out << "   " << GetName() << "->AddEntry(" << quote
+                   << text << quote << "," << mentry->GetEntryId();
             }
-#endif
+#else
             out << "   " << GetName() << "->AddEntry(" << quote
-  			    << outext << quote << "," << mentry->GetEntryId();
+                << outext << quote << "," << mentry->GetEntryId();
 
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
@@ -1552,6 +1552,7 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                out << ",gClient->GetPicture(" << quote
                    << mentry->fPic->GetName() << quote << ")";
             }
+#endif
             delete [] outext;
             break;
          case kMenuPopup:
@@ -1572,19 +1573,20 @@ void TGPopupMenu::SavePrimitive(ofstream &out, Option_t *option)
                i++; text++; lentext--;
             }
             outext[i]=0;
+            
 #ifdef R__WIN32
-            if (strchr(outext, '\\')) {
+            if (strchr(outext,'\\')) {
                TString name = TString(outext);
                name.ReplaceAll('\\','/');
                text = name.Data();
-			   out << "   " << GetName() << "->AddPopup(" << quote
-			       << text << quote << "," << mentry->fPopup->GetName();
+               out << "   " << GetName() << "->AddPopup(" << quote
+                   << text << quote << "," << mentry->fPopup->GetName();
             }
-#endif			
+#else			
             out << "   " << GetName() << "->AddPopup(" << quote
-		    	<< outext << quote << "," << mentry->fPopup->GetName();
-
-			delete [] outext;
+                << outext << quote << "," << mentry->fPopup->GetName();
+#endif
+            delete [] outext;
             break;
          case kMenuLabel:
             out << "   " << GetName() << "->AddLabel(" << quote
