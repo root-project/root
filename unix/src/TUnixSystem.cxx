@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.57 2003/04/03 14:52:37 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.58 2003/04/06 21:30:13 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1334,7 +1334,8 @@ void TUnixSystem::StackTrace()
    const char *cppfilt = "c++filt";
 #endif
 #if (__GNUC__ >= 3)
-   const char *cppfiltarg = "--format=gnu-v3";
+   //const char *cppfiltarg = "--format=gnu-v3";
+   const char *cppfiltarg = "--format=gnu-new-abi";
 #else
    const char *cppfiltarg = "";
 #endif
