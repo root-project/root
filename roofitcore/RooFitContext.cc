@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.10 2001/05/31 21:21:36 david Exp $
+ *    File: $Id: RooFitContext.cc,v 1.11 2001/06/18 21:04:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,6 +27,7 @@
 
 
 #include <fstream.h>
+#include <iomanip.h>
 #include "TStopwatch.h"
 #include "TFitter.h"
 #include "TMinuit.h"
@@ -193,6 +194,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData)
       _dataClone = trimData ;
     }
   }
+  return kFALSE ;
 }
 
 
@@ -233,6 +235,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
     }
   }
   delete sIter ;
+  return kFALSE ;
 }
 
 
@@ -509,7 +512,7 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   }
 
   // Optional logging
-  if (logf) *logf << f << endl;
+  if (logf) *logf << setprecision(15) << f << endl;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.23 2001/06/12 19:06:26 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.24 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -86,7 +86,7 @@ Double_t RooAbsReal::getVal(const RooDataSet* dset) const
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval(dset) ;
-    _lastData = dset ;
+    _lastData = (RooDataSet*) dset ;
     setValueDirty(kFALSE) ;
     setShapeDirty(kFALSE) ;
   } 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.28 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.29 2001/06/18 21:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -191,14 +191,13 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
   // Load values of given ttree
 
   // Clone source tree
-  //TTree* tClone = (TTree*) t->Clone() ;
-  TTree* tClone = t->CloneTree() ;
+  TTree* tClone = ((TTree*)t)->CloneTree() ;
   
-  // Clone list of variables
-  RooArgSet sourceArgSet(_vars,"sourceArgSet") ;
+  // Clone list of variables  
+  RooArgSet *sourceArgSet = _vars.snapshot(kFALSE) ;
   
   // Attach args in cloned list to cloned source tree
-  TIterator* sourceIter =  sourceArgSet.MakeIterator() ;
+  TIterator* sourceIter =  sourceArgSet->MakeIterator() ;
   RooAbsArg* sourceArg(0) ;
   while (sourceArg=(RooAbsArg*)sourceIter->Next()) {
     sourceArg->attachToTree(*tClone) ;
@@ -221,7 +220,6 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
     Int_t entryNumber=tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
-    
     // Does this event pass the cuts?
     if (select && select->eval()==0) continue ; 
         
@@ -232,7 +230,8 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        if (!sourceArg->isValid()) {
 	 continue ;
-       }
+       }       
+       sourceArg->postTreeLoadHook() ;
        destArg->copyCache(sourceArg) ;
      }   
 
@@ -241,6 +240,9 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
 
    SetTitle(t->GetTitle());
    if (select) delete select;
+
+   delete sourceIter ;
+   delete sourceArg ;
    delete tClone ;
 }
 
@@ -281,7 +283,7 @@ void RooDataSet::dump() {
 }
 
 
-void RooDataSet::addColumn(RooAbsArg& newVar)
+RooAbsArg* RooDataSet::addColumn(RooAbsArg& newVar)
 {
   // Add and precalculate new column, using given valHolder to store precalculate value
 
@@ -291,7 +293,7 @@ void RooDataSet::addColumn(RooAbsArg& newVar)
   if(!valHolder->isFundamental()) {
     cout << GetName() << "::addColumn: holder argument is not fundamental: \""
 	 << valHolder->GetName() << "\"" << endl;
-    return;
+    return 0;
   }
 
   // Clone current tree
@@ -311,6 +313,7 @@ void RooDataSet::addColumn(RooAbsArg& newVar)
     cloneData->get(i) ;
 
     _vars = cloneData->_vars ;
+
     newVarClone->syncCache(this) ;
     valHolder->copyCache(newVarClone) ;
 
@@ -319,6 +322,8 @@ void RooDataSet::addColumn(RooAbsArg& newVar)
   
   delete newVarClone;
   delete cloneData ;
+  
+  return valHolder ;
 }
 
 

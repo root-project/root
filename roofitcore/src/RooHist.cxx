@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.4 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooHist.cc,v 1.5 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -15,7 +15,7 @@
 // TGraphAsymmErrors class. Error bars are calculated using either Poisson
 // or Binomial statistics.
 
-#include "BaBar/BaBar.hh"
+// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooHist.hh"
 //#include "RooFitTools/RooMath.hh"
@@ -27,7 +27,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.4 2001/05/02 18:09:00 david Exp $";
+"$Id: RooHist.cc,v 1.5 2001/06/16 20:28:20 david Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
@@ -61,7 +61,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
   SetTitle(data.GetTitle());
   // calculate our nominal bin width if necessary
   if(_nominalBinWidth == 0) {
-    const TAxis *axis= data.GetXaxis();
+    const TAxis *axis= ((TH1&)data).GetXaxis();
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
   // TH1::GetYaxis() is not const (why!?)

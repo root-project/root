@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.3 2001/05/09 00:51:10 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.4 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -13,7 +13,7 @@
 // -- CLASS DESCRIPTION --
 // A RooCurve is a graphical representation of a real-valued function.
 
-#include "BaBar/BaBar.hh"
+// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooCurve.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -28,7 +28,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.3 2001/05/09 00:51:10 david Exp $";
+"$Id: RooCurve.cc,v 1.4 2001/06/16 20:28:20 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();

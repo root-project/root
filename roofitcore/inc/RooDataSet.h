@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.18 2001/06/16 20:28:20 david Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.19 2001/06/18 21:04:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,7 +48,7 @@ public:
   RooDataSet(RooDataSet const & other) ;
   // WVE Circular call caveat: Clone() cannot be overloaded to use 
   // the copy ctor as the copy ctor needs to use clone to initialize the copy
-  inline virtual ~RooDataSet() ;
+  virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
   // The possible options are: (D)ebug, (Q)uiet.
@@ -59,7 +59,7 @@ public:
   // Add one ore more rows of data
   void add(const RooArgSet& row);
   void append(RooDataSet& data) ;
-  void addColumn(RooAbsArg& var) ;
+  RooAbsArg* addColumn(RooAbsArg& var) ;
 
   // Load a given row of data
   const RooArgSet* get() const { return &_vars ; } // last loaded row

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.14 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.15 2001/06/16 20:28:21 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -22,7 +22,7 @@
 // and return a pointer to this copy. The caller owns the input object
 // and this class owns the returned object.
 
-#include "BaBar/BaBar.hh"
+// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -42,7 +42,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.14 2001/05/18 00:59:19 david Exp $";
+"$Id: RooPlot.cc,v 1.15 2001/06/16 20:28:21 david Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 

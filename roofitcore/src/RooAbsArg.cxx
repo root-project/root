@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.37 2001/06/18 21:04:20 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.38 2001/06/23 01:20:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -448,7 +448,7 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
   }
 
   // Propagate dirty flag to all clients if this is a down->up transition
-  //if (flag==kTRUE && (!_valueDirty || isFundamental())) {
+//    if (flag==kTRUE && (!_valueDirty || isFundamental())) {
   if (flag==kTRUE) {
     _clientValueIter->Reset() ;
     RooAbsArg* client ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFunc1D.cc,v 1.1 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooRealFunc1D.cc,v 1.2 2001/06/16 20:28:21 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -15,7 +15,7 @@
 // one RooRealVar object that it depends on, and implements the abstract
 // RooAbsFunc1D interface for a real-valued function of one real variable.
 
-#include "BaBar/BaBar.hh"
+// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooRealFunc1D.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -26,7 +26,7 @@ ClassImp(RooRealFunc1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooRealFunc1D.cc,v 1.1 2001/05/02 18:09:00 david Exp $";
+"$Id: RooRealFunc1D.cc,v 1.2 2001/06/16 20:28:21 david Exp $";
 
 RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor,
 			     const RooArgSet *normVars) :

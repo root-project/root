@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAddModel.cc,v 1.1 2001/06/23 01:20:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -98,7 +98,7 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   iter = other._modelProxyList.MakeIterator() ;
   while(proxy=(RooRealProxy*)iter->Next()) {
     if (_basis) {
-      removeServer(proxy->arg()) ;
+      removeServer(*proxy->absArg()) ;
       _modelProxyList.Add(new RooRealProxy("model","model",this,*(RooResolutionModel*)(proxy->arg().Clone()) )) ;
     } else {
       _modelProxyList.Add(new RooRealProxy("model",this,*proxy)) ;
@@ -272,12 +272,14 @@ Double_t RooAddModel::getNorm(const RooDataSet* dset) const
   while(coef=(RooRealProxy*)cIter->Next()) {
     model = (RooResolutionModel*)((RooRealProxy*)pIter->Next())->absArg() ;
     norm += model->getNorm(dset)*(*coef) ;
+//      cout << "RooAddModel::getNorm norm=" << model->getNorm(dset) << " coef=" << (*coef) << endl ;
     lastCoef -= (*coef) ;
   }
 
   // Add last model with correct coefficient
   model = (RooResolutionModel*)((RooRealProxy*)pIter->Next())->absArg() ;
   norm += model->getNorm(dset)*lastCoef ;
+//      cout << "RooAddModel::getNorm norm=" << model->getNorm(dset) << " lastCoef=" << lastCoef << endl ;
 
   // Warn about coefficient degeneration
   if (lastCoef<0 || lastCoef>1) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.1 2001/05/31 21:21:35 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.2 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -13,7 +13,7 @@
 // -- CLASS DESCRIPTION --
 // A class description belongs here...
 
-#include "BaBar/BaBar.hh"
+//#include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooAcceptReject.hh"
 #include "RooFitCore/RooAbsReal.hh"
@@ -29,7 +29,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.1 2001/05/31 21:21:35 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.2 2001/06/16 20:28:20 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooSimultaneous.cc,v 1.1 2001/06/26 18:11:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,7 +25,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 {
 }
 
-RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name=0) : 
+RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat)
 {
@@ -63,7 +63,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 
   // Create a proxy named after the associated index state
-  RooRealProxy* proxy = new RooRealProxy(catLabel,catLabel,this,pdf) ;
+  RooRealProxy* proxy = new RooRealProxy(catLabel,catLabel,this,(RooAbsPdf&)pdf) ;
   _pdfProxyList.Add(proxy) ;
 
   return kFALSE ;

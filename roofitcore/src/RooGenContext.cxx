@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.2 2001/05/31 21:21:36 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.3 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -13,7 +13,7 @@
 // -- CLASS DESCRIPTION --
 // A class description belongs here...
 
-#include "BaBar/BaBar.hh"
+// #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooGenContext.hh"
 #include "RooFitCore/RooAbsPdf.hh"
@@ -29,7 +29,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.2 2001/05/31 21:21:36 david Exp $";
+"$Id: RooGenContext.cc,v 1.3 2001/06/16 20:28:20 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype) :
   TNamed(model), _origVars(&vars), _prototype(prototype), _cloneSet(0), _pdfClone(0),

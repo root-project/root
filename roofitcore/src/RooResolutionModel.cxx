@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.2 2001/06/09 05:08:48 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.3 2001/06/23 01:20:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -131,7 +131,7 @@ Double_t RooResolutionModel::getVal(const RooDataSet* dset) const
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
-    if (_verboseEval) cout << "RooResolutionModel::getVal(" << GetName() << "): recalculating value" << endl ;    
+    if (_verboseEval>1) cout << "RooResolutionModel::getVal(" << GetName() << "): recalculating value" << endl ;    
     _value = traceEval(dset) ; 
 
     setValueDirty(kFALSE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooComplex.rdl,v 1.1 2001/06/23 01:20:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,8 +16,7 @@
 
 #include <math.h>
 #include "Rtypes.h"
-
-class ostream;
+#include <iostream.h>
 
 // This is a bare-bones complex class adapted from the CINT complex.h header,
 // and introduced to support the complex error function in RooMath. The main

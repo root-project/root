@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.1 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.2 2001/06/23 01:20:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -57,6 +57,7 @@ protected:
   RooResolutionModel* _model   ; // Original resolution model
   RooRealVar* _convVar ;         // Convolution variable
 
+  virtual void syncNormalizationHook(RooAbsReal* norm,const RooDataSet* dset) const ;
 
   const RooRealVar* convVar() const ;  // Convolution variable 
   RooSetProxy _convSet  ;        // Set of resModel X basisFunc convolution

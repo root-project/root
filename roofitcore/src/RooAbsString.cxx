@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.6 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.7 2001/06/16 20:28:20 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -93,7 +93,7 @@ void RooAbsString::writeToStream(ostream& os, Bool_t compact) const
 void RooAbsString::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
   //Print object contents
-  os << indent << "RooAbsString: " << GetName() << " = " << getVal();
+  os << "RooAbsString: " << GetName() << " = " << getVal();
   os << " : \"" << fTitle << "\"" ;
 
   printAttribList(os) ;

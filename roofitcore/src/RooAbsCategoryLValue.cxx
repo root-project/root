@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.4 2001/05/17 00:43:14 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.5 2001/05/31 21:21:34 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -97,6 +97,7 @@ void RooAbsCategoryLValue::copyCache(const RooAbsArg* source)
 Bool_t RooAbsCategoryLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
+  return kTRUE ;
 }
 
 

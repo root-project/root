@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.2 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.3 2001/06/23 01:20:33 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -218,12 +218,44 @@ void RooConvolutedPdf::dump(const RooDataSet* dset) const
   while(conv=(RooAbsPdf*)iter->Next()) {
     Double_t coef = coefficient(index++) ;
     if (coef!=0) {
-      cout << "convolution: value = " << conv->getVal(0)*coef 
-	   << " norm = " << conv->getNorm(dset)*coef  << endl ;
+//        cout << "convolution: value = " << conv->getVal(0)*coef 
+//  	   << " norm = " << conv->getNorm(dset)*coef  << endl ;
     }
   }
   
   delete iter ;
+}
+
+
+
+void RooConvolutedPdf::syncNormalizationHook(RooAbsReal* norm,const RooDataSet* dset) const 
+{
+  // Make convolution normalizations servers of the convoluted pdf normalization
+  TIterator* iter = _convSet.MakeIterator() ;
+  RooAbsPdf* conv ;
+  while(conv=(RooAbsPdf*)iter->Next()) {
+    conv->syncNormalization(&_convDummyDataSet) ;
+
+    // Add lead node servers of convolution normalization integrals to our normalization
+    // integral, except for the integrated variables
+
+
+    RooArgSet leafList("leafNodeServerList") ;
+    conv->_norm->leafNodeServerList(&leafList) ;
+    TIterator* sIter = leafList.MakeIterator() ;
+
+    RooAbsArg* server ;
+    while(server=(RooAbsArg*)sIter->Next()) {
+      if (!_norm->findServer(*server)) {
+	_norm->addServer(*server,kTRUE,kFALSE) ;
+      }
+    }
+    delete sIter ;
+
+  }  
+  delete iter ;
+
+  return ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.15 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.16 2001/06/23 01:20:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -82,7 +82,7 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
-  static void verboseEval(Bool_t stat) { _verboseEval = stat ; }
+  static void verboseEval(Int_t stat) { _verboseEval = stat ; }
 
 private:
 
@@ -91,9 +91,11 @@ private:
 
 protected:
 
-  static Bool_t _verboseEval ;
+  friend class RooRealIntegral ;
+  static Int_t _verboseEval ;
 
   virtual void syncNormalization(const RooDataSet* dset) const ;
+  virtual void syncNormalizationHook(RooAbsReal* norm,const RooDataSet* dset) const {} ;
 
   // support interface for generating toy MC samples
   virtual Double_t generateEnvelope(const RooArgSet &whatVars);
@@ -123,6 +125,7 @@ private:
 
 protected:
 
+  friend class RooConvolutedPdf ;
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid

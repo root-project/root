@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.2 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.3 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,9 +46,9 @@
 ClassImp(RooLinearVar)
 
 RooLinearVar::RooLinearVar(const char *name, const char *title, RooRealVar& variable, 
-			   RooAbsReal& slope, RooAbsReal& offset, const char *unit= "") :
+			   RooAbsReal& slope, RooAbsReal& offset, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
-  _var("var","variable",this,variable),
+  _var("var","variable",this,variable,kTRUE,kTRUE),
   _slope("slope","slope",this,slope),
   _offset("offset","offset",this,offset)
 {
@@ -109,7 +109,11 @@ Double_t RooLinearVar::getFitMin() const
   RooRealVar& var = (RooRealVar&) _var.arg() ;
 
   if (var.hasFitMin()) {
-    return _offset + var.getFitMin() * _slope ;
+    if (_slope>0) {
+      return _offset + var.getFitMin() * _slope ;
+    } else {
+      return _offset + var.getFitMax() * _slope ;
+    }
   } 
   return -INFINITY ;
 }
@@ -122,7 +126,11 @@ Double_t RooLinearVar::getFitMax() const
   RooRealVar& var = (RooRealVar&) _var.arg() ;
 
   if (var.hasFitMax()) {
-    return _offset + var.getFitMax() * _slope ;
+    if (_slope>0) {
+      return _offset + var.getFitMax() * _slope ;
+    } else {
+      return _offset + var.getFitMin() * _slope ;
+    }
   } 
   return INFINITY ;
 }
@@ -153,6 +161,7 @@ Double_t RooLinearVar::jacobian() const
 Bool_t RooLinearVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from stream
+  return kTRUE ;
 }
 
 

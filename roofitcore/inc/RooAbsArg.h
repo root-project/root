@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.33 2001/06/18 21:04:20 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.34 2001/06/23 01:20:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,6 +48,7 @@ public:
   inline TIterator* shapeClientIterator() const { return _clientListShape.MakeIterator() ; }
   inline TIterator* serverIterator() const { return _serverList.MakeIterator() ; }
   inline RooAbsArg* findServer(const char *name) const { return (RooAbsArg*)_serverList.FindObject(name); }
+  inline RooAbsArg* findServer(const RooAbsArg& arg) const { return (RooAbsArg*)_serverList.FindObject(&arg); }
   inline RooAbsArg* findServer(Int_t index) const { return (RooAbsArg*)_serverList.At(index); }
   inline Bool_t isValueServer(const RooAbsArg& arg) const { return _clientListValue.FindObject(&arg)?kTRUE:kFALSE ; }
   inline Bool_t isValueServer(const char* name) const { return _clientListValue.FindObject(name)?kTRUE:kFALSE ; }

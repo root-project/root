@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlotable.rdl,v 1.3 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.4 2001/06/16 20:28:21 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@ public:
   inline virtual ~RooPlotable() { }
 
   inline const char* getYAxisLabel() const { return _yAxisLabel.Data(); }
-  inline setYAxisLabel(const char *label) { _yAxisLabel= label; }
+  inline void setYAxisLabel(const char *label) { _yAxisLabel= label; }
   inline void updateYAxisLimits(Double_t y) {
     if(y > _ymax) _ymax= y;
     if(y < _ymin) _ymin= y;

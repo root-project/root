@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.19 2001/05/31 21:21:34 david Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.20 2001/06/16 20:28:19 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -329,7 +329,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 
   // First determine if branch is taken
   if (t.GetBranch(GetName())) {
-    t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
+    t.SetBranchAddress(GetName(),&((Int_t&)_value._value)) ;
   } else {    
     TString format(GetName());
     format.Append("/I");

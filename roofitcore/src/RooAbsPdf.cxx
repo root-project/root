@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.16 2001/06/12 19:06:26 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.17 2001/06/23 01:20:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,7 +44,7 @@ ClassImp(RooAbsPdf)
 ;
 
 
-Bool_t RooAbsPdf::_verboseEval(kFALSE) ;
+Int_t RooAbsPdf::_verboseEval(0) ;
 
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
@@ -102,7 +102,7 @@ Double_t RooAbsPdf::getVal(const RooDataSet* dset) const
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || _norm->isValueDirty() || dset != _lastDataSet) {
-    if (_verboseEval) cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
+    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): recalculating value" << endl ;
     _value = traceEval(dset) / _norm->getVal() ;
     setValueDirty(kFALSE) ;
     setShapeDirty(kFALSE) ;    
@@ -141,12 +141,13 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 {
   if (dset == _lastDataSet) return ;
 
-  if (_verboseEval) cout << "RooAbsPdf:syncNormalization(" << GetName() 
-			 << ") recalculating normalization" << endl ;
+  if (_verboseEval>0) cout << "RooAbsPdf:syncNormalization(" << GetName() 
+			 << ") recalculating normalization (" 
+			 << _lastDataSet << " -> " << dset << ")" << endl ;
   _lastDataSet = (RooDataSet*) dset ;
 
   // Update dataset pointers of proxies
-  setProxyDataSet(dset) ;
+  ((RooAbsPdf*) this)->setProxyDataSet(dset) ;
   
   RooArgSet* depList = getDependents(dset) ;
   
@@ -160,6 +161,10 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
     _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
 				TString(GetTitle()).Append(" Integral"),*this,*depList) ;
   }
+
+  // Allow optional post-processing
+  syncNormalizationHook(_norm,dset) ;
+
   delete depList ;
 }
 
@@ -421,7 +426,7 @@ Double_t RooAbsPdf::nLogLikelihood(const RooDataSet* dset, Bool_t extended) cons
 
 
 
-Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) 
+Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options, Double_t *minValue) 
 {
   // Fit this PDF to given data set
   RooFitContext context(&data,this) ;
@@ -449,7 +454,7 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
   }
 }
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents= 0) const {
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents) const {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
   // number of events or else try to use expectedEvents() if nEvents <= 0.
