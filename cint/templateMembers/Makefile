@@ -42,20 +42,21 @@ templateMembers_C.$(DllSuf): templateMembersDict.cxx
 
 
 templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v Processing > templateMembers.log 2>>templateMembers.build.log
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v -e Processing > templateMembers.log && \
+	grep -v Mem: templateMembers.log > templateMembersNoMem.log
 
 templateMembers: templateMembers.log  templateMembers.ref
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 	$(CMDECHO)echo This failures is due to the odd object life time in CINT.
-	$(CMDECHO) diff -wb templateMembers.ref templateMembers.log | grep -v ::~ > templateMembers.diff.log && \
-		diff -w templateMembers.diff.log templateMembers.diff.ref
+	$(CMDECHO)diff -wb templateMembersNoMem.ref templateMembersNoMem.log 
 else
 	$(TestDiff)
 endif
 
 templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v Processing > templateMembers.ref 2>> templateMembers.build.log
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v -e Processing -e Mem: > templateMembers.ref && \
+	grep -v Mem: templateMembers.ref > templateMembersNoMem.ref
 
 templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSuf)
 	$(buildWithLib)

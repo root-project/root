@@ -23,9 +23,10 @@ TEST_TARGETS += $(TEST_TARGETS_DIR)
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib 
+ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib dummy.C 
 
-export CURDIR=$(shell basename $(PWD))
+export CURDIR=$(shell basename `pwd`)
+#debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
 ifeq ($(CALLDIR),)
 	export CALLDIR:=.
 else
@@ -155,26 +156,36 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 	
 %_cpp.$(DllSuf) : %.cpp
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
 %_C.$(DllSuf) : %.C
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_C.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1
 
 %_cxx.$(DllSuf) : %.cxx
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
 %_h.$(DllSuf) : %.h
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_h.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
+define buildWithLib
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter-out $<,$^)\"\) > $*.build.log 2>&1
+endef
+    
 define WarnFailTest
 	$(CMDECHO)echo Warning $@ has some known skipped failures "(in ./$(CURDIR))"
 endef
 
 define TestDiff
 	$(CMDECHO) diff -b $@.ref $<
+endef
+
+define BuildFromObj
+$(CMDECHO) touch dummy.C
+$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"dummy.C\"\,\"$<\",1\) > $@.build.log 2>&1
+$(CMDECHO) mv dummy_C.$(DllSuf) $@ 
 endef
 
 RemoveLeadingDirs := sed -e 's?^[A-z/\].*[/\]??' -e 's/.dll/.so/'

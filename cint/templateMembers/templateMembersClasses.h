@@ -5,40 +5,43 @@ using namespace std;
 
 #ifdef _MSC_VER
 #define SHOW std::cout << __FUNCSIG__ << std::endl;
+#define SHOWMEM std::cout << "Mem: "; SHOW
 #else
-#define SHOW std::cout << __PRETTY_FUNCTION__ << std::endl
+#define SHOW  std::cout << __PRETTY_FUNCTION__ << std::endl
+#define SHOWMEM std::cout << "Mem: " << __PRETTY_FUNCTION__ << std::endl
 #endif
+
 
 class Base {
  public:
   Base() { SHOW; }
-  Base(const Base&) { SHOW; }
-  virtual ~Base() { SHOW; }
+  Base(const Base&) { SHOWMEM; }
+  virtual ~Base() { SHOWMEM; }
   ClassDef(Base,0);
 };
 
 class Derived : public Base {
  public:
-  Derived() { SHOW; }
-  Derived(const Derived& c) : Base(c) { SHOW; }
-  virtual ~Derived() { SHOW; }
+  Derived() { SHOWMEM; }
+  Derived(const Derived& c) : Base(c) { SHOWMEM; }
+  virtual ~Derived() { SHOWMEM; }
   ClassDef(Derived,0);
 };
 
 template <class T>
 class TemplateClass {
  public:
-  TemplateClass() { SHOW; }
-  TemplateClass(const TemplateClass&) { SHOW; }
-  virtual ~TemplateClass() { SHOW; }
+  TemplateClass() { SHOWMEM; }
+  TemplateClass(const TemplateClass&) { SHOWMEM; }
+  virtual ~TemplateClass() { SHOWMEM; }
   ClassDef(TemplateClass,0);
 };
 
 template <class T>
 class shared_ptr {
  public:
-  shared_ptr() { SHOW; }
-  shared_ptr(const shared_ptr&) { SHOW; } 
+  shared_ptr() { SHOWMEM; }
+  shared_ptr(const shared_ptr&) { SHOWMEM; } 
 
   template <class U>
     void f1(U) { SHOW; }
@@ -94,7 +97,7 @@ class shared_ptr {
 /*   template <class U> */
 /*     shared_ptr<T>() { SHOW; } //rootcint can't find this */
 
-  virtual ~shared_ptr() { SHOW; }
+  virtual ~shared_ptr() { SHOWMEM; }
 
   ClassDef(shared_ptr, 0);
 };
