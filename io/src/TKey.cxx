@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.22 2002/08/23 08:54:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.23 2002/11/01 19:12:09 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -454,7 +454,7 @@ TObject *TKey::ReadObj()
    Version_t kvers = fBufferRef->ReadVersion();
 
    fBufferRef->SetBufferOffset(fKeylen);
-   TObject *obj = 0;
+   TObject *tobj = 0;
    TDirectory *cursav = gDirectory;
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!cl) {
@@ -463,17 +463,17 @@ TObject *TKey::ReadObj()
    }
    // Create an instance of this class
 
-   obj = (TObject*)cl->New();
-   if (!obj) {
+   char *pobj = (char*)cl->New();
+   Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
+   //if (baseOffset==-1) cl does not inherit from TObject (this is NOT possible yet).
+   tobj = (TObject*)(pobj+baseOffset);
+   if (!pobj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
    }
    if (kvers > 1)
-      fBufferRef->MapObject(obj);  //register obj in map to handle self reference
+      fBufferRef->MapObject(pobj);  //register obj in map to handle self reference
 
-   char cmd[2048];
-   sprintf(cmd,"((%s*)0x%lx)->Streamer((TBuffer&)0x%lx);",cl->GetName(),(Long_t)obj,(Long_t)fBufferRef);
-   
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
@@ -490,24 +490,22 @@ TObject *TKey::ReadObj()
          objbuf += nout;
       }
       if (nout) {
-         //obj->Streamer(*fBufferRef); //does not work with example 2 above
-         gInterpreter->Calc(cmd); //also works if TObject is not the first base class
+         tobj->Streamer(*fBufferRef); //does not work with example 2 above
          delete [] fBuffer;
       } else {
          delete [] fBuffer;
-         delete obj;
-         obj = 0;
+         delete pobj;
+         pobj = 0;
          goto CLEAR;
       }
    } else {
-      //obj->Streamer(*fBufferRef);
-      gInterpreter->Calc(cmd);
+      tobj->Streamer(*fBufferRef);
    }
 
-   if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
+   if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
    if (cl == TDirectory::Class()) {
-      TDirectory *dir = (TDirectory*)obj;
+      TDirectory *dir = dynamic_cast<TDirectory*>(tobj);
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
       gDirectory->Append(dir);
@@ -518,7 +516,7 @@ CLEAR:
    fBuffer    = 0;
    gDirectory = cursav;
 
-   return obj;
+   return (TObject*)pobj;
 }
 
 //______________________________________________________________________________
