@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.72 2004/07/09 17:40:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.73 2004/07/23 14:29:15 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1678,66 +1678,67 @@ Double_t TMath::MedianImp(Size n, const Element *a,const Double_t *w, Index *wor
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
 
-  if (n <= 0 || !a) return 0;
-  Bool_t isAllocated = kFALSE;
-  Double_t median;
-  Index *ind;
-  Index workLocal[kWorkMax];
+   if (n <= 0 || !a) return 0;
+   Bool_t isAllocated = kFALSE;
+   Double_t median;
+   Index *ind;
+   Index workLocal[kWorkMax];
 
-  if (work) {
-    ind = work;
-  } else {
-    ind = workLocal;
-    if (n > kWorkMax) {
-      isAllocated = kTRUE;
-      ind = new Index[n];
-     }
-  }
+   if (work) {
+     ind = work;
+   } else {
+      ind = workLocal;
+      if (n > kWorkMax) {
+         isAllocated = kTRUE;
+         ind = new Index[n];
+      }
+   }
 
    if (w) {
-     Double_t sumTot2 = 0;
-     for (Int_t j = 0; j < n; j++) {
-       if (w[j] < 0) {
-	 ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
-	 return 0;
+      Double_t sumTot2 = 0;
+      for (Int_t j = 0; j < n; j++) {
+         if (w[j] < 0) {
+	   ::Error("Median","w[%d] = %.4e < 0 ?!",j,w[j]);
+	   return 0;
+         }
+         sumTot2 += w[j];
+      }
+
+      sumTot2 /= 2.;
+
+      SortImp(n, a, ind, kFALSE);
+
+      Double_t sum = 0.;
+      Int_t jl;
+      for (jl = 0; jl < n; jl++) {
+         sum += w[ind[jl]];
+         if (sum >= sumTot2) break;
+      }
+
+      Int_t jh;
+      sum = 2.*sumTot2;
+      for (jh = n-1; jh >= 0; jh--) {
+         sum -= w[ind[jh]];
+         if (sum <= sumTot2) break;
+      }
+
+      median = 0.5*(a[ind[jl]]+a[ind[jh]]);
+
+    } else {
+
+       if (n%2 == 1)
+          median = KOrdStatImp(n, a,n/2, ind);
+       else {
+          if (n<1000)
+             median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2+1, ind));
+          else
+             median = KOrdStatImp(n, a, n/2, ind);
        }
-       sumTot2 += w[j];
-     }
+    }
 
-     sumTot2 /= 2.;
-
-     SortImp(n, a, ind, kFALSE);
-
-     Double_t sum = 0.;
-     Int_t jl;
-     for (jl = 0; jl < n; jl++) {
-       sum += w[ind[jl]];
-       if (sum >= sumTot2) break;
-     }
-
-     Int_t jh;
-     sum = 2.*sumTot2;
-     for (jh = n-1; jh >= 0; jh--) {
-       sum -= w[ind[jh]];
-       if (sum <= sumTot2) break;
-     }
-
-     median = 0.5*(a[ind[jl]]+a[ind[jh]]);
-
-   }
-    else{
-
-     if (n%2 == 1) median = KOrdStatImp(n, a,n/2, ind);
-     else {
-       if (n<1000) median = 0.5*(KOrdStatImp(n, a, n/2 -1, ind)+KOrdStatImp(n, a, n/2+1, ind));
-       else median = KOrdStatImp(n, a, n/2, ind);
-     }
-   }
-
-   if (isAllocated)
-     delete [] ind;
-   return median;
-
+    if (isAllocated)
+       delete [] ind;
+    return median;
 }
 
 //______________________________________________________________________________
@@ -1761,7 +1762,8 @@ Double_t TMath::Median(Long64_t n, const Short_t *a, const Double_t *w, Long64_t
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
-  return MedianImp(n, a, w, work);
+
+   return MedianImp(n, a, w, work);
 }
 
 //______________________________________________________________________________
@@ -1785,7 +1787,8 @@ Double_t TMath::Median(Long64_t n, const Int_t *a, const Double_t *w, Long64_t *
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
-  return MedianImp(n, a, w, work);
+
+   return MedianImp(n, a, w, work);
 }
 
 //______________________________________________________________________________
@@ -1809,7 +1812,8 @@ Double_t TMath::Median(Long64_t n, const Float_t *a, const Double_t *w, Long64_t
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
-  return MedianImp(n, a, w, work);
+
+   return MedianImp(n, a, w, work);
 }
 
 //______________________________________________________________________________
@@ -1833,7 +1837,8 @@ Double_t TMath::Median(Long64_t n, const Double_t *a, const Double_t *w, Long64_
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
-  return MedianImp(n, a, w, work);
+
+   return MedianImp(n, a, w, work);
 }
 
 //______________________________________________________________________________
@@ -1857,13 +1862,13 @@ Double_t TMath::Median(Long64_t n, const Long64_t *a, const Double_t *w, Long64_
    // If work is supplied, it is used to store the sorting index and assumed to be
    // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
    // or on the heap for n >= kWorkMax .
-  return MedianImp(n, a, w, work);
+
+   return MedianImp(n, a, w, work);
 }
 
 
 //______________________________________________________________________________
 #if defined(_MSC_VER) && (_MSC_VER<1300)
-// See also the declarations at the top of this file
 template <class Element, class Index, class Size>
 Element KOrdStatImpStandalone(Size n, const Element *a, Size k, Index *work)
 #else
@@ -1871,146 +1876,157 @@ template <class Element, class Index, class Size>
 Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
 #endif
 {
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
-  //
-  //taken from "Numerical Recipes in C++" without the index array
-  // implemented by Anna Khreshuk
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+   //
+   // Taken from "Numerical Recipes in C++" without the index array
+   // implemented by Anna Khreshuk.
+   //
+   // See also the declarations at the top of this file
 
-  Bool_t isAllocated = kFALSE;
-  Size i, ir, j, l, mid;
-  Index arr;
-  Index *ind;
-  Index workLocal[kWorkMax];
-  Index temp;
+   Bool_t isAllocated = kFALSE;
+   Size i, ir, j, l, mid;
+   Index arr;
+   Index *ind;
+   Index workLocal[kWorkMax];
+   Index temp;
 
-  if (work) {
-    ind = work;
-  } else {
-    ind = workLocal;
-    if (n > kWorkMax) {
-       isAllocated = kTRUE;
-       ind = new Index[n];
-    }
-  }
-
-  for (Size ii=0; ii<n; ii++){
-     ind[ii]=ii;
-  }
-  Size rk = k;
-  l=0;
-  ir = n-1;
-  for(;;) {
-    if (ir<=l+1) { //active partition contains 1 or 2 elements
-       if (ir == l+1 && a[ind[ir]]<a[ind[l]])
-	  {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
-       return a[ind[rk]];
-    } else {
-      mid = (l+ir) >> 1; //choose median of left, center and right
-      {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
-      if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
-	 {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
-
-      if (a[ind[l+1]]>a[ind[ir]])
-	 {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
-
-      if (a[ind[l]]>a[ind[l+1]])
-    	{temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
-
-      i=l+1;        //initialize pointers for partitioning
-      j=ir;
-      arr = ind[l+1];
-      for (;;){
-	 do i++; while (a[ind[i]]<a[arr]);
-	 do j--; while (a[ind[j]]>a[arr]);
-	 if (j<i) break;  //pointers crossed, partitioning complete
-	 {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+   if (work) {
+      ind = work;
+   } else {
+      ind = workLocal;
+      if (n > kWorkMax) {
+         isAllocated = kTRUE;
+         ind = new Index[n];
       }
-      ind[l+1]=ind[j];
-      ind[j]=arr;
-      if (j>=rk) ir = j-1; //keep active the partition that
-      if (j<=rk) l=i;      //contains the k_th element
-    }
-  }
-  if (isAllocated)
-    delete[] ind;
+   }
 
+   for (Size ii=0; ii<n; ii++) {
+      ind[ii]=ii;
+   }
+   Size rk = k;
+   l=0;
+   ir = n-1;
+   for(;;) {
+      if (ir<=l+1) { //active partition contains 1 or 2 elements
+         if (ir == l+1 && a[ind[ir]]<a[ind[l]])
+	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         return a[ind[rk]];
+      } else {
+         mid = (l+ir) >> 1; //choose median of left, center and right
+         {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
+         if (a[ind[l]]>a[ind[ir]])  //also rearrange so that a[l]<=a[l+1]
+	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+
+         if (a[ind[l+1]]>a[ind[ir]])
+	    {temp=ind[l+1]; ind[l+1]=ind[ir]; ind[ir]=temp;}
+
+         if (a[ind[l]]>a[ind[l+1]])
+    	    {temp = ind[l]; ind[l]=ind[l+1]; ind[l+1]=temp;}
+
+         i=l+1;        //initialize pointers for partitioning
+         j=ir;
+         arr = ind[l+1];
+         for (;;){
+	    do i++; while (a[ind[i]]<a[arr]);
+	    do j--; while (a[ind[j]]>a[arr]);
+	    if (j<i) break;  //pointers crossed, partitioning complete
+	       {temp=ind[i]; ind[i]=ind[j]; ind[j]=temp;}
+         }
+         ind[l+1]=ind[j];
+         ind[j]=arr;
+         if (j>=rk) ir = j-1; //keep active the partition that
+         if (j<=rk) l=i;      //contains the k_th element
+      }
+   }
+   if (isAllocated)
+      delete[] ind;
 }
 
 //______________________________________________________________________________
-Double_t TMath::KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work){
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
+Double_t TMath::KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
    return KOrdStatImp(n, a, k, work);
 }
 
 //______________________________________________________________________________
-Float_t TMath::KOrdStat(Long64_t n, const Float_t *a, Long64_t k, Long64_t *work){
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
-  return KOrdStatImp(n, a, k, work);
+Float_t TMath::KOrdStat(Long64_t n, const Float_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
+   return KOrdStatImp(n, a, k, work);
 }
 
 //______________________________________________________________________________
-Int_t TMath::KOrdStat(Long64_t n, const Int_t *a, Long64_t k, Long64_t *work){
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
-  return KOrdStatImp(n, a, k, work);
+Int_t TMath::KOrdStat(Long64_t n, const Int_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
+   return KOrdStatImp(n, a, k, work);
 }
 
 //______________________________________________________________________________
-Short_t TMath::KOrdStat(Long64_t n, const Short_t *a, Long64_t k, Long64_t *work){
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
- return KOrdStatImp(n, a, k, work);
+Short_t TMath::KOrdStat(Long64_t n, const Short_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n . If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
+   return KOrdStatImp(n, a, k, work);
 }
 
 //______________________________________________________________________________
-Long64_t TMath::KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work){
-  //returns k_th order statistic of the array a of size n
-  //(k_th smallest element out of n elements)
-  //
-  // C-convention is used for array indexing, so if you want
-  // the second smallest element, call KOrdStat(n, a, 1)
-  //
-  // If work is supplied, it is used to store the sorting index and assumed to be
-  // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
-  // or on the heap for n >= kWorkMax .
+Long64_t TMath::KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
    return KOrdStatImp(n, a, k, work);
 }
 
@@ -2306,7 +2322,8 @@ Bool_t TMath::IsInside(Double_t xp, Double_t yp, Int_t np, Double_t *x, Double_t
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
    // NOTE that the polygon must be a closed polygon (1st and last point
-   // must be identical)
+   // must be identical).
+
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
@@ -2327,7 +2344,8 @@ Bool_t TMath::IsInside(Float_t xp, Float_t yp, Int_t np, Float_t *x, Float_t *y)
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
    // NOTE that the polygon must be a closed polygon (1st and last point
-   // must be identical)
+   // must be identical).
+
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
@@ -2348,7 +2366,8 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
    // Function which returns kTRUE if point xp,yp lies inside the
    // polygon defined by the np points in arrays x and y, kFALSE otherwise
    // NOTE that the polygon must be a closed polygon (1st and last point
-   // must be identical)
+   // must be identical).
+
    Double_t xint;
    Int_t i;
    Int_t inter = 0;
@@ -2365,7 +2384,6 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
 
 //_____________________________________________________________________________
 #if defined(_MSC_VER) && (_MSC_VER<1300)
-// See also the declarations at the top of this file
 template <class Element, class Index, class Size>
 void SortImpStandalone(Size n1, const Element *a,
                        Index *index, Bool_t down)
@@ -2384,6 +2402,8 @@ void TMath::SortImp(Size n1, const Element *a,
    // based on the quicksort algorithm.
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
+   //
+   // See also the declarations at the top of this file.
 
    Size i,i1,n,i2,i3,i33,i222,iswap,n2;
    Size i22 = 0;
