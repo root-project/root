@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.1 2001/01/26 16:55:08 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -195,7 +195,8 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fSockets = new TSocket*[fSize];
 
    // establish fSize parallel socket connections between client and server
-   for (int i = 0; i < fSize; i++) {
+   int i;
+   for (i = 0; i < fSize; i++) {
       fSockets[i] = ss.Accept();
       gROOT->GetListOfSockets()->Remove(fSockets[i]);
    }
@@ -211,7 +212,7 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fWritePtr       = new char*[fSize];
    fReadPtr        = new char*[fSize];
 
-   for (int i = 0; i < fSize; i++) {
+   for (i = 0; i < fSize; i++) {
       fWriteMonitor->Add(fSockets[i], TMonitor::kWrite);
       fReadMonitor->Add(fSockets[i], TMonitor::kRead);
    }

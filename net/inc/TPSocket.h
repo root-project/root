@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.1 2001/01/26 16:55:07 rdm Exp $
 // Author: Fons Rademakers   20/1/2001
 
 /*************************************************************************
@@ -52,6 +52,7 @@ private:
    TPSocket(const TPSocket &);        // not implemented
    void operator=(const TPSocket &);  // idem
    void Init(Int_t tcpwindowsize);
+   Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
    TPSocket(TInetAddress address, const char *service, Int_t size, Int_t tcpwindowsize = -1);

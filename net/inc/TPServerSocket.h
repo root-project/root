@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TPServerSocket.h,v 1.1 2001/01/26 16:55:07 rdm Exp $
 // Author: Fons Rademakers   19/1/2001
 
 /*************************************************************************
@@ -41,6 +41,7 @@ private:
 
    TPServerSocket(const TPServerSocket &);  // not implemented
    void operator=(const TPServerSocket &);  // idem
+   Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
    TPServerSocket(Int_t port, Bool_t reuse = kFALSE,

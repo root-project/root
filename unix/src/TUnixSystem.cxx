@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.14 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.15 2001/01/25 18:37:47 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2581,6 +2581,7 @@ int TUnixSystem::UnixDynLoad(const char *lib)
 #endif
       if (handle != 0) return 0;
 #else
+      if (path) { }  // use path remove warning
       ::Error("TUnixSystem::UnixDynLoad", "not yet implemented for this platform");
       return -1;
 #endif
