@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.48 2003/09/12 17:36:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.49 2003/09/26 13:15:04 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1479,7 +1479,6 @@ void TProofServ::Setup()
    if (PubKey != "None") {
 
       // We got a key to decode the passwd ...
-
       TAuthenticate::SetRSAPublic(PubKey);
 
       // Receive passwd

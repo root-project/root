@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.54 2003/09/12 17:36:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.55 2003/09/23 08:54:50 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -109,16 +109,16 @@ TProof::TProof(const char *masterurl, const char *conffile,
    // the form: proof://host[:port] or proofs://host[:port]. Conffile is
    // the name of the config file describing the remote PROOF cluster
    // (this argument alows you to describe different cluster configurations).
-   // The default proof.conf. Confdir is the directory where the config
+   // The default is proof.conf. Confdir is the directory where the config
    // file and other PROOF related files are (like motd and noproof files).
    // Loglevel is the log level (default = 1).
 
-   if (!conffile || strlen(conffile)==0 )
+   if (!conffile || strlen(conffile) == 0)
       conffile = kPROOF_ConfFile;
-   if (!confdir  || strlen(confdir)==0 )
+   if (!confdir  || strlen(confdir) == 0)
       confdir = kPROOF_ConfDir;
 
-   // Can have only one PROOF session open at a time.
+   // Can have only one PROOF session open at a time (for the time being).
    if (gProof) {
       Warning("TProof", "closing currently open PROOF session");
       gProof->Close();
@@ -238,7 +238,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             AuthAvailable[i] = CheckAuth(i, &AuthDet[i]);
          }
          PDB(kGlobal,3)
-            Info("Init","meth:%d avail:%d det:%s",i,AuthAvailable[i],AuthDet[i]);
+            Info("Init","meth:%d avail:%d det:%s", i, AuthAvailable[i], AuthDet[i]);
       }
 
       char fconf[256];
@@ -261,10 +261,10 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          if ((pconf = fopen(fconf, "r"))) {
 
             // Default security levels and protocols
-            Int_t security = gEnv->GetValue("Proofd.Authentication",TAuthenticate::kRfio);
-            security       = (security >= 0 && security <= kMAXSEC) ?  security : -1;
-            if (!strcmp(fUrlProt.Data(), "proofs")) security = TAuthenticate::kSRP;
-            if (!strcmp(fUrlProt.Data(), "proofk")) security = TAuthenticate::kKrb5;
+            Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kRfio);
+            security = (security >= 0 && security <= kMAXSEC) ? security : -1;
+            if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
+            if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
 
             fConfFile = fconf;
 
@@ -381,7 +381,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
                   if (hostAuth == 0) {
                      // Create HostAuth object ...
-                     hostAuth = new THostAuth(SlaveFqdn.Data(),fUser.Data(),nSecs,fSecs,(char **)fDets);
+                     hostAuth = new THostAuth(SlaveFqdn, fUser, nSecs, fSecs,(char **)fDets);
                      // ... and add it to the list (static in TAuthenticate)
                      PDB(kGlobal,3) hostAuth->Print();
                      authInfo->Add(hostAuth);
@@ -471,12 +471,12 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             return 0;
          }
 
-         TList *claims = fCondor->Claim(9999,"dummy");
+         TList *claims = fCondor->Claim(9999, "dummy");
 
          Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
-         security       = (security >= 0 && security <= kMAXSEC) ?  security : TAuthenticate::kClear;
-         if (!strcmp(fUrlProt.Data(), "proofs")) security = TAuthenticate::kSRP;
-         if (!strcmp(fUrlProt.Data(), "proofk")) security = TAuthenticate::kKrb5;
+         security = (security >= 0 && security <= kMAXSEC) ? security : TAuthenticate::kClear;
+         if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
+         if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
 
          // If chosen method is not available get first available security method
          if (AuthAvailable[security] == 0) {
@@ -537,12 +537,12 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             }
 
             // Check if a HostAuth object for this (host,user) pair already exists
-            THostAuth *hostAuth = TAuthenticate::GetHostAuth((char *)SlaveFqdn.Data(),(char *)fUser.Data());
+            THostAuth *hostAuth = TAuthenticate::GetHostAuth(SlaveFqdn, fUser);
 
             if (hostAuth == 0) {
                // Create HostAuth object ...
-               //hostAuth = new THostAuth(SlaveFqdn.Data(),fUser.Data(),security,AuthDet[security]);
-               hostAuth = new THostAuth(SlaveFqdn.Data(),fUser.Data(),nSecs,fSecs,(char **)fDets);
+               //hostAuth = new THostAuth(SlaveFqdn, fUser, security, AuthDet[security]);
+               hostAuth = new THostAuth(SlaveFqdn, fUser, nSecs, fSecs, (char **)fDets);
                // ... and add it to the list (static in TAuthenticate)
                if (gDebug > 3) hostAuth->Print();
                authInfo->Add(hostAuth);
@@ -608,9 +608,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       // These are superseeded by the directives found in the
       // client's $(HOME)/.rootauthrc
       Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
-      security       = (security >= 0 && security <= kMAXSEC) ?  security : -1;
-      if (!strcmp(fUrlProt.Data(), "proofs")) security = TAuthenticate::kSRP;
-      if (!strcmp(fUrlProt.Data(), "proofk")) security = TAuthenticate::kKrb5;
+      security = (security >= 0 && security <= kMAXSEC) ? security : -1;
+      if (fUrlProt == "proofs") security = TAuthenticate::kSRP;
+      if (fUrlProt == "proofk") security = TAuthenticate::kKrb5;
 
       // create master server
       TSlave *slave = new TSlave(fMaster, fPort, 0, 100, "master", security, this);
