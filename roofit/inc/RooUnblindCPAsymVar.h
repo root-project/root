@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.2 2001/05/14 05:25:05 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.3 2001/05/14 22:55:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -42,7 +42,7 @@ protected:
   friend class RooAbsPdf ;
   
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  virtual Double_t evaluate(const RooDataSet* dset) const ;
 
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;

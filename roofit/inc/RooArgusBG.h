@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooArgusBG.rdl,v 1.1 2001/05/07 06:14:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,7 +33,7 @@ protected:
   RooRealProxy m0 ;
   RooRealProxy c ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate(const RooDataSet* dset) const ;
 //   void initGenerator();
 
 private:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooDircPdf.cc,v 1.1 2001/05/14 05:25:05 verkerke Exp $
+ *    File: $Id: RooDircPdf.cc,v 1.2 2001/05/17 00:48:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -67,7 +67,7 @@ RooDircPdf::RooDircPdf(const RooDircPdf& other, const char* name) :
 //   relNorm = _relNormFun.Eval(cosTheta, drcMtm); // (core area)/(core + tail areas)
 //
 
-Double_t RooDircPdf::evaluate() const
+Double_t RooDircPdf::evaluate(const RooDataSet* dset) const
 {
   static Double_t root2 = sqrt(2);  
   static Double_t rootpiby2 = sqrt(atan2(0.0,-1.0)/2.0) ;

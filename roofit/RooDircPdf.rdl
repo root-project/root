@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooDircPdf.rdl,v 1.1 2001/05/14 05:25:05 verkerke Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.2 2001/05/17 00:48:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -48,7 +48,7 @@ protected:
   RooRealProxy relNorm ; 
   Bool_t _milliRadians ;
   
-  Double_t evaluate() const ;
+  Double_t evaluate(const RooDataSet* dset) const ;
 
 private:
 
