@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBMixDecay.cc,v 1.8 2001/11/05 18:53:48 verkerke Exp $
+ *    File: $Id: RooBMixDecay.cc,v 1.9 2001/11/14 19:15:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -103,6 +103,8 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
 
 Int_t RooBMixDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
 {
+//   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
+
   if (matchArgs(allVars,analVars,_mixState,_tagFlav)) return 3 ;
   if (matchArgs(allVars,analVars,_mixState)) return 2 ;
   if (matchArgs(allVars,analVars,_tagFlav)) return 1 ;
@@ -167,20 +169,20 @@ void RooBMixDecay::initGenerator(Int_t code)
   switch (code) {
   case 2:
     {
-      // Calculate the fraction of mixed events to generate
-      Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg())).getVal() ;
-      _mixState = -1 ; // mixed
-      Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
-      _genMixFrac = mixInt/sumInt ;
-      break ;
-    }  
-  case 3:
-    {
       // Calculate the fraction of B0bar events to generate
       Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
       _tagFlav = 1 ; // B0 
       Double_t flavInt = RooRealIntegral("flavInt","flav integral",*this,RooArgSet(_t.arg())).getVal() ;
       _genFlavFrac = flavInt/sumInt ;
+      break ;
+    }  
+  case 3:
+    {
+      // Calculate the fraction of mixed events to generate
+      Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg())).getVal() ;
+      _mixState = -1 ; // mixed
+      Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+      _genMixFrac = mixInt/sumInt ;
       break ;
     }  
   case 4:
@@ -214,13 +216,13 @@ void RooBMixDecay::generateEvent(Int_t code)
   case 2:
     {
       Double_t rand = RooRandom::uniform() ;
-      _mixState = (Int_t) ((rand<=_genMixFrac) ? -1 : 1) ;
+      _tagFlav = (Int_t) ((rand<=_genFlavFrac) ?  1 : -1) ;
       break ;
     }
   case 3:
     {
       Double_t rand = RooRandom::uniform() ;
-      _tagFlav = (Int_t) ((rand<=_genFlavFrac) ?  1 : -1) ;
+      _mixState = (Int_t) ((rand<=_genMixFrac) ? -1 : 1) ;
       break ;
     }
   case 4:
