@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.34 2002/08/16 21:16:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.1 2002/09/06 19:57:59 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -14,7 +14,7 @@
 class TConfidenceLevel;
 class TRandom;
 class TLimitDataSource;
-class TArrayF;
+class TArrayD;
 class TOrdCollection;
 
 //____________________________________________________________________
@@ -41,9 +41,9 @@ class TLimit {
    static TLimitDataSource *Fluctuate(TLimitDataSource * input, bool init,TRandom *);
    inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
  private:
-   static TArrayF *fgTable;              // a log table... just to speed up calculation
+   static TArrayD *fgTable;              // a log table... just to speed up calculation
    static TOrdCollection *fgSystNames;   // Collection of systematics names
-   ClassDef(TLimit, 1)          // Class to compute 95% CL limits
+   ClassDef(TLimit, 2)          // Class to compute 95% CL limits
 };
 
 #endif

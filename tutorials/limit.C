@@ -13,9 +13,9 @@ void limit() {
   c1->SetFillColor(42);
 	  
 // Create some histograms
-  TH1F* background = new TH1F("background","The expected background",30,-4,4);
-  TH1F* signal     = new TH1F("signal","the expected signal",30,-4,4);
-  TH1F* data       = new TH1F("data","some fake data points",30,-4,4);
+  TH1D* background = new TH1D("background","The expected background",30,-4,4);
+  TH1D* signal     = new TH1D("signal","the expected signal",30,-4,4);
+  TH1D* data       = new TH1D("data","some fake data points",30,-4,4);
   background->SetFillColor(48);
   signal->SetFillColor(41);
   data->SetMarkerStyle(21);
@@ -61,8 +61,8 @@ void limit() {
 
 // Add some systematics
   cout << endl << "Computing limits with systematics... " << endl;
-  TH1F* errorb = new TH1F("errorb","errors on background",1,0,1);
-  TH1F* errors = new TH1F("errors","errors on signal",1,0,1);
+  TH1D* errorb = new TH1D("errorb","errors on background",1,0,1);
+  TH1D* errors = new TH1D("errors","errors on signal",1,0,1);
   TObjArray* names = new TObjArray();
   TObjString name1("bg uncertainty");
   TObjString name2("sig uncertainty");

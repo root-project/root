@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.3 2002/09/06 21:41:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.4 2002/09/10 14:59:15 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@
  *************************************************************************/
 
 #include "TLimit.h"
-#include "TArrayF.h"
+#include "TArrayD.h"
 #include "TOrdCollection.h"
 #include "TConfidenceLevel.h"
 #include "TLimitDataSource.h"
@@ -31,7 +31,7 @@
 
 ClassImp(TLimit)
 
-TArrayF *TLimit::fgTable = new TArrayF(0);
+TArrayD *TLimit::fgTable = new TArrayD(0);
 TOrdCollection *TLimit::fgSystNames = new TOrdCollection();
 
 TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
@@ -78,9 +78,9 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    <BLOCKQUOTE><PRE>
     TFile* infile=new TFile("plotfile.root","READ");
     infile->cd();
-    TH1F* sh=(TH1F*)infile->Get("signal");
-    TH1F* bh=(TH1F*)infile->Get("background");
-    TH1F* dh=(TH1F*)infile->Get("data");
+    TH1D* sh=(TH1D*)infile->Get("signal");
+    TH1D* bh=(TH1D*)infile->Get("background");
+    TH1D* dh=(TH1D*)infile->Get("data");
     TLimitDataSource* mydatasource = new TLimitDataSource(sh,bh,dh);
     TConfidenceLevel *myconfidence = TLimit::ComputeLimit(mydatasource,50000);
     cout &lt&lt "  CLs    : " &lt&lt myconfidence->CLs()  &lt&lt endl;
@@ -112,12 +112,12 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    Int_t ncand   = 0;
    Int_t i;
    for (i = 0; i <= data->GetSignal()->GetLast(); i++) {
-      nbins  += ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX();
-      maxbins = ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX() > maxbins ?
-	        ((TH1F *) (data->GetSignal()->At(i)))->GetNbinsX() + 1 : maxbins;
-      nsig   += ((TH1F *) (data->GetSignal()->At(i)))->Integral();
-      nbg    += ((TH1F *) (data->GetBackground()->At(i)))->Integral();
-      ncand  += (Int_t) ((TH1F *) (data->GetCandidates()->At(i)))->Integral();
+      nbins  += ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX();
+      maxbins = ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() > maxbins ?
+	        ((TH1D *) (data->GetSignal()->At(i)))->GetNbinsX() + 1 : maxbins;
+      nsig   += ((TH1D *) (data->GetSignal()->At(i)))->Integral();
+      nbg    += ((TH1D *) (data->GetBackground()->At(i)))->Integral();
+      ncand  += (Int_t) ((TH1D *) (data->GetCandidates()->At(i)))->Integral();
    }
    result->SetBtot(nbg);
    result->SetStot(nsig);
@@ -126,11 +126,11 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
    fgTable->Set(maxbins * (data->GetSignal()->GetLast() + 1));
    for (Int_t channel = 0; channel <= data->GetSignal()->GetLast(); channel++)
       for (Int_t bin = 0;
-           bin <= ((TH1F *) (data->GetSignal()->At(channel)))->GetNbinsX();
+           bin <= ((TH1D *) (data->GetSignal()->At(channel)))->GetNbinsX();
            bin++) {
-         Double_t s = (Double_t) ((TH1F *) (data->GetSignal()->At(channel)))->GetBinContent(bin);
-         Double_t b = (Double_t) ((TH1F *) (data->GetBackground()->At(channel)))->GetBinContent(bin);
-         Double_t d = (Double_t) ((TH1F *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
+         Double_t s = (Double_t) ((TH1D *) (data->GetSignal()->At(channel)))->GetBinContent(bin);
+         Double_t b = (Double_t) ((TH1D *) (data->GetBackground()->At(channel)))->GetBinContent(bin);
+         Double_t d = (Double_t) ((TH1D *) (data->GetCandidates()->At(channel)))->GetBinContent(bin);
          // Compute the value of the "-2lnQ" for the actual data
          if ((b == 0) && (s > 0)) {
             cout << "WARNING: Ignoring bin " << bin << " of channel "
@@ -168,22 +168,22 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
-              bin <=((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX();
+              bin <=((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetNbinsX();
               bin++) {
-            if ((Double_t) ((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
+            if ((Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) != 0) {
                // s+b hypothesis
-               Double_t rate = (Double_t) ((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) +
-                               (Double_t) ((TH1F *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               Double_t rate = (Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin) +
+                               (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                Double_t rand = myrandom->Poisson(rate);
                tss[i] += rand * fgTable->At((channel * maxbins) + bin);
-               Double_t s = (Double_t) ((TH1F *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin);
-               Double_t b = (Double_t) ((TH1F *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               Double_t s = (Double_t) ((TH1D *) (fluctuated->GetSignal()->At(channel)))->GetBinContent(bin);
+               Double_t b = (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                if ((s > 0) && (b > 0))
                   lrs[i] += statistic(s, b, rand) - s;
                else if ((s > 0) && (b == 0))
                   lrs[i] += 20 * rand - s;
                // b hypothesis
-               rate = (Double_t) ((TH1F *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
+               rate = (Double_t) ((TH1D *) (fluctuated->GetBackground()->At(channel)))->GetBinContent(bin);
                rand = myrandom->Poisson(rate);
                tsb[i] += rand * fgTable->At((channel * maxbins) + bin);
                if ((s > 0) && (b > 0))
@@ -254,11 +254,11 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
          serrf[channel] = 0;
          berrf[channel] = 0;
          for (Int_t bin = 0;
-              bin <=((TH1F *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX();
+              bin <=((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetNbinsX();
 	      bin++) {
-            serrf[channel] += ((TH1F *) (input->GetErrorOnSignal()->At(channel)))->GetBinContent(bin) *
+            serrf[channel] += ((TH1D *) (input->GetErrorOnSignal()->At(channel)))->GetBinContent(bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
-            berrf[channel] += ((TH1F *) (input->GetErrorOnBackground()->At(channel)))->GetBinContent(bin) *
+            berrf[channel] += ((TH1D *) (input->GetErrorOnBackground()->At(channel)))->GetBinContent(bin) *
                 toss[fgSystNames->BinarySearch((TObjString*) (((TObjArray *) (input->GetErrorNames()->At(channel)))->At(bin)))];
          }
          if ((serrf[channel] < -1.0) || (berrf[channel] < -0.9)) {
@@ -274,13 +274,13 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
    result->SetOwner();
    for (Int_t channel = 0; channel <= input->GetSignal()->GetLast();
         channel++) {
-      TH1F *newsignal = new TH1F(*(TH1F *) (input->GetSignal()->At(channel)));
+      TH1D *newsignal = new TH1D(*(TH1D *) (input->GetSignal()->At(channel)));
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
-      TH1F *newbackground = new TH1F(*(TH1F *) (input->GetBackground()->At(channel)));
+      TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));
       newbackground->Scale(1 + berrf[channel]);
       newbackground->SetDirectory(0);
-      TH1F *newcandidates = new TH1F(*(TH1F *) (input->GetCandidates()));
+      TH1D *newcandidates = new TH1D(*(TH1D *) (input->GetCandidates()));
       newcandidates->SetDirectory(0);
       result->AddChannel(newsignal, newbackground, newcandidates);
    }
