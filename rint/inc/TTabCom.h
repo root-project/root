@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.h,v 1.2 2000/08/23 14:55:58 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -135,8 +135,10 @@ class TTabCom
           // CINT "." instructions
           // the position of these guys is irrelevant since each of
           // these commands will always be the only command on the line.
+          kCINT_Edit,  // .E
           kCINT_Load,  // .L
           kCINT_Exec,  // .x
+          kCINT_EXec,  // .X
 
           // specific preprocessor directives.
           kCINT_pragma,

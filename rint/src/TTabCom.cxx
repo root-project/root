@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.3 2000/10/31 12:23:57 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.5 2000/12/20 17:36:52 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -1417,8 +1417,10 @@ Int_t TTabCom::Hook( char* buf, int* pLoc )
           }
           break;
 
-     case kCINT_Exec:
+     case kCINT_Edit:
      case kCINT_Load:
+     case kCINT_Exec:
+     case kCINT_EXec:
           {
                const TString   fileName     = s3("[^ ]*$");
                const TString   macroPath    = DeterminePath( fileName, TROOT::GetMacroPath() );
@@ -1743,8 +1745,10 @@ void TTabCom::InitPatterns( void )
      SetPattern( kCINT_stderr, "; *2>>?.*$" );   // stderr
      SetPattern( kCINT_stdin,  "; *<.*$"    );   // stdin
 
+     SetPattern( kCINT_Edit,  "^ *\\.E .*$" );
      SetPattern( kCINT_Load,  "^ *\\.L .*$" );
      SetPattern( kCINT_Exec,  "^ *\\.x [-0-9_a-zA-Z~$./]*$" );
+     SetPattern( kCINT_EXec,  "^ *\\.X [-0-9_a-zA-Z~$./]*$" );
 
      SetPattern( kCINT_pragma,     "^# *pragma +[_a-zA-Z0-9]*$" );
      SetPattern( kCINT_includeSYS, "^# *include *<[^>]*$"  );   // system files
