@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.42 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.43 2003/07/08 19:42:07 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -973,12 +973,12 @@ void TRootBrowser::BrowseObj(TObject *obj)
    // TRootBrowser::Add() which will fill the IconBox and the tree.
    // Emits signal "BrowseObj(TObject*)".
 
+   Emit("BrowseObj(TObject*)", (Long_t)obj);
    fIconBox->RemoveAll();
    obj->Browse(fBrowser);
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
-   Emit("BrowseObj(TObject*)", (Long_t)obj);
 }
 
 //______________________________________________________________________________
@@ -1381,7 +1381,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if ((item = (TGFileItem *) fIconBox->GetNextSelected(&p)) != 0) {
                         gVirtualX->SetCursor(fIconBox->GetId(),gVirtualX->CreateCursor(kPointer));
                         gVirtualX->SetCursor(fLt->GetId(),gVirtualX->CreateCursor(kPointer));
-                        IconBoxAction((TObject *)item->GetUserData());
+                        TObject *obj = (TObject *)item->GetUserData();
+                        DoubleClicked(obj);
+                        IconBoxAction(obj);
                         return kTRUE; //
                      }
                   }
@@ -1596,8 +1598,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
       }
 
       if (useLock) fTreeLock = kTRUE;
+      Emit("BrowseObj(TObject*)", (Long_t)obj);
       obj->Browse(fBrowser);
-      DoubleClicked(obj);
       if (useLock) fTreeLock = kFALSE;
 
 out:

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.9 2003/09/19 12:05:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.10 2003/09/19 18:09:58 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -69,10 +69,10 @@ TQObjSender fQObject;\
 public:\
 TList *GetListOfSignals() const {return fQObject.GetListOfSignals();}\
 Bool_t Connect(const char *sig,const char *cl,void *rcvr,const char *slt)\
-{fQObject.SetSender(this); fQObject.SetSenderClassName(sender_class); return fQObject.Connect(sig,cl,rcvr,slt);}\
+{fQObject.SetSender(this);fQObject.SetSenderClassName(sender_class);return fQObject.Connect(sig,cl,rcvr,slt);}\
 Bool_t Disconnect(const char *sig=0,void *rcvr=0,const char *slt=0){return fQObject.Disconnect(sig,rcvr,slt);}\
 void HighPriority(const char *signal_name,const char *slot_name=0){fQObject.HighPriority(signal_name,slot_name);}\
-void LowPriority(const char *signal_name,const char * slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
+void LowPriority(const char *signal_name,const char *slot_name=0){fQObject.LowPriority(signal_name,slot_name);}\
 void Emit(const char *signal){fQObject.Emit(signal);}\
 void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
 void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
