@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.27 2004/01/29 16:02:03 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.28 2004/02/19 19:08:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -96,8 +96,8 @@ private:
 
    Bool_t            CountMembers(const char *lpszGroupName);
    Bool_t            GetNbGroups();
-   Long_t            LookupSID (const char *lpszAccountName, int what);
-   Bool_t            CollectMembers(const char *lpszGroupName);
+   Long_t            LookupSID (const char *lpszAccountName, int what, int &groupIdx, int &memberIdx);
+   Bool_t            CollectMembers(const char *lpszGroupName, int &groupIdx, int &memberIdx);
    Bool_t            CollectGroups();
 
 public:

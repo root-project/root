@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.75 2004/03/02 13:09:17 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.76 2004/03/03 13:26:40 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -49,8 +49,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <lm.h>
-
-static int gGroupIdx, gMemberIdx;
 
 const char *kProtocolName   = "tcp";
 typedef void (*SigHandler_t)(ESignals);
@@ -2103,7 +2101,8 @@ Bool_t TWinNTSystem::GetNbGroups()
 }
 
 //________________________________________________________________________________
-Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what)
+Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what, 
+                                int &groupIdx, int &memberIdx)
 {
    //
    // Take the name and look up a SID so that we can get full
@@ -2172,18 +2171,19 @@ Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what)
                 (DWORD)j-1); // index of subauthority to retrieve
    dwSubAuth = *pdwSubAuth;
    if(what == SID_MEMBER) {
-       fPasswords[gMemberIdx].pw_uid = dwSubAuth;
-       fPasswords[gMemberIdx].pw_gid = fGroups[gGroupIdx].gr_gid;
-       fPasswords[gMemberIdx].pw_group = strdup(fGroups[gGroupIdx].gr_name);
+       fPasswords[memberIdx].pw_uid = dwSubAuth;
+       fPasswords[memberIdx].pw_gid = fGroups[groupIdx].gr_gid;
+       fPasswords[memberIdx].pw_group = strdup(fGroups[groupIdx].gr_name);
    }
    else if(what == SID_GROUP) {
-       fGroups[gGroupIdx].gr_gid = dwSubAuth;
+       fGroups[groupIdx].gr_gid = dwSubAuth;
    }
    return 0;
 }
 
 //________________________________________________________________________________
-Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName)
+Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName, int &groupIdx, 
+                                    int &memberIdx)
 {
    NET_API_STATUS NetStatus = NERR_Success;
    LPBYTE Data = NULL;
@@ -2259,12 +2259,12 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName)
          dwLastError = GetLastError();
       }
 
-      fPasswords[gMemberIdx].pw_name = strdup(szAnsiMemberName);
-      fPasswords[gMemberIdx].pw_passwd = strdup("");
-      fGroups[gGroupIdx].gr_mem[i] = strdup(szAnsiMemberName);
+      fPasswords[memberIdx].pw_name = strdup(szAnsiMemberName);
+      fPasswords[memberIdx].pw_passwd = strdup("");
+      fGroups[groupIdx].gr_mem[i] = strdup(szAnsiMemberName);
 
-      if(!stricmp(fPasswords[gMemberIdx].pw_name, act_name))
-         fActUser = gMemberIdx;
+      if(!stricmp(fPasswords[memberIdx].pw_name, act_name))
+         fActUser = memberIdx;
 
 
       TCHAR szUserName[255]=TEXT("");
@@ -2279,15 +2279,15 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName)
       if (nStatus == NERR_Success) {
          if (pUI11Buf != NULL) {
             wsprintf(szFullMemberName,"%S",pUI11Buf->usri11_full_name);
-            fPasswords[gMemberIdx].pw_gecos = strdup(szFullMemberName);
+            fPasswords[memberIdx].pw_gecos = strdup(szFullMemberName);
             wsprintf(szMemberHomeDir,"%S",pUI11Buf->usri11_home_dir);
-            fPasswords[gMemberIdx].pw_dir = strdup(szMemberHomeDir);
+            fPasswords[memberIdx].pw_dir = strdup(szMemberHomeDir);
          }
       }
-      if((fPasswords[gMemberIdx].pw_gecos == NULL) || (strlen(fPasswords[gMemberIdx].pw_gecos) == 0))
-         fPasswords[gMemberIdx].pw_gecos = strdup(fPasswords[gMemberIdx].pw_name);
-      if((fPasswords[gMemberIdx].pw_dir == NULL) || (strlen(fPasswords[gMemberIdx].pw_dir) == 0))
-         fPasswords[gMemberIdx].pw_dir = strdup("c:\\");
+      if((fPasswords[memberIdx].pw_gecos == NULL) || (strlen(fPasswords[memberIdx].pw_gecos) == 0))
+         fPasswords[memberIdx].pw_gecos = strdup(fPasswords[memberIdx].pw_name);
+      if((fPasswords[memberIdx].pw_dir == NULL) || (strlen(fPasswords[memberIdx].pw_dir) == 0))
+         fPasswords[memberIdx].pw_dir = strdup("c:\\");
       //
       // Free the allocated memory.
       //
@@ -2301,11 +2301,11 @@ Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName)
          putenv ((GetVersion () & 0x80000000) ? "SHELL=command" : "SHELL=cmd");
 
       /* Set dir and shell from environment variables. */
-      fPasswords[gMemberIdx].pw_shell = getenv ("SHELL");
+      fPasswords[memberIdx].pw_shell = getenv ("SHELL");
 
       // Find out the SID of the Member.
-      LookupSID ((LPCTSTR)szAnsiMemberName, SID_MEMBER);
-      gMemberIdx++;
+      LookupSID ((LPCTSTR)szAnsiMemberName, SID_MEMBER, groupIdx, memberIdx);
+      memberIdx++;
       MemberInfo++;
    }
 
@@ -2324,9 +2324,7 @@ Bool_t TWinNTSystem::CollectGroups()
    LOCALGROUP_INFO_0 *GroupInfo;
    char szAnsiName[256];
    DWORD dwLastError = 0;
-   int  iRetOp = 0;
-
-   gGroupIdx = gMemberIdx = 0;
+   int  iRetOp = 0, iGroupIdx = 0, iMemberIdx = 0;
 
    if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
        return kFALSE;
@@ -2354,16 +2352,16 @@ Bool_t TWinNTSystem::CollectGroups()
                (LPCSTR)NULL,     // address of default for unmappable characters
                (LPBOOL)NULL );     // address of flag set when default char used.
 
-      fGroups[gGroupIdx].gr_name = strdup(szAnsiName);
-      fGroups[gGroupIdx].gr_passwd = strdup("");
+      fGroups[iGroupIdx].gr_name = strdup(szAnsiName);
+      fGroups[iGroupIdx].gr_passwd = strdup("");
 
       // Find out the SID of the Group.
-      LookupSID ((LPCTSTR)szAnsiName, SID_GROUP);
+      LookupSID ((LPCTSTR)szAnsiName, SID_GROUP, iGroupIdx, iMemberIdx);
       // Now lookup all members of this group and record down their names and
       // SIDs into the output file.
-      CollectMembers((LPCTSTR)szAnsiName);
+      CollectMembers((LPCTSTR)szAnsiName, iGroupIdx, iMemberIdx);
 
-      gGroupIdx++;
+      iGroupIdx++;
       GroupInfo++;
    }
 
