@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.15 2003/01/22 11:23:03 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.16 2003/09/29 12:37:34 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -85,8 +85,8 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
       ptx = gPad->UtoPixel(fX);
       pty = gPad->VtoPixel(fY);
    } else {
-      ptx = gPad->XtoAbsPixel(fX);
-      pty = gPad->YtoAbsPixel(fY);
+      ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+      pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
    }
 
    // Get the text control box
@@ -166,8 +166,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          px1 = gPad->UtoPixel(fX);
          py1 = gPad->VtoPixel(fY);
       } else {
-         px1 = gPad->XtoAbsPixel(fX);
-         py1 = gPad->YtoAbsPixel(fY);
+         px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX));
+         py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY));
       }
       theta  = fTextAngle;
       Size   = 0;
@@ -277,8 +277,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          fX = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
          fY = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
       } else {
-         fX = gPad->AbsPixeltoX(px1);
-         fY = gPad->AbsPixeltoY(py1);
+         fX = gPad->PadtoX(gPad->AbsPixeltoX(px1));
+         fY = gPad->PadtoY(gPad->AbsPixeltoY(py1));
       }
       fTextAngle = theta;
       gPad->Modified(kTRUE);
@@ -403,7 +403,7 @@ void TText::Paint(Option_t *)
 
    TAttText::Modify();  //Change text attributes only if necessary
    if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
-   else                   gPad->PaintText(fX,fY,GetTitle());
+   else                   gPad->PaintText(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTitle());
 }
 
 //______________________________________________________________________________

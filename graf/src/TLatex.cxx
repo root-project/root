@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.39 2003/09/10 06:49:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.40 2003/09/30 10:09:38 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1504,17 +1504,17 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 void TLatex::Paint(Option_t *)
 {
 // Paint
+  Double_t xsave = fX;
+  Double_t ysave = fY;
   if (TestBit(kTextNDC)) {
-     Double_t xsave = fX;
-     Double_t ysave = fY;
      fX = gPad->GetX1() + xsave*(gPad->GetX2() - gPad->GetX1());
      fY = gPad->GetY1() + ysave*(gPad->GetY2() - gPad->GetY1());
      PaintLatex(fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
-     fX = xsave;
-     fY = ysave;
   } else {
-     PaintLatex(fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
+     PaintLatex(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTextAngle(),GetTextSize(),GetTitle());
   }
+  fX = xsave;
+  fY = ysave;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.14 2002/12/10 14:00:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.15 2003/09/18 15:53:52 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -113,11 +113,11 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 //  The distance is computed in pixels units.
 //
 
-    Double_t x = gPad->AbsPixeltoX(px);
-    Double_t y = gPad->AbsPixeltoY(py);
+    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
 
-    Double_t dxnr = x - GetX1();
-    Double_t dynr = y - GetY1();
+    Double_t dxnr = x - fX1;
+    Double_t dynr = y - fY1;
 
     Double_t ct = TMath::Cos(kPI*GetTheta()/180.0);
     Double_t st = TMath::Sin(kPI*GetTheta()/180.0);
@@ -125,8 +125,8 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
     Double_t dx =  dxnr*ct + dynr*st;
     Double_t dy = -dxnr*st + dynr*ct;
 
-    Double_t r1 = GetR1();
-    Double_t r2 = GetR2();
+    Double_t r1 = fR1;
+    Double_t r2 = fR2;
 
     if (dx == 0 || r1 == 0 || r2 == 0) return 9999;
     Double_t distp = TMath::Sqrt(dx*dx + dy*dy);
@@ -178,7 +178,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //  if Middle button clicked, the line is moved parallel to itself
 //     until the button is released.
 //
-
+//  NOTE that support for log scale is not implemented
 
    Int_t kMaxDiff = 10;
    const Int_t kMinSize = 25;
@@ -462,8 +462,8 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       angle = phimin*kPI/180 + Double_t(i)*dphi;
       dx    = fR1*TMath::Cos(angle);
       dy    = fR2*TMath::Sin(angle);
-      x[i]  = fX1 + dx*ct - dy*st;
-      y[i]  = fY1 + dx*st + dy*ct;
+      x[i]  = gPad->XtoPad(fX1 + dx*ct - dy*st);
+      y[i]  = gPad->YtoPad(fY1 + dx*st + dy*ct);
    }
    TString opt = option;
    opt.ToLower();
@@ -471,8 +471,8 @@ void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phi
       if (GetFillColor()) gPad->PaintFillArea(n,x,y);
       if (GetLineStyle()) gPad->PaintPolyLine(n+1,x,y);
    } else {
-      x[n+1] = fX1;
-      y[n+1] = fY1;
+      x[n+1] = gPad->XtoPad(fX1);
+      y[n+1] = gPad->YtoPad(fY1);
       x[n+2] = x[0];
       y[n+2] = y[0];
       if (GetFillColor()) gPad->PaintFillArea(n+2,x,y);

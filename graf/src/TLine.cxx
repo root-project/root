@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.10 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -77,7 +77,7 @@ Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a line*-*-*-*-*-*
 //*-*                  ===========================================
 
-   if (!TestBit(kLineNDC)) return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
+   if (!TestBit(kLineNDC)) return DistancetoLine(px,py,gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
    Double_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
    Double_t y1 = gPad->GetY1() + fY1*(gPad->GetY2()-gPad->GetY1());
    Double_t x2 = gPad->GetX1() + fX2*(gPad->GetX2()-gPad->GetX1());
@@ -146,10 +146,10 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          px2 = gPad->UtoPixel(fX2);
          py2 = gPad->VtoPixel(fY2);
       } else {
-         px1 = gPad->XtoAbsPixel(fX1);
-         py1 = gPad->YtoAbsPixel(fY1);
-         px2 = gPad->XtoAbsPixel(fX2);
-         py2 = gPad->YtoAbsPixel(fY2);
+         px1 = gPad->XtoAbsPixel(gPad->XtoPad(fX1));
+         py1 = gPad->YtoAbsPixel(gPad->YtoPad(fY1));
+         px2 = gPad->XtoAbsPixel(gPad->XtoPad(fX2));
+         py2 = gPad->YtoAbsPixel(gPad->YtoPad(fY2));
       }
       P1 = P2 = L = kFALSE;
 
@@ -221,18 +221,18 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       } else {
          if (P1) {
-            fX1 = gPad->AbsPixeltoX(px);
-            fY1 = gPad->AbsPixeltoY(py);
+            fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+            fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          }
          if (P2) {
-            fX2 = gPad->AbsPixeltoX(px);
-            fY2 = gPad->AbsPixeltoY(py);
+            fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+            fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          }
          if (L) {
-            fX1 = gPad->AbsPixeltoX(px1);
-            fY1 = gPad->AbsPixeltoY(py1);
-            fX2 = gPad->AbsPixeltoX(px2);
-            fY2 = gPad->AbsPixeltoY(py2);
+            fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px1));
+            fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py1));
+            fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px2));
+            fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
          }
       }
       gPad->Modified(kTRUE);
@@ -271,7 +271,7 @@ void TLine::Paint(Option_t *)
 //*-*-*-*-*-*-*-*-*-*-*Paint this line with its current attributes*-*-*-*-*-*-*
 //*-*                  ===========================================
    if (TestBit(kLineNDC)) PaintLineNDC(fX1,fY1,fX2,fY2);
-   else                   PaintLine(fX1,fY1,fX2,fY2);
+   else                   PaintLine(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
 
 //______________________________________________________________________________

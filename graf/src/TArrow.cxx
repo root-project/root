@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.8 2003/04/02 14:14:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.9 2003/10/09 16:39:59 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -134,7 +134,7 @@ void TArrow::Paint(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*Paint this arrow with its current attributes*-*-*-*-*-*-*
 //*-*                  ============================================
 
-   PaintArrow(fX1, fY1, fX2, fY2, fArrowSize, option);
+   PaintArrow(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2), fArrowSize, option);
 }
 
 
