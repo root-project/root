@@ -263,9 +263,10 @@ freebsd4)
    auxglibs=${auxlibs}
    ;;
 macosx)
-   # MacOS X with cc (GNU cc v2.95.2.)
-   auxcflags=
-   auxlibs="-u _G__cpp_setup_initializerG__Tree -lm `[ -d /sw/lib ] && echo -L/sw/lib` -ldl"
+   # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
+   finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
+   auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
+   auxlibs="-u _G__cpp_setup_initializerG__Tree -lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
    auxglibs=${auxlibs}
    ;;
 hiux)

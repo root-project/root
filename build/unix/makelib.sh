@@ -75,21 +75,23 @@ elif [ $PLATFORM = "fbsd" ]; then
    # for elf:  echo $PLATFORM: $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS
    # for elf:  $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB `lorder $OBJS | tsort -q`
 elif [ $PLATFORM = "macosx" ]; then
+   # Look for a fink installation
+   FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    echo $LD $SOFLAGS$SONAME -o $LIB $OBJS \
-	`[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
    $LD $SOFLAGS$SONAME -o $LIB $OBJS \
-	`[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
+	`[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
    else
       opt=-O
    fi
    echo $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
-	$OBJS `[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
+	$OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
    $LD $opt -bundle -flat_namespace -undefined suppress -o $BUNDLE \
-	$OBJS `[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
+	$OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` -ldl $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA $EXPLLNKCORE

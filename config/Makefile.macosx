@@ -57,6 +57,7 @@ INSTALL      := cp -pPR
 INSTALLDATA  := cp -pPR
 
 # Extras
-FINK_CXXFLAGS = $(shell [ -d /sw/include ] && echo -I/sw/include)
-FINK_CFLAGS   = $(shell [ -d /sw/include ] && echo -I/sw/include)
-FINK_LDFLAGS  = $(shell [ -d /sw/lib ] && echo -L/sw/lib)
+FINK_DIR      = $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
+FINK_CXXFLAGS = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_CFLAGS   = $(shell [ -d $(FINK_DIR)/include ] && echo -I$(FINK_DIR)/include)
+FINK_LDFLAGS  = $(shell [ -d $(FINK_DIR)/lib ] && echo -L$(FINK_DIR)/lib)

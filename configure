@@ -1285,17 +1285,19 @@ if test "x$platform" = "xwin32"; then
     enable_asimage="no"
 fi
 if test ! "x$enable_asimage" = "xno" ; then
+    #Figure out where fink on Mac OS X is installed (if any)
+    finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include /sw/include
+       /usr/local/include /usr/include /opt/include $finkdir/include
     asjpegincdir=$found_dir
     check_header "png.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include /sw/include
+       /usr/local/include /usr/include /opt/include $finkdir/include
     aspngincdir=$found_dir
     check_header "tiffio.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include /sw/include
+       /usr/local/include /usr/include /opt/include $finkdir/include
     astiffincdir=$found_dir
     check_header "gif_lib.h" "" $ASIMAGE $ASIMAGE/include \
-       /usr/local/include /usr/include /opt/include /sw/include
+       /usr/local/include /usr/include /opt/include $finkdir/include
     asgifincdir=$found_dir
 
     asextralib=""
@@ -1306,7 +1308,7 @@ if test ! "x$enable_asimage" = "xno" ; then
     # add libpng which needs libz
     for k in libjpeg libtiff libungif libz libpng ; do
         check_library $k "$enable_shared" "" \
-            $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib /sw/lib
+            $ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/lib /opt/lib $finkdir/lib
         if test "x$k" = "xlibz" ; then
             found_libz=$found_lib
             found_dirz=$found_dir
