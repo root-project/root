@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: rsadef.h,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsadef.h,v 1.2 2003/08/29 17:23:31 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -26,14 +26,6 @@
 
 typedef	unsigned short rsa_INT;		/* muss MAXINT fassen		*/
 typedef	unsigned long rsa_LONG;		/* muss (MAXINT+1)^2 -1 fassen	*/
-
-#ifndef P
-#if defined (__STDC__) || defined (__cplusplus)
-#define P(x) x
-#else
-#define P(x) ()
-#endif
-#endif
 
 /*
  *	(MAXINT+1)-adic Zahlen

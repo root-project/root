@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsaaux.h,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -33,25 +33,25 @@ extern rsa_NUMBER a_one,a_two;
  * Prototypes
  */
 
-void	a_add		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	a_assign	P(( rsa_NUMBER*, rsa_NUMBER* ));
-int	a_cmp		P(( rsa_NUMBER*, rsa_NUMBER* ));
-void	a_div		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	a_div2		P(( rsa_NUMBER* ));
-void	a_ggt		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	a_imult		P(( rsa_NUMBER*, rsa_INT, rsa_NUMBER* ));
-void	a_mult		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	a_sub		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	m_init		P(( rsa_NUMBER*, rsa_NUMBER* ));
-void	m_add		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	m_mult		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-void	m_exp		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-int	n_bits		P(( rsa_NUMBER*, int));
-void	n_div		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
-int	n_cmp		P(( rsa_INT*, rsa_INT*, int ));
-int	n_mult		P(( rsa_INT*, rsa_INT, rsa_INT*, int ));
-int	n_sub		P(( rsa_INT*, rsa_INT*, rsa_INT*, int, int ));
-int	n_bitlen	P(( rsa_NUMBER* ));
+void	a_add(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	a_assign(rsa_NUMBER*, rsa_NUMBER*);
+int	a_cmp(rsa_NUMBER*, rsa_NUMBER*);
+void	a_div(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	a_div2(rsa_NUMBER*);
+void	a_ggt(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	a_imult(rsa_NUMBER*, rsa_INT, rsa_NUMBER*);
+void	a_mult(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	a_sub(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	m_init(rsa_NUMBER*, rsa_NUMBER*);
+void	m_add(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	m_mult(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+void	m_exp(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+int	n_bits(rsa_NUMBER*, int);
+void	n_div(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
+int	n_cmp(rsa_INT*, rsa_INT*, int);
+int	n_mult(rsa_INT*, rsa_INT, rsa_INT*, int);
+int	n_sub(rsa_INT*, rsa_INT*, rsa_INT*, int, int);
+int	n_bitlen(rsa_NUMBER*);
 
 
 
@@ -59,16 +59,16 @@ int	n_bitlen	P(( rsa_NUMBER* ));
  * prim.h         *
  ******************/
 
-int	p_prim		P(( rsa_NUMBER*, int ));
-void	inv		P(( rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER* ));
+int	p_prim(rsa_NUMBER*, int);
+void	inv(rsa_NUMBER*, rsa_NUMBER*, rsa_NUMBER*);
 
 
 /******************
  * rnd.h          *
  ******************/
 
-void	gen_number	P(( int, rsa_NUMBER* ));
-void	init_rnd	P(( void ));
+void	gen_number(int, rsa_NUMBER*);
+void	init_rnd(void);
 
 
 /******************
