@@ -3,6 +3,18 @@
 # Desc: Add test directories, copies Makefiles and update CVS repository
 # Args: $1 -> dest dir
 
+printUSAGE() { echo "Usage: mktest [path]"  ;
+	       echo "  Where path is the directory path for the test to be added"; 
+	       echo "";
+	       echo "mktest is a script to add test directories, copy Makefile	
+	       and update cvs repository";
+	       exit 1; }
+
+if [ $# -lt 1 ] ; then 
+	printUSAGE ; 
+fi
+
+
 # Saves the parent directory
 PARENT_DIR=${1%/*}
 
@@ -32,3 +44,5 @@ cd $1
 #Add & Commit Makefile to CVS
 #cvs add Makefile
 #cvs commit -m "Makefile" Makefile
+
+echo "Message: $1 successfully created "

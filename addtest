@@ -4,13 +4,26 @@
 # Args: $1 -> test Name
 #	$2 -> test directory
 
-printUSAGE() { echo "Give the Directory $@."  ;exit 1; }
+printUSAGE() { 
+		echo "" ;
+		echo "Usage: addtest [test name] [test path]"  ;
+	       	echo "  where test name is the name of the test to be added"
+		echo "  where test path is the directory path for the test to be added"; 
+	        echo "";
+	        echo "addtest is a script to add test to the directories, update
+		Makefile, create .ref, runTESTNAME.C and update cvs repository";
+	        echo "" ;
+		exit 1; 
+	     }
+
+
+
 printERROR() { echo "ERROR: $@." >&2 ; }
 
 # check whether sufficient args are given
 
 if [ $# -lt 2 ] ; then 
-	printUSAGE "for the test" ; 
+	printUSAGE ; 
 fi
 
 if [ ! -d "$2" ] ; then
@@ -57,3 +70,4 @@ if [ ! -s $run$1.C ]; then
     echo "}" >> run$1.C 
 fi
 
+echo "Message: Test successfully added"
