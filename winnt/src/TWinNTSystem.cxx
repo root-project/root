@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.111 2004/12/16 11:27:46 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.112 2005/01/06 21:27:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -491,7 +491,8 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             delete gSplash;
             gSplash = 0;
          }
-         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
+         ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), 
+                          ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
          if (gConsoleEvent) {
             ::ResetEvent(gConsoleEvent);
             ::CloseHandle(gConsoleEvent);
