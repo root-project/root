@@ -6,7 +6,7 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 NOOPT         =
 else
-OPT           = -O2
+OPT           = -O
 NOOPT         =
 endif
 
