@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.14 2001/04/09 08:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.15 2001/05/28 06:32:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -86,7 +86,6 @@ public:
     virtual void      CreatePacketGenerator(Int_t nentries, Stat_t firstEntry);
     virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      EstimateLimits(Int_t estimate, Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
 
             void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax, Bool_t isInteger);
