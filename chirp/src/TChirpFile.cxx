@@ -69,9 +69,7 @@ TChirpFile::TChirpFile(const char *path, Option_t *option,
       goto zombie;
    }
 
-   SetName(path_part);
-
-   fname = GetName();
+   fname = path_part;
 
    fRealName = fname;
 

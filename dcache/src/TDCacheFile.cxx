@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.6 2003/04/28 10:18:38 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.7 2003/05/05 09:36:27 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -66,7 +66,8 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
       fOption = "READ";
    }
 
-   const char *fname;
+   TString stmp;
+   char *fname;
 
    if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
       // Ugh, no PNFS support
@@ -74,14 +75,13 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
          Error("TDCacheFile", "Without PNFS support only reading access is allowed.");
          goto zombie;
       }
-      SetName(path);
-      fname = GetName();
+      fname = path;
    } else {
       // Metadata provided by PNFS
       if ((fname = gSystem->ExpandPathName(path))) {
-         SetName(fname);
-         delete [] (char*)fname;
-         fname = GetName();
+         stmp = fname;
+         delete [] fname;
+         fname = (char *)stmp.Data();
       } else {
          Error("TDCacheFile", "error expanding path %s", path);
          goto zombie;
