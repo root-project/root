@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.3 2001/02/09 21:08:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,79 +18,88 @@
 
 ClassImp(TColor)
 
-//______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*-* C O L O R class *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =================
-//  At initialisation time, a table of colors is generated when
-//  the first Canvas constructor is called.
-//  This linked list can be accessed from the ROOT object
-//      (see TROOT::GetListOfColors).
-//  When a color is defined, two "companion" colors are also defined:
-//    - the dark version (color_index + 100)
-//    - the bright version (color_index + 150)
-// The dark and bright color are used to give 3-D effects when drawing
-// various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).
-//
-//  This is the list of currently supported basic colors.
-//  (here dark and bright colors are not shown).
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TColor                                                               //
+//                                                                      //
+// Color defined by RGB or HLS.                                         //
+// At initialization time, a table of colors is generated. This linked  //
+// list can be accessed from the ROOT object                            //
+// (see TROOT::GetListOfColors()). When a color is defined in the range //
+// of [1,50], two "companion" colors are also defined:                  //
+//    - the dark version (color_index + 100)                            //
+//    - the bright version (color_index + 150)                          //
+// The dark and bright color are used to give 3-D effects when drawing  //
+// various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).         //
+//                                                                      //
+// This is the list of currently supported basic colors (here dark and  //
+// bright colors are not shown).                                        //
 //Begin_Html
 /*
 <img src="gif/colors.gif">
 */
 //End_Html
-//
-//
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TColor::TColor(): TNamed()
 {
-//*-*-*-*-*-*-*-*-*-*-*Color default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
+   // Default ctor.
 
+   fNumber = -1;
+   fRed = fGreen = fBlue = fHue = fLight = fSaturation = -1;
 }
 
 //______________________________________________________________________________
 TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name)
-      :TNamed(name,"")
+      : TNamed(name,"")
 {
-//*-*-*-*-*-*-*-*-*-*-*Color normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =======================
-//-
-//  Initialize a color structure.
-//  Compute the RGB and HLS parameters
+   // Normal color constructor. Initialize a color structure.
+   // Compute the RGB and HLS parameters
 
-//*-*- Do not enter if color number already exist
+   // do not enter if color number already exist
    TColor *col = gROOT->GetColor(color);
    if (col) {
       Warning("TColor", "color %d already defined", color);
+      fNumber = col->GetNumber();
+      fRed    = col->GetRed();
+      fGreen  = col->GetGreen();
+      fBlue   = col->GetBlue();
+      fHue    = col->GetHue();
+      fLight  = col->GetLight();
+      fSaturation = col->GetSaturation();
       return;
    }
-   SetNumber(color);
+
+   fNumber = color;
+
    char aname[32];
-   if (!strlen(name)) {
-      sprintf(aname,"Color%d",color);
+   if (!name || !*name) {
+      sprintf(aname, "Color%d", color);
       SetName(aname);
    }
    const char *cname = GetName();
-//*-*- enter in the list of colors
-   gROOT->GetListOfColors()->AddAt(this,color);
 
-   if (color > 0 && color < 51) {   //*-*- Now create associated colors for WBOX shading
+   // enter in the list of colors
+   gROOT->GetListOfColors()->AddAt(this, color);
+
+   if (color > 0 && color < 51) {
+      // now create associated colors for WBOX shading
       sprintf(aname,"%s%s",cname,"_dark");
-      new TColor(100+color, 0,0,0,aname);
+      new TColor(100+color, -1, -1, -1, aname);
       sprintf(aname,"%s%s",cname,"_bright");
-      new TColor(150+color, 0,0,0,aname);
+      new TColor(150+color, -1, -1, -1, aname);
    }
 
-//*-*- Fill color structure
+   // fill color structure
    SetRGB(r, g, b);
 }
 
 //______________________________________________________________________________
 TColor::~TColor()
 {
-//*-*-*-*-*-*-*-*-*-*-*Color default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Color destructor.
 
    gROOT->GetListOfColors()->Remove(this);
 }
@@ -98,14 +107,15 @@ TColor::~TColor()
 //______________________________________________________________________________
 TColor::TColor(const TColor &color)
 {
+   // Color copy ctor.
+
    ((TColor&)color).Copy(*this);
 }
 
 //______________________________________________________________________________
 void TColor::Copy(TObject &obj)
 {
-//*-*-*-*-*-*-*-*-*-*-*Copy this color to color*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
+   // Copy this color to obj.
 
    TObject::Copy(obj);
    ((TColor&)obj).fRed   = fRed;
@@ -113,16 +123,14 @@ void TColor::Copy(TObject &obj)
    ((TColor&)obj).fBlue  = fBlue;
    ((TColor&)obj).fHue   = fHue;
    ((TColor&)obj).fLight = fLight;
-   ((TColor&)obj).fSaturation   = fSaturation;
+   ((TColor&)obj).fSaturation = fSaturation;
 }
 
 //______________________________________________________________________________
 void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Float_t &g, Float_t &b)
 {
-//*-*-*-*-*-*-*-*Compute HLS from RGB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ====================
-//- See HIGZ routine IGHTOR
-//
+   // Compute HLS from RGB (see HIGZ routine IGHTOR).
+
    Float_t rh, rl, rs, rm1, rm2;
    rh = rl = rs = 0;
    if (hue   > 0) rh = hue;   if (rh > 360) rh = 360;
@@ -142,10 +150,8 @@ void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Flo
 //______________________________________________________________________________
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
-//*-*-*-*-*-*-*-*Auxiliary to HLStoRGB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =====================
-// See HIGZ routine IGHR01
-//
+   // Auxiliary to HLStoRGB (see HIGZ routine IGHR01).
+
    Float_t hue = huei;
    if (hue > 360) hue = hue - 360;
    if (hue < 0)   hue = hue + 360;
@@ -158,24 +164,24 @@ Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 //______________________________________________________________________________
 void TColor::ls(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*List this color with its attributes*-*-*-*-*-*-*-*-*
-//*-*                    ===================================
+   // List this color with its attributes.
+
    printf("Color:%d  Red=%f Green=%f Blue=%f\n",fNumber,fRed,fGreen,fBlue);
 }
 
 //______________________________________________________________________________
 void TColor::Print(Option_t *) const
 {
-//*-*-*-*-*-*-*-*-*-*-*Dump this color with its attributes*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================================
-   TColor::ls();
+   // Dump this color with its attributes.
+
+   ls();
 }
 
 //______________________________________________________________________________
 void TColor::RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &hue, Float_t &light, Float_t &satur )
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute HLS from RGB*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ====================
+   // Compute HLS from RGB.
+
    Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff;
    minval = r;
    if (g <minval) minval = g;
@@ -207,38 +213,54 @@ void TColor::RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &hue, Float_t &li
 //______________________________________________________________________________
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
-//*-*-*-*-*-*-*-*Initialize this color and its assosiated colors*-*-*-*-*-*-*
-//*-*            ===============================================
-   Int_t color = GetNumber();
+   // Initialize this color and its assosiated colors.
+
    fRed   = r;
    fGreen = g;
    fBlue  = b;
 
+   if (fRed < 0) return;
+
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
 
-//*-*- make this color known to the graphics system
-   if (gVirtualX && !gROOT->IsBatch())   gVirtualX->SetRGB(color, r, g, b);
-
-   if (color > 50) return;
-//*-*- Now define associated colors for WBOX shading
-   Float_t dr, dg, db, lr, lg, lb;
    Int_t nplanes = 16;
    if (gVirtualX) gVirtualX->GetPlanes(nplanes);
    if (nplanes == 0) nplanes = 16;
-//*-*-----------Dark color
-//*-*           ==========
+
+   // allocate color now (can be delayed when we have a large colormap)
+#ifndef R__WIN32
+   if (nplanes < 16)
+#endif
+      Allocate();
+
+   if (fNumber > 50) return;
+
+   // now define associated colors for WBOX shading
+   Float_t dr, dg, db, lr, lg, lb;
+
+   // set dark color
    HLStoRGB(fHue, 0.7*fLight, fSaturation, dr, dg, db);
-   TColor *dark = gROOT->GetColor(100+color);
+   TColor *dark = gROOT->GetColor(100+fNumber);
    if (dark) {
       if (nplanes > 8) dark->SetRGB(dr, dg, db);
       else             dark->SetRGB(0.3,0.3,0.3);
    }
-//*-*-----------Light color
-//*-*           ===========
+
+   // set light color
    HLStoRGB(fHue, 1.2*fLight, fSaturation, lr, lg, lb);
-   TColor *light = gROOT->GetColor(150+color);
+   TColor *light = gROOT->GetColor(150+fNumber);
    if (light) {
       if (nplanes > 8) light->SetRGB(lr, lg, lb);
       else             light->SetRGB(0.8,0.8,0.8);
    }
 }
+
+//______________________________________________________________________________
+void TColor::Allocate()
+{
+   // Make this color known to the graphics system.
+
+   if (gVirtualX && !gROOT->IsBatch())
+      gVirtualX->SetRGB(fNumber, fRed, fGreen, fBlue);
+}
+
