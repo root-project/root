@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.18 2002/03/14 18:14:22 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.19 2002/07/17 11:07:37 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -234,6 +234,7 @@ public:
    virtual TVirtualPad *GetVirtCanvas() const ;
    Int_t             GetPadPaint() const {return fPadPaint;}
    Int_t             GetPixmapID() const {return fPixmapID;}
+   ULong_t           Hash() const { return fName.Hash(); }
    virtual Bool_t    HasCrosshair() const {return (Bool_t)fCrosshair;}
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE);
    Bool_t            HasFixedAspectRatio() const { return fFixedAspectRatio; }
