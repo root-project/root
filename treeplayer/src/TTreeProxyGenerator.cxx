@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.2 2004/06/28 05:29:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.3 2004/06/28 16:38:00 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -1347,6 +1347,10 @@ namespace ROOT {
 
 
       fprintf(hf,"// System Headers needed by the proxy\n");
+      fprintf(hf,"#if defined(__CINT__) && !defined(__MAKECINT__)\n");
+      fprintf(hf,"   #define ROOT_Rtypes\n");
+      fprintf(hf,"   #define ROOT_TError\n");
+      fprintf(hf,"#endif\n");
       fprintf(hf,"#include <TROOT.h>\n");
       fprintf(hf,"#include <TChain.h>\n");
       fprintf(hf,"#include <TFile.h>\n");
@@ -1356,11 +1360,9 @@ namespace ROOT {
       fprintf(hf,"#include <TBranchProxy.h>\n");
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
-      fprintf(hf,"#if defined(__CINT__) && !defined(__MAKECINT__)\n");
-      fprintf(hf,"   #define ROOT_Rtypes\n");
-      fprintf(hf,"#endif\n");
-      fprintf(hf,"using namespace ROOT;\n");       // questionable
-      fprintf(hf,"\n\n");
+      fprintf(hf,"#include <TMethodCall.h>\n\n");
+      fprintf(hf,"using namespace ROOT;\n"); // questionable
+      fprintf(hf,"\n");
 
       fprintf(hf,"// forward declarations needed by this particular proxy\n");
       TIter next( &fListOfForwards );
@@ -1386,6 +1388,15 @@ namespace ROOT {
       fprintf(hf, "   TH1            *htemp;     //!pointer to the histogram\n");
       fprintf(hf, "   TBranchProxyDirector  fDirector; //!Manages the proxys\n\n");
 
+      fprintf(hf, "   // Optional User methods\n");
+      fprintf(hf, "   TClass         *fClass;    // Pointer to this class's description\n");
+      fprintf(hf, "   TMethodCall     fBeginMethod;\n");
+      fprintf(hf, "   TMethodCall     fSlaveBeginMethod;\n");
+      fprintf(hf, "   TMethodCall     fNotifyMethod;\n");
+      fprintf(hf, "   TMethodCall     fProcessMethod;\n");
+      fprintf(hf, "   TMethodCall     fSlaveTerminateMethod;\n");
+      fprintf(hf, "   TMethodCall     fTerminateMethod;\n");
+
       fprintf(hf, "   // Wrapper class for each unwounded class\n");
       next = &fListOfClasses;
       TBranchProxyClassDescriptor *clp;
@@ -1409,6 +1420,13 @@ namespace ROOT {
       fprintf(hf,   ",\n      fInput(0)");
       fprintf(hf,   ",\n      htemp(0)");
       fprintf(hf,   ",\n      fDirector(tree,-1)");
+      fprintf(hf,   ",\n      fClass                (gROOT->GetClass(\"%s\"))",classname.Data());
+      fprintf(hf,   ",\n      fBeginMethod          (fClass,\"%s_Begin\",\"(TTree*)0\")",scriptfunc.Data());
+      fprintf(hf,   ",\n      fSlaveBeginMethod     (fClass,\"%s_SlaveBegin\",\"(TTree*)0\")",scriptfunc.Data());
+      fprintf(hf,   ",\n      fNotifyMethod         (fClass,\"%s_Notify\",\"\")",scriptfunc.Data());
+      fprintf(hf,   ",\n      fProcessMethod        (fClass,\"%s_Process\",\"0\")",scriptfunc.Data());
+      fprintf(hf,   ",\n      fSlaveTerminateMethod (fClass,\"%s_SlaveTerminate\",\"\")",scriptfunc.Data());
+      fprintf(hf,   ",\n      fTerminateMethod      (fClass,\"%s_Terminate\",\"\")",scriptfunc.Data());
       next.Reset();
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          fprintf(hf,",\n      %-*s(&fDirector,\"%s\")",
@@ -1483,6 +1501,7 @@ namespace ROOT {
       fprintf(hf,"   // Called when loading a new file.\n");
       fprintf(hf,"   // Get branch pointers.\n");
       fprintf(hf,"   fDirector.SetTree(fChain);\n");
+      fprintf(hf,"   if (fNotifyMethod.IsValid()) fNotifyMethod.Execute(this);\n");
       fprintf(hf,"   \n");
       fprintf(hf,"   return kTRUE;\n");
       fprintf(hf,"}\n");
@@ -1497,6 +1516,7 @@ namespace ROOT {
       fprintf(hf,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
       fprintf(hf,"\n");
       fprintf(hf,"   TString option = GetOption();\n");
+      fprintf(hf,"   if (fBeginMethod.IsValid()) fBeginMethod.Execute(this,Form(\"0x%%x\",tree));\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
 
@@ -1520,6 +1540,9 @@ namespace ROOT {
          fprintf(hf,"   htemp->SetTitle(\"%s\");\n",fScript.Data());
       }
       fprintf(hf,"   fObject = htemp;\n");
+      fprintf(hf,"   if (fSlaveBeginMethod.IsValid()) {\n");
+      fprintf(hf,"      fSlaveBeginMethod.Execute(this,Form(\"0x%%x\",tree));\n");
+      fprintf(hf,"   }\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
       fprintf(hf,"\n");
@@ -1552,21 +1575,20 @@ namespace ROOT {
       } else {
          fprintf(hf,"   htemp->Fill(%s());\n",scriptfunc.Data());
       }
+      fprintf(hf,"   if (fProcessMethod.IsValid()) fProcessMethod.Execute(this,Form(\"%%d\",entry));\n");
       fprintf(hf,"   return kTRUE;\n");
       fprintf(hf,"\n");
-      fprintf(hf,"}\n");
-      fprintf(hf,"\n");
+      fprintf(hf,"}\n\n");
 
       // generate code for class member function SlaveTerminate
-      fprintf(hf,"\n");
       fprintf(hf,"void %s::SlaveTerminate()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The SlaveTerminate() function is called after all entries or objects\n"
               "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
               "   // on each slave server.");
       fprintf(hf,"\n");
-      fprintf(hf,"\n");
-      fprintf(hf,"}\n");
+      fprintf(hf,"   if (fSlaveTerminateMethod.IsValid()) fSlaveTerminateMethod.Execute(this);\n");
+      fprintf(hf,"}\n\n");
 
       // generate code for class member function Terminate
       fprintf(hf,"void %s::Terminate()\n",classname.Data());
@@ -1576,10 +1598,11 @@ namespace ROOT {
       fprintf(hf,"   \n");
       fprintf(hf,"   if (!drawflag && !fOption.Contains(\"goff\") && !fOption.Contains(\"same\")) {\n");
       fprintf(hf,"      gPad->Clear();\n");
-      fprintf(hf,"      return;\n");
-      fprintf(hf,"  }\n");
-      fprintf(hf,"   if (fOption.Contains(\"goff\")) drawflag = false;\n");
-      fprintf(hf,"   if (drawflag) htemp->Draw(fOption);\n");
+      fprintf(hf,"   } else {\n");
+      fprintf(hf,"      if (fOption.Contains(\"goff\")) drawflag = false;\n");
+      fprintf(hf,"      if (drawflag) htemp->Draw(fOption);\n");
+      fprintf(hf,"   }\n");
+      fprintf(hf,"   if (fTerminateMethod.IsValid()) fTerminateMethod.Execute(this);\n");
       fprintf(hf,"\n");
       fprintf(hf,"}\n");
 
