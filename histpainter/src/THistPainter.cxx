@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.51 2001/10/24 13:47:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.52 2001/10/26 16:23:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1344,6 +1344,7 @@ void THistPainter::PaintAxis()
    axis.SetTitleSize(fXaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
    axis.SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
+   axis.SetBit(TAxis::kNoExponent,   fXaxis->TestBit(TAxis::kNoExponent));
    axis.SetTimeFormat(fXaxis->GetTimeFormat());
 
    chopt[0] = 0;
@@ -1402,6 +1403,7 @@ void THistPainter::PaintAxis()
    axis.SetTitleSize(fYaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
    axis.SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
+   axis.SetBit(TAxis::kNoExponent,  fYaxis->TestBit(TAxis::kNoExponent));
    axis.SetTimeFormat(fYaxis->GetTimeFormat());
 
       chopt[0] = 0;
@@ -3114,6 +3116,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
         axis->SetTitleSize(fXaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fXaxis->TestBit(TGaxis::kCenterTitle));
         axis->SetBit(TGaxis::kRotateTitle, fXaxis->TestBit(TGaxis::kRotateTitle));
+        axis->SetBit(TAxis::kNoExponent,  fXaxis->TestBit(TAxis::kNoExponent));
 	if (Hoption.Logx) {
 	    bmin = TMath::Power(10, rmin[0]);
 	    bmax = TMath::Power(10, rmax[0]);
@@ -3150,6 +3153,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
         axis->SetTitleSize(fYaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fYaxis->TestBit(TGaxis::kCenterTitle));
         axis->SetBit(TGaxis::kRotateTitle, fYaxis->TestBit(TGaxis::kRotateTitle));
+        axis->SetBit(TAxis::kNoExponent,  fYaxis->TestBit(TAxis::kNoExponent));
 
 	//if (TMath::Abs(z1[0] - z2[0]) < epsil && TMath::Abs(z1[1] - z2[1]) < epsil) {
 	//    strcpy(chopay, "SDH+=N");
@@ -3197,6 +3201,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
         axis->SetTitleSize(fZaxis->GetTitleSize());
         axis->SetBit(TGaxis::kCenterTitle, fZaxis->TestBit(TGaxis::kCenterTitle));
         axis->SetBit(TGaxis::kRotateTitle, fZaxis->TestBit(TGaxis::kRotateTitle));
+        axis->SetBit(TAxis::kNoExponent,  fZaxis->TestBit(TAxis::kNoExponent));
 	if (Hoption.Logz) {
 	    bmin = TMath::Power(10, rmin[2]);
 	    bmax = TMath::Power(10, rmax[2]);
@@ -3259,6 +3264,7 @@ void THistPainter::PaintPalette()
    axis.SetTitleSize(zaxis->GetTitleSize());
    axis.SetBit(TGaxis::kCenterTitle, zaxis->TestBit(TGaxis::kCenterTitle));
    axis.SetBit(TGaxis::kRotateTitle, zaxis->TestBit(TGaxis::kRotateTitle));
+   axis.SetBit(TAxis::kNoExponent,  zaxis->TestBit(TAxis::kNoExponent));
    Int_t ndiv = zaxis->GetNdivisions();
    Double_t wmin = Hparam.zmin;
    Double_t wmax = Hparam.zmax;
