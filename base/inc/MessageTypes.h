@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.15 2002/11/15 20:02:56 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.16 2002/12/10 02:19:46 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -46,14 +46,10 @@ enum EMessageTypes {
    kPROOF_PRINT,                         //ask master to print config
    kPROOF_RESET,                         //reset slave
    kPROOF_GETOBJECT,                     //ask for object with given name
-   kPROOF_TREEDRAW,                      //tree draw command follows
    kPROOF_GETPACKET,                     //ask for next packet
-   kPROOF_LIMITS,                        //ask for histogram limits
    kPROOF_CHECKFILE,                     //filename and md5 follows
    kPROOF_SENDFILE,                      //filename, length and file follows
    kPROOF_PARALLEL,                      //number of parallel slaves follows
-   kPROOF_OPENFILE,                      //type of file, name and option follows
-   kPROOF_CLOSEFILE,                     //name of file follows
    kPROOF_PROCESS,                       //process events, DSet and input list follow
    kPROOF_OUTPUTLIST,                    //return the output list from Process()
    kPROOF_AUTOBIN,                       //callback for auto binning
