@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.25 2002/05/31 17:16:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.26 2002/06/14 20:30:35 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -486,6 +486,17 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   gre->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   gre->SetPointError("<<i<<","<<fEX[i]<<","<<fEY[i]<<");"<<endl;
    }
+   
+   static Int_t frameNumber = 0;
+   if (fHistogram) {
+      frameNumber++;
+      TString hname = fHistogram->GetName();
+      hname += frameNumber;
+      fHistogram->SetName(hname.Data());
+      fHistogram->SavePrimitive(out,"nodraw");
+      out<<"   gre->SetHistogram("<<fHistogram->GetName()<<");"<<endl;
+      out<<"   "<<endl;
+   }
 
    // save list of functions
    TIter next(fFunctions);
@@ -493,6 +504,9 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
       out<<"   gre->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   ptstats->SetParent(gre->GetListOfFunctions());"<<endl;
+      }
    }
 
    if (strstr(option,"multigraph")) {

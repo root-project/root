@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.4 2000/11/21 20:22:33 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/12/09 18:23:51 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -18,6 +18,7 @@
 #pragma link C++ class TArc+;
 #pragma link C++ class TArrow+;
 #pragma link C++ class TBox-;
+#pragma link C++ class TCrown+;
 #pragma link C++ class TCurlyArc+;
 #pragma link C++ class TCurlyLine+;
 #pragma link C++ class TCutG-;
