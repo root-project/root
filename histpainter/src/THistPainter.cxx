@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.7 2000/06/21 22:22:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.8 2000/06/22 13:28:37 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1871,6 +1871,7 @@ Int_t THistPainter::PaintInit()
    TObject *f;
    TF1 *f1;
    Stat_t allchan = 0;
+   TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
       ymax = TMath::Max(ymax,c1);
@@ -1880,18 +1881,18 @@ Int_t THistPainter::PaintInit()
       }
       if (Hoption.Func) {
          xv[0] = fXaxis->GetBinCenter(i);
-         TIter   next(fFunctions);
          while ((f = (TObject*) next())) {
             if (f->IsA() == TF1::Class()) {
                f1 = (TF1*)f;
                if (xv[0] < f1->GetXmin() || xv[0] > f1->GetXmax()) continue;
                fval = f1->Eval(xv[0],0,0);
-               ymax = TMath::Max(ymax,Double_t(fval));
+               ymax = TMath::Max(ymax,fval);
                if (Hoption.Logy) {
-                  if (fval > 0.3*c1) ymin = TMath::Min(ymin,Double_t(fval));
+                  if (fval > 0.3*c1) ymin = TMath::Min(ymin,fval);
                }
             }
          }
+         next.Reset();
       }
       ymin = TMath::Min(ymin,c1);
       allchan += c1;
