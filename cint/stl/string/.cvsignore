@@ -1,0 +1,3 @@
+*.def *.exp *.lib *.pdb *.log *Dict.*
+*.def *.exp *.lib *.pdb *.log *Dict.* t01_C.d passing.out passingcint.out
+*.dll

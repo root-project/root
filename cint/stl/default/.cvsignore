@@ -1,0 +1,2 @@
+*.def *.exp *.lib *.pdb *.log *Dict.* *.d *.out dict*
+*.dll

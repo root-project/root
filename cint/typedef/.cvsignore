@@ -1,4 +1,4 @@
 *.log
 *.so
 *.dll
-*.d
+*.d *.def *.exp *.lib *.pdb *.log *Dict.*
