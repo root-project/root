@@ -151,7 +151,7 @@ int main(int argc, char** argv)
   cptot += cp4;
   printf("6  STLhit* : RT=%6.2f s  Cpu=%6.2f s\n",rt4,cp4);
   timer.Start(kTRUE);
-  Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,1,cx);
+  Int_t nbytes5 = STLhitStar->MakeTree(1,nevents,0,99,cx);
   timer.Stop();
   Double_t rt5w = timer.RealTime();
   Double_t cp5w = timer.CpuTime();
@@ -166,7 +166,7 @@ int main(int argc, char** argv)
   printf("8  STLhit*r: RT=%6.2f s  Cpu=%6.2f s\n",rt5r,cp5r);
   timer.Start(kTRUE);
   Float_t cx6;
-  Int_t nbytes6 = STLhitStar->MakeTree(1,nevents,1,1,cx6);
+  Int_t nbytes6 = STLhitStar->MakeTree(1,nevents,1,99,cx6);
   timer.Stop();
   Double_t rt6w = timer.RealTime();
   Double_t cp6w = timer.CpuTime();
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
   cptot += cp7;
   printf("11 Clones1 : RT=%6.2f s  Cpu=%6.2f s\n",rt7,cp7);
   timer.Start(kTRUE);
-  Int_t nbytes8 = Cloneshit->MakeTree(1,nevents,0,1,cx);
+  Int_t nbytes8 = Cloneshit->MakeTree(1,nevents,0,99,cx);
   timer.Stop();
   Double_t rt8w = timer.RealTime();
   Double_t cp8w = timer.CpuTime();
@@ -205,7 +205,7 @@ int main(int argc, char** argv)
   printf("13 Clones1r: RT=%6.2f s  Cpu=%6.2f s\n",rt8r,cp8r);
   timer.Start(kTRUE);
   Float_t cx9;
-  Int_t nbytes9 = Cloneshit->MakeTree(1,nevents,1,1,cx9);
+  Int_t nbytes9 = Cloneshit->MakeTree(1,nevents,1,99,cx9);
   timer.Stop();
   Double_t rt9w = timer.RealTime();
   Double_t cp9w = timer.CpuTime();
@@ -219,7 +219,7 @@ int main(int argc, char** argv)
   cptot += cp9r;
   printf("15 Clones1r: RT=%6.2f s  Cpu=%6.2f s\n",rt9r,cp9r);
   timer.Start(kTRUE);
-  Int_t nbytes10 = Cloneshit->MakeTree(1,nevents,0,2,cx);
+  Int_t nbytes10 = Cloneshit->MakeTree(1,nevents,0,99,cx);
   timer.Stop();
   Double_t rt10w = timer.RealTime();
   Double_t cp10w = timer.CpuTime();
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
   printf("17 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt10r,cp10r);
   timer.Start(kTRUE);
   Float_t cx11;
-  Int_t nbytes11 = Cloneshit->MakeTree(1,nevents,1,2,cx11);
+  Int_t nbytes11 = Cloneshit->MakeTree(1,nevents,1,99,cx11);
   timer.Stop();
   Double_t rt11w = timer.RealTime();
   Double_t cp11w = timer.CpuTime();
