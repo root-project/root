@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.11 2002/01/24 23:31:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.12 2002/05/18 08:21:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -116,6 +116,21 @@ TColor::TColor(const TColor &color) : TNamed(color)
 }
 
 //______________________________________________________________________________
+const char *TColor::AsHexString() const
+{
+   // Return color as hexidecimal string. This string can be directly passed
+   // to, for example, TGClient::GetColorByName(). String will be reused so
+   // copy immediately if needed.
+
+   Int_t r, g, b;
+   r = Int_t(fRed   * 255);
+   g = Int_t(fGreen * 255);
+   b = Int_t(fBlue  * 255);
+
+   return Form("#%02x%02x%02x", r, g, b);
+}
+
+//______________________________________________________________________________
 void TColor::Copy(TObject &obj)
 {
    // Copy this color to obj.
@@ -127,6 +142,19 @@ void TColor::Copy(TObject &obj)
    ((TColor&)obj).fHue   = fHue;
    ((TColor&)obj).fLight = fLight;
    ((TColor&)obj).fSaturation = fSaturation;
+}
+
+//______________________________________________________________________________
+ULong_t TColor::GetPixel() const
+{
+   // Return pixel value corresponding to this color. This pixel value can
+   // be used in the GUI classes. This call does not work in batch mode since
+   // it needs to communicate with the graphics system.
+
+   if (gVirtualX && !gROOT->IsBatch())
+      return gVirtualX->GetPixel(fNumber);
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -217,7 +245,7 @@ void TColor::RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &hue, Float_t &li
 //______________________________________________________________________________
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
-   // Initialize this color and its assosiated colors.
+   // Initialize this color and its associated colors.
 
    fRed   = r;
    fGreen = g;
@@ -358,4 +386,20 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    return color->GetNumber();
 }
 
+//______________________________________________________________________________
+ULong_t TColor::Number2Pixel(Int_t ci)
+{
+   // Static method that given a color index number, returns the corresponding
+   // pixel value. This pixel value can be used in the GUI classes. This call
+   // does not work in batch mode since it needs to communicate with the
+   // graphics system.
+
+   TColor *color = gROOT->GetColor(ci);
+   if (color)
+      return color->GetPixel();
+   else
+      ::Warning("TColor::Number2Pixel", "color with index %d not defined", ci);
+
+   return 0;
+}
 

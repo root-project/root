@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.3 2001/05/07 00:22:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.4 2001/07/17 09:06:55 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -60,10 +60,12 @@ public:
    TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name="");
    TColor(const TColor &color);
    virtual ~TColor();
-           void  Copy(TObject &color);
+   const char   *AsHexString() const;
+   void          Copy(TObject &color);
    virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const {r = fRed; g = fGreen; b = fBlue;}
    virtual void  GetHLS(Float_t &h, Float_t &l, Float_t &s) const {h = fHue; l = fLight; s = fSaturation;}
    Int_t         GetNumber() const {return fNumber;}
+   ULong_t       GetPixel() const;
    Float_t       GetRed() const {return fRed;}
    Float_t       GetGreen() const {return fGreen;}
    Float_t       GetBlue() const {return fBlue;}
@@ -74,11 +76,12 @@ public:
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
-   static void   HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
-   static void   RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
-   static Int_t  GetColor(const char *hexcolor);
-   static Int_t  GetColor(Float_t r, Float_t g, Float_t b);
-   static Int_t  GetColor(Int_t r, Int_t g, Int_t b);
+   static void    HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
+   static void    RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
+   static Int_t   GetColor(const char *hexcolor);
+   static Int_t   GetColor(Float_t r, Float_t g, Float_t b);
+   static Int_t   GetColor(Int_t r, Int_t g, Int_t b);
+   static ULong_t Number2Pixel(Int_t ci);
 
    ClassDef(TColor,1)  //Color defined by RGB or HLS
 };
