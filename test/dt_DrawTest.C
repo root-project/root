@@ -34,8 +34,8 @@ void DrawSkippable(TTree* tree, const char* what, const char* cond,
 void DrawMarks() {
 
   // The base is currently: RunDrawTest.C++("Event.old.split.root",0)
-  Float_t rt_base = 2.33;
-  Float_t cp_base = 2.34;
+  Float_t rt_base = 2.33/10.0;
+  Float_t cp_base = 2.34/10.0;
 
   Float_t rt = gBenchmark->GetRealTime("DrawTest");
   Float_t ct = gBenchmark->GetCpuTime("DrawTest");
@@ -50,7 +50,7 @@ void DrawMarks() {
 
 
 //_______________________________________________________________
-TDirectory* GenerateDrawHist(TTree *tree,int level = 1)
+TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
 {
 // Test selections via TreeFormula
 // tree is a TTree when called by stress9
@@ -125,7 +125,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1)
    // Test variable indexing
    DrawSkippable(tree,"fClosestDistance[fNvertex/2]","hClosestDistanceIndex",
                  !(level>0));
-   DrawSkippable(tree,"fPx:fPy[fNpoint]","fPy[fNpoint]>0","hPxInd",!(level>0));
+   DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",!(level>0));
 
    // Test of simple function calls
    DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",!(level>0));   
@@ -141,12 +141,15 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1)
                  ,"hAndValid",!(level>0));
 
    // Test weight
-   DrawSkippable(tree,"fPx","(fBx>.4) || (fBy<=-.4)","hPxBx",!(level>0));
-   DrawSkippable(tree,"fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)",
+   DrawSkippable(tree,"fPx","(fBx>.25) || (fBy<=-.25)","hPxBx",!(level>0));
+   DrawSkippable(tree,"fPx","fBx*fBx*(fBx>.25) + fBy*fBy*(fBy<=-.25)",
                  "hPxBxWeight",!(level>0));
   
-   gBenchmark->Show("DrawTest");  gBenchmark->Start("DrawTest");
+   if (quietLevel<2) gBenchmark->Show("DrawTest");  
+   else gBenchmark->Stop("DrawTest");  
+   gBenchmark->Start("DrawTest");
 
    return hfile;
 
 }
+

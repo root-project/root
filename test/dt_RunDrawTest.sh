@@ -7,32 +7,40 @@ ClassWarning='Warning in <TClass::TClass>: no dictionary for class'
 RootPrompt='root \[0\]'
 Streamer="Event::Streamer not available,"
 
-root.exe -l -q -b 'dt_RunDrawTest.C++("Event.old.split.root",0)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.split.root",1)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.split.root",2)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.split.root",3)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.split.root",4)' 2>&1 | grep -v "$RootPrompt"
+# launch replace
+# root.exe -l -b 'dt_RunDrawTest.C+("Event.new.split9.root",0)'
+launch () {
+  echo test $1 level $2 
+  (echo 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' | root.exe -l -b 2>&1; return $?;) | grep -v "$3";
+}
 
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.streamed.root",0)' 2>&1 | grep -v "$Streamer\|$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.streamed.root",1)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.streamed.root",2)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.streamed.root",3)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.old.streamed.root",4)' 2>&1 | grep -v "$RootPrompt"
 
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split9.root",0)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split9.root",1)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split9.root",2)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split9.root",3)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split9.root",4)' 2>&1 | grep -v "$RootPrompt"
+launch "Event.old.split.root" 0 "$ClassWarning\|$RootPrompt" && \
+launch "Event.old.split.root" 1 "$RootPrompt" && \
+launch "Event.old.split.root" 2 "$ClassWarning\|$RootPrompt" && \
+launch "Event.old.split.root" 3 "$RootPrompt" && \
+launch "Event.old.split.root" 4 "$RootPrompt"
 
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split1.root",0)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split1.root",1)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split1.root",2)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split1.root",3)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split1.root",4)' 2>&1 | grep -v "$RootPrompt"
+launch "Event.old.streamed.root" 0 "$Streamer\|$ClassWarning\|$RootPrompt" && \
+launch "Event.old.streamed.root" 1 "$RootPrompt" && \
+launch "Event.old.streamed.root" 2 "$ClassWarning\|$RootPrompt" && \
+launch "Event.old.streamed.root" 3 "$RootPrompt" && \
+launch "Event.old.streamed.root" 4 "$RootPrompt"
 
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split0.root",0)' 2>&1 | grep -v "$Streamer\|$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split0.root",1)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split0.root",2)' 2>&1 | grep -v "$ClassWarning\|$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split0.root",3)' 2>&1 | grep -v "$RootPrompt"
-root.exe -l -q -b 'dt_RunDrawTest.C+("Event.new.split0.root",4)' 2>&1 | grep -v "$RootPrompt"
+launch "Event.new.split9.root" 0 "$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split9.root" 1 "$RootPrompt" && \
+launch "Event.new.split9.root" 2 "$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split9.root" 3 "$RootPrompt" && \
+launch "Event.new.split9.root" 4 "$RootPrompt"
+
+launch "Event.new.split1.root" 0 "$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split1.root" 1 "$RootPrompt" && \
+launch "Event.new.split1.root" 2 "$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split1.root" 3 "$RootPrompt" && \
+launch "Event.new.split1.root" 4 "$RootPrompt"
+
+launch "Event.new.split0.root" 0 "$Streamer\|$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split0.root" 1 "$RootPrompt" && \
+launch "Event.new.split0.root" 2 "$ClassWarning\|$RootPrompt" && \
+launch "Event.new.split0.root" 3 "$RootPrompt" && \
+launch "Event.new.split0.root" 4 "$RootPrompt"

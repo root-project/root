@@ -4,6 +4,7 @@
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TSystem.h"
 
 #ifndef __CINT__
@@ -192,15 +193,15 @@ void MakeHisto(TTree *tree, TDirectory* To) {
             refAndValid->Fill( t->GetValid() & 0x1 );
          }
          
-         Track * t2 = (Track*)tracks->At(t->GetNpoint());
+         Track * t2 = (Track*)tracks->At(t->GetNpoint()/6);
          if (t2 && t2->GetPy()>0) {
             refPxInd->Fill(t2->GetPy(),t->GetPx());
          }
          float Bx,By;
          Bx = t->GetBx();
          By = t->GetBy();
-         if ((Bx>.4) || (By<=-.4)) refPxBx->Fill(t->GetPx());
-         double weight = Bx*Bx*(Bx>.4) + By*By*(By<=-.4);
+         if ((Bx>.25) || (By<=-.25)) refPxBx->Fill(t->GetPx());
+         double weight = Bx*Bx*(Bx>.25) + By*By*(By<=-.25);
          if (weight) refPxBxWeight->Fill(t->GetPx(),weight);
 
          if (i<4) {
@@ -222,7 +223,9 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
 }
 
-void dt_MakeRef(const char* from) {
+void dt_MakeRef(const char* from, Int_t verboseLevel = 2) {
+   SetVerboseLevel(verboseLevel);
+
    if (!TClassTable::GetDict("Event")) {
       gSystem->Load("libEvent");
       gHasLibrary = kTRUE;

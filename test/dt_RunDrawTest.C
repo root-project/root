@@ -38,6 +38,7 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
    }
 
    Float_t xrange = ref->GetXaxis()->GetXmax() - ref->GetXaxis()->GetXmin();
+   if (xrange==0) fprintf(stderr,"no range for %s\n",ref->GetName());
    if (TMath::Abs((mean1-mean2)/xrange) > 0.001*xrange) return -1;
    if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001)    return -2;
    return n1*factor-n2;
@@ -108,7 +109,7 @@ void SetVerboseLevel(Int_t verboseLevel) {
    }
 }
 
-void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
+bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
   // This launch a test a TTree::Draw.
   // The mode currently available are:
   //    0: Do not load the shared library
@@ -168,18 +169,19 @@ void dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    // cerr << "Branch style is " << gBranchStyle << endl;
 
    if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
-   TDirectory* where = GenerateDrawHist(tree);
+   TDirectory* where = GenerateDrawHist(tree,1,gQuietLevel);
  
    if (gQuietLevel<2) cout << "Comparing histograms" << endl;
    if (Compare(where)>0) {
      cout << "DrawTest: Comparison failed" << endl;
-     return;
+     return false;
    }
    DrawMarks();
 
-   cout << "DrawTest: Comparison was successfull" << endl;
+   if (gQuietLevel<2) cout << "DrawTest: Comparison was successfull" << endl;
    if (hfile) delete hfile;
    else delete tree;
    gROOT->GetList()->Delete();
 
+   return true;
 }   
