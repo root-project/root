@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.2 2000/07/06 16:53:36 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.3 2000/07/13 19:19:27 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,7 +20,7 @@
 #pragma link C++ class TBranchObject;
 #pragma link C++ class TChain-;
 #pragma link C++ class TChainElement;
-#pragma link C++ class TCut;
+#pragma link C++ class TCut+;
 #pragma link C++ class TEventList-;
 #pragma link C++ class TLeaf-;
 #pragma link C++ class TLeafObject-;
