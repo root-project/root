@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.35 2001/03/12 07:16:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.36 2001/04/09 08:07:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -191,15 +191,16 @@ TClass::TClass() : TDictionary()
 {
    // Default ctor.
 
-   fBase         = 0;
-   fData         = 0;
-   fMethod       = 0;
-   fRealData     = 0;
-   fClassInfo    = 0;
-   fAllPubData   = 0;
-   fAllPubMethod = 0;
-   fStreamerInfo = 0;
-   fCheckSum     = 0;
+   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
+   fBase           = 0;
+   fData           = 0;
+   fMethod         = 0;
+   fRealData       = 0;
+   fClassInfo      = 0;
+   fAllPubData     = 0;
+   fAllPubMethod   = 0;
+   fCheckSum       = 0;
+   fStreamerInfo   = 0;
 
    ResetInstanceCount();
 }
@@ -219,9 +220,9 @@ TClass::TClass(const char *name) : TDictionary()
 
    fName           = name;
    fClassVersion   = 0;
-   fDeclFileName   = 0;
-   fImplFileName   = 0;
-   fDeclFileLine   = -1;    // -1 for standalone TClass (checked in dtor)
+   fDeclFileName   = "";
+   fImplFileName   = "";
+   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
    fImplFileLine   = 0;
    fBase           = 0;
    fData           = 0;
@@ -258,8 +259,8 @@ TClass::TClass(const char *name, Version_t cversion,
 
    fName           = name;
    fClassVersion   = cversion;
-   fDeclFileName   = dfil;
-   fImplFileName   = ifil;
+   fDeclFileName   = dfil ? dfil : "";
+   fImplFileName   = ifil ? ifil : "";
    fDeclFileLine   = dl;
    fImplFileLine   = il;
    fBase           = 0;
@@ -340,7 +341,7 @@ TClass::~TClass()
       fStreamerInfo->Delete();
    delete fStreamerInfo;
 
-   if (fDeclFileLine >= 0)
+   if (fDeclFileLine >= -1)
       gROOT->GetListOfClasses()->Remove(this);
 
    delete fClassInfo;
@@ -972,7 +973,7 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
 //     Track::Class()->IgnoreTObjectStreamer();
 //  and not:
 //     BigTrack::Class()->IgnoreTObjectStreamer();
-   
+
    if ( ignore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
@@ -1123,7 +1124,7 @@ Int_t TClass::Size() const
 {
    // Return size of object of this class.
 
-   if (fClassInfo) return GetClassInfo()->Size(); 
+   if (fClassInfo) return GetClassInfo()->Size();
    return ((TClass*)this)->GetStreamerInfo()->GetSize();
 }
 
