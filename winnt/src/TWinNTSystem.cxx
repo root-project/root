@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.94 2004/06/08 21:11:54 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.95 2004/06/17 10:54:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1370,6 +1370,69 @@ Bool_t TWinNTSystem::ChangeDirectory(const char *path)
 }
 
 //______________________________________________________________________________
+__inline BOOL DBL_BSLASH(LPCTSTR psz) 
+{     
+   // 
+   // Inline function to check for a double-backslash at the 
+   // beginning of a string 
+   //  
+   return (psz[0] == TEXT('\\') && psz[1] == TEXT('\\')); 
+} 
+
+//______________________________________________________________________________
+BOOL PathIsUNC(LPCTSTR pszPath) 
+{     
+   // Returns TRUE if the given string is a UNC path. 
+   // 
+   // TRUE 
+   //      "\\foo\bar" 
+   //      "\\foo"         <- careful 
+   //      "\\" 
+   // FALSE 
+   //      "\foo" 
+   //      "foo" 
+   //      "c:\foo"  
+   return DBL_BSLASH(pszPath); 
+} 
+
+#pragma data_seg(".text", "CODE")
+const TCHAR c_szColonSlash[] = TEXT(":\\");
+#pragma data_seg() 
+
+//______________________________________________________________________________
+BOOL PathIsRoot(LPCTSTR pPath)
+{
+   //
+   // check if a path is a root 
+   // 
+   // returns: 
+   //  TRUE for "\" "X:\" "\\foo\asdf" "\\foo\"
+   //  FALSE for others
+   //  
+   if (!IsDBCSLeadByte(*pPath)) {
+      if (!lstrcmpi(pPath + 1, c_szColonSlash))
+         // "X:\" case
+         return TRUE;
+   }      
+   if ((*pPath == TEXT('\\')) && (*(pPath + 1) == 0))
+      // "\" case
+      return TRUE;
+   if (DBL_BSLASH(pPath)) {
+      // smells like UNC name
+      LPCTSTR p;
+      int cBackslashes = 0;
+      for (p = pPath + 2; *p; p = CharNext(p)) {
+         if (*p == TEXT('\\') && (++cBackslashes > 1))
+            return FALSE;   // not a bare UNC name, therefore not a root dir
+      }
+      // end of string with only 1 more backslash
+      // must be a bare UNC, which looks like a root dir
+      return TRUE;
+   }
+   return FALSE;
+}  
+
+//______________________________________________________________________________
 void *TWinNTSystem::OpenDirectory(const char *dir)
 {
    // Open a directory. Returns 0 if directory does not exist.
@@ -1379,16 +1442,37 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
       return helper->OpenDirectory(dir);
    }
 
+   char *entry = new char[strlen(dir)+3];
    struct _stati64 finfo;
 
-   if (_stati64(dir, &finfo) < 0) {
-      return 0;
+   if(PathIsUNC(dir)) {
+      strcpy(entry, dir);
+      if ((entry[strlen(dir)-1] == '/') || (entry[strlen(dir)-1] == '\\' )) {
+         entry[strlen(dir)-1] = '\0';
+      }
+      if(PathIsRoot(entry)) {
+         strcat(entry,"\\");
+      }
+      if (_stati64(entry, &finfo) < 0) {
+         delete [] entry;
+         return 0;
+      }
+   }
+   else {
+      strcpy(entry, dir);
+      if ((entry[strlen(dir)-1] == '/') || (entry[strlen(dir)-1] == '\\' )) {
+         if(!PathIsRoot(entry))
+            entry[strlen(dir)-1] = '\0';
+      }
+      if (_stati64(entry, &finfo) < 0) {
+         delete [] entry;
+         return 0;
+      }
    }
 
    if (finfo.st_mode & S_IFDIR) {
-      char *entry = new char[strlen(dir)+3];
       strcpy(entry, dir);
-      if (!(entry[strlen(dir)] == '/' || entry[strlen(dir)] == '\\' )) {
+      if (!(entry[strlen(dir)-1] == '/' || entry[strlen(dir)-1] == '\\' )) {
          strcat(entry,"\\");
       }
       strcat(entry,"*");
@@ -1403,6 +1487,7 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
       delete [] entry;
       return searchFile;
    } else {
+      delete [] entry;
       return 0;
    }
 }
