@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.62 2004/05/26 07:48:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.63 2004/06/04 08:35:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -207,7 +207,7 @@ public:
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
     virtual TList    *GetListOfFriends() const  {return fFriends;}
     virtual TSeqCollection *GetListOfAliases() const {return fAliases;}
-    
+
     // GetMakeClass is left non-virtual for efficiency reason.
     // Making it virtual affects the performance of the I/O
             Int_t     GetMakeClass() const {return fMakeClass;}
@@ -250,6 +250,7 @@ public:
     virtual Int_t     MakeCode(const char *filename=0);
     virtual Int_t     MakeSelector(const char *selector=0);
     Bool_t            MemoryFull(Int_t nbytes);
+    virtual Int_t     Merge(TCollection *list);
     static  TTree    *MergeTrees(TList *list);
     virtual Bool_t    Notify();
     TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"

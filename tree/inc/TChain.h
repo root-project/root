@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.34 2003/08/14 04:44:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.35 2003/10/20 06:32:28 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
     virtual void      Loop(Option_t *option="",Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
     virtual Int_t     Merge(const char *name);
+    virtual Int_t     Merge(TCollection *list);
     virtual Int_t     Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="") const;
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.88 2004/03/09 21:17:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.89 2004/04/30 00:27:46 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -987,6 +987,16 @@ Int_t TChain::Merge(const char *name)
 
    TFile *file = TFile::Open(name,"recreate","chain files",1);
    return Merge(file,0,"");
+}
+
+
+//______________________________________________________________________________
+Int_t TChain::Merge(TCollection * /* list */ )
+{
+   // Merge all TChains in the list
+
+   Error("Merge", "not implemented");
+   return -1;
 }
 
 

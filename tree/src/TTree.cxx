@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.190 2004/06/04 08:35:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.191 2004/06/04 16:40:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -454,7 +454,7 @@ TTree::~TTree()
 }
 
 //______________________________________________________________________________
-void TTree::AddClone(TTree *clone) 
+void TTree::AddClone(TTree *clone)
 {
 // Add a cloned tree to our list of tree to be notify whenever we changes our
 // addresses and are being deleted.
@@ -639,7 +639,7 @@ Int_t TTree::AutoSave(Option_t *option)
 //
 //   if option contains "SaveSelf", gDirectory->SaveSelf() is called.
 //   This allows another process to analyze the Tree while the Tree is being filled.
-// 
+//
 //   By default the previous header is deleted after having written the new header.
 //   if option contains "Overwrite", the previous Tree header is deleted
 //   before written the new header. This option is slightly faster, but
@@ -684,7 +684,7 @@ Int_t TTree::AutoSave(Option_t *option)
 //         ntuple->Refresh();
 //      }
 //   }
-      
+
    if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return 0;
    if (gDebug > 0) {
       printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
@@ -708,9 +708,9 @@ Int_t TTree::AutoSave(Option_t *option)
    // save StreamerInfo
    TFile *file = fDirectory->GetFile();
    if (file) file->WriteStreamerInfo();
-   
+
    if (opt.Contains("saveself")) fDirectory->SaveSelf();
-   
+
    dirsav->cd();
    return nbytes;
 }
@@ -1605,7 +1605,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 //
 // IMPORTANT: The cloned tree stays connected with this tree until this tree
 //            is deleted.  In particular, any changes in branch addresses
-//            in this tree are forwarded to the clone trees.  Any changes 
+//            in this tree are forwarded to the clone trees.  Any changes
 //            made to the branch addresses of the cloned trees are over-ridden
 //            anytime this tree changes its branch addresses.
 //            Once this tree is deleted, all the addresses of the cloned tree
@@ -1624,7 +1624,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
 
   // we make a full copy of this tree
    if (LoadTree(0)<0) return 0; //in case this is a TChain
-   TTree *thistree = GetTree(); 
+   TTree *thistree = GetTree();
 
    TTree *newtree = (TTree*)thistree->Clone();
    if (newtree == 0) return 0;
@@ -1701,7 +1701,7 @@ void TTree::CopyAddresses(TTree *tree)
          char *add = branch->GetAddress();
          if (!add) {
             branch->SetAddress(0);      // Attempts to set a default address
-            add = branch->GetAddress(); 
+            add = branch->GetAddress();
          }
          if (br) br->SetAddress(add);
       }
@@ -1721,7 +1721,7 @@ void TTree::CopyAddresses(TTree *tree)
       if (!branch->GetAddress()&&!leaf->GetValuePointer()) {
          // We should attempts to set the address of the branch.
          // something like:
-         //(TBranchElement*)branch->GetMother()->SetAddress(0) 
+         //(TBranchElement*)branch->GetMother()->SetAddress(0)
          //plus a few more subtilities (see TBranchElement::GetEntry).
          //but for now we go the simpliest route:
          branch->GetEntry(0);
@@ -1763,7 +1763,7 @@ TTree *TTree::CopyTree(const char *selection, Option_t *option, Int_t nentries, 
 //
 // IMPORTANT: The copied tree stays connected with this tree until this tree
 //            is deleted.  In particular, any changes in branch addresses
-//            in this tree are forwarded to the clone trees.  Any changes 
+//            in this tree are forwarded to the clone trees.  Any changes
 //            made to the branch addresses of the copied trees are over-ridden
 //            anytime this tree changes its branch addresses.
 //            Once this tree is deleted, all the addresses of the copied tree
@@ -1880,7 +1880,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
 //*-*                  ===========================================
 //
-//  varexp is an expression of the general form 
+//  varexp is an expression of the general form
 //   - "e1"           produces a 1-d histogram of expression "e1"
 //   - "e1:e2"        produces a 2-d histogram (or profile) of "e1" versus "e2"
 //   - "e1:e2:e3"     produces a 3-d scatter-plot of "e1" versus "e2" versus "e3"
@@ -2077,14 +2077,14 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
 //                 As a comparison
 //    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
-//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 will draw the sum arr3 for the index 0 to 2 only if the
 //                 actual_size_of_arr3 is greater or equal to 3.
 //                 Note that the array in 'primary' is flatened/linearilized thus using
 //                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
 //                 to yield the expected results.  To visualize a bit more what elements
 //                 would be matched by TTree::Draw, TTree::Scan can be used:
 //    tree->Scan("arr1:Alt$(arr2,0)");
-//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 will print on one line the value of arr1 and (arr2,0) that will be
 //                 matched by
 //    tree->Draw("arr1-Alt$(arr2,0)");
 //
@@ -2787,9 +2787,9 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 //
 //  If the Tree has friend trees, the corresponding entry with
 //  the index values (major,minor) is read. Note that the master Tree
-//  and its friend may have different entry serial numbers corresponding 
+//  and its friend may have different entry serial numbers corresponding
 //  to (major,minor).
-   
+
    Int_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
    Int_t i;
@@ -2883,12 +2883,12 @@ TLeaf *TTree::GetLeaf(const char *aname)
       if (slash) {
          const char* brname = leaf->GetBranch()->GetName();
          if (strncmp(brname,aname,nbch)) continue;
-         
+
          // The start of the branch name is indentical to the content
          // of 'aname' before the first '/'.
          // Let's make sure that it is not longer (we are trying
          // to avoid having jet2/value match the branch jet23
-         if ( strlen(brname)>nbch 
+         if ( strlen(brname)>nbch
               && brname[nbch]!='.'
               && brname[nbch]!='['
               /* any other terminators? */
@@ -3022,11 +3022,11 @@ TVirtualTreePlayer *TTree::GetPlayer()
 }
 
 //______________________________________________________________________________
-TList *TTree::GetUserInfo() 
+TList *TTree::GetUserInfo()
 {
    // return a pointer to the list containing user objects associated to this Tree
    // The list is automatically created if it does not exist
-   
+
    if (!fUserInfo) fUserInfo = new TList();
    return fUserInfo;
 }
@@ -3223,7 +3223,7 @@ Bool_t TTree::MemoryFull(Int_t nbytes)
 }
 
 //______________________________________________________________________________
-TTree *TTree::MergeTrees(TList *list) 
+TTree *TTree::MergeTrees(TList *list)
 {
    //static function merging the Trees in the TList into a new Tree.
    //Trees in the list can be memory or disk-resident trees
@@ -3236,19 +3236,48 @@ TTree *TTree::MergeTrees(TList *list)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
+      Int_t nentries = (Int_t)tree->GetEntries();
+      if (nentries == 0) continue;
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree();
          continue;
       } else {
          tree->CopyAddresses(newtree);
       }
-      Int_t nentries = (Int_t)tree->GetEntries();
       for (Int_t i=0;i<nentries;i++) {
          tree->GetEntry(i);
          newtree->Fill();
       }
    }
    return newtree;
+}
+
+//______________________________________________________________________________
+Int_t TTree::Merge(TCollection *list)
+{
+   //function merging the Trees in the TList into this Tree.
+
+   if (!list) return 0;
+   TIter next(list);
+   TTree *tree;
+   while ((tree = (TTree*)next())) {
+      if (!tree->InheritsFrom(TTree::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",
+               tree->ClassName(), ClassName());
+         return -1;
+      }
+
+      Long64_t nentries = (Long64_t)tree->GetEntries();
+      if (nentries == 0) continue;
+
+      tree->CopyAddresses(this);
+      for (Long64_t i=0; i<nentries ; i++) {
+         tree->GetEntry(i);
+         Fill();
+      }
+   }
+
+   return (Int_t) GetEntries();
 }
 
 //______________________________________________________________________________
@@ -3512,7 +3541,7 @@ void TTree::Refresh()
 //  Tree status on its file
 //  One can call this function in case the Tree on its file is being
 //  updated by another process
-      
+
    if (!fDirectory) return;
    fDirectory->ReadKeys();
    fDirectory->GetList()->Remove(this);
@@ -3524,7 +3553,7 @@ void TTree::Refresh()
    fZipBytes     = tree->fZipBytes;
    fSavedBytes   = tree->fSavedBytes;
    fTotalBuffers = tree->fTotalBuffers;
-      
+
    //loop on all branches and update them
    Int_t nleaves = fLeaves.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++)  {
@@ -3532,7 +3561,7 @@ void TTree::Refresh()
       TBranch *branch = (TBranch*)leaf->GetBranch();
       branch->Refresh(tree->GetBranch(branch->GetName()));
    }
-   
+
    fDirectory->GetList()->Remove(tree);
    fDirectory->GetList()->Add(this);
    delete tree;
@@ -3601,19 +3630,19 @@ Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, 
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
    // see TTreePlayer::Scan for more information
-   
+
    GetPlayer();
    if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
    else         return -1;
 }
 
 //______________________________________________________________________________
-Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula) 
+Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set a tree variable alias*-*-*-*-*-*
 //*-*                  ====================================
 //
-//  Set an alias for an expression/formula based on the tree 'variables'.  
+//  Set an alias for an expression/formula based on the tree 'variables'.
 //
 //  The content of 'aliasName' can be used in TTreeFormula (i.e. TTree::Draw,
 //  TTree::Scan, TTreeViewer) and will be evaluated as the content of
@@ -3644,7 +3673,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
          return kTRUE;
       }
    }
-   
+
    TNamed *holder = new TNamed(aliasName,aliasFormula);
    fAliases->Add(holder);
 
@@ -3892,7 +3921,7 @@ void TTree::SetEntries(Double_t n)
   // independently via TBranch::Fill without calling TTree::Fill
   // Calling TTree::SetEntries make sense only if the number of existing entries
   // is null. A Warning is issued otherwise
-   
+
    if (fEntries != 0) {
       Warning("SetEntries","Trees has already %g entries",fEntries);
    }
@@ -3920,7 +3949,7 @@ void TTree::SetFileNumber(Int_t number)
 //    (see TTree::ChangeFile)
 // if fFileNumber=10, the new file name will have a suffix "_11",
 // ie, fFileNumber is incremented before setting the file name
-   
+
    if (fFileNumber < 0) {
       Warning("SetFileNumber","file number must be positive. Set to 0");
       fFileNumber = 0;
@@ -3928,7 +3957,7 @@ void TTree::SetFileNumber(Int_t number)
    }
    fFileNumber = number;
 }
-  
+
 //______________________________________________________________________________
 void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
@@ -3998,7 +4027,7 @@ void TTree::Show(Int_t entry, Int_t lenmax)
 //*-*        ===========================================
 // if entry==-1, print current entry (default)
 // if a leaf is an array, a maximum of lenmax elements is printed.
-// 
+//
    if (entry != -1) GetEntry(entry);
    printf("======> EVENT:%d\n",fReadEntry);
    TObjArray *leaves  = GetListOfLeaves();
