@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.17 2002/11/27 15:22:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.18 2002/12/02 18:50:03 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -413,6 +413,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
 
    TGListTreeItem *item;
    fOnMouseOver = kFALSE;
+   TGPosition pos = GetPagePosition();
 
    if ((item = FindItem(event->fY)) != 0) {
       if (fTipItem == item) return kTRUE;
@@ -425,18 +426,16 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
 
       if (item->fTipText.Length() > 0) {
 
-         UInt_t width = FontTextWidth(fFont, item->fText.Data());
-         SetToolTipText(item->fTipText.Data(), item->fXtext+width,
-                        item->fY+item->fHeight-4, 1000);
+         SetToolTipText(item->fTipText.Data(), item->fXtext,
+                        item->fY -pos.fY +item->fHeight -4, 1000);
 
       } else if (fAutoTips && item->GetUserData()) {
          // must derive from TObject (in principle user can put pointer
          // to anything in user data field). Add check.
          TObject *obj = (TObject *)item->GetUserData();
          if (obj->InheritsFrom(TObject::Class())) {
-            UInt_t width = FontTextWidth(fFont, item->fText.Data());
-            SetToolTipText(obj->GetTitle(), item->fXtext+width,
-                           item->fY+item->fHeight-4, 1000);
+            SetToolTipText(obj->GetTitle(), item->fXtext,
+                           item->fY -pos.fY +item->fHeight -4, 1000);
          }
       }
       fTipItem = item;
