@@ -11,7 +11,7 @@
 
 //==========CPP macros
 
-#define DOLOOP for(Int_t k=0; k<narr; ++k) 
+#define DOLOOP for(Int_t k=0; k<narr; ++k)
 
 #define ReadBasicTypeElem(name,index)           \
    {                                            \
@@ -43,7 +43,7 @@
 #define ReadBasicArrayLoop(name)                               \
    {                                                           \
       for(Int_t k=0; k<narr; ++k) ReadBasicArrayElem(name,k)   \
-   } 
+   }
 
 #define ReadBasicPointerElem(name,index)        \
    {                                            \
@@ -99,23 +99,23 @@
    }
 
 //______________________________________________________________________________
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
-   // Support for non standard compilers
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+// Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferSkipImp(TBuffer &b, const T &arr, Int_t i, Int_t kase, 
+Int_t TStreamerInfo__ReadBufferSkipImp(TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset,
-                                       ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                       TClass *fClass, Int_t *fOffset, Int_t *fNewType,
-                                       Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
-                                       TStreamerInfo::CompInfo *fComp)
+                                       ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
+                                       TClass *fClass, Int_t * /*fOffset*/, Int_t * /*fNewType*/,
+                                       Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
+                                       TStreamerInfo::CompInfo * /*fComp*/)
 #else
 template <class T>
-Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kase, 
+Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 #endif
-{ 
+{
    //  Skip elements in a TClonesArray
    UInt_t start, count;
 
@@ -178,7 +178,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          }
          break;
       }
-      
+
       // skip Class *  derived from TObject with comment field  //->
       case TStreamerInfo::kSkip + TStreamerInfo::kObjectp: {
          DOLOOP {
@@ -187,7 +187,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          }
          break;
       }
-     
+
       // skip Class*   derived from TObject
       case TStreamerInfo::kSkip + TStreamerInfo::kObjectP: {
          DOLOOP{
@@ -300,20 +300,20 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
 }
 
 //______________________________________________________________________________
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
-   // Support for non standard compilers
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+// Support for non standard compilers
 template <class T>
-Int_t TStreamerInfo__ReadBufferConvImp(TBuffer &b, const T &arr,  Int_t i, Int_t kase, 
-                                       TStreamerElement *aElement, Int_t narr, 
+Int_t TStreamerInfo__ReadBufferConvImp(TBuffer &b, const T &arr,  Int_t i, Int_t kase,
+                                       TStreamerElement *aElement, Int_t narr,
                                        Int_t eoffset,
-                                       ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                       TClass *fClass, Int_t *fOffset, Int_t *fNewType,
-                                       Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
-                                       TStreamerInfo::CompInfo *fComp)
+                                       ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
+                                       TClass * /*fClass*/, Int_t *fOffset, Int_t *fNewType,
+                                       Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
+                                       TStreamerInfo::CompInfo * /*fComp*/)
 #else
 template <class T>
-Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t kase, 
-                                    TStreamerElement *aElement, Int_t narr, 
+Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t kase,
+                                    TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 #endif
 {
@@ -511,7 +511,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConv + TStreamerInfo::kULong64: ConvCBasicType(ULong64_t)
 #endif
       case TStreamerInfo::kConv + TStreamerInfo::kBits:    ConvCBasicType(UInt_t);
-         
+
          // convert array of basic types  array[8]
       case TStreamerInfo::kConvL + TStreamerInfo::kChar:    ConvCBasicArray(Char_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kShort:   ConvCBasicArray(Short_t);
@@ -560,21 +560,21 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
 }
 
 //______________________________________________________________________________
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
-   // Support for non standard compilers
-template <class T> 
-Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *This, 
-                                   TBuffer &b, const T &arr, Int_t first, 
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+// Support for non standard compilers
+template <class T>
+Int_t TStreamerInfo__ReadBufferImp(TStreamerInfo *This,
+                                   TBuffer &b, const T &arr, Int_t first,
                                    Int_t narr, Int_t eoffset, Int_t arrayMode,
                                    ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                   TClass *fClass, Int_t *fOffset, Int_t *fNewType,
+                                   TClass *fClass, Int_t *fOffset, Int_t * /*fNewType*/,
                                    Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
                                    TStreamerInfo::CompInfo *fComp,
                                    Version_t &fOldVersion)
 {
 #else
-template <class T> 
-Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first, 
+template <class T>
+Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                                 Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
   TStreamerInfo *This = this;
@@ -588,7 +588,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
    //  and T==TVirtualCollectionProxy
 
    b.IncrementLevel(This);
-   
+
    Int_t last;
 
    if (!fType) {
@@ -596,12 +596,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
       fClass->BuildRealData(ptr);
       This->BuildOld();
    }
-   
+
    //loop on all active members
-   
+
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
-   
+
    // In order to speed up the case where the object being written is
    // not in a collection (i.e. arrayMode is false), we actually
    // duplicate the code for the elementary types using this typeOffset.
@@ -613,11 +613,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
    Int_t isPreAlloc = 0;
    for (Int_t i=first;i<last;i++) {
 
-      b.SetStreamerElementNumber(i);      
-      TStreamerElement * aElement  = (TStreamerElement*)fElem[i];      
+      b.SetStreamerElementNumber(i);
+      TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
       fgElement = aElement;
-      
-      const Int_t ioffset = fOffset[i]+eoffset;   
+
+      const Int_t ioffset = fOffset[i]+eoffset;
 
       if (gDebug > 1) {
          printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
@@ -645,10 +645,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kULong64:            ReadBasicType(ULong64_t); continue;
          case TStreamerInfo::kDouble32: {
             Double_t *x=(Double_t*)(arr[0]+ioffset);
-            Float_t afloat; b >> afloat; *x = (Double_t)afloat; 
-            continue; 
+            Float_t afloat; b >> afloat; *x = (Double_t)afloat;
+            continue;
          }
-      
+
          case TStreamerInfo::kChar   + kHaveLoop: ReadBasicTypeLoop(Char_t);    continue;
          case TStreamerInfo::kShort  + kHaveLoop: ReadBasicTypeLoop(Short_t);   continue;
          case TStreamerInfo::kInt    + kHaveLoop: ReadBasicTypeLoop(Int_t);     continue;
@@ -664,11 +664,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kDouble32 + kHaveLoop: {
             for(Int_t k=0; k<narr; ++k) {
                Double_t *x=(Double_t*)(arr[k]+ioffset);
-               Float_t afloat; b >> afloat; *x = (Double_t)afloat; 
+               Float_t afloat; b >> afloat; *x = (Double_t)afloat;
             }
-            continue; 
+            continue;
          }
-      
+
          // read array of basic types  like array[8]
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:   ReadBasicArray(Char_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:  ReadBasicArray(Short_t);   continue;
@@ -705,7 +705,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             }
             continue;
          }
-      
+
          // read pointer to an array of basic types  array[n]
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:   ReadBasicPointer(Char_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:  ReadBasicPointer(Short_t);  continue;
@@ -720,19 +720,19 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong:  ReadBasicPointer(ULong_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:ReadBasicPointer(ULong64_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
-            Char_t isArray; 
-            b >> isArray; 
+            Char_t isArray;
+            b >> isArray;
             const int imethod = fMethod[i]+eoffset;
             Int_t *l = (Int_t*)(arr[0]+imethod);
-            Double_t **f = (Double_t**)(arr[0]+ioffset); 
-            int j; 
-            for(j=0;j<fLength[i];j++) { 
-               delete [] f[j]; 
-               f[j] = 0; if (*l <=0) continue; 
-               f[j] = new Double_t[*l]; 
+            Double_t **f = (Double_t**)(arr[0]+ioffset);
+            int j;
+            for(j=0;j<fLength[i];j++) {
+               delete [] f[j];
+               f[j] = 0; if (*l <=0) continue;
+               f[j] = new Double_t[*l];
                b.ReadFastArrayDouble32(f[j],*l);
-           } 
-            continue; 
+           }
+            continue;
          }
 
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar    + kHaveLoop: ReadBasicPointerLoop(Char_t);    continue;
@@ -750,19 +750,19 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32+ kHaveLoop: {
             const int imethod = fMethod[i]+eoffset;
             for(Int_t k=0; k<narr; ++k) {
-               Char_t isArray; 
-               b >> isArray; 
+               Char_t isArray;
+               b >> isArray;
                Int_t *l = (Int_t*)(arr[k]+imethod);
-               Double_t **f = (Double_t**)(arr[k]+ioffset); 
-               int j; 
-               for(j=0;j<fLength[i];j++) { 
-                  delete [] f[j]; 
-                  f[j] = 0; if (*l <=0) continue; 
-                  f[j] = new Double_t[*l]; 
+               Double_t **f = (Double_t**)(arr[k]+ioffset);
+               int j;
+               for(j=0;j<fLength[i];j++) {
+                  delete [] f[j];
+                  f[j] = 0; if (*l <=0) continue;
+                  f[j] = new Double_t[*l];
                   b.ReadFastArrayDouble32(f[j],*l);
-               } 
+               }
             }
-            continue; 
+            continue;
          }
       }
 
@@ -780,10 +780,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             }
          }
          continue;
-         
+
          // special case for TObject::fBits in case of a referenced object
          case TStreamerInfo::kBits: {
-            DOLOOP { 
+            DOLOOP {
                UInt_t *x=(UInt_t*)(arr[k]+ioffset); b >> *x;
                if ((*x & kIsReferenced) != 0) {
                   UShort_t pidf;
@@ -791,7 +791,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TFile* file = (TFile*)b.GetParent();
                   TProcessID *pid = TProcessID::ReadProcessID(pidf,file);
                   if (pid!=0) {
-                     TObject *obj = (TObject*)(arr[k]+eoffset); 
+                     TObject *obj = (TObject*)(arr[k]+eoffset);
                      UInt_t gpid = pid->GetUniqueID();
                      UInt_t uid = (obj->GetUniqueID() & 0xffffff) + (gpid<<24);
                      obj->SetUniqueID(uid);
@@ -801,10 +801,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             }
          }
          continue;
-         
+
          // array counter //[n]
          case TStreamerInfo::kCounter: {
-            DOLOOP {               
+            DOLOOP {
                Int_t *x=(Int_t*)(arr[k]+ioffset);
                b >> *x;
             }
@@ -818,20 +818,20 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kTNamed:  { DOLOOP { ((TNamed*) (arr[k]+ioffset))->TNamed::Streamer(b) ;} } continue;
 
       }
-      
-   SWIT: 
-      isPreAlloc= 0; 
+
+   SWIT:
+      isPreAlloc= 0;
       cle       = fComp[i].fClass;
       pstreamer = fComp[i].fStreamer;
-      
+
       switch (kase) {
-         
+
          case TStreamerInfo::kAnyp:    // Class*  not derived from TObject with    comment field //->
          case TStreamerInfo::kAnyp+TStreamerInfo::kOffsetL:
          case TStreamerInfo::kObjectp: // Class*      derived from TObject with    comment field  //->
          case TStreamerInfo::kObjectp+TStreamerInfo::kOffsetL:
             isPreAlloc = 1;
-            
+
          case TStreamerInfo::kObjectP: // Class* derived from TObject with no comment field NOTE: Re-added by Phil
          case TStreamerInfo::kObjectP+TStreamerInfo::kOffsetL:
          case TStreamerInfo::kAnyP:    // Class*  not derived from TObject with no comment field NOTE:: Re-added by Phil
@@ -849,7 +849,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
 //                ROOT::NewArrFunc_t arraynew = cl->GetNewArray();
 //                ROOT::DelArrFunc_t arraydel = cl->GetDeleteArray();
 //                UInt_t start,count;
-//                // Version_t v = 
+//                // Version_t v =
 //                b.ReadVersion(&start, &count, cle);
 //                if (pstreamer == 0) {
 //                   Int_t size = cl->Size();
@@ -884,7 +884,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
 //                } else {
 //                   DOLOOP{(*pstreamer)(b,arr[k]+ioffset,fLength[i]);}
 //                }
-//                b.CheckByteCount(start,count,aElement->GetFullName());               
+//                b.CheckByteCount(start,count,aElement->GetFullName());
 //             }
 //             continue;
 
@@ -892,7 +892,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL: // array of pointers to Container with no virtual table (stl) and no comment
             {
                UInt_t start,count;
-               // Version_t v = 
+               // Version_t v =
                b.ReadVersion(&start, &count, cle);
                if (pstreamer == 0) {
                   DOLOOP {
@@ -914,7 +914,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                } else {
                   DOLOOP {(*pstreamer)(b,arr[k]+ioffset,fLength[i]);}
                }
-               b.CheckByteCount(start,count,aElement->GetFullName());               
+               b.CheckByteCount(start,count,aElement->GetFullName());
             }
             continue;
 
@@ -922,12 +922,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:     // array of Container with no virtual table (stl) and no comment
             {
                UInt_t start,count;
-               // Version_t v = 
+               // Version_t v =
                b.ReadVersion(&start, &count, cle);
                if (fOldVersion<3){   // case of old TStreamerInfo
                   //  Backward compatibility. Some TStreamerElement's where without
                   //  Streamer but were not removed from element list
-                  if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {    
+                  if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
                      b.SetBufferOffset(start);  //thre is no byte count
                   }
                }
@@ -938,20 +938,20 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                } else {
                   DOLOOP {(*pstreamer)(b,arr[k]+ioffset,fLength[i]);}
                }
-               b.CheckByteCount(start,count,aElement->GetFullName());               
+               b.CheckByteCount(start,count,aElement->GetFullName());
             }
             continue;
-            
-         case TStreamerInfo::kObject: // Class derived from TObject 
+
+         case TStreamerInfo::kObject: // Class derived from TObject
             if (cle->IsStartingWithTObject() && cle->GetClassInfo()) {
                DOLOOP {((TObject*)(arr[k]+ioffset))->Streamer(b);}
                continue; // intentionally inside the if statement.
                       // if the class does not start with its TObject part (or does
                       // not have one), we use the generic case.
             }
-         case TStreamerInfo::kAny:    // Class not derived from TObject 
+         case TStreamerInfo::kAny:    // Class not derived from TObject
             if (pstreamer) {
-               DOLOOP {(*pstreamer)(b,arr[k]+ioffset,0);} 
+               DOLOOP {(*pstreamer)(b,arr[k]+ioffset,0);}
             } else {
                DOLOOP { cle->Streamer(arr[k]+ioffset,b);}}
             continue;
@@ -961,7 +961,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             if (file && file->GetVersion() < 30208) {
                // For older ROOT file we use a totally different case to treat
                // this situation, so we change 'kase' and restart.
-               kase = TStreamerInfo::kStreamer; 
+               kase = TStreamerInfo::kStreamer;
                goto SWIT;
             }
             // there is intentionally no break/continue statement here.
@@ -974,19 +974,19 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             }
             continue;
          }
-            
+
          // Base Class
-         case TStreamerInfo::kBase:     
+         case TStreamerInfo::kBase:
             if (!(arrayMode&1)) {
                if(pstreamer)  {kase = TStreamerInfo::kStreamer; goto SWIT;}
                DOLOOP { ((TStreamerBase*)aElement)->ReadBuffer(b,arr[k]);}
             } else {
-               
+
                Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
                cle->GetStreamerInfo(clversion)->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
-            
+
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTString:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTObject:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTNamed:
@@ -1021,7 +1021,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                           count<= 0    || v   !=  fOldVersion) {
                   b.SetBufferOffset(start);
                   continue;
-               } 
+               }
             }
             if (pstreamer == 0) {
                if (1 || gDebug > 0) {
@@ -1034,7 +1034,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             b.CheckByteCount(start,count,aElement->GetFullName());
          }
          continue;
-         
+
          case TStreamerInfo::kStreamLoop:{
             UInt_t start,count;
             b.ReadVersion(&start, &count, cle);
@@ -1048,21 +1048,21 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                DOLOOP {
                   Int_t *counter = (Int_t*)(arr[k]+imethod);
                   (*pstreamer)(b,arr[k]+ioffset,*counter);
-               }  
+               }
             }
             b.CheckByteCount(start,count,aElement->GetFullName());
          }
          continue;
-         
-         
-         
+
+
+
          default: {
             int ans = -1;
-            if (kase >= TStreamerInfo::kConv) 
+            if (kase >= TStreamerInfo::kConv)
                ans = This->ReadBufferConv(b,arr,i,kase,aElement,narr,eoffset);
             if (ans==0) continue;
-            
-            if (kase >= TStreamerInfo::kSkip) 
+
+            if (kase >= TStreamerInfo::kSkip)
                ans = This->ReadBufferSkip(b,arr,i,kase,aElement,narr,eoffset);
             if (ans==0) continue;
          }
@@ -1076,9 +1076,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
    return 0;
 }
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
 
-Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_t kase, 
+Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
@@ -1087,7 +1087,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_
                                           fNdata,fType,fgElement,fComp);
 }
 
-Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t i, Int_t kase, 
+Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
@@ -1095,42 +1095,41 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &a
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
-Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char** const &arr,  Int_t i, Int_t kase, 
-                                    TStreamerElement *aElement, Int_t narr, 
+Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char** const &arr,  Int_t i, Int_t kase,
+                                    TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
   return TStreamerInfo__ReadBufferConvImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
-Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arr,  Int_t i, Int_t kase, 
-                                    TStreamerElement *aElement, Int_t narr, 
+Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arr,  Int_t i, Int_t kase,
+                                    TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
   return TStreamerInfo__ReadBufferConvImp(b,arr,i,kase,aElement,narr,eoffset,fMethod,
                                           fElem,fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp);
 }
 
-Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char** const &arr, Int_t first, 
+Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char** const &arr, Int_t first,
                                 Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
   return TStreamerInfo__ReadBufferImp(this,b,arr,first,narr,eoffset,arrayMode,fMethod,fElem,
                                       fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp,fOldVersion);
 }
 
-Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first, 
+Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,
                                 Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
   return TStreamerInfo__ReadBufferImp(this,b,arr,first,narr,eoffset,arrayMode,fMethod,fElem,
                                       fLength,fClass,fOffset,fNewType,fNdata,fType,fgElement,fComp,fOldVersion);
 }
-
 
 #endif
 
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, 
+Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
                                    Int_t nc, Int_t first, Int_t eoffset)
 {
    //  The STL vector/list is deserialized from the buffer b
@@ -1140,10 +1139,10 @@ Int_t TStreamerInfo::ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont,
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, 
+Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones,
                                       Int_t nc, Int_t first, Int_t eoffset)
 {
-   char **arr = (char **)clones->GetObjectRef(0); 
+   char **arr = (char **)clones->GetObjectRef(0);
    return ReadBuffer(b,arr,first,nc,eoffset,1);
 }
 

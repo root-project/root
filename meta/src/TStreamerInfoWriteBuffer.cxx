@@ -11,7 +11,7 @@
 
 //==========CPP macros
 
-#define DOLOOP for(int k=0; k<narr; ++k) 
+#define DOLOOP for(int k=0; k<narr; ++k)
 
 #define WriteBasicTypeElem(name,index)          \
    {                                            \
@@ -74,19 +74,19 @@
 
 
 //______________________________________________________________________________
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
-template <class T> 
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+template <class T>
 Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *This,
-                                       TBuffer &b, const T &arr, Int_t first, 
+                                       TBuffer &b, const T &arr, Int_t first,
                                        Int_t narr, Int_t eoffset, Int_t arrayMode,
                                        ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                       TClass *fClass, Int_t *fOffset, Int_t *fNewType,
-                                       Int_t fNdata, Int_t *fType, TStreamerElement *&fgElement,
+                                       TClass *fClass, Int_t *fOffset, Int_t * /*fNewType*/,
+                                       Int_t fNdata, Int_t *fType, TStreamerElement *& /*fgElement*/,
                                        TStreamerInfo::CompInfo *fComp)
 {
 #else
-template <class T> 
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first, 
+template <class T>
+Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 				    Int_t narr, Int_t eoffset, Int_t arrayMode)
 {
    TStreamerInfo *This = this;
@@ -118,9 +118,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
    for (Int_t i=first;i<last;i++) {
 
-      b.SetStreamerElementNumber(i);    
+      b.SetStreamerElementNumber(i);
       TStreamerElement *aElement = (TStreamerElement*)fElem[i];
- 
+
       const Int_t ioffset = eoffset+fOffset[i];
 
       if (gDebug > 1) {
@@ -130,12 +130,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                 b.Length(),arr[0],ioffset);
       }
 
-      switch (fType[i]+typeOffset) { 
+      switch (fType[i]+typeOffset) {
          // In this switch we intentionally use 'continue' instead of
-         // 'break' to avoid running the 2nd switch (see later in this 
+         // 'break' to avoid running the 2nd switch (see later in this
          // function).
 
-         case TStreamerInfo::kChar:                WriteBasicType(Char_t);    continue; 
+         case TStreamerInfo::kChar:                WriteBasicType(Char_t);    continue;
          case TStreamerInfo::kShort:               WriteBasicType(Short_t);   continue;
          case TStreamerInfo::kInt:                 WriteBasicType(Int_t);     continue;
          case TStreamerInfo::kLong:                WriteBasicType(Long_t);    continue;
@@ -148,9 +148,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kULong:               WriteBasicType(ULong_t);   continue;
          case TStreamerInfo::kULong64:             WriteBasicType(ULong64_t); continue;
          case TStreamerInfo::kDouble32: {
-            Double_t *x=(Double_t*)(arr[0]+ioffset); 
-            b << Float_t(*x); 
-            continue; 
+            Double_t *x=(Double_t*)(arr[0]+ioffset);
+            b << Float_t(*x);
+            continue;
          }
 
          case TStreamerInfo::kChar    + kHaveLoop: WriteBasicTypeLoop(Char_t);    continue;
@@ -167,10 +167,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kULong64 + kHaveLoop: WriteBasicTypeLoop(ULong64_t); continue;
          case TStreamerInfo::kDouble32+ kHaveLoop: {
             for(int k=0; k<narr; ++k) {
-               Double_t *x=(Double_t*)(arr[k]+ioffset); 
-               b << Float_t(*x); 
+               Double_t *x=(Double_t*)(arr[k]+ioffset);
+               b << Float_t(*x);
             }
-            continue; 
+            continue;
          }
 
          // write array of basic types  array[8]
@@ -188,7 +188,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:WriteBasicArray(ULong64_t); continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32: {
             b.WriteFastArrayDouble32((Double_t*)(arr[0]+ioffset),fLength[i]);
-            continue; 
+            continue;
          }
 
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar    + kHaveLoop: WriteBasicArrayLoop(Char_t);    continue;
@@ -207,7 +207,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             for(int k=0; k<narr; ++k) {
                b.WriteFastArrayDouble32((Double_t*)(arr[k]+ioffset),fLength[i]);
             }
-            continue; 
+            continue;
          }
 
          // write pointer to an array of basic types  array[n]
@@ -225,18 +225,18 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kULong64:WriteBasicPointer(ULong64_t); continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32: {
             int imethod = fMethod[i]+eoffset;
-            Int_t *l = (Int_t*)(arr[0]+imethod); 
-            Double_t **f = (Double_t**)(arr[0]+ioffset); 
-            Double_t *af = *f; 
-            if (af && *l)  b << Char_t(1); 
+            Int_t *l = (Int_t*)(arr[0]+imethod);
+            Double_t **f = (Double_t**)(arr[0]+ioffset);
+            Double_t *af = *f;
+            if (af && *l)  b << Char_t(1);
             else          {b << Char_t(0); continue;}
             int j;
-            for(j=0;j<fLength[i];j++) { 
+            for(j=0;j<fLength[i];j++) {
                b.WriteFastArrayDouble32(f[j],*l);
-            }  
-            continue; 
+            }
+            continue;
          }
- 
+
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar    + kHaveLoop: WriteBasicPointerLoop(Char_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort   + kHaveLoop: WriteBasicPointerLoop(Short_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt     + kHaveLoop: WriteBasicPointerLoop(Int_t);     continue;
@@ -252,42 +252,42 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kOffsetP + TStreamerInfo::kDouble32+ kHaveLoop: {
             int imethod = fMethod[i]+eoffset;
             for(int k=0; k<narr; ++k) {
-               Int_t *l = (Int_t*)(arr[k]+imethod); 
-               Double_t **f = (Double_t**)(arr[k]+ioffset); 
-               Double_t *af = *f; 
-               if (af && *l)  b << Char_t(1); 
+               Int_t *l = (Int_t*)(arr[k]+imethod);
+               Double_t **f = (Double_t**)(arr[k]+ioffset);
+               Double_t *af = *f;
+               if (af && *l)  b << Char_t(1);
                else          {b << Char_t(0); continue;}
-               int j; 
-               for(j=0;j<fLength[i];j++) { 
+               int j;
+               for(j=0;j<fLength[i];j++) {
                   b.WriteFastArrayDouble32(f[j],*l);
-               }  
+               }
             }
-            continue; 
+            continue;
          }
-         
-         case TStreamerInfo::kCounter: { 
+
+         case TStreamerInfo::kCounter: {
             Int_t *x=(Int_t*)(arr[0]+ioffset);
             b << *x;
             if (i == last-1) {
                b.DecrementLevel(This);
                return x[0]; // info used by TBranchElement::FillLeaves
             }
-            continue; 
+            continue;
          }
 
-         case TStreamerInfo::kCounter + kHaveLoop : { 
-            DOLOOP { 
+         case TStreamerInfo::kCounter + kHaveLoop : {
+            DOLOOP {
                Int_t *x=(Int_t*)(arr[k]+ioffset);
                b << x[0];
             }
-            continue; 
+            continue;
          }
 
-         
+
       };
       Bool_t isPreAlloc = 0;
 
-      switch (fType[i]) { 
+      switch (fType[i]) {
 
          // char*
          case TStreamerInfo::kCharStar: { DOLOOP {
@@ -301,11 +301,11 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             } else {
                b << nch;
             }
-         } 
+         }
          continue; }
-         
+
          // special case for TObject::fBits in case of a referenced object
-         case TStreamerInfo::kBits: { DOLOOP { 
+         case TStreamerInfo::kBits: { DOLOOP {
             UInt_t *x=(UInt_t*)(arr[k]+ioffset); b << *x;
             if ((*x & kIsReferenced) != 0) {
                TObject *obj = (TObject*)(arr[k]+eoffset);
@@ -324,7 +324,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kTNamed:  { DOLOOP{ ((TNamed *)(arr[k]+ioffset))->TNamed::Streamer(b); }; continue; }
 
          case TStreamerInfo::kAnyp:     // Class*   Class not derived from TObject and with comment field //->
-         case TStreamerInfo::kAnyp    + TStreamerInfo::kOffsetL:            
+         case TStreamerInfo::kAnyp    + TStreamerInfo::kOffsetL:
 
          case TStreamerInfo::kObjectp:  // Class *  Class     derived from TObject and with comment field //->
          case TStreamerInfo::kObjectp + TStreamerInfo::kOffsetL:
@@ -379,7 +379,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 //                      char **contp = (char**)(arr[k]+ioffset);
 //                      const Int_t *counter = (Int_t*)(arr[k]+imethod);
 //                      const Int_t sublen = (*counter);
-                    
+
 //                      for(int j=0;j<fLength[i];++j) {
 //                         char *cont = contp[j];
 //                         for(int k=0;k<sublen;++k) {
@@ -434,10 +434,10 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
 
                continue;
             }
-         
+
          case TStreamerInfo::kObject:   // Class      derived from TObject
          case TStreamerInfo::kAny:   // Class  NOT derived from TObject
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kObject: 
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
          case TStreamerInfo::kAny     + TStreamerInfo::kOffsetL: {
             TClass *cl                 = fComp[i].fClass;
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
@@ -445,7 +445,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                {b.WriteFastArray((void*)(arr[k]+ioffset),cl,fLength[i],pstreamer);}
             continue;
          }
-            
+
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTString:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTObject:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kTNamed:
@@ -460,7 +460,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          }
 
             // Base Class
-         case TStreamerInfo::kBase:    
+         case TStreamerInfo::kBase:
             if (!(arrayMode&1)) {
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
                if(pstreamer) {
@@ -471,13 +471,13 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                } else {
                   DOLOOP { ((TStreamerBase*)aElement)->WriteBuffer(b,arr[k]);}
                }
-            } else { 
+            } else {
                TClass *cl                 = fComp[i].fClass;
                cl->GetStreamerInfo()->WriteBufferAux(b,arr,-1,narr,ioffset,arrayMode);
             }
             continue;
-            
-         case TStreamerInfo::kStreamer: 
+
+         case TStreamerInfo::kStreamer:
          {
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
 
@@ -491,8 +491,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             b.SetByteCount(pos,kTRUE);
          }
          continue;
-         
-         
+
+
          case TStreamerInfo::kStreamLoop:{
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
             UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
@@ -520,8 +520,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    return 0;
 }
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
-   // Support for non standard compilers
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+// Support for non standard compilers
 
 Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
 {
@@ -529,7 +529,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char ** const &arr, Int_t first,
                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
                                           fNdata,fType,fgElement,fComp);
 }
- 
+
 Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
 {
   return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
@@ -552,15 +552,15 @@ Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, I
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *ipointer, Int_t first)
-{  
+{
    return WriteBufferAux(b,&ipointer,first,1,0,0);
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, 
+Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones,
                                        Int_t nc, Int_t first, Int_t eoffset)
 {
-   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0)); 
+   char **arr = reinterpret_cast<char**>(clones->GetObjectRef(0));
    return WriteBufferAux(b,arr,first,nc,eoffset,1);
 }
 

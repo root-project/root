@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.53 2004/08/20 21:02:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.54 2004/08/23 16:05:43 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,6 +31,11 @@
 #include "TClonesArray.h"
 #endif
 
+#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
+    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR<=3)
+#define R__BROKEN_FUNCTION_TEMPLATES
+#endif
+
 class TStreamerElement;
 class TStreamerBasicType;
 class TVirtualCollectionProxy;
@@ -38,11 +43,13 @@ class TVirtualCollectionProxy;
 class TStreamerInfo : public TNamed {
 
 private:
-   
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
+public:
+#endif
    class CompInfo {
    // Class used to cache information (see fComp)
-   public: 
-      TClass          *fClass; 
+   public:
+      TClass          *fClass;
       TString          fClassName;
       TMemberStreamer *fStreamer;
       CompInfo() : fClass(0), fClassName(""), fStreamer(0) {};
@@ -53,6 +60,7 @@ private:
       }
    };
 
+private:
    UInt_t            fCheckSum;       //checksum of original class
    Int_t             fClassVersion;   //Class version identifier
    Int_t             fNumber;         //!Unique identifier
@@ -104,10 +112,10 @@ public:
 
 //	Some comments about EReadWrite
 //	kBase    : base class element
-//	kOffsetL : fixed size array 
-//	kOffsetP : pointer to object 
-//	kCounter : counter for array size 
-//	kCharStar: pointer to array of char 
+//	kOffsetL : fixed size array
+//	kOffsetP : pointer to object
+//	kCounter : counter for array size
+//	kCharStar: pointer to array of char
 //	kBits    : TObject::fBits in case of a referenced object
 //	kObject  : Class  derived from TObject
 //	kObjectp : Class* derived from TObject and with    comment field //->Class
@@ -165,18 +173,16 @@ public:
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
    // Support for non standard compilers
    Int_t               ReadBuffer(TBuffer &b,  char** const &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    Int_t               ReadBufferConv(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-    Int_t               ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   Int_t               ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    Int_t               ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);  
-
+   Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 #else
-
-   template <class T>  
+   template <class T>
    Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    template <class T>
    Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
@@ -202,12 +208,12 @@ public:
    static Bool_t       CanDelete();
    static void         SetCanDelete(Bool_t opt=kTRUE);
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA)
+#ifdef R__BROKEN_FUNCTION_TEMPLATES
    // Support for non standard compilers
    Int_t               WriteBufferAux      (TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
    Int_t               WriteBufferAux      (TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 #else
-   template <class T> 
+   template <class T>
    Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 #endif
 
