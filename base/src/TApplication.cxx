@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.57 2004/05/10 08:14:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.58 2004/05/17 12:15:17 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -74,6 +74,7 @@ TApplication::TApplication()
    fArgc          = 0;
    fArgv          = 0;
    fAppImp        = 0;
+   fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
    fNoLog         = kFALSE;
    fNoLogo        = kFALSE;
@@ -144,6 +145,7 @@ TApplication::TApplication(const char *appClassName,
    fIdleTimer     = 0;
    fIdleCommand   = 0;
    fSigHandler    = 0;
+   fIsRunning     = kFALSE;
    fReturnFromRun = kFALSE;
    fAppImp        = 0;
 
@@ -797,7 +799,12 @@ void TApplication::Run(Bool_t retrn)
    // Main application eventloop. Calls system dependent eventloop via gSystem.
 
    SetReturnFromRun(retrn);
+
+   fIsRunning = kTRUE;
+
    gSystem->Run();
+
+   fIsRunning = kFALSE;
 }
 
 //______________________________________________________________________________
