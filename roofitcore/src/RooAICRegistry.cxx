@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAICRegistry.cc,v 1.5 2001/11/14 18:42:35 verkerke Exp $
+ *    File: $Id: RooAICRegistry.cc,v 1.6 2001/11/19 07:23:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -18,19 +18,21 @@ ClassImp(RooAICRegistry)
 ;
 
 RooAICRegistry::RooAICRegistry(Int_t regSize) :
-  _clArr(0), _asArr1(0), _asArr2(0), _regSize(regSize)
+  _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0), _regSize(regSize)
 {
 }
 
 
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
-  _clArr(0), _asArr1(0), _asArr2(0), _regSize(other._regSize)
+  _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0), _regSize(other._regSize)
 {
   // Copy code-list array if other PDF has one
   if (other._clArr) {
     _clArr = new pInt_t[other._regSize] ;    
     _asArr1 = new pRooArgSet[other._regSize] ;
     _asArr2 = new pRooArgSet[other._regSize] ;
+    _asArr3 = new pRooArgSet[other._regSize] ;
+    _asArr4 = new pRooArgSet[other._regSize] ;
     _clSize = new Int_t[other._regSize] ;
     Int_t i,j ;
     for (i=0 ; i<_regSize ; i++) {
@@ -38,12 +40,16 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other) :
       _clSize[i]=0 ;
       _asArr1[i]=0 ;
       _asArr2[i]=0 ;
+      _asArr3[i]=0 ;
+      _asArr4[i]=0 ;
     }
     i=0 ;
     while(other._clArr[i] && i<_regSize) {
       _clSize[i] = other._clSize[i] ;
       _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->Clone()) : 0 ; 
       _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->Clone()) : 0 ;
+      _asArr3[i] = other._asArr3[i] ? ((RooArgSet*)other._asArr3[i]->Clone()) : 0 ;
+      _asArr4[i] = other._asArr4[i] ? ((RooArgSet*)other._asArr4[i]->Clone()) : 0 ;
       _clArr[i] = new Int_t[_clSize[i]] ;
       for (j=0 ; j<_clSize[i] ; j++) {
 	_clArr[i][j] = other._clArr[i][j] ;
@@ -64,17 +70,21 @@ RooAICRegistry::~RooAICRegistry()
       delete[] _clArr[i++] ;
       if (_asArr1[i]) delete _asArr1[i] ;
       if (_asArr2[i]) delete _asArr2[i] ;
+      if (_asArr3[i]) delete _asArr3[i] ;
+      if (_asArr4[i]) delete _asArr4[i] ;
     }
     delete[] _clArr ;
     delete[] _clSize ;
     delete[] _asArr1 ;
     delete[] _asArr2 ;
+    delete[] _asArr3 ;
+    delete[] _asArr4 ;
   }
 }
 
 
 
-Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArgSet* set2)
+Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArgSet* set2, RooArgSet* set3, RooArgSet* set4)
 {
   Int_t i,j ;
 
@@ -84,11 +94,15 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
     _clSize = new Int_t[_regSize] ;
     _asArr1 = new pRooArgSet[_regSize] ;
     _asArr2 = new pRooArgSet[_regSize] ;
+    _asArr3 = new pRooArgSet[_regSize] ;
+    _asArr4 = new pRooArgSet[_regSize] ;
     for (i=0 ; i<_regSize ; i++) {
       _clArr[i] = 0 ;    
       _clSize[i] = 0 ;
       _asArr1[i] = 0 ;
       _asArr2[i] = 0 ;
+      _asArr3[i] = 0 ;
+      _asArr4[i] = 0 ;
     }
   }
 
@@ -100,6 +114,8 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
       _clSize[i] = size ;
       _asArr1[i] = set1 ;
       _asArr2[i] = set2 ;
+      _asArr3[i] = set3 ;
+      _asArr4[i] = set4 ;
       for (j=0 ; j<size ; j++) _clArr[i][j] = codeList[j] ;
       return i ;
     } else {
@@ -111,12 +127,20 @@ Int_t RooAICRegistry::store(Int_t* codeList, Int_t size, RooArgSet* set1, RooArg
 	if (!_asArr1[i] && set1) match=kFALSE ;
 	if (_asArr2[i] && !set2) match=kFALSE ;
 	if (!_asArr2[i] && set2) match=kFALSE ;
-	if (_asArr1[i] && set1 && !set1->equals(*_asArr1[i])) return kFALSE ;
-	if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) return kFALSE ;	
+	if (_asArr3[i] && !set3) match=kFALSE ;
+	if (!_asArr3[i] && set3) match=kFALSE ;
+	if (_asArr4[i] && !set4) match=kFALSE ;
+	if (!_asArr4[i] && set4) match=kFALSE ;
+	if (_asArr1[i] && set1 && !set1->equals(*_asArr1[i])) match=kFALSE ;
+	if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) match=kFALSE ;	
+	if (_asArr3[i] && set3 && !set3->equals(*_asArr3[i])) match=kFALSE ;	
+	if (_asArr4[i] && set4 && !set4->equals(*_asArr4[i])) match=kFALSE ;	
       }
       if (match) {
 	if (set1) delete set1 ;
 	if (set2) delete set2 ;
+	if (set3) delete set3 ;
+	if (set4) delete set4 ;
 	return i ;
       }
     }
@@ -144,5 +168,14 @@ const Int_t* RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1, pRooAr
 {
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
+  return _clArr[masterCode] ;
+}
+
+const Int_t* RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const 
+{
+  set1 = _asArr1[masterCode] ;
+  set2 = _asArr2[masterCode] ;
+  set3 = _asArr3[masterCode] ;
+  set4 = _asArr4[masterCode] ;
   return _clArr[masterCode] ;
 }

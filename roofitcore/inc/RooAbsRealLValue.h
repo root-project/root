@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.14 2001/11/19 18:03:20 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.15 2001/11/20 03:53:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -80,6 +80,8 @@ public:
   
   // Build 1-dimensional plots
   RooPlot *frame(Double_t lo, Double_t hi, Int_t nbins) const;
+  RooPlot *frame(Double_t lo, Double_t hi) const;
+  RooPlot *frame(Int_t nbins) const;
   RooPlot *frame() const;
 
   // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.16 2001/11/19 07:23:53 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.17 2001/11/19 18:03:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -153,6 +153,40 @@ RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const 
 }
 
 
+RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const {
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+
+  return new RooPlot(*this,xlo,xhi,getFitBins());
+}
+
+
+
+RooPlot *RooAbsRealLValue::frame(Int_t nbins) const {
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+  //
+  // The current fit range may not be open ended or empty.
+
+  // Plot range of variable may not be infinite or empty
+  if (getFitMin()==getFitMax()) {
+    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    return 0 ;
+  }
+  if (RooNumber::isInfinite(getFitMin())||RooNumber::isInfinite(getFitMax())) {
+    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    return 0 ;
+  }
+
+  return new RooPlot(*this,getFitMin(),getFitMax(),nbins);
+}
+
+
+
 RooPlot *RooAbsRealLValue::frame() const {
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a
@@ -231,7 +265,7 @@ void RooAbsRealLValue::setFitBin(Int_t ibin)
 {
   // Check range of plot bin index
   if (ibin<0 || ibin>=numFitBins()) {
-    cout << "RooAbsRealLValue::setPlotBin(" << GetName() << ") ERROR: bin index " << ibin
+    cout << "RooAbsRealLValue::setFitBin(" << GetName() << ") ERROR: bin index " << ibin
 	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
     return ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.64 2001/11/19 19:53:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.65 2001/11/19 23:09:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -244,7 +244,7 @@ void RooAbsReal::setPlotMax(Double_t value) {
 void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
   // Set a new plot range
   cout << "RooAbsReal::setPlotBins(" << GetName() 
-       << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsReal::frame() when different from fitRange" << endl ;
+       << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsRealLValue::frame() when different from fitRange" << endl ;
 
 //   // Check if new limit is consistent
 //   if (min>max) {
@@ -262,7 +262,7 @@ void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
 void RooAbsReal::setPlotBins(Int_t value) {
   // Set number of histogram bins 
   cout << "RooAbsReal::setPlotBins(" << GetName() 
-       << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsReal::frame() when different from fitBins" << endl ;
+       << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsRealLValue::frame() when different from fitBins" << endl ;
 //   _plotBins = value ;  
 }
 
