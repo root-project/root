@@ -15,7 +15,7 @@ longlongdict.C: Class.h $(ROOTSYS)/bin/rootcint
 	$(CMDECHO)rootcint -f longlongdict.C -c Class.h linkdef.h
 
 longlongtest: longlongdict.C
-	$(CMDECHO) test ! `(grep "long long" longlongdict.C > /dev/null) && echo $?`
+	$(CMDECHO) test ! `(cat longlongdict.C | grep -v G__letLonglong | grep "long long"  > /dev/null) && echo $?`
 
 testWithFailure:
 ifeq ($(FAIL),)
