@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.47 2001/10/05 07:03:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.48 2001/10/18 06:55:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -198,7 +198,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fBorderSize = bordersize;
    fBorderMode = bordermode;
    if (gPad)   fCanvas = gPad->GetCanvas();
-   else        fCanvas = (TCanvas*)this; 
+   else        fCanvas = (TCanvas*)this;
    fMother     = (TPad*)gPad;
    fPrimitives = new TList;
    fExecs      = new TList;
@@ -388,7 +388,7 @@ void TPad::Clear(Option_t *option)
 //   If the bit kClearAfterCR has been set for this pad, the Clear function
 //   will execute only after having pressed a CarriageReturn
 //   Set the bit with mypad->SetBit(TPad::kClearAfterCR)
-      
+
    if (!IsEditable()) return;
 
    if (!fPadPaint) {
@@ -398,9 +398,9 @@ void TPad::Clear(Option_t *option)
    }
 
    cd();
-   
+
    if (TestBit(kClearAfterCR)) getchar();
-   
+
    if (!gPad->IsBatch()) gVirtualX->ClearWindow();
    if (gVirtualPS && gPad == gPad->GetCanvas()) gVirtualPS->NewPage();
 
@@ -3754,8 +3754,14 @@ void TPad::ResizePad(Option_t *option)
          //without this protection, the OpenPixmap or ResizePixmap crashes with
          //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
          //resulting in a frozen xterm
-         if (w <= 0 || w > 10000) {printf("pad:%s width  changed from %d to %d\n",GetName(),w,10); w = 10;}
-         if (h <= 0 || h > 10000) {printf("pad:%s height changed from %d to %d\n",GetName(),h,10); h = 10;}
+         if (w <= 0 || w > 10000) {
+            Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
+            w = 10;
+         }
+         if (h <= 0 || h > 10000) {
+            Warning("ResizePad", "%s height changed from %d to %d\n",GetName(),h,10);
+            h = 10;
+         }
          if (fPixmapID == -1)       // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
          else
