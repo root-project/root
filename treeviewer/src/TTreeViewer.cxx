@@ -1430,7 +1430,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         void *p = 0;
                         Int_t x = (Int_t)(parm2 &0xffff);
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
-                        TGLVTreeEntry *item;
+                        TGLVTreeEntry *item = 0;
                         if ((item = (TGLVTreeEntry *) fLVContainer->GetNextSelected(&p)) != 0) {
                            fContextMenu->Popup(x, y, this);
                         }
