@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.16 2001/02/26 07:15:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.17 2001/04/09 07:58:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    Int_t            GetType() const {return fType;}
    Int_t            GetOffset() const {return fOffset;}
    const char      *GetTypeName() const {return fTypeName.Data();}
+   const char      *GetTypeNameBasic() const;
    virtual void     Init(TObject *obj=0);
    virtual Bool_t   IsaPointer() const {return kFALSE;}
    virtual Bool_t   IsOldFormat(const char *newTypeName);

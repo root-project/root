@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.24 2001/03/03 11:27:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.25 2001/04/09 07:58:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -130,6 +130,33 @@ Int_t TStreamerElement::GetSize() const
    
    if (fArrayLength) return fArrayLength*fSize;
    return fSize;
+}
+
+//______________________________________________________________________________
+const char *TStreamerElement::GetTypeNameBasic() const
+{
+   //return type name of this element
+   //in case the type name is not a standard basic type, return
+   //the basic type name known to CINT
+   
+   TDataType *dt = gROOT->GetType(fTypeName.Data());
+   if (fType < 1 || fType > 55) return fTypeName.Data();
+   if (dt && dt->GetType() > 0) return fTypeName.Data();
+   Int_t dtype = fType%20;
+   switch (dtype) {
+      case  1: return "Char_t";   
+      case  2: return "Short_t";   
+      case  3: return "Int_t";   
+      case  4: return "Long_t";   
+      case  5: return "Float_t";   
+      case  6: return "Int_t";   
+      case  8: return "Double_t";   
+      case 11: return "UChar_t";   
+      case 12: return "UShort_t";   
+      case 13: return "UInt_t";   
+      case 14: return "ULong_t"; 
+   }
+   return "";  
 }
 
 //______________________________________________________________________________
