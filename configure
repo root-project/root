@@ -73,10 +73,10 @@ check_library() {
 	return 1
     fi
 
-    # Save arguments in logical names
+    # Save arguments in local names
     lib=$1       ; shift
     shared=$1    ; shift
-    libdir=$1    ; shift
+    libdirl=$1   ; shift
     libdirs="$*"
 
     # Write a message
@@ -84,8 +84,8 @@ check_library() {
 
     # check if we got a specific argument as to where the library
     # is to be found
-    if test ! "x$libdir" = "x" ; then
-        libdirs=$libdir
+    if test ! "x$libdirl" = "x" ; then
+        libdirs=$libdirl
     fi
     found_lib=no
     found_dir=no
@@ -151,7 +151,7 @@ check_library() {
     unset shared
     unset lib
     unset flib
-    unset libdir
+    unset libdirl
 }
 check_header()  {
     # This function will try to locate a header [$1] in the specific
