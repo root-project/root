@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.3 2000/09/29 08:57:05 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.4 2000/10/09 19:15:59 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -70,6 +70,9 @@
 #pragma link C++ class TGPictureButton;
 #pragma link C++ class TGCheckButton;
 #pragma link C++ class TGRadioButton;
+#pragma link C++ class TGButtonGroup;
+#pragma link C++ class TGVButtonGroup;
+#pragma link C++ class TGHButtonGroup;
 #pragma link C++ class TGTextBuffer;
 #pragma link C++ class TGTextEntry;
 #pragma link C++ class TGMsgBox;

@@ -28,7 +28,7 @@ GUIDH        := $(GUIDS:.cxx=.h)
 GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
                 TGFrame.h TGLayout.h TGString.h TGWidget.h TGIcon.h TGLabel.h \
                 TGButton.h TGTextBuffer.h TGTextEntry.h TGMsgBox.h TGMenu.h \
-                TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h \
+                TGGC.h TGShutter.h TG3DLine.h TGProgressBar.h TGButtonGroup.h \
                 WidgetMessageTypes.h
 GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
