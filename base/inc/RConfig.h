@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.31 2002/02/23 10:15:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.32 2002/02/26 11:11:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -38,7 +38,7 @@
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
-#   ifdef __ia64
+#   ifdef __LP64__
 #      define R__B64
 #   endif
 #   ifndef R__HPUX11

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.35 2002/01/27 16:49:43 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.36 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2136,19 +2136,9 @@ int TUnixSystem::UnixSelect(UInt_t nfds, TFdSet *readready, TFdSet *writeready,
       struct timeval tv;
       tv.tv_sec  = Int_t(timeout / 1000);
       tv.tv_usec = (timeout % 1000) * 1000;
-#if (defined(R__HPUX) && !defined(_XPG4_EXTENDED) && !defined(R__GNU)) || \
-    (defined(R__HIUX) && !defined(R__GNU)) || (defined(R__AIX) && !defined(_AIX43))
-      retcode = select(nfds, readready->GetBits(), writeready->GetBits(), 0, &tv);
-#else
       retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, &tv);
-#endif
    } else {
-#if (defined(R__HPUX) && !defined(_XPG4_EXTENDED) && !defined(R__GNU)) || \
-    (defined(R__HIUX) && !defined(R__GNU)) || (defined(R__AIX) && !defined(_AIX43))
-      retcode = select(nfds, readready->GetBits(), writeready->GetBits(), 0, 0);
-#else
       retcode = select(nfds, (fd_set*)readready->GetBits(), (fd_set*)writeready->GetBits(), 0, 0);
-#endif
    }
    if (retcode == -1) {
       if (GetErrno() == EINTR) {

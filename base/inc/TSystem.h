@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.17 2002/02/14 19:11:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.18 2002/02/26 17:57:20 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -125,18 +125,18 @@ public:
 #   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
 #endif
 
-const int kNFDBITS = (sizeof(Long_t) * 8);      // 8 bits per byte
+const Int_t kNFDBITS = (sizeof(Int_t) * 8);      // 8 bits per byte
 
 class TFdSet {
 private:
-   Long_t fds_bits[HOWMANY(256, kNFDBITS)];     // upto 255 file descriptors
+   Int_t fds_bits[HOWMANY(256, kNFDBITS)];     // upto 255 file descriptors
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void Set(int n) { fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS)); }
-   void Clr(int n) { fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS)); }
-   int  IsSet(int n) { return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS)); }
-   int *GetBits() { return (int *)fds_bits; }
+   void  Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
+   void  Set(Int_t n) { fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS)); }
+   void  Clr(Int_t n) { fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS)); }
+   Int_t IsSet(Int_t n) { return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS)); }
+   Int_t *GetBits() { return (Int_t *)fds_bits; }
 };
 
 
