@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.42 2003/02/20 22:36:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.43 2003/04/03 15:31:59 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -593,12 +593,26 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
 //*-*-              Determine time format
 
-   timeformat = fTimeFormat;
+   Int_t IdF = fTimeFormat.Index("%F");
+   if (IdF>=0) {
+      timeformat = fTimeFormat(0,IdF);
+   } else {
+      timeformat = fTimeFormat;
+   }
 
-// correct for time offset not being integer
+// determine the time offset and correct for time offset not being integer
+   Double_t timeoffset;
    if (OptionTime) {
-      wmin += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
-      wmax += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
+      if (IdF>=0) {
+         Int_t LnF = fTimeFormat.Length();
+         TString stringtimeoffset = fTimeFormat(IdF+2,LnF);
+         TDatime da(stringtimeoffset);
+         timeoffset = da.Convert();
+      } else {
+         timeoffset = gStyle->GetTimeOffset();
+      }
+      wmin += timeoffset - (int)(timeoffset);
+      wmax += timeoffset - (int)(timeoffset);
    }
 
 //*-*-              Determine number of divisions 1, 2 and 3
@@ -1308,7 +1322,7 @@ L110:
 //*-*-              Generate the time labels
 
                if (OptionTime) {
-                  timed = Wlabel + (int)(gStyle->GetTimeOffset());
+                  timed = Wlabel + (int)(timeoffset);
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = localtime(&timelabel);
                   strftime(LABEL,36,timeformat.Data(),utctis);
@@ -1842,6 +1856,15 @@ void TGaxis::SetTimeFormat(const char *tformat)
 //      %% %
 
    fTimeFormat = tformat;
+
+   // If the time offset is already defined or if the input string
+   // is empty then return     
+   if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
+
+   // If the time offset not defined put the current one (in gStyle)
+   TDatime TimeOffset(gStyle->GetTimeOffset());
+   fTimeFormat.Append("%F");
+   fTimeFormat.Append(TimeOffset.AsSQLString());
 }
 
 

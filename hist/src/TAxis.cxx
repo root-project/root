@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.38 2002/12/19 16:06:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.39 2003/01/10 10:38:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 #include "TError.h"
 #include "TH1.h"
 #include "TObjString.h"
+#include "TDatime.h"
 
 ClassImp(TAxis)
 
@@ -850,8 +851,35 @@ void TAxis::SetTimeFormat(const char *tformat)
 //      %M minute (00-59)
 //      %S seconds (00-61)
 //      %% %
-
+//
+//    This function allows also to define the time offset. It is done via %F 
+//    which should be appended at the end of the format string. The time
+//    offset has the following format: 'yyyy-mm-dd hh:mm:ss'
+//    Example:
+//
+//          h = new TH1F("Test","h",3000,0.,200000.);
+//          h->GetXaxis()->SetTimeDisplay(1);
+//          h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+//
+//    This defines the time format being "dd/mm/yy" and the time offset as the
+//    February 28th 2003 at 13:00:01
+//
+//    If %F is not specified, the time offset used will be the one defined by:
+//    gStyle->SetTimeOffset. For example like that:
+//
+//          TDatime da(2003,02,28,12,00,00);
+//          gStyle->SetTimeOffset(da.Convert());
+//
    fTimeFormat = tformat;
+   
+   // If the time offset is already defined or if the input string
+   // is empty then return
+   if (fTimeFormat.Index("%F")>=0 || fTimeFormat.IsNull()) return;
+
+   // If the time offset not defined put the current one (in gStyle)
+   TDatime TimeOffset(gStyle->GetTimeOffset());
+   fTimeFormat.Append("%F");
+   fTimeFormat.Append(TimeOffset.AsSQLString());
 }
 
 //______________________________________________________________________________
