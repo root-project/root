@@ -1,4 +1,4 @@
-/* @(#)root/cont:$Name$:$Id$ */
+/* @(#)root/cont:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -36,7 +36,7 @@
 #pragma link C++ class THashTableIter;
 #pragma link C++ class TIter;
 #pragma link C++ class TIterator;
-#pragma link C++ class TList;
+#pragma link C++ class TList-;
 #pragma link C++ class TListIter;
 #pragma link C++ class TMap-;
 #pragma link C++ class TMapIter;
