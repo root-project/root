@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.21 2001/02/26 08:39:37 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.22 2001/03/30 15:09:30 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -57,13 +57,13 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(R__ALPHA)
+#if defined(R__LINUX) && !defined(R__MKLINUX)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
 #   include <dlfcn.h>
 #endif
-#if defined(R__ALPHA) && !defined(R__LINUX)
+#if defined(R__ALPHA)
 #   include <sys/mount.h>
 #   ifndef R__TRUE64
     extern "C" int statfs(const char *file, struct statfs *buffer);
