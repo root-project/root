@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.17 2001/10/08 05:20:22 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.18 2001/10/12 01:48:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -440,6 +440,19 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
 					const RooDataSet *prototype, Bool_t verbose) const 
 {
-  return new RooSimGenContext(*this,vars,prototype,verbose) ;
+  if (vars.find(_indexCat.arg().GetName())) {
+    // Generating index category: return special sim-context
+    return new RooSimGenContext(*this,vars,prototype,verbose) ;
+  } else {
+    // Not generaring index cat: return context for pdf associated with present index state
+    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.arg().getLabel()) ;
+    if (!proxy) {
+      cout << "RooSimultaneous::genContext(" << GetName() 
+	   << ") ERROR: no PDF associated with current state (" 
+	   << _indexCat.arg().GetName() << ")" << endl ;
+      return 0 ;
+    }
+    return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,verbose) ;
+  }
 }
 
