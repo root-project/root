@@ -15,12 +15,12 @@ endif
 # Compiler:
 CXX           = ecc
 CC            = ecc
-CXXFLAGS      = -KPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -KPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -KPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = $(EXTRA_CXXFLAGS)
+CFLAGS        = $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
-CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT
 

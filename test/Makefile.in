@@ -350,7 +350,7 @@ endif
 ifeq ($(ARCH),linuxia64ecc)
 # Itanium Linux with Intel ecc
 CXX           = ecc
-CXXFLAGS      = -O -KPIC
+CXXFLAGS      = -O
 LD            = ecc
 LDFLAGS       = -O -i_dynamic
 SOFLAGS       = -shared
