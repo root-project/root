@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.22 2002/06/04 09:13:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.23 2002/09/14 00:28:53 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -1464,7 +1464,26 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
+#ifndef R__ACC
+
    G__load_text(RQ_OBJECT_STRING);
+
+#else
+
+   // Work around for aCC Error 131: "base/src/TQObject.cxx", line 1467 # The
+   // string literal created with the '#' operator is too long.
+   char rqh[128];
+# ifdef ROOTINCDIR
+   sprintf(rqh, "%s/RQ_OBJECT.h", ROOTINCDIR);
+# else
+   sprintf(rqh, "%s/include/RQ_OBJECT.h", gSystem->Getenv("ROOTSYS"));
+# endif
+   if (!gSystem->AccessPathName(rqh, kReadPermission))
+      G__loadfile(rqh);
+   else
+      Warning("TQObject::LoadRQ_OBJECT", "%s not found", rqh);
+
+#endif
 }
 
 // Global function which simplifies making connection in interpreted
