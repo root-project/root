@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.107 2003/07/17 19:56:35 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.108 2003/07/22 16:05:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4131,6 +4131,9 @@ void TPad::ResizePad(Option_t *option)
          //without this protection, the OpenPixmap or ResizePixmap crashes with
          //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
          //resulting in a frozen xterm
+	 if (!(TMath::Finite(fX1)) || !(TMath::Finite(fX2))
+	     || !(TMath::Finite(fY1)) || !(TMath::Finite(fY2)))
+	    Warning("ResizePad", "Inf/NaN propagated to the pad. Check drawn objects.");
          if (w <= 0 || w > 10000) {
             Warning("ResizePad", "%s width changed from %d to %d\n",GetName(),w,10);
             w = 10;
