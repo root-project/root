@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.32 2004/07/01 18:45:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.33 2004/07/04 17:57:24 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1370,7 +1370,7 @@ void TSubString::AssertElement(Ssiz_t i) const
 //______________________________________________________________________________
 Bool_t TString::IsAscii() const
 {
-   // Return true if all characters in string are ascii.
+   // Returns true if all characters in string are ascii.
 
    const char *cp = Data();
    for (Ssiz_t i = 0; i < Length(); ++i)
@@ -1382,10 +1382,13 @@ Bool_t TString::IsAscii() const
 //______________________________________________________________________________
 Bool_t TString::IsAlpha() const
 {
-   // Return true if all characters in string are alphabetic.
+   // Returns true if all characters in string are alphabetic.
+   // Returns false in case string length is 0.
 
    const char *cp = Data();
-   for (Ssiz_t i = 0; i < Length(); ++i)
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
       if (!isalpha(cp[i]))
          return kFALSE;
    return kTRUE;
@@ -1394,10 +1397,13 @@ Bool_t TString::IsAlpha() const
 //______________________________________________________________________________
 Bool_t TString::IsAlnum() const
 {
-   // Return true if all characters in string are alphanumeric.
+   // Returns true if all characters in string are alphanumeric.
+   // Returns false in case string length is 0.
 
    const char *cp = Data();
-   for (Ssiz_t i = 0; i < Length(); ++i)
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
       if (!isalnum(cp[i]))
          return kFALSE;
    return kTRUE;
@@ -1406,10 +1412,13 @@ Bool_t TString::IsAlnum() const
 //______________________________________________________________________________
 Bool_t TString::IsDigit() const
 {
-   // Return true if all characters in string are digits (0-9).
+   // Returns true if all characters in string are digits (0-9).
+   // Returns false in case string length is 0.
 
    const char *cp = Data();
-   for (Ssiz_t i = 0; i < Length(); ++i)
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
       if (!isdigit(cp[i]))
          return kFALSE;
    return kTRUE;
@@ -1418,11 +1427,14 @@ Bool_t TString::IsDigit() const
 //______________________________________________________________________________
 Bool_t TString::IsHex() const
 {
-   // Return true if all characters in string are hexidecimal digits
-   // (0-9,a-f,A-F).
+   // Returns true if all characters in string are hexidecimal digits
+   // (0-9,a-f,A-F). Returns false in case string length is 0.
+
 
    const char *cp = Data();
-   for (Ssiz_t i = 0; i < Length(); ++i)
+   Ssiz_t len = Length();
+   if (len == 0) return kFALSE;
+   for (Ssiz_t i = 0; i < len; ++i)
       if (!isxdigit(cp[i]))
          return kFALSE;
    return kTRUE;
