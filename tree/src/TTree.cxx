@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.64 2001/04/20 17:56:51 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.65 2001/04/23 14:06:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -389,13 +389,13 @@ TTree::~TTree()
    }
    fLeaves.Clear();
    fBranches.Delete();
-   fDirectory  = 0;
    delete fPlayer;
    if (fFriends) {
       fFriends->Delete();
       delete fFriends;
       fFriends = 0;
    }
+   fDirectory  = 0; //must be done after the destruction of friends
 }
 
 //______________________________________________________________________________
