@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.30 2005/02/23 15:09:33 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.31 2005/02/25 14:22:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,6 +77,7 @@ public:
     return (lo+hi)/2 ;
   }
 
+  using RooAbsData::plotOn ;
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
   
   virtual void reset() ;
