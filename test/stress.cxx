@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.48 2004/01/05 13:45:12 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.49 2004/01/05 13:58:14 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -69,6 +69,7 @@
 #ifndef __CINT__
 
 #include <TROOT.h>
+#include <TSystem.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TFile.h>
@@ -138,6 +139,10 @@ void stress(Int_t nevent, Int_t style = 1)
 {
    //Main control function invoking all test programs
 
+   //just in case an interactive version runs stress.cxx, check that
+   //libEvent library is loaded
+   if (!gROOT->GetClass("event")) gSystem->Load("libEvent");
+   
    if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
    gROOT->GetListOfFunctions()->Delete();
