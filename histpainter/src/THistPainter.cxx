@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.89 2002/07/15 10:56:22 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.90 2002/07/16 20:32:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4575,9 +4575,17 @@ void THistPainter::PaintTable(Option_t *option)
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory
 //   PaintDate();     //    Draw date/time
-//   if (!Hoption.Same && !Hoption.Lego && !Hoption.Surf) {
+
+   TF1 *fit  = 0;
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TF1::Class())) {
+         fit = (TF1*)obj;
+         break;
+      }
+   }
    if (Hoption.Same != 1) {
-      TF2 *fit = (TF2*)fFunctions->First();
       if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
          PaintStat2(gStyle->GetOptStat(),fit);
       }
