@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.56 2004/09/13 10:03:09 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.57 2004/09/15 10:05:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1604,7 +1604,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 
 // Create the profile histogram
   char *pname = (char*)name;
-  if (strcmp(name,"_pfx") == 0) {
+  if (name && strcmp(name,"_pfx") == 0) {
      Int_t nch = strlen(GetName()) + 5;
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
@@ -1712,7 +1712,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 
 // Create the projection histogram
   char *pname = (char*)name;
-  if (strcmp(name,"_pfy") == 0) {
+  if (name && strcmp(name,"_pfy") == 0) {
      Int_t nch = strlen(GetName()) + 5;
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
@@ -1825,7 +1825,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 
 // Create the projection histogram
   char *pname = (char*)name;
-  if (strcmp(name,"_px") == 0) {
+  if (name && strcmp(name,"_px") == 0) {
      Int_t nch = strlen(GetName()) + 4;
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
@@ -1944,7 +1944,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 
 // Create the projection histogram
   char *pname = (char*)name;
-  if (strcmp(name,"_py") == 0) {
+  if (name && strcmp(name,"_py") == 0) {
      Int_t nch = strlen(GetName()) + 4;
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
