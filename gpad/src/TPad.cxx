@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.97 2003/02/22 16:21:10 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.98 2003/02/25 12:01:07 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3648,6 +3648,22 @@ void TPad::Print(const char *filename, Option_t *option)
 //    h1.Draw();
 //    c1.Print("c1.ps");
 //
+//  The TCanvas::Print("file.ps(") mechanism is very useful, but it can be
+//  a little inconvenient to have the action of opening/closing a file
+//  being atomic with printing a page.  Particularly if pages are being
+//  generated in some loop one needs to detect the special cases of first
+//  and last page and then munge the argument to Print() accordingly.
+//  
+//  The "[" and "]" can be used instead of "(" and ")".  Example:
+//  
+//    c1.Print("file.ps[");   // No actual print, just open file.ps 
+//    for (int i=0; i<10; ++i) {
+//      // fill canvas for context i
+//      // ...
+//  
+//      c1.Print("file.ps");  // actually print canvas to file
+//    }// end loop
+//    c1.Print("file.ps]");   // No actual print, just close.
 
    char psname[264];
    Int_t lenfil =  filename ? strlen(filename) : 0;
@@ -3747,12 +3763,14 @@ void TPad::Print(const char *filename, Option_t *option)
    // is not on the screen, set batch mode
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen  = strstr(psname,"("); if (copen)  *copen  = 0;
-   char *cclose = strstr(psname,")"); if (cclose) *cclose = 0;
+   char *copen   = strstr(psname,"("); if (copen)  *copen  = 0;
+   char *cclose  = strstr(psname,")"); if (cclose) *cclose = 0;
+   char *copenb  = strstr(psname,"["); if (copenb)  *copenb  = 0;
+   char *ccloseb = strstr(psname,"]"); if (ccloseb) *ccloseb = 0;
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
-   if (copen)  mustClose = kFALSE;
-   if (cclose) mustClose = kTRUE;
+   if (copen  || copenb)  mustClose = kFALSE;
+   if (cclose || ccloseb) mustClose = kTRUE;
 
    Bool_t noScreen = kFALSE;
    if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
@@ -3784,8 +3802,10 @@ void TPad::Print(const char *filename, Option_t *option)
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
-      Paint();
+      if (!copenb) {
+         gVirtualPS->NewPage();
+         Paint();
+      }
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
       Info("Print", "PostScript file %s has been created", psname);
       if (mustClose) {
@@ -3798,8 +3818,10 @@ void TPad::Print(const char *filename, Option_t *option)
       }
    } else {
       // Append to existing Postscript file
-      gVirtualPS->NewPage();
-      Paint();
+      if (!ccloseb) {
+         gVirtualPS->NewPage();
+         Paint();
+      }
       Info("Print", "Current canvas added to PostScript file %s", psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
