@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.10 2003/10/23 09:36:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.11 2004/02/07 08:54:03 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -301,7 +301,7 @@ void TArrow::SavePrimitive(ofstream &out, Option_t *)
        out<<"   TArrow *";
    }
    out<<"arrow = new TArrow("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fArrowSize<<","<<quote<<fOption<<quote<<");"<<endl;
+      <<","<<fArrowSize<<","<<quote<<GetDrawOption()<<quote<<");"<<endl;
 
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
