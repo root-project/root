@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCurve.rdl,v 1.16 2002/09/05 04:33:21 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,7 +58,7 @@ protected:
 		Double_t y2, Double_t minDy, Double_t minDx);
 
   void shiftCurveToZero(Double_t prevYMax) ;
-  Int_t findPoint(Double_t value) const ;
+  Int_t findPoint(Double_t value, Double_t tolerance=1e-10) const ;
   Double_t average(Double_t lo, Double_t hi) const ;
 
   ClassDef(RooCurve,1) // 1-dimensional smooth curve

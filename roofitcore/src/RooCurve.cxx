@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooCurve.cc,v 1.35 2002/09/05 04:33:21 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -326,7 +326,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist) const
 
     // Add pull^2 to chisq
     if (y!=0) {      
-      Double_t pull = (y>avg) ? ((y-avg)/eyh) : ((y-avg)/eyl) ;
+      Double_t pull = (y>avg) ? ((y-avg)/eyl) : ((y-avg)/eyh) ;
       chisq += pull*pull ;
     }
   }
@@ -340,8 +340,9 @@ Double_t RooCurve::chiSquare(const RooHist& hist) const
 Double_t RooCurve::average(Double_t lo, Double_t hi) const
 {
   // Find points corresponding to first and last point
-  Int_t ifirst = findPoint(lo) ;
-  Int_t ilast  = findPoint(hi) ;
+  Double_t tolerance = fabs(hi-lo)*1e-3 ;
+  Int_t ifirst = findPoint(lo,tolerance) ;
+  Int_t ilast  = findPoint(hi,tolerance) ;
 
   if (ilast<=ifirst) {
     cout << "RooCurve::average(" << GetName() 
@@ -366,7 +367,7 @@ Double_t RooCurve::average(Double_t lo, Double_t hi) const
 
 
 
-Int_t RooCurve::findPoint(Double_t xvalue) const
+Int_t RooCurve::findPoint(Double_t xvalue, Double_t tolerance) const
 {
   Double_t delta(999.),x,y ;
   Int_t i,n = GetN() ;
@@ -379,5 +380,5 @@ Int_t RooCurve::findPoint(Double_t xvalue) const
     }
   }
 
-  return (delta<1e-10)?ibest:-1 ;
+  return (delta<tolerance)?ibest:-1 ;
 }
