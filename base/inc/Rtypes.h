@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.6 2000/12/02 16:24:58 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.7 2000/12/11 18:03:56 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -28,6 +28,14 @@
 #include <stdio.h>
 
 #include "DllImport.h"
+
+
+//---- forward declared class types --------------------------------------------
+
+class TClass;
+class TBuffer;
+class TMemberInspector;
+
 
 //---- types -------------------------------------------------------------------
 
@@ -61,9 +69,9 @@ typedef const char     Option_t;    //Option string
 typedef int            Ssiz_t;      //String size
 typedef float          Real_t;      //TVector and TMatrix element type
 
+typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
-class TBuffer;
-typedef void (*Streamer_t)(TBuffer &, void*, int);
+
 
 //---- constants ---------------------------------------------------------------
 
@@ -94,10 +102,6 @@ R__EXTERN Int_t gDebug;
 
 
 //---- ClassDef macros ---------------------------------------------------------
-
-class TClass;
-class TBuffer;
-class TMemberInspector;
 
 extern TClass *CreateClass(const char *cname, Version_t id,
                            const char *dfil, const char *ifil,
