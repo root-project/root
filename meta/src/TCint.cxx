@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.34 2001/10/25 06:20:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.35 2001/10/25 07:44:33 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -34,8 +34,6 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
-#include "G__ci.h"
-
 
 #ifdef WIN32
 #  ifndef ROOT_TGWin32Command

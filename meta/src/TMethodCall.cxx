@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.5 2001/10/25 06:20:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.6 2001/10/25 07:44:33 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -29,8 +29,6 @@
 #include "TROOT.h"
 #include "Strlen.h"
 #include "Api.h"
-
-#include "G__ci.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
