@@ -16,10 +16,12 @@
 
 #ifndef __CINT__
 
+#ifndef G__NEWSTDHEADER
 #ifndef _WINDOWS
 #include <stdiostream.h>
 #else
 #include <stdiostr.h>
+#endif
 #endif
 
 #else

@@ -358,3 +358,38 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
 }
 #endif
 ////////////////////////////////////////////////////////////////////
+
+
+#ifndef G__OLDIMPLEMENTATION1423
+/*********************************************************************
+* New scheme operator new/delete 
+*********************************************************************/
+
+#ifdef G__NEVER
+////////////////////////////////////////////////////////////////////
+extern "C" void* G__operator_new(size_t size,void* p) {
+  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);
+  return new char(size);
+}
+
+////////////////////////////////////////////////////////////////////
+extern "C" void* G__operator_new_ary(size_t size,void* p) {
+  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);
+  return new char[](size);
+}
+
+////////////////////////////////////////////////////////////////////
+extern "C" void G__operator_delete(void *p) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+  delete p;
+}
+
+////////////////////////////////////////////////////////////////////
+extern "C" void G__operator_delete_ary(void *p) {
+  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;
+  delete[] p;
+}
+////////////////////////////////////////////////////////////////////
+#endif
+
+#endif /* 1423 */

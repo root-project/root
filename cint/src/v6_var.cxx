@@ -950,6 +950,26 @@ char* ttt;
       }
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1426
+    if(0==conv_done) {
+      int itype;
+      for(itype=0;itype<G__newtype.alltype;itype++) {
+	if(type==G__newtype.type[itype]&&tagnum==G__newtype.tagnum[itype]) {
+	  constvar ^= 1;
+	  strcpy(ttt+9,G__type2string(type,tagnum,itype,reftype,constvar));
+	  strcpy(ttt+strlen(ttt),"()");
+	  conv_result=G__getfunction(ttt,&conv_done ,G__TRYMEMFUNC);
+	  if(0==conv_done) {
+	    constvar ^= 1;
+	    strcpy(ttt+9,G__type2string(type,tagnum,typenum,reftype,constvar));
+	    strcpy(ttt+strlen(ttt),"()");
+	    conv_result=G__getfunction(ttt,&conv_done ,G__TRYMEMFUNC);
+	  }
+	  if(conv_done) break;
+	}
+      }
+    }
+#endif
     if(conv_done) {
       if(G__dispsource) {
 	fprintf(G__serr,"!!!Conversion operator called 0x%lx.%s\n"
@@ -2817,7 +2837,11 @@ struct G__var_array *varglobal,*varlocal;
       case 'U': /* struct,union */
 	if(ig25<paran
 #ifndef G__OLDIMPLEMENTATION1291
-	   && ((1==paran-ig25 && G__PARANORMAL==var->reftype[ig15]) ||
+	   && ((
+#ifdef G__OLDIMPLEMENTATION1430
+		1==paran-ig25 &&
+#endif
+		G__PARANORMAL==var->reftype[ig15]) ||
 	       paran-ig25==var->reftype[ig15])
 #endif
 	   ) {
@@ -5271,7 +5295,7 @@ void G__letstructp(result
 		   ,item
 		   ,para
 		   ,pp_inc
-	     )
+		   )
 G__value result;
 long G__struct_offset; /* used to be int */
 int ig15;

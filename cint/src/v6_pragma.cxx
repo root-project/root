@@ -345,10 +345,25 @@ int G__pragma()
     }
     else {
       if((FILE*)NULL==G__fpautocc) {
-#ifndef G__OLDIMPLEMENTATION486
+#ifndef G__OLDIMPLEMENTATION1434
+	if(G__setautoccnames()) {
+	  G__compilemode = 0;
+	  fprintf(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	  G__printlinenum();
+	  return(1);
+	}
+#else
 	G__setautoccnames();
 #endif
 	G__fpautocc=fopen(G__autocc_c,"w");
+#ifndef G__OLDIMPLEMENTATION1434
+	if((FILE*)NULL==G__fpautocc) {
+	  fprintf(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	  G__printlinenum();
+	  G__compilemode = 0;
+	  return(1);
+	}
+#endif
       }
       G__appendautocc(G__fpautocc);
     }
@@ -493,6 +508,7 @@ int G__setautoccnames()
   if(!p) p = strrchr(G__srcfile[G__ifile.filenum].filename,'\\');
   if(!p) p = strrchr(G__srcfile[G__ifile.filenum].filename,':');
   if(!p) p = G__srcfile[G__ifile.filenum].filename;
+  else   ++p;
   strcpy(fname,p);
   p = strrchr(fname,'.');
   if(p) *p = '\0';
@@ -519,12 +535,25 @@ int G__setautoccnames()
       G__copyfile(fpto,fpfrom);
       fclose(fpto);
     }
+#ifndef G__OLDIMPLEMENTATION1434
+    else {/* error */
+      fclose(fpfrom);
+      return(1);
+    }
+#endif
     fclose(fpfrom);
   }
   else {
     fpto=fopen(backup,"w");
-    if(fpto) fprintf(fpto,"new autocc file\n");
-    fclose(fpto);
+    if(fpto) {
+      fprintf(fpto,"new autocc file\n");
+      fclose(fpto);
+    }
+#ifndef G__OLDIMPLEMENTATION1434
+    else {/* error */
+      return(1);
+    }
+#endif
   } 
   G__autoccfilenum = G__ifile.filenum;
   return(0);
@@ -577,6 +606,10 @@ int G__autocc()
 
 #if defined(G__SYMANTEC)
     sprintf(temp,"smake -f %s",G__autocc_mak);
+    if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
+    system(temp);
+#elif defined(G__BORLAND)
+    sprintf(temp,"make.exe -f %s",G__autocc_mak);
     if(G__asm_dbg) fprintf(G__serr,"%s\n",temp);
     system(temp);
 #elif defined(G__VISUAL)

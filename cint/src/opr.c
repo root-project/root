@@ -1822,7 +1822,11 @@ G__value *defined;
     G__store_struct_offset = expressionin.obj.i;
     G__tagnum = expressionin.tagnum;
     
+#ifndef G__OLDIMPLEMENTATION1427
+    buffer = G__getfunction(expr,&ig2,G__TRYUNARYOPR);
+#else
     buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
+#endif
     
     G__store_struct_offset = store_struct_offset;
     G__tagnum = store_tagnum;
@@ -1987,7 +1991,11 @@ G__value *defined;
       G__store_struct_offset = defined->obj.i;
       G__tagnum = defined->tagnum; 
       
+#ifndef G__OLDIMPLEMENTATION1427
+      buffer = G__getfunction(expr,&ig2,G__TRYBINARYOPR);
+#else
       buffer = G__getfunction(expr,&ig2,G__TRYMEMFUNC);
+#endif
       
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
@@ -2477,7 +2485,7 @@ G__value *val;
     case G__OPR_PREFIXDEC:  return(G__OPR_PREFIXDEC_D);
     }
   }
-#if 0 /* following change rather slowed down */
+#ifdef G__NEVER /* following change rather slowed down */
   else if('l'==val->type) {
     switch(opr) {
     case G__OPR_POSTFIXINC: return(G__OPR_POSTFIXINC_L);

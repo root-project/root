@@ -698,7 +698,7 @@ char *temp;
      strcmp(temp,"register")==0||
 #endif
 #ifndef G__OLDIMPLEMENTATION1419
-     strcmp(temp,"typename")==0||
+     (G__iscpp && strcmp(temp,"typename")==0)||
 #endif
      -1!=G__defined_typename(temp)||
      -1!=G__defined_tagname(temp,2)||
@@ -1141,7 +1141,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
       isvoid=0;
     }
 #endif
-    else if(G__istypename(paraname) || strchr(paraname,'[')) {
+    else if(G__istypename(paraname) || strchr(paraname,'[')
+#ifndef G__OLDIMPLEMENTATION1433
+	    || -1!=G__friendtagnum
+#endif
+	    ) {
       G__p_ifunc->ansi[func_now]=1;
       isvoid=0;
     }
@@ -1823,7 +1827,7 @@ int func_now;
     while(strcmp(paraname,"const")==0 || strcmp(paraname,"register")==0 ||
        strcmp(paraname,"auto")==0 || strcmp(paraname,"volatile")==0
 #ifndef G__OLDIMPLEMENTATION1419
-	  || strcmp(paraname,"typename")==0
+	  || (G__iscpp && strcmp(paraname,"typename")==0)
 #endif
 	  ) {
       if(strcmp(paraname,"const")==0) 
@@ -1890,6 +1894,14 @@ int func_now;
     else if(strcmp(paraname,"void")==0) type='y';
     else if(strcmp(paraname,"FILE")==0) type='e';
     else {
+#ifndef G__OLDIMPLEMENTATION1433
+      int store_tagdefining = G__tagdefining;
+      int store_def_tagnum = G__def_tagnum;
+      if(-1!=G__friendtagnum) {
+	G__tagdefining = G__friendtagnum;
+	G__def_tagnum = G__friendtagnum;
+      }
+#endif
       typenum=G__defined_typename(paraname);
       if(-1==typenum) {
 	tagnum = G__defined_tagname(paraname,1);
@@ -1931,6 +1943,10 @@ int func_now;
 	pointlevel += G__newtype.nindex[typenum];
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1433
+      G__tagdefining = store_tagdefining;
+      G__def_tagnum = store_def_tagnum;
+#endif
     }
 
     /* determine pointer level */
@@ -3243,6 +3259,11 @@ int recursive;
 	  funclist->p_rate[i] = G__EXACTMATCH;
 	}
       }
+#ifndef G__OLDIMPLEMENTATION1424
+      else if('i'==param_type && (formal_tagnum!=param_tagnum)) {
+	funclist->p_rate[i] = G__PROMOTIONMATCH;
+      }
+#endif
       else { /* match */
 	funclist->p_rate[i] = G__EXACTMATCH;
       }
@@ -3593,7 +3614,7 @@ int recursive;
     }
 
     if(0==recursive && G__NOMATCH==funclist->p_rate[i]) {
-      if(param_type=='u') {
+      if(param_type=='u' && -1!=param_tagnum) {
 	struct G__ifunc_table *ifunc2;
 	int ifn2;
 	int hash2;
@@ -4470,6 +4491,67 @@ int recursive;
   return(funclist);
 }
 
+#ifndef G__OLDIMPLEMENTATION1427
+/***********************************************************************
+* G__rate_binary_operator()
+**********************************************************************/
+struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,recursive)
+struct G__param *libp;
+int tagnum;
+char* funcname;
+int hash;
+struct G__funclist *funclist;
+int recursive;
+{
+  int i;
+  struct G__param fpara;
+  struct G__ifunc_table *p_ifunc = &G__ifunc;
+
+  // set 1st argument as the object
+  fpara.para[0].type='u';
+  fpara.para[0].tagnum=tagnum;
+  fpara.para[0].typenum = -1;
+  fpara.para[0].obj.i = G__store_struct_offset;;
+  fpara.para[0].ref = G__store_struct_offset;;
+
+  // set 2nd to n arguments
+  fpara.paran = libp->paran+1;
+  for(i=0;i<libp->paran;i++) fpara.para[i+1] = libp->para[i];
+
+  /* Search for name match
+   *  if reserved func or K&R, match immediately
+   *  check number of arguments and default parameters
+   *  rate parameter match */
+  while(p_ifunc) {
+    int ifn;
+    for(ifn=0;ifn<p_ifunc->allifunc;++ifn) {
+      if(hash==p_ifunc->hash[ifn]&&strcmp(funcname,p_ifunc->funcname[ifn])==0){
+	if(p_ifunc->para_nu[ifn]<fpara.paran ||
+	   (p_ifunc->para_nu[ifn]>fpara.paran&&
+	    !p_ifunc->para_default[ifn][fpara.paran])
+#ifdef G__OLDIMPLEMENTATION1260_YET
+	   || (G__isconst && 0==p_ifunc->isconst[ifn])
+#endif
+#ifndef G__OLDIMPLEMENTATION1315
+	   || (recursive && p_ifunc->isexplicit[ifn])
+#endif
+	   ) {
+	}
+	else {
+	  funclist = G__funclist_add(funclist,p_ifunc,ifn);
+	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,recursive);
+	  funclist->ifunc = 0; /* added as dummy */
+	}
+      }
+    }
+    p_ifunc = p_ifunc->next;
+  }
+
+  return(funclist);
+}
+#endif
+
+
 /***********************************************************************
 * G__overload_match(funcname,libp,hash,p_ifunc,memfunc_flag,access,pifn)
 **********************************************************************/
@@ -4551,6 +4633,13 @@ int recursive;
 				    ,store_ifunc,recursive);
   }
 
+#ifndef G__OLDIMPLEMENTATION1427
+  if(!match && (G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag)) {
+    funclist = G__rate_binary_operator(libp,G__tagnum,funcname,hash
+				       ,funclist,recursive);
+  }
+#endif
+
   /* if there is no name match, return null */
   if((struct G__funclist*)NULL==funclist) return((struct G__ifunc_table*)NULL);
   /* else  there is function name match */
@@ -4573,6 +4662,14 @@ int recursive;
     }
     func = func->prev;
   }
+
+#ifndef G__OLDIMPLEMENTATION1427
+  if((G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag) && 
+     match && 0==match->ifunc) {
+    G__funclist_delete(funclist);
+    return((struct G__ifunc_table*)NULL);
+  }
+#endif
 
 #ifdef G__ASM_DBG2
   G__display_ambiguous(scopetagnum,funcname,libp,funclist,bestmatch);

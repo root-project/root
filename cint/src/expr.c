@@ -1897,8 +1897,15 @@ char *item;
 	  result3 = G__getitem(sbuf);
 	  gettingspecial = 0;
 #ifndef G__OLDIMPLEMENTATION1379
+#ifndef G__OLDIMPLEMENTATION1420
+	  if(G__const_noerror) {
+	    G__return = store_return;
+	    G__security_error = store_security_error;
+	  }
+#else
 	  G__return = store_return;
 	  G__security_error = store_security_error;
+#endif
 #endif
 	  return result3;
 	}

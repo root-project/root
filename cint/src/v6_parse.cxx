@@ -3699,7 +3699,11 @@ G__value G__exec_statement()
 #endif
 	  }
 #ifndef G__OLDIMPLEMENTATION949
-          else {
+          else 
+#ifndef G__OLDIMPLEMENTATION1425
+	    if(iout) 
+#endif
+	    {
             int namespace_tagnum;
 #ifdef G__NEVER 
 	    /* This part given by Scott Snyder causes problem on Redhat4.2

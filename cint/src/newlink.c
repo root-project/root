@@ -53,6 +53,7 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 **************************************************************************/
 /* #define G__BUILTIN */
 
+
 #if !defined(G__DECCXX) && !defined(G__BUILTIN)
 #define G__N_EXPLICITDESTRUCTOR
 #endif
@@ -65,6 +66,7 @@ void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc
 #undef G__P2FDECL
 #endif
 #endif
+
 
 /**************************************************************************
 * If this is Windows-NT/95, create G__PROJNAME.DEF file
@@ -171,6 +173,10 @@ static char G__DLLID[G__MAXNAME];
 static char *G__DLLID;
 #endif
 static char *G__INITFUNC;
+
+#ifndef G__OLDIMPLEMENTATION1423
+static char G__NEWID[G__MAXNAME];
+#endif
 
 #ifndef G__FONS60
 /**************************************************************************
@@ -522,6 +528,84 @@ FILE *fp;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1423
+/**************************************************************************
+* G__gen_newdelete()
+*
+**************************************************************************/
+void G__gen_newdelete(fp) 
+FILE *fp;
+{
+  if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE)){
+    fprintf(fp,"class G__%s_tag {};\n\n",G__NEWID);
+    
+    if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
+      fprintf(fp,"static ");
+    fprintf(fp,"void* operator new(size_t size,G__%s_tag* p) {\n",G__NEWID);
+    fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return((void*)p);\n");
+    fprintf(fp,"  return new char[size];\n");
+    fprintf(fp,"}\n\n");
+
+#ifndef G__OLDIMPLEMENTATION1431
+    fprintf(fp,"/* dummy, for exception */\n");
+    if(G__is_operator_newdelete&(G__DUMMYARG_NEWDELETE_STATIC))
+      fprintf(fp,"static ");
+    fprintf(fp,"void operator delete(void *p,G__%s_tag* x) {\n",G__NEWID);
+    fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+    fprintf(fp,"  delete p;\n");
+    fprintf(fp,"}\n\n");
+#endif
+    
+    fprintf(fp,"static void G__operator_delete(void *p) {\n");
+    fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+    fprintf(fp,"  delete p;\n");
+    fprintf(fp,"}\n\n");
+    
+  }
+  else {
+    if(0==(G__is_operator_newdelete&(G__MASK_OPERATOR_NEW|G__IS_OPERATOR_NEW))){
+      if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
+	fprintf(fp,"static void* operator new(size_t size) {\n");
+	fprintf(fp,"  if(G__PVOID!=G__getgvp()) return((void*)G__getgvp());\n");
+      }
+      else {
+	fprintf(fp,"static void* operator new(size_t size,void* p) {\n");
+#ifndef G__OLDIMPLEMENTATION1321
+	fprintf(fp,"  if(p && (long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+#else
+	fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return(p);\n");
+#endif
+      }
+      /* fprintf(fp,"  if(G__PVOID!=(long)p) return(p);\n"); */
+      fprintf(fp,"#ifndef G__ROOT\n");
+      fprintf(fp,"  return(malloc(size));\n");
+      fprintf(fp,"#else\n");
+      fprintf(fp,"  return new char[size];\n");
+      fprintf(fp,"#endif\n");
+      fprintf(fp,"}\n");
+    }
+    else {
+      fprintf(G__serr,"Note: operator new() masked %x\n"
+	      ,G__is_operator_newdelete);
+    }
+#ifdef G__N_EXPLICITDESTRUCTOR
+    if(0==(G__is_operator_newdelete&
+	   (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
+      fprintf(fp,"static void operator delete(void *p) {\n");
+      fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
+      /* fprintf(fp,"  if(G__PVOID!=G__getgvp()) return;\n"); */
+      fprintf(fp,"  free(p);\n");
+      fprintf(fp,"}\n");
+    }
+    else {
+      fprintf(G__serr,"Note: operator delete() masked %x\n"
+	      ,G__is_operator_newdelete);
+    }
+#endif /* G__N_EXPLICITDESTRUCTOR */
+  }
+}
+#endif
+
 /**************************************************************************
 * G__gen_cpplink()
 *
@@ -569,6 +653,9 @@ void G__gen_cpplink()
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1423
+  G__gen_newdelete(fp);
+#else /* 1423 */
   if(0==(G__is_operator_newdelete&(G__MASK_OPERATOR_NEW|G__IS_OPERATOR_NEW))){
     if(G__is_operator_newdelete&(G__NOT_USING_2ARG_NEW)) {
       fprintf(fp,"static void* operator new(size_t size) {\n");
@@ -596,7 +683,7 @@ void G__gen_cpplink()
   }
 #ifdef G__N_EXPLICITDESTRUCTOR
   if(0==(G__is_operator_newdelete&
-     (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
+	 (G__MASK_OPERATOR_DELETE|G__IS_OPERATOR_DELETE))) {
     fprintf(fp,"static void operator delete(void *p) {\n");
     fprintf(fp,"  if((long)p==G__getgvp() && G__PVOID!=G__getgvp()) return;\n");
     /* fprintf(fp,"  if(G__PVOID!=G__getgvp()) return;\n"); */
@@ -607,7 +694,8 @@ void G__gen_cpplink()
     fprintf(G__serr,"Note: operator delete() masked %x\n"
 	    ,G__is_operator_newdelete);
   }
-#endif
+#endif /* G__N_EXPLICITDESTRUCTOR */
+#endif /* 1423 */
 
 #ifndef G__OLDIMPLEMENTATION1169
 #ifdef G__BUILTIN
@@ -693,7 +781,11 @@ void G__gen_cpplink()
   fclose(G__WINDEFfp);
 #endif
 
-  if(G__is_operator_newdelete&(G__IS_OPERATOR_NEW|G__IS_OPERATOR_DELETE)) {
+  if(
+#ifndef G__OLDIMPLEMENTATION1423
+     (0==(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)) &&
+#endif /* 1423 */
+     (G__is_operator_newdelete&(G__IS_OPERATOR_NEW|G__IS_OPERATOR_DELETE))) {
     fp = fopen("G__ISOPRNEW","w");
 #ifndef G__OLDIMPLEMENTATION606
     if(!fp) G__fileerror("G__ISOPRNEW");
@@ -704,7 +796,7 @@ void G__gen_cpplink()
     fprintf(G__serr,"//Overloaded global operator new and/or delete are\n");
     fprintf(G__serr,"//found in user's source file.\n");
     fprintf(G__serr,"//Modify functions as follows. Otherwise, you may find\n");
-    fprintf(G__serr,"//problems later.\n");
+    fprintf(G__serr,"//problems later.  (%x)\n",G__is_operator_newdelete);
     fprintf(G__serr,"\n");
     fprintf(G__serr,"// Giving memory arena to a base class object for constructor call\n");
     fprintf(G__serr,"#define G__PVOID (-1)\n");
@@ -737,6 +829,7 @@ void G__gen_cpplink()
 #endif
     fprintf(G__serr,"######################################################\n");
   }
+
 #ifdef G__OLDIMPLEMENTATION1197
 #ifdef G__GENWINDEF
   free(G__WINDEF);
@@ -1411,6 +1504,15 @@ char *dllid;
   strcpy(G__DLLID,G__map_cpp_name(dllid));
 #else
     G__DLLID = dllid;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1423
+    if(0==strncmp(linkfilename,"G__cpp_",7)) 
+      strcpy(G__NEWID,G__map_cpp_name(linkfilename+7));
+    else if(0==strncmp(linkfilename,"G__",3)) 
+      strcpy(G__NEWID,G__map_cpp_name(linkfilename+3));
+    else
+      strcpy(G__NEWID,G__map_cpp_name(linkfilename));
 #endif
 
   switch(G__globalcomp) {
@@ -2351,11 +2453,23 @@ struct G__ifunc_table *ifunc;
 #endif
 	  fprintf(fp,"     else {\n");
 	  fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
-	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
+#endif
+	    fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
 	  fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
 	  fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	  fprintf(fp,"     }\n");
-	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
+#endif
+	    fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
 	}
 	else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2368,7 +2482,19 @@ struct G__ifunc_table *ifunc;
 #else
 	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-	  fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
+#endif
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
+#endif
+	    fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
 	}
       }
       else {
@@ -2377,18 +2503,22 @@ struct G__ifunc_table *ifunc;
 #else
 	if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION836
-	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
-#else
-	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",ifunc->funcname[ifn]);
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
 #endif
+	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
 	}
 	else {
-#ifndef G__OLDIMPLEMENTATION836
-	  fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
-#else
-	  fprintf(fp,"      p = new %s(",ifunc->funcname[ifn]);
+#ifndef G__OLDIMPLEMENTATION1423
+	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+		    ,G__NEWID,G__fulltagname(tagnum,1));
+	  else
 #endif
+	    fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
 	}
 	if(m>2) fprintf(fp,"\n");
 	for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -2421,11 +2551,23 @@ struct G__ifunc_table *ifunc;
 #endif
 	fprintf(fp,"     else {\n");
 	fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
-	fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
+		  ,G__NEWID,G__fulltagname(tagnum,1));
+	else
+#endif
+	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
 	fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
 	fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
 	fprintf(fp,"     }\n");
-	fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		  ,G__NEWID,G__fulltagname(tagnum,1));
+	else
+#endif
+	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2438,7 +2580,13 @@ struct G__ifunc_table *ifunc;
 #else
 	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-	fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));}
+#ifndef G__OLDIMPLEMENTATION1423
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		  ,G__NEWID,G__fulltagname(tagnum,1));
+	else
+#endif
+	  fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));}
     }
     else {
 #ifndef G__OLDIMPLEMENTATION680
@@ -2446,18 +2594,22 @@ struct G__ifunc_table *ifunc;
 #else
       if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-#ifndef G__OLDIMPLEMENTATION836
-	fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
-#else
-	fprintf(fp,"      p = new((void*)G__getgvp()) %s(",ifunc->funcname[ifn]);
+#ifndef G__OLDIMPLEMENTATION1423
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+		  ,G__NEWID,G__fulltagname(tagnum,1));
+	else
 #endif
+	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
       }
       else {
-#ifndef G__OLDIMPLEMENTATION836
-	fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
-#else
-	fprintf(fp,"      p = new %s(",ifunc->funcname[ifn]);
+#ifndef G__OLDIMPLEMENTATION1423
+	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
+		  ,G__NEWID,G__fulltagname(tagnum,1));
+	else
 #endif
+	  fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
       }
       if(m>2) fprintf(fp,"\n");
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -2761,6 +2913,9 @@ int isnonpublicnew;
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
+#ifndef G__OLDIMPLEMENTATION1423
+  char dtorname[G__ONELINE];
+#endif
 
   G__ASSERT( tagnum != -1 );
 
@@ -2800,7 +2955,9 @@ int isnonpublicnew;
 #endif /* G__CPPIF_STATIC */
     fprintf(fp," {\n");
     fprintf(fp,"   %s *p;\n",G__fulltagname(tagnum,1));
+#ifdef G__OLDIMPLEMENTATION1432
     fprintf(fp,"   if(0!=libp->paran) ;\n");
+#endif
 
 #ifndef G__OLDIMPLEMENTATION680
     if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
@@ -2821,10 +2978,22 @@ int isnonpublicnew;
 #endif
       fprintf(fp,"     else {\n");
       fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
+#ifndef G__OLDIMPLEMENTATION1423
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
+		,G__NEWID,G__fulltagname(tagnum,1));
+      else 
+#endif
       fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
       fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
       fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
       fprintf(fp,"     }\n");
+#ifndef G__OLDIMPLEMENTATION1423
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		,G__NEWID,G__fulltagname(tagnum,1));
+      else
+#endif
       fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
     }
     else {
@@ -2838,7 +3007,13 @@ int isnonpublicnew;
 #else
       fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
 #endif
-      fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
+		,G__NEWID,G__fulltagname(tagnum,1));
+      else
+#endif
+	fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
     }
     fprintf(fp,"   result7->obj.i = (long)p;\n");
     fprintf(fp,"   result7->ref = (long)p;\n");
@@ -2895,6 +3070,11 @@ int isnonpublicnew;
 #else
     if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
+#ifndef G__OLDIMPLEMENTATION1423
+      if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) 
+	fprintf(fp,"   p=new((G__%s_tag*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",G__NEWID,temp,temp);
+      else
+#endif
       fprintf(fp,"   p=new((void*)G__getgvp()) %s(*(%s*)G__int(libp->para[0]));\n",temp,temp);
     }
     else {
@@ -2930,6 +3110,16 @@ int isnonpublicnew;
     sprintf(funcname,"~%s",G__struct.name[tagnum]);
     fprintf(fp,"// automatic destructor\n");
 
+#ifndef G__OLDIMPLEMENTATION1423
+    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
+      if(1 /* strchr(funcname,'<') */ ) {
+	sprintf(dtorname,"G__T%s",G__map_cpp_name(G__fulltagname(tagnum,0)));
+	fprintf(fp,"typedef %s %s;\n",G__fulltagname(tagnum,0),dtorname);
+      }
+      else strcpy(dtorname,funcname+1);
+    }
+#endif
+
 #ifdef G__CPPIF_STATIC
     fprintf(fp,"static int %s(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)"
 	    ,G__map_cpp_funcname(tagnum ,funcname ,ifn,page));
@@ -2951,23 +3141,48 @@ int isnonpublicnew;
     fprintf(fp,"       delete[] (%s *)(G__getstructoffset());\n" ,G__fulltagname(tagnum,1));
     fprintf(fp,"     else\n");
     fprintf(fp,"       for(int i=G__getaryconstruct()-1;i>=0;i--)\n");
-#ifndef G__N_EXPLICITDESTRUCTOR
-    fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
-    fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
-    fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
+#ifndef G__OLDIMPLEMENTATION1423
+    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
+      fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
+      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
+      fprintf(fp,"->~%s();\n",dtorname);
+    }
+    else {
 #else
-    fprintf(fp,"         delete (%s *)",G__fulltagname(tagnum,1));
-    fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i);\n" ,G__fulltagname(tagnum,1));
 #endif
 #ifndef G__N_EXPLICITDESTRUCTOR
-    fprintf(fp,"   else if(G__PVOID==G__getgvp()) delete (%s *)(G__getstructoffset());\n"
-	    ,G__fulltagname(tagnum,1));
-    fprintf(fp,"   else ((%s *)(G__getstructoffset()))"
-	    ,G__fulltagname(tagnum,1));
-    fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
+      fprintf(fp,"         ((%s *)",G__fulltagname(tagnum,1));
+      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i))" ,G__fulltagname(tagnum,1));
+      fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
 #else
-    fprintf(fp,"   else  delete (%s *)(G__getstructoffset());\n"
-	    ,G__fulltagname(tagnum,1));
+      fprintf(fp,"         delete (%s *)",G__fulltagname(tagnum,1));
+      fprintf(fp,"((G__getstructoffset())+sizeof(%s)*i);\n" ,G__fulltagname(tagnum,1));
+#endif
+#ifndef G__OLDIMPLEMENTATION1423
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1423
+    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE) {
+      fprintf(fp,"   else {\n");
+      fprintf(fp,"     ((%s *)(G__getstructoffset()))",G__fulltagname(tagnum,1));
+      fprintf(fp,"->~%s();\n",dtorname);
+      fprintf(fp,"     G__operator_delete((void*)G__getstructoffset());\n");
+      fprintf(fp,"   }\n");
+    }
+    else {
+#endif /* 1423 */
+#ifndef G__N_EXPLICITDESTRUCTOR
+      fprintf(fp,"   else if(G__PVOID==G__getgvp()) delete (%s *)(G__getstructoffset());\n"
+	      ,G__fulltagname(tagnum,1));
+      fprintf(fp,"   else ((%s *)(G__getstructoffset()))"
+	      ,G__fulltagname(tagnum,1));
+      fprintf(fp,"->~%s();\n",G__fulltagname(tagnum,1));
+#else
+      fprintf(fp,"   else  delete (%s *)(G__getstructoffset());\n"
+	      ,G__fulltagname(tagnum,1));
+#endif
+#ifndef G__OLDIMPLEMENTATION1423
+    }
 #endif
 #ifdef G__OLDIMPLEMENTATION579
     /* This was my mistake. ifn is out of bound and must not call 
@@ -3335,8 +3550,15 @@ char *endoffunc;
 #endif
 	  fprintf(fp,"        %s *pobj,xobj=",G__type2string('u',tagnum,-1,0,0));
 	  if(0==(G__is_operator_newdelete&G__NOT_USING_2ARG_NEW)) {
-	    sprintf(endoffunc,";\n        pobj=new((void*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
-		    ,G__type2string('u',tagnum,-1,0,0));
+#ifndef G__OLDIMPLEMENTATION1423
+	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)
+	      sprintf(endoffunc,";\n        pobj=new((G__%s_tag*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
+		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
+	    else
+#endif
+	      sprintf(endoffunc,";\n        pobj=new((void*)G__getgvp()) %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
+		      ,G__type2string('u',tagnum,-1,0,0));
+
 	  }
 	  else {
 	    sprintf(endoffunc,";\n        pobj=new %s(xobj);\n        result7->obj.i=(long)((void*)pobj); result7->ref=result7->obj.i;\n        G__store_tempobject(*result7);\n      }"
@@ -3350,8 +3572,14 @@ char *endoffunc;
 #else
 	  if(0==G__is_operator_newdelete&G__IS_OPERATOR_NEW) {
 #endif
-	    fprintf(fp,"        pobj=new((void*)G__getgvp()) %s("
-		    ,G__type2string('u',tagnum,-1,0,0));
+#ifndef G__OLDIMPLEMENTATION1423
+	    if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE)
+	      fprintf(fp,"        pobj=new((G__%s_tag*)G__getgvp()) %s("
+		      ,G__NEWID,G__type2string('u',tagnum,-1,0,0));
+	    else
+#endif
+	      fprintf(fp,"        pobj=new((void*)G__getgvp()) %s("
+		      ,G__type2string('u',tagnum,-1,0,0));
 	  }
 	  else {
 	    fprintf(fp,"        pobj=new %s("

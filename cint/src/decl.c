@@ -276,6 +276,20 @@ char *new_name;
 	cin=G__fgetvarname(new_name+3,",;=():");
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1428
+      else if(strcmp(new_name,"inline")==0) {
+	cin=G__fgetvarname(new_name,",;=():");
+      }
+      else if(strcmp(new_name,"*inline")==0) {
+	cin=G__fgetvarname(new_name+1,",;=():");
+      }
+      else if(strcmp(new_name,"**inline")==0) {
+	cin=G__fgetvarname(new_name+2,",;=():");
+      }
+      else if(strcmp(new_name,"***inline")==0) {
+	cin=G__fgetvarname(new_name+3,",;=():");
+      }
+#endif
     }
 
     if(isspace(cin)) {

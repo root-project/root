@@ -678,13 +678,15 @@ struct G__baseparam {
 /**************************************************************************
 * flag argument to G__getfunction()
 **************************************************************************/
-#define G__TRYNORMAL        0
-#define G__CALLMEMFUNC      1
-#define G__TRYMEMFUNC       2
-#define G__CALLCONSTRUCTOR  3  
-#define G__TRYCONSTRUCTOR   4  
-#define G__TRYDESTRUCTOR    5  
+#define G__TRYNORMAL         0
+#define G__CALLMEMFUNC       1
+#define G__TRYMEMFUNC        2
+#define G__CALLCONSTRUCTOR   3  
+#define G__TRYCONSTRUCTOR    4  
+#define G__TRYDESTRUCTOR     5  
 #define G__CALLSTATICMEMFUNC 6
+#define G__TRYUNARYOPR       7
+#define G__TRYBINARYOPR      8
 
 #ifndef G__OLDIMPLEMENTATINO1250
 #define G__TRYIMPLICITCONSTRUCTOR 7
@@ -815,8 +817,8 @@ struct G__AppPragma {
 #define G__MASK_OPERATOR_NEW      0x04
 #define G__MASK_OPERATOR_DELETE   0x08
 #define G__NOT_USING_2ARG_NEW     0x10
-#define G__USE_DUMMYARG_NEW      0x100
-#define G__USE_DUMMYARG_DELETE   0x200
+#define G__DUMMYARG_NEWDELETE        0x100
+#define G__DUMMYARG_NEWDELETE_STATIC 0x200
 
 /**************************************************************************
 * Stub function mode

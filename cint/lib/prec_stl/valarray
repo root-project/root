@@ -208,6 +208,30 @@ template<class T> class valarray {
   friend valarray<T> tan  (const valarray<T>&);
   friend valarray<T> tanh (const valarray<T>&);
 
+#ifdef G__VISUAL
+// Visual C++ 6.0 , FATAL BUG C1001 INTERNAL COMPILER ERROR, workaround
+#pragma link MACRO function abs(valarray<T>);
+#pragma link MACRO function acos(valarray<T>);
+#pragma link MACRO function asin(valarray<T>);
+#pragma link MACRO function atan(valarray<T>);
+#pragma link MACRO function atan2(valarray<T>,valarray<T>);
+#pragma link MACRO function atan2(valarray<T>,T);
+#pragma link MACRO function atan2(T,valarray<T>);
+#pragma link MACRO function cos(valarray<T>);
+#pragma link MACRO function cosh(valarray<T>);
+#pragma link MACRO function exp(valarray<T>);
+#pragma link MACRO function log(valarray<T>);
+#pragma link MACRO function log10(valarray<T>);
+#pragma link MACRO function pow(valarray<T>,valarray<T>);
+#pragma link MACRO function pow(valarray<T>,T);
+#pragma link MACRO function pow(T,valarray<T>);
+#pragma link MACRO function sin(valarray<T>);
+#pragma link MACRO function sinh(valarray<T>);
+#pragma link MACRO function sqrt(valarray<T>);
+#pragma link MACRO function tan(valarray<T>);
+#pragma link MACRO function tanh(valarray<T>);
+#endif
+
 };
 
 

@@ -21,12 +21,21 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014059
-#define G__CINTVERSIONSTR  "5.14.59, Oct 28 2000"
+#define G__CINTVERSION 5014062
+#define G__CINTVERSIONSTR  "5.14.62, Nov 12 2000"
+
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* New memory allocation scheme is turned on for ROOT by defining 
+ * following macro. Default off for ROOT. */
+/* #define G__EXPERIMENTAL1423 */
+
+/* New memory allocation scheme is turned off for pure Cint by defining 
+ * following macro. Default on for pure Cint */
+/* #define G__OLDIMPLEMENTATION1423 */
 
 /* Define following macros if you want to store where global variables
  * and typedefs are defined in source files. Reason of not making this
@@ -1656,6 +1665,15 @@ extern G__EXPORT void G__set_smartunload G__P((int smartunload));
 #ifndef G__OLDIMPLEMENTATION1210
 typedef int (*G__IgnoreInclude) G__P((const char* fname,const char* expandedfname));
 extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1423
+#ifdef G__NEVER
+extern G__EXPORT void* G__operator_new G__P((size_t size,void* p));
+extern G__EXPORT void* G__operator_new_ary G__P((size_t size,void* p)) ;
+extern G__EXPORT void G__operator_delete G__P((void *p)) ;
+extern G__EXPORT void G__operator_delete_ary G__P((void *p)) ;
+#endif
 #endif
 
 #ifdef G__ASM_WHOLEFUNC

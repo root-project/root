@@ -553,6 +553,10 @@ int G__init_env()
 * error recovery
 ************************************************************************/
 static struct G__dictposition errordictpos;
+#ifndef G__OLDIMPLEMENTATION1422
+static struct G__input_file errorifile;
+#endif
+
 
 #ifndef G__OLDIMPLEMENTATION1066
 /******************************************************************
@@ -622,6 +626,9 @@ int ifn;
 void G__storerewindposition()
 {
    G__store_dictposition(&errordictpos);
+#ifndef G__OLDIMPLEMENTATION1422
+   errorifile = G__ifile;
+#endif
 }
 
 /************************************************************************
@@ -645,6 +652,9 @@ void G__rewinddictionary()
       fprintf(G__serr,"!!!Dictionary position not recorvered because G__unloadfile() in macro!!!\n");
     }
   }
+#ifndef G__OLDIMPLEMENTATION1422
+  G__ifile = errorifile;
+#endif
   errordictpos.var = (struct G__var_array*)NULL;
 }
 #endif
@@ -926,6 +936,10 @@ FILE *fout;
       G__security_error = G__NOERROR; 
 #endif
       /* G__security_error = G__NOERROR; */ /* don't remember why not doing */
+#ifndef G__OLDIMPLEMENTATION1421
+      G__prerun = 0;
+      G__decl = 0;
+#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION1031

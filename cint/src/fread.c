@@ -67,7 +67,7 @@ char *buf;
 #ifndef G__OLDIMPLEMENTATION1419
      || strcmp(buf,"volatile")==0 
      || strcmp(buf,"register")==0 
-     || strcmp(buf,"typename")==0 
+     || (G__iscpp && strcmp(buf,"typename")==0)
 #endif
      ) {
     return(1);
@@ -147,7 +147,7 @@ char *string,*endmark;
 	if(tmpltnest) {
 	  if(G__isstoragekeyword(pp)) {
 #ifndef G__OLDIMPLEMENTATION1419
-	    if(strcmp("typename",pp)==0) {
+	    if(G__iscpp && strcmp("typename",pp)==0) {
 	      i -= 8;
 	      c=' ';
 	      ignoreflag = 1;
@@ -639,7 +639,7 @@ char *string,*endmark;
 	string[i] = '\0';
 	if(G__isstoragekeyword(pp)) {
 #ifndef G__OLDIMPLEMENTATION1419
-	  if(strcmp("typename",pp)==0) {
+	  if(G__iscpp && strcmp("typename",pp)==0) {
 	    i -= 8;
 	    c=' ';
 	    ignoreflag = 1;
@@ -897,7 +897,7 @@ char *string,*endmark;
 	string[i] = '\0';
 	if(G__isstoragekeyword(pp)) {
 #ifndef G__OLDIMPLEMENTATION1419
-	  if(strcmp("typename",pp)==0) {
+	  if(G__iscpp && strcmp("typename",pp)==0) {
 	    i -= 8;
 	    c=' ';
 	    ignoreflag = 1;

@@ -7,7 +7,7 @@
 ############################################################
 # platform/linux2.0RH6.2
 #  Platform dependent information for LINUX 2.0 RedHatH6.2 or later
-#  Redhat-5.2
+#  Redhat-6.2
 ############################################################
 
 # Tools
