@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.16 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.17 2002/01/25 16:39:13 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -457,7 +457,7 @@ TObject *TKey::ReadObj()
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
    char cmd[2048];
-   sprintf(cmd,"((%s*)0x%x)->Streamer((TBuffer&)0x%x);",cl->GetName(),(Seek_t)obj,(Seek_t)fBufferRef);
+   sprintf(cmd,"((%s*)0x%lx)->Streamer((TBuffer&)0x%lx);",cl->GetName(),(Long_t)obj,(Long_t)fBufferRef);
    
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
