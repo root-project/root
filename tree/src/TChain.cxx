@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.65 2003/03/19 17:25:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.66 2003/04/09 14:30:38 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -793,7 +793,7 @@ Int_t TChain::LoadTree(Int_t entry)
    Int_t status;
    while ((element = (TChainElement*)next())) {
       status = element->GetStatus();
-      if (status >=0) fTree->SetBranchStatus(element->GetName(),status);
+      fTree->SetBranchStatus(element->GetName(),status);
    }
    next.Reset();
    while ((element = (TChainElement*)next())) {
