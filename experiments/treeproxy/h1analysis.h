@@ -95,13 +95,17 @@ void h1analysis_Terminate()
 
    TCanvas *c1 = new TCanvas("c1","h1analysis analysis",10,10,800,600);
    c1->SetBottomMargin(0.15);
-   hdmd->GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
-   hdmd->GetXaxis()->SetTitleOffset(1.4);
+   if (!hdmd) {
+      fprintf(stderr,"h1analysis_Terminate nothing to fit\n");
+   } else {
+      hdmd->GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
+      hdmd->GetXaxis()->SetTitleOffset(1.4);
+   }
    
    //fit histogram hdmd with function f5 using the loglikelihood option
    TF1 *f5 = new TF1("f5",fdm5,0.139,0.17,5); 
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
-   hdmd->Fit("f5","lr");
+   if (hdmd) hdmd->Fit("f5","lr");
    
    //create the canvas for tau d0
    gStyle->SetOptFit(0);
@@ -116,11 +120,13 @@ void h1analysis_Terminate()
    // in the current directory.
    TF1 *f2 = new TF1("f2",fdm2,0.139,0.17,2);
    f2->SetParameters(10000, 10);
-   h2->FitSlicesX(f2,0,0,1,"qln");
+   if (h2) h2->FitSlicesX(f2,0,0,1,"qln");
    TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
-   h2_1->GetXaxis()->SetTitle("#tau[ps]");
-   h2_1->SetMarkerStyle(21);
-   h2_1->Draw();
+   if (h2_1) {
+      h2_1->GetXaxis()->SetTitle("#tau[ps]");
+      h2_1->SetMarkerStyle(21);
+      h2_1->Draw();
+   }
    c2->Update();
    TLine *line = new TLine(0,0,0,c2->GetUymax());
    line->Draw();

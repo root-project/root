@@ -1689,12 +1689,11 @@ void TGenerateProxy::WriteProxy() {
 
    // Other functions.
    fprintf(hf,"   ~%s();\n",classname.Data());
+   fprintf(hf,"   Int_t   Version() const {return 1;}\n");
    fprintf(hf,"   void    Begin(::TTree *tree);\n");
    fprintf(hf,"   void    Init(::TTree *tree);\n");
    fprintf(hf,"   Bool_t  Notify();\n");
    fprintf(hf,"   Bool_t  Process(Int_t entry);\n");
-   fprintf(hf,"   Bool_t  ProcessCut(Int_t entry);\n");
-   fprintf(hf,"   void    ProcessFill(Int_t entry);\n");
    fprintf(hf,"   void    SetOption(const char *option) { fOption = option; }\n");
    fprintf(hf,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
    fprintf(hf,"   void    SetInputList(TList *input) {fInput = input;}\n");
@@ -1776,42 +1775,34 @@ void TGenerateProxy::WriteProxy() {
    fprintf(hf,"\n");
    fprintf(hf,"}\n");
    fprintf(hf,"\n");
-   fprintf(hf,"Bool_t %s::Process(Int_t /* entry */)\n",classname.Data());
+   fprintf(hf,"Bool_t %s::Process(Int_t entry)\n",classname.Data());
    fprintf(hf,"{\n");
-   fprintf(hf,"   // Processing function.\n");
-   fprintf(hf,"   // Entry is the entry number in the current tree.\n");
-   fprintf(hf,"   // Read only the necessary branches to select entries.\n");
-   fprintf(hf,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
-   fprintf(hf,"   // Return kFALSE to stop processing.\n");
-   fprintf(hf,"\n");
-   fprintf(hf,"   return kTRUE;\n");
-   fprintf(hf,"}\n");
-   fprintf(hf,"\n");
-   fprintf(hf,"Bool_t %s::ProcessCut(Int_t /* entry */)\n",classname.Data());
-   fprintf(hf,"{\n");
-   fprintf(hf,"   // Selection function.\n");
-   fprintf(hf,"   // Entry is the entry number in the current tree.\n");
-   fprintf(hf,"   // Read only the necessary branches to select entries.\n");
-   fprintf(hf,"   // Return kFALSE as soon as a bad entry is detected.\n");
-   fprintf(hf,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
-   fprintf(hf,"\n");
-   fprintf(hf,"   return kTRUE;\n");
-   fprintf(hf,"}\n");
-   fprintf(hf,"\n");
-   fprintf(hf,"void %s::ProcessFill(Int_t entry)\n",classname.Data());
-   fprintf(hf,"{\n");
-   fprintf(hf,"   // Function called for selected entries only.\n");
-   fprintf(hf,"   // Entry is the entry number in the current tree.\n");
-   fprintf(hf,"   // Read branches not processed in ProcessCut() and fill histograms.\n");
-   fprintf(hf,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
 
+   fprintf(hf,"   // The Process() function is called for each entry in the tree (or possibly\n"
+               "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
+               "   // specifies which entry in the currently loaded tree is to be processed.\n"
+               "   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()\n"
+               "   // to read either all or the required parts of the data. When processing\n"
+               "   // keyed objects with PROOF, the object is already loaded and is available\n"
+               "   // via the fObject pointer.\n"
+               "   //\n"
+               "   // This function should contain the \"body\" of the analysis. It can contain\n"
+               "   // simple or elaborate selection criteria, run algorithms on the data\n"
+               "   // of the event and typically fill histograms.\n\n");
+   fprintf(hf,"   // WARNING when a selector is used with a TChain, you must use\n");
+   fprintf(hf,"   //  the pointer to the current TTree to call GetEntry(entry).\n");
+   fprintf(hf,"   //  The entry is always the local entry number in the current tree.\n");
+   fprintf(hf,"   //  Assuming that fChain is the pointer to the TChain being processed,\n");
+   fprintf(hf,"   //  use fChain->GetTree()->GetEntry(entry).\n");
+   fprintf(hf,"\n");
+   fprintf(hf,"\n");
    fprintf(hf,"   fDirector.SetReadEntry(entry);\n");
    if (cutfilename) {
       fprintf(hf,"   if (%s()) htemp->Fill(%s());\n",cutscriptfunc.Data(),scriptfunc.Data());
    } else {
       fprintf(hf,"   htemp->Fill(%s());\n",scriptfunc.Data());
    }
-
+   fprintf(hf,"   return kTRUE;\n");
    fprintf(hf,"\n");
    fprintf(hf,"}\n");
    fprintf(hf,"\n");

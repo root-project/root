@@ -100,7 +100,7 @@ double h1analysis()
 {
    static bool loaded = false;
    
-   if (loaded==0) {
+   if (!loaded) {
       h1analysis_Begin(fChain, htemp, this);
       loaded = true;
    }
