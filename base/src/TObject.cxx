@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.64 2004/08/24 10:41:58 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.65 2004/09/20 19:34:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -392,9 +392,9 @@ void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 TObject *TObject::FindObject(const char *) const
 {
-// must be redefined in derived classes
-// this function is typycally used with TCollections, but can also be used
-// to find an object by name inside this object
+   // Must be redefined in derived classes.
+   // This function is typycally used with TCollections, but can also be used
+   // to find an object by name inside this object.
 
    return 0;
 }
@@ -402,9 +402,9 @@ TObject *TObject::FindObject(const char *) const
 //______________________________________________________________________________
 TObject *TObject::FindObject(const TObject *) const
 {
-// must be redefined in derived classes
-// this function is typycally used with TCollections, but can also be used
-// to find an object inside this object
+   // Must be redefined in derived classes.
+   // This function is typycally used with TCollections, but can also be used
+   // to find an object inside this object.
 
    return 0;
 }
