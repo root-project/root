@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.124 2003/04/09 16:30:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.125 2003/04/20 21:26:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -287,7 +287,7 @@ TTreePlayer::TTreePlayer()
    fInput          = new TList();
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
-   fSelector->SetInputList(fInput);   
+   fSelector->SetInputList(fInput);
 }
 
 //______________________________________________________________________________
@@ -681,7 +681,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //       - execute statement "tree->StartViewer();"
 //
    if (fTree->GetEntriesFriend() == 0) return 0;
-   
+
    Int_t oldEstimate  = fTree->GetEstimate();
    TEventList *elist  = fTree->GetEventList();
    TNamed *cvarexp    = (TNamed*)fInput->FindObject("varexp");
@@ -697,7 +697,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
    fSelectedRows = nrows;
    fDimension = fSelector->GetDimension();
-   
+
    //*-* an Event List
    if (fDimension <= 0) {
       fTree->SetEstimate(oldEstimate);
@@ -708,7 +708,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       }
       return nrows;
    }
-   
+
    // Draw generated histogram
    Int_t drawflag = fSelector->GetDrawFlag();
    Int_t action   = fSelector->GetAction();
@@ -722,7 +722,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       gPad->Clear();
       return 0;
    }
-        
+
    //*-*- 1-D distribution
    if (fDimension == 1) {
       if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("X");
@@ -761,7 +761,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       }
 
    }
-   
+
    return fSelectedRows;
 }
 
@@ -781,7 +781,7 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 //  Example:
 //    tree.Fit("pol4","sqrt(x)>>hsqrt","y>0")
 //    will fit sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory. 
+//    directory.
 //
 
    Int_t nch = strlen(option) + 10;
@@ -791,7 +791,7 @@ Int_t TTreePlayer::Fit(const char *formula ,const char *varexp, const char *sele
 
    Int_t nsel = DrawSelect(varexp,selection,opt,nentries,firstentry);
 
-   delete [] opt; 
+   delete [] opt;
 
    if (fHistogram) {
       fHistogram->Fit(formula,option,goption);
@@ -822,42 +822,38 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
 //______________________________________________________________________________
 Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 {
-//====>
-//*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
-//*-*          ==============================================
+// Generate skeleton analysis class for this Tree
 //
-//   The following files are produced: classname.h and classname.C
-//   if classname is NULL, classname will be nameoftree.
+// The following files are produced: classname.h and classname.C
+// If classname is 0, classname will be called "nameoftree.
 //
-//   When the option "selector" is specified, the function generates the
-//   selector class described in TTree::MakeSelector.
+// When the option "anal" is specified, the function generates the
+// analysis class described in TTree::makeAnal.
 //
-//   The generated code in classname.h includes the following:
-//      - Identification of the original Tree and Input file name
-//      - Definition of analysis class (data and functions)
-//      - the following class functions:
-//         -constructor (connecting by default the Tree file)
-//         -GetEntry(Int_t entry)
-//         -Init(TTree *tree) to initialize a new TTree
-//         -Show(Int_t entry) to read and Dump entry
+// The generated code in classname.h includes the following:
+//    - Identification of the original Tree and Input file name
+//    - Definition of analysis class (data and functions)
+//    - the following class functions:
+//       - constructor (connecting by default the Tree file)
+//       - GetEntry(Int_t entry)
+//       - Init(TTree *tree) to initialize a new TTree
+//       - Show(Int_t entry) to read and Dump entry
 //
-//   The generated code in classname.C includes only the main
-//   analysis function Loop.
+// The generated code in classname.C includes only the main
+// analysis function Loop.
 //
-//   To use this function:
-//      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeClass("MyClass");
-//    where T is the name of the Tree in file myfile.root
-//    and MyClass.h, MyClass.C the name of the files created by this function.
-//   In a Root session, you can do:
-//      Root > .L MyClass.C
-//      Root > MyClass t
-//      Root > t.GetEntry(12); // Fill t data members with entry number 12
-//      Root > t.Show();       // Show values of entry 12
-//      Root > t.Show(16);     // Read and show values of entry 16
-//      Root > t.Loop();       // Loop on all entries
-//
-//====>
+// To use this function:
+//    - connect your Tree file (eg: TFile f("myfile.root");)
+//    - T->MakeClass("MyClass");
+// where T is the name of the Tree in file myfile.root
+// and MyClass.h, MyClass.C the name of the files created by this function.
+// In a ROOT session, you can do:
+//    root > .L MyClass.C
+//    root > MyClass t
+//    root > t.GetEntry(12); // Fill t data members with entry number 12
+//    root > t.Show();       // Show values of entry 12
+//    root > t.Show(16);     // Read and show values of entry 16
+//    root > t.Loop();       // Loop on all entries
 
    TString opt = option;
    opt.ToLower();
@@ -1574,31 +1570,26 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 //______________________________________________________________________________
 Int_t TTreePlayer::MakeCode(const char *filename)
 {
-//====>
-//*-*-*-*-*-*-*-*-*Generate skeleton function for this Tree*-*-*-*-*-*-*
-//*-*              ========================================
+// Generate skeleton function for this Tree
 //
-//   The function code is written on filename
-//   if filename is NULL, filename will be nameoftree.C
+// The function code is written on filename.
+// If filename is 0, filename will be called nameoftree.C
 //
-//   The generated code includes the following:
-//      - Identification of the original Tree and Input file name
-//      - Connection of the Tree file
-//      - Declaration of Tree variables
-//      - Setting of branches addresses
-//      - a skeleton for the entry loop
+// The generated code includes the following:
+//    - Identification of the original Tree and Input file name
+//    - Connection of the Tree file
+//    - Declaration of Tree variables
+//    - Setting of branches addresses
+//    - A skeleton for the entry loop
 //
-//   To use this function:
-//      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeCode("user.C");
-//    where T is the name of the Tree in file myfile.root
-//    and user.C the name of the file created by this function.
+// To use this function:
+//    - connect your Tree file (eg: TFile f("myfile.root");)
+//    - T->MakeCode("anal.C");
+// where T is the name of the Tree in file myfile.root
+// and anal.C the name of the file created by this function.
 //
-//   NOTE: Since the implementation of this function, new and better
-//         function TTree::MakeClass and TTree::MakeSelector have been developped.
-//
-//          Author: Rene Brun
-//====>
+// NOTE: Since the implementation of this function, a new and better
+//       function TTree::MakeClass() has been developped.
 
 // Connect output file
    char *tfile = new char[1000];
@@ -2006,14 +1997,14 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
    if (elist) nentries = elist->GetN();
 
    TDirectory *cursav = gDirectory;
-   
+
    fTree->SetNotify(selector);
-   
+
    selector->SetOption(option);
 
    selector->Begin(fTree);  //<===call user initialisation function
    selector->Notify();
-   
+
    if (selector->GetStatus()!=-1) {
 
       //Create a timer to get control in the entry loop(s)
@@ -2024,7 +2015,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 
       //loop on entries (elist or all entries)
       Long_t entry, entryNumber, localEntry;
-      
+
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -2039,8 +2030,8 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 
       selector->Terminate();  //<==call user termination function
    }
-   
-   
+
+
    if (cursav) cursav->cd();
    return selector->GetStatus();
 

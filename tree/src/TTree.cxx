@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.146 2003/04/09 08:48:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.147 2003/04/17 07:44:45 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2741,36 +2741,32 @@ Int_t TTree::LoadTree(Int_t entry)
 //______________________________________________________________________________
 Int_t TTree::MakeSelector(const char *selector)
 {
-//====>
-//*-*-*-*-*-*-*Generate skeleton selector class for this Tree*-*-*-*-*-*-*
-//*-*          ==============================================
+// Generate skeleton selector class for this Tree
 //
-//   The following files are produced: selector.h and selector.C
-//   if selector is NULL, selector will be nameoftree.
+// The following files are produced: selector.h and selector.C.
+// If selector is 0, the selector will be called "nameoftree".
 //
-//   The generated code in selector.h includes the following:
-//      - Identification of the original Tree and Input file name
-//      - Definition of selector class (data and functions)
-//      - the following class functions:
-//         - constructor and destructor
-//         - void    Begin(TTree *tree)
-//         - void    Init(TTree *tree)
-//         - Bool_t  Notify()
-//         - Bool_t  Process(Int-t entry)
-//         - void    Terminate
+// The generated code in selector.h includes the following:
+//    - Identification of the original Tree and Input file name
+//    - Definition of selector class (data and functions)
+//    - The following class functions:
+//       - constructor and destructor
+//       - void    Begin(TTree *tree)
+//       - void    Init(TTree *tree)
+//       - Bool_t  Notify()
+//       - Bool_t  Process(Int_t entry)
+//       - void    Terminate
 //
-//   The class selector derives from TSelector.
-//   The generated code in selector.C includes empty functions defined above:
+// The class selector derives from TSelector.
+// The generated code in selector.C includes empty functions defined above:
 //
-//   To use this function:
-//      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeSelector("myselect");
-//    where T is the name of the Tree in file myfile.root
-//    and myselect.h, myselect.C the name of the files created by this function.
-//   In a Root session, you can do:
-//      Root > T->Process("select.C")
-//
-//====>
+// To use this function:
+//    - connect your Tree file (eg: TFile f("myfile.root");)
+//    - T->MakeSelector("myselect");
+// where T is the name of the Tree in file myfile.root
+// and myselect.h, myselect.C the name of the files created by this function.
+// In a ROOT session, you can do:
+//    root > T->Process("select.C")
 
    return MakeClass(selector,"selector");
 }
@@ -2778,42 +2774,38 @@ Int_t TTree::MakeSelector(const char *selector)
 //______________________________________________________________________________
 Int_t TTree::MakeClass(const char *classname, Option_t *option)
 {
-//====>
-//*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
-//*-*          ==============================================
+// Generate skeleton analysis class for this Tree
 //
-//   The following files are produced: classname.h and classname.C
-//   if classname is NULL, classname will be nameoftree.
+// The following files are produced: classname.h and classname.C
+// If classname is 0, classname will be called "nameoftree.
 //
-//   When the option "anal" is specified, the function generates the
-//   analysis class described in TTree::makeAnal.
+// When the option "anal" is specified, the function generates the
+// analysis class described in TTree::makeAnal.
 //
-//   The generated code in classname.h includes the following:
-//      - Identification of the original Tree and Input file name
-//      - Definition of analysis class (data and functions)
-//      - the following class functions:
-//         -constructor (connecting by default the Tree file)
-//         -GetEntry(Int_t entry)
-//         -Init(TTree *tree) to initialize a new TTree
-//         -Show(Int_t entry) to read and Dump entry
+// The generated code in classname.h includes the following:
+//    - Identification of the original Tree and Input file name
+//    - Definition of analysis class (data and functions)
+//    - the following class functions:
+//       - constructor (connecting by default the Tree file)
+//       - GetEntry(Int_t entry)
+//       - Init(TTree *tree) to initialize a new TTree
+//       - Show(Int_t entry) to read and Dump entry
 //
-//   The generated code in classname.C includes only the main
-//   analysis function Loop.
+// The generated code in classname.C includes only the main
+// analysis function Loop.
 //
-//   To use this function:
-//      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeClass("MyClass");
-//    where T is the name of the Tree in file myfile.root
-//    and MyClass.h, MyClass.C the name of the files created by this function.
-//   In a Root session, you can do:
-//      Root > .L MyClass.C
-//      Root > MyClass t
-//      Root > t.GetEntry(12); // Fill t data members with entry number 12
-//      Root > t.Show();       // Show values of entry 12
-//      Root > t.Show(16);     // Read and show values of entry 16
-//      Root > t.Loop();       // Loop on all entries
-//
-//====>
+// To use this function:
+//    - connect your Tree file (eg: TFile f("myfile.root");)
+//    - T->MakeClass("MyClass");
+// where T is the name of the Tree in file myfile.root
+// and MyClass.h, MyClass.C the name of the files created by this function.
+// In a ROOT session, you can do:
+//    root > .L MyClass.C
+//    root > MyClass t
+//    root > t.GetEntry(12); // Fill t data members with entry number 12
+//    root > t.Show();       // Show values of entry 12
+//    root > t.Show(16);     // Read and show values of entry 16
+//    root > t.Loop();       // Loop on all entries
 
    GetPlayer();
    if (!fPlayer) return 0;
@@ -2824,31 +2816,26 @@ Int_t TTree::MakeClass(const char *classname, Option_t *option)
 //______________________________________________________________________________
 Int_t TTree::MakeCode(const char *filename)
 {
-//====>
-//*-*-*-*-*-*-*-*-*Generate skeleton function for this Tree*-*-*-*-*-*-*
-//*-*              ========================================
+// Generate skeleton function for this Tree
 //
-//   The function code is written on filename
-//   if filename is NULL, filename will be nameoftree.C
+// The function code is written on filename.
+// If filename is 0, filename will be called nameoftree.C
 //
-//   The generated code includes the following:
-//      - Identification of the original Tree and Input file name
-//      - Connection of the Tree file
-//      - Declaration of Tree variables
-//      - Setting of branches addresses
-//      - a skeleton for the entry loop
+// The generated code includes the following:
+//    - Identification of the original Tree and Input file name
+//    - Connection of the Tree file
+//    - Declaration of Tree variables
+//    - Setting of branches addresses
+//    - A skeleton for the entry loop
 //
-//   To use this function:
-//      - connect your Tree file (eg: TFile f("myfile.root");)
-//      - T->MakeCode("anal.C");
-//    where T is the name of the Tree in file myfile.root
-//    and anal.C the name of the file created by this function.
+// To use this function:
+//    - connect your Tree file (eg: TFile f("myfile.root");)
+//    - T->MakeCode("anal.C");
+// where T is the name of the Tree in file myfile.root
+// and anal.C the name of the file created by this function.
 //
-//   NOTE: Since the implementation of this function, a new and better
-//         function TTree::MakeClass has been developped.
-//
-//          Author: Rene Brun
-//====>
+// NOTE: Since the implementation of this function, a new and better
+//       function TTree::MakeClass() has been developped.
 
    Warning("MakeCode","MakeCode is obsolete. Use MakeClass or MakeSelector instead");
 
