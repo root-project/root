@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.19 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.20 2004/12/07 14:36:01 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -119,6 +119,8 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(fTWidth, fTHeight+1); }
    const TGString *GetText() const { return fText; }
    void SetText(TGString *new_text);
+   virtual const char *GetTitle() const { return fText->Data(); }
+   virtual void  SetTitle(const char *text) { *fText = text; }
 
    virtual void  DrawCopy(Handle_t id, Int_t x, Int_t y);
    virtual void Update(TGLBEntry *e)
@@ -212,6 +214,9 @@ public:
    virtual TGLBEntry *Select(Int_t id, Bool_t sel);
    virtual TGLBEntry *Select(Int_t id);
 
+   virtual TGVScrollBar  *GetVScrollbar() const;
+   virtual void   SetVsbPosition(Int_t newPos);
+
    virtual void   SetMultipleSelections(Bool_t multi);
    virtual Bool_t GetMultipleSelections() const { return fMultiSelect; }
 
@@ -265,11 +270,11 @@ public:
                                   { return fLbc->GetMultipleSelections(); }
    virtual Int_t GetNumberOfEntries() const
                                   { return fLbc->GetList()->GetSize(); }
-   virtual TGLBEntry *GetEntry(Int_t id) const;
-
-   TGFrame     *GetContainer() const { return fVport->GetContainer(); }
-   TGViewPort  *GetViewPort() const { return fVport; }
-   TGScrollBar *GetScrollBar() const { return fVScrollbar; }
+   virtual TGLBEntry   *GetEntry(Int_t id) const;
+   virtual TGFrame     *GetContainer() const { return fVport->GetContainer(); }
+   virtual TGViewPort  *GetViewPort() const { return fVport; }
+   virtual TGScrollBar *GetScrollBar() const { return fVScrollbar; }
+   virtual TGVScrollBar *GetVScrollbar() const { return fVScrollbar; }
    virtual void DrawBorder();
    virtual void Resize(UInt_t w, UInt_t h);
    virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }

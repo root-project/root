@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.22 2004/10/22 07:31:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.23 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -123,6 +123,10 @@ public:
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
    virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);
+   virtual TGHScrollBar *GetHScrollbar() const;
+   virtual TGVScrollBar *GetVScrollbar() const;
+   virtual void  SetHsbPosition(Int_t newPos);
+   virtual void  SetVsbPosition(Int_t newPos);
 
    virtual const TGFrame *GetNextSelected(void **current);
    virtual TGFrame *GetLastActive() const { return fLastActiveEl ? fLastActiveEl->fFrame : 0; }

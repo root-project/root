@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.26 2004/10/13 12:24:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.27 2004/10/21 12:07:54 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -339,8 +339,11 @@ TGContainer::~TGContainer()
 {
    // Delete canvas container.
 
-   if (fScrollTimer) delete fScrollTimer;
-   if (fKeyTimer) delete fKeyTimer;
+   delete fScrollTimer;
+   fScrollTimer = 0;
+
+   delete fKeyTimer;
+   fKeyTimer = 0;
 }
 
 //______________________________________________________________________________
@@ -620,6 +623,7 @@ void TGContainer::ActivateItem(TGFrameElement* el)
    if (!fSelected) fSelected = 1;
 
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
+   fClient->NeedRedraw(this);
 }
 
 //______________________________________________________________________________
@@ -1287,7 +1291,7 @@ void TGContainer::SearchPattern()
    TString str;
 
    while ((fe=( TGFrameElement*)next())) {
-      str = fe->fFrame->GetName();
+      str = fe->fFrame->GetTitle();
 
       if (str.BeginsWith(fKeyInput,TString::kIgnoreCase)) {
          if (fLastActiveEl && (fLastActiveEl!=fe) )
@@ -1401,7 +1405,7 @@ void* TGContainer::FindItem(const TString& name, Bool_t direction,
    }
 
    while (el) {
-      str = el->fFrame->GetName();
+      str = el->fFrame->GetTitle();
       idx = str.Index(name,0,cmp);
 
       if (idx!=kNPOS) {
@@ -1422,42 +1426,104 @@ void* TGContainer::FindItem(const TString& name, Bool_t direction,
 }
 
 //______________________________________________________________________________
+TGHScrollBar *TGContainer::GetHScrollbar() const
+{
+   // returns pointer to hor. scroll bar
+
+   return fCanvas ? fCanvas->GetHScrollbar() : 0;
+}
+
+//______________________________________________________________________________
+TGVScrollBar *TGContainer::GetVScrollbar() const
+{
+   // returns pointer to vert. scroll bar
+
+   return fCanvas ? fCanvas->GetVScrollbar() : 0;
+}
+
+//______________________________________________________________________________
+void TGContainer::SetVsbPosition(Int_t newPos)
+{
+   // Set position of vertical scrollbar.
+
+   TGVScrollBar *vb = GetVScrollbar();
+
+   if (vb && vb->IsMapped()) {
+      vb->SetRange((Int_t)GetHeight(), (Int_t)fViewPort->GetHeight());
+      vb->SetPosition(newPos);
+   } else {
+     fViewPort->SetVPos(0);
+   }
+}
+
+//______________________________________________________________________________
+void TGContainer::SetHsbPosition(Int_t newPos)
+{
+   // set new hor. position
+
+   TGHScrollBar *hb = GetHScrollbar();
+
+   if (hb && hb->IsMapped()) {
+      hb->SetRange((Int_t)GetWidth(), (Int_t)fViewPort->GetWidth());
+      hb->SetPosition(newPos);
+   } else {
+     fViewPort->SetHPos(0);
+   }
+}
+
+//______________________________________________________________________________
 void TGContainer::AdjustPosition()
 {
    // Move content to position of highlighted/activated frame.
 
    if (!fLastActiveEl) return;
-   TGFrame* f = fLastActiveEl->fFrame;
+   TGFrame *f = fLastActiveEl->fFrame;
 
    Int_t vh = 0;
    Int_t v = 0;
 
-   if (fCanvas->GetVScrollbar()->IsMapped()) {
-      vh = fCanvas->GetVScrollbar()->GetPosition()+(Int_t)fViewPort->GetHeight();
+   TGHScrollBar *hb = GetHScrollbar();
+   TGVScrollBar *vb = GetVScrollbar();
+   Int_t pos = 0;
+   Int_t pg;
 
-      if (f->GetY()<fCanvas->GetVScrollbar()->GetPosition()) {
-         v = TMath::Max(0, f->GetY()-(Int_t)fViewPort->GetHeight()/2);
-         fCanvas->SetVsbPosition(v);
-      } else if (f->GetY()+(Int_t)f->GetHeight()>vh) {
-         v = TMath::Min((Int_t)GetHeight()-(Int_t)fViewPort->GetHeight(),
-                        f->GetY()+(Int_t)f->GetHeight()-(Int_t)fViewPort->GetHeight()/2);
-         fCanvas->SetVsbPosition(v);
+   if (vb && vb->IsMapped()) {
+      pg = (vb->GetPageSize()*GetHeight())/fViewPort->GetHeight();
+      pos = vb->GetPosition()*pg;
+      vh =  pos + (Int_t)fViewPort->GetHeight();
+
+      if (f->GetY() < pos) {
+         v = TMath::Max(0, f->GetY() - (Int_t)fViewPort->GetHeight()/2);
+         v = (v*pg)/GetHeight();
+
+         SetVsbPosition(v);
+      } else if (f->GetY() + (Int_t)f->GetHeight() > vh) {
+         v = TMath::Min((Int_t)GetHeight() - (Int_t)fViewPort->GetHeight(),
+                        f->GetY() + (Int_t)f->GetHeight() - (Int_t)fViewPort->GetHeight()/2);
+         v = (v*pg)/GetHeight();
+         SetVsbPosition(v);
       }
    }
 
    Int_t hw = 0;
    Int_t h = 0;
 
-   if (fCanvas->GetHScrollbar()->IsMapped() && !fCanvas->GetVScrollbar()->IsMapped()) {
-      hw = fCanvas->GetHScrollbar()->GetPosition()+(Int_t)fViewPort->GetWidth();
+   if (hb && hb->IsMapped() && (!vb || (vb && !vb->IsMapped()))) {
+      pg = (hb->GetPageSize()*GetWidth())/fViewPort->GetWidth();
+      pos = hb->GetPosition()*pg;
+      hw = pos + (Int_t)fViewPort->GetWidth();
 
-      if (f->GetX()<fCanvas->GetHScrollbar()->GetPosition()) {
-         h = TMath::Max(0, f->GetX()-(Int_t)fViewPort->GetWidth()/2);
-         fCanvas->SetHsbPosition(h);
-      } else if (f->GetX()+(Int_t)f->GetWidth()>hw) {
-         h = TMath::Min((Int_t)GetWidth()-(Int_t)fViewPort->GetWidth(),
-                        f->GetX()+(Int_t)f->GetWidth()-(Int_t)fViewPort->GetWidth()/2);
-         fCanvas->SetHsbPosition(h);
+      if (f->GetX() < pos) {
+         h = TMath::Max(0, f->GetX() - (Int_t)fViewPort->GetWidth()/2);
+         h = (h*pg)/GetWidth();
+
+         SetHsbPosition(h);
+      } else if (f->GetX() + (Int_t)f->GetWidth() > hw) {
+         h = TMath::Min((Int_t)GetWidth() - (Int_t)fViewPort->GetWidth(),
+                        f->GetX() + (Int_t)f->GetWidth() - (Int_t)fViewPort->GetWidth()/2);
+         h = (h*pg)/GetWidth();
+
+         SetHsbPosition(h);
       }
    }
 }
@@ -1484,7 +1550,8 @@ void TGContainer::LineLeft(Bool_t select)
 
    Int_t hw = pos.fX + dim.fWidth;
 
-   if (x<=0 && !fCanvas->GetHScrollbar()->IsMapped()) { // move to previous line
+   TGHScrollBar *hb =  GetHScrollbar();
+   if (x<=0 && (hb && !hb->IsMapped())) { // move to previous line
       x = hw;
       y = y - la->fFrame->GetHeight() - la->fLayout->GetPadTop();
    }
@@ -1523,7 +1590,8 @@ void TGContainer::LineRight(Bool_t select)
              fLastActiveEl->fFrame->GetWidth()-
              fLastActiveEl->fLayout->GetPadRight();
 
-   if (x >= hw && !fCanvas->GetHScrollbar()->IsMapped()) { // move one line down
+   TGHScrollBar *hb =  GetHScrollbar();
+   if (x >= hw && (hb && !hb->IsMapped())) { // move one line down
       x = 0;
       y = y + fLastActiveEl->fFrame->GetHeight() + fLastActiveEl->fLayout->GetPadBottom();
    }
@@ -1610,10 +1678,13 @@ void TGContainer::PageUp(Bool_t select)
    Int_t y = fLastActiveEl->fFrame->GetY();
    Int_t x = fLastActiveEl->fFrame->GetX();
 
-   if (fCanvas->GetVScrollbar()->IsMapped()) {
+   TGVScrollBar *vb =  GetVScrollbar();
+   TGHScrollBar *hb =  GetHScrollbar();
+
+   if (vb && vb->IsMapped()) {
       y -= dim.fHeight;
    } else {
-      if (fCanvas->GetHScrollbar()->IsMapped()) {
+      if (hb && hb->IsMapped()) {
          x -= dim.fWidth;
       } else {
          Home();
@@ -1651,10 +1722,13 @@ void TGContainer::PageDown(Bool_t select)
    Int_t y = fLastActiveEl->fFrame->GetY();
    Int_t x = fLastActiveEl->fFrame->GetX();
 
-   if (fCanvas->GetVScrollbar()->IsMapped()) {
+   TGVScrollBar *vb =  GetVScrollbar();
+   TGHScrollBar *hb =  GetHScrollbar();
+
+   if (vb && vb->IsMapped()) {
       y +=  dim.fHeight;
    } else {
-      if (fCanvas->GetHScrollbar()->IsMapped()) {
+      if (hb && hb->IsMapped()) {
           x += dim.fWidth;
       } else {
          End();
@@ -1709,6 +1783,8 @@ void TGContainer::End(Bool_t select)
 //______________________________________________________________________________
 const TGGC &TGContainer::GetLineGC()
 {
+   //
+
    if (!fgLineGC) {
       GCValues_t gval;
       gval.fMask = kGCForeground | kGCBackground | kGCFunction | kGCFillStyle |
@@ -1974,8 +2050,9 @@ void TGCanvas::SetHsbPosition(Int_t newPos)
       TGFrame *container = fVport->GetContainer();
       fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
       fHScrollbar->SetPosition(newPos);
-   } else
+   } else {
      fVport->SetHPos(0);
+   }
 }
 
 //______________________________________________________________________________
@@ -1987,8 +2064,9 @@ void TGCanvas::SetVsbPosition(Int_t newPos)
       TGFrame *container = fVport->GetContainer();
       fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
       fVScrollbar->SetPosition(newPos);
-   } else
+   } else {
       fVport->SetVPos(0);
+   }
 }
 
 //______________________________________________________________________________

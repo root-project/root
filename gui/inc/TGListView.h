@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.21 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.22 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -100,7 +100,8 @@ public:
    virtual void        Activate(Bool_t a);
    Bool_t              IsActive() const { return fActive; }
    TGString           *GetItemName() const { return fName; }
-   virtual const char *GetName() const { return fName->GetString(); }
+   virtual const char *GetTitle() const { return fName->GetString(); }
+   virtual void  SetTitle(const char *text) { *fName = text; }
    void                SetItemName(const char *name) { *fName = name; }
    const TGPicture    *GetPicture() const { return fCurrent; }
    EListViewMode       GetViewMode() const { return fViewMode; }

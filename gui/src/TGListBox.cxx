@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.30 2004/12/08 11:41:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.31 2004/12/08 12:04:53 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -558,11 +558,32 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    if (!fMultiSelect) {
       // deselect all entries
       TIter next(fList);
-      while ((el = (TGFrameElement *) next()))
+      while ((el = (TGFrameElement *) next())) {
          ((TGLBEntry *)(el->fFrame))->Activate(kFALSE);
+      }
    }
    fLastActive = 0;
    fLastActiveEl = 0;
+}
+
+//______________________________________________________________________________
+TGVScrollBar *TGLBContainer::GetVScrollbar() const
+{
+   // return a pointer to vertical scroll bar
+
+   return fListBox ? fListBox->GetVScrollbar() : 0;
+}
+
+//______________________________________________________________________________
+void TGLBContainer::SetVsbPosition(Int_t newPos)
+{
+   // set new hor. position
+
+   TGVScrollBar *vb = GetVScrollbar();
+
+   if (vb && vb->IsMapped()) {
+      vb->SetPosition(newPos);
+   }
 }
 
 //______________________________________________________________________________
@@ -579,17 +600,19 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    Int_t y = pos.fY + event->fY;
    Bool_t activate = kFALSE;
 
-   if (event->fCode == kButton4) {
+   TGVScrollBar *vb = GetVScrollbar();
+
+   if ((event->fCode == kButton4) && vb){
       // scroll 2 lines up (a button down is always followed by a button up)
-      Int_t newpos = fListBox->GetScrollBar()->GetPosition() - 1;
+      Int_t newpos = vb->GetPosition() - 1;
       if (newpos < 0) newpos = 0;
-      fListBox->GetScrollBar()->SetPosition(newpos);
+      vb->SetPosition(newpos);
       return kTRUE;
    }
-   if (event->fCode == kButton5) {
+   if ((event->fCode == kButton5) && vb) {
       // scroll 2 lines down (a button down is always followed by a button up)
-      Int_t newpos = fListBox->GetScrollBar()->GetPosition() + 1;
-      fListBox->GetScrollBar()->SetPosition(newpos);
+      Int_t newpos = vb->GetPosition() + 1;
+      vb->SetPosition(newpos);
       return kTRUE;
    }
 
@@ -602,6 +625,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
+
             activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
@@ -632,6 +656,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
+
             activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
@@ -794,6 +819,7 @@ void TGListBox::InitListBox()
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
    fLbc->SetMapSubwindows(kFALSE);
+   fLbc->fViewPort = fVport;
 
    fLbc->Associate(this);
    fLbc->SetListBox(this);
