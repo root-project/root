@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -59,6 +59,7 @@ protected:
    FontStruct_t      fFontStruct;        // text font
    GContext_t        fNormGC;            // normal drawing context
    GContext_t        fSelGC, fSelbackGC; // selection mode drawing contexts
+   Atom_t            fClipboard;         // clipboard property
    TBlinkTimer      *fCurBlink;          // cursor blink timer
    Int_t             fMaxLen;            // maximum length of text
    Bool_t            fDeleteGC;          // if kTRUE delete the fNormGC and fSelGC
@@ -74,6 +75,7 @@ protected:
    static GContext_t    fgDefaultSelectedGC;
    static GContext_t    fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
+   static Atom_t        fgClipboard;
 
             Int_t       GetCharacterIndex(Int_t xcoord);
    virtual  void        DoRedraw();

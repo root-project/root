@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -138,6 +138,8 @@
 <li><i> Control-K </i>
         Delete marked text if any or delete all
         characters to the right of the cursor
+<li><i> Control-U </i>
+        Delete all characters on the line
 <li><i> Control-V </i>
         Paste the clipboard text into line edit.
 <li><i> Control-X </i>
@@ -285,6 +287,7 @@ void TGTextEntry::Init()
    fCursorIX    = fStartIX = fEndIX = fOffset = 0;
    fSelectionOn = fCursorOn = kFALSE;
    fCurBlink    = 0;
+   fClipboard   = fgClipboard;
 
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 
@@ -1031,6 +1034,8 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    //  <li><i> Control-K </i>
    //          Delete marked text if any or delete all
    //          characters to the right of the cursor
+   //  <li><i> Control-U </i>
+   //          Delete all characters on the line
    //  <li><i> Control-V </i>
    //          Paste the clipboard text into line edit.
    //  <li><i> Control-X </i>
@@ -1051,14 +1056,14 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    n = strlen(tmp);
    Int_t unknown = 0;
 
-   if ( (EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return)  {
+   if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return)  {
 
       ReturnPressed();                                      // emit signal
       if (!TestBit(kNotDeleted)) return kTRUE;
       fSelectionOn = kFALSE;
 
-   } else if (event->fState & kKeyControlMask) {          // Cntrl key modifier pressed
-      switch ((EKeySym)keysym  & ~0x20)  {                // question to Fons, why ???
+   } else if (event->fState & kKeyControlMask) {  // Cntrl key modifier pressed
+      switch ((EKeySym)keysym & ~0x20) {     // treat upper and lower the same
       case kKey_A:
          Home(event->fState & kKeyShiftMask);
          break;
@@ -1082,6 +1087,10 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
          break;
       case kKey_K:
          HasMarkedText() ? Del() : Remove();
+         break;
+      case kKey_U:
+         Home();
+         Remove();
          break;
       case kKey_V:
          Paste();
@@ -1165,7 +1174,7 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
             // No primary selection, so use the cut buffer
             PastePrimary(fClient->GetRoot()->GetId(), kCutBuffer, kFALSE);
          } else {
-            gVirtualX->ConvertPrimarySelection(fId, event->fTime);
+            gVirtualX->ConvertPrimarySelection(fId, fClipboard, event->fTime);
          }
       }
    }
