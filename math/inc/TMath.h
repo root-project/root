@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.5 2001/12/03 12:38:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.6 2001/12/03 12:46:07 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -326,6 +326,7 @@ extern "C" {
    extern int    finite(double);
    extern int    isnan(double);
 }
+#endif
 
 inline Double_t TMath::Sin(Double_t x)
    { return sin(x); }
