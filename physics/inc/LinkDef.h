@@ -1,4 +1,4 @@
-/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.2 2000/09/08 16:42:12 brun Exp $ */
+/* @(#)root/physics:$Name:  $:$Id: LinkDef.h,v 1.3 2002/02/18 10:07:42 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,6 +32,7 @@
 #pragma link C++ class TRotation+;
 #pragma link C++ class TGenPhaseSpace+;
 #pragma link C++ class TFeldmanCousins+;
+#pragma link C++ class TRolke+;
 
 #endif
 
