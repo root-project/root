@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.115 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.116 2002/12/03 10:25:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3701,21 +3701,21 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
       }
 
 //  do 353 i.e. running median 3, 5, and 3 in a single loop
-      for  (kk = 0; kk < 3; kk++)  {
+      for  (kk = 1; kk <= 3; kk++)  {
          ik = 0;
-         if  (kk == 1)  ik = 1;
-         nn1 = ik + 1;
+         if  (kk == 2)  ik = 1;
+         nn1 = ik + 2;
          nn2 = NN - ik - 1;
        // do all elements beside the first and last point for median 3
        //  and first two and last 2 for median 5
-         for  (ii = nn1; ii < nn2; ii++)  {
+         for  (ii = nn1; ii <= nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = YY[ii + jj - 1];
             }
             ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
          }
 
-         if  (kk == 0)  {   // first median 3
+         if  (kk == 1)  {   // first median 3
 // first point
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
@@ -3727,7 +3727,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
             ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
          }
-         if  (kk == 1)  {   //  median 5
+         if  (kk == 2)  {   //  median 5
   //  first point remains the same
             ZZ[0] = YY[0];
             for  (ii = 0; ii < 3; ii++) {
@@ -3736,7 +3736,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             ZZ[1] = TH1::SmoothMedian(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
-               hh[ii] = YY[NN - 3 + ii];
+               hh[ii] = YY[NN +nn2 -1 + ii];
             }
             ZZ[NN - 2] = TH1::SmoothMedian(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
@@ -3744,8 +3744,8 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
       }
 
 // quadratic interpolation for flat segments
-      nn2 = nn2 - 1;
-      for (ii = nn1 + 1; ii < nn2; ii++) {
+      nn2 = nn2 - 2;
+      for (ii = nn1; ii <= nn2; ii++) {
          if  (ZZ[ii - 1] != ZZ[ii]) continue;
          if  (ZZ[ii] != ZZ[ii + 1]) continue;
          hh[0] = ZZ[ii - 2] - ZZ[ii];
@@ -3753,7 +3753,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
          if  (hh[0] * hh[1] < 0) continue;
          jk = 0;
          if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         YY[ii] = 0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk] /6.;
+         YY[ii] = -0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk] /6.;
          YY[ii + jk] = 0.5*(ZZ[ii + 2*jk] - ZZ[ii - 2*jk]) + ZZ[ii - jk];
       }
 
@@ -3771,21 +3771,21 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
       }
 
 //  do 353 i.e. running median 3, 5, and 3 in a single loop
-      for  (kk = 0; kk < 3; kk++)  {
+      for  (kk = 1; kk <= 3; kk++)  {
          ik = 0;
-         if  (kk == 1)  ik = 1;
+         if  (kk == 2)  ik = 1;
          nn1 = ik + 1;
          nn2 = NN - ik - 1;
        // do all elements beside the first and last point for median 3
        //  and first two and last 2 for median 5
-         for  (ii = nn1; ii < nn2; ii++)  {
+         for  (ii = nn1; ii <= nn2; ii++)  {
             for  (jj = 0; jj < 3; jj++) {
                hh[jj] = YY[ii + jj - 1];
             }
             ZZ[ii] = TH1::SmoothMedian(3 + 2*ik, hh);
          }
 
-         if  (kk == 0)  {   // first median 3
+         if  (kk == 1)  {   // first median 3
 // first point
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
@@ -3797,7 +3797,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
             ZZ[NN - 1] = TH1::SmoothMedian(3, hh);
          }
-         if  (kk == 1)  {   //  median 5
+         if  (kk == 2)  {   //  median 5
 //  first point remains the same
             ZZ[0] = YY[0];
             for  (ii = 0; ii < 3; ii++) {
@@ -3815,7 +3815,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
 
 // quadratic interpolation for flat segments
       nn2 = nn2 - 1;
-      for (ii = nn1 + 1; ii < nn2; ii++) {
+      for (ii = nn1 + 1; ii <= nn2; ii++) {
          if  (ZZ[ii - 1] != ZZ[ii]) continue;
          if  (ZZ[ii] != ZZ[ii + 1]) continue;
          hh[0] = ZZ[ii - 2] - ZZ[ii];
@@ -3823,12 +3823,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
          if  (hh[0] * hh[1] < 0) continue;
          jk = 0;
          if  ( TMath::Abs(hh[1]) > TMath::Abs(hh[0]) ) jk = -1;
-         YY[ii] = 0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk]/6.;
+         YY[ii] = -0.5*ZZ[ii - 2*jk] + ZZ[ii - jk]/0.75 + ZZ[ii + 2*jk]/6.;
          YY[ii + jk] = 0.5*(ZZ[ii + 2*jk] - ZZ[ii - 2*jk]) + ZZ[ii - jk];
       }
 
 // running means
-      for  (ii = 1; ii < NN - 1; ii++) {
+      for  (ii = 1; ii <= NN - 1; ii++) {
          ZZ[ii] = 0.25*YY[ii - 1] + 0.5*YY[ii] + 0.25*YY[ii + 1];
       }
       ZZ[0] = YY[0];
