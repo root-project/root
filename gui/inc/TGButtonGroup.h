@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.3 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.4 2001/01/10 09:34:59 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
    void Init();
 
 public:
-   TGButtonGroup(TGWindow *parent = 0,
+   TGButtonGroup(TGWindow *parent,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
                  GContext_t norm = fgDefaultGC(),
@@ -99,7 +99,7 @@ public:
 class TGVButtonGroup : public TGButtonGroup {
 
 public:
-   TGVButtonGroup(TGWindow *parent = 0,
+   TGVButtonGroup(TGWindow *parent,
                   const TString &title = "",
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
@@ -116,7 +116,7 @@ public:
 class TGHButtonGroup : public TGButtonGroup {
 
 public:
-   TGHButtonGroup(TGWindow *parent = 0,
+   TGHButtonGroup(TGWindow *parent,
                   const TString &title = "",
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
