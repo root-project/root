@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.69 2004/12/14 13:06:47 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.70 2005/01/10 11:00:44 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1112,14 +1112,14 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
             }
             char *startOfLine = fLine;
             char *endOfLine = fLine + strlen(fLine) - 1;
-
+            if (endOfLine<startOfLine) endOfLine = startOfLine;
 
             // remove leading spaces
             while (isspace(*startOfLine))
                startOfLine++;
 
             // remove trailing spaces
-            while (isspace(*endOfLine))
+            while (endOfLine>startOfLine&&isspace(*endOfLine))
                endOfLine--;
             if (*startOfLine == '#' && !tempFlag)
                thisLineIsPpLine = kTRUE;
@@ -1132,7 +1132,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
                // remove a repeating characters from the end of the line
                while ((*endOfLine == *startOfLine) &&
-                      (endOfLine >= startOfLine))
+                      (endOfLine > startOfLine))
                   endOfLine--;
                endOfLine++;
                char tempChar = *endOfLine;
@@ -1307,9 +1307,10 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
                      c2 = *typeEnd;
                      *typeEnd = 0;
                      char *type = typeEnd - 1;
+                     if (type<fLine) type = fLine;
                      while (IsName(*type) && (type > fLine))
                         type--;
-                     if (*type == ':' && (type - 1 > fLine)
+                     if (*type == ':' && ( (type - 1) > fLine)
                          && *(type - 1) == ':') {
                         // found a namespace
                         type--;
@@ -1322,7 +1323,7 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
 
                      while ((type > fLine) && isspace(*(type - 1)))
                         type--;
-                     if (type > fLine) {
+                     if (type > fLine && (type-fLine)>=5 ) {
                         if (!strncmp(type - 5, "const", 5))
                            found = kTRUE;
                         else
@@ -1960,6 +1961,8 @@ Bool_t THtml::CopyHtmlFile(const char *sourceName, const char *destName)
       Long64_t sSize, dSize;
       Long_t sId, sFlags, sModtime;
       Long_t dId, dFlags, dModtime;
+      sModtime = 0;
+      dModtime = 0;
       if (!
           (check =
            gSystem->GetPathInfo(sourceFile, &sId, &sSize, &sFlags,
