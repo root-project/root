@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.2 2000/06/13 11:20:32 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -24,24 +24,12 @@ ClassImp(TText)
 //______________________________________________________________________________
 //
 //   TText is the base class for several text objects.
-//   See TAttText for a list of text attributes or fonts.
+//   See TAttText for a list of text attributes or fonts,
+//   and also for a discussion on text spped and font quality.
 //
 //  By default, the text is drawn in the pad coordinates system.
 //  One can draw in NDC coordinates [0,1] if the function SetNDC
 //  is called for a TText object.
-//  In case a text is drawn to a PostScript file (see TPostScript)
-//  the following characters have a special action:
-//
-//      ` : go to greek
-//      ' : go to special characters
-//      ~ : go to ZapfDingbats
-//      ? : go to subscript
-//      ^ : go to superscript
-//      ! : go to normal level of script
-//      & : backspace one character
-//      # : end of greek or of ZapfDingbats
-//
-//  This special characters have no effect on the screen.
 //
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.2 2000/06/05 07:31:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -35,7 +35,55 @@ ClassImp(TAttText)
 //*-*    Text Angle
 //*-*
 //*-*  This class is used (in general by secondary inheritance)
+//*-*
 //*-*  by many other classes (graphics, histograms).
+//*-*    align : Text alignment = 10*HorizontalAlign + VerticalAlign
+//*-*            For Horizontal alignment the following convention applies:
+//*-*               1=left adjusted, 2=centered, 3=rigth adjusted
+//*-*            For Vertical alignment the following convention applies:
+//*-*               1=bottom adjusted, 2=centered, 3=top adjusted
+//*-*            For example align = 11 = left adjusted and bottom adjusted
+//*-*                        align = 32 = right adjusted and vertically centered
+//*-*    angle : Text angle in degrees
+//*-*    color : Text Color Index
+//*-*    font  : Text font code = 10*fontnumber + precision
+//*-*             Font numbers must be between 1 and 14
+//*-*             precision = 0 fast hardware fonts (steps in the size)
+//*-*             precision = 1 scalable and rotatable hardware fonts (see below)
+//*-*             precision = 2 scalable and rotatable hardware fonts
+//*-*    size  : Character size expressed in percentage of the current pad height
+//*-*            The textsize in pixels (say charheight) will be:
+//*-*             charheight = textsize*canvas_height if current pad is horizontal.
+//*-*             charheight = textsize*canvas_width  if current pad is vertical.
+//*-*
+//*-* Font quality and speed
+//*-* ======================
+//*-*  When precision 0 is used, only the original non-scaled system fonts
+//*-*  are used. The fonts have a minimum (4)  and maximum (37) size in pixels.
+//*-*  These fonts are fast and are of good quality. Their size varies with
+//*-*  large steps and they cannot be rotated.
+//*-*  Precision 1 and 2 fonts have a different behaviour depending if the 
+//*-*  True Type Fonts are used or not. If TTF are used, you always get
+//*-*  very good quality scalable and rotatable fonts. However TTF are slow.
+//*-*  Precision 1 and 2 fonts have a different behaviour for Postscript
+//*-*  in case of TLatex objects. With precision 1, the Postscript text uses
+//*-*  the old convention (see TPostScript) for some special characters
+//*-*  to draw sub and superscripts or greek text.
+//*-*  With precision 2 the "PostScript" special characters are drawn as such.
+//*-*  To draw sub and superscripts it is highly recommended to use TLatex
+//*-*  objects instead.
+//*-*
+//*-*  How to use True Type Fonts
+//*-*  ==========================
+//*-*  You can activate the TTF by adding (or activating) the following line
+//*-*  in your .rootrc file.
+//*-*  Unix.*.Root.UseTTFonts:     true
+//*-*  WinNT  for NT
+//*-*  You can check that you indeed use the TTF in your Root session.
+//*-*  When the TTF is active, you get the following message at the start
+//*-*  of a session:
+//*-*    "FreeType Engine v1.x used to render TrueType fonts."
+//*-*  You can also check with the command gEnv->Print().
 //*-*
 //*-*  List of the currently supported fonts (screen and PostScript)
 //*-*  =============================================================
@@ -78,24 +126,6 @@ TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Floa
 //*-*-*-*-*-*-*-*-*-*-*-*-*AttText normal constructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ===========================
 //*-*  Text attributes are taking from the argument list
-//*-*    align : Text alignment = 10*HorizontalAlign + VerticalAlign
-//*-*            For Horizontal alignment the following convention applies:
-//*-*               1=left adjusted, 2=centered, 3=rigth adjusted
-//*-*            For Vertical alignment the following convention applies:
-//*-*               1=bottom adjusted, 2=centered, 3=top adjusted
-//*-*            For example align = 11 = left adjusted and bottom adjusted
-//*-*                        align = 32 = right adjusted and vertically centered
-//*-*    angle : Text angle in degrees
-//*-*    color : Text Color Index
-//*-*    font  : Text font code = 10*fontnumber + precision
-//*-*             Font numbers must be between 1 and 14
-//*-*             precision = 1 fast hardware fonts (steps in the size)
-//*-*             precision = 2 scalable and rotatable hardware fonts
-//*-*    size  : Character size expressed in percentage of the current pad height
-//*-*            The textsize in pixels (say charheight) will be:
-//*-*             charheight = textsize*canvas_height if current pad is horizontal.
-//*-*             charheight = textsize*canvas_width  if current pad is vertical.
-//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fTextAlign = align;
    fTextAngle = angle;
@@ -230,8 +260,9 @@ again:
 
 //*-*-           ready to draw text
          Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
-         if (mgn <0)    mgn = 1;
          if (mgn > 100) mgn = 100;
+         if (mgn <0)    mgn = 1;
+         if (fTextFont%10 == 0) mgn = 1;
          gVirtualX->SetTextMagnitude(mgn);
          gVirtualX->DrawText(0,0,0,-1.,0,TVirtualX::kClear);
          gVirtualX->SetTextFont(fTextFont);
