@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.1 2000/10/17 12:19:19 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
 
 //______________________________________________________________________________
 TQSlot::TQSlot(TClass *cl, const char *method_name,
-               const char *funcname ) : TObject(), TRefCnt()
+               const char *funcname) : TObject(), TRefCnt()
 {
    // Create the method invocation environment. Necessary input
    // information: the class, full method name with prototype
@@ -137,7 +137,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 }
 
 //______________________________________________________________________________
-TQSlot::TQSlot(const char *class_name, const char *funcname ) :
+TQSlot::TQSlot(const char *class_name, const char *funcname) :
    TObject(), TRefCnt()
 {
    // Create the method invocation environment. Necessary input

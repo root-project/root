@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.1 2000/10/17 12:19:18 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -136,10 +136,6 @@ public: \
       { Emit(signal,(Double_t)param); } \
    void Destroyed() \
       { Emit("Destroyed()"); } \
-   void Error(const char* error_msg) \
-      { Emit("Error(char*)", error_msg); } \
-   void Error(Long_t error_id) \
-      { Emit("Error(Long_t)", error_id); } \
    void ChangedBy(const char *method) \
       { Emit("ChangedBy(char*)", method); } \
    void Message(const char *msg)\

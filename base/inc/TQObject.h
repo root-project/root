@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.1 2000/10/17 12:19:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.2 2000/10/20 12:15:32 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -114,6 +114,7 @@ public:
    virtual void   LowPriority(const char *signal_name,
                               const char *slot_name = 0);
 
+   virtual Bool_t HasConnection(const char *signal_name);
    virtual void   Connected(const char *signal_name) { }
    virtual void   Disconnected(const char *signal_name) { }
 

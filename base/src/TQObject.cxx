@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.1 2000/10/17 12:19:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.2 2000/10/19 10:44:44 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -86,8 +86,12 @@ ClassImpQ(TQClass)
 
 /////////////////// internal use static functions ///////////////////
 //______________________________________________________________________________
-char *ResolveTypes(const char *method)
+static char *ResolveTypes(const char *method)
 {
+   // Resolve any typedefs in the method signature. For example:
+   // func(Float_t,Int_t) becomes func(float,int).
+   // The returned string must be deleted by the user.
+
    if (!method || !strlen(method)) return 0;
 
    char *str = new char[strlen(method)+1];
@@ -137,9 +141,10 @@ static char *CompressName(const char *method_name)
    // method name.
    //
    //  Example: CompressName(" Draw(const char *, const char *,
-   //                               Option_t * , Int_t , Int_t )")
+   //                               Option_t * , Int_t , Int_t)")
    //
    // Returns the string "Draw(char*,char*,char*,int,int)"
+   // The returned string must be deleted by the user.
 
    if (!method_name || !strlen(method_name)) return 0;
 
@@ -149,7 +154,7 @@ static char *CompressName(const char *method_name)
    char *tmp = str;
 
    // substitute "const" with white spaces
-   while( (tmp = strstr(tmp,"const")) ) {
+   while( (tmp = strstr(tmp,"const"))) {
       for(int i=0; i<5; i++) *(tmp+i) = ' ';
    }
 
@@ -365,7 +370,7 @@ public:
 //______________________________________________________________________________
 TQConnectionList::~TQConnectionList()
 {
-   // destructor
+   // Destructor.
 
    TIter next(this);
    TQConnection *connection;
@@ -413,7 +418,7 @@ Bool_t TQConnectionList::Disconnect(void *receiver, const char *slot_name)
 }
 
 //______________________________________________________________________________
-void TQConnectionList::ls(Option_t* option)
+void TQConnectionList::ls(Option_t *option)
 {
    // List signal name and list all connections in this signal list.
 
@@ -422,7 +427,7 @@ void TQConnectionList::ls(Option_t* option)
 }
 
 //______________________________________________________________________________
-void TQConnectionList::Print(Option_t* option)
+void TQConnectionList::Print(Option_t *option)
 {
    // Print signal name.
 
@@ -440,8 +445,8 @@ TQObject::TQObject()
    //  - When fListOfSignals/fListOfConnections are empty they will
    //    be deleted
 
-   fListOfSignals       = 0;
-   fListOfConnections   = 0;
+   fListOfSignals     = 0;
+   fListOfConnections = 0;
 }
 
 //______________________________________________________________________________
@@ -515,7 +520,7 @@ void TQObject::HighPriority(const char *signal_name, const char *slot_name)
       return;
    } else {                   // slot_name != 0 , update signal list
       TQConnection *con = 0;
-      TIter next_con( clist );
+      TIter next_con(clist);
       while ((con = (TQConnection*)next_con())) {
          if (!strcmp(slot_name,con->GetName()))
             break;
@@ -559,6 +564,30 @@ void TQObject::LowPriority(const char *signal_name, const char *slot_name)
       clist->Remove(con);     // remove and add as last
       clist->AddLast(con);
    }
+}
+
+//______________________________________________________________________________
+Bool_t TQObject::HasConnection(const char *signal_name)
+{
+   // Return true if there is any object connected to this signal.
+   // Only checks for object signals.
+
+   if (!fListOfSignals)
+      return kFALSE;
+
+   register TQConnectionList *clist  = 0;
+   char *signal = CompressName(signal_name);
+
+   // check object signals
+   TIter next_list(fListOfSignals);
+   while ((clist = (TQConnectionList*)next_list())) {
+      if (!strcmp(signal,clist->GetName())) {
+         delete [] signal;
+         return kTRUE;
+      }
+   }
+   delete [] signal;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
