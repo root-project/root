@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.6 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.7 2003/07/17 07:36:41 brun Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -118,10 +118,7 @@ void TFrame::Paint(Option_t *option)
 
    TWbox::Paint(option);
       
-   Int_t style = gVirtualX->GetFillStyle();
-   gVirtualX->SetFillStyle(0);
-   gPad->PaintBox(fX1,fY1,fX2,fY2);
-   gVirtualX->SetFillStyle(style);
+   gPad->PaintBox(fX1,fY1,fX2,fY2,"s");
 }
 
 //______________________________________________________________________________
