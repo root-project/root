@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.8 2000/09/08 07:33:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.9 2000/09/11 06:21:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -842,6 +842,23 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    }
    gFile->SumBuffer(key->GetObjlen());
    return key->WriteFile(0);
+}
+
+//______________________________________________________________________________
+void TObject::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TObject.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
+      R__b >> fUniqueID;
+      R__b >> fBits;
+      fBits |= kIsOnHeap;  // by definition de-serialized object is on heap
+   } else {
+      R__b.WriteVersion(TObject::IsA());
+      R__b << fUniqueID;
+      R__b << fBits;
+   }
 }
 
 //______________________________________________________________________________
