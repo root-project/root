@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2001/03/16 22:56:00 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.4 2001/03/16 22:56:00 fine Exp $
+// $Id: TFileSet.cxx,v 1.4 2001/05/14 06:44:09 brun Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -54,7 +54,9 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
   //             (kTRUE by default)
   //  maxDeep  - the max number of the levels of the directory to read in
   //             (=10 by default)
-  //
+  //  Note: If the "dirname" points to non-existent object.
+  //  ----  For example it is dead-link then the object is marked as "Zombie" 
+  //        and this flag is propagated upwards
 
   if (!maxDepth) return;
 
@@ -76,12 +78,12 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
     void *dir = 0;
     if (flags & 2 ) {
        dir = gSystem->OpenDirectory(name);
-#ifndef WIN32
        if (!dir) {
-        perror("can not be open due error\n");
+#ifndef WIN32
+        perror("cannot be open due to error:\n");
         fprintf(stderr, " directory: %s",name);
-        }
 #endif
+       }
     }
     if (dir) {   // this is a directory
       SetTitle("directory");
@@ -91,13 +93,22 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
          Char_t *file = gSystem->ConcatFileName(dirbuf,name);
          TString nextdir = file;
          delete [] file;
-         Add(new TFileSet(nextdir,name,kFALSE,maxDepth-1));
+         TFileSet *fs = new TFileSet(nextdir,name,kFALSE,maxDepth-1);
+         if (fs->IsZombie())  {
+           // propagate "Zombie flag upwards
+           MakeZombie(); 
+         }
+         Add(fs);
 
       }
       gSystem->FreeDirectory(dir);
     }
     else
        SetTitle("file");
+  } else { 
+    // Set Zombie flag
+    MakeZombie(); 
+    SetTitle("Zombie");
   }
 }
 
