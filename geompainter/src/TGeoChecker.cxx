@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.18 2002/12/10 14:34:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.19 2002/12/11 17:10:20 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -338,17 +338,14 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
 //         fGeom->IsStepEntering();
          // find where we end-up
          endnode = fGeom->Step();
-         if (fGeom->IsOutside()) endnode=0;
          step = fGeom->GetStep();
-         fGeom->IsEntering();
          while (step<1E10) {
             // now see if we can make an other step
-	          iloop=0;
-//            if (!fGeom->IsEntering()) printf("Looping %s\n", fGeom->GetPath());
+            iloop=0;
             while (!fGeom->IsEntering()) {
-	             iloop++;
+               iloop++;
                fGeom->SetStep(1E-3);
-	             step += 1E-3;
+               step += 1E-3;
                endnode = fGeom->Step();
             }
             if (iloop>1000) printf("%i steps\n", iloop);   
@@ -356,7 +353,6 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
                x += step/matprop;
             }   
             if (endnode==0 && step>1E10) break;
-         //printf("x=%f, step==%g, matprop=%g\n", x,step,matprop);
             // generate an extra step to cross boundary
             startnode = endnode;    
             if (startnode) {
@@ -367,11 +363,8 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
             
             fGeom->FindNextBoundary();
             endnode = fGeom->Step();
-            if (fGeom->IsOutside()) endnode=0;
             step = fGeom->GetStep();
-            fGeom->IsEntering();
          }
-//	 printf("%i : x=%f\n", igen, x);
          hist->Fill(phi, theta, x); 
       }
    }
@@ -460,9 +453,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 
    Double_t start[3];
    Double_t dir[3];
-   Double_t eps = 0.;
    Int_t istep= 0;
-   if ((startx==0) && (starty==0) && (startz==0)) eps=1E-3;
    Double_t *point = fGeom->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
@@ -479,17 +470,16 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       if (n10) {
          if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nrays));
       }
-      start[0] = startx+eps;
-      start[1] = starty+eps;
-      start[2] = startz+eps;
+      start[0] = startx;
+      start[1] = starty;
+      start[2] = startz;
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
       dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
       dir[2]=TMath::Cos(theta);
-      fGeom->InitTrack(&start[0], &dir[0]);
+      startnode = fGeom->InitTrack(start[0],start[1],start[2], dir[0],dir[1],dir[2]);
       line = 0;
-      startnode = fGeom->GetCurrentNode();
       if (fGeom->IsOutside()) startnode=0;
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
       if (vis1) {
@@ -505,6 +495,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       endnode = fGeom->Step();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
       while (step<1E10) {
+         istep = 0;
          while (!fGeom->IsEntering()) {
             istep++;
             if (istep>1E4) break;
@@ -531,13 +522,11 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          } 
          // now see if we can make an other step
          if (endnode==0 && step>1E10) break;
-         istep = 0;
          // generate an extra step to cross boundary
          startnode = endnode;    
          fGeom->FindNextBoundary();
          step = fGeom->GetStep();
          endnode = fGeom->Step();
-         vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
       }      
    }   
    // draw all segments
