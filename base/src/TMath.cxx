@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.70 2004/07/08 17:42:04 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.71 2004/07/09 17:22:59 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //   TMath::Pi = 3.14159265358979323846,
 //   TMath::E  = 2.7182818284590452354;
 
+const Int_t kWorkMax = 100;
 
 ClassImp(TMath)
 
@@ -1670,7 +1671,6 @@ Double_t TMath::MedianSorted(Int_t n, Double_t *a)
    return a[imin];
 }
 
-Int_t kWorkMax = 100;
 
 //______________________________________________________________________________
 Short_t TMath::Median(Int_t n, const Short_t *a, const Double_t *w, Int_t *work)
