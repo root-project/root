@@ -4961,7 +4961,11 @@ struct G__funclist *pmatch;
 	    param->ref = param->obj.i;
 #ifdef G__ASM
 	    if(G__asm_noverflow) {
-	      if(rewind_arg && baseoffset) {
+	      if(rewind_arg 
+#ifdef G__OLDIMPLEMENTATION1879
+		 && baseoffset
+#endif
+		 ) {
 #ifdef G__ASM_DBG
 		if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
 				       ,G__asm_cp,rewind_arg);
@@ -4978,7 +4982,11 @@ struct G__funclist *pmatch;
 	      G__asm_inst[G__asm_cp+1] = formal_tagnum;
 	      G__asm_inst[G__asm_cp+2] = baseoffset;
 	      G__inc_cp_asm(3,0);
-	      if(rewind_arg && baseoffset) {
+	      if(rewind_arg 
+#ifdef G__OLDIMPLEMENTATION1879
+		 && baseoffset
+#endif
+		 ) {
 #ifdef G__ASM_DBG
 		if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
 				       ,G__asm_cp,-rewind_arg);
@@ -5013,7 +5021,11 @@ struct G__funclist *pmatch;
 #endif
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
-	    if(rewind_arg && baseoffset) {
+	    if(rewind_arg 
+#ifdef G__OLDIMPLEMENTATION1879
+	       && baseoffset
+#endif
+	       ) {
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
 				     ,G__asm_cp,rewind_arg);
@@ -5030,7 +5042,11 @@ struct G__funclist *pmatch;
 	    G__asm_inst[G__asm_cp+1] = formal_tagnum;
 	    G__asm_inst[G__asm_cp+2] = baseoffset;
 	    G__inc_cp_asm(3,0);
-	    if(rewind_arg && baseoffset) {
+	    if(rewind_arg 
+#ifdef G__OLDIMPLEMENTATION1879
+	       && baseoffset
+#endif
+	       ) {
 #ifdef G__ASM_DBG
 	      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
 				     ,G__asm_cp,-rewind_arg);

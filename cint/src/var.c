@@ -2651,12 +2651,34 @@ struct G__var_array *varglobal,*varlocal;
 
 #ifndef G__OLDIMPLEMENTATION672
     if('u'!=tolower(var->type[ig15])&&'u'==result.type&&-1!=result.tagnum) {
+#ifndef G__OLDIMPLEMENTATION1880
+      if(G__asm_noverflow && paran) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
+			       ,G__asm_cp,paran);
+#endif
+	G__asm_inst[G__asm_cp] = G__REWINDSTACK;
+	G__asm_inst[G__asm_cp+1] = paran;
+	G__inc_cp_asm(2,0);
+      }
+#endif /* 1880 */
       G__fundamental_conversion_operator(var->type[ig15]
 					 ,var->p_tagtable[ig15]
 					 ,var->p_typetable[ig15]
 					 ,var->reftype[ig15]
 					 ,var->constvar[ig15]
 					 ,&result,ttt);
+#ifndef G__OLDIMPLEMENTATION1880
+      if(G__asm_noverflow && paran) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: REWINDSTACK %d\n"
+			       ,G__asm_cp,paran);
+#endif
+	G__asm_inst[G__asm_cp] = G__REWINDSTACK;
+	G__asm_inst[G__asm_cp+1] = -paran;
+	G__inc_cp_asm(2,0);
+      }
+#endif /* 1880 */
     }
 #endif /* ON672 */
       

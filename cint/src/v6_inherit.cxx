@@ -330,7 +330,7 @@ struct G__baseparam *pbaseparam;
   long store_struct_offset;
   int i;
 #ifndef G__OLDIMPLEMENTATION1870
-  struct G__baseparam *pbaseparam;
+  struct G__baseparam *pbaseparam = pbaseparamin;
 #else
   int j;
 #endif

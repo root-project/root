@@ -451,7 +451,10 @@ long localmem;
       pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) {
-	G__fprinterr(G__serr," -> %d\n", G__asm_stack[sp-1].obj.i);
+	G__fprinterr(G__serr," -> %d %d %d\n"
+		     , G__asm_stack[sp-1].obj.i
+		     , G__asm_stack[sp-1].type
+		     , G__asm_stack[sp-1].tagnum);
       }
 #endif
 #ifdef G__ASM_DBG

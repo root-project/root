@@ -39,6 +39,7 @@ CINTS2       := $(filter-out $(MODDIRS)/iccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/vc7strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/bcstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrmold.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/Apiifold.%,$(CINTS2))
@@ -109,7 +110,11 @@ CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
 CINTS1       += $(MODDIRS)/winnt.c
+ifeq ($(VC_MAJOR),13)
+CINTS2       += $(MODDIRS)/vc7strm.cxx
+else
 CINTS2       += $(MODDIRS)/vcstrm.cxx
+endif
 endif
 ifeq ($(PLATFORM),vms)
 CINTS2       += $(MODDIRS)/fakestrm.cxx
@@ -215,6 +220,9 @@ $(CINTDIRS)/libstrm.o: $(CINTDIRS)/libstrm.cxx
 
 $(CINTDIRS)/vcstrm.o: $(CINTDIRS)/vcstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vcstream -o $@ -c $<
+
+$(CINTDIRS)/vc7strm.o: $(CINTDIRS)/vc7strm.cxx
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/vc7strm -o $@ -c $<
 
 $(CINTDIRS)/sunstrm.o: $(CINTDIRS)/sunstrm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/snstream -o $@ -c $<
