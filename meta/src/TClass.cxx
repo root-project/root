@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.41 2001/04/23 07:08:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.42 2001/04/24 14:31:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1087,7 +1087,7 @@ void *TClass::New(Bool_t defConstructor)
    void *p = GetClassInfo()->New();
    fgCallingNew = kFALSE;
    if (!p) {
-      Error("New", "Cannot create object of class %s", GetName());
+      Error("New", "cannot create object of class %s", GetName());
    }
 
    return p;
@@ -1108,7 +1108,7 @@ void *TClass::New(void *arena, Bool_t defConstructor)
    fgCallingNew = defConstructor;
    void *p = GetClassInfo()->New(arena);
    fgCallingNew = kFALSE;
-   if (!p) Error("New with placments", "no default ctor for class %s", GetName());
+   if (!p) Error("New with placement", "cannot create object of class %s", GetName());
 
    return p;
 }
