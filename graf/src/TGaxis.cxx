@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.61 2003/11/25 17:12:30 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.62 2003/11/27 15:15:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -821,6 +821,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          N1A         = N1Aold;
          NN1         = NN1old;
          Nticks      = NN1;
+         if (OptionTime) {
+            wmin        += timeoffset - (int)(timeoffset) + rangeOffset;
+            wmax        += timeoffset - (int)(timeoffset) + rangeOffset;
+         }
       }
    }
 
