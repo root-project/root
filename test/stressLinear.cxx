@@ -1600,6 +1600,20 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
     {
       if (gVerbose)
+        cout << "\n  Test m^T * m_sym == m_sym^T * m == m_sym^T * m_sym  multiplications" << endl;
+      TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
+      TMatrixD mtm      = TMatrixD(m    ,TMatrixD::kTransposeMult,m);
+      TMatrixD mtm_sym1 = TMatrixD(m_sym,TMatrixD::kTransposeMult,m_sym);
+      TMatrixD mtm_sym2 = TMatrixD(m    ,TMatrixD::kTransposeMult,m_sym);
+      TMatrixD mtm_sym3 = TMatrixD(m_sym,TMatrixD::kTransposeMult,m);
+      ok &= VerifyMatrixIdentity(mtm,mtm_sym1,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mtm,mtm_sym2,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mtm,mtm_sym3,gVerbose,epsilon);
+    }
+
+    {
+      if (gVerbose)
         cout << "\n  Test n * m_sym == n * m multiplications" << endl;
       TMatrixD n = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixD m = n;

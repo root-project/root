@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.23 2004/09/07 19:36:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.24 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -359,6 +359,7 @@ void TMatrixF::AMultB(const TMatrixF &a,const TMatrixF &b,Int_t constr)
 #else
   const Int_t na     = a.GetNoElements();
   const Int_t nb     = b.GetNoElements();
+  const Int_t ncolsa = a.GetNcols();
   const Int_t ncolsb = b.GetNcols();
   const Float_t * const ap = a.GetMatrixArray();
   const Float_t * const bp = b.GetMatrixArray();
@@ -376,7 +377,7 @@ void TMatrixF::AMultB(const TMatrixF &a,const TMatrixF &b,Int_t constr)
       *cp++ = cij;
       bcp -= nb-1;                              // Set bcp to the (j+1)-th col
     }
-    arp0 += a.GetNcols();                       // Set ap to the (i+1)-th row
+    arp0 += ncolsa;                             // Set ap to the (i+1)-th row
   }
 
   Assert(cp == this->GetMatrixArray()+fNelems && arp0 == ap+na);
@@ -421,7 +422,6 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixF &b,Int_t constr)
   cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,b.GetNcols(),0.0,cp1,fNcols);
 #else
-  const Float_t *ap2 = a.GetMatrixArray();
   const Float_t *bp2 = b.GetMatrixArray();
         Float_t *cp2 = this->GetMatrixArray();
 
@@ -430,7 +430,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixF &b,Int_t constr)
       const Float_t b_ij = *bp1++;
       *cp1 += b_ij*(*ap1);
       Float_t tmp = 0.0;
-      ap2 = ap1+1;
+      const Float_t *ap2 = ap1+1;
       for (Int_t k = i+1; k < fNrows; k++) {
         const Int_t index_kj = k*fNcols+j;
         const Float_t a_ik = *ap2++;
@@ -483,19 +483,15 @@ void TMatrixF::AMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
   cblas_ssymm (CblasRowMajor,CblasRight,CblasUpper,fNrows,fNcols,1.0,
                bp1,b.GetNcols(),ap1,a.GetNcols(),0.0,cp1,fNcols);
 #else
-  const Float_t *ap2 = a.GetMatrixArray();
-  const Float_t *bp2 = b.GetMatrixArray();
-        Float_t *cp2 = this->GetMatrixArray();
-
   for (Int_t i = 0; i < fNrows; i++) {
     const Float_t *bp1 = b.GetMatrixArray();
     for (Int_t j = 0; j < fNcols; j++) {
       const Float_t a_ij = *ap1++;
       *cp1 += a_ij*(*bp1);
       Float_t tmp = 0.0;
-      ap2 = ap1;
-      bp2 = bp1+1;
-      cp2 = cp1+1;
+      const Float_t *ap2 = ap1;
+      const Float_t *bp2 = bp1+1;
+            Float_t *cp2 = cp1+1;
       for (Int_t k = j+1; k < fNcols; k++) {
         const Float_t a_ik = *ap2++;
         const Float_t b_jk = *bp2++;
@@ -548,7 +544,6 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixFSym &b,Int_t constr)
   cblas_ssymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
                ap1,a.GetNcols(),bp1,b.GetNcols(),0.0,cp1,fNcols);
 #else
-  const Float_t *ap2 = a.GetMatrixArray();
   const Float_t *bp2 = b.GetMatrixArray();
         Float_t *cp2 = this->GetMatrixArray();
   for (Int_t i = 0; i < fNrows; i++) {
@@ -556,7 +551,7 @@ void TMatrixF::AMultB(const TMatrixFSym &a,const TMatrixFSym &b,Int_t constr)
       const Float_t b_ij = *bp1++;
       *cp1 += b_ij*(*ap1);
       Float_t tmp = 0.0;
-      ap2 = ap1+1;
+      const Float_t *ap2 = ap1+1;
       for (Int_t k = i+1; k < fNrows; k++) {
         const Int_t index_kj = k*fNcols+j;
         const Float_t a_ik = *ap2++;
@@ -615,7 +610,7 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixF &b,Int_t constr)
         Float_t *       cp = this->GetMatrixArray();
 
   const Float_t *acp0 = ap;           // Pointer to  A[i,0];
-  while (acp0 < ap+a.GetNcols()) {
+  while (acp0 < ap+ncolsa) {
     for (const Float_t *bcp = bp; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
       const Float_t *acp = acp0;                       // Pointer to the i-th column of A, reset to A[0,i]
       Float_t cij = 0;
@@ -670,26 +665,23 @@ void TMatrixF::AtMultB(const TMatrixF &a,const TMatrixFSym &b,Int_t constr)
   cblas_sgemm (CblasRowMajor,CblasTrans,CblasNoTrans,fNrows,fNcols,a.GetNrows(),
                1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
 #else
-  const Float_t *ap2 = a.GetMatrixArray();
-  const Float_t *bp2 = b.GetMatrixArray();
-        Float_t *cp1 = this->GetMatrixArray();
-        Float_t *cp2 = this->GetMatrixArray();
+  Float_t *cp1 = this->GetMatrixArray();
 
   for (Int_t i = 0; i < fNrows; i++) {
     const Float_t *ap1 = a.GetMatrixArray()+i; // i-column of a
     const Float_t *bp1 = b.GetMatrixArray();
     for (Int_t j = 0; j < fNcols; j++) {
-      const Float_t a_ji = *ap1;
-      *cp1++ += a_ji*(*bp1);
+      const Double_t a_ji = *ap1;
+      *cp1 += a_ji*(*bp1);
       Float_t tmp = 0.0;
-      ap2 = ap1;
-      bp2 = bp1+1;
-      cp2 = cp1;
+      const Float_t *ap2 = ap1+fNrows;
+      const Float_t *bp2 = bp1+1;
+            Float_t *cp2 = cp1+1;
       for (Int_t k = j+1; k < fNcols; k++) {
         const Float_t b_jk = *bp2++;
-        *cp2 += a_ji*b_jk;
-        tmp += (*ap1) * b_jk;
-        ap1 += fNrows;
+        *cp2++ += a_ji*b_jk;
+        tmp += (*ap2) * b_jk;
+        ap2 += fNrows;
       }
       *cp1++ += tmp;
       ap1 += fNrows;
