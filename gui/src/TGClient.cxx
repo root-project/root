@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.31 2004/03/05 11:13:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.32 2004/03/05 11:29:02 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -486,10 +486,6 @@ Bool_t TGClient::ProcessOneEvent()
    if (!fRoot) return kFALSE;
    if (gVirtualX->EventsPending()) {
       gVirtualX->NextEvent(event);
-#ifdef GDK_WIN32
-      if (event.fType == kOtherEvent)
-         return kFALSE;
-#endif
       if (fWaitForWindow == kNone) {
          HandleEvent(&event);
          if (fForceRedraw)
