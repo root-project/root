@@ -32,6 +32,7 @@
 	--prefix=%_prefix 				\
 	--etcdir=%_sysconfdir/root  			\
 	--docdir=%_defaultdocdir/root-doc-%ver          \
+	--cintincdir=%_prefix/lib/root/cint		\
         --enable-table  				\
         --enable-thread 				\
         --enable-shared 				\
