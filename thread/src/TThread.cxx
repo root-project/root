@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.22 2004/09/15 14:39:03 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.23 2004/11/02 13:07:57 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -315,7 +315,7 @@ TThread *TThread::Self()
 //______________________________________________________________________________
 Long_t TThread::Join(void **ret)
 {
-   // Static method to join thread. (rdm?)
+   // Join thread.
 
    return TThread::Join(0, ret);
 }
@@ -323,20 +323,11 @@ Long_t TThread::Join(void **ret)
 //______________________________________________________________________________
 Long_t TThread::Join(Long_t jid, void **ret)
 {
-#if 0
-   Long_t jd = jid;
-   if (!jd) {  // jd is not known
-      TThread *myth = TThread::Self();
-      if (!myth) return -1L;
-      jd = myth->fJoinId;
-      if (!jd) return -1L;
-   }
-#else
    Long_t jd;
    TThread *myth = jid ? GetThread(jid) : GetThread(fId);
    if (!myth) return -1L;
    jd = myth->fJoinId;
-#endif
+
    return fgThreadImp->Join(jd, ret);
 }
 
