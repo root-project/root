@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.10 2001/02/24 11:18:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.11 2001/03/11 23:10:01 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -98,6 +98,10 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
    }
+   char name[100];
+   sprintf(name,"%ss",classname);
+   SetName(name);
+   
    fKeep = new TObjArray(s);
 
    BypassStreamer(kTRUE);
