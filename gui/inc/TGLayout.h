@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.3 2001/05/02 00:52:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.4 2002/11/11 16:23:16 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -58,7 +58,7 @@ public:
    TGFrame        *fFrame;
    Int_t           fState;
    TGLayoutHints  *fLayout;
-   ClassDef(TGFrameElement, 0); 
+   ClassDef(TGFrameElement, 0);
 };
 
 
@@ -74,25 +74,25 @@ class TGLayoutHints : public TObject {
 
 protected:
    ULong_t  fLayoutHints;     // layout hints (combination of ELayoutHints)
-   UInt_t   fPadtop;          // amount of top padding
-   UInt_t   fPadbottom;       // amount of bottom padding
-   UInt_t   fPadleft;         // amount of left padding
-   UInt_t   fPadright;        // amount of right padding
+   Int_t    fPadtop;          // amount of top padding
+   Int_t    fPadbottom;       // amount of bottom padding
+   Int_t    fPadleft;         // amount of left padding
+   Int_t    fPadright;        // amount of right padding
 
 public:
    TGLayoutHints(ULong_t hints = kLHintsNormal,
-                 UInt_t padleft = 0, UInt_t padright = 0,
-                 UInt_t padtop = 0, UInt_t padbottom = 0)
+                 Int_t padleft = 0, Int_t padright = 0,
+                 Int_t padtop = 0, Int_t padbottom = 0)
        { fPadleft = padleft; fPadright = padright;
          fPadtop  = padtop;  fPadbottom = padbottom;
          fLayoutHints = hints; }
    virtual ~TGLayoutHints() { }
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
-   UInt_t  GetPadTop() const { return fPadtop; }
-   UInt_t  GetPadBottom() const { return fPadbottom; }
-   UInt_t  GetPadLeft() const { return fPadleft; }
-   UInt_t  GetPadRight() const { return fPadright; }
+   Int_t   GetPadTop() const { return fPadtop; }
+   Int_t   GetPadBottom() const { return fPadbottom; }
+   Int_t   GetPadLeft() const { return fPadleft; }
+   Int_t   GetPadRight() const { return fPadright; }
 
    ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
 };
