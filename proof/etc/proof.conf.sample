@@ -31,13 +31,13 @@
 # $ROOTSYS/etc/system.rootauthrc for details.
 #
 
-#node pcna49a image=nfs
+#master pcna49a image=nfs
 
-#slave pcna49a  perf=100 image=nfs
-#slave pcna49b  perf=100 image=nfs
-#slave pcna49c  perf=100 image=nfs
-#slave pcna49d  perf=100 image=nfs
-#slave pcna49e  perf=75 image=nfs
+#worker pcna49a  perf=100 image=nfs
+#worker pcna49b  perf=100 image=nfs
+#worker pcna49c  perf=100 image=nfs
+#worker pcna49d  perf=100 image=nfs
+#worker pcna49e  perf=75 image=nfs
 
 #user rdm on pcna49d
 
