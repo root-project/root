@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.24 2002/06/16 01:40:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.25 2002/07/17 12:29:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1765,8 +1765,8 @@ void TProof::ShowPackages(Bool_t all)
 void TProof::ShowEnabledPackages(Bool_t all)
 {
    // List which packages are enabled. If all is true show enabled packages
-   // for all slaves. If everything is ok all package directories
-   // should be the same.
+   // for all slaves. If everything is ok all slaves should have the same
+   // packages enabled.
 
    if (!IsValid()) return;
 
@@ -1808,8 +1808,11 @@ void TProof::ClearPackage(const char *package)
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package, Bool_t build)
+Int_t TProof::EnablePackage(const char *package)
 {
+   // Enable specified package. Executes the PROOF-INF/BUILD.C (or BUILD.sh)
+   // if exists followed by the PROOF-INF/setup.C script.
+   // Returns 0 in case of success and -1 in case of error.
 
    return 0;
 }
@@ -1854,6 +1857,9 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
    TIter next(fUniqueSlaves);
    TSlave *sl;
    while ((sl = (TSlave *) next())) {
+      if (!sl->IsValid())
+         continue;
+
       sl->GetSocket()->Send(mess);
 
       TMessage *reply;
@@ -1869,8 +1875,15 @@ Int_t TProof::UploadPackage(const char *par, Int_t parallel)
                ftp.put(par, gSystem->BaseName(par));
             }
          }
-         // unlock dir
+         // install package and unlock dir
          sl->GetSocket()->Send(mess2);
+         delete reply;
+         sl->GetSocket()->Recv(reply);
+         if (reply->What() != kPROOF_CHECKFILE) {
+            Error("UploadPackage", "unpacking of package %s failed", par);
+            delete reply;
+            return -1;
+         }
       }
       delete reply;
    }

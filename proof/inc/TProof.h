@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.20 2002/04/19 18:23:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.21 2002/05/10 11:07:22 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -208,7 +208,7 @@ public:
    void        ShowEnabledPackages(Bool_t all = kFALSE);
    void        ClearPackages();
    void        ClearPackage(const char *package);
-   Int_t       EnablePackage(const char *package, Bool_t build = kFALSE);
+   Int_t       EnablePackage(const char *package);
    Int_t       UploadPackage(const char *par, Int_t parallel = 1);
 
    const char *GetMaster() const { return fMaster; }
