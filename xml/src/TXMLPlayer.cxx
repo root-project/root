@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.3 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.4 2004/06/30 09:34:27 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -40,9 +40,7 @@
 //    }
 // 
 //  3. Copy "streamers.h", "streamers.cxx", "TXmlFile.h", "TXmlFile.cxx" files
-//     to user project and compile them. Include and library paths should include
-//     paths to libxml2 installation (if there is no standard installation)
-//
+//     to user project and compile them. 
 // TXMLPlayer class generates one function per class, which called class streamer.
 // Name of such function for class TExample will be TExample_streamer.
 //

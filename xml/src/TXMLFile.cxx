@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.8 2004/06/29 14:45:38 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.cxx,v 1.9 2004/12/09 07:22:40 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -61,26 +61,7 @@
 //
 // Configuring ROOT with the option "xml"
 // ======================================
-// The XML package uses the public XML parser and toolkit
-// from Gnome. You should download the latest version 2-6.9
-// from http://www.xmlsoft.org/downloads.html.
-//
-// On Unix systems dowload "libxml2-2.6.9.tar.gz" and create
-// $XMLDIR pointing to the directory libxml2-2.6.9. in the $ROOTSYS
-// directory, run the normal
-//   ./configure
-//   make
-// Path to $XMLDIR/.libs should be included in $LD_LIBRARY_PATH variable
-//
-// On Windows, from the same web site download
-//   libxml2-2.6.9.win32.zip
-//   iconv-1.9.1.win32.zip
-// unzip the two files, then copy the file iconv.h from the iconv/include file
-// to $XMLDIR/include. Also copy iconv.dll, iconv.lib and iconv_a.lib
-// from the iconv/lib directory to $XMLDIR/lib.
-//
-// You are now ready to configure ROOT with the XML option. do:
-//  ./configure -enable-xml -enable-xxxxx, etc
+// The XML package is enabled by default
 //
 // documentation
 // =============
