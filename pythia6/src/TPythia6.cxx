@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.7 2002/11/13 17:40:59 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.8 2002/11/26 17:57:43 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +87,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 #else
 # define pyevnt PYEVNT
 # define pyinit PYINIT
+# define pychge PYCHGE
 # define pycomp PYCOMP
 # define pyedit PYEDIT
 # define pyexec PYEXEC
