@@ -153,6 +153,7 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
+MAKESTATIC    = build/unix/makestatic.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
@@ -219,7 +220,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                debian redhat \
+                static debian redhat \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -348,6 +349,7 @@ distclean:: clean
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	@rm -f tutorials/pca.C tutorials/*.so
+	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
@@ -366,6 +368,10 @@ cintdlls: $(CINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
 	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
 	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
+
+static: rootlibs
+	@$(MAKESTATIC) $(PLATFORM) $(CXX) $(CC) $(LD) "$(LDFLAGS)" \
+	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)
