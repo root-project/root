@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.10 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.11 2003/10/22 18:48:36 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -71,21 +71,63 @@ TSocket *sock = 0;
 THostAuth *HostAuth = 0;
 Int_t  gRSAKey = 0;
 
+struct TKrb5CleanUp {
+
+   bool                  fSignal;
+   krb5_context          context;
+   krb5_ccache           ccdef;
+   krb5_principal        client;
+   krb5_principal        server;
+   krb5_auth_context     auth_context;
+   krb5_ap_rep_enc_part *rep_ret;
+   char*                 data;
+
+   TKrb5CleanUp() : fSignal(false),context(0),ccdef(0),client(0),
+      server(0),auth_context(0),rep_ret(0), data(0) {
+   }
+
+   ~TKrb5CleanUp() {
+      if (fSignal) gSystem->IgnoreSignal(kSigPipe, kFALSE);
+
+      if (data) free(data);
+      if (rep_ret) krb5_free_ap_rep_enc_part(context, rep_ret);
+
+      if (auth_context)  krb5_auth_con_free(context, auth_context);
+
+      if (server) krb5_free_principal(context, server);
+      if (client) krb5_free_principal(context, client);
+
+
+      if (ccdef)   krb5_cc_close(context, ccdef);
+      if (context) krb5_free_context(context);
+
+   }
+};
+
+
 //______________________________________________________________________________
 Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t version)
 {
    // Kerberos v5 authentication code. Returns 0 in case authentication
    // failed, 1 in case of success and 2 in case remote does not support
    // Kerberos5.
-   // Protocol 'version':  2    supports negotiation and auth reuse
+   // Protocol 'version':  3    supports alternate username
+   //                      2    supports negotiation and auth reuse
    //                      1    first kerberos implementation
    //                      0    no kerberos support (function should not be called)
+   // user is used to input the target username and return the name in the
+   // principal used
+
+
+   TKrb5CleanUp cleanup;
 
    int retval;
    int Auth, kind;
 
    char answer[100];
    int type;
+
+   TString targetUser(user);
 
    // From the calling TAuthenticate
    sock = auth->GetSocket();
@@ -100,21 +142,24 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // get a context
    krb5_context context;
    retval = krb5_init_context(&context);
+   cleanup.context = context;
+
    if (retval) {
       com_err("<Krb5Authenticate>", retval, "while initializing krb5");
-      return -1;  // this is a memory leak, but it's small
+      return -1;
    }
 
    // ignore broken connection signal handling
    gSystem->IgnoreSignal(kSigPipe, kTRUE);
+   cleanup.fSignal = true;
 
    // get our credentials cache
    krb5_ccache ccdef;
    if ((retval = krb5_cc_default(context, &ccdef))) {
       com_err("<Krb5Authenticate>", retval, "while getting default cache");
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return -1;
    }
+   cleanup.ccdef = ccdef;
 
    // get our principal from the cache
    krb5_principal client;
@@ -131,16 +176,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
-            gSystem->IgnoreSignal(kSigPipe, kFALSE);
             return -1;
          }
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
-         gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
    }
+   cleanup.client = client;
 
    if (Krb5CheckCred(context,ccdef,client) != 1) {
 
@@ -153,17 +197,16 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          Krb5InitCred(ClientPrincipal);
          if ((retval = krb5_cc_get_principal(context, ccdef, &client))) {
             com_err("<Krb5Authenticate>", retval, "while getting client principal name");
-            gSystem->IgnoreSignal(kSigPipe, kFALSE);
             return -1;
          }
       } else {
          Warning("Krb5Authenticate",
                  "not a tty: cannot prompt for credentials, returning failure");
-         gSystem->IgnoreSignal(kSigPipe, kFALSE);
          return -1;
       }
    }
    if (ClientPrincipal) delete[] ClientPrincipal;
+   cleanup.client = client;
 
    // Get a normal string for user
    char   User[64];
@@ -223,6 +266,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          if (retval == kErrConnectionRefused) return -2;
          return 0;
       }
+
       // retval == 0 when no Krb5 support compiled in remote rootd
       if (retval == 0 || kind != kROOTD_KRB5)
          return 2;
@@ -231,12 +275,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // ok, krb5 is supported
    // ignore broken connection signal handling
    gSystem->IgnoreSignal(kSigPipe, kTRUE);
+   cleanup.fSignal = false;
 
    // test for CRC-32
    if (!valid_cksumtype(CKSUMTYPE_CRC32)) {
       com_err("<Krb5Authenticate>", KRB5_PROG_SUMTYPE_NOSUPP,
               "while using CRC-32");
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
 
@@ -245,13 +289,22 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    // services in the local /etc/services file
    const char *service;
    if (sock->GetPort() == 1093)
-      service = "proofd";
+     service = "proofd";
    else if (sock->GetPort() == 1094)
-      service = "rootd";
-   else
+     service = "rootd";
+   else {
       service = sock->GetService();
 
+      // if port is not 1093 or 1094 AND the
+      // service is not described in /etc/service
+      // let's default to "host"
+
+      int port = atoi(service);
+      if (port != 0) service = "host";
+   }
+
    const char *serv_host = sock->GetInetAddress().GetHostName();
+
    krb5_principal server;
 
    if (gDebug > 3)
@@ -261,9 +314,9 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
                                          KRB5_NT_SRV_HST, &server))) {
       com_err("<Krb5Authenticate>", retval, "while generating service "
               "principal %s/%s", serv_host, service);
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
+   cleanup.server = server;
 
    if (gDebug > 3) {
       char *Realm = StrDup(server->realm.data);
@@ -283,6 +336,22 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
    cksum_data.length = strlen(serv_host);
    krb5_error *err_ret;
    krb5_ap_rep_enc_part *rep_ret;
+
+   retval = krb5_auth_con_init(context,&auth_context);
+   if (retval)  Error("Krb5Authenticate","failed auth_con_init: %s\n",
+                      error_message(retval));
+   cleanup.auth_context = auth_context;
+
+   retval = krb5_auth_con_setflags(context, auth_context,
+                                   KRB5_AUTH_CONTEXT_RET_TIME);
+   if (retval)  Error("Krb5Authenticate","failed auth_con_setflags: %s\n",
+                      error_message(retval));
+
+   if (gDebug > 1)
+     Info("Krb5Authenticate",
+          "Sending kerberos authentification to %s",
+          serv_host);
+
    retval = krb5_sendauth(context, &auth_context, (krb5_pointer)&sockd,
                           proto_version, client, server,
                           AP_OPTS_MUTUAL_REQUIRED,
@@ -290,35 +359,73 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
                           0, // not rolling our own creds, using ccache
                           ccdef, &err_ret, &rep_ret, 0); // ugh!
 
-   krb5_free_principal(context, server);
-   krb5_free_principal(context, client);
-   krb5_cc_close(context, ccdef);
-   if (auth_context)
-      krb5_auth_con_free(context, auth_context);
-
    // handle the reply (this is a verbatim copy from the kerberos
    // sample client source)
    if (retval && retval != KRB5_SENDAUTH_REJECTED) {
       com_err("<Krb5Authenticate>", retval, "while using sendauth");
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
    if (retval == KRB5_SENDAUTH_REJECTED) {
       // got an error
       Error("Krb5Authenticate", "sendauth rejected, error reply "
-            "is:\n\t\"%*s\"\n",
+            "is:\n\t\"%*s\"",
             err_ret->text.length, err_ret->text.data);
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    } else if (!rep_ret) {
       // no reply
-      gSystem->IgnoreSignal(kSigPipe, kFALSE);
       return 0;
    }
+   cleanup.rep_ret = rep_ret;
 
-   // got a reply
-   krb5_free_ap_rep_enc_part(context, rep_ret);
-   krb5_free_context(context);
+   if (version > 2) {
+
+      // Send the targetUser name
+
+   fprintf(stderr,"client is %s target is %s\n",
+           User,targetUser.Data());
+      sock->Send(targetUser.Data(),kROOTD_KRB5);
+
+      krb5_data outdata;
+      outdata.data = 0;
+
+      retval = krb5_auth_con_genaddrs(context, auth_context,
+                                      sockd, KRB5_AUTH_CONTEXT_GENERATE_LOCAL_FULL_ADDR);
+
+      if (retval) {
+         Error("Krb5Authenticate","failed auth_con_genaddrs is: %s\n",
+               error_message(retval));
+      }
+
+      retval = krb5_fwd_tgt_creds(context,auth_context, 0 /*host*/,
+                                  client, server, ccdef, true,
+                                  &outdata);
+      if (retval) {
+         Error("Krb5Authenticate","fwd_tgt_creds failed: %s\n",
+               error_message(retval));
+         return 0;
+      }
+
+      cleanup.data = outdata.data;
+
+      if (gDebug > 3)
+         Info("Krb5Authenticate",
+              "Sending kerberos forward ticket to %s %p %d [%d,%d,%d,...]",
+              serv_host,outdata.data,outdata.length,
+              outdata.data[0],outdata.data[1],outdata.data[2]);
+
+      // Send length first
+      char BufLen[20];
+      sprintf(BufLen, "%d",outdata.length);
+      sock->Send(BufLen,kROOTD_KRB5);
+
+      // Send Key. second ...
+      Int_t Nsen = sock->SendRaw(outdata.data, outdata.length);
+
+      if (gDebug>3)
+         Info("Krb5Authenticate",
+              "For kerberos forward ticket sent %d bytes (expected %d)",
+              Nsen,outdata.length);
+   }
 
    // restore attention to broken connection signal handling
    gSystem->IgnoreSignal(kSigPipe, kFALSE);
@@ -345,12 +452,15 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
 
          // returns user + OffSet
          nrec = sock->Recv(retval, type);
+
       }
 
-      if (type != kROOTD_KRB5 || retval < 1)
+      if (type != kROOTD_KRB5 || retval < 1) {
          Warning("Krb5Auth",
                  "problems recvn (user,offset) length (%d:%d bytes:%d)",
                   type,retval,nrec);
+         return 0;
+      }
       char *rfrm = new char[retval+1];
       nrec = sock->Recv(rfrm,retval+1, type);  // receive user,offset) info
 

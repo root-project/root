@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.17 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.18 2003/10/22 18:48:36 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -144,6 +144,32 @@ extern "C" {
    #include "rsalib.h"
 }
 
+//--- Machine specific routines ------------------------------------------------
+
+#if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
+    defined(cygwingcc)
+static int setresgid(gid_t r, gid_t e, gid_t)
+{
+   if (setgid(r) == -1)
+      return -1;
+   return setegid(e);
+}
+
+static int setresuid(uid_t r, uid_t e, uid_t)
+{
+   if (setuid(r) == -1)
+      return -1;
+   return seteuid(e);
+}
+#else
+#if defined(linux) && !defined(HAS_SETRESUID)
+extern "C" {
+   int setresgid(gid_t r, gid_t e, gid_t s);
+   int setresuid(uid_t r, uid_t e, uid_t s);
+}
+#endif
+#endif
+
 namespace ROOT {
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
@@ -223,6 +249,19 @@ const int kAUTH_SSH_MSK = 0x10;
 
 
 namespace ROOT {
+
+void printPrincipal(krb5_principal Principal)
+{
+   ErrorInfo("printPrincipal: realm == '%s'",
+             Principal->realm.data);
+   ErrorInfo("printPrincipal: length == %d type == %d",
+             Principal->length,Principal->type);
+   for(int i=0; i <Principal->length;  i++ ) {
+     ErrorInfo("printPrincipal: data[%d]==%s",
+               i, Principal->data[i].data);
+   }
+}
+
 
 //______________________________________________________________________________
 void RpdSetDebugFlag(int Debug)
@@ -1643,14 +1682,27 @@ void RpdKrb5Auth(const char *sstr)
       sscanf(sstr, "%d %d %d %d %s", &gRemPid, &ofs, &opt, &Ulen, dumm);
       gReUseRequired = (opt & kAUTH_REUSE_MSK);
    }
+
    // get service principal
+   const char *service = gService;
+   int port = 0; // need to retrieve that information
+
+   if ((strcmp(gService, "rootd") == 0  && port == 1094) ||
+       (strcmp(gService, "proofd") == 0 && port == 1093)) {
+      // keep the real service name
+   } else {
+      // default to host
+      service = "host";
+   }
+
    krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, gService,
+   if ((retval = krb5_sname_to_principal(gKcontext, 0, service,
                                          KRB5_NT_SRV_HST, &server))) {
-      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %s",
-                gService, error_message(retval));
+      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
+                gService, retval, error_message(retval));
       return;
    }
+
    // listen for authentication from the client
    krb5_auth_context auth_context = 0;
    krb5_ticket *ticket;
@@ -1667,6 +1719,7 @@ void RpdKrb5Auth(const char *sstr)
       ErrorInfo("RpdKrb5Auth: recvauth failed--%s", error_message(retval));
       return;
    }
+
    // get client name
    char *cname;
    if ((retval =
@@ -1687,6 +1740,160 @@ void RpdKrb5Auth(const char *sstr)
    if (pos != string::npos)
       user = user.erase(pos);   // drop the instance
    strncpy(gUser, user.c_str(), 64);
+
+   string targetUser = gUser;
+
+   if (gClientProtocol >= 9) {
+
+       // Receive target name
+
+      if (gDebug > 2)
+         ErrorInfo("RpdKrb5Auth: receiving target user ... ");
+
+       EMessageTypes kind;
+       char buffer[66];
+       NetRecv(buffer, 65, kind);
+
+       if (kind != kROOTD_KRB5) {
+          ErrorInfo("RpdKrb5Auth: protocol error, received message of type %d instead of %d\n",
+                    kind,kROOTD_KRB5);
+       }
+       buffer[65] = 0;
+       targetUser = buffer;
+
+      if (gDebug > 2)
+         ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
+   }
+
+   // const char* targetUser = gUser; // "cafuser";
+   if (krb5_kuserok(gKcontext, ticket->enc_part2->client, targetUser.c_str())) {
+      strncpy(gUser, targetUser.c_str(), 64);
+      reply =  "authenticated as ";
+      reply += gUser;
+   } else {
+      ErrorInfo
+        ("RpdKrb5Auth: could not change user from %s to %s",gUser,targetUser.c_str());
+   }
+
+   if (gClientProtocol >= 9) {
+
+      char *data = 0;
+      int size = 0;
+      if (gDebug > 2)
+         ErrorInfo("RpdKrb5Auth: receiving forward cred ... ");
+
+      {
+         EMessageTypes kind;
+         char BufLen[20];
+         NetRecv(BufLen, 20, kind);
+
+         if (kind != kROOTD_KRB5) {
+            ErrorInfo("RpdKrb5Auth: protocol error, received message of type %d instead of %d\n",
+                      kind, kROOTD_KRB5);
+         }
+
+         size = atoi(BufLen);
+         if (gDebug > 3)
+            ErrorInfo("RpdKrb5Auth: got len '%s' %d ", BufLen, size);
+
+         data = new char[size+1];
+
+         // Receive and decode encoded public key
+         int Nrec = -1;
+         Nrec = NetRecvRaw(data, size);
+
+         if (gDebug > 3)
+            ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
+      }
+
+      krb5_data forwardCreds;
+      forwardCreds.data = data;
+      forwardCreds.length = size;
+
+      if (gDebug > 2)
+         ErrorInfo("RpdKrb5Auth: received forward cred ... %d %d %d",
+                   data[0], data[1], data[2]);
+
+      int net = sock;
+      retval = krb5_auth_con_genaddrs(gKcontext, auth_context,
+                                      net, KRB5_AUTH_CONTEXT_GENERATE_REMOTE_FULL_ADDR);
+      if (retval) {
+         ErrorInfo("RpdKrb5Auth: failed auth_con_genaddrs is: %s\n",
+                   error_message(retval));
+      }
+
+      krb5_creds **creds = 0;
+      if ((retval = krb5_rd_cred(gKcontext, auth_context, &forwardCreds, &creds, 0))) {
+         ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
+         return;
+      }
+
+      struct passwd *pw = getpwnam(gUser);
+      if (pw) {
+         Int_t fromUid = getuid();
+
+         if (setresuid(pw->pw_uid, pw->pw_uid, fromUid) == -1) {
+            ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
+            return;
+         }
+
+         if (gDebug>5)
+            ErrorInfo("RpdKrb5Auth: saving ticket to cache ...");
+
+         krb5_context context = gKcontext;
+
+         krb5_ccache cache = 0;
+         if ((retval = krb5_cc_default(context, &cache))) {
+            ErrorInfo("RpdKrb5Auth: cc_default failed--%s", error_message(retval));
+            return;
+         }
+
+         if (gDebug>5)
+            ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
+                      krb5_cc_get_name(context,cache));
+
+         // this is not working (why?)
+         // this would mean that if a second user comes in, it will tremple
+         // the existing one :(
+         //       if ((retval = krb5_cc_gen_new(context,&cache))) {
+         //          ErrorInfo("RpdKrb5Auth: cc_gen_new failed--%s", error_message(retval));
+         //          return;
+         //       }
+
+         const char *cacheName = krb5_cc_get_name(context,cache);
+
+         if (gDebug>5)
+            ErrorInfo("RpdKrb5Auth: working (2) on ticket to cache (%s) ... ",cacheName);
+
+         if ((retval = krb5_cc_initialize(context,cache,
+                                          ticket->enc_part2->client))) {
+            ErrorInfo("RpdKrb5Auth: cc_initialize failed--%s", error_message(retval));
+            return;
+         }
+
+         if ((retval = krb5_cc_store_cred(context,cache, *creds))) {
+            ErrorInfo("RpdKrb5Auth: cc_store_cred failed--%s", error_message(retval));
+            return;
+         }
+
+         if ((retval = krb5_cc_close(context,cache))) {
+            ErrorInfo("RpdKrb5Auth: cc_close failed--%s", error_message(retval));
+            return;
+         }
+
+         //       if ( chown( cacheName, pw->pw_uid, pw->pw_gid) != 0 ) {
+         //          ErrorInfo("RpdKrb5Auth: could not change the owner ship of the cache file %s",cacheName);
+         //       }
+
+         if (gDebug>5)
+            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",cacheName);
+
+         if (setresuid(fromUid,fromUid, fromUid) == -1) {
+            ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
+            return;
+         }
+      }
+   }
 
    NetSend(reply.c_str(), kMESS_STRING);
    krb5_auth_con_free(gKcontext, auth_context);

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.49 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.50 2003/10/26 01:03:38 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -147,6 +147,7 @@
 // Protocol changes (see gProtocol):
 // 6: added support for kerberos5 authentication
 // 7: added support for Globus, SSH and uid/gid authentication and negotiation
+// 8: change in Kerberos authentication protocol
 
 #include "config.h"
 
@@ -227,7 +228,7 @@ int     gForegroundFlag          = 0;
 int     gInetdFlag               = 0;
 int     gMaster                  =-1;
 int     gPort                    = 0;
-int     gProtocol                = 7;       // increase when protocol changes
+int     gProtocol                = 8;       // increase when protocol changes
 char    gRcFile[kMAXPATHLEN]     = { 0 };
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
@@ -306,8 +307,11 @@ void ProofdLogin()
 
    struct passwd *pw = getpwnam(gUser);
 
-   if (chdir(pw->pw_dir) == -1)
-      Error(ErrFatal,-1,"ProofdLogin: can't change directory to %s", pw->pw_dir);
+   if (!pw)
+      Error(ErrFatal, -1, "ProofdLogin: user %s does not exist locally\n", gUser);
+
+   if (pw && chdir(pw->pw_dir) == -1)
+      Error(ErrFatal, -1, "ProofdLogin: can't change directory to %s", pw->pw_dir);
 
    if (getuid() == 0) {
 

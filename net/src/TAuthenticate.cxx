@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.24 2003/10/09 01:17:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.25 2003/10/22 18:48:36 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -84,7 +84,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
    fSocket   = sock;
    fRemote   = remote;
    fHostAuth = 0;
-   fVersion  = 2;                // The latest, by default
+   fVersion  = 3;                // The latest, by default
    fRSAKey   = 0;
 
    if (gDebug > 2)
@@ -98,18 +98,23 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
       char *sproto = StrDup(proto);
       if ((pdd = strstr(sproto, ":")) != 0) {
          int rproto = atoi(pdd + 1);
-         int lproto = (int) (pdd - sproto);
-         sproto[lproto] = '\0';
+         *pdd = '\0';
          if (strstr(sproto, "root") != 0) {
-            if (rproto < 8) {
-               fVersion = 1;
-               if (rproto < 6)
-                  fVersion = 0;
+            if (rproto < 9 ) {
+               fVersion = 2;
+               if (rproto < 8) {
+                  fVersion = 1;
+                  if (rproto < 6)
+                     fVersion = 0;
+               }
             }
          }
          if (strstr(sproto, "proof") != 0) {
-            if (rproto < 7)
-               fVersion = 1;
+            if (rproto < 8) {
+               fVersion = 2;
+               if (rproto < 7)
+                  fVersion = 1;
+            }
          }
          if (gDebug > 3)
             Info("TAuthenticate",
@@ -311,6 +316,7 @@ Bool_t TAuthenticate::Authenticate()
             }
          }
          if (fgKrb5AuthHook) {
+            fUser = fgDefaultUser;
             st = (*fgKrb5AuthHook) (this, fUser, fDetails, fVersion);
          } else {
             Error("Authenticate",

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.65 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.66 2003/10/23 17:32:24 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -201,6 +201,7 @@
 // 5 -> 6: added support for kerberos5 authentication
 // 6 -> 7: added support for kROOTD_BYE and kROOTD_PROTOCOL2
 // 7 -> 8: added support for Globus, SSH and Rfio authentication and negotiation
+// 8 -> 9: change in Kerberos authentication protocol
 
 #include "config.h"
 
@@ -335,7 +336,7 @@ int     gInetdFlag               = 0;
 char    gOption[32]              = { 0 };
 int     gPort1                   = 0;
 int     gPort2                   = 0;
-int     gProtocol                = 8;       // increase when protocol changes
+int     gProtocol                = 9;       // increase when protocol changes
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
 char    gRootdTab[kMAXPATHLEN]   = { 0 };   // keeps track of open files
