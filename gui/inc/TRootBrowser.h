@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.6 2003/01/16 17:57:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.7 2003/04/16 11:15:14 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TGListTree;
 class TGListTreeItem;
 class TGFileItem;
 class TList;
-
+class TGFileContainer;
 
 class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
@@ -119,6 +119,8 @@ public:
    virtual void ShowStatusBar(Bool_t show = kTRUE);
    virtual void Show() { MapRaised(); }
    virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
+   TGListTree      *GetListTree() const { return fLt; }
+   TGFileContainer *GetIconBox() const;
 
    // overridden from TGMainFrame
    void     CloseWindow();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.43 2003/07/08 19:42:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.44 2003/09/20 14:39:57 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -979,6 +979,14 @@ void TRootBrowser::BrowseObj(TObject *obj)
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
+}
+
+//______________________________________________________________________________
+TGFileContainer *TRootBrowser::GetIconBox() const
+{
+   // returns pointer to fIconBox object
+
+   return (TGFileContainer*)fIconBox;
 }
 
 //______________________________________________________________________________
