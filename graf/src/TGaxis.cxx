@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.13 2001/04/19 17:31:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.14 2001/05/07 12:28:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -160,7 +160,7 @@ TGaxis::TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 //{
 //   gStyle->SetOptStat(0);
 //
-//   TH2F *h2 = new TH2F("h","Axes",2,0,10,2,-2,2);
+//   TH2F *h2 = new TH2F("h","Axes",100,0,10,100,-2,2);
 //   h2->Draw();
 //
 //   TF1 *f1=new TF1("f1","-x",-10,10);
