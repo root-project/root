@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.7 2001/01/30 11:29:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.8 2001/05/09 13:27:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 TStyle  *gStyle;
 
 ClassImp(TStyle)
-   
+
 
 //______________________________________________________________________________
 //
@@ -269,6 +269,7 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fStatTextColor  = fStatTextColor;
    ((TStyle&)obj).fStatBorderSize = fStatBorderSize;
    ((TStyle&)obj).fStatFont       = fStatFont;
+   ((TStyle&)obj).fStatFontSize   = fStatFontSize;
    ((TStyle&)obj).fStatStyle      = fStatStyle;
    ((TStyle&)obj).fStatFormat     = fStatFormat;
    ((TStyle&)obj).fStatW          = fStatW;
@@ -278,6 +279,7 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fTitleColor     = fTitleColor;
    ((TStyle&)obj).fTitleTextColor = fTitleTextColor;
    ((TStyle&)obj).fTitleFont      = fTitleFont;
+   ((TStyle&)obj).fTitleFontSize  = fTitleFontSize;
    ((TStyle&)obj).fTitleStyle     = fTitleStyle;
    ((TStyle&)obj).fTitleBorderSize= fTitleBorderSize;
    ((TStyle&)obj).fTitleW         = fTitleW;
@@ -370,6 +372,7 @@ void TStyle::Reset(Option_t *)
    fStatTextColor  = 1;
    fStatBorderSize = 2;
    fStatFont       = 62;
+   fStatFontSize   = 0;
    fStatStyle      = 1001;
    fStatW          = 0.20;
    fStatH          = 0.16;
@@ -380,6 +383,7 @@ void TStyle::Reset(Option_t *)
    fTitleColor     = fCanvasColor;
    fTitleTextColor = 1;
    fTitleFont      = 62;
+   fTitleFontSize  = 0;
    fTitleStyle     = 1001;
    fTitleBorderSize= 2;
    fTitleW         = 0;
@@ -790,7 +794,7 @@ void TStyle::SetPaperSize(Float_t xsize, Float_t ysize)
    // Set paper size for PostScript output.
    // The paper size is specified in centimeters. Default is 20x26.
    // See also TPad::Print
-   
+
    fPaperSizeX = xsize;
    fPaperSizeY = ysize;
 }
@@ -847,19 +851,19 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 }
 
 //______________________________________________________________________________
-Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length, 
-                              Double_t* Red, Double_t* Green, 
+Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
+                              Double_t* Red, Double_t* Green,
                               Double_t* Blue, UInt_t NColors)
 {
   // STATIC function.
-  // Linear gradient color table: 
+  // Linear gradient color table:
   // Red, Green and Blue are several RGB colors with values from 0.0 .. 1.0.
   // Their number is "Intervals".
   // Length is the length of the color interval between the RGB-colors:
   // Imaging the whole gradient goes from 0.0 for the first RGB color to 1.0
-  // for the last RGB color, then each "Length"-entry in between stands for 
+  // for the last RGB color, then each "Length"-entry in between stands for
   // the length of the intervall between the according RGB colors.
-  // 
+  //
   // This definition is similar to the povray-definition of gradient
   // color tables.
   //
@@ -869,13 +873,13 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   // > Double_t Red[5]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
   // > Double_t Green[5] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
   // > Double_t Blue[5]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-  // Define the length of the (color)-interval between this points 
+  // Define the length of the (color)-interval between this points
   // > Double_t Stops[5] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-  // i.e. the color interval between Color 2 and Color 3 is 
+  // i.e. the color interval between Color 2 and Color 3 is
   // 0.79 - 0.62 => 17 % of the total palette area between these colors
   //
   //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
-  
+
   UInt_t g, c;
   UInt_t NPalette = 0;
   Int_t *Palette = new Int_t[NColors+1];
@@ -883,12 +887,12 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   TColor *Color;
   Int_t HighestIndex = 0;
 
-  // Check if all RGB values are between 0.0 and 1.0 and 
+  // Check if all RGB values are between 0.0 and 1.0 and
   // Length goes from 0.0 to 1.0 in increasing order.
   for (c = 0; c < Number; c++) {
-    if (Red[c] < 0 || Red[c] > 1.0 || 
-        Green[c] < 0 || Green[c] > 1.0 || 
-        Blue[c] < 0 || Blue[c] > 1.0 || 
+    if (Red[c] < 0 || Red[c] > 1.0 ||
+        Green[c] < 0 || Green[c] > 1.0 ||
+        Blue[c] < 0 || Blue[c] > 1.0 ||
         Length[c] < 0 || Length[c] > 1.0) {
       //Error("CreateGradientColorTable",
       //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
@@ -902,7 +906,7 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
         delete [] Palette;
         return -1;
       }
-    } 
+    }
   }
 
   // Search for the highest color index not used in ROOT:
@@ -920,14 +924,14 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
   }
   HighestIndex++;
 
-  // Now create the colors and add them to the default palette:  
-  
+  // Now create the colors and add them to the default palette:
+
   // For each defined gradient...
   for (g = 1; g < Number; g++) {
     // create the colors...
     NColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
     for (c = 0; c < NColorsGradient; c++) {
-      Color = new TColor(HighestIndex, 
+      Color = new TColor(HighestIndex,
                          Red[g-1] + c * (Red[g] - Red[g-1])/ NColorsGradient,
                          Green[g-1] + c * (Green[g] - Green[g-1])/ NColorsGradient,
                          Blue[g-1] + c * (Blue[g] - Blue[g-1])/ NColorsGradient,
@@ -937,10 +941,10 @@ Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
       HighestIndex++;
     }
   }
-  
+
   gStyle->SetPalette(NPalette, Palette);
   delete [] Palette;
-  
+
   return HighestIndex - NColors;
 }
 
@@ -993,7 +997,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
       return;
    }
-   
+
    // set Pretty Palette Spectrum Violet->Red
    if (ncolors == 1 && colors == 0) {
       ncolors = 50;
@@ -1001,7 +1005,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
       return;
    }
-   
+
    // set DeepSea palette
    if (colors == 0 && ncolors > 50) {
       const Int_t NRGBs = 5;
@@ -1012,7 +1016,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
       return;
    }
-   
+
    // set user defined palette
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
