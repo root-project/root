@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.37 2002/05/03 18:13:32 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.38 2002/05/09 20:21:59 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -370,8 +370,8 @@
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)
 #else
-    // Currently CINT does not really mind to have duplicates and
-    // does not work correctly as far as merging token is concerned.
+    /* Currently CINT does not really mind to have duplicates and     */
+    /* does not work correctly as far as merging tokens is concerned. */
 #   define _R__UNIQUE_(X) X
 #endif
 
