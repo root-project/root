@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.5 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.6 2002/04/05 08:14:10 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
   virtual ~TSpline() {if(fHistogram) delete fHistogram; if(fGraph) delete fGraph;}
   virtual  void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
   virtual  void     Draw(Option_t *option="");
-  virtual Int_t     GetNpx() {return fNpx;}
+  virtual Int_t     GetNpx() const {return fNpx;}
   virtual  void     Paint(Option_t *option="");
   virtual Double_t  Eval(Double_t x) const=0;
            void     SetNpx(Int_t n) {fNpx=n;}
@@ -155,14 +155,14 @@ public:
 	   Double_t y[], Int_t n, const char *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   Double_t x[], TF1 *func, Int_t n, const char *opt=0,
+	   Double_t x[], const TF1 *func, Int_t n, const char *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
 	   Double_t xmin, Double_t xmax,
-	   TF1 *func, Int_t n, const char *opt=0,
+	   const TF1 *func, Int_t n, const char *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
   TSpline3(const char *title,
-	   TGraph *g, const char *opt=0,
+	   const TGraph *g, const char *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
   Double_t Eval(Double_t x) const;
   virtual ~TSpline3() {if (fPoly) delete [] fPoly;}
@@ -202,16 +202,16 @@ public:
 	   const char *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   Double_t x[], TF1 *func, Int_t n,
+	   Double_t x[], const TF1 *func, Int_t n,
 	   const char *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
 	   Double_t xmin, Double_t xmax,
-	   TF1 *func, Int_t n,
+	   const TF1 *func, Int_t n,
 	   const char *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
   TSpline5(const char *title,
-	   TGraph *g,
+	   const TGraph *g,
 	   const char *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
   Double_t Eval(Double_t x) const;

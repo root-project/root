@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.4 2000/12/11 00:01:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.5 2001/02/07 20:54:01 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -269,7 +269,7 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   Double_t x[], TF1 *func, Int_t n, const char *opt,
+		   Double_t x[], const TF1 *func, Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -291,7 +291,7 @@ TSpline3::TSpline3(const char *title,
   fPoly = new TSplinePoly3[n];
   for (Int_t i=0; i<n; ++i) {
     fPoly[i].X() = x[i];
-    fPoly[i].Y() = func->Eval(x[i]);
+    fPoly[i].Y() = ((TF1*)func)->Eval(x[i]);
   }
   //
   // Build the spline coefficients
@@ -301,7 +301,7 @@ TSpline3::TSpline3(const char *title,
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
 		   Double_t xmin, Double_t xmax,
-		   TF1 *func, Int_t n, const char *opt,
+		   const TF1 *func, Int_t n, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE),
   fValBeg(valbeg), fValEnd(valend),
@@ -324,7 +324,7 @@ TSpline3::TSpline3(const char *title,
   for (Int_t i=0; i<n; ++i) {
     Double_t x=fXmin+i*fDelta;
     fPoly[i].X() = x;
-    fPoly[i].Y() = func->Eval(x);
+    fPoly[i].Y() = ((TF1*)func)->Eval(x);
   }
   //
   // Build the spline coefficients
@@ -333,7 +333,7 @@ TSpline3::TSpline3(const char *title,
 
 //____________________________________________________________________________
 TSpline3::TSpline3(const char *title,
-		   TGraph *g, const char *opt,
+		   const TGraph *g, const char *opt,
 		   Double_t valbeg, Double_t valend) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE),
   fValBeg(valbeg), fValEnd(valend),
@@ -844,7 +844,7 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   Double_t x[], TF1 *func, Int_t n,
+		   Double_t x[], const TF1 *func, Int_t n,
 		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1, x[0], x[n-1], n, kFALSE)
@@ -866,7 +866,7 @@ TSpline5::TSpline5(const char *title,
   fPoly = new TSplinePoly5[fNp];
   for (Int_t i=0; i<fNp-end; ++i) {
     fPoly[i+beg].X() = x[i];
-    fPoly[i+beg].Y() = func->Eval(x[i]);
+    fPoly[i+beg].Y() = ((TF1*)func)->Eval(x[i]);
   }
   //
   // Set the double knots at boundaries
@@ -879,7 +879,7 @@ TSpline5::TSpline5(const char *title,
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
 		   Double_t xmin, Double_t xmax,
-		   TF1 *func, Int_t n,
+		   const TF1 *func, Int_t n,
 		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,(xmax-xmin)/(n-1), xmin, xmax, n, kTRUE)
@@ -902,7 +902,7 @@ TSpline5::TSpline5(const char *title,
   for (Int_t i=0; i<fNp-end; ++i) {
     Double_t x=fXmin+i*fDelta;
     fPoly[i+beg].X() = x;
-    fPoly[i+beg].Y() = func->Eval(x);
+    fPoly[i+beg].Y() = ((TF1*)func)->Eval(x);
   }
   //
   // Set the double knots at boundaries
@@ -914,7 +914,7 @@ TSpline5::TSpline5(const char *title,
 
 //____________________________________________________________________________
 TSpline5::TSpline5(const char *title,
-		   TGraph *g,
+		   const TGraph *g,
 		   const char *opt, Double_t b1, Double_t e1,
 		   Double_t b2, Double_t e2) :
   TSpline(title,-1,0,0,g->GetN(),kFALSE)
