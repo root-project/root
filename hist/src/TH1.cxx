@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.206 2004/10/08 08:00:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.207 2004/10/13 10:04:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4830,7 +4830,7 @@ void TH1::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetMean(Int_t axis) const
+Double_t TH1::GetMean(Int_t axis) const
 {
 //   -*-*-*-*-*-*Return mean value of this histogram along the X axis*-*-*-*-*
 //               ====================================================
@@ -4851,7 +4851,29 @@ Stat_t TH1::GetMean(Int_t axis) const
 }
 
 //______________________________________________________________________________
-Stat_t TH1::GetRMS(Int_t axis) const
+Double_t TH1::GetMeanError(Int_t axis) const
+{
+//   -*-*-*-*-*-*Return standard error of mean of this histogram along the X axis*-*-*-*-*
+//               ====================================================
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
+//  Also note, that although the definition of standard error doesn't include the 
+//  assumption of normality, many uses of this feature implicitly assume it. 
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t rms = GetRMS(axis);
+   Stat_t stats[15];
+   GetStats(stats);
+   if (stats[0]==0) return 0;
+   return (rms/TMath::Sqrt(stats[0]));
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetRMS(Int_t axis) const
 {
 //   -*-*-*-*-*-*Return the Sigma value of this histogram*-*-*-*-*
 //               ===================================================
@@ -4875,6 +4897,26 @@ Stat_t TH1::GetRMS(Int_t axis) const
   x    = stats[axm]/stats[0];
   rms2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
   return TMath::Sqrt(rms2);
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetRMSError(Int_t axis) const
+{
+//   -*-*-*-*-*-*Return error of RMS estimation for Normal distribution*-*-*-*-*
+//               ====================================================
+//  Note that the mean value/RMS is computed using the bins in the currently
+//  defined range (see TAxis::SetRange). By default the range includes
+//  all bins from 1 to nbins included, excluding underflows and overflows.
+//  To force the underflows and overflows in the computation, one must
+//  call the static function TH1::StatOverflows(kTRUE) before filling
+//  the histogram.
+
+   if (axis <1 || axis > 3) return 0;
+   Double_t rms = GetRMS(axis);
+   Stat_t stats[15];
+   GetStats(stats);
+   if (stats[0]==0) return 0;
+   return (rms/TMath::Sqrt(2*stats[0]));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.59 2004/09/13 10:03:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.60 2004/10/18 15:42:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -211,7 +211,8 @@ public:
     virtual Int_t    GetMinimumBin() const;
     virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
     virtual Double_t GetMinimumStored() const {return fMinimum;}
-    virtual Stat_t   GetMean(Int_t axis=1) const;
+    virtual Double_t GetMean(Int_t axis=1) const;
+    virtual Double_t GetMeanError(Int_t axis=1) const;
     virtual Int_t    GetNbinsX() const {return fXaxis.GetNbins();}
     virtual Int_t    GetNbinsY() const {return fYaxis.GetNbins();}
     virtual Int_t    GetNbinsZ() const {return fZaxis.GetNbins();}
@@ -226,7 +227,8 @@ public:
     virtual void     GetStats(Stat_t *stats) const;
     virtual Stat_t   GetSumOfWeights() const;
     virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
-    virtual Stat_t   GetRMS(Int_t axis=1) const;
+    virtual Double_t GetRMS(Int_t axis=1) const;
+    virtual Double_t GetRMSError(Int_t axis=1) const;
             TAxis   *GetXaxis() const;
             TAxis   *GetYaxis() const;
             TAxis   *GetZaxis() const;
