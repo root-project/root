@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.3 2000/11/27 18:38:27 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.4 2000/12/02 15:49:45 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -32,65 +32,62 @@
 
 R__EXTERN const char *kRootdErrStr[];
 
-char *TAuthenticate::fgUser;
-char *TAuthenticate::fgPasswd;
+TString      TAuthenticate::fgUser;
+TString      TAuthenticate::fgPasswd;
 SecureAuth_t TAuthenticate::fgSecAuthHook;
 
 
 ClassImp(TAuthenticate)
 
 //______________________________________________________________________________
-TAuthenticate::TAuthenticate(TSocket *sock, const char *proto,
-                             const char *remote)
+TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
+                             const char *proto, Int_t security)
 {
    // Create authentication object.
 
    fSocket   = sock;
-   fProtocol = proto;
    fRemote   = remote;
-   if (fProtocol == "roots" || fProtocol == "proofs")
-      fSecure = kTRUE;
-   else
-      fSecure = kFALSE;
+   fProtocol = proto;
+   fSecurity = (ESecurity) security;
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::Authenticate(TString &usr)
+Bool_t TAuthenticate::Authenticate()
 {
-   // Authenticate to remote rootd server. Return kTRUE if authentication
-   // succeeded.
+   // Authenticate to remote rootd or proofd server. Return kTRUE if
+   // authentication succeeded.
 
    Bool_t result = kFALSE;
 
-   char *user   = 0;
-   char *passwd = 0;
+   TString user;
+   TString passwd;
 
    // Get user and passwd set via static functions SetUser and SetPasswd.
-   if (fgUser)
-      user = StrDup(fgUser);
-   if (fgPasswd)
-      passwd = StrDup(fgPasswd);
+   if (fgUser != "")
+      user = fgUser;
+   if (fgPasswd != "")
+      passwd = fgPasswd;
 
-   // Check ~/.netrc file if user was not set via the static SetUser() method.
-   if (!user)
+   // Check ~/.rootnetrc and ~/.netrc files if user was not set via
+   // the static SetUser() method.
+   if (user == "")
       CheckNetrc(user, passwd);
 
-   // If user also not set via ~/.netrc ask user.
-   if (!user) {
-      user = GetUser(fRemote);
-      if (!user)
+   // If user also not set via  ~/.rootnetrc or ~/.netrc ask user.
+   if (user == "") {
+      user = PromptUser(fRemote);
+      if (user == "")
          Error("Authenticate", "user name not set");
    }
 
-   fUser = user;
-   usr   = user;
+   fUser   = user;
+   fPasswd = passwd;
 
    // if not anonymous login try to use secure authentication
-   if ((fProtocol == "roots" || fProtocol == "proofs") &&
-       fUser != "anonymous" && fUser != "rootd") {
+   if (fSecurity == kSRP && fUser != "anonymous" && fUser != "rootd") {
       if (!fgSecAuthHook) {
          char *p;
-         char *lib = Form("%s/lib/libSRPAuth", gRootDir);
+         TString lib = TString(gRootDir) + "/lib/libSRPAuth";
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
             delete [] p;
             gSystem->Load(lib);
@@ -104,7 +101,7 @@ Bool_t TAuthenticate::Authenticate(TString &usr)
             return kTRUE;
          if (st == 2)
             Warning("Authenticate", "remote %s does not support secure authentication",
-                    fProtocol.BeginsWith("root") ? "rootd" : "proofd");
+                    fProtocol.Data());
       } else {
          Error("Authenticate", "no support for secure authentication available");
          return kFALSE;
@@ -119,33 +116,35 @@ Bool_t TAuthenticate::Authenticate(TString &usr)
 
    if (kind == kROOTD_ERR) {
       AuthError("Authenticate", stat);
-      goto out;
+      return result;
    }
    if (kind == kROOTD_AUTH && stat == 1) {
       result = kTRUE;
-      goto out;
+      return result;
    }
 
 badpass:
-   if (!passwd) {
-      passwd = GetPasswd();
-      if (!passwd)
+   if (passwd == "") {
+      passwd = PromptPasswd();
+      if (passwd == "")
          Error("Authenticate", "password not set");
    }
 
    if (fUser == "anonymous" || fUser == "rootd") {
-      if (!strchr(passwd, '@')) {
+      if (!passwd.Contains("@")) {
          Warning("Authenticate", "please use passwd of form: user@host.do.main");
-         delete [] passwd;
-         passwd = 0;
+         passwd = "";
          goto badpass;
       }
    }
 
-   if (passwd) {
-      int n = strlen(passwd);
-      for (int i = 0; i < n; i++)
-         passwd[i] = ~passwd[i];
+   fPasswd = passwd;
+
+   if (passwd != "") {
+      for (int i = 0; i < passwd.Length(); i++) {
+         char inv = ~passwd(i);
+         passwd.Replace(i, 1, inv);
+      }
    }
 
    fSocket->Send(passwd, kROOTD_PASS);
@@ -156,22 +155,17 @@ badpass:
    if (kind == kROOTD_AUTH && stat == 1)
       result = kTRUE;
 
-out:
-   delete [] user;
-   delete [] passwd;
-
    return result;
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
+Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 {
    // Try to get user name and passwd from the ~/.rootnetrc or
    // ~/.netrc files. First ~/.rootnetrc is tried, after that ~/.netrc.
    // These files will only be used when their access masks are 0600.
    // Returns kTRUE if user and passwd were found for the machine
-   // specified in the URL. User and passwd must be deleted by
-   // the caller. If kFALSE, user and passwd are 0.
+   // specified in the URL. If kFALSE, user and passwd are "".
    // The format of these files are:
    //
    // # this is a comment line
@@ -187,7 +181,7 @@ Bool_t TAuthenticate::CheckNetrc(char *&user, char *&passwd)
    Bool_t  first  = kTRUE;
    TString remote = fRemote;
 
-   user = passwd = 0;
+   user = passwd = "";
 
    char *net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootnetrc");
 
@@ -218,14 +212,14 @@ again:
             int nword = sscanf(line, "%s %s %s %s %s %s", word[0], word[1],
                                word[2], word[3], word[4], word[5]);
             if (nword != 6) continue;
-            if (fSecure &&  strcmp(word[0], "secure"))  continue;
-            if (!fSecure && strcmp(word[0], "machine"))  continue;
+            if (fSecurity == kSRP    && strcmp(word[0], "secure"))  continue;
+            if (fSecurity == kNormal && strcmp(word[0], "machine")) continue;
             if (strcmp(word[2], "login"))    continue;
             if (strcmp(word[4], "password")) continue;
 
             if (!strcmp(word[1], remote)) {
-               user   = StrDup(word[3]);
-               passwd = StrDup(word[5]);
+               user   = word[3];
+               passwd = word[5];
                result = kTRUE;
                break;
             }
@@ -236,7 +230,7 @@ again:
    }
    delete [] net;
 
-   if (first && !fSecure && !result) {
+   if (first && fSecurity == kNormal && !result) {
       net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
       first = kFALSE;
       goto again;
@@ -246,10 +240,26 @@ again:
 }
 
 //______________________________________________________________________________
-char *TAuthenticate::GetUser(const char *remote)
+const char *TAuthenticate::GetGlobalUser()
 {
-   // Static method to get user name to be used for authentication to rootd
-   // or proofd. User is asked to type user name.
+   // Static method returning the global user.
+
+   return fgUser;
+}
+
+//______________________________________________________________________________
+const char *TAuthenticate::GetGlobalPasswd()
+{
+   // Static method returning the global global password.
+
+   return fgPasswd;
+}
+
+//______________________________________________________________________________
+char *TAuthenticate::PromptUser(const char *remote)
+{
+   // Static method to prompt for the user name to be used for authentication
+   // to rootd or proofd. User is asked to type user name.
    // Returns user name (which must be deleted by caller) or 0.
 
    const char *user = gSystem->Getenv("USER");
@@ -269,11 +279,11 @@ char *TAuthenticate::GetUser(const char *remote)
 }
 
 //______________________________________________________________________________
-char *TAuthenticate::GetPasswd(const char *prompt)
+char *TAuthenticate::PromptPasswd(const char *prompt)
 {
-   // Static method to get passwd to be used for authentication to rootd
-   // or proofd. Uses non-echoing command line to get passwd.
-   // Returns passwd (which must de deleted by caller) or 0.
+   // Static method to prompt for the user's passwd to be used for
+   // authentication to rootd or proofd. Uses non-echoing command line
+   // to get passwd. Returns passwd (which must de deleted by caller) or 0.
 
    Gl_config("noecho", 1);
    char *pw = Getline((char*)prompt);
@@ -294,31 +304,27 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SetUser(const char *user)
+void TAuthenticate::SetGlobalUser(const char *user)
 {
-   // Set user name to be used for authentication to rootd.
+   // Set global user name to be used for authentication to rootd or proofd.
 
-   if (fgUser)
-      delete [] fgUser;
+   if (fgUser != "")
+      fgUser = "";
 
-   if (!user || !user[0])
-      fgUser = 0;
-   else
-      fgUser = StrDup(user);
+   if (user && user[0])
+      fgUser = user;
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SetPasswd(const char *passwd)
+void TAuthenticate::SetGlobalPasswd(const char *passwd)
 {
-   // Set passwd to be used for authentication to rootd.
+   // Set global passwd to be used for authentication to rootd or proofd.
 
-   if (fgPasswd)
-      delete [] fgPasswd;
+   if (fgPasswd != "")
+      fgPasswd = "";
 
-   if (!passwd || !passwd[0])
-      fgPasswd = 0;
-   else
-      fgPasswd = StrDup(passwd);
+   if (passwd && passwd[0])
+      fgPasswd = passwd;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.2 2000/11/27 15:40:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.3 2000/11/27 18:38:27 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -38,30 +38,39 @@ typedef Int_t (*SecureAuth_t)(TSocket *sock, const char *user,
 
 class TAuthenticate : public TObject {
 
+public:
+   enum ESecurity { kNormal, kSRP };  // level of authentication security
+
 private:
-   TString   fUser;      // user to be authentiated
-   TString   fProtocol;  // remote service (root, roots, proof, proofs)
+   TString   fUser;      // user to be authenticated
+   TString   fPasswd;    // user's password
+   TString   fProtocol;  // remote service (rootd, proofd)
    TString   fRemote;    // remote host to which we want to connect
    TSocket  *fSocket;    // connection to remote daemon
-   Bool_t    fSecure;    // true if secure login is needed (roots, proofs)
+   ESecurity fSecurity;  // logon security level
 
-   static char         *fgUser;
-   static char         *fgPasswd;
+   static TString       fgUser;
+   static TString       fgPasswd;
    static SecureAuth_t  fgSecAuthHook;
 
 public:
-   TAuthenticate(TSocket *sock, const char *proto, const char *remote);
+   TAuthenticate(TSocket *sock, const char *remote, const char *proto,
+                 Int_t security);
    virtual ~TAuthenticate() { }
 
-   Bool_t Authenticate(TString &user);
-   Bool_t CheckNetrc(char *&user, char *&passwd);
+   Bool_t      Authenticate();
+   Bool_t      CheckNetrc(TString &user, TString &passwd);
+   const char *GetUser() const { return fUser.Data(); }
+   const char *GetPasswd() const { return fPasswd.Data(); }
 
-   static void  SetUser(const char *user);
-   static void  SetPasswd(const char *passwd);
-   static void  SetSecureAuthHook(SecureAuth_t func);
-   static char *GetUser(const char *remote);
-   static char *GetPasswd(const char *prompt = "Password: ");
-   static void  AuthError(const char *where, Int_t error);
+   static const char *GetGlobalUser();
+   static const char *GetGlobalPasswd();
+   static void        SetGlobalUser(const char *user);
+   static void        SetGlobalPasswd(const char *passwd);
+   static char       *PromptUser(const char *remote);
+   static char       *PromptPasswd(const char *prompt = "Password: ");
+   static void        SetSecureAuthHook(SecureAuth_t func);
+   static void        AuthError(const char *where, Int_t error);
 
    ClassDef(TAuthenticate,0)  // Class providing remote authentication service
 };
