@@ -5733,7 +5733,7 @@ int isrecursive;
     if(deftmpfunc->hash==hash && strcmp(deftmpfunc->name,funcname)==0 &&
        (G__matchtemplatefunc(deftmpfunc,libp,&call_para,G__PROMOTION)
 #ifndef G__OLDIMPLEMENTATION1727
-	|| pexplicitarg
+	|| (pexplicitarg && libp->paran==0)
 #endif
 	)) {
 
