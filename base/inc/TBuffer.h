@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.41 2004/11/17 06:02:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.42 2004/11/19 14:28:17 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -127,6 +127,7 @@ public:
    virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void      *ReadObjectAny(const TClass* cast);
+   virtual void       SkipObjectAny();
 
    virtual void       IncrementLevel(TStreamerInfo* info);
    virtual void       SetStreamerElementNumber(Int_t) {}

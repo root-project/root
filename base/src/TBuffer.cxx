@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.69 2004/10/19 11:00:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.70 2004/11/17 06:02:51 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1927,6 +1927,16 @@ TObject *TBuffer::ReadObject(const TClass * /*clReq*/)
    // We recommend using ReadObjectAny instead of ReadObject
 
    return (TObject*) ReadObjectAny(0);
+}
+
+//______________________________________________________________________________
+void TBuffer::SkipObjectAny()
+{
+   // Skip any kind of object from buffer
+   
+   UInt_t start, count; 
+   ReadVersion(&start, &count);
+   SetBufferOffset(start+count+sizeof(UInt_t));
 }
 
 //______________________________________________________________________________
