@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.71 2001/05/19 20:25:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.72 2001/05/20 13:50:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1021,7 +1021,7 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
 }
 
 //______________________________________________________________________________
-Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, int k) const
+Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, int k, Int_t eoffset) const
 {
 //  return value of element i in object number j in a TClonesArray and eventually
 // element k in a sub-array.
@@ -1029,13 +1029,8 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
    Int_t nc = clones->GetEntriesFast();
    if (j >= nc) return 0;
 
-   //find offset of this class with respect to class in clones
-   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-   //Int_t leng   = fLength[i];
-   Int_t offset = baseOffset + fOffset[i];
    char *pointer = (char*)clones->UncheckedAt(j);
-   char *ladd = pointer+offset;
-//printf("vclones:%s, fType[%d]=%d, j=%d\n",GetName(),i,fType[i],j);
+   char *ladd    = pointer + eoffset + fOffset[i];
    switch (fType[i]) {
          // basic types
       case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
@@ -1323,7 +1318,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
 
 
 //______________________________________________________________________________
-void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i) const
+void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset) const
 {
 //  print value of element i in a TClonesArray
 
@@ -1332,10 +1327,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    const Int_t kMaxPrint = 10;
    if (nc > kMaxPrint) nc = kMaxPrint;
 
-   //find offset of this class with respect to class in clones
-   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-   //Int_t leng   = fLength[i];
-   Int_t offset = baseOffset + fOffset[i];
+   Int_t offset = eoffset + fOffset[i];
    Int_t j;
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
@@ -1380,7 +1372,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // Class *  derived from TObject with comment field  //->
       case kObjectp: {
-                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TObject **obj = (TObject**)ladd;
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
                       printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
@@ -1388,7 +1380,7 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 
          // Class*   derived from TObject
       case kObjectP: {
-                      TObject **obj = (TObject**)(pointer+fOffset[i]);
+                      TObject **obj = (TObject**)ladd;
                       TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
                       printf("(%s*)%lx",el->GetClass()->GetName(),(Long_t)(*obj));
                       break;
@@ -1396,24 +1388,24 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 
          // Class    derived from TObject
       case kObject:  {
-                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      TObject *obj = (TObject*)ladd;
                       printf("%s",obj->GetName());
                       break;
                      }
 
          // Special case for TString, TObject, TNamed
       case kTString: {
-                      TString *st = (TString*)(pointer+fOffset[i]);
+                      TString *st = (TString*)ladd;
                       printf("%s",st->Data());
                       break;
                      }
       case kTObject: {
-                      TObject *obj = (TObject*)(pointer+fOffset[i]);
+                      TObject *obj = (TObject*)ladd;
                       printf("%s",obj->GetName());
                       break;
                      }
       case kTNamed:  {
-                      TNamed *named = (TNamed*) (pointer+fOffset[i]);
+                      TNamed *named = (TNamed*)ladd;
                       printf("%s/%s",named->GetName(),named->GetTitle());
                       break;
                      }
@@ -1940,7 +1932,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first)
+Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset)
 {
 //  The TClonesArray clones is deserialized from the buffer b
 
@@ -1972,7 +1964,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
       if (isArray == 0) continue; \
-      pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
+      pointer = (char*)clones->UncheckedAt(k)+eoffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       delete [] *f; \
@@ -2010,16 +2002,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       fClass->BuildRealData();
       BuildOld();
    }
-   //find offset of this class with respect to class in clones
-   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
-
    //loop on all active members
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
       leng   = fLength[i];
-      offset = baseOffset + fOffset[i];
+      offset = eoffset + fOffset[i];
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
          printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, offset=%d,  %s, bufpos=%d, nc=%d\n",fClass->GetName(),element->GetName(),i,fType[i],offset,element->ClassName(),b.Length(),nc);
@@ -2178,7 +2167,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             TStreamerBase *element = (TStreamerBase*)fElem[i];
             TClass *clbase = element->GetClassPointer();
             Int_t clversion = element->GetBaseVersion();
-            clbase->GetStreamerInfo(clversion)->ReadBufferClones(b,clones,nc,-1);
+            clbase->GetStreamerInfo(clversion)->ReadBufferClones(b,clones,nc,-1,0);
             //for (Int_t k=0;k<nc;k++) {
             //   pointer = (char*)clones->UncheckedAt(k)+baseOffset;
             //   element->ReadBuffer(b,pointer);
@@ -2214,7 +2203,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          UInt_t start,count;
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
-                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                            pointer = (char*)clones->UncheckedAt(k)+offset;
                             Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                             (*pstreamer)(b,pointer+offset,*counter);
                          }
@@ -2589,7 +2578,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 }
 
 //______________________________________________________________________________
-Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first)
+Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset)
 {
 //  The TClonesArray clones is serialized to the buffer b
 
@@ -2634,16 +2623,15 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 }
 //==========
 
-   //find offset of this class with respect to class in clones
-   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    //loop on all active members
+   Int_t baseOffset = eoffset;
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
       if (gDebug > 1) {
          TStreamerElement *element = (TStreamerElement*)fElem[i];
-         printf("WriteBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
+         printf("WriteBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),fOffset[i]);
       }
       switch (fType[i]) {
          // write basic types
@@ -2769,7 +2757,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                        //   element->WriteBuffer(b,pointer);
                        //}
                        TClass *clbase = element->GetClassPointer();
-                       clbase->GetStreamerInfo()->WriteBufferClones(b,clones,nc,-1);
+                       clbase->GetStreamerInfo()->WriteBufferClones(b,clones,nc,-1,0);
                        break;
                      }
 

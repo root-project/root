@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.23 2001/05/08 20:28:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.24 2001/05/20 14:14:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -99,19 +99,19 @@ public:
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
-   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k) const;
+   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
    Int_t               New(const char *p);
    void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len) const;
-   void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i) const;
+   void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset) const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
-   Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
+   Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile();
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
-   Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
+   Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
 
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    static Bool_t       CanOptimize();
