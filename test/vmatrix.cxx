@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -875,11 +875,9 @@ void test_matrix_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
-
-TROOT mat("matrix","verify matrices");
-
 int main()
 {
+   TROOT mat("matrix","verify matrices");
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
           "\n\t\tVerify Operations on Matrices" << endl;

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -69,11 +69,10 @@ static TMatrix traditional_downsampling(const TMatrix &orig_matrix)
    return smaller_m;
 }
 
-
-TROOT sample("sample","performance sample");
-
 int main()
 {
+   TROOT sample("sample","performance sample");
+   
    cout << "\nDownsample matrices using traditional and non-traditional methods"
         << endl;
 
