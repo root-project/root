@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawInfo.h,v 1.2 2005/03/10 18:25:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.h,v 1.3 2005/03/10 19:15:22 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
       kHISTOGRAM1D,
       kHISTOGRAM2D,
       kLISTOFGRAPHS,
-      kLISTOFPOLYMARKERS3D,
+      kLISTOFPOLYMARKERS3D
    };
 
    static Int_t fgMaxDimension;      // = 4

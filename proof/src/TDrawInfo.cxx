@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.2 2005/03/10 18:25:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TDrawInfo.cxx,v 1.3 2005/03/10 19:15:22 rdm Exp $
 // Author: Marek Biskup   24/01/2004
 
 /*************************************************************************
@@ -129,7 +129,7 @@ Bool_t TDrawInfo::ParseName(TString name)
    for (int i = 0; i < fgMaxParameters; i++)
       fParameterGiven[i] = kFALSE;
 
-   if (char *p = strstr(name.Data(), "(")) {
+   if (char *p = (char*)strstr(name.Data(), "(")) {
       fName = name(0, p - name.Data());
       p++;
       char* end = p + strlen(p);
@@ -170,7 +170,7 @@ Bool_t TDrawInfo::ParseVarExp()
 {
    // Split variables and parse name and parameters in brackets.
 
-   char* gg = strstr(fExp.Data(), ">>");
+   char* gg = (char*)strstr(fExp.Data(), ">>");
    TString variables;
    TString name;
 
