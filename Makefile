@@ -85,7 +85,7 @@ LPATH         = lib
 ifneq ($(ARCH),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree
+ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
 RINTLIBS     := -lRint
 PROOFLIBS    := -lGpad -lProof -lTreePlayer
 CERNPATH     := -L$(CERNLIBDIR)
