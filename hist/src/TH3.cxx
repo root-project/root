@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.12 2001/08/08 07:18:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.13 2001/09/18 08:49:42 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -146,6 +146,144 @@ Int_t TH3::Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w)
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(y);
    binz = fZaxis.FindBin(z);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Stat_t w)
+{
+// Increment cell defined by namex,namey,namez by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(namey);
+   binz = fZaxis.FindBin(namez);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(const char *namex, Axis_t y, const char *namez, Stat_t w)
+{
+// Increment cell defined by namex,y,namez by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(y);
+   binz = fZaxis.FindBin(namez);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(const char *namex, const char *namey, Axis_t z, Stat_t w)
+{
+// Increment cell defined by namex,namey,z by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(namex);
+   biny = fYaxis.FindBin(namey);
+   binz = fZaxis.FindBin(z);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(Axis_t x, const char *namey, const char *namez, Stat_t w)
+{
+// Increment cell defined by x,namey,namezz by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(x);
+   biny = fYaxis.FindBin(namey);
+   binz = fZaxis.FindBin(namez);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w)
+{
+// Increment cell defined by x,namey,z by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(x);
+   biny = fYaxis.FindBin(namey);
+   binz = fZaxis.FindBin(z);
+   bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
+   AddBinContent(bin,w);
+   if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
+   if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
+   if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
+   if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
+   return bin;
+}
+
+//______________________________________________________________________________
+Int_t TH3::Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w)
+{
+// Increment cell defined by x,y,namez by a weight w
+//
+// If the storage of the sum of squares of weights has been triggered,
+// via the function Sumw2, then the sum of the squares of weights is incremented
+// by w^2 in the cell corresponding to x,y,z.
+//
+   Int_t binx, biny, binz, bin;
+   fEntries++;
+   binx = fXaxis.FindBin(x);
+   biny = fYaxis.FindBin(y);
+   binz = fZaxis.FindBin(namez);
    bin  =  binx + (fXaxis.GetNbins()+2)*(biny + (fYaxis.GetNbins()+2)*binz);
    AddBinContent(bin,w);
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
