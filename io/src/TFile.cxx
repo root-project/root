@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.31 2001/01/28 08:54:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.32 2001/01/28 13:55:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1469,14 +1469,18 @@ void TFile::ReadStreamerInfo()
 
    if (list == 0) return;
    if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
-
+//list->Dump();
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
    TIter next(list);
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         Warning("ReadStreamerInfo"," not a TStreamerInfo object");
+         continue;
+      }
       info->BuildCheck();
       Int_t uid = info->GetNumber();
-      fClassIndex->fArray[uid] = 1;
+      if (uid >= 0) fClassIndex->fArray[uid] = 1;
       if (gDebug > 0) printf(" -class: %s version: %d info read at slot %d\n",info->GetName(), info->GetClassVersion(),uid);
    }
    fClassIndex->fArray[0] = 0;
@@ -1536,6 +1540,10 @@ void TFile::WriteStreamerInfo()
    TList list;
 
    while ((info = (TStreamerInfo*)next())) {
+      if (info->IsA() != TStreamerInfo::Class()) {
+         Warning("WriteStreamerInfo"," not a TStreamerInfo object");
+         continue;
+      }
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) list.Add(info);
       if (gDebug > 0) printf(" -class: %s info number %d saved\n",info->GetName(),uid);
