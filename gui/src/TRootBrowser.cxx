@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.22 2002/10/10 17:09:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.25 2002/11/15 13:24:59 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -172,14 +172,12 @@ class TRootIconBox;
 class TRootIconList : public TList {
 
 private:
-   TRootIconBox    *fIconBox; //
+   TRootIconBox    *fIconBox; // icon box to which list belongs
    const TGPicture *fPic;     // list view icon
-   TString          fName;    // the name of the list
 
 public:
    TRootIconList(TRootIconBox* box = 0);
    virtual ~TRootIconList();
-   const char       *GetName() const { return fName.Data(); }
    void              UpdateName();
    const char       *GetTitle() const { return "ListView Container"; }
    Bool_t            IsFolder() const { return kFALSE; }
@@ -226,6 +224,7 @@ void TRootIconList::UpdateName()
 //----- right side of the browser)
 
 class TRootIconBox : public TGFileContainer {
+
 friend class TRootIconList;
 
 private:
@@ -235,12 +234,12 @@ private:
    Bool_t           fGrouped;        //
    TString          fCachedPicName;  //
    TList           *fGarbage;        // garbage for  TRootIconList's
-   Int_t            fGroupSize;   // the total number of items when icon box switched to "global view" mode
+   Int_t            fGroupSize;      // the total number of items when icon box switched to "global view" mode
    TGString        *fCurrentName;    //
-   const TGPicture *fLargeCachedPic;  //
-   const TGPicture *fSmallCachedPic;  //
-   Bool_t           fWasGrouped;
-   TObject         *fActiveObject;    //
+   const TGPicture *fLargeCachedPic; //
+   const TGPicture *fSmallCachedPic; //
+   Bool_t           fWasGrouped;     //
+   TObject         *fActiveObject;   //
 
    void  *FindItem(const TString& name,
                    Bool_t direction = kTRUE,
@@ -1135,7 +1134,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kViewList:
                   case kViewDetails:
                      SetViewMode((Int_t)parm1);
-                     fClient->NeedRedraw(fIconBox);  
+                     fClient->NeedRedraw(fIconBox);
                      break;
                   case kViewHidden:
                      if (fBrowser->TestBit(TBrowser::kNoHidden)) {
@@ -1191,7 +1190,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (fListLevel) {
                            item = fListLevel->GetParent();
                            if (item) fListLevel = item;
-                          
+
                            obj = (TObject *) fListLevel->GetUserData();
                            fLt->ClearHighlighted();
                            fLt->HighlightItem(fListLevel);
@@ -1308,7 +1307,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (fListLevel) {
                            item = fListLevel->GetParent();
                            if (item) fListLevel = item;
-                          
+
                            obj = (TObject *) fListLevel->GetUserData();
                            fLt->ClearHighlighted();
                            fLt->HighlightItem(fListLevel);
@@ -1477,7 +1476,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
    if (obj) {
       Bool_t useLock = kTRUE;
 
-      if (obj->IsA() != TSystemFile::Class()) 
+      if (obj->IsA() != TSystemFile::Class())
          gVirtualX->SetCursor(fId, fWaitCursor);
 
       gVirtualX->Update();
@@ -1573,7 +1572,7 @@ void TRootBrowser::RecursiveRemove(TObject *obj)
    //gVirtualX->SetCursor(fId, fWaitCursor);
    //gVirtualX->Update();
 
-   // don't delete fIconBox items here (it's status will be updated
+   // don't delete fIconBox items here, it's status will be updated
    // via TBrowser::Refresh() which should be called once all objects have
    // been removed.
    //fIconBox->RemoveItemWithData(obj);
@@ -1589,7 +1588,7 @@ void TRootBrowser::Refresh(Bool_t force)
    // Refresh the browser contents.
 
    if ( ((fBrowser && fBrowser->GetRefreshFlag()) || force)
-      && !fIconBox->WasGrouped() 
+      && !fIconBox->WasGrouped()
       && fIconBox->NumItems()<fIconBox->GetGroupSize() ) {
 
       gVirtualX->SetCursor(fId, fWaitCursor);
@@ -1607,8 +1606,8 @@ void TRootBrowser::Refresh(Bool_t force)
             BrowseObj(obj);
             fTreeLock = kFALSE;
          }
-      } 
-     
+      }
+
       sav = fListLevel;
       fListLevel = 0;
       BrowseObj(gROOT);
