@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.2 2000/10/19 10:44:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.3 2000/10/22 19:21:29 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -117,11 +117,11 @@ static char *ResolveTypes(const char *method)
       TDataType *dt = gROOT->GetType(s);
       if (s1) *s1 = s2;
       if (!first) res += ",";
-      if (dt)
+      if (dt) {
          res += dt->GetFullTypeName();
-      else
+         if (s1) res += s1;
+      } else
          res += s;
-      if (s1) res += s1;
       first = kFALSE;
    }
 
@@ -491,7 +491,7 @@ TList *TQObject::GetListOfClassSignals() const
 #ifdef R__RTTI
    qcl = dynamic_cast<TQClass*>(IsA());
 #else
-   if (IsA() == TQClass::Class())
+   if (IsA()->IsA() == TQClass::Class())
       qcl = (TQClass*) IsA();
 #endif
    return qcl ? qcl->fListOfSignals : 0; //!!
@@ -882,9 +882,8 @@ Bool_t TQObject::ConnectToClass(TQObject *sender,
    // Receiver class needs to have a dictionary.
 
    // sender should be TQObject
-   if (!sender->IsA()->InheritsFrom(TQObject::Class())) {
+   if (!sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
-   }
 
    // remove "const" and strip blanks
    char *signal_name = CompressName(signal);
@@ -947,10 +946,9 @@ Bool_t TQObject::ConnectToClass(const char *class_name,
 
    TClass *sender = gROOT->GetClass(class_name);
 
-   // sender should be TQObject
-   if (!sender || !sender->InheritsFrom(TQObject::Class())) {
+   // sender class should be TQObject (i.e. TQClass)
+   if (!sender || !sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
-   }
 
    TList *slist = ((TQClass*)sender)->fListOfSignals;
    char *signal_name = CompressName(signal);
@@ -1141,8 +1139,8 @@ Bool_t TQObject::Connect(const char *class_name,
 
    TClass *sender = gROOT->GetClass(class_name);
 
-   // sender should be TQObject
-   if (!sender->InheritsFrom(TQObject::Class()))
+   // sender class should be TQObject (i.e. TQClass)
+   if (!sender || !sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
 
    TList *slist = ((TQClass*)sender)->fListOfSignals;
@@ -1349,9 +1347,8 @@ Bool_t TQObject::Disconnect(const char *class_name,
    TClass *sender = gROOT->GetClass(class_name);
 
    // sender should be TQClass (which derives from TQObject)
-   if (sender->IsA() != TQClass::Class()) {
+   if (!sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
-   }
 
    TQClass *qcl = (TQClass*)sender;   // cast TClass to TQClass
    return Disconnect(qcl, signal, receiver, slot);
