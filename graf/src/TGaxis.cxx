@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.59 2003/09/23 14:56:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.60 2003/11/25 11:34:58 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -622,7 +622,18 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             tp.tm_min   = mi;
             tp.tm_sec   = ss;
             tp.tm_isdst = -1;
-            timeoffset = mktime(&tp);
+            timeoffset  = mktime(&tp);
+            // Add the time offset's decimal part if it is there
+            Int_t Ids   = stringtimeoffset.Index("s");
+            if (Ids >= 0) {
+               Float_t dp;
+               Int_t Lns   = stringtimeoffset.Length();
+               TString sdp = stringtimeoffset(Ids+1,Lns);
+               sscanf(sdp.Data(),"%g",&dp);
+               timeoffset += dp;
+            }
+	    // if OptionTime = 2 gmtime will be used instead of localtime
+            if (stringtimeoffset.Index("GMT")) OptionTime =2;
          } else {
             Error(where, "Time offset has not the right format");
          }
@@ -1353,7 +1364,11 @@ L110:
                if (OptionTime) {
                   timed = Wlabel + (int)(timeoffset) - rangeOffset;
                   timelabel = (time_t)((Long_t)(timed));
-                  utctis = localtime(&timelabel);
+                  if (OptionTime == 1) {
+                     utctis = localtime(&timelabel);
+                  } else {
+                     utctis = gmtime(&timelabel);
+                  }
                   TString timeformattmp;
                   if (timeformat.Length() < 220) timeformattmp = timeformat;
                   else timeformattmp = "#splitline{Format}{too long}";
@@ -1935,22 +1950,43 @@ void TGaxis::SetTimeFormat(const char *tformat)
 }
 
 //______________________________________________________________________________
-void TGaxis::SetTimeOffset(Double_t toffset)
+void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 {
    // Change the time offset
-   char sqldate[20];
+   // If option = "gmt" the time offset is treated as a GMT time.
+
+   TString opt = option;
+   opt.ToLower();
+
+   Bool_t gmt = kFALSE;
+   if (opt.Contains("gmt")) gmt = kTRUE;
+
+   char tmp[20]; 
    time_t timeoff;
    struct tm* utctis;
-     
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
-    
-   timeoff = (time_t)((Long_t)(toffset));
-   utctis = localtime(&timeoff);
 
-   strftime(sqldate,256,"%Y-%m-%d %H:%M:%S",utctis);
-   fTimeFormat.Append(sqldate);
+   timeoff = (time_t)((Long_t)(toffset));
+   if (gmt) {
+      utctis = gmtime(&timeoff); 
+   } else {
+      utctis = localtime(&timeoff); 
+   }
+
+   strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
+   fTimeFormat.Append(tmp);
+
+   // append the decimal part of the time offset
+   Double_t ds = toffset-(Int_t)toffset;
+   if(ds!= 0) {
+      sprintf(tmp,"s%g",ds);
+      fTimeFormat.Append(tmp);
+   }
+
+   // If the time is GMT, stamp fTimeFormat
+   if (gmt) fTimeFormat.Append(" GMT");
 }
 
 //______________________________________________________________________________
