@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.73 2004/03/12 21:43:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.74 2004/03/14 18:15:47 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -603,26 +603,37 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
     compt = compt2 = compt3 = compt4 = 0;puiss10=0;puiss10bis = 0;
     inString = false;
     j = lchain;
+    Bool_t isdecimal = 1; // indicates whether the left part is decimal.
 
     for (i=1;i<=lchain; i++) {
 
        puiss10=puiss10bis=0;
        if (i>2) {
           t = chaine[i-3];
-          if (strchr("0123456789",t) && chaine[i-2] == 'e' ) puiss10 = 1;
-          else if (i>3) {
-             t = chaine[i-4];
-             if (strchr("0123456789",t) && chaine(i-3,2) == ".e" ) puiss10 = 1;
+          isdecimal = isdecimal && (strchr("0123456789.",t)!=0);
+          if (isdecimal) {
+             if ( chaine[i-2] == 'e' ) puiss10 = 1;
+          } else if ( strchr("+-/[]()&|><=!*/%^\\",t) ) {
+             isdecimal = 1; // reset after delimiter
           }
        }
        if (j>2) {
-          t = chaine[j-3];
-          if (strchr("0123456789",t) && chaine[j-2] == 'e' ) puiss10bis = 1;
-          else if (j>3) {
-             t = chaine[j-4];
-             if (strchr("0123456789",t) && chaine(j-3,2) == ".e" ) puiss10bis = 1;
+          if (chaine[j-2] == 'e') {
+             Bool_t isrightdecimal = 1;
+             int k;
+             for(k=j-3; k>=0 && isrightdecimal; --k) {
+                t = chaine[k];
+                isrightdecimal = isrightdecimal && (strchr("0123456789.",t)!=0);
+                if (!isrightdecimal) {
+                   if (strchr("+-/[]()&|><=!*/%^\\",t)!=0) {
+                      puiss10bis = 1;
+                   }
+                }
+             }
+             if (k<0 && isrightdecimal)  puiss10bis = 1;
           }
        }
+
        if (chaine(i-1,1) == "\"") inString = !inString;
        if (inString) continue;
        if (chaine(i-1,1) == "[") compt2++;
@@ -660,6 +671,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
              puiss10=0; divi=j;
           }
        if (chaine(j-1,1)=="^" && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
+      
        j--;
     }
 
