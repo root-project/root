@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.31 2003/07/16 06:31:43 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.32 2003/07/29 13:52:36 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -44,13 +44,12 @@
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML
-/*
-</pre>
+//BEGIN_HTML <!--
+/* -->
 <P>
 <H2><A NAME=H2Basic-concepts-of-MINUIT.html>Basic concepts of MINUIT</A></H2>
 <P>
-The <A HREF=http://wwwinfo.cern.ch/asdoc/minuit/minmain.html> MINUIT</A> package acts on a multiparameter Fortran function to which one
+The <A HREF="http://wwwinfo.cern.ch/asdoc/minuit/minmain.html"> MINUIT</A> package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
 when an Histogram.Fit command is invoked.
@@ -268,9 +267,8 @@ very quickly and lose accuracy.
 <P>
 The function may have unphysical local minima, especially at infinity in
 some variables.
-<pre>
-*/
-//END_HTML
+<!--*/
+// -->END_HTML
 
 #include <stdlib.h>
 #include <stdio.h>
