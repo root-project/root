@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.108 2002/01/18 11:29:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.109 2002/01/19 11:04:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3050,6 +3050,13 @@ void TTree::SetDirectory(TDirectory *dir)
    if (fDirectory) fDirectory->GetList()->Remove(this);
    fDirectory = dir;
    if (fDirectory) fDirectory->GetList()->Add(this);
+   TFile *file = 0;
+   if (fDirectory) file = fDirectory->GetFile();
+   TBranch * b;
+   TIter next(GetListOfBranches());
+   while((b = (TBranch*)next())){
+      b->SetFile(file);
+   }
 }
 
 //_______________________________________________________________________
