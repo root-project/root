@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.27 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.28 2004/12/07 14:36:01 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -635,9 +635,9 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
 
             if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
                f->Activate(kTRUE);
+               fClient->NeedRedraw(this);
                fLastActive = f;
                fLastActiveEl = el;
-               fClient->NeedRedraw(this);
             } else {
                f->Activate(kFALSE);
             }
@@ -680,6 +680,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             if (((x > xf0 && x < xff) && (y > yf0 &&  y < yff))) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
+                  fClient->NeedRedraw(this);
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                               f->EntryId(), 0);
                }
@@ -698,6 +699,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
          if (((x > xf0) && (x < xff) && (y > yf0) &&  (y < yff)))  {
             f->Activate(kTRUE);
+            fClient->NeedRedraw(this);
             fLastActive = f;
          } else {
             f->Activate(kFALSE);
