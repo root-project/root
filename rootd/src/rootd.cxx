@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.73 2003/12/10 15:52:20 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.74 2003/12/10 18:54:59 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -595,11 +595,11 @@ again:
 //______________________________________________________________________________
 int RootdCheckTab(int mode)
 {
-   // Checks gRootdTab file to see if file can be opened. If mode=1 then
+   // Checks gRootdTab file to see if file can be opened. If mode = 1 then
    // check if file can safely be opened in write mode, i.e. see if file
-   // is not already opened in either read or write mode. If mode=0 then
+   // is not already opened in either read or write mode. If mode = 0 then
    // check if file can safely be opened in read mode, i.e. see if file
-   // is not already opened in write mode. If mode is -1 check write mode
+   // is not already opened in write mode. If mode = -1 check write mode
    // like 1 but do not update rootdtab file. Returns 1 if file can be
    // opened safely, otherwise 0.
    //
@@ -733,7 +733,7 @@ again:
 }
 
 //______________________________________________________________________________
-void RootdCloseTab(int force=0)
+void RootdCloseTab(int force = 0)
 {
    // Removes from the gRootdTab file the reference to gFile for the
    // current rootd. If force = 1, then remove all references for gFile
@@ -1257,14 +1257,19 @@ void RootdOpen(const char *msg)
 
    NetSend(gWritable, kROOTD_OPEN);
 
+   struct stat sbuf;
+   fstat(gFd, &sbuf);
+   unsigned long ino = (unsigned long) sbuf.st_ino;
+
    if (gDebug > 0)
       ErrorInfo("RootdOpen: file %s opened in mode %s", gFile, gOption);
    else {
       if (gAnon)
-         ErrorInfo("RootdOpen: file %s (%s) opened by %s/%s", gFile, gOption,
-                   gUser, gPasswd);
+         ErrorInfo("RootdOpen: file %s (inode=%lu,%s) opened by %s/%s",
+                   gFile, ino, gOption, gUser, gPasswd);
       else
-         ErrorInfo("RootdOpen: file %s (%s) opened by %s", gFile, gOption, gUser);
+         ErrorInfo("RootdOpen: file %s (inode=%lu,%s) opened by %s",
+                   gFile, ino, gOption, gUser);
    }
 }
 
