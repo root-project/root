@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.6 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.7 2001/06/29 17:28:07 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #endif
 
 
+class TVectorD;
 class TMatrixD;
 class TElementActionD;
 class TElementPosActionD;
@@ -62,18 +63,15 @@ class TMatrixDRow;
 class TMatrixDColumn;
 class TMatrixDDiag;
 
-class TVectorD;
 TVectorD &operator+=(TVectorD &target, const TVectorD &source);
 TVectorD &operator-=(TVectorD &target, const TVectorD &source);
-Double_t operator*(const TVectorD &v1, const TVectorD &v2);
+Double_t  operator*(const TVectorD &v1, const TVectorD &v2);
 TVectorD &Add(TVectorD &target, Double_t scalar, const TVectorD &source);
 TVectorD &ElementMult(TVectorD &target, const TVectorD &source);
 TVectorD &ElementDiv(TVectorD &target, const TVectorD &source);
-
-Bool_t operator==(const TVectorD &v1, const TVectorD &v2);
-void Compare(const TVectorD &im1, const TVectorD &im2);
-Bool_t AreCompatible(const TVectorD &v1, const TVectorD &v2);
-
+Bool_t    operator==(const TVectorD &v1, const TVectorD &v2);
+void      Compare(const TVectorD &im1, const TVectorD &im2);
+Bool_t    AreCompatible(const TVectorD &v1, const TVectorD &v2);
 
 
 class TVectorD : public TObject {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.9 2001/04/11 11:10:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.10 2001/06/29 17:28:06 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -57,6 +57,7 @@ class ostream;
 
 class TRegexp;
 class TString;
+class TSubString;
 
 TString operator+(const TString& s1, const TString& s2);
 TString operator+(const TString& s,  const char *cs);
@@ -69,6 +70,10 @@ TString operator+(Long_t i, const TString& s);
 TString operator+(ULong_t i, const TString& s);
 Bool_t  operator==(const TString& s1, const TString& s2);
 Bool_t  operator==(const TString& s1, const char *s2);
+Bool_t  operator==(const TSubString& s1, const TSubString& s2);
+Bool_t  operator==(const TSubString& s1, const TString& s2);
+Bool_t  operator==(const TSubString& s1, const char *s2);
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -121,6 +126,10 @@ class TSubString {
 friend class TStringLong;
 friend class TString;
 
+friend Bool_t operator==(const TSubString& s1, const TSubString& s2);
+friend Bool_t operator==(const TSubString& s1, const TString& s2);
+friend Bool_t operator==(const TSubString& s1, const char *s2);
+
 private:
    TString      *fStr;           // Referenced string
    Ssiz_t        fBegin;         // Index of starting character
@@ -128,10 +137,6 @@ private:
 
    // NB: the only constructor is private
    TSubString(const TString& s, Ssiz_t start, Ssiz_t len);
-
-   friend Bool_t operator==(const TSubString& s1, const TSubString& s2);
-   friend Bool_t operator==(const TSubString& s1, const TString& s2);
-   friend Bool_t operator==(const TSubString& s1, const char *s2);
 
 protected:
    void          SubStringError(Ssiz_t, Ssiz_t, Ssiz_t) const;

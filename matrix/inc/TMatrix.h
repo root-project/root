@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.6 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.7 2001/06/29 17:28:06 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -48,22 +48,21 @@
 #include "TVector.h"
 #endif
 
+class TMatrix;
 class TLazyMatrix;
 class TMatrixRow;
 class TMatrixColumn;
 class TMatrixDiag;
 class TMatrixPivoting;
 
-class TMatrix;
 TMatrix &operator+=(TMatrix &target, const TMatrix &source);
 TMatrix &operator-=(TMatrix &target, const TMatrix &source);
 TMatrix &Add(TMatrix &target, Double_t scalar, const TMatrix &source);
 TMatrix &ElementMult(TMatrix &target, const TMatrix &source);
 TMatrix &ElementDiv(TMatrix &target, const TMatrix &source);
-
-Bool_t operator==(const TMatrix &im1, const TMatrix &im2);
-void Compare(const TMatrix &im1, const TMatrix &im2);
-Bool_t AreCompatible(const TMatrix &im1, const TMatrix &im2);
+Bool_t   operator==(const TMatrix &im1, const TMatrix &im2);
+void     Compare(const TMatrix &im1, const TMatrix &im2);
+Bool_t   AreCompatible(const TMatrix &im1, const TMatrix &im2);
 Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
 
