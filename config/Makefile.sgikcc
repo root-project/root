@@ -32,7 +32,7 @@ else
 ABI           = -32 -mips2
 endif
 
-ifneq ($(OSTHREADLIB),)
+ifneq ($(ENABLETHREAD),yes)
 CXXOPT        += --thread_safe
 endif
 
@@ -53,7 +53,7 @@ CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq ($(EXCEPTIONS),yes)
 CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
 endif
 

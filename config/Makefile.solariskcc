@@ -20,7 +20,7 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifneq ($(OSTHREADLIB),)
+ifneq ($(ENABLETHREAD),yes)
 CXXOPT        += --thread_safe
 endif
 
@@ -39,7 +39,7 @@ CINTCFLAGS    = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \
                 -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
 
-ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+ifeq ($(EXCEPTIONS),yes)
 CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
 endif
 

@@ -1350,6 +1350,7 @@ sed -e "s|@architecture@|$arch|"            \
     -e "s|@xpmlibdir@|$xpmlibdir|"          \
     -e "s|@xpmlib@|$xpmlib|"                \
     -e "s|@enable_star@|$enable_star|"      \
+    -e "s|@enable_thread@|$enable_thread|"  \
     -e "s|@threadlibdir@|$threadlibdir|"    \
     -e "s|@threadlib@|$threadlib|"          \
     -e "s|@ttfincdir@|$ttfincdir|"          \
