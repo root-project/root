@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.172 2005/03/22 19:53:59 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.173 2005/03/24 18:37:53 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1684,10 +1684,24 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
          } else if (br->GetType()==41) {
             // sub branch of a Collection
 
+            TBranchElement *count = br->GetBranchCount();
+            TFormLeafInfo* collectioninfo;
+            if ( count->GetID() >= 0 ) {
+               TStreamerElement *collectionElement = 
+                  (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+               TClass *collectionCl = collectionElement->GetClassPointer();
+
+               collectioninfo = 
+                  new TFormLeafInfoCollection(collectionCl, 0, collectionElement, kTRUE);
+            } else {
+               TClass *collectionCl = gROOT->GetClass(count->GetClassName());
+               collectioninfo = 
+                  new TFormLeafInfoCollection(collectionCl, 0, collectionCl, kTRUE);
+            }
+
             TStreamerInfo *info = br->GetInfo();
             TClass* cl = info->GetClass();
             TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
-            TFormLeafInfo* collectioninfo = new TFormLeafInfoCollection(cl, 0, element, kTRUE);
             Int_t offset;
             info->GetStreamerElement(element->GetName(),offset);
             collectioninfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
