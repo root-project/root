@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.19 2002/10/25 07:36:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.20 2002/10/25 11:19:02 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -45,6 +45,9 @@
 #include "TClass.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilHist.h"
+
+Double_t TVectorD::fgErr;
+
 
 ClassImp(TVectorD)
 
@@ -944,140 +947,3 @@ void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2)
             "at (%d) element, with values %g and %g",
             imax, v1(imax), v2(imax));
 }
-
-
-
-#if defined(R__MACOSX)
-
-//______________________________________________________________________________
-//  These functions should be inline
-//______________________________________________________________________________
-
-TVectorD::TVectorD(Int_t n)
-{
-   Allocate(n);
-}
-
-TVectorD::TVectorD(Int_t lwb, Int_t upb)
-{
-   Allocate(upb-lwb+1, lwb);
-}
-
-Bool_t TVectorD::IsValid() const
-{
-   if (fNrows == -1)
-      return kFALSE;
-   return kTRUE;
-}
-
-void TVectorD::SetElements(const Double_t *elements)
-{
-  if (!IsValid()) {
-    Error("SetElements", "vector is not initialized");
-    return;
-  }
-  memcpy(fElements,elements,fNrows*sizeof(Double_t));
-}
-
-TVectorD::TVectorD(Int_t n, const Double_t *elements)
-{
-   Allocate(n);
-   SetElements(elements);
-}
-
-TVectorD::TVectorD(Int_t lwb, Int_t upb, const Double_t *elements)
-{
-   Allocate(upb-lwb+1, lwb);
-   SetElements(elements);
-}
-
-Bool_t AreCompatible(const TVectorD &v1, const TVectorD &v2)
-{
-   if (!v1.IsValid()) {
-      Error("AreCompatible", "vector 1 not initialized");
-      return kFALSE;
-   }
-   if (!v2.IsValid()) {
-      Error("AreCompatible", "vector 2 not initialized");
-      return kFALSE;
-   }
-
-   if (v1.fNrows != v2.fNrows || v1.fRowLwb != v2.fRowLwb)
-      return kFALSE;
-
-   return kTRUE;
-}
-
-TVectorD &TVectorD::operator=(const TVectorD &source)
-{
-   if (this != &source && AreCompatible(*this, source)) {
-      TObject::operator=(source);
-      memcpy(fElements, source.fElements, fNrows*sizeof(Double_t));
-   }
-   return *this;
-}
-
-TVectorD::TVectorD(const TVectorD &another) : TObject(another)
-{
-   if (another.IsValid()) {
-      Allocate(another.GetUpb()-another.GetLwb()+1, another.GetLwb());
-      *this = another;
-   } else
-      Error("TVectorD(const TVectorD&)", "other vector is not valid");
-}
-
-void TVectorD::ResizeTo(Int_t n)
-{
-   TVectorD::ResizeTo(0,n-1);
-}
-
-void TVectorD::ResizeTo(const TVectorD &v)
-{
-   TVectorD::ResizeTo(v.GetLwb(), v.GetUpb());
-}
-
-const Double_t &TVectorD::operator()(Int_t ind) const
-{
-   static Double_t err;
-   err = 0.0;
-
-   if (!IsValid()) {
-      Error("operator()", "vector is not initialized");
-      return err;
-   }
-
-   Int_t aind = ind - fRowLwb;
-   if (aind >= fNrows || aind < 0) {
-      Error("operator()", "requested element %d is out of vector boundaries [%d,%d]",
-            ind, fRowLwb, fNrows+fRowLwb-1);
-      return err;
-   }
-
-   return fElements[aind];
-}
-
-Double_t &TVectorD::operator()(Int_t index)
-{
-   return (Double_t&)((*(const TVectorD *)this)(index));
-}
-
-inline const Double_t &TVectorD::operator[](Int_t i) const
-{
-   return (Double_t&)((*(const TVectorD *)this)(i));
-}
-
-inline Double_t &TVectorD::operator[](Int_t i)
-{
-   return (Double_t&)((*(const TVectorD *)this)(i));
-}
-
-TVectorD &TVectorD::Zero()
-{
-   if (!IsValid())
-      Error("Zero", "vector not initialized");
-   else
-      memset(fElements, 0, fNrows*sizeof(Double_t));
-   return *this;
-}
-
-#endif

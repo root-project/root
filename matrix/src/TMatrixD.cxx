@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.30 2002/10/25 06:29:03 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.31 2002/10/25 11:19:02 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -159,6 +159,9 @@
 #include "TClass.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilHist.h"
+
+Double_t TMatrixD::fgErr;
+
 
 ClassImp(TMatrixD)
 
@@ -860,7 +863,7 @@ Double_t E2Norm(const TMatrixD &m1, const TMatrixD &m2)
 //______________________________________________________________________________
 TMatrixD &TMatrixD::NormByDiag(const TVectorD &v, Option_t *option)
 {
-   // b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j))) 
+   // b(i,j) = a(i,j)/sqrt(abs*(v(i)*v(j)))
 
    if (!IsValid()) {
       Error("NormByDiag", "matrix not initialized");
@@ -2530,243 +2533,3 @@ void VerifyMatrixIdentity(const TMatrixD &m1, const TMatrixD &m2)
             "at (%d,%d) element, with values %g and %g",
             imax,jmax,m1(imax,jmax),m2(imax,jmax));
 }
-
-
-#if defined(R__MACOSX)
-
-//______________________________________________________________________________
-//  These functions should be inline
-//______________________________________________________________________________
-
-TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols)
-{
-   Allocate(no_rows, no_cols);
-}
-
-TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
-{
-   Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
-}
-
-Bool_t TMatrixD::IsValid() const
-{
-   if (fNrows == -1)
-      return kFALSE;
-   return kTRUE;
-}
-
-void TMatrixD::SetElements(const Double_t *elements, Option_t *option)
-{
-  if (!IsValid()) {
-    Error("SetElements", "matrix is not initialized");
-    return;
-  }
-
-  TString opt = option;
-  opt.ToUpper();
-
-  if (opt.Contains("F"))
-    memcpy(fElements,elements,fNelems*sizeof(Double_t));
-  else
-  {
-    for (Int_t irow = 0; irow < fNrows; irow++)
-    {
-      for (Int_t icol = 0; icol < fNcols; icol++)
-        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
-    }
-  }
-}
-
-TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols,
-                          const Double_t *elements, Option_t *option)
-{
-  // option="F": array elements contains the matrix stored column-wise
-  //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
-  // else        it is supposed that array elements are stored row-wise
-  //             a[i,j] = elements[i*no_cols+j]
-
-  Allocate(no_rows, no_cols);
-  SetElements(elements,option);
-}
-
-TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
-                          const Double_t *elements, Option_t *option)
-{
-  Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
-  SetElements(elements,option);
-}
-
-void TMatrixD::GetElements(Double_t *elements, Option_t *option) const
-{
-  if (!IsValid()) {
-    Error("GetElements", "matrix is not initialized");
-    return;
-  }
-
-  TString opt = option;
-  opt.ToUpper();
-
-  if (opt.Contains("F"))
-    memcpy(elements,fElements,fNelems*sizeof(Double_t));
-  else
-  {
-    for (Int_t irow = 0; irow < fNrows; irow++)
-    {
-      for (Int_t icol = 0; icol < fNcols; icol++)
-        elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
-    }
-  }
-}
-
-TMatrixD::TMatrixD(const TLazyMatrixD &lazy_constructor)
-{
-   Allocate(lazy_constructor.fRowUpb-lazy_constructor.fRowLwb+1,
-            lazy_constructor.fColUpb-lazy_constructor.fColLwb+1,
-            lazy_constructor.fRowLwb, lazy_constructor.fColLwb);
-  lazy_constructor.FillIn(*this);
-}
-
-TMatrixD &TMatrixD::operator=(const TLazyMatrixD &lazy_constructor)
-{
-   if (!IsValid()) {
-      Error("operator=(const TLazyMatrixD&)", "matrix is not initialized");
-      return *this;
-   }
-   if (lazy_constructor.fRowUpb != GetRowUpb() ||
-       lazy_constructor.fColUpb != GetColUpb() ||
-       lazy_constructor.fRowLwb != GetRowLwb() ||
-       lazy_constructor.fColLwb != GetColLwb()) {
-      Error("operator=(const TLazyMatrixD&)", "matrix is incompatible with "
-            "the assigned Lazy matrix");
-      return *this;
-   }
-
-   lazy_constructor.FillIn(*this);
-   return *this;
-}
-
-Bool_t AreCompatible(const TMatrixD &im1, const TMatrixD &im2)
-{
-   if (!im1.IsValid()) {
-      Error("AreCompatible", "matrix 1 not initialized");
-      return kFALSE;
-   }
-   if (!im2.IsValid()) {
-      Error("AreCompatible", "matrix 2 not initialized");
-      return kFALSE;
-   }
-
-   if (im1.fNrows  != im2.fNrows  || im1.fNcols  != im2.fNcols ||
-       im1.fRowLwb != im2.fRowLwb || im1.fColLwb != im2.fColLwb)
-      return kFALSE;
-
-   return kTRUE;
-}
-
-TMatrixD &TMatrixD::operator=(const TMatrixD &source)
-{
-   if (this != &source && AreCompatible(*this, source)) {
-      TObject::operator=(source);
-      memcpy(fElements, source.fElements, fNelems*sizeof(Double_t));
-   }
-   return *this;
-}
-
-TMatrixD::TMatrixD(const TMatrixD &another) : TObject(another)
-{
-   if (another.IsValid()) {
-      Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);
-      *this = another;
-   } else
-      Error("TMatrixD(const TMatrixD&)", "other matrix is not valid");
-}
-
-void TMatrixD::ResizeTo(const TMatrixD &m)
-{
-   ResizeTo(m.GetRowLwb(), m.GetRowUpb(), m.GetColLwb(), m.GetColUpb());
-}
-
-const Double_t &TMatrixD::operator()(int rown, int coln) const
-{
-   static Double_t err;
-   err = 0.0;
-
-   if (!IsValid()) {
-      Error("operator()", "matrix is not initialized");
-      return err;
-   }
-
-   Int_t arown = rown - fRowLwb;          // Effective indices
-   Int_t acoln = coln - fColLwb;
-
-   if (arown >= fNrows || arown < 0) {
-      Error("operator()", "row index %d is out of matrix boundaries [%d,%d]",
-            rown, fRowLwb, fNrows+fRowLwb-1);
-      return err;
-   }
-   if (acoln >= fNcols || acoln < 0) {
-      Error("operator()", "col index %d is out of matrix boundaries [%d,%d]",
-            coln, fColLwb, fNcols+fColLwb-1);
-      return err;
-   }
-
-   return (fIndex[acoln])[arown];
-}
-
-Double_t &TMatrixD::operator()(Int_t rown, Int_t coln)
-{
-   return (Double_t&)((*(const TMatrixD *)this)(rown,coln));
-}
-
-const TMatrixDRow TMatrixD::operator[](int rown) const
-{
-   return TMatrixDRow(*this,rown);
-}
-
-TMatrixDRow TMatrixD::operator[](int rown)
-{
-   return TMatrixDRow(*this,rown);
-}
-
-TMatrixD &TMatrixD::Zero()
-{
-   if (!IsValid())
-      Error("Zero", "matrix not initialized");
-   else
-      memset(fElements, 0, fNelems*sizeof(Double_t));
-   return *this;
-}
-
-TMatrixD &TMatrixD::Apply(const TElementActionD &action)
-{
-   if (!IsValid())
-      Error("Apply(TElementActionD&)", "matrix not initialized");
-   else
-      for (Double_t *ep = fElements; ep < fElements+fNelems; ep++)
-         action.Operation(*ep);
-   return *this;
-}
-
-TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
-{
-   // Apply action to each element of the matrix. In action the location
-   // of the current element is known. The matrix is traversed in the
-   // natural (that is, column by column) order.
-
-   if (!IsValid()) {
-      Error("Apply(TElementPosActionD&)", "matrix not initialized");
-      return *this;
-   }
-
-   Double_t *ep = fElements;
-   for (action.fJ = fColLwb; action.fJ < fColLwb+fNcols; action.fJ++)
-      for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
-         action.Operation(*ep++);
-
-   Assert(ep == fElements+fNelems);
-
-   return *this;
-}
-
-
-#endif

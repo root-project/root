@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.19 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.20 2002/10/25 11:19:02 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -88,6 +88,8 @@ protected:
    Int_t      fColLwb;           // lower bound of the col index
    Double_t  *fElements;         //[fNelems] elements themselves
    Double_t **fIndex;            //! index[i] = &matrix(0,i) (col index)
+
+   static Double_t fgErr;        // used to return as reference in case of error
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
@@ -227,10 +229,9 @@ void VerifyElementValue(const TMatrixD &m, Double_t val);
 void VerifyMatrixIdentity(const TMatrixD &m1, const TMatrixD &m2);
 
 
-#if !defined(R__MACOSX)
 inline Bool_t TMatrixD::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
-#endif
+
 
 #ifndef ROOT_TMatrixDUtils
 #include "TMatrixDUtils.h"
@@ -238,8 +239,6 @@ inline Bool_t TMatrixD::IsValid() const
 
 
 //----- inlines ----------------------------------------------------------------
-
-#if !defined(R__MACOSX)
 
 #ifndef __CINT__
 
@@ -388,12 +387,11 @@ inline void TMatrixD::ResizeTo(const TMatrixD &m)
 
 inline const Double_t &TMatrixD::operator()(int rown, int coln) const
 {
-   static Double_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    Int_t arown = rown - fRowLwb;          // Effective indices
@@ -402,12 +400,12 @@ inline const Double_t &TMatrixD::operator()(int rown, int coln) const
    if (arown >= fNrows || arown < 0) {
       Error("operator()", "row index %d is out of matrix boundaries [%d,%d]",
             rown, fRowLwb, fNrows+fRowLwb-1);
-      return err;
+      return fgErr;
    }
    if (acoln >= fNcols || acoln < 0) {
       Error("operator()", "col index %d is out of matrix boundaries [%d,%d]",
             coln, fColLwb, fNcols+fColLwb-1);
-      return err;
+      return fgErr;
    }
 
    return (fIndex[acoln])[arown];
@@ -467,8 +465,6 @@ inline TMatrixD &TMatrixD::Apply(const TElementPosActionD &action)
 
    return *this;
 }
-
-#endif
 
 #endif
 

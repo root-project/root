@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.14 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.15 2002/10/25 11:19:02 rdm Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -159,6 +159,8 @@ private:
    Int_t           fInc;     // if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
    Real_t         *fPtr;     //! pointer to the a[row,0]
 
+   static Real_t   fgErr;    // used to return as reference in case of error
+
    TMatrixRow() { fMatrix = 0; fInc = 0; fPtr = 0; }
 
 public:
@@ -196,9 +198,11 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;         //! the matrix I am a column of
-   Int_t           fColInd;         // effective column index
-   Real_t         *fPtr;            //! pointer to the a[0,i] column
+   const TMatrix  *fMatrix;    //! the matrix I am a column of
+   Int_t           fColInd;    // effective column index
+   Real_t         *fPtr;       //! pointer to the a[0,i] column
+
+   static Real_t   fgErr;      // used to return as reference in case of error
 
    TMatrixColumn() { fMatrix = 0; fPtr = 0; }
 
@@ -242,6 +246,8 @@ private:
    Int_t           fNdiag;   // number of diag elems, min(nrows,ncols)
    Real_t         *fPtr;     //! pointer to the a[0,0]
 
+   static Real_t   fgErr;    // used to return as reference in case of error
+
    TMatrixDiag() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
 
 public:
@@ -282,6 +288,8 @@ friend class TVector;
 private:
    const TMatrix  *fMatrix;  //! the matrix I am the diagonal of
    Real_t         *fPtr;     //! pointer to the a[0,0]
+
+   static Real_t   fgErr;    // used to return as reference in case of error
 
    TMatrixFlat() { fMatrix = 0; fPtr = 0; }
 
@@ -347,8 +355,6 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__MACOSX)
-
 #ifndef __CINT__
 
 inline TMatrixRow::TMatrixRow(const TMatrix &matrix, Int_t row)
@@ -383,12 +389,11 @@ inline const Real_t &TMatrixRow::operator()(Int_t i) const
 {
    // Get hold of the i-th row's element.
 
-   static Real_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!fMatrix->IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    Int_t acoln = i-fMatrix->fColLwb;           // Effective index
@@ -396,7 +401,7 @@ inline const Real_t &TMatrixRow::operator()(Int_t i) const
    if (acoln >= fMatrix->fNcols || acoln < 0) {
       Error("operator()", "TMatrixRow index %d is out of row boundaries [%d,%d]",
             i, fMatrix->fColLwb, fMatrix->fNcols+fMatrix->fColLwb-1);
-      return err;
+      return fgErr;
    }
 
    return fMatrix->fIndex[acoln][fPtr-fMatrix->fElements];
@@ -449,12 +454,11 @@ inline const Real_t &TMatrixColumn::operator()(Int_t i) const
 {
    // Access the i-th element of the column
 
-   static Real_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!fMatrix->IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    Int_t arown = i-fMatrix->fRowLwb;           // Effective indices
@@ -462,7 +466,7 @@ inline const Real_t &TMatrixColumn::operator()(Int_t i) const
    if (arown >= fMatrix->fNrows || arown < 0) {
       Error("operator()", "TMatrixColumn index %d is out of column boundaries [%d,%d]",
             i, fMatrix->fRowLwb, fMatrix->fNrows+fMatrix->fRowLwb-1);
-      return err;
+      return fgErr;
    }
 
    return fPtr[arown];
@@ -510,18 +514,17 @@ inline const Real_t &TMatrixDiag::operator()(Int_t i) const
    // Get hold of the i-th diag element (indexing always starts at 0,
    // regardless of matrix' col_lwb and row_lwb)
 
-   static Real_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!fMatrix->IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    if (i >= fNdiag || i < 0) {
       Error("TMatrixDiag", "TMatrixDiag index %d is out of diag boundaries [0,%d]",
             i, fNdiag-1);
-      return err;
+      return fgErr;
    }
 
    return fMatrix->fIndex[i][i];
@@ -567,18 +570,17 @@ inline const Real_t &TMatrixFlat::operator()(Int_t i) const
    // Get hold of the i-th element (indexing always starts at 0,
    // regardless of matrix' col_lwb and row_lwb)
 
-   static Real_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!fMatrix->IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    if (i >= fMatrix->fNelems || i < 0) {
       Error("TMatrixFlat", "TMatrixFlat index %d is out of boundaries [0,%d]",
             i, fMatrix->fNelems-1);
-      return err;
+      return fgErr;
    }
 
    return fMatrix->fElements[i];
@@ -598,8 +600,6 @@ inline Real_t &TMatrixFlat::operator[](Int_t i)
 {
    return (Real_t&)((*(const TMatrixFlat *)this)(i));
 }
-
-#endif
 
 #endif
 

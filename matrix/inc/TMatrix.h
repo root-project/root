@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.19 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.20 2002/10/25 11:19:01 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -88,6 +88,8 @@ protected:
    Int_t     fColLwb;           // lower bound of the col index
    Real_t   *fElements;	        //[fNelems] elements themselves
    Real_t  **fIndex;            //! index[i] = &matrix(0,i) (col index)
+
+   static Real_t fgErr;         // used to return as reference in case of error
 
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
@@ -227,10 +229,9 @@ void VerifyElementValue(const TMatrix &m, Real_t val);
 void VerifyMatrixIdentity(const TMatrix &m1, const TMatrix &m2);
 
 
-#if !defined(R__MACOSX)
 inline Bool_t TMatrix::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
-#endif
+
 
 #ifndef ROOT_TMatrixUtils
 #include "TMatrixUtils.h"
@@ -238,8 +239,6 @@ inline Bool_t TMatrix::IsValid() const
 
 
 //----- inlines ----------------------------------------------------------------
-
-#if !defined(R__MACOSX)
 
 #ifndef __CINT__
 
@@ -388,12 +387,11 @@ inline void TMatrix::ResizeTo(const TMatrix &m)
 
 inline const Real_t &TMatrix::operator()(int rown, int coln) const
 {
-   static Real_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!IsValid()) {
       Error("operator()", "matrix is not initialized");
-      return err;
+      return fgErr;
    }
 
    Int_t arown = rown - fRowLwb;          // Effective indices
@@ -402,12 +400,12 @@ inline const Real_t &TMatrix::operator()(int rown, int coln) const
    if (arown >= fNrows || arown < 0) {
       Error("operator()", "row index %d is out of matrix boundaries [%d,%d]",
             rown, fRowLwb, fNrows+fRowLwb-1);
-      return err;
+      return fgErr;
    }
    if (acoln >= fNcols || acoln < 0) {
       Error("operator()", "col index %d is out of matrix boundaries [%d,%d]",
             coln, fColLwb, fNcols+fColLwb-1);
-      return err;
+      return fgErr;
    }
 
    return (fIndex[acoln])[arown];
@@ -467,8 +465,6 @@ inline TMatrix &TMatrix::Apply(const TElementPosAction &action)
 
    return *this;
 }
-
-#endif
 
 #endif
 

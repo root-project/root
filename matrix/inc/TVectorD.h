@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.18 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.19 2002/10/25 11:19:02 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -93,6 +93,8 @@ protected:
    Int_t     fNrows;            // number of rows
    Int_t     fRowLwb;           // lower bound of the row index
    Double_t *fElements;         //[fNrows] elements themselves
+
+   static Double_t fgErr;       // used to return as reference in case of error
 
    void Allocate(Int_t nrows, Int_t row_lwb = 0);
    void Invalidate() { fNrows = -1; fElements = 0; }
@@ -190,8 +192,6 @@ void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2);
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__MACOSX)
-
 #ifndef __CINT__
 
 inline TVectorD::TVectorD(Int_t n)
@@ -281,19 +281,18 @@ inline void TVectorD::ResizeTo(const TVectorD &v)
 
 inline const Double_t &TVectorD::operator()(Int_t ind) const
 {
-   static Double_t err;
-   err = 0.0;
+   fgErr = 0.0;
 
    if (!IsValid()) {
       Error("operator()", "vector is not initialized");
-      return err;
+      return fgErr;
    }
 
    Int_t aind = ind - fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()", "requested element %d is out of vector boundaries [%d,%d]",
             ind, fRowLwb, fNrows+fRowLwb-1);
-      return err;
+      return fgErr;
    }
 
    return fElements[aind];
@@ -322,8 +321,6 @@ inline TVectorD &TVectorD::Zero()
       memset(fElements, 0, fNrows*sizeof(Double_t));
    return *this;
 }
-
-#endif
 
 #endif
 
