@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.34 2004/09/14 15:56:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.35 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -297,7 +297,7 @@ Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
    if (iact<3 && safe) {
@@ -318,7 +318,7 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       point_new[1] = point[1]+sstep*dir[1];
       point_new[2] = point[2]+sstep*dir[2];
       if (!Contains(point_new)) return 0.;
-      return (DistToOut(point_new,dir,iact,step,safe)+sstep);
+      return (DistFromInside(point_new,dir,iact,step,safe)+sstep);
    }   
    // determine if the current segment is a tube or a cone
    Bool_t intub = kTRUE;
@@ -342,17 +342,17 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t cm = TMath::Cos(phim*TMath::DegToRad());
    Double_t sm = TMath::Sin(phim*TMath::DegToRad());
    if (intub) {
-      if (inphi) snxt=TGeoTubeSeg::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm); 
-      else snxt=TGeoTube::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
+      if (inphi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm); 
+      else snxt=TGeoTube::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
    } else {
-      if (inphi) snxt=TGeoConeSeg::DistToOutS(point_new, dir, dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1], phi1,phi2);
-      else snxt=TGeoCone::DistToOutS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
+      if (inphi) snxt=TGeoConeSeg::DistFromInsideS(point_new, dir, dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1], phi1,phi2);
+      else snxt=TGeoCone::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
    }                              
 
    for (Int_t i=0; i<3; i++) point_new[i]=point[i]+(snxt+1E-6)*dir[i];
    if (!Contains(&point_new[0])) return snxt;
    
-   snxt += DistToOut(&point_new[0], dir, 3) + 1E-6;
+   snxt += DistFromInside(&point_new[0], dir, 3) + 1E-6;
    return snxt;
 }
 
@@ -386,11 +386,11 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t phi2 = phi1+fDphi;
 
    if ((rmin1==rmin2) && (rmax1==rmax2)) {
-      if (!is_seg) snxt=TGeoTube::DistToInS(local, dir, rmin1, rmax1, dz);
-      else snxt=TGeoTubeSeg::DistToInS(local, dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
+      if (!is_seg) snxt=TGeoTube::DistFromOutsideS(local, dir, rmin1, rmax1, dz);
+      else snxt=TGeoTubeSeg::DistFromOutsideS(local, dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
    } else {  
-      if (!is_seg) snxt=TGeoCone::DistToInS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
-      else snxt=TGeoConeSeg::DistToInS(local,dir,rmin1, rmax1, rmin2, rmax2, dz, phi1, phi2);
+      if (!is_seg) snxt=TGeoCone::DistFromOutsideS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
+      else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,rmin1, rmax1, rmin2, rmax2, dz, phi1, phi2);
    }
    if (snxt<1E20) return snxt;
    // check next segment
@@ -402,7 +402,7 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
 }      
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPcon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    if ((iact<3) && safe) {

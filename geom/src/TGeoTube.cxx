@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.42 2004/09/20 13:44:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.43 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
-// TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
+// TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -233,7 +233,7 @@ Int_t TGeoTube::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
+Double_t TGeoTube::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
 // compute distance from inside point to surface of the tube (static)
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
@@ -269,7 +269,7 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
       sr=-b+d;
       if (sr>0) return TMath::Min(sz,sr);
    }
-//   printf("Error : TGeoTube::DistToOutS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
+//   printf("Error : TGeoTube::DistFromInsideS() -> cannot exit tube rmin=%f rmax=%f dZ=%f from point (%f, %f, %f,)!\n", 
 //          rmin,rmax,dz, point[0], point[1], point[2]);
 //   Double_t *p = gGeoManager->GetCurrentPoint();
 //   Double_t *dr = gGeoManager->GetCurrentDirection();
@@ -278,7 +278,7 @@ Double_t TGeoTube::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Dou
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTube::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
    if (iact<3 && safe) {
@@ -323,7 +323,7 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
+Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
 // static method to compute distance from outside point to a tube with given parameters
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
@@ -372,7 +372,7 @@ Double_t TGeoTube::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Doub
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTube::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
    // fist localize point w.r.t tube
@@ -382,7 +382,7 @@ Double_t TGeoTube::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
    }
    // find distance to shape
-   return DistToInS(point, dir, fRmin, fRmax, fDz);
+   return DistFromOutsideS(point, dir, fRmin, fRmax, fDz);
 }
 
 //_____________________________________________________________________________
@@ -1082,7 +1082,7 @@ Double_t TGeoTubeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz, 
+Double_t TGeoTubeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz, 
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm)
 {
 // compute distance from inside point to surface of the tube segment (static)
@@ -1129,7 +1129,7 @@ Double_t TGeoTubeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTubeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
    if (iact<3 && safe) {
@@ -1148,11 +1148,11 @@ Double_t TGeoTubeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
    Double_t sm = TMath::Sin(phim);
    
    // compute distance to surface 
-   return TGeoTubeSeg::DistToOutS(point,dir,fRmin,fRmax,fDz,c1,s1,c2,s2,cm,sm);
+   return TGeoTubeSeg::DistFromInsideS(point,dir,fRmin,fRmax,fDz,c1,s1,c2,s2,cm,sm);
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, 
+Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, 
                                 Double_t dz, Double_t c1, Double_t s1, Double_t c2, Double_t s2,
                                 Double_t cm, Double_t sm, Double_t cdfi)
 {
@@ -1252,7 +1252,7 @@ Double_t TGeoTubeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin, D
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTubeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube segment
    // fist localize point w.r.t tube
@@ -1274,7 +1274,7 @@ Double_t TGeoTubeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
    Double_t cdfi = TMath::Cos(dfi);
    
    // find distance to shape
-   return TGeoTubeSeg::DistToInS(point, dir, fRmin, fRmax, fDz, c1, s1, c2, s2, cm, sm, cdfi);
+   return TGeoTubeSeg::DistFromOutsideS(point, dir, fRmin, fRmax, fDz, c1, s1, c2, s2, cm, sm, cdfi);
 }
 
 //_____________________________________________________________________________
@@ -2017,7 +2017,7 @@ Double_t TGeoCtub::GetZcoord(Double_t xc, Double_t yc, Double_t zc) const
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the cut tube
    if (iact<3 && safe) {
@@ -2170,7 +2170,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCtub::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cut tube
    if (iact<3 && safe) *safe = Safety(point, kTRUE);
@@ -2231,7 +2231,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
          sr=-b+d;
          if (sr<0) sr=TGeoShape::Big();
       } else {
-         Error("DistToOut", "In shape %s cannot get outside !", GetName());
+         Error("DistFromInside", "In shape %s cannot get outside !", GetName());
       }      
    }
    // phi planes

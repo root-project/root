@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.14 2004/06/01 11:46:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.15 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -44,9 +44,9 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

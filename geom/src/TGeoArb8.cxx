@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.33 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.34 2004/04/26 13:06:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -448,12 +448,12 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 }      
       
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from outside point to surface of the arb8
    Double_t snxt=TGeoShape::Big();
    if (!TGeoBBox::Contains(point)) {
-      snxt=TGeoBBox::DistToIn(point,dir,3);
+      snxt=TGeoBBox::DistFromOutside(point,dir,3);
       if (snxt>1E20) return snxt;
    }   
    Double_t dist[5];
@@ -488,7 +488,7 @@ Double_t TGeoArb8::DistToIn(Double_t *point, Double_t *dir, Int_t /*iact*/, Doub
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // compute distance from inside point to surface of the arb8
    Int_t i;
@@ -950,7 +950,7 @@ TGeoTrap::~TGeoTrap()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrap::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the arb8
    if (iact<3 && safe) {
@@ -960,11 +960,11 @@ Double_t TGeoTrap::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
-   return TGeoArb8::DistToOut(point, dir, iact, step, safe);
+   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoTrap::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the arb8
    if (iact<3 && safe) {
@@ -974,7 +974,7 @@ Double_t TGeoTrap::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get ouside this shape
-   return TGeoArb8::DistToIn(point, dir, iact, step, safe);
+   return TGeoArb8::DistFromOutside(point, dir, iact, step, safe);
 }   
 
 //_____________________________________________________________________________

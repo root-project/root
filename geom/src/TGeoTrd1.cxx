@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.23 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.24 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   24/10/01
-// TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
+// TGeoTrd1::Contains() and DistFromInside() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -173,7 +173,7 @@ Bool_t TGeoTrd1::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd1::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd1::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the trd1
 
@@ -281,7 +281,7 @@ void TGeoTrd1::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *ve
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd1::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the trd1
    Double_t snxt = TGeoShape::Big();

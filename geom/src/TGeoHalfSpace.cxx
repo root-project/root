@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.2 2004/08/24 14:04:27 brun Exp $
+// @(#):$Name:  $:$Id: TGeoHalfSpace.cxx,v 1.3 2004/09/20 16:00:25 brun Exp $
 // Author: Mihaela Gheata   03/08/04
 
 /*************************************************************************
@@ -93,7 +93,7 @@ Int_t TGeoHalfSpace::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoHalfSpace::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoHalfSpace::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to the plane
    Double_t r[3];
@@ -116,7 +116,7 @@ Double_t TGeoHalfSpace::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoHalfSpace::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoHalfSpace::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to the plane
    Double_t r[3];

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.16 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.17 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -57,16 +57,16 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  void          DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t &b, Double_t &delta);   
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t dz,
+   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz,
                                     Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-//   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1,Double_t rmin2, Double_t rmax2, 
+//   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1,Double_t rmin2, Double_t rmax2, 
 //                                   Double_t dz, Double_t ro1, Double_t tg1, Double_t cr1, Double_t zv1,
 //                                   Double_t ro2, Double_t tg2, Double_t cr2, Double_t zv2, Double_t r2, Double_t rin, Double_t rout);
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t dz,
+   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
                                    Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -137,15 +137,15 @@ public:
    
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToCons(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2);
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
+   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
                                     Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  Double_t      DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
                                       Double_t s2, Double_t c2, Double_t sm, Double_t cm);   
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
                                    Double_t dz, Double_t phi1, Double_t phi2);   
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

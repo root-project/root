@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoXtru.h,v 1.5 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.6 2004/08/30 07:04:39 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -66,9 +66,9 @@ public:
    virtual Bool_t        Contains(Double_t *point) const;
    Bool_t                DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv);
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t x0=0., Double_t y0=0., Double_t scale=1.);
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}

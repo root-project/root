@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.16 2004/04/22 14:07:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.17 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -49,11 +49,11 @@ public:
    static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
                                         Double_t rmin, Double_t rmax, Double_t dz);
    virtual Bool_t        Contains(Double_t *point) const;
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  void          DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta);
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -119,13 +119,13 @@ public:
                                         Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
+   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
                                     Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm);
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
+   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -182,9 +182,9 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t        Contains(Double_t *point) const;
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);

@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.23 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.24 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
-// TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
+// TGeoTrd2::Contains() and DistFromInside() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -181,7 +181,7 @@ Bool_t TGeoTrd2::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the trd2
    Double_t snxt = TGeoShape::Big();
@@ -229,7 +229,7 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the trd2
    Double_t snxt = TGeoShape::Big();

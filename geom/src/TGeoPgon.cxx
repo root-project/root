@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.41 2004/09/20 13:44:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.42 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -297,7 +297,7 @@ void TGeoPgon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polygone
    // first find out in which Z section the point is in
@@ -866,7 +866,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
 }           
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the polygone
    if (iact<3 && safe) {
@@ -895,7 +895,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    radmax += 1E-8;
    if (r2>(radmax*radmax) || pt[2]<fZ[0] || pt[2]>fZ[fNz-1]) {
       pt[2] -= 0.5*(fZ[0]+fZ[fNz-1]);
-      snext = TGeoTube::DistToInS(pt,dir,0.,radmax,0.5*(fZ[fNz-1]-fZ[0]));
+      snext = TGeoTube::DistFromOutsideS(pt,dir,0.,radmax,0.5*(fZ[fNz-1]-fZ[0]));
       if (snext>1E10) return TGeoShape::Big();
       if (snext>stepmax) return TGeoShape::Big();
       stepmax -= snext;

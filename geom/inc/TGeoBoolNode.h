@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.6 2004/06/01 11:46:25 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.7 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -58,9 +58,9 @@ public:
    virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
    virtual Bool_t    Contains(Double_t *point) const         = 0;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py) = 0;
-   virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
-   virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
    virtual EGeoBoolType GetBooleanOperator() const = 0;
    virtual Int_t     GetNpoints() const = 0;
@@ -98,9 +98,9 @@ public:
    virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints() const;
@@ -133,9 +133,9 @@ public:
    virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints() const;
@@ -168,9 +168,9 @@ public:
    virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
    virtual Bool_t    Contains(Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistToOut(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistToIn(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints() const;

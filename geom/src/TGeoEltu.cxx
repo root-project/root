@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.17 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.18 2004/06/25 11:59:55 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -128,7 +128,7 @@ Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
    Double_t a2=fRmin*fRmin;
@@ -205,7 +205,7 @@ Double_t TGeoEltu::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
    Double_t snxt=TGeoShape::Big();

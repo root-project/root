@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.13 2004/08/13 07:38:11 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.14 2004/09/20 16:00:25 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -284,7 +284,7 @@ Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
    return 9999;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to outside.
@@ -305,10 +305,10 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
    fLeftMat->MasterToLocal(point, &local[0]);
    Bool_t inside1 = fLeft->Contains(&local[0]);
-   if (inside1) d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
+   if (inside1) d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
    Bool_t inside2 = fRight->Contains(&local[0]);
-   if (inside2) d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
+   if (inside2) d2 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
 
    if (inside1 && inside2) snxt = TMath::Min(d1, d2);
    else if (inside1) snxt = d1;   
@@ -316,13 +316,13 @@ Double_t TGeoUnion::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    else return 0.;
 
    for (i=0; i<3; i++) master[i] += (snxt+epsil)*dir[i];
-   dd = DistToOut(&master[0], dir, iact, step-snxt, safe);
+   dd = DistFromInside(&master[0], dir, iact, step-snxt, safe);
    if (dd > 0.) dd += epsil;
    snxt += dd;
    return snxt;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoUnion::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
@@ -337,9 +337,9 @@ Double_t TGeoUnion::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
-   d1 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
+   d1 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
-   d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
+   d2 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
    return snxt;
 }
@@ -499,7 +499,7 @@ Int_t TGeoSubtraction::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
    return 9999;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoSubtraction::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to outside.
@@ -514,14 +514,14 @@ Double_t TGeoSubtraction::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
-   d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
+   d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
-   d2 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
+   d2 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
@@ -544,7 +544,7 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    while (1) {
       if (inside) {
          // propagate to outside of '-'
-         d1 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
+         d1 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
          snxt += d1+epsil;
          for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
          epsil = 1.E-8;
@@ -554,10 +554,10 @@ Double_t TGeoSubtraction::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
       } 
       // master outside '-' and outside '+' ;  find distances to both
       fLeftMat->MasterToLocal(&master[0], &local[0]);
-      d2 = fLeft->DistToIn(&local[0], &ldir[0], iact, step, safe);
+      d2 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
       if (d2>1E20) return TGeoShape::Big();
       fRightMat->MasterToLocal(&master[0], &local[0]);
-      d1 = fRight->DistToIn(&local[0], &rdir[0], iact, step, safe);
+      d1 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
       if (d2<d1) {
          snxt += d2+epsil;
          return snxt;
@@ -796,7 +796,7 @@ Int_t TGeoIntersection::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
    return 9999;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoIntersection::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to outside.
@@ -811,14 +811,14 @@ Double_t TGeoIntersection::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
    fLeftMat->MasterToLocal(point, &local[0]);
    fLeftMat->MasterToLocalVect(dir, &ldir[0]);
    fRightMat->MasterToLocalVect(dir, &rdir[0]);
-   d1 = fLeft->DistToOut(&local[0], &ldir[0], iact, step, safe);
+   d1 = fLeft->DistFromInside(&local[0], &ldir[0], iact, step, safe);
    fRightMat->MasterToLocal(point, &local[0]);
-   d2 = fRight->DistToOut(&local[0], &rdir[0], iact, step, safe);
+   d2 = fRight->DistFromInside(&local[0], &rdir[0], iact, step, safe);
    snxt = TMath::Min(d1, d2);
    return snxt;
 }   
 //-----------------------------------------------------------------------------
-Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point to inside.
@@ -843,17 +843,17 @@ Double_t TGeoIntersection::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
    Bool_t inright = fRight->Contains(rpt);
    if (inleft && inright) return 0.;
    if (!inleft)  {
-      d1 = fLeft->DistToIn(lpt,ldir,iact,step,safe);
+      d1 = fLeft->DistFromOutside(lpt,ldir,iact,step,safe);
       if (d1 > 1E20) return TGeoShape::Big();
    }   
    if (!inright) {
-      d2 = fRight->DistToIn(rpt,rdir,iact,step,safe);
+      d2 = fRight->DistFromOutside(rpt,rdir,iact,step,safe);
       if (d2>1E20) return TGeoShape::Big();
    }
    Double_t snext = TMath::Max(d1,d2);   
    for (i=0; i<3; i++) master[i] += (snext+epsil)*dir[i];
    if (Contains(master)) return snext;
-   dd = DistToIn(master,dir,iact,step,safe);
+   dd = DistFromOutside(master,dir,iact,step,safe);
    if (dd > 0.) dd += epsil;
    snext += dd;
    return snext;

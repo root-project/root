@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.7 2004/09/14 15:56:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.8 2004/10/15 15:30:49 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -182,7 +182,7 @@ Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir) const
 }      
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoParaboloid::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the paraboloid
    if (iact<3 && safe) {
@@ -203,7 +203,7 @@ Double_t TGeoParaboloid::DistToOut(Double_t *point, Double_t *dir, Int_t iact, D
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoParaboloid::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the paraboloid and safe distance
    Double_t snxt = TGeoShape::Big();

@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.31 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.32 2004/11/02 16:55:20 brun Exp $
 // Author: Andrei Gheata   31/01/02
-// TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
+// TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -290,7 +290,7 @@ Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the sphere
    Double_t saf[6];
@@ -511,7 +511,7 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the sphere
    Double_t saf[6];

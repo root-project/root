@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.31 2004/09/14 15:57:25 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.32 2004/10/15 15:30:49 brun Exp $// Author: Andrei Gheata   24/10/01
 
-// Contains() and DistToIn/Out() implemented by Mihaela Gheata
+// Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -236,7 +236,7 @@ Bool_t TGeoBBox::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoBBox::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the box
    Double_t saf[6];
@@ -268,7 +268,7 @@ Double_t TGeoBBox::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoBBox::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoBBox::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the box
    Double_t saf[3];

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.45 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.46 2004/11/03 08:39:47 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -1331,10 +1331,10 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
          // propagate to the clipping shape if any
          if (fClippingShape) {
             if (inclip) {
-               stemin = fClippingShape->DistToOut(cop,dir,3);
+               stemin = fClippingShape->DistFromInside(cop,dir,3);
                stemax = TGeoShape::Big();
             } else {
-               stemax = fClippingShape->DistToIn(cop,dir,3);
+               stemax = fClippingShape->DistFromOutside(cop,dir,3);
                stemin = 0;
             }
          }         
@@ -1369,7 +1369,7 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                      gGeoManager->Step();
                      inclip = fClippingShape->Contains(point);
                   }   
-                  stemax = fClippingShape->DistToIn(point,dir,3);
+                  stemax = fClippingShape->DistFromOutside(point,dir,3);
                }
             }              
             nextnode = fGeom->FindNextBoundary();
@@ -1383,12 +1383,12 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   steptot = 0;
                   inclip = fClippingShape->Contains(point);
                   if (inclip) {
-                     stemin = fClippingShape->DistToOut(point,dir,3);
+                     stemin = fClippingShape->DistFromInside(point,dir,3);
                      stemax = TGeoShape::Big();
                      continue;
                   } else {
                      stemin = 0;
-                     stemax = fClippingShape->DistToIn(point,dir,3);  
+                     stemax = fClippingShape->DistFromOutside(point,dir,3);  
                   }
                }
             }      
@@ -1422,12 +1422,12 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
                   steptot = 0;
                   inclip = fClippingShape->Contains(point);
                   if (inclip) {
-                     stemin = fClippingShape->DistToOut(point,dir,3);
+                     stemin = fClippingShape->DistFromInside(point,dir,3);
                      stemax = TGeoShape::Big();
                      continue;
                   } else {
                      stemin = 0;
-                     stemax = fClippingShape->DistToIn(point,dir,3);  
+                     stemax = fClippingShape->DistFromOutside(point,dir,3);  
                   }
                }
             }      

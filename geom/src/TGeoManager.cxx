@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.96 2004/10/18 15:28:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.97 2004/11/04 10:38:21 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2696,9 +2696,9 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       fCache->MasterToLocal(fPoint, &point[0]);
       fCache->MasterToLocalVect(fDirection, &dir[0]);
       if (tvol->Contains(&point[0])) {
-         fStep=tvol->GetShape()->DistToOut(&point[0], &dir[0], iact, fStep, &safe);
+         fStep=tvol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
       } else {
-         fStep=tvol->GetShape()->DistToIn(&point[0], &dir[0], iact, fStep, &safe);
+         fStep=tvol->GetShape()->DistFromOutside(&point[0], &dir[0], iact, fStep, &safe);
       }
       PopPath();
       return fNextNode;
@@ -2707,7 +2707,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // closest boundary
    // if point is outside, just check the top node
    if (fIsOutside) {
-      snext = fTopVolume->GetShape()->DistToIn(fPoint, fDirection, iact, fStep, &safe);
+      snext = fTopVolume->GetShape()->DistFromOutside(fPoint, fDirection, iact, fStep, &safe);
       if (snext < fStep) {
          fIsStepEntering = kTRUE;
          fStep = snext;
@@ -2721,7 +2721,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    fCache->MasterToLocalVect(fDirection, &dir[0]);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    // find distance to exiting current node
-   snext = vol->GetShape()->DistToOut(&point[0], &dir[0], iact, fStep, &safe);
+   snext = vol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
    if (snext < fStep) {
       fNextNode = fCurrentNode;
       fStep = snext;
@@ -2746,7 +2746,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          fCache->MasterToLocal(fPoint, &mothpt[0]);
          fCache->MasterToLocalVect(fDirection, &vecpt[0]);
          // check distance to out
-         snext = mother->GetShape()->DistToOut(&mothpt[0], &vecpt[0], iact, fStep, &safe);
+         snext = mother->GetShape()->DistFromInside(&mothpt[0], &vecpt[0], iact, fStep, &safe);
          if (snext<fStep) {
             fIsStepEntering = kFALSE;
             fStep = snext;
@@ -2760,7 +2760,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                current->cd();
                current->MasterToLocal(&mothpt[0], &dpt[0]);
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
-               snext = current->GetVolume()->GetShape()->DistToIn(&dpt[0], &dvec[0], iact, fStep, &safe);
+               snext = current->GetVolume()->GetShape()->DistFromOutside(&dpt[0], &dvec[0], iact, fStep, &safe);
                if (snext<fStep) {
                   if (computeGlobal) {
                      *fCurrentMatrix = GetCurrentMatrix();
@@ -2790,7 +2790,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
       if (snext<fStep) {
          if (computeGlobal) {
             *fCurrentMatrix = GetCurrentMatrix();
@@ -2806,7 +2806,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->cd();
       current->MasterToLocal(&point[0], &lpoint[0]);
       current->MasterToLocalVect(&dir[0], &ldir[0]);
-      snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
+      snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
       if (snext<fStep) {
          if (computeGlobal) {
             *fCurrentMatrix = GetCurrentMatrix();
@@ -2830,11 +2830,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             }
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
          } else {
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
          }
 
          if (snext<fStep) {
@@ -2860,7 +2860,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             current->cd();
             current->MasterToLocal(&point[0], &lpoint[0]);
             current->MasterToLocalVect(&dir[0], &ldir[0]);
-            snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
+            snext = current->GetVolume()->GetShape()->DistFromOutside(&lpoint[0], &ldir[0], iact, fStep, &safe);
             if (snext<fStep) {
                if (computeGlobal) {
                   *fCurrentMatrix = GetCurrentMatrix();

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.21 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.22 2004/08/13 07:38:11 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -237,21 +237,21 @@ Bool_t TGeoCompositeShape::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::DistToIn(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to this composite shape.
    if (!CouldBeCrossed(point, dir)) return TGeoShape::Big();
-   if (fNode) return fNode->DistToIn(point, dir, iact, step, safe);
+   if (fNode) return fNode->DistFromOutside(point, dir, iact, step, safe);
    return TGeoShape::Big();
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::DistToOut(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoCompositeShape::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to outside of this composite shape.
-   if (fNode) return fNode->DistToOut(point, dir, iact, step, safe);
+   if (fNode) return fNode->DistFromInside(point, dir, iact, step, safe);
    return TGeoShape::Big();
 }   
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.23 2004/09/13 16:16:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.24 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -86,7 +86,7 @@
 //   | -DY <= point[1] <= DY
 //   | -DZ <= point[2] <= DZ
 //
-// B) Double_t TGeoShape::DistToOut(Double_t *point[3], Double_t *dir[3],
+// B) Double_t TGeoShape::DistFromInside(Double_t *point[3], Double_t *dir[3],
 //                                  Int_t iact, Double_t step, Double_t *safe)
 //   - computes the distance to exiting a shape from a given point INSIDE, along
 // a given direction. The direction is given by its director cosines with respect
@@ -103,7 +103,7 @@
 //                   the proposed step.
 //   IACT > 2     => compute only the distance to exiting, ignoring anything else.
 //
-// C) Double_t TGeoShape::DistToOut(Double_t *point[3], Double_t *dir[3],
+// C) Double_t TGeoShape::DistFromOutside(Double_t *point[3], Double_t *dir[3],
 //                                  Int_t iact, Double_t step, Double_t *safe)
 //   - computes the distance to entering a shape from a given point OUTSIDE. Acts
 // in the same way as B).

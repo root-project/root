@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.19 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.20 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -204,7 +204,7 @@ Bool_t TGeoPara::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPara::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
    if (iact<3 && safe) {
@@ -250,10 +250,10 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPara::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPara::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
-//   Warning("DistToIn", "PARA TOIN");
+//   Warning("DistFromOutside", "PARA TOIN");
 //   Double_t snxt=TGeoShape::Big();
    Double_t dn31=-fZ-point[2];
    Double_t dn32=fZ-point[2];

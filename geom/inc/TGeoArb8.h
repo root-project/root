@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.13 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.14 2004/04/26 13:06:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -66,9 +66,9 @@ public:
    void                  ComputeTwist();
    virtual Bool_t        Contains(Double_t *point) const;     
    Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const;
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -140,9 +140,9 @@ public:
             Double_t tl2, Double_t alpha2);
    // destructor
    virtual ~TGeoTrap();
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -194,10 +194,10 @@ public:
             Double_t tl2, Double_t alpha2);
    // destructor
    virtual ~TGeoGtra();
-   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistToOut(point,dir,iact,step,safe);}
-   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistToIn(point,dir,iact,step,safe);}
+   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistFromInside(point,dir,iact,step,safe);}
+   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const {return TGeoArb8::DistFromOutside(point,dir,iact,step,safe);}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const {return 8;}
    Double_t              GetTwistAngle() const {return fTwistAngle;}

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.13 2004/09/14 15:56:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.14 2004/10/15 15:30:49 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -289,7 +289,7 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
    // locate Z segment
@@ -385,10 +385,10 @@ Double_t TGeoXtru::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
-//   Warning("DistToIn", "not implemented");
+//   Warning("DistFromOutside", "not implemented");
    if (iact<3 && safe) {
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
@@ -434,7 +434,7 @@ Double_t TGeoXtru::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    }      
    // Check if the bounding box is missed by the track
    if (!TGeoBBox::Contains(pt)) {
-      dist = TGeoBBox::DistToIn(pt,dir,3);
+      dist = TGeoBBox::DistFromOutside(pt,dir,3);
       if (dist>stepmax) return TGeoShape::Big();
       if (dist>1E-6) dist-=1E-6; // decrease snext to make sure we do not cross the xtru
       for (i=0; i<3; i++) pt[i] += dist*dir[i]; // we are now closer

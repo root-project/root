@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.34 2004/09/20 13:44:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.35 2004/10/15 15:30:49 brun Exp $
 // Author: Andrei Gheata   31/01/02
-// TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
+// TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -234,7 +234,7 @@ Bool_t TGeoCone::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, 
+Double_t TGeoCone::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, 
                               Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
 // compute distance from inside point to surface of the cone (static)
@@ -298,7 +298,7 @@ Double_t TGeoCone::DistToOutS(Double_t *point, Double_t *dir, Double_t dz,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCone::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cone
    
@@ -308,11 +308,11 @@ Double_t TGeoCone::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
    // compute distance to surface 
-   return TGeoCone::DistToOutS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
+   return TGeoCone::DistFromInsideS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz, 
+Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz, 
                              Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
 // compute distance from outside point to surface of the tube
@@ -396,7 +396,7 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCone::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    // compute safe radius
@@ -406,7 +406,7 @@ Double_t TGeoCone::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
    // compute distance to Z planes
-   return TGeoCone::DistToInS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
+   return TGeoCone::DistFromOutsideS(point, dir, fDz, fRmin1, fRmax1, fRmin2, fRmax2);
 }
 
 //_____________________________________________________________________________
@@ -1264,7 +1264,7 @@ Double_t TGeoConeSeg::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
+Double_t TGeoConeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
 // compute distance from inside point to surface of the tube segment
@@ -1304,7 +1304,7 @@ Double_t TGeoConeSeg::DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoConeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
    Double_t phi1 = fPhi1*TMath::DegToRad();
@@ -1345,7 +1345,7 @@ Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, 
+Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, 
                                 Double_t rmin2, Double_t rmax2, Double_t dz, Double_t phi1, Double_t phi2)
 {
 // compute distance from outside point to surface of arbitrary tube
@@ -1442,7 +1442,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoConeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    // compute safe radius
@@ -1451,7 +1451,7 @@ Double_t TGeoConeSeg::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Doubl
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   return TGeoConeSeg::DistToInS(point, dir,fRmin1,fRmax1,fRmin2,fRmax2,fDz, fPhi1, fPhi2);
+   return TGeoConeSeg::DistFromOutsideS(point, dir,fRmin1,fRmax1,fRmin2,fRmax2,fDz, fPhi1, fPhi2);
 }
 
 //_____________________________________________________________________________
