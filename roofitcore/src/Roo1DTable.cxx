@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.9 2001/10/08 05:20:09 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.10 2001/10/27 22:28:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -84,7 +84,7 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
   // matches no table slot name, the table overflow
   // counter is incremented.
 
-  _total++ ;
+  _total += weight ;
 
   Bool_t found(kFALSE) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.33 2002/03/29 03:19:01 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.34 2002/03/29 03:19:47 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -45,6 +45,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 				 RooAbsCategoryLValue& indexCat) : 
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
+  _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _codeReg(10),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
@@ -63,6 +64,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 				 const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) :
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
+  _plotCoefNormSet("plotCoefNormSet","plotCoefNormSet",this,kFALSE,kFALSE),
   _codeReg(10),
   _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
@@ -101,6 +103,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name) : 
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
+  _plotCoefNormSet("plotCoefNormSet",this,other._plotCoefNormSet),
   _codeReg(other._codeReg),
   _anyCanExtend(other._anyCanExtend),
   _anyMustExtend(other._anyMustExtend)
@@ -470,13 +473,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   RooAddPdf *plotVar = new RooAddPdf(plotVarName,"weighted sum of RS components",pdfCompList,wgtCompList) ;
 
   // Fix appropriate coefficient normalization in plot function
-  RooArgSet* normSet = plotVar->getDependents(frame->getNormVars()) ;
-  if (projData) {
-    RooArgSet* tmp = (RooArgSet*) projData->get()->selectCommon(projectedVars) ;
-    normSet->remove(*tmp,kTRUE,kTRUE) ;
-    delete tmp ;
+  if (_plotCoefNormSet.getSize()>0) {
+    plotVar->fixCoefNormalization(_plotCoefNormSet) ;
   }
-  plotVar->fixCoefNormalization(*normSet) ;
 
   RooAbsData* projDataTmp(0) ;
   RooArgSet projSetTmp ;
@@ -551,6 +550,14 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   if (projDataTmp) delete projDataTmp ;
 
   return frame2 ;
+}
+
+
+
+void RooSimultaneous::selectNormalization(const RooArgSet* normSet) 
+{
+  _plotCoefNormSet.removeAll() ;
+  if (normSet) _plotCoefNormSet.add(*normSet) ;
 }
 
 

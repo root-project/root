@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.60 2002/02/13 02:03:28 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.61 2002/03/22 22:43:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1148,4 +1148,24 @@ TH2F* RooAbsPdf::plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar&
 
   RooFitContext context(&data,this) ;
   return context.plotNLLContours(var1,var2,n1,n2,n3) ;
+}
+
+
+void RooAbsPdf::fixAddCoefNormalization(const RooArgSet& addNormSet) 
+{
+  RooArgSet* compSet = getComponents() ;
+  TIterator* iter = compSet->createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+    if (pdf) {
+      if (addNormSet.getSize()>0) {
+	pdf->selectNormalization(&addNormSet) ;
+      } else {
+	pdf->selectNormalization(0) ;
+      }
+    } 
+  }
+  delete iter ;
+  delete compSet ;  
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.52 2002/03/22 22:43:53 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.53 2002/03/29 03:18:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -125,6 +125,8 @@ public:
   static void setDefaultNormIntConfig(const RooIntegratorConfig& config) ;
   void setNormIntConfig() ;
   void setNormIntConfig(const RooIntegratorConfig& config) ;
+
+  virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
   
 private:
 
