@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.14 2000/12/02 15:48:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.15 2000/12/04 16:48:08 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1242,7 +1242,20 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 
    // we are now ready to generate the classes
    // loop on all TStreamerInfo
-   TList *list = (TList*)Get("StreamerInfo");
+   TList *list = 0;
+   if (fSeekInfo) {
+      TKey *key = new TKey();
+      char *buffer = new char[fNbytesInfo+1];
+      char *buf    = buffer;
+      Seek(fSeekInfo);
+      ReadBuffer(buf,fNbytesInfo);
+      key->ReadBuffer(buf);
+      list = (TList*)key->ReadObj();
+      delete [] buffer;
+      delete key;
+   } else {
+      list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
+   }
    if (list == 0) {
       Error("MakeProject","File has no StreamerInfo");
       delete [] path;
