@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -44,7 +44,7 @@ private:
    Bool_t             fReturnFromRun;  //When true return from Run()
    int                fArgc;           //Number of command line arguments
    char             **fArgv;           //Command line arguments
-   TApplicationImp   *fAppImp;         //Window system specific application implementation
+   TApplicationImp   *fAppImp;         //!Window system specific application implementation
    Bool_t             fNoLog;          //Do not process logon and logoff macros
    Bool_t             fQuit;           //Exit after having processed input files
    TObjArray         *fFiles;          //Array of input files (TObjString's)
