@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.3 2000/05/26 06:43:01 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.4 2000/05/30 06:12:50 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -245,12 +245,14 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 //*-*                  =========================
 //
 
+  const Int_t kMAXFOUND = 200;      //must be the same as values defined in TFormula
+  const Int_t kMAXSTRINGFOUND = 10;
   Int_t i,pos,pos2,int1,int2;
   Float_t aresult;
-  Double_t tab[255];
-  Float_t param[50];
+  Double_t tab[kMAXFOUND];
+  Float_t param[kMAXFOUND];
   Double_t dexp;
-  char *tab2[20];
+  char *tab2[kMAXSTRINGFOUND];
 
   if (fNoper == 1 && fNcodes > 0) {
      if (fCodes[0] < 0) {
