@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.7 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.8 2001/09/06 22:34:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooNumber.hh"
 
 
 ClassImp(RooStreamParser)
@@ -81,7 +82,7 @@ TString RooStreamParser::readToken()
   // Read one token
 
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
-  Bool_t first(kTRUE), quotedString(kFALSE) ;
+  Bool_t first(kTRUE), quotedString(kFALSE), lineCont(kFALSE) ;
   char buffer[1024], c, cnext, cprev=' ' ;
   Int_t bufptr(0) ;
 
@@ -120,11 +121,20 @@ TString RooStreamParser::readToken()
     }
 
     // If '-' or '/' see what the next character is
-    if (c == '.' || c=='-' || c=='/') {
+    if (c == '.' || c=='-' || c=='+' || c=='/' || c=='\\') {
       _is.get(cnext) ;
       _is.putback(cnext) ;
     }
-    
+
+    // Check for line continuation marker
+    if (c=='\\' && cnext=='\\') {
+      // Kill rest of line including endline marker
+      zapToEnd() ;
+      _is.get(c) ;
+      lineCont=kTRUE ;
+      break ;
+    }
+
     // Stop if begin of comments is encountered
     if (c=='/' && cnext=='/') {
       zapToEnd() ;
@@ -143,9 +153,9 @@ TString RooStreamParser::readToken()
     }
 
     if (!quotedString) {
-      // Decide if next char is punctuation (exempt - and . that are part of floating point numbers)
+      // Decide if next char is punctuation (exempt - and . that are part of floating point numbers, or +/- preceeding INF)
       if (isPunctChar(c) && !(c=='.' && (isdigit(cnext)||isdigit(cprev))) 
-	  && !(c=='-' && (isdigit(cnext)||cnext=='.'))) {
+	  && !((c=='-'||c=='+') && (isdigit(cnext)||cnext=='.'||cnext=='i'||cnext=='I'))) {
 	if (first) {
 	  // Make this a one-char punctuation token
 	  buffer[bufptr++]=c ;
@@ -180,7 +190,9 @@ TString RooStreamParser::readToken()
 
   // Absorb trailing white space or absorb rest of line if // is encountered
   if (c=='\n') {
-    _is.putback(c) ;
+    if (!lineCont) {
+      _is.putback(c) ;
+    }
   } else {
     c = _is.peek() ;
 
@@ -198,6 +210,11 @@ TString RooStreamParser::readToken()
 	c = _is.peek() ;
       }
     }
+  }
+
+  // If no token was read line is continued, return first token on next line
+  if (bufptr==0 && lineCont) {
+    return readToken() ;
   }
   
   // Zero terminate buffer and convert to TString
@@ -292,6 +309,13 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
   // Convert given string to a double
   char* endptr(0) ;
   const char* data=token.Data() ;
+
+  // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
+  if (!strcasecmp(data,"inf") || !strcasecmp(data+1,"inf")) {
+    value = (data[0]=='-') ? -RooNumber::infinity : RooNumber::infinity ;
+    return kFALSE ;
+  }
+
   value = strtod(data,&endptr) ;
   Bool_t error = (endptr-data!=token.Length()) ;
 
