@@ -6,14 +6,14 @@
 //////////////////////////////////////////////////////////
 
 
-#ifndef h1anal_h
-#define h1anal_h
+#ifndef h1analysis_h
+#define h1analysis_h
 
 #include <TChain.h>
 #include <TFile.h>
 #include <TSelector.h>
 
-class h1anal : public TSelector {
+class h1analysis : public TSelector {
    public :
    TTree          *fChain;    //pointer to the analyzed TTree or TChain
    //Declaration of leaves types
@@ -324,8 +324,8 @@ class h1anal : public TSelector {
    TBranch        *b_plan;
    TBranch        *b_nnout;
 
-   h1anal(TTree *tree=0);
-   ~h1anal();
+   h1analysis(TTree *tree=0);
+   ~h1analysis();
    void    Begin(TTree *tree);
    void    Init(TTree *tree);
    Bool_t  Notify();
@@ -338,19 +338,19 @@ class h1anal : public TSelector {
 
 
 //_____________________________________________________________________
-h1anal::h1anal(TTree *tree)
+h1analysis::h1analysis(TTree *tree)
 {
 // Build the chain of Root files
 //
 }
 
 //_____________________________________________________________________
-h1anal::~h1anal()
+h1analysis::~h1analysis()
 {
 }
 
 //_____________________________________________________________________
-void h1anal::Init(TTree *tree)
+void h1analysis::Init(TTree *tree)
 {
 //   Set branch addresses
    if (tree == 0) return;
@@ -511,7 +511,7 @@ void h1anal::Init(TTree *tree)
 }
 
 //_____________________________________________________________________
-Bool_t h1anal::Notify()
+Bool_t h1analysis::Notify()
 {
 //   called when loading a new file
 //   get branch pointers
