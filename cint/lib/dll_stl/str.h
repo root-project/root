@@ -44,12 +44,34 @@ using namespace std;
 #pragma link C++ typedef string::traits_type;
 #ifndef G__OLDIMPLEMENTATION1598
 #pragma link C++ function operator==(const string&,const string&);
+
 #pragma link C++ function operator!=(const string&,const string&);
+
+#pragma link C++ function operator<(const string&,const string&);
+#pragma link C++ function operator<(const string&,const string&);
 #pragma link C++ function operator<(const string&,const string&);
 #pragma link C++ function operator>(const string&,const string&);
 #pragma link C++ function operator<=(const string&,const string&);
 #pragma link C++ function operator>=(const string&,const string&);
 #pragma link C++ function operator+(const string&,const string&);
+
+#pragma link C++ function operator<(const char*,const string&);
+#pragma link C++ function operator<(const char*,const string&);
+#pragma link C++ function operator<(const char*,const string&);
+#pragma link C++ function operator>(const char*,const string&);
+#pragma link C++ function operator<=(const char*,const string&);
+#pragma link C++ function operator>=(const char*,const string&);
+#pragma link C++ function operator+(const char*,const string&);
+
+#pragma link C++ function operator<(const string&,const char*);
+#pragma link C++ function operator<(const string&,const char*);
+#pragma link C++ function operator<(const string&,const char*);
+#pragma link C++ function operator>(const string&,const char*);
+#pragma link C++ function operator<=(const string&,const char*);
+#pragma link C++ function operator>=(const string&,const char*);
+#pragma link C++ function operator+(const string&,const char*);
+
+
 #endif
 #endif
 
