@@ -83,6 +83,10 @@ SRPUTILINCDIR  := @srputilincdir@
 AFSLIB         := @afslib@
 AFSLIBDIR      := @afslibdir@
 
+SHADOWFLAGS    := @shadowpw@
+SHADOWLIB      :=
+SHADOWLIBDIR   :=
+
 STAR           := @enable_star@
 
 INSTALL        := cp -dpR

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.23 2002/01/27 17:44:18 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.24 2002/02/06 18:27:40 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -148,14 +148,14 @@ extern "C" {
 }
 #endif
 
-#if defined(sun)
+#if defined(__sun)
 extern "C" int gethostname(char *, int);
-#ifndef SHADOWPW
-#define SHADOWPW
+#ifndef R__SHADOWPW
+#define R__SHADOWPW
 #endif
 #endif
 
-#ifdef SHADOWPW
+#ifdef R__SHADOWPW
 #include <shadow.h>
 #endif
 

@@ -19,13 +19,14 @@ ROOTDDEP     := $(ROOTDO:.o=.d)
 ROOTD        := bin/rootd
 
 ##### use shadow passwords for authentication #####
-SHADOWFLAGS  := #-DR__SHADOWPW
-SHADOWLIBS   :=
+ifneq ($(SHADOWFLAGS),)
+SHADOWLIBS   := $(SHADOWLIBDIR) $(SHADOWLIB)
+endif
 
 ##### use AFS for authentication #####
 ifneq ($(AFSLIB),)
 AFSFLAGS     := -DR__AFS
-AFSLIBS      := $(AFSLIBDIR) $(AFSLIB) 
+AFSLIBS      := $(AFSLIBDIR) $(AFSLIB)
 endif
 
 ##### use SRP for authentication #####

@@ -30,6 +30,7 @@ enable_rfio=yes
 enable_dcache=yes
 enable_rpath=no
 enable_sapdb=yes
+enable_shadowpw=
 enable_shared=yes
 enable_soversion=no
 enable_srp=yes
@@ -293,6 +294,7 @@ confhelp() {
     echo "   dcache          dCache support, requires dcap library from DESY"
     echo "   srp             SRP support, requires SRP source tree"
     echo "   afs             AFS support, requires AFS libs and objects"
+    echo "   shadowpw        Shadow password support"
     echo "   pythia          Pythia5 EG support, requires libPythia"
     echo "   pythia6         Pythia6 EG support, requires libPythia6"
     echo "   venus           Venus EG support, requires libVenus"
@@ -439,6 +441,8 @@ if test $# -gt 0 ; then
       --disable-srp)          enable_srp=no         ;;
       --enable-afs)           enable_afs=yes        ;;
       --disable-afs)          enable_afs=no         ;;
+      --enable-shadowpw)      enable_shadowpw=yes   ;;
+      --disable-shadowpw)     enable_shadowpw=no    ;;
       --enable-pythia)        enable_pythia=yes     ;;
       --disable-pythia)       enable_pythia=no      ;;
       --enable-pythia6)       enable_pythia6=yes    ;;
@@ -1020,6 +1024,27 @@ fi
 
 ######################################################################
 #
+### echo %%% Shadow password support
+#
+
+echo $ac_n "Checking for shadow passwords ... $ac_c"
+
+if test "x$enable_shadowpw" = "x"; then
+   if test -e "/etc/shadow"; then
+      enable_shadowpw="yes"
+   else
+      enable_shadowpw="no"
+   fi
+fi
+
+if test "x$enable_shadowpw" = "xyes"; then
+   shadowpw="-DR__SHADOWPW "
+fi
+
+echo $enable_shadowpw
+
+######################################################################
+#
 ### echo %%% STAR Library - Contributed library
 #
 if test "x$enable_star" = "xyes" || test ! "x$STAR" = "x"; then
@@ -1028,6 +1053,7 @@ if test "x$enable_star" = "xyes" || test ! "x$STAR" = "x"; then
 else
     enable_star=""
 fi
+
 
 ######################################################################
 #
@@ -1255,6 +1281,7 @@ sed -e "s|@architecture@|$arch|"           \
     -e "s|@srputilincdir@|$srputilincdir|" \
     -e "s|@afslibdir@|$afslibdir|"         \
     -e "s|@afslib@|$afslib|"               \
+    -e "s|@shadowpw@|$shadowpw|"           \
     -e "s|@pythialibdir@|$pythialibdir|"   \
     -e "s|@pythialib@|$pythialib|"         \
     -e "s|@pythia6libdir@|$pythia6libdir|" \
