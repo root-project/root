@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.73 2004/11/24 07:41:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.74 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -371,7 +371,7 @@ Bool_t TProof::StartSlaves()
                   if (!strcmp(expworkdir,gProofServ->GetWorkDir())) {
                      fImage = image;
                   }
-                  delete [] expworkdir;
+                  delete [] (char *) expworkdir;
                }
             }
          }

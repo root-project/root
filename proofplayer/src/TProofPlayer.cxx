@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.42 2004/12/28 20:51:25 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.43 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -1083,7 +1083,7 @@ void TProofPlayerSuperMaster::Progress(TSlave *sl, Long64_t total, Long64_t proc
    Long64_t tot = 0;
    for (Int_t i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
    Long64_t proc = 0;
-   for (Int_t i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+   for (i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
 
    Progress(tot, proc);
 }
@@ -1099,7 +1099,7 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
    Long64_t tot = 0;
    for (Int_t i=0; i<fSlaveTotals.GetSize(); i++) tot+=fSlaveTotals[i];
    Long64_t proc = 0;
-   for (Int_t i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
+   for (i=0; i<fSlaveProgress.GetSize(); i++) proc+=fSlaveProgress[i];
 
    TMessage m(kPROOF_PROGRESS);
 
