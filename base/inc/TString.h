@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.3 2000/11/21 12:21:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.4 2000/11/27 10:39:02 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -226,6 +226,10 @@ public:
    TString&    operator+=(const char *s);        // Append string
    TString&    operator+=(const TString& s);
    TString&    operator+=(char c);
+   TString&    operator+=(Short_t i);
+   TString&    operator+=(UShort_t i);
+   TString&    operator+=(Int_t i);
+   TString&    operator+=(UInt_t i);
    TString&    operator+=(Long_t i);
    TString&    operator+=(ULong_t i);
 
@@ -385,6 +389,18 @@ inline TString& TString::operator+=(const TString& s)
 
 inline TString& TString::operator+=(char c)
 { return Append(c); }
+
+inline TString& TString::operator+=(Short_t i)
+{ return operator+=((Long_t)i); }
+
+inline TString& TString::operator+=(UShort_t i)
+{ return operator+=((ULong_t) i); }
+
+inline TString& TString::operator+=(Int_t i)
+{ return operator+=((Long_t)i); }
+
+inline TString& TString::operator+=(UInt_t i)
+{ return operator+=((ULong_t) i); }
 
 inline TString& TString::operator+=(Long_t i)
 { return operator+=(Form("%ld", i)); }
