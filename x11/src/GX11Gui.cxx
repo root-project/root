@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.28 2003/01/20 08:44:47 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.29 2003/05/01 17:16:57 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -180,6 +180,11 @@ static Int_t RootX11IOErrorHandler(Display *)
 
    ::Error("RootX11IOErrorHandler", "fatal X11 error (connection to server lost?!)");
    fprintf(stderr,"\n**** Save data and exit application ****\n\n");
+   // delete X connection handler (to avoid looping in TSystem::DispatchOneEvent())
+   if (gXDisplay && gSystem) {
+      gSystem->RemoveFileHandler(gXDisplay);
+      SafeDelete(gXDisplay);
+   }
    if (TROOT::Initialized()) {
       //Getlinem(kInit, "Root > ");
       Throw(2);
