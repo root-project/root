@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.32 2003/07/25 17:22:38 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.33 2003/08/06 23:40:22 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -2206,7 +2206,7 @@ const char *numlabel[] = {
 const Double_t numinit[] = {
    12345, 1.0, 1.00, 1.000, 1.0000, 1.2E-12,
    90 * 3600, 120 * 60, 12 * 60, 12 * 3600 + 15 * 60,
-   19991121, 19991121, (Double_t) 0xDEADFACE
+   19991121, 19991121, (Double_t) 0xDEADFACEU
 };
 
 EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
