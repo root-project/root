@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.5 2000/06/13 10:34:10 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.6 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -546,7 +546,7 @@ void TAxis::Set(Int_t nbins, Float_t *xbins)
    fXlabels   = 0;
    fTitle     = "";
    char name[64];
-   sprintf(name,"%s%s",GetName(),"x");
+   sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
@@ -572,7 +572,7 @@ void TAxis::Set(Int_t nbins, Axis_t *xbins)
    fXlabels   = 0;
    fTitle     = "";
    char name[64];
-   sprintf(name,"%s%s",GetName(),"x");
+   sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
