@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.h,v 1.3 2000/09/08 07:36:57 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -43,23 +43,23 @@ class TObjArray;
 class TGeometry : public TNamed {
 
 private:
-   THashList        *fMaterials;          //Collection of materials
-   THashList        *fMatrices;           //Collection of rotation matrices
-   THashList        *fShapes;             //Collection of shapes
-   TList            *fNodes;              //Collection of nodes
-   TNode            *fCurrentNode;        //Pointer to current node
+   THashList        *fMaterials;          //->Collection of materials
+   THashList        *fMatrices;           //->Collection of rotation matrices
+   THashList        *fShapes;             //->Collection of shapes
+   TList            *fNodes;              //->Collection of nodes
+   TRotMatrix       *fMatrix;             //!Pointers to current rotation matrices
+   TNode            *fCurrentNode;        //!Pointer to current node
    TMaterial       **fMaterialPointer;    //!Pointers to materials
    TRotMatrix      **fMatrixPointer;      //!Pointers to rotation matrices
    TShape          **fShapePointer;       //!Pointers to shapes
-   Float_t           fBomb;               //Bomb factor for exploded geometry
-   TRotMatrix      *fMatrix;              //! Pointers to current rotation matrices
+   Float_t          fBomb;                //Bomb factor for exploded geometry
+   Int_t            fGeomLevel;           //!
    Double_t         fX;                   //!
    Double_t         fY;                   //! The global translation of the current node
    Double_t         fZ;                   //!
    Double_t         fTranslation[kMAXLEVELS][kVectorSize];//!
    Double_t         fRotMatrix[kMAXLEVELS][kMatrixSize];  //!
    Bool_t           fIsReflection[kMAXLEVELS];            //!
-   Int_t            fGeomLevel;                           //!
 
 public:
 
@@ -117,7 +117,7 @@ public:
                                       Double_t x, Double_t y, Double_t z, Double_t *matrix,
                                       Double_t *dxnew, Double_t *rmatnew);
 
-   ClassDef(TGeometry,1)  //Structure for Matrices, Shapes and Nodes
+   ClassDef(TGeometry,2)  //Structure for Matrices, Shapes and Nodes
 };
 
 
