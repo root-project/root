@@ -30,7 +30,7 @@
 #include <iostream.h>
 #endif
 #if !defined(__hpux) && !defined(_MSC_VER)
-using namespace std;
+namespace std {} using namespace std;
 #endif
 #endif
 

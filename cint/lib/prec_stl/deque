@@ -67,7 +67,7 @@ class deque {
    public:
     iterator() ;
     iterator(const iterator& x) ;
-#if defined(G__BORLAND) || defined(G__KCC)
+#if defined(G__BORLAND) || defined(G__KCC) || (defined (G__SGI)&&!defined(G__GNU))
 #else
     iterator& operator=(const iterator& x) ;
 #endif
@@ -115,7 +115,7 @@ class deque {
 	{
    public:
     reverse_iterator(const reverse_iterator& x);
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
 #ifdef G__HPUX

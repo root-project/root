@@ -73,7 +73,7 @@ class list {
    public:
     iterator() ;
     iterator(const iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     iterator& operator=(const iterator& x) ;
 #endif
     T& operator*() const ;
@@ -107,7 +107,7 @@ class list {
 	{
    public:
     reverse_iterator(const reverse_iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
     T& operator*() const ;

@@ -37,7 +37,7 @@ class vector {
  public:
   typedef T value_type;
 
-#if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
+#if ((defined(G__GNUC) || defined(G__SGI)) && !defined(G__KCC)) || defined(G__HPUX) 
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
   typedef value_type& reference;
@@ -134,7 +134,7 @@ class vector {
 	{
    public:
     reverse_iterator(const reverse_iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
 #if !(G__GNUC>=3) && !defined(G__KCC)

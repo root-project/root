@@ -97,6 +97,8 @@ extern int telldir(DIR* dir);
 extern struct dirent *readdir(DIR *dir);
 #if defined(G__KCC) || defined(__KCC)
 extern void seekdir(DIR* dir,off_t loc);
+#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
+extern void seekdir( DIR *, off_t );
 #else
 extern void seekdir(DIR* dir,long loc);
 #endif
@@ -226,6 +228,8 @@ extern long setpgrp(void);
 #elif defined(G__FBSD) || defined(__FreeBSD__)
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
+extern pid_t setpgrp(void);
+#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
 extern pid_t setpgrp(void);
 #else
 extern int setpgrp(void);

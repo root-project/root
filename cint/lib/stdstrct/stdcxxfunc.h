@@ -23,9 +23,13 @@
 #include <time.h>
 #include <locale.h>
 #endif
+#if defined(__sgi) && !defined(__GNUC__) && !defined(__KCC)
+#include <math.h>
+#else
 #include <cmath>
-#ifndef __hpux
-using namespace std;
+#endif
+#ifdef __hpux
+namespace std {} using namespace std;
 #endif
 
 #ifdef __MAKECINT__
@@ -61,6 +65,7 @@ float tanh (float);
 double abs(double);            // fabs()
 double pow(double, int);
 
+#if !defined(G__SUN)
 long double abs  (long double);
 long double acos (long double);
 long double asin (long double);
@@ -85,6 +90,7 @@ long double sinh (long double);
 long double sqrt (long double);
 long double tan  (long double);
 long double tanh (long double);
+#endif
 
 #endif
 

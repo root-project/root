@@ -78,7 +78,7 @@ class set {
    public:
     iterator() ;
     iterator(const iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     iterator& operator=(const iterator& x) ;
 #endif
 #if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
@@ -120,7 +120,7 @@ class set {
 	{
    public:
     reverse_iterator(const reverse_iterator& x);
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if !defined(G__BORLAND) && !defined(G__KCC) && !(defined (G__SGI)&&!defined(G__GNU))
     reverse_iterator& operator=(const reverse_iterator& x) ;
 #endif
 #if defined(G__VISUAL) || (defined(G__GNUC) && !defined(G__KCC))
@@ -190,7 +190,7 @@ class set {
   // set operations:
 #if defined(G__HPUX) || defined(G__VISUAL)
   iterator  find(const Key& x) ;
-#elif defined(G__INTEL_COMPILER)
+#elif defined(G__INTEL_COMPILER) || defined(G__AIX)
   iterator  find(const Key& x) ;
   const_iterator  find(const Key& x) const;
 #else
@@ -200,7 +200,7 @@ class set {
 #if defined(G__HPUX) || defined(G__VISUAL)
   iterator  lower_bound(const Key& x) ;
   iterator  upper_bound(const Key& x) ;
-#elif defined(G__INTEL_COMPILER)
+#elif defined(G__INTEL_COMPILER) || defined(G__AIX)
   iterator  lower_bound(const Key& x) ;
   iterator  upper_bound(const Key& x) ;
   const_iterator  lower_bound(const Key& x) const;
