@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.33 2002/08/20 15:13:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.34 2002/08/23 14:51:44 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -85,6 +85,10 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
+   //
+   // In case you want to send a TClonesArray (or object containing a
+   // TClonesArray) via a TMessage over a TSocket don't forget to call
+   // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
    if (!gROOT)
       ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
@@ -126,6 +130,10 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
+   //
+   // In case you want to send a TClonesArray (or object containing a
+   // TClonesArray) via a TMessage over a TSocket don't forget to call
+   // BypassStreamer(kFALSE). See TClonesArray::BypassStreamer().
 
    if (!gROOT)
       ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
@@ -184,13 +192,13 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
    // the StreamerInfo of the class in the array being optimized,
    // one cannot use later the TClonesArray with split>0. For example,
    // there is a problem with the following scenario:
-   //  1- a class Foo has a TClonesArray of Bar objects
-   //  2- the Foo object is written with split=0 to Tree T1.
+   //  1- A class Foo has a TClonesArray of Bar objects
+   //  2- The Foo object is written with split=0 to Tree T1.
    //     In this case the StreamerInfo for the class Bar is created
    //     in optimized mode in such a way that data members of the same type
    //     are written as an array improving the I/O performance.
-   //  3- in a new program, T1 is read and a new Tree T2 is created
-   //      with the object Foo in split>1
+   //  3- In a new program, T1 is read and a new Tree T2 is created
+   //     with the object Foo in split>1
    //  4- When the T2 branch is created, the StreamerInfo for the class Bar
    //     is created with no optimization (mandatory for the split mode).
    //     The optimized Bar StreamerInfo is going to be used to read
@@ -198,8 +206,10 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
    //     data member values not in the right sequence.
    // The solution to this problem is to call BypassStreamer(kFALSE)
    // for the TClonesArray. In this case, the normal Bar::Streamer function
-   // will be called. The BAR::Streamer function works OK independently
+   // will be called. The Bar::Streamer function works OK independently
    // if the Bar StreamerInfo had been generated in optimized mode or not.
+   // In case you want to send Foo via a TMessage over a TSocket you also
+   // need to disable the streamer bypass.
 
    if (bypass)
       SetBit(kBypassStreamer);
