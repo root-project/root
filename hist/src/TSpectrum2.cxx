@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.3 2003/04/14 13:59:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.cxx,v 1.4 2003/04/15 09:36:21 brun Exp $
 // Author: Miroslav Morhac   11/04/2003
 
 /////////////////////////////////////////////////////////////////////////////
@@ -164,14 +164,18 @@ const char *TSpectrum2::Background(TH1 * h, int number_of_iterations,
       Int_t sizex = hin->GetXaxis()->GetNbins();
       Int_t sizey = hin->GetYaxis()->GetNbins();
       Int_t i, j, bin, npeaks;
+      Float_t zmax = -1e30;
       Float_t ** source = new float *[sizex];
       for (i = 0; i < sizex; i++) {
          source[i] = new float[sizey];
          for (j = 0; j < sizey; j++) {
             source[i][j] = (Float_t) hin->GetBinContent(i + 1, j + 1);
+            if (source[i][j] > zmax) zmax = source[i][j];
          }
       }
-      npeaks = Search2General(source, sizex, sizey, sigma, 0, kTRUE, 8);
+      Double_t threshold = zmax/20;
+      if (threshold <5) threshold = 5;
+      npeaks = Search2General(source, sizex, sizey, sigma, threshold, kTRUE, 8);
       for (i = 0; i < npeaks; i++) {
          bin = 1 + Int_t(fPositionX[i] + 0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
@@ -10191,48 +10195,49 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
 
 //____________________________________________________________________________
     Int_t TSpectrum2::Search2General(float **source, int sizex, int sizey,
-                                      double sigma, int threshold,
-                                      bool markov, int aver_window) 
+                                      double sigma, double threshold,
+                                      bool markov, int aver_window)
 {
-   
+
 /////////////////////////////////////////////////////////////////////////////
-/*	TWO-DIMENSIONAL PEAK SEARCH FUNCTION				   */ 
-/*	This function searches for peaks in source spectrum		   */ 
-/*	The number of found peaks and their positions are written into	   */ 
-/*	structure pointed by two_dim_peak structure pointer.		   */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	source-pointer to the matrix of source spectrum			   */ 
-/*	sizex-x length of source spectrum				   */ 
-/*	sizey-y length of source spectrum				   */ 
-/*	sigma-sigma of searched peaks, for details we refer to manual	   */ 
-/*	threshold-threshold value for selected peaks                       */ 
-/*      markov-logical variable, if it is true, first the source spectrum  */ 
+/*	TWO-DIMENSIONAL PEAK SEARCH FUNCTION				   */
+/*	This function searches for peaks in source spectrum		   */
+/*	The number of found peaks and their positions are written into	   */
+/*	structure pointed by two_dim_peak structure pointer.		   */
+/*									   */
+/*	Function parameters:						   */
+/*	source-pointer to the matrix of source spectrum			   */
+/*	sizex-x length of source spectrum				   */
+/*	sizey-y length of source spectrum				   */
+/*	sigma-sigma of searched peaks, for details we refer to manual	   */
+/*	threshold-threshold value for selected peaks                       */
+/*      markov-logical variable, if it is true, first the source spectrum  */
 /*             is replaced by new spectrum calculated using Markov         */ 
-/*             chains method.                                              */ 
+/*             chains method.                                              */
 /*	aver_window-averanging window of searched peaks, for details       */ 
-/*                  we refer to manual (applies only for Markov method)    */ 
+/*                  we refer to manual (applies only for Markov method)    */
 /*									   */ 
 /////////////////////////////////////////////////////////////////////////////
-   int xmin = 0, xmax = sizex, ymin = 0, ymax =
-       sizey, i, j, l, peak_index = 0, k1, k2, is;
+   int xmin = 0, xmax = sizex, ymin = 0, ymax = sizey, i, j, l, peak_index = 0;
    double a, b, maxch, plocha = 0;
    double nom, nip, nim, sp, sm, spx, spy, smx, smy;
-   double s, f, dpeakx, dpeaky, dxmin, dxmax, dymin, dymax,
-       filter[PEAK_WINDOW], norma, val, val1, val2, val3, val4, val5, val6,
-       val7, val8;
-   int x, y, n, priz, polx = 0, poly = 0, li, lj, lmin, lmax;
-   double pocet_sigma = 5;     //bolo 3
+   double s, f, dpeakx, dpeaky, dxmin, dxmax, dymin, dymax,filter[PEAK_WINDOW], norma, val, val1, val2, val3, val4, val5, val6, val7, val8;
+   int x, y, priz, li, lj, lmin, lmax;
+   double s4, f4, norma4, filter4[PEAK_WINDOW];
+   double s6, f6, norma6, filter6[PEAK_WINDOW], s6two;
+   double pocet_sigma=3, suma, sumai, maxamp;
+
+
    if (sizex <= 0 || sizey <= 0) {
-      Error("Search2General", "Wrong size, must positive");
+      Error("Search2General", "Wrong size, must be positive");
       return 0;
    }
    if (sigma < 0) {
       Error("Search2General", "Invalid sigma, must be positive");
       return 0;
    }
-   if (threshold < 0) {
-      Error("Search2General", "Invalid threshold, must be nonnegative");
+   if (threshold <= 1) {
+      Error("Search2General", "Invalid threshold, must be greater than 1");
       return 0;
    }
    j = (int) (pocet_sigma * sigma + 0.5);
@@ -10255,18 +10260,20 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
       }
    }
    double **working_space = new double *[sizex];
-   double *working_vector_x = new double[2 * sizex];
-   double *working_vector_y = new double[2 * sizey];
    for (i = 0; i < sizex; i++)
-      working_space[i] = new double[2 * sizey];
+      working_space[i] = new double[3 * sizey];
    for (j = 0; j < sizey; j++) {
       for (i = 0; i < sizex; i++) {
          working_space[i][j] = 0;
          working_space[i][j + sizey] = 0;
       }
    }
-   for (i = 0; i < PEAK_WINDOW; i++)
+
+   for (i = 0; i < PEAK_WINDOW; i++){
       filter[i] = 0;
+      filter4[i] = 0;
+      filter6[i] = 0;
+   }
    j = (int) (pocet_sigma * sigma + 0.5);
    for (i = -j; i <= j; i++) {
       a = i;
@@ -10280,13 +10287,24 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
       s = s / (sigma * sigma * sigma * sigma);
       s = s * a;
       filter[PEAK_WINDOW / 2 + i] = s;
+      b = i;
+      s = (b * b * b * b - 6 * b * b * sigma * sigma + 3 * sigma * sigma * sigma * sigma) / (sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma);
+      s = s * a;
+      filter4[PEAK_WINDOW / 2 + i]=s;
+      s = (b * b * b * b * b * b - 15 * b * b * b * b * sigma * sigma + 45 * b * b * sigma * sigma * sigma * sigma - 15 * sigma * sigma * sigma * sigma * sigma * sigma) / (sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma * sigma);
+      s = s * a;
+      filter6[PEAK_WINDOW / 2 + i]=s;
    }
-   norma = 0;
+   norma = 0,norma4 = 0,norma6 = 0;
    for (i = 0; i < PEAK_WINDOW; i++) {
       norma = norma + TMath::Abs(filter[i]);
+      norma4 = norma4 + TMath::Abs(filter4[i]);
+      norma6 = norma6 + TMath::Abs(filter6[i]);
    }
    for (i = 0; i < PEAK_WINDOW; i++) {
       filter[i] = filter[i] / norma;
+      filter4[i] = filter4[i] / norma4;
+      filter6[i] = filter6[i] / norma6;
    }
    if (markov == true) {
       for (i = 0, maxch = 0; i < sizex; i++) {
@@ -10306,21 +10324,29 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
          nim = source[i + 1][ymin] / maxch;
          sp = 0, sm = 0;
          for (l = 1; l <= aver_window; l++) {
-            a = source[i + l][ymin] / maxch;
+            if((i + l) > xmax)
+	       a = source[xmax][ymin] / maxch;
+
+            else
+               a = source[i + l][ymin] / maxch;
             b = a - nip;
             if (a + nip <= 0)
                a = 1;
-            
+
             else
                a = TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
-            a = source[i - l + 1][ymin] / maxch;
+            if(i - l + 1 < xmin)
+               a = source[xmin][ymin] / maxch;
+
+            else
+               a = source[i - l + 1][ymin] / maxch;
             b = a - nim;
             if (a + nim <= 0)
                a = 1;
-            
+
             else
                a = TMath::Sqrt(a + nim);
             b = b / a;
@@ -10336,21 +10362,29 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
          nim = source[xmin][i + 1] / maxch;
          sp = 0, sm = 0;
          for (l = 1; l <= aver_window; l++) {
-            a = source[xmin][i + l] / maxch;
+            if((i + l) > ymax)
+               a = source[xmin][ymax] / maxch;
+
+            else
+               a = source[xmin][i + l] / maxch;
             b = a - nip;
             if (a + nip <= 0)
                a = 1;
-            
+
             else
                a = TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
-            a = source[xmin][i - l + 1] / maxch;
+            if(i - l + 1 < ymin)
+               a=source[xmin][ymin] / maxch;
+
+            else
+               a = source[xmin][i - l + 1] / maxch;
             b = a - nim;
             if (a + nim <= 0)
                a = 1;
-            
+
             else
                a = TMath::Sqrt(a + nim);
             b = b / a;
@@ -10367,21 +10401,29 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
             nim = source[i + 1][j + 1] / maxch;
             spx = 0, smx = 0;
             for (l = 1; l <= aver_window; l++) {
-               a = source[i + l][j] / maxch;
+               if(i + l > xmax)
+                  a = source[xmax][j] / maxch;
+
+               else
+                  a = source[i + l][j] / maxch;
                b = a - nip;
                if (a + nip <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nip);
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
-               a = source[i - l + 1][j] / maxch;
+               if(i - l + 1 < xmin)
+                  a = source[xmin][j] / maxch;
+
+               else
+                  a = source[i - l + 1][j] / maxch;
                b = a - nim;
                if (a + nim <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nim);
                b = b / a;
@@ -10392,21 +10434,29 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
             nip = source[i + 1][j] / maxch;
             nim = source[i + 1][j + 1] / maxch;
             for (l = 1; l <= aver_window; l++) {
-               a = source[i][j + l] / maxch;
+               if(j + l > ymax)
+                  a = source[i][ymax] / maxch;
+
+               else
+                  a = source[i][j + l] / maxch;
                b = a - nip;
                if (a + nip <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nip);
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
-               a = source[i][j - l + 1] / maxch;
+               if(j - l + 1 < ymin)
+                  a = source[i][ymin] / maxch;
+
+               else
+                  a = source[i][j - l + 1] / maxch;
                b = a - nim;
                if (a + nim <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nim);
                b = b / a;
@@ -10430,279 +10480,215 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
          }
       }
    }
-   if (sigma != 0) {
-      a = pocet_sigma * sigma + 0.5;
-      i = (int) a;
-      ymin = i;
-      ymax = sizey - i;
-      xmin = i;
-      xmax = sizex - i;
+   if(sigma >= 2){
+      a = pocet_sigma*sigma+0.5;
+      i = (int)a;
+      ymin = -i;
+      ymax = sizey + i;
+      xmin = -i;
+      xmax = sizex + i;
       lmin = PEAK_WINDOW / 2 - i;
       lmax = PEAK_WINDOW / 2 + i;
-      for (i = xmin; i < xmax; i++) {
-         for (j = ymin; j < ymax; j++) {
-            s = 0, f = 0;
-            for (li = lmin; li <= lmax; li++) {
-               for (lj = lmin; lj <= lmax; lj++) {
-                  a = source[i + li - PEAK_WINDOW / 2][j + lj -
-                                                        PEAK_WINDOW / 2];
-                  s += a * filter[li] * filter[lj];
-                  f +=
-                      a * filter[li] * filter[li] * filter[lj] *
-                      filter[lj];
-               }
+      for(i = xmin,maxamp = 0;i < xmax;i++){
+       	 for(j = ymin;j < ymax;j++){
+	    s = 0,f = 0,s6two = 0,f6 = 0,s4 = 0,f4 = 0;
+	    for(li = lmin;li <= lmax;li++){
+	       for(lj = lmin;lj <= lmax;lj++){
+                  if((i + li - PEAK_WINDOW / 2) < 0){
+                     if((j + lj - PEAK_WINDOW/2) < 0)
+                        a = source[0][0];
+
+                     else if((j + lj - PEAK_WINDOW / 2) >= sizey)
+                        a = source[0][sizey - 1];
+
+                     else
+                        a = source[0][j + lj - PEAK_WINDOW / 2];
+                  }
+
+                  else if((i + li - PEAK_WINDOW / 2) >= sizex){
+                     if((j + lj - PEAK_WINDOW / 2) < 0)
+                        a = source[sizex - 1][0];
+
+                     else if((j + lj - PEAK_WINDOW / 2) >= sizey)
+                        a = source[sizex - 1][sizey - 1];
+
+                     else
+                        a = source[sizex - 1][j + lj - PEAK_WINDOW / 2];
+                  }
+
+                  else{
+                     if((j + lj - PEAK_WINDOW / 2) < 0)
+                        a = source[i + li - PEAK_WINDOW / 2][0];
+
+                     else if((j + lj - PEAK_WINDOW / 2) >= sizey)
+                        a = source[i + li - PEAK_WINDOW / 2][sizey - 1];
+
+                     else
+                	a = source[i + li - PEAK_WINDOW / 2][j + lj - PEAK_WINDOW / 2];
+                  }
+     		  s += a * filter[li] * filter[lj];
+	          f += a * filter[li] * filter[li] * filter[lj] * filter[lj];
+   	          s4 += a * filter4[li] * filter4[lj];
+		  f4 += a * filter4[li] * filter4[li] * filter4[lj] * filter4[lj];
+		  s6two += a * filter6[li] * filter6[lj];
+   		  f6 += a * filter6[li] * filter6[li] * filter6[lj] * filter6[lj];
+      	       }
             }
             f = TMath::Sqrt(f);
-            working_space[i][j] = s;
-            working_space[i][j + sizey] = f;
+            f4 = TMath::Sqrt(f4);
+            f6 = TMath::Sqrt(f6);
+            if(i >= 0 && i < sizex && j >= 0 && j < sizey){
+     	       working_space[i][j] = s6two;
+	       working_space[i][j + sizey] = f6;
+               if(s6two > f6 && s > f && s4 > f4){
+      	          s = 0,s4 = 0,s6 = 0;
+		  for(li = lmin;li <= lmax;li++){
+                     if(j + li - PEAK_WINDOW / 2 < 0)
+                        a = source[i][0];
+
+                     else if(j + li - PEAK_WINDOW / 2 >= sizey)
+                        a = source[i][sizey - 1];
+
+                     else
+        		a = source[i][j + li - PEAK_WINDOW / 2];
+   	             s += a * filter[li];
+        	     s4 += a * filter4[li];
+        	     s6 += a * filter6[li];
+                  }
+                  if(s < 0 && s4 > 0 && s6 < 0){
+	             s = 0,s4 = 0,s6 = 0;
+		     for(li = lmin;li <= lmax;li++){
+                        if(i + li - PEAK_WINDOW / 2 < 0)
+                           a = source[0][j];
+
+                        else if(i + li - PEAK_WINDOW / 2 >= sizex)
+                           a = source[sizex - 1][j];
+
+                        else
+        		   a = source[i + li - PEAK_WINDOW / 2][j];
+                        s += a * filter[li];
+                        s4 += a * filter4[li];
+                	s6 += a * filter6[li];
+                     }
+                     if(s < 0 && s4 > 0 && s6 < 0){
+                        working_space[i][j + 2 * sizey] = s6two;
+                        if(maxamp < s6two)
+                           maxamp = s6two;
+                     }
+
+                     else
+                        working_space[i][j + 2 * sizey] = 0;
+                  }
+
+                  else
+                     working_space[i][j + 2 * sizey] = 0;
+               }
+
+               else
+                  working_space[i][j + 2 * sizey] = 0;
+            }
          }
       }
-      for (x = xmin; x < xmax; x++) {
-         for (y = ymin + 1; y < ymax; y++) {
-            val = working_space[x][y];
-            val1 = working_space[x - 1][y - 1];
-            if (val >= val1) {
-               val2 = working_space[x][y - 1];
-               if (val >= val2) {
-                  val3 = working_space[x + 1][y - 1];
-                  if (val >= val3) {
-                     val4 = working_space[x - 1][y];
-                     if (val >= val4) {
-                        val5 = working_space[x + 1][y];
-                        if (val >= val5) {
-                           val6 = working_space[x - 1][y + 1];
-                           if (val >= val6) {
-                              val7 = working_space[x][y + 1];
-                              if (val >= val7) {
-                                 val8 = working_space[x + 1][y + 1];
-                                 if (val >= val8) {
-                                    if (val != val1 || val != val2
-                                         || val != val3 || val != val4
-                                         || val != val5 || val != val6
-                                         || val != val7 || val != val8) {
-                                       priz = 0;
-                                       for (j = 0;
-                                             (j < peak_index)
-                                             && (priz == 0); j++) {
-                                          dxmin = fPositionX[j] - sigma;
-                                          dxmax = fPositionX[j] + sigma;
-                                          dymin = fPositionY[j] - sigma;
-                                          dymax = fPositionY[j] + sigma;
-                                          if ((x >= dxmin) && (x <= dxmax)
-                                               && (y >= dymin)
-                                               && (y <= dymax))
-                                             priz = 1;
-                                       }
-                                       if (priz == 0) {
-                                          s = 0, f = 0;
-                                          for (li = lmin; li <= lmax;
-                                                li++) {
-                                             a = source[x][y + li -
-                                                            PEAK_WINDOW /
-                                                            2];
-                                             s += a * filter[li];
-                                             f +=
-                                                 a * filter[li] *
-                                                 filter[li];
-                                          }
-                                          f = TMath::Sqrt(f);
-                                          if (s < f) {
-                                             s = 0, f = 0;
-                                             for (li = lmin; li <= lmax;
-                                                   li++) {
-                                                a = source[x + li -
-                                                            PEAK_WINDOW /
-                                                            2][y];
-                                                s += a * filter[li];
-                                                f +=
-                                                    a * filter[li] *
-                                                    filter[li];
-                                             }
-                                             f = TMath::Sqrt(f);
-                                             if (s < f) {
-                                                for (i =
-                                                      x + lmin -
-                                                      PEAK_WINDOW / 2;
-                                                      i <=
-                                                      x + lmax -
-                                                      PEAK_WINDOW / 2;
-                                                      i++) {
-                                                   working_vector_x[i -
-                                                                     x -
-                                                                     lmin +
-                                                                     PEAK_WINDOW
-                                                                     / 2] =
-                                                       -working_space[i]
-                                                       [y];
-                                                   working_vector_x[i -
-                                                                     x -
-                                                                     lmin +
-                                                                     PEAK_WINDOW
-                                                                     / 2 +
-                                                                     sizex]
-                                                       =
-                                                       working_space[i][y +
-                                                                        sizey];
-                                                }
-                                                
-                                                    //find peaks in y-th column
-                                                    n =
-                                                    PeakEvaluate
-                                                    (working_vector_x,
-                                                     sizex,
-                                                     lmax - lmin + 1,
-                                                     x + lmin -
-                                                     PEAK_WINDOW / 2,
-                                                     markov);
-                                                if (n == -1) {
-                                                   Warning("Search2",
-                                                            "TOO MANY PEAKS IN ONE COLUMN");
-                                                   return -1;
-                                                }
-                                                if (n != 0) {
-                                                   val = sizex;
-                                                   for (i = 0; i < n; i++) {
-                                                      a = fPosition[i];
-                                                      a = TMath::Abs(a -
-                                                                      x);
-                                                      if (a < val) {
-                                                         val = a;
-                                                         polx = i;
-                                                      }
-                                                   }
-                                                   dpeakx =
-                                                       fPosition[polx];
-                                                   for (i =
-                                                         y + lmin -
-                                                         PEAK_WINDOW / 2;
-                                                         i <=
-                                                         y + lmax -
-                                                         PEAK_WINDOW / 2;
-                                                         i++) {
-                                                      working_vector_y[i -
-                                                                        y -
-                                                                        lmin
-                                                                        +
-                                                                        PEAK_WINDOW
-                                                                        /
-                                                                        2]
-                                                          =
-                                                          -working_space[x]
-                                                          [i];
-                                                      working_vector_y[i -
-                                                                        y -
-                                                                        lmin
-                                                                        +
-                                                                        PEAK_WINDOW
-                                                                        /
-                                                                        2 +
-                                                                        sizey]
-                                                          =
-                                                          working_space[x]
-                                                          [i + sizey];
-                                                   }
-                                                   
-                                                       //find peaks in x-th row
-                                                       n =
-                                                       PeakEvaluate
-                                                       (working_vector_y,
-                                                        sizey,
-                                                        lmax - lmin + 1,
-                                                        y + lmin -
-                                                        PEAK_WINDOW / 2,
-                                                        markov);
-                                                   if (n == -1) {
-                                                      Warning("Search2",
-                                                               "TOO MANY PEAKS IN ONE COLUMN");
-                                                      return -1;
-                                                   }
-                                                   if (n != 0) {
-                                                      val = sizey;
-                                                      for (i = 0; i < n;
-                                                            i++) {
-                                                         a = fPosition[i];
-                                                         a = TMath::
-                                                             Abs(a - y);
-                                                         if (a < val) {
-                                                            val = a;
-                                                            poly = i;
-                                                         }
-                                                      }
-                                                      dpeaky =
-                                                          fPosition[poly];
-                                                      is =
-                                                          (int) (3 *
-                                                                 sigma +
-                                                                 0.5);
-                                                      k1 =
-                                                          (int) dpeakx,
-                                                          k2 =
-                                                          (int) dpeaky;
-                                                      val1 =
-                                                          source[k1 -
-                                                                 is][k2 -
-                                                                     is];
-                                                      val2 =
-                                                          source[k1 -
-                                                                 is][k2 +
-                                                                     is];
-                                                      val3 =
-                                                          source[k1 +
-                                                                 is][k2 -
-                                                                     is];
-                                                      val4 =
-                                                          source[k1 +
-                                                                 is][k2 +
-                                                                     is];
-                                                      val5 =
-                                                          source[k1][k2 -
-                                                                     is];
-                                                      val6 =
-                                                          source[k1 -
-                                                                 is][k2];
-                                                      val7 =
-                                                          source[k1][k2 +
-                                                                     is];
-                                                      val8 =
-                                                          source[k1 +
-                                                                 is][k2];
-                                                      val =
-                                                          source[k1][k2];
-                                                      a = (val1 + val2 +
-                                                            val3 + val4 -
-                                                            2 * (val5 +
-                                                                 val6 +
-                                                                 val7 +
-                                                                 val8) +
-                                                            4 * val) / 4;
-                                                      if (a > threshold
-                                                           || threshold ==
-                                                           0) {
-                                                         if (peak_index <
-                                                              fMaxPeaks) {
-                                                            fPositionX
-                                                                [peak_index]
-                                                                = dpeakx;
-                                                            fPositionY
-                                                                [peak_index]
-                                                                = dpeaky;
-                                                            peak_index +=
-                                                                1;
-                                                         } else {
-                                                            Warning
-                                                                ("Search2",
-                                                                 "PEAK BUFFER FULL");
-                                                            return 0;
-                                                         }
-                                                      }
-                                                   }
-                                                }
-                                             }
-                                          }
-                                       }
-                                    }
-                                 }
-                              }
+      for(x = 1;x < sizex - 1;x++){
+       	 for(y = 1;y < sizey - 1;y++){
+            val = working_space[x][2 * sizey + y];
+            val1 = working_space[x - 1][2 * sizey + y - 1];
+            val2 = working_space[x][2 * sizey + y - 1];
+            val3 = working_space[x + 1][2 * sizey + y - 1];
+            val4 = working_space[x - 1][2 * sizey + y];
+            val5 = working_space[x + 1][2 * sizey + y];
+            val6 = working_space[x - 1][2 * sizey + y + 1];
+            val7 = working_space[x][2 * sizey + y + 1];
+            val8 = working_space[x + 1][2 * sizey + y + 1];
+            if(val >= val1 && val >= val2 && val >= val3 && val >= val4 && val >= val5 && val >= val6 && val >= val7 && val >= val8 && val > maxamp/100){
+               if(val != val1 || val != val2 || val != val3 || val != val4 || val != val5 || val != val6 || val != val7 || val != val8){
+                  priz=0;
+                  for(j = 0;(j < peak_index)&&(priz == 0);j++){
+                     //dxmin = p->positionx[j] - sigma;
+                     //dxmax = p->positionx[j] + sigma;
+                     //dymin = p->positiony[j] - sigma;
+                     //dymax = p->positiony[j] + sigma;
+                     dxmin = fPositionX[j] - sigma;
+                     dxmax = fPositionX[j] + sigma;
+                     dymin = fPositionY[j] - sigma;
+                     dymax = fPositionY[j] + sigma;
+                     if((x >= dxmin) && (x <= dxmax) && (y >= dymin) && (y <= dymax))
+                        priz=1;
+                  }
+                  if(priz == 0){
+                     suma = 0,sumai = 0;
+                     priz = 0;
+                     j = 0;
+                     for(i = x;i >= 0 && priz == 0;i--){
+                        if(working_space[i][y + 2 * sizey] > 0){
+                           a = i;
+                           b = working_space[i][y + 2 * sizey];
+                           suma += b;
+                           sumai += a*b;
+                           j += 1;
+                        }
+
+                        else
+                           priz=1;
+                     }
+                     priz = 0;
+                     for(i = x + 1;i < sizex && priz == 0;i++){
+                        if(working_space[i][y + 2 * sizey] > 0){
+                           a = i;
+                           b = working_space[i][y + 2 * sizey];
+                           suma += b;
+                           sumai += a * b;
+                           j += 1;
+                        }
+
+                        else
+                           priz=1;
+                     }
+                     dpeakx = sumai / suma;
+                     suma = 0,sumai = 0;
+                     priz = 0;
+                     l = 0;
+                     for(i = y;i >= 0 && priz == 0;i--){
+                        if(working_space[x][i + 2 * sizey] > 0){
+                           a = i;
+                           b = working_space[x][i + 2 * sizey];
+                           suma += b;
+                           sumai += a * b;
+                           l += 1;
+                        }
+
+                        else
+                           priz=1;
+                     }
+                     priz = 0;
+                     for(i = y + 1;i < sizey && priz == 0;i++){
+                        if(working_space[x][i + 2 * sizey] > 0){
+                           a = i;
+                           b = working_space[x][i + 2 * sizey];
+                           suma += b;
+                           sumai += a * b;
+                           l += 1;
+                        }
+
+                        else
+                           priz = 1;
+                     }
+                     if(j > 2 && l > 2){
+                        dpeaky = sumai / suma;
+                        i = (int)(dpeakx + 0.5);
+                        j = (int)(dpeaky + 0.5);
+                        s = working_space[i][j];
+                        f = working_space[i][j + sizey];
+                        if(threshold * f < TMath::Abs(s)){
+                           if(peak_index < fMaxPeaks){
+                              fPositionX[peak_index] = dpeakx;
+                              fPositionY[peak_index] = dpeaky;
+                              peak_index += 1;
+                           }
+
+                           else{
+                              Warning("Search2","PEAK BUFFER FULL");
+                              return 0;
                            }
                         }
                      }
@@ -10712,23 +10698,22 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
          }
       }
    }
-   
-   else {
-      for (x = 1; x < sizex - 1; x++) {
-         for (y = 1; y < sizey - 1; y++) {
-            a = (source[x - 1][y - 1] + source[x - 1][y + 1] +
-                  source[x + 1][y - 1] + source[x + 1][y + 1] -
-                  2 * (source[x - 1][y] + source[x + 1][y] +
-                       source[x][y - 1] + source[x][y + 1]) +
-                  4 * source[x][y]) / 4;
-            if (a > threshold) {
-               dpeaky = fPosition[poly];
-               if (peak_index < fMaxPeaks) {
+
+   else{
+      for(x = 1;x < sizex - 1;x++){
+         for(y = 1;y < sizey - 1;y++){
+            a = (source[x - 1][y - 1] + source[x - 1][y + 1] + source[x + 1][y - 1] + source[x + 1][y + 1] - 2 * (source[x - 1][y] + source[x + 1][y] + source[x][y - 1] + source[x][y + 1]) + 4 * source[x][y]) / 16;
+            b = (source[x - 1][y - 1] + source[x - 1][y + 1] + source[x + 1][y - 1] + source[x + 1][y + 1] + 4 * (source[x - 1][y] + source[x + 1][y] + source[x][y - 1] + source[x][y + 1]) + 16 * source[x][y]) / 256;
+            b=TMath::Sqrt(b);
+            if(TMath::Abs(a) > (threshold * b)){
+               if(peak_index < fMaxPeaks){
                   fPositionX[peak_index] = x;
                   fPositionY[peak_index] = y;
                   peak_index += 1;
-               } else {
-                  Warning("Search2", "PEAK BUFFER FULL");
+               }
+
+               else{
+                  Warning("Search2","PEAK BUFFER FULL");
                   return 0;
                }
             }
@@ -10738,11 +10723,11 @@ const char *TSpectrum2::Deconvolution2HighResolution(float **source,
    for (i = 0; i < sizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   delete[]working_vector_x;
-   delete[]working_vector_y;
    fNPeaks = peak_index;
    return fNPeaks;
 }
+
+
 
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.5 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.h,v 1.1 2003/04/14 12:56:34 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -227,7 +227,7 @@ public:
    const char *Smooth2(float **spectrum,int sizex,int sizey,int pointsx,int pointsy);
    void DecFourier2(double *working_space,int num,int iter,int inv);
    const char *Deconvolution2HighResolution(float** source,const float** resp,int sizex,int sizey,int number_of_iterations,int number_of_repetitions,double boost);
-   Int_t Search2General(float **source,int sizex,int sizey,double sigma,int threshold,bool markov,int aver_window);
+   Int_t Search2General(float **source,int sizex,int sizey,double sigma,double threshold,bool markov,int aver_window);
    double      Lls(double a);
 
       //auxiliary functions for 2. parameter fit functions
