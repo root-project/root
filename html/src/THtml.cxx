@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.6 2001/02/06 17:35:55 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.7 2001/05/16 08:55:58 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -2543,21 +2543,16 @@ void THtml::MakeIndex(const char *filter)
       if( impname ) {
          fileNames[numberOfImpFiles] = StrDup( impname, 64 );
 
-         char *underline = strchr( fileNames[numberOfImpFiles], '_');
-//         if( underline )
-//            strcpy( underline + 1, classNames[nOK] );
-//         else {
-            // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-            char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/");
-            if (srcdir) {
-               strcpy(srcdir, "_");
-               for (char *t = fileNames[numberOfImpFiles]; (t[0] = toupper(t[0])); t++) ;
-               strcat(srcdir, classNames[nOK]);
-            } else {
-               strcpy( fileNames[nOK], "USER_" );
-               strcat( fileNames[nOK], classNames[nOK] );
-            }
-//         }
+         // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
+         char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/");
+         if (srcdir && !strchr(srcdir+5,'/') && srcdir[5] == 'T') {
+            strcpy(srcdir, "_");
+            for (char *t = fileNames[numberOfImpFiles]; (t[0] = toupper(t[0])); t++) ;
+            strcat(srcdir, classNames[nOK]);
+         } else {
+            strcpy( fileNames[nOK], "USER_" );
+            strcat( fileNames[nOK], classNames[nOK] );
+         }
          numberOfImpFiles++;
       }
       else cout << "WARNING class:" << classNames[i] << " has no implementation file name !" << endl;
