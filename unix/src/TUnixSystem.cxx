@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.102 2004/05/18 09:34:37 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.103 2004/06/14 16:18:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -3509,35 +3509,44 @@ const char *TUnixSystem::GetDynamicPath()
 {
    // Get shared library search path. Static utility function.
 
-   static const char *dynpath = 0;
+   static TString dynpath;
 
-   if (dynpath == 0) {
-      const char *rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
-      if (rdynpath == 0)
+   if (dynpath.IsNull()) {
+      TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+      if (rdynpath.IsNull()) {
 #ifdef ROOTLIBDIR
-         rdynpath = StrDup(Form(".:%s", ROOTLIBDIR));
+         rdynpath = ".:"; rdynpath += ROOTLIBDIR;
 #else
-         rdynpath = StrDup(Form(".:%s/lib", gRootDir));
+         rdynpath = ".:"; rdynpath += gRootDir; rdynpath += "/lib";
 #endif
-      const char *ldpath = 0;
+      }
+      TString ldpath;
 #if defined (R__AIX)
       ldpath = gSystem->Getenv("LIBPATH");
 #elif defined(R__HPUX)
       ldpath = gSystem->Getenv("SHLIB_PATH");
+#elif defined(R__MACOSX)
+      ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
+      if (!ldpath.IsNull())
+         ldpath += ":";
+      ldpath += gSystem->Getenv("LD_LIBRARY_PATH");
 #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
 #endif
-      if (ldpath == 0)
+      if (ldpath.IsNull())
          dynpath = rdynpath;
-      else
-         dynpath = StrDup(Form("%s:%s", rdynpath, ldpath));
+      else {
+         dynpath = rdynpath; dynpath += ":"; dynpath += ldpath;
+      }
 
 #ifdef ROOTLIBDIR
-      if (!strstr(dynpath, ROOTLIBDIR))
-         dynpath = StrDup(Form("%s:%s", dynpath, ROOTLIBDIR));
+      if (!dynpath.Contains(ROOTLIBDIR)) {
+         dynpath += ":"; dynpath += ROOTLIBDIR;
+      }
 #else
-      if (!strstr(dynpath, Form("%s/lib", gRootDir)))
-         dynpath = StrDup(Form("%s:%s/lib", dynpath, gRootDir));
+      if (!dynpath.Contains(Form("%s/lib", gRootDir))) {
+         dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
+      }
 #endif
    }
    return dynpath;
