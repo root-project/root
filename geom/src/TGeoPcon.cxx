@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.16 2003/02/07 13:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.17 2003/03/07 07:55:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -648,7 +648,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    Bool_t outz = kFALSE;
    skipz = 3;
    if (ipl<0) {
-      ipl++;
+      ipl=0;
       skipz = 0;
       outz = kTRUE;
    } else if (ipl==fNz-1) {
@@ -666,7 +666,6 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    rmin2 = fRmin[ipl+1];
    rmax2 = fRmax[ipl+1];
    is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
-   is_seg  = (fDphi<360)?kTRUE:kFALSE;
    memcpy(ptnew, point, 2*sizeof(Double_t));
    ptnew[2] = point[2] - 0.5*(fZ[ipl]+fZ[ipl+1]);
    if (is_seg) {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.20 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.21 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1025,6 +1025,7 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
                if (fRmin[ipl]>fRmin[ipl-1] || fRmax[ipl]<fRmax[ipl-1]) {
                   saf[0] = point[2]-fZ[ipl];
                   if (saf[0]<1E-4) return saf[0];
+                  saf[0] = -saf[0];
                }
             }
          }
@@ -1032,17 +1033,18 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
             if (fZ[ipl+1]==fZ[ipl+2]) {
                if (fRmin[ipl+1]>fRmin[ipl+2] || fRmax[ipl+1]<fRmax[ipl+2]) {
                   saf[1] = fZ[ipl+1]-point[2];
-                  if (saf[1]<1E-4) return saf[1];         
+                  if (saf[1]<1E-4) return saf[1];
+                  saf[1] = -saf[1];         
                }
             }
          }
       } else {
          if (ipl<0) {
             ipl=0;
-            saf[0] = fZ[0]-point[2];
+            saf[0] = -fZ[0]+point[2];
          } else {
             ipl=fNz-2;
-            saf[1] = point[2]-fZ[fNz-1];
+            saf[1] = -point[2]+fZ[fNz-1];
          }
          dz = fZ[ipl+1]-fZ[ipl];
       }

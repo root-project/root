@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.15 2003/02/07 13:46:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.16 2003/03/14 11:49:02 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -239,77 +239,69 @@ Double_t TGeoTrd1::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
    if (point[2]<-fDz) {
-      cn = -dir[2];
-      if (cn<0) {
-         snxt = -(fDz+point[2])/cn;
-         // find extrapolated X and Y
-         xnew = point[0]+snxt*dir[0];
-         if (TMath::Abs(xnew) < fDx1) {
-            ynew = point[1]+snxt*dir[1];
-            if (TMath::Abs(ynew) < fDy) return snxt;
-         }
-      }      
+      if (dir[2]<=0) return kBig;
+      snxt = -(fDz+point[2])/dir[2];
+      // find extrapolated X and Y
+      xnew = point[0]+snxt*dir[0];
+      if (TMath::Abs(xnew) < fDx1) {
+         ynew = point[1]+snxt*dir[1];
+         if (TMath::Abs(ynew) < fDy) return snxt;
+      }
    } else if (point[2]>fDz) {
-      cn = dir[2];
-      if (cn<0) {
-         snxt = -(fDz-point[2])/cn;
-         // find extrapolated X and Y
-         xnew = point[0]+snxt*dir[0];
-         if (TMath::Abs(xnew) < fDx2) {
-            ynew = point[1]+snxt*dir[1];
-            if (TMath::Abs(ynew) < fDy) return snxt;
-         }
-      }      
+      if (dir[2]>=0) return kBig;
+      snxt = (fDz-point[2])/dir[2];
+      // find extrapolated X and Y
+      xnew = point[0]+snxt*dir[0];
+      if (TMath::Abs(xnew) < fDx2) {
+         ynew = point[1]+snxt*dir[1];
+         if (TMath::Abs(ynew) < fDy) return snxt;
+      }
    }
    // check if X facettes are crossed
    if (point[0]<-distx) {
       cn = -dir[0]+fx*dir[2];
-      if (cn<0) {
-         snxt = (point[0]+distx)/cn;
-         // find extrapolated Y and Z
-         ynew = point[1]+snxt*dir[1];
-         if (TMath::Abs(ynew) < fDy) {
-            znew = point[2]+snxt*dir[2];
-            if (TMath::Abs(znew) < fDz) return snxt;
-         }
+      if (cn>=0) return kBig;
+      snxt = (point[0]+distx)/cn;
+      // find extrapolated Y and Z
+      ynew = point[1]+snxt*dir[1];
+      if (TMath::Abs(ynew) < fDy) {
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) return snxt;
       }
    }            
    if (point[0]>distx) {
       cn = dir[0]+fx*dir[2];
-      if (cn<0) {
-         snxt = (distx-point[0])/cn;
-         // find extrapolated Y and Z
-         ynew = point[1]+snxt*dir[1];
-         if (TMath::Abs(ynew) < fDy) {
-            znew = point[2]+snxt*dir[2];
-            if (TMath::Abs(znew) < fDz) return snxt;
-         }
+      if (cn>=0) return kBig;
+      snxt = (distx-point[0])/cn;
+      // find extrapolated Y and Z
+      ynew = point[1]+snxt*dir[1];
+      if (TMath::Abs(ynew) < fDy) {
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) return snxt;
       }
    }
    // finally check Y facettes
    if (point[1]<-fDy) {
       cn = -dir[1];            
-      if (cn<0) {
-         snxt = (point[1]+fDy)/cn;
-         // find extrapolated X and Z
-         znew = point[2]+snxt*dir[2];
-         if (TMath::Abs(znew) < fDz) {
-            xnew = point[0]+snxt*dir[0];
-            Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
-            if (TMath::Abs(xnew) < dx) return snxt;
-         }
+      if (cn>=0) return kBig;
+      snxt = (point[1]+fDy)/cn;
+      // find extrapolated X and Z
+      znew = point[2]+snxt*dir[2];
+      if (TMath::Abs(znew) < fDz) {
+         xnew = point[0]+snxt*dir[0];
+         Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
+         if (TMath::Abs(xnew) < dx) return snxt;
       }
-   } else if (point[1]>0) {
-      cn = dir[1];            
-      if (cn<0) {
-         snxt = (fDy-point[1])/cn;
-         // find extrapolated X and Z
-         znew = point[2]+snxt*dir[2];
-         if (TMath::Abs(znew) < fDz) {
-            xnew = point[0]+snxt*dir[0];
-            Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
-            if (TMath::Abs(xnew) < dx) return snxt;
-         }
+   } else if (point[1]>fDy) {
+      cn = dir[1];        
+      if (cn>=0) return kBig;    
+      snxt = (fDy-point[1])/cn;
+      // find extrapolated X and Z
+      znew = point[2]+snxt*dir[2];
+      if (TMath::Abs(znew) < fDz) {
+         xnew = point[0]+snxt*dir[0];
+         Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
+         if (TMath::Abs(xnew) < dx) return snxt;
       }
    }
    return kBig;
