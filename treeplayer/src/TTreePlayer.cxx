@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.3 2000/06/09 16:27:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.4 2000/06/13 09:18:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1002,8 +1002,9 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    if (!fV2 && fVar2)   fV2 = new Double_t[fTree->GetEstimate()];
    if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
-   Int_t force = TestBit(TTree::kForceRead);
+   Int_t force = fTree->TestBit(TTree::kForceRead);
    if (!fMultiplicity || !fDimension) {
+      Bool_t available = kTRUE;
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -1011,27 +1012,29 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          if (gROOT->IsInterrupted()) break;
          fTree->LoadTree(entryNumber);
          if (fSelect) {
-            if (force) fSelect->GetNdata();
+            if (force) { available = (fSelect->GetNdata()>0); };
             fW[fNfill] = fSelect->EvalInstance(0);
             if (!fW[fNfill]) continue;
          } else fW[fNfill] = 1;
          if (fVar1) {
-            if (force) fVar1->GetNdata();
+            if (force) { available = (fVar1->GetNdata()>0); };
             fV1[fNfill] = fVar1->EvalInstance(0);
          }
          if (fVar2) {
-            if (force) fVar2->GetNdata();
+            if (force) { available = (fVar2->GetNdata()>0); };
             fV2[fNfill] = fVar2->EvalInstance(0);
             if (fVar3) {
-               if (force) fVar3->GetNdata();
+               if (force) { available = (fVar3->GetNdata()>0); };
                fV3[fNfill] = fVar3->EvalInstance(0);
             }
          }
-         fNfill++;
-         if (fNfill >= fTree->GetEstimate()) {
-            TakeAction(fNfill,npoints,action,obj,option);
-            fNfill = 0;
-         }
+         if (available) {
+            fNfill++;
+            if (fNfill >= fTree->GetEstimate()) {
+               TakeAction(fNfill,npoints,action,obj,option);
+               fNfill = 0;
+            }
+         } else available = kTRUE;
       }
 
       // nentries == -1 when all entries have been processed by proofserver
