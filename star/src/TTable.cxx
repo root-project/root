@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.19 2001/05/29 16:07:51 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.16 2001/05/29 19:08:08 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -45,7 +45,7 @@
 //  	float x_last[3];      /* coord. of last measured point (cm)     */
 //  	float length;         /* from first to last point (cm)          */
 //  	float impact;         /* primary vertex (cm)                    */
-//  	unsigned long map[2]; /* extrap. info. (see preceeding comments)*//
+//  	unsigned long map[2]; /* extrap. info. (see preceeding comments)*/
 //  	int id;               /* Primary key (see comments)             */
 //  	int iflag;            /* bitmask quality info. (see comments)   */
 //  	int det_id;           /* Detector id information                */
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.16  2001/05/29 19:08:08  brun
+// New version of some STAR classes from Valery.
+//
 // Revision 1.19  2001/05/29 16:07:51  fine
 //  comments make up
 //                                                   //
