@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.10 2002/01/23 09:33:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.11 2002/02/25 23:08:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -283,6 +283,7 @@ public:
         void             SetOptLogy(Int_t logy=1) {fOptLogy = logy;}
         void             SetOptLogz(Int_t logz=1) {fOptLogz = logz;}
         void             SetOptStat(Int_t stat=1);
+        void             SetOptStat(Option_t *stat);
         void             SetOptTitle(Int_t tit=1) {fOptTitle = tit;}
         void             SetBarOffset(Float_t baroff=0.5) {fBarOffset = baroff;}
         void             SetBarWidth(Float_t barwidth=0.5) {fBarWidth = barwidth;}

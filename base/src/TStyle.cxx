@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.15 2002/01/23 09:33:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.16 2002/02/25 23:08:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -821,6 +821,38 @@ void TStyle::SetOptStat(Int_t mode)
 //           print only name of histogram and number of entries.
 //
    fOptStat = mode;
+}
+  
+  //______________________________________________________________________________
+void TStyle::SetOptStat(Option_t *stat)
+{
+//  The parameter mode can be = IOURMEN
+//    n ;  name of histogram is printed
+//    e ;  number of entries printed
+//    m ;  mean value printed
+//    r ;  rms printed
+//    u ;  number of underflows printed
+//    o ;  number of overflows printed
+//    i ;  integral of bins printed
+//  Example: gStyle->SetOptStat("ne");
+//           print only name of histogram and number of entries.
+//  gStyle->SetOptStat("n") is equivalent to gStyle->SetOptStat(1)
+//  which is the default layout (RMEN)
+
+  Int_t mode=0;
+ 
+  TString opt = stat;
+  opt.ToLower();
+
+  if (opt.Contains("n")) mode+=1;
+  if (opt.Contains("e")) mode+=10;
+  if (opt.Contains("m")) mode+=100;
+  if (opt.Contains("r")) mode+=1000;
+  if (opt.Contains("u")) mode+=10000;
+  if (opt.Contains("o")) mode+=100000;
+  if (opt.Contains("i")) mode+=1000000;
+
+  SetOptStat(mode);
 }
 
 //______________________________________________________________________________
