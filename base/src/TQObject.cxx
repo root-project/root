@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.25 2002/09/16 22:19:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.26 2002/10/21 17:09:52 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -384,7 +384,7 @@ Bool_t TQObject::CheckConnectArgs(TQObject *sender,
        signalMethod->GetNargs() <
         (slotMethod->GetNargs() - slotMethod->GetNargsOpt())) {
       ::Error("TQObject::CheckConnectArgs",
-              "inconsitency in numbers of arguments");
+              "inconsistency in numbers of arguments");
       delete [] slot_method;
       return kFALSE;
    }
