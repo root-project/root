@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.2 2001/05/02 14:18:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.3 2001/05/07 18:44:16 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -622,8 +622,10 @@ TGDimension TGTableLayout::GetDefaultSize() const
                     2*border_width + (fNrows-1)*fSep);
 
    UInt_t col, row;
-   for (col = 0; col < fNcols; ++col) size.fWidth += fCol[col].fDefSize;
-   for (row = 0; row < fNrows; ++row) size.fHeight += fRow[row].fDefSize;
+   if (fCol)
+      for (col = 0; col < fNcols; ++col) size.fWidth += fCol[col].fDefSize;
+   if (fRow)
+      for (row = 0; row < fNrows; ++row) size.fHeight += fRow[row].fDefSize;
 
    return size;
 }
