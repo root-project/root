@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.38 2001/11/08 19:59:27 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.39 2001/11/15 08:46:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -281,9 +281,10 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     RooArgSet pruneList("pruneList") ;
     findUnusedDataVariables(_pdfClone,_dataClone,pruneList) ;
 
-    if (doPdf)
+    if (doPdf) {
       findRedundantCacheServers(_pdfClone,_dataClone,cacheList,pruneList) ;
-    
+    }    
+
     if (pruneList.getSize()!=0) {
       // Created trimmed list of data variables
       RooArgSet newVarList(*_dataClone->get()) ;
@@ -422,7 +423,9 @@ void RooFitContext::findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,Ro
   TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg *var ;
   while (var=(RooAbsArg*) vIter->Next()) {
-    if (allClientsCached(var,cacheList)) pruneList.add(*var) ;
+    if (allClientsCached(var,cacheList)) {
+      pruneList.add(*var) ;
+    }
   }
   delete vIter ;
 }
@@ -436,11 +439,10 @@ Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
   TIterator* cIter = var->valueClientIterator() ;    
   RooAbsArg* client ;
   while (client=(RooAbsArg*) cIter->Next()) {
-
     anyClient = kTRUE ;
     if (!cacheList.find(client->GetName())) {
       // If client is not cached recurse
-      ret = allClientsCached(client,cacheList) ;
+      ret &= allClientsCached(client,cacheList) ;
     }
   }
   delete cIter ;

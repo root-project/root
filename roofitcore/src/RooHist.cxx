@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.11 2001/10/13 21:53:21 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.12 2001/11/16 01:48:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.11 2001/10/13 21:53:21 verkerke Exp $";
+"$Id: RooHist.cc,v 1.12 2001/11/16 01:48:23 david Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
@@ -167,10 +167,24 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
     cout << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
     return;
   }
+
+  // WVE Kludge: PoissonInterval is broken for n > ~100! Restore gaussian errors for the moment  
+
+  ym= sqrt(n) ;
+  yp= ym ;
   SetPoint(index,binCenter,n);
-  SetPointError(index,dx,dx,scale*(n-ym),scale*(yp-n));
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  SetPointError(index,dx,dx,scale*ym,scale*yp);
+  updateYAxisLimits(scale*(n+yp));
+  updateYAxisLimits(scale*(n-ym));
+
+  // WVE Original code below
+
+  //   SetPoint(index,binCenter,n);
+  //   SetPointError(index,dx,dx,scale*(n-ym),scale*(yp-n));
+  //   updateYAxisLimits(scale*yp);
+  //   updateYAxisLimits(scale*ym);
+
+  // WVE end kludge
 }
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth) {
