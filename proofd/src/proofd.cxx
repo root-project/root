@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.48 2003/10/07 14:03:03 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.49 2003/10/22 18:48:36 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -543,7 +543,7 @@ void CheckGlobus(char *rcfile)
    if (gDebug > 2) ErrorInfo("CheckGlobus: user: %d: %s", uGlobus, uRcFile);
 
    // Check in the local environment ...
-   sprintf(s,"%s",rcfile);
+   sprintf(s, "%s", rcfile);
    if (gDebug > 2) ErrorInfo("CheckGlobus: checking local: %s", s);
 
    if (!access(s, R_OK)) {
@@ -665,7 +665,7 @@ void Authenticate()
    while (!gAuth) {
 
       if (NetRecv(recvbuf, kMaxBuf, kind) < 0)
-         Error(ErrFatal,-1,"Authenticate: error receiving message");
+         Error(ErrFatal, -1, "Authenticate: error receiving message");
 
       // Decode the method ...
       Meth = RpdGetAuthMethod(kind);
@@ -683,7 +683,7 @@ void Authenticate()
 
       // If authentication required, check if we accept the method proposed; if not
       // send back the list of accepted methods, if any ...
-      if (Meth != -1  && gClientProtocol > 8 ) {
+      if (Meth != -1  && gClientProtocol > 8) {
 
          // Check if accepted ...
          if (RpdCheckAuthAllow(Meth, gOpenHost)) {
@@ -764,7 +764,7 @@ recvauth:
       // If authentication successfull, receive info for later authentications
       if (gAuth == 1 && gClientProtocol > 8) {
 
-         sprintf(gFilePA,"%s/proofauth.%ld", gTmpDir, (long)getpid());
+         sprintf(gFilePA, "%s/proofauth.%ld", gTmpDir, (long)getpid());
          if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s", gFilePA);
 
          FILE *fpa = fopen(gFilePA, "w");
@@ -810,10 +810,17 @@ const char *RerouteUser()
 {
    // Look if user should be rerouted to another server node.
 
-   char conffile[256];
+   char conffile[1024];
    FILE *proofconf;
 
-   sprintf(conffile, "%s/etc/proof.conf", gConfDir);
+   conffile[0] = 0;
+   if (getenv("HOME")) {
+      sprintf(conffile, "%s/.proof.conf", getenv("HOME"));
+      if (access(conffile, R_OK))
+         conffile[0] = 0;
+   }
+   if (conffile[0] == 0)
+      sprintf(conffile, "%s/etc/proof.conf", gConfDir);
    if ((proofconf = fopen(conffile, "r")) != 0) {
       // read configuration file
       static char user_on_node[32];
@@ -1002,9 +1009,9 @@ void ProofdExec()
    argvv[8] = 0;
    argvv[9] = 0;
    argvv[10] = 0;
-   if (getenv("X509_CERT_DIR")!=0)  argvv[8] = strdup(getenv("X509_CERT_DIR"));
-   if (getenv("X509_USER_CERT")!=0) argvv[9] = strdup(getenv("X509_USER_CERT"));
-   if (getenv("X509_USER_KEY")!=0)  argvv[10] = strdup(getenv("X509_USER_KEY"));
+   if (getenv("X509_CERT_DIR"))  argvv[8] = strdup(getenv("X509_CERT_DIR"));
+   if (getenv("X509_USER_CERT")) argvv[9] = strdup(getenv("X509_USER_CERT"));
+   if (getenv("X509_USER_KEY"))  argvv[10] = strdup(getenv("X509_USER_KEY"));
    argvv[11] = 0;
 #else
    argvv[7] = 0;
