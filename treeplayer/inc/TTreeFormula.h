@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.28 2003/02/27 21:10:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.29 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -88,6 +88,7 @@ protected:
    Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
    Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info);
+   Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 
    virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
