@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.7 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.8 2004/05/18 14:28:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1428,7 +1428,8 @@ void TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
         rowIndex_new[irow] = rowIndex_new[nrowIndex_old-1];
     }
   } else {
-    Allocate(nrows,ncols,0,0,1,nr_nonzeros);
+    const Int_t nelems_new = (nr_nonzeros >= 0) ? nr_nonzeros : 0;
+    Allocate(nrows,ncols,0,0,1,nelems_new);
   }
 }
 
@@ -1529,7 +1530,8 @@ void TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t co
         rowIndex_new[irow] = rowIndex_new[nrowIndex_old-1];
     }
   } else {
-    Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1,nr_nonzeros);
+    const Int_t nelems_new = (nr_nonzeros >= 0) ? nr_nonzeros : 0;
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1,nelems_new);
   }
 }
 
@@ -2462,22 +2464,24 @@ Bool_t AreCompatible(const TMatrixDSparse &m1,const TMatrixDSparse &m2,Int_t ver
     return kFALSE;
   }
 
-  if (memcmp(m1.GetRowIndexArray(),m2.GetRowIndexArray(),(m1.GetNrows()+1)*sizeof(Int_t))) {
+  const Int_t *pR1 = m1.GetRowIndexArray();
+  const Int_t *pR2 = m2.GetRowIndexArray();
+  const Int_t nRows = m1.GetNrows();
+  if (memcmp(pR1,pR2,(nRows+1)*sizeof(Int_t))) {
     if (verbose)
       ::Error("AreCompatible", "matrices 1 and 2 have different rowIndex");
-    const Int_t *p1 = m1.GetRowIndexArray();
-    const Int_t *p2 = m2.GetRowIndexArray();
-    for (Int_t i = 0; i < m1.GetNrows()+1; i++)
-      printf("%d: %d %d\n",i,p1[i],p2[i]);
+    for (Int_t i = 0; i < nRows+1; i++)
+      printf("%d: %d %d\n",i,pR1[i],pR2[i]);
     return kFALSE;
   }
-  if (memcmp(m1.GetColIndexArray(),m2.GetColIndexArray(),m1.GetNoElements()*sizeof(Int_t))) {
+  const Int_t *pD1 = m1.GetColIndexArray();
+  const Int_t *pD2 = m2.GetColIndexArray();
+  const Int_t nData = m1.GetNoElements();
+  if (memcmp(pD1,pD2,nData*sizeof(Int_t))) {
     if (verbose)
       ::Error("AreCompatible", "matrices 1 and 2 have different colIndex");
-    const Int_t *p1 = m1.GetColIndexArray();
-    const Int_t *p2 = m2.GetColIndexArray();
-    for (Int_t i = 0; i < m1.GetNoElements(); i++)
-      printf("%d: %d %d\n",i,p1[i],p2[i]);
+    for (Int_t i = 0; i < nData; i++)
+      printf("%d: %d %d\n",i,pD1[i],pD2[i]);
     return kFALSE;
   }
 
