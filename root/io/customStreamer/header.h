@@ -14,7 +14,7 @@ public:
 };
 
 // Various streamers
-void hard2StreamStreamer(TBuffer &b, void *objadd, int) {
+void hard2StreamStreamer(TBuffer &b, void *objadd) {
    TClass *R__cl = gROOT->GetClass("Hard2Stream");
 
    Hard2Stream *obj = (Hard2Stream*)objadd;
@@ -45,6 +45,6 @@ void hard2StreamStreamer(TBuffer &b, void *objadd, int) {
 #include "TClass.h"
 void setStreamer() {
    TClass *cl = gROOT->GetClass("Hard2Stream");
-cl->SetStreamer(new TStreamer(hard2StreamStreamer));
+cl->AdoptStreamer(new TClassStreamer(hard2StreamStreamer));
 
 }
