@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.15 2001/12/07 21:58:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.16 2001/12/10 13:50:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -47,7 +47,7 @@ private:
 
 public:
         // TAxis status bits
-        enum { kAxisRange   = BIT(11), 
+        enum { kAxisRange   = BIT(11),
                kCenterTitle = BIT(12),
                kRotateTitle = BIT(15),
                kPalette     = BIT(16),
@@ -61,9 +61,9 @@ public:
         virtual void     CenterTitle(Bool_t center=kTRUE);  // *MENU*
         const char      *ChooseTimeFormat(Double_t axislength=0);
         virtual void     Copy(TObject &axis);
-        virtual void     Delete(Option_t * ="") { }
+        virtual void     Delete(Option_t * /*option*/ ="") { }
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-        virtual TObject *DrawClone(Option_t * ="") const {return 0;}
+        virtual TObject *DrawClone(Option_t * /*option*/ ="") const {return 0;}
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual Int_t    FindBin(Axis_t x);
         virtual Int_t    FindFixBin(Axis_t x) const;
@@ -88,7 +88,7 @@ public:
         virtual void     Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
         virtual void     Set(Int_t nbins, const Float_t *xbins);
         virtual void     Set(Int_t nbins, const Axis_t *xbins);
-        virtual void     SetDrawOption(Option_t * ="") { }
+        virtual void     SetDrawOption(Option_t * /*option*/ ="") { }
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void     SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
         virtual void     SetParent(TObject *obj) {fParent = obj;}
