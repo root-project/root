@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.28 2002/08/09 13:12:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.29 2002/09/19 13:59:48 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -288,10 +288,11 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    gProofServ = this;
 
+   TAuthenticate::SetGlobalUser(fUser);
+   TAuthenticate::SetGlobalPasswd(fPasswd);
+
    // if master, start slave servers
    if (IsMaster()) {
-      TAuthenticate::SetGlobalUser(fUser);
-      TAuthenticate::SetGlobalPasswd(fPasswd);
       TString master = "proof://__master__";
       TInetAddress a = gSystem->GetSockName(0);
       if (a.IsValid()) {
@@ -629,7 +630,15 @@ void TProofServ::HandleSocketInput()
 
             (*mess) >> isTree >> filename >> dir >> objname;
 
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
+                                 "Report size of object %s (%s) in dir %s in file %s",
+                                 objname.Data(), isTree ? "T" : "O",
+                                 dir.Data(), filename.Data());
+
             r = TDSet::GetEntries(isTree, filename, dir, objname, entries);
+
+            PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
+                                 "Found %d %s", entries, isTree ? "entries" : "objects");
 
             TMessage answ(kPROOF_REPORTSIZE);
             answ << r << entries;
@@ -1139,14 +1148,13 @@ void TProofServ::RedirectOutput()
       SysError("RedirectOutput", "could not duplicate output socket");
    fSocket->SetDescriptor(isock);
 
-   // Remove all previous log files and create new log files.
+   // Create new log files.
    char logfile[512];
 
    if (IsMaster()) {
-      sprintf(logfile, "%s/proof_%d.log", fSessionDir.Data(), gSystem->GetPid());
+      sprintf(logfile, "%s/master.log", fSessionDir.Data());
    } else {
-      sprintf(logfile, "%s/proofs%d_%d.log", fSessionDir.Data(), fOrdinal,
-              gSystem->GetPid());
+      sprintf(logfile, "%s/slave-%d.log", fSessionDir.Data(), fOrdinal);
    }
 
    if ((freopen(logfile, "w", stdout)) == 0)
@@ -1345,16 +1353,15 @@ void TProofServ::Setup()
    TMessage *mess;
    fSocket->Recv(mess);
 
-   if (IsMaster()) {
-
+   if (IsMaster())
       (*mess) >> fUser >> fPasswd >> fConfFile >> fProtocol;
+   else
+      (*mess) >> fUser >> fPasswd >> fProtocol >> fOrdinal;
 
-      for (int i = 0; i < fPasswd.Length(); i++) {
-         char inv = ~fPasswd(i);
-         fPasswd.Replace(i, 1, inv);
-      }
-   } else
-      (*mess) >> fUser >> fProtocol >> fOrdinal;
+   for (int i = 0; i < fPasswd.Length(); i++) {
+      char inv = ~fPasswd(i);
+      fPasswd.Replace(i, 1, inv);
+   }
 
    delete mess;
 
@@ -1409,7 +1416,8 @@ void TProofServ::Setup()
    if (gSystem->AccessPathName(fCacheDir))
       gSystem->MakeDirectory(fCacheDir);
 
-   fCacheLock = fCacheDir + "/" + kPROOF_LockFile;
+   fCacheLock = kPROOF_CacheLockFile;
+   fCacheLock += fUser;
 
    // check and make sure "packages" directory exists
    fPackageDir = workdir;
@@ -1417,14 +1425,22 @@ void TProofServ::Setup()
    if (gSystem->AccessPathName(fPackageDir))
       gSystem->MakeDirectory(fPackageDir);
 
-   fPackageLock = fPackageDir + "/" + kPROOF_LockFile;
+   fPackageLock = kPROOF_PackageLockFile;
+   fPackageLock += fUser;
 
    // create session directory and make it the working directory
+   TString host = gSystem->HostName();
+   if (host.Index(".") != kNPOS)
+      host.Remove(host.Index("."));
    fSessionDir = workdir;
    if (IsMaster())
       fSessionDir += "/master-";
-   else
+   else {
       fSessionDir += "/slave-";
+      fSessionDir += fOrdinal;
+      fSessionDir += "-";
+   }
+   fSessionDir += host + "-";
    fSessionDir += TTimeStamp().GetSec();
    fSessionDir += "-";
    fSessionDir += gSystem->GetPid();
@@ -1458,8 +1474,10 @@ void TProofServ::Terminate(int status)
    // Terminate the proof server.
 
    // Cleanup session directory
-   if (status == 0)
+   if (status == 0) {
+      gSystem->MakeDirectory(fSessionDir+"/.delete");  // needed in case fSessionDir is on NFS ?!
       gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
+   }
 
    gSystem->Exit(status);
 }
