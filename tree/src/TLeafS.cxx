@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.9 2001/01/24 16:32:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.10 2001/01/24 17:08:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -191,7 +191,7 @@ void TLeafS::SetAddress(void *add)
          fNdata = fLen;
          Int_t ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if (ncountmax > fNdata || *fPointer == 0) {
-            delete [] *fPointer;
+            if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
            *fPointer = new Short_t[fNdata];
          }
