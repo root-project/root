@@ -1,3 +1,14 @@
+// @(#)root/gl:$Name:  $:$Id:$
+// Author:  Timur Pocheptsov  03/08/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 /** KempoApi: The Turloc Toolkit *****************************/
 /** *    *                                                  **/
 /** **  **  Filename: ArcBall.cpp                           **/
@@ -16,10 +27,10 @@
 /**   09/25/2003 - (TJG) - Version for NeHe Basecode users  **/
 /**                                                         **/
 /*************************************************************/
-#include <TPoint.h>
-#include <TMath.h>
 
 #include "TArcBall.h"
+#include "TPoint.h"
+#include "TMath.h"
 
 const Double_t Epsilon = 1.0e-5;
 
@@ -64,8 +75,8 @@ inline void Matrix3dSetIdentity(Double_t * NewObj)
 }
 /**
  * Sets the value of this matrix to the matrix conversion of the
- * quaternion argument. 
- * @param q1 the quaternion to be converted 
+ * quaternion argument.
+ * @param q1 the quaternion to be converted
  */
 //$hack this can be optimized some(if s == 0)
 //void Matrix3fSetRotationFromQuat4f(Matrix3fT * NewObj, const Quat4fT * q1)
@@ -85,8 +96,8 @@ void Matrix3dSetRotationFromQuat4d(Double_t * NewObj, const Double_t * q1)
 
 /**
  * Sets the value of this matrix to the result of multiplying itself
- * with matrix m1. 
- * @param m1 the other matrix 
+ * with matrix m1.
+ * @param m1 the other matrix
  */
 void Matrix3dMulMatrix3d(Double_t * NewObj, const Double_t * m1)
 {
@@ -126,7 +137,7 @@ inline void Matrix4dSetRotationScaleFromMatrix4d(Double_t * NewObj, const Double
 inline Double_t Matrix4fSVD(const Double_t * NewObj, Double_t * rot3, Double_t * rot4)
 {
    Double_t s = TMath::Sqrt(
-                ( (NewObj[0] * NewObj[0]) + (NewObj[1] * NewObj[1]) + (NewObj[2] * NewObj[2]) + 
+                ( (NewObj[0] * NewObj[0]) + (NewObj[1] * NewObj[1]) + (NewObj[2] * NewObj[2]) +
                   (NewObj[4] * NewObj[4]) + (NewObj[5] * NewObj[5]) + (NewObj[6] * NewObj[6]) +
                   (NewObj[8] * NewObj[8]) + (NewObj[9] * NewObj[9]) + (NewObj[10] * NewObj[10]) ) / 3.0f );
 
@@ -153,10 +164,10 @@ inline Double_t Matrix4fSVD(const Double_t * NewObj, Double_t * rot3, Double_t *
       rot3[8] *= n;
    }
 
-   if (rot4)  
+   if (rot4)
    {
       if (rot4 != NewObj)
-         Matrix4dSetRotationScaleFromMatrix4d(rot4, NewObj);  
+         Matrix4dSetRotationScaleFromMatrix4d(rot4, NewObj);
 
       Double_t n = 1. / TMath::Sqrt(NewObj[0] * NewObj[0] + NewObj[1] * NewObj[1] + NewObj[2] * NewObj[2] + 0.0001);
 
@@ -229,8 +240,8 @@ inline void TArcBall::MapToSphere(const TPoint & NewPt, Double_t * NewVec) const
 }
 
 TArcBall::TArcBall(UInt_t Width, UInt_t Height)
-            :fThisRot(), fLastRot(), 
-	     fTransform(), fStVec(), 
+            :fThisRot(), fLastRot(),
+	     fTransform(), fStVec(),
 	     fEnVec(), fAdjustWidth(0.),
 	     fAdjustHeight(0.)
 {
@@ -242,9 +253,9 @@ TArcBall::TArcBall(UInt_t Width, UInt_t Height)
 void TArcBall::Click(const TPoint & NewPt)
 {
    MapToSphere(NewPt, fStVec);
-   
+
    for(Int_t i = 0; i < 9; ++i)
-      fLastRot[i] = fThisRot[i]; 
+      fLastRot[i] = fThisRot[i];
 }
 
 //Mouse drag, calculate rotation
@@ -267,11 +278,11 @@ void TArcBall::Drag(const TPoint & NewPt)
    }
    else  //if it's zero
       NewRot[0] = NewRot[1] = NewRot[2] = NewRot[3] = 0.;
-      
+
    Matrix3dSetRotationFromQuat4d(fThisRot, NewRot);
    Matrix3dMulMatrix3d(fThisRot, fLastRot);
    Matrix4dSetRotationFromMatrix3d(fTransform, fThisRot);
-   
+
 //   std::cout<<"KyKy\n";
 }
 
@@ -282,9 +293,9 @@ Double_t * TArcBall::GetRotMatrix()
 
 void TArcBall::ResetMatrices()
 {
-   fTransform[0] = 1.f, fTransform[1] = fTransform[2] = fTransform[3] =  
-   fTransform[4] = 0.f, fTransform[5] = 1.f, fTransform[6] = fTransform[7] =  
-   fTransform[8] = fTransform[9] = 0.f, fTransform[10] = 1.f, fTransform[11] = 
+   fTransform[0] = 1.f, fTransform[1] = fTransform[2] = fTransform[3] =
+   fTransform[4] = 0.f, fTransform[5] = 1.f, fTransform[6] = fTransform[7] =
+   fTransform[8] = fTransform[9] = 0.f, fTransform[10] = 1.f, fTransform[11] =
    fTransform[12] = fTransform[13] = fTransform[14] = 0.f, fTransform[15] = 1.f;
    Matrix3dSetIdentity(fLastRot);
    Matrix3dSetIdentity(fThisRot);
