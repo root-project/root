@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.131 2003/04/10 09:00:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.132 2003/04/10 17:09:18 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1907,6 +1907,7 @@ void THistPainter::PaintColorLevels(Option_t *)
          xstep = fXaxis->GetBinWidth(i);
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
+         if (z == 0) continue; // do not draw the empty bins
          if (Hoption.Logz) {
             if (z > 0) z = TMath::Log10(z);
             else       z = zmin;
