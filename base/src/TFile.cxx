@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.4 2000/07/24 18:21:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.5 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -315,7 +315,7 @@ void TFile::Init(Bool_t create)
 
 //*-*---------------NEW file
    if (create) {
-      fFree        = new TList(this);
+      fFree        = new TList;
       fBEGIN       = kBegin;    //First used word in file following the file header
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fBEGIN, max_file_size);  //Create new free list
@@ -362,7 +362,7 @@ void TFile::Init(Bool_t create)
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
-        fFree = new TList(this);
+        fFree = new TList;
         if (fSeekFree > fBEGIN) {
            ReadFree();
         } else {
@@ -868,7 +868,7 @@ void TFile::Recover()
 
    fEND = (Int_t)size;
 
-   if (fWritable && !fFree) fFree  = new TList(this);
+   if (fWritable && !fFree) fFree  = new TList;
 
    TKey *key;
    Int_t nrecov = 0;

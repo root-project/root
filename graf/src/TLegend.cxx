@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.3 2000/08/07 12:25:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.4 2000/09/08 07:41:00 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2, const char 
   //
   // You can edit the TLegend by right-clicking on it.
   //
-  fPrimitives = new TList(this);
+  fPrimitives = new TList;
   if ( header && strlen(header) > 0) {
     TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
     headerEntry->SetTextAlign(0);
@@ -126,7 +126,7 @@ TLegendEntry *TLegend::AddEntry(TObject *obj, const char *label, Option_t *optio
   //    F draw a box with fill associated w/ TAttFill if obj inherits TAttFill
   //
   TLegendEntry *newentry = new TLegendEntry( obj, label, option );
-  if ( !fPrimitives ) fPrimitives = new TList(this);
+  if ( !fPrimitives ) fPrimitives = new TList;
   fPrimitives->Add(newentry);
   return newentry;
 }
@@ -272,7 +272,7 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
 
   TLegendEntry *newentry = new TLegendEntry( obj, label, option );
 
-  if ( !fPrimitives ) fPrimitives = new TList(this);
+  if ( !fPrimitives ) fPrimitives = new TList;
   if ( beforeEntry ) {
     fPrimitives->AddBefore( (TObject*)beforeEntry, (TObject*)newentry );
   } else {
@@ -557,7 +557,7 @@ void TLegend::SetHeader( const char *header )
 {
   // Sets the header, which is the "title" that appears at the top of the
   //  TLegend
-  if ( !fPrimitives ) new TList(this);
+  if ( !fPrimitives ) new TList;
   TIter next(fPrimitives);
   TLegendEntry *first;   // header is always the first entry
   if ((  first = (TLegendEntry*)next() )) {

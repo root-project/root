@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.3 2000/08/01 23:45:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.4 2000/08/15 13:06:16 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -215,7 +215,7 @@ void TClass::BuildRealData()
 
    TObject *realDataObject;
 
-   fRealData = new TList(this);
+   fRealData = new TList;
 
    // Create an instance of this class
    if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;

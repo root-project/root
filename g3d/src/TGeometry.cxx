@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.2 2000/09/08 07:36:57 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -84,10 +84,10 @@ TGeometry::TGeometry()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Geometry default constructor*-*-*-*-*-*-*-*-*-*-*-*
 
-   fMaterials       = new THashList(this,100,3);
-   fMatrices        = new THashList(this,100,3);
-   fShapes          = new THashList(this,500,3);
-   fNodes           = new TList(this);
+   fMaterials       = new THashList(100,3);
+   fMatrices        = new THashList(100,3);
+   fShapes          = new THashList(500,3);
+   fNodes           = new TList;
    fCurrentNode     = 0;
    fMaterialPointer = 0;
    fMatrixPointer   = 0;
@@ -106,10 +106,10 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
 //*-*-*-*-*-*-*-*-*-*-*-*-*Geometry normal constructor*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ===========================
 
-   fMaterials       = new THashList(this,1000,3);
-   fMatrices        = new THashList(this,1000,3);
-   fShapes          = new THashList(this,5000,3);
-   fNodes           = new TList(this);
+   fMaterials       = new THashList(1000,3);
+   fMatrices        = new THashList(1000,3);
+   fShapes          = new THashList(5000,3);
+   fNodes           = new TList;
    fCurrentNode     = 0;
    fMaterialPointer = 0;
    fMatrixPointer   = 0;
@@ -190,7 +190,7 @@ void TGeometry::Draw(Option_t *option)
 TObject *TGeometry::FindObject(TObject *) const
 {
 // find object in a geometry node, material, etc
-   
+
    Error("FindObject","Not yet implemented");
    return 0;
 }
@@ -203,7 +203,7 @@ TObject *TGeometry::FindObject(const char *name) const
    TObjArray *loc = TGeometry::Get(name);
    if (loc) return loc->At(0);
    return 0;
-}     
+}
 
 //______________________________________________________________________________
 TObjArray *TGeometry::Get(const char *name)

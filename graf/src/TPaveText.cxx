@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.3 2000/06/13 11:13:27 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
 //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
 //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
-   fLines   = new TList(this);
+   fLines   = new TList;
    fMargin  = 0.05;
    fLongest = 0;
 }
@@ -92,7 +92,7 @@ TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (!gPad->IsEditable()) return 0;
    TBox *newbox = new TBox(x1,y1,x2,y2);
 
-   if (!fLines) fLines = new TList(this);
+   if (!fLines) fLines = new TList;
    fLines->Add(newbox);
    return newbox;
 }
@@ -106,7 +106,7 @@ TLine *TPaveText::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (!gPad->IsEditable()) return 0;
    TLine *newline = new TLine(x1,y1,x2,y2);
 
-   if (!fLines) fLines = new TList(this);
+   if (!fLines) fLines = new TList;
    fLines->Add(newline);
    return newline;
 }
@@ -125,7 +125,7 @@ TText *TPaveText::AddText(Double_t x1, Double_t y1, const char *text)
    Int_t nch = strlen(text);
    if (nch > fLongest) fLongest = nch;
 
-   if (!fLines) fLines = new TList(this);
+   if (!fLines) fLines = new TList;
    fLines->Add(newtext);
    return newtext;
 }

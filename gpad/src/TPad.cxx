@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.13 2000/09/05 09:21:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.14 2000/09/08 07:36:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -195,8 +195,8 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    if (gPad)   fCanvas = gPad->GetCanvas();
    else        fCanvas = (TCanvas*)this;
    fMother     = (TPad*)gPad;
-   fPrimitives = new TList(this);
-   fExecs      = new TList(this);
+   fPrimitives = new TList;
+   fExecs      = new TList;
    fPadPointer = 0;
    fTheta      = 30;
    fPhi        = 30;
@@ -302,7 +302,7 @@ void TPad::AddExec(const char *name, const char*command)
 //    to develop more powerful interactive applications exploiting CINT
 //    as a development engine.
 
-   if (!fExecs) fExecs = new TList(this);
+   if (!fExecs) fExecs = new TList;
    TExec *ex = new TExec(name,command);
    fExecs->Add(ex);
 }
@@ -312,7 +312,7 @@ void TPad::AutoExec()
 {
 // Execute the list of Execs when a pad event occurs.
 
-   if (!fExecs) fExecs = new TList(this);
+   if (!fExecs) fExecs = new TList;
    TIter next(fExecs);
    TExec *exec;
    while ((exec = (TExec*)next())) {
@@ -1069,7 +1069,7 @@ void TPad::DeleteExec(const char *name)
 {
 // Remove TExec name from the list of Execs.
 
-   if (!fExecs) fExecs = new TList(this);
+   if (!fExecs) fExecs = new TList;
    TExec *ex = (TExec*)fExecs->FindObject(name);
    if (!ex) return;
    fExecs->Remove(ex);
@@ -4061,7 +4061,7 @@ void TPad::Streamer(TBuffer &b)
 //      b >> fPrimitives;
       readLevel++;
       gROOT->SetReadingBasket(kTRUE);
-      fPrimitives = new TList(this);
+      fPrimitives = new TList;
       b >> nobjects;
       if (nobjects > 0) {
          TPad *padsav = (TPad*)gPad;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.12 2000/08/31 17:05:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.13 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -104,7 +104,7 @@ TGraph::TGraph(Int_t n)
       return;
    }
 
-   fFunctions = new TList(this);
+   fFunctions = new TList;
    fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
@@ -130,7 +130,7 @@ TGraph::TGraph(Int_t n, Float_t *x, Float_t *y)
       return;
    }
 
-   fFunctions = new TList(this);
+   fFunctions = new TList;
    fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
@@ -158,7 +158,7 @@ TGraph::TGraph(Int_t n, Double_t *x, Double_t *y)
       return;
    }
 
-   fFunctions = new TList(this);
+   fFunctions = new TList;
    fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
@@ -730,7 +730,7 @@ void TGraph::Fit(const char *fname, Option_t *option, Option_t *)
 
 //*-*- Store fitted function in histogram functions list and draw
    if (!fitOption.Nostore) {
-      if (!fFunctions) fFunctions = new TList(this);
+      if (!fFunctions) fFunctions = new TList;
       if (!fitOption.Plus) {
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
@@ -2458,9 +2458,9 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
 void TGraph::Set(Int_t n)
 {
 // Set number of points in the graph
-// Existing coordinates are preserved 
+// Existing coordinates are preserved
 // New coordinates above fNpoints are preset to 0.
-   
+
    if (n < 0) n = 0;
    if (n == fNpoints) return;
    Double_t *xx=0, *yy=0;

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.8 2000/09/01 20:37:05 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.9 2000/09/05 09:15:53 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -101,7 +101,7 @@ TCint::~TCint()
    // Destroy the CINT interpreter interface.
 
    if (fMore != -1) {
-     // only close the opened files do not free memory:   
+     // only close the opened files do not free memory:
      // G__scratch_all();
      G__close_inputfiles();
    }
@@ -451,7 +451,7 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 
    if (!cl->fBase) {
 
-      cl->fBase = new TList(cl);
+      cl->fBase = new TList;
 
       G__BaseClassInfo t(*cl->GetClassInfo()), *a;
       while (t.Next()) {
@@ -471,7 +471,7 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 
    if (!cl->fData) {
 
-      cl->fData = new TList(cl);
+      cl->fData = new TList;
 
       G__DataMemberInfo t(*cl->GetClassInfo()), *a;
       while (t.Next()) {
@@ -491,7 +491,7 @@ void TCint::CreateListOfMethods(TClass *cl)
 
    if (!cl->fMethod) {
 
-      cl->fMethod = new TList(cl);
+      cl->fMethod = new TList;
 
       G__MethodInfo t(*cl->GetClassInfo()), *a;
       while (t.Next()) {
@@ -511,7 +511,7 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 
    if (!m->fMethodArgs) {
 
-      m->fMethodArgs = new TList(m);
+      m->fMethodArgs = new TList;
 
       G__MethodArgInfo t(*m->fInfo), *a;
       while (t.Next()) {

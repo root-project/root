@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.21 2000/08/27 20:03:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.22 2000/08/30 16:58:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -55,12 +55,12 @@
 //*-*      TH3D : histograms with one double per channel. Maximum precision 14 digits
 //*-*
 //*-*   Profile histograms: See classes  TProfile and TProfile2D
-//*-*   Profile histograms are used to display the mean value of Y and its RMS 
-//*-*   for each bin in X. Profile histograms are in many cases an elegant 
+//*-*   Profile histograms are used to display the mean value of Y and its RMS
+//*-*   for each bin in X. Profile histograms are in many cases an elegant
 //*-*   replacement of two-dimensional histograms : the inter-relation of two
 //*-*   measured quantities X and Y can always be visualized by a two-dimensional
 //*-*   histogram or scatter-plot; If Y is an unknown (but single-valued)
-//*-*   approximate function of X, this function is displayed by a profile 
+//*-*   approximate function of X, this function is displayed by a profile
 //*-*   histogram with much better precision than by a scatter-plot.
 ///*-*
 //*-*- All histogram classes are derived from the base class TH1
@@ -115,7 +115,7 @@
 //*-*
 //*-*   Fix or variable bin size
 //*-*   ========================
-//*-* 
+//*-*
 //*-*  All histogram types support either fix or variable bin sizes.
 //*-*  2-D histograms may have fix size bins along X and variable size bins
 //*-*  along Y or vice-versa. The functions to fill, manipulate, draw or access
@@ -126,7 +126,7 @@
 //*-*     Double_t binCenter = xaxis->GetBinCenter(bin), etc.
 //*-*  See class TAxis for a description of all the access functions.
 //*-*  The axis range is always stored internally in double precision.
-//*-* 
+//*-*
 //*-*   Convention for numbering bins
 //*-*   =============================
 //*-*   For all histogram types: nbins, xlow, xup
@@ -163,7 +163,7 @@
 //*-*  By default, the bin number is computed using the current axis ranges.
 //*-*  If the automatic binning option has been set via
 //*-*         h->SetBit(TH1::kCanRebin);
-//*-*  then, the Fill Function will automatically extend the axis range to 
+//*-*  then, the Fill Function will automatically extend the axis range to
 //*-*  accomodate the new value specified in the Fill argument. The method
 //*-*  used is to double the bin size until the new value fits in the range,
 //*-*  merging bins two by two. This automatic binning options is extensively
@@ -178,13 +178,13 @@
 //*-*  a check is made that the bin contents do not exceed the maximum positive
 //*-*  capacity (127 or 65535). Histograms of all types may have positive
 //*-*  or/and negative bin contents.
-//*-* 
+//*-*
 //*-*  Rebinning
 //*-*  =========
 //*-*  At any time, an histogram can be rebinned via TH1::Rebin. This function
 //*-*  returns a new histogram with the rebinned contents.
 //*-*  If bin errors were stored, they are recomputed during the rebinning.
-//*-* 
+//*-*
 //*-*  Associated errors
 //*-*  =================
 //*-*  By default, for each bin, the sum of weights is computed at fill time.
@@ -206,7 +206,7 @@
 //*-*
 //*-*  Operations on histograms
 //*-*  ========================
-//*-* 
+//*-*
 //*-*  Many types of operations are supported on histograms or between histograms
 //*-*  - Addition of an histogram to the current histogram
 //*-*  - Additions of two histograms with coefficients and storage into the current
@@ -218,12 +218,12 @@
 //*-*  the resulting error bars are also computed assuming independent histograms.
 //*-*  In case of divisions, Binomial errors are also supported.
 //*-*
-//*-* 
+//*-*
 //*-*  Fitting histograms
 //*-*  ==================
-//*-* 
+//*-*
 //*-*  Histograms (1-D,2-D,3-D and Profiles) can be fitted with a user
-//*-*  specified function via TH1::Fit. When an histogram is fitted, the 
+//*-*  specified function via TH1::Fit. When an histogram is fitted, the
 //*-*  resulting function with its parameters is added to the list of functions
 //*-*  of this histogram. If the histogram is made persistent, the list of
 //*-*  associated functions is also persistent. Given a pointer (see above)
@@ -232,8 +232,8 @@
 //*-*    Double_t chi2 = myfunc->GetChisquare();
 //*-*    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //*-*    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-//*-* 
-//*-* 
+//*-*
+//*-*
 //*-*  Projections of histograms
 //*-*  ========================
 //*-*  One can:
@@ -241,10 +241,10 @@
 //*-*     see functions TH2::ProjectionX,Y, TH2::ProfileX,Y, TProfile::ProjectionX
 //*-*   - make a 1-D, 2-D or profile out of a 3-D histogram
 //*-*     see functions TH3::ProjectionZ, TH3::Project3D.
-//*-* 
+//*-*
 //*-*  One can fit these projections via:
 //*-*   TH2::FitSlicesX,Y, TH3::FitSlicesZ.
-//*-* 
+//*-*
 //*-*  Random Numbers and histograms
 //*-*  =============================
 //*-*  TH1::FillRandom can be used to randomly fill an histogram using
@@ -323,7 +323,7 @@
 //*-*
 //*-*  Saving/Reading histograms to/from a Root file
 //*-*  ================================
-//*-*  The following statements create a Root file and store an histogram 
+//*-*  The following statements create a Root file and store an histogram
 //*-*  on the file. Because TH1 derives from TNamed, the key identifier on
 //*-*  the file is the histogram name:
 //*-*     TFile f("histos.root","new");
@@ -338,7 +338,7 @@
 //*-*
 //*-*  Miscelaneous operations
 //*-*  =======================
-//*-* 
+//*-*
 //*-*   TH1::KolmogorovTest: Statistical test of compatibility in shape between
 //*-*                        two histograms.
 //*-*   TH1::Smooth smooths the bin contents of a 1-d histogram
@@ -347,7 +347,7 @@
 //*-*   TH1::GetRMS(int axis)  returns the Root Mean Square along axis
 //*-*   TH1::GetEntries returns the number of entries
 //*-*   TH1::Reset() resets the bin contents and errors of an histogram.
-//*-* 
+//*-*
 //Begin_Html
 /*
 <img src="gif/th1_classtree.gif">
@@ -388,7 +388,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 //*-*-*-*-*-*-*-*-*-*-*Histogram default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
    fDirectory = 0;
-   fFunctions = new TList(this);
+   fFunctions = new TList;
    fIntegral  = 0;
    fPainter   = 0;
    fXaxis.SetName("xaxis");
@@ -531,7 +531,7 @@ void TH1::Build()
       gDirectory->Append(this);
    }
    fDirectory = gDirectory;
-   fFunctions = new TList(this);
+   fFunctions = new TList;
 }
 
 //______________________________________________________________________________
@@ -1105,8 +1105,8 @@ void TH1::Draw(Option_t *option)
 //*-*  the pad is updated. One does not need to redraw the histogram.
 //*-*  To draw the current version of an histogram in a pad, one can use
 //*-*     h->DrawCopy();
-//*-*  This makes a clone of the histogram. Once the clone is drawn, the original 
-//*-*  histogram may be modified or deleted without affecting the aspect of the 
+//*-*  This makes a clone of the histogram. Once the clone is drawn, the original
+//*-*  histogram may be modified or deleted without affecting the aspect of the
 //*-*  clone.
 //*-*  By default, TH1::Draw clears the current pad.
 //*-*
@@ -3227,7 +3227,7 @@ Stat_t TH1::Integral(Int_t binx1, Int_t binx2)
    }
    return integral;
 }
-        
+
 //______________________________________________________________________________
 Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
 {
@@ -3249,7 +3249,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
 
    TString opt = option;
    opt.ToUpper();
-   
+
    Double_t prb = 0;
    TH1 *h1 = this;
    if (h2 == 0) return 0;
@@ -3269,7 +3269,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
       Error("KolmogorovTest","Number of channels is different, %d and %d\n",ncx1,ncx2);
       return 0;
    }
-    
+
      // Check consistency in channel edges
    Double_t difprec = 1e-5;
    Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
@@ -3278,15 +3278,15 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
       Error("KolmogorovTest","histograms with different binning");
       return 0;
    }
-   
+
    Bool_t afunc1 = kFALSE;
    Bool_t afunc2 = kFALSE;
-   Double_t sum1 = 0, sum2 = 0;    
+   Double_t sum1 = 0, sum2 = 0;
    Int_t bin;
    for (bin=1;bin<=ncx1;bin++) {
       sum1 += h1->GetBinContent(bin);
       sum2 += h2->GetBinContent(bin);
-   } 
+   }
    if (sum1 == 0) {
       Error("KolmogorovTest","Histogram1 %s integral is zero\n",h1->GetName());
       return 0;
@@ -3337,7 +3337,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
          esum1 = h2->GetSumOfWeights();
       }
    }
- 
+
    Double_t s1 = 1/sum1;
    Double_t s2 = 1/sum2;
 
@@ -3359,9 +3359,9 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    if (afunc1)      z = dfmax*TMath::Sqrt(esum2);
    else if (afunc2) z = dfmax*TMath::Sqrt(esum1);
    else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
-   
+
    prb = TMath::KolmogorovProb(z);
-      
+
    if (opt.Contains("N")) {
       // Combine probabilities for shape and normalization,
       prb1 = prb;
@@ -3379,7 +3379,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
       printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
       printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
       printf(" Kolmo Probabil = %g, Max Dist = %g\n",prb,dfmax);
-      if (opt.Contains("N")) 
+      if (opt.Contains("N"))
       printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
    }
       // This numerical error condition should never occur:
@@ -3388,7 +3388,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
 
    if(opt.Contains("M"))  return dfmax;
    else                   return prb;
-}  
+}
 
 //______________________________________________________________________________
 void TH1::SetContent(Stat_t *content)
@@ -3430,7 +3430,7 @@ Double_t TH1::GetContourLevel(Int_t level)
 {
 // Return value of contour number level
 // see GetContour to return the array of all contour levels
-   
+
   if (level <0 || level >= fContour.fN) return 0;
   Double_t zlevel = fContour.fArray[level];
   return zlevel;

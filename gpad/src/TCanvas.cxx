@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.7 2000/09/05 09:21:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.8 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -449,7 +449,7 @@ void TCanvas::Build()
    fCanvas         = this;
    fMother         = (TPad*)gPad;
    if (!fPrimitives) {
-      fPrimitives     = new TList(this);
+      fPrimitives     = new TList;
       SetFillColor(gStyle->GetCanvasColor());
       SetFillStyle(1001);
       SetGrid(gStyle->GetPadGridX(),gStyle->GetPadGridY());
@@ -662,7 +662,7 @@ void TCanvas::DrawClonePad()
   TAttLine::Copy((TAttLine&)*pad);
   TAttFill::Copy((TAttFill&)*pad);
   TAttPad::Copy((TAttPad&)*pad);
-  
+
   //copy primitives
   TIter next(GetListOfPrimitives());
   while ((obj=next())) {

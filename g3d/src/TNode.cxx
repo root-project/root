@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -208,7 +208,7 @@ void TNode::BuildListOfNodes()
 //*-*-*-*-*-*Create the list to support sons of this node*-*-*-*-*-*-*-*-*-*-*
 //*-*        ============================================
 
-   if (!fNodes) fNodes   = new TList(this);
+   if (!fNodes) fNodes   = new TList;
 }
 
 //______________________________________________________________________________

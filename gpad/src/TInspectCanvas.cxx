@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.2 2000/08/30 16:55:14 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.3 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
-   fObjects    = new TList(this);
+   fObjects    = new TList;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.2 2000/06/13 11:05:33 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -89,7 +89,7 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
   if (cl->InheritsFrom(TCollection::Class())) {
      TList *lh = (TList*)idcur;
      if (!TestBit(kObjIsParent))  idcur = lh->First();
-     else                         idcur = lh->GetParent();
+//     else                         idcur = lh->GetParent();
      if (!idcur) return;
      idcur->Inspect();
      return;

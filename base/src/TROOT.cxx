@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.13 2000/09/05 10:55:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.14 2000/09/08 07:34:50 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -238,26 +238,26 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fVersionDate = IDATQQ();
    fVersionTime = ITIMQQ();
    fApplication = 0;
-   fClasses     = new THashList(this,300,2);
+   fClasses     = new THashList(300,2);
    fColors      = new TObjArray(1000);
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
-   fList        = new TList(this);
-   fFiles       = new TList(this);
-   fMappedFiles = new TList(this);
-   fSockets     = new TList(this);
-   fCanvases    = new TList(this);
-   fStyles      = new TList(this);
-   fFunctions   = new TList(this);
-   fTasks       = new TList(this);
-   fGeometries  = new TList(this);
-   fBrowsers    = new TList(this);
-   fSpecials    = new TList(this);
-   fBrowsables  = new TList(this);
-   fCleanups    = new TList(this);
-   fMessageHandlers = new TList(this);
-   
+   fList        = new TList;
+   fFiles       = new TList;
+   fMappedFiles = new TList;
+   fSockets     = new TList;
+   fCanvases    = new TList;
+   fStyles      = new TList;
+   fFunctions   = new TList;
+   fTasks       = new TList;
+   fGeometries  = new TList;
+   fBrowsers    = new TList;
+   fSpecials    = new TList;
+   fBrowsables  = new TList;
+   fCleanups    = new TList;
+   fMessageHandlers = new TList;
+
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
    fRootFolder->SetTitle("root of all folders");
@@ -280,7 +280,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fCanvases);
    fCleanups->Add(fBrowsers);
    fCleanups->Add(fTasks);
-   
+
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
    fReadingBasket = kFALSE;
@@ -477,7 +477,7 @@ TObject *TROOT::FindObject(const char *name) const
    TObject *obj;
    while ((obj=next())) {
       temp = obj->FindObject(name);         if (temp) return temp;
-   }      
+   }
    if (gDirectory) temp = gDirectory->Get(name); if (temp) return temp;
    if (gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
@@ -583,7 +583,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
 TObject *TROOT::FindObjectAny(const char *name) const
 {
 // return a pointer to the first object with name starting at //root
-   
+
    return fRootFolder->FindObjectAny(name);
 }
 
@@ -612,7 +612,7 @@ const char *TROOT::FindObjectPathName(TObject *obj) const
 // The returned string points to a static char array in TROOT.
 // If this function is called in a loop or recursively, it is the
 // user's responsability to copy this string in his area.
-   
+
    Error("FindObjectPathName","Not yet implemented");
    return "??";
 }
@@ -846,7 +846,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobals) {
-      fGlobals = new THashList(this, 100, 3);
+      fGlobals = new THashList(100, 3);
       load = kTRUE;
    }
 
@@ -870,7 +870,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobalFunctions) {
-      fGlobalFunctions = new THashList(this, 100, 3);
+      fGlobalFunctions = new THashList(100, 3);
       load = kTRUE;
    }
 
@@ -894,7 +894,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fTypes) {
-      fTypes = new THashList(this, 100, 3);
+      fTypes = new THashList(100, 3);
       load = kTRUE;
 
       // Add also basic types (like a identity typedef "typedef int int"
