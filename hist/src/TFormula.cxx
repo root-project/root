@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.28 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.29 2002/01/24 11:39:29 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -147,7 +147,7 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
 }
 
 //______________________________________________________________________________
-TFormula::TFormula(const TFormula &formula)
+TFormula::TFormula(const TFormula &formula) : TNamed()
 {
    ((TFormula&)formula).Copy(*this);
 }
