@@ -1,4 +1,4 @@
 <?xml version="1.0" ?>
-<extension class="command.ShellCommandTest" kind="test"><argument name="environment"><set/></argument><argument name="stdin"><text/></argument><argument name="command"><text>cd cint/function; gmake</text></argument><argument name="timeout"><integer>-1</integer></argument><argument name="stderr"><text/></argument><argument name="stdout"><text>Warning longArgTest has some known skipped failures (in ./function)
-All test succeeded in ./function
+<extension class="command.ShellCommandTest" kind="test"><argument name="environment"><set/></argument><argument name="stdin"><text/></argument><argument name="command"><text>cd cint/function; gmake</text></argument><argument name="timeout"><integer>-1</integer></argument><argument name="stderr"><text/></argument><argument name="stdout"><text>Warning longArgTest has some known skipped failures (in .)
+All test succeeded in .
 </text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>
