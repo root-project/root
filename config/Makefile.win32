@@ -83,10 +83,12 @@ TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
 EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
 EGLIBEXTRA          = lib/libGraf3d.lib lib/libGraf.lib
 PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib $(FPYTHIA)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIALIBDIR) $(FPYTHIALIB)
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib $(FPYTHIA6)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
 VENUSLIBDEP         = $(EGLIB)
-VENUSLIBEXTRA       = lib/libEG.lib
+VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
 GLLIBDEP            = $(G3DLIB) $(WIN32LIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
