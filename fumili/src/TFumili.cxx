@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.7 2003/05/06 20:42:47 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.8 2003/05/07 10:35:39 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -215,7 +215,7 @@ Double_t TFumili::Chisquare(Int_t npar, Double_t *params)
    
    Double_t amin = 0;
    H1FitChisquareFumili(npar,params,amin,params,1);
-   return amin;
+   return 2*amin;
 }
 
 
@@ -230,6 +230,7 @@ void TFumili::Clear(Option_t *)
   // NB: this procedure doesn't reset parameter limits 
   //
   fNpar = fMaxParam;
+  fNfcn = 0;
   for (Int_t i=0;i<fNpar;i++){
     fA[i]   =0.;
     fDF[i]  =0.;
@@ -1709,17 +1710,19 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
 	    hFitter->Derivatives(df,x);
 	    Int_t N = 0;
 	    fsum = (fu-cu)/eu;
-	    for (i=0;i<npar;i++) 
-	      if (pl0[i]>0){
-		df[N] = df[i]/eu; 
-		// left only non-fixed param derivatives / by Sigma
-		gin[i] += df[N]*fsum;
-		N++;
-	      }
-	    Int_t L = 0;
-	    for (i=0;i<N;i++)
-	      for (Int_t j=0;j<=i;j++) 
-		zik[L++] += df[i]*df[j];
+	    if (flag!=1) {
+	      for (i=0;i<npar;i++) 
+		if (pl0[i]>0){
+		  df[N] = df[i]/eu; 
+		  // left only non-fixed param derivatives / by Sigma
+		  gin[i] += df[N]*fsum;
+		  N++;
+		}
+	      Int_t L = 0;
+	      for (i=0;i<N;i++)
+		for (Int_t j=0;j<=i;j++) 
+		  zik[L++] += df[i]*df[j];
+	    }
             f += .5*fsum*fsum;
          }
       }
@@ -1796,14 +1799,9 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
             if (TF1::RejectedPoint()) continue;
             npfits++;
 	    if (fu < 1.e-9) fu = 1.e-9; 
-            if (Foption.Like == 1) {
-               icu  = Int_t(cu);
-               fsub = -fu +icu*TMath::Log(fu);
-               fobs = hFitter->GetSumLog(icu);
-            } else {
-               fsub = -fu +cu*TMath::Log(fu);
-               fobs = TMath::Gamma(cu+1);
-            }
+            icu  = Int_t(cu);
+            fsub = -fu +icu*TMath::Log(fu);
+            fobs = hFitter->GetSumLog(icu);
 	    fsub -= fobs;
     	    hFitter->Derivatives(df,x);
 	    int N=0;
@@ -1826,7 +1824,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
          }
       }
    }
-   f *=.5;
+   //f *=.5;
    f1->SetNumberFitPoints(npfits);
    delete[] df;
 }
