@@ -43,11 +43,11 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\(
 LD            = g++
 LDFLAGS       = $(OPT) -Xlinker -bind_at_load -flat_namespace
 ifeq ($(MACOSX_MINOR),3)
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined dynamic_lookup \
-                -install_name $(LIBDIR)/
+SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
 else
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
-                -install_name $(LIBDIR)/
+SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
+                -undefined suppress -install_name $(LIBDIR)/
 endif
 SOEXT         = dylib
 FORCELINK     = yes
