@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.37 2002/12/10 14:00:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.38 2003/02/05 19:30:14 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1136,13 +1136,13 @@ TMatrixD &TMatrixD::Invert(Double_t *determ_ptr)
          Double_t *o = new Double_t[fNelems];
          memcpy(o,m,fNelems*sizeof(Double_t));
          m[0] = +(o[4]*o[8]-o[5]*o[7])/determinant;
-         m[1] = -(o[3]*o[8]-o[5]*o[6])/determinant;
-         m[2] = +(o[3]*o[7]-o[4]*o[6])/determinant;
-         m[3] = -(o[1]*o[8]-o[2]*o[7])/determinant;
+         m[1] = -(o[1]*o[8]-o[2]*o[7])/determinant;
+         m[2] = +(o[1]*o[5]-o[2]*o[4])/determinant;
+         m[3] = -(o[3]*o[8]-o[5]*o[6])/determinant;
          m[4] = +(o[0]*o[8]-o[2]*o[6])/determinant;
-         m[5] = -(o[0]*o[7]-o[1]*o[6])/determinant;
-         m[6] = +(o[1]*o[5]-o[2]*o[4])/determinant;
-         m[7] = -(o[0]*o[5]-o[2]*o[3])/determinant;
+         m[5] = -(o[0]*o[5]-o[2]*o[3])/determinant;
+         m[6] = +(o[3]*o[7]-o[4]*o[6])/determinant;
+         m[7] = -(o[0]*o[7]-o[1]*o[6])/determinant;
          m[8] = +(o[0]*o[4]-o[1]*o[3])/determinant;
          delete [] o;
       }
