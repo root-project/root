@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.154 2003/07/24 09:13:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.155 2003/07/27 15:39:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -450,6 +450,9 @@ void TTree::AddClone(TTree *clone)
    if (!fClones) {
       fClones = new TList();
       fClones->SetOwner(false);
+
+      // So that the clones are automatically removed from the list when
+      // they are deleted.
       gROOT->GetListOfCleanups()->Add(fClones);
    }
    fClones->Add(clone);
@@ -1881,14 +1884,41 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  Example:
 //    tree.Draw("sqrt(x)>>hsqrt","y>0")
 //    will draw sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory.
-//      TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
+//    directory.  To retrieve it do:
+//    TH1F *hsqrt = (TH1F*)gDirectory->Get("hsqrt");
+//
+//  The binning information is taken from the environment variables
+//
+//     Hist.Binning.?D.?
+//
+//  In addition, the name of the histogram can be followed by up to 9
+//  numbers between '(' and ')', where the numbers describe the
+//  following:
+//
+//   1 - bins in x-direction
+//   2 - lower limit in x-direction
+//   3 - upper limit in x-direction
+//   4-6 same for y-direction
+//   7-9 same for z-direction
+//
+//   When a new binning is used the new value will become the default.
+//   Values can be skipped.
+//  Example:
+//    tree.Draw("sqrt(x)>>hsqrt(500,10,20)"
+//          // plot sqrt(x) between 10 and 20 using 500 bins
+//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,60,50,.1,.5)"
+//          // plot sqrt(x) against sin(y)
+//          // 100 bins in x-direction; lower limit on x-axis is 10; upper limit is 60
+//          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
 //
 //  By default, the specified histogram is reset.
 //  To continue to append data to an existing histogram, use "+" in front
-//  of the histogram name;
+//  of the histogram name.
+//  A '+' in front of the histogram name is ignored, when the name is followed by
+//  binning information as described in the previous paragraph.
 //    tree.Draw("sqrt(x)>>+hsqrt","y>0")
 //      will not reset hsqrt, but will continue filling.
+//  This works for 1-D, 2-D and 3-D histograms.
 //
 //     Special functions and variables
 //     ===============================

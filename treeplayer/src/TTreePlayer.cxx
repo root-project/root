@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.129 2003/07/06 19:41:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.130 2003/07/17 14:30:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -514,13 +514,17 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     Saving the result of Draw to an histogram
 //     =========================================
 //  By default the temporary histogram created is called htemp.
+//  One can retrieve a pointer to this histogram with:
+//    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp");
+//
 //  If varexp0 contains >>hnew (following the variable(s) name(s),
 //  the new histogram created is called hnew and it is kept in the current
-//  directory.
+//  directory (and also the current pad).
 //  Example:
 //    tree.Draw("sqrt(x)>>hsqrt","y>0")
 //    will draw sqrt(x) and save the histogram as "hsqrt" in the current
-//    directory.
+//    directory.  To retrieve it do:
+//    TH1F *hsqrt = (TH1F*)gDirectory->Get("hsqrt");
 //
 //  The binning information is taken from the environment variables
 //
