@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.61 2004/04/18 18:28:01 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.62 2004/04/22 13:30:31 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -758,10 +758,10 @@ public:
       Reset();
       MSG msg;
 
-      while (::PeekMessage(&msg, NULL, 0, WM_USER, PM_NOREMOVE)) {
-         ::PeekMessage(&msg, NULL, 0, WM_USER, PM_REMOVE);
-         ::TranslateMessage(&msg);
-         ::DispatchMessage(&msg);
+      while (::PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_NOREMOVE)) {
+         ::PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE);
+         ::TranslateMessage (&msg);
+         ::DispatchMessage (&msg);
       }
       return kFALSE;
    }
@@ -785,7 +785,6 @@ public:
 TGWin32MainThread* gMainThread = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
 LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
-
 
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
