@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.13 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.14 2001/03/13 15:32:21 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1442,7 +1442,7 @@ void TF1::Save(Double_t xmin, Double_t xmax)
    if (fSave != 0) {delete [] fSave; fSave = 0;}
    fNsave = fNpx+3;
    if (fNsave <= 3) {fNsave=0; return;}
-   fSave  = new Double_t[fNsave+1];
+   fSave  = new Double_t[fNsave];
    Int_t i;
    Double_t dx = (xmax-xmin)/fNpx;
    if (dx <= 0) {
@@ -1453,7 +1453,7 @@ void TF1::Save(Double_t xmin, Double_t xmax)
    }
    Double_t xv[1];
    InitArgs(xv,fParams);
-   for (i=0;i<fNpx;i++) {
+   for (i=0;i<=fNpx;i++) {
       xv[0]    = xmin + dx*i;
       fSave[i] = EvalPar(xv,fParams);
    }
@@ -1622,7 +1622,7 @@ void TF1::Streamer(TBuffer &b)
       
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fNsave <= 0) { saved = 1; Save(0,0);}
+      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax);}
       
       TF1::Class()->WriteBuffer(b,this);
       
