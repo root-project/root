@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.41 2003/12/02 08:37:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.42 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -91,6 +91,7 @@ friend class TPacketizer2;
 friend class TCondor;
 
 private:
+   Bool_t    fValid;         //is this a valid proof object
    TString   fMaster;        //name of master server (use "" if this is a master)
    TString   fConfDir;       //directory containing cluster config information
    TString   fConfFile;      //file containing config information
@@ -244,8 +245,8 @@ public:
    Float_t     GetCpuTime() const { return fCpuTime; }
 
    Bool_t      IsMaster() const { return fMasterServ; }
-   Bool_t      IsValid() const { return GetNumberOfActiveSlaves() > 0 ? kTRUE : kFALSE; }
-   Bool_t      IsParallel() const { return GetParallel() > 1 ? kTRUE : kFALSE; }
+   Bool_t      IsValid() const { return fValid; }
+   Bool_t      IsParallel() const { return GetParallel() > 0 ? kTRUE : kFALSE; }
 
    void        SetActive(Bool_t active = kTRUE);
 

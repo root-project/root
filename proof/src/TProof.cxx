@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.62 2004/04/13 17:42:06 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.63 2004/04/20 15:23:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -115,10 +115,7 @@ TProof::TProof(const char *masterurl, const char *conffile,
       gProof->Close();
    }
 
-   if (Init(masterurl, conffile, confdir, loglevel) == 0) {
-      // on Init failure make sure IsValid() returns kFALSE
-      SafeDelete(fActiveSlaves);
-   }
+   Init(masterurl, conffile, confdir, loglevel);
 
    gProof = this;
 }
@@ -139,7 +136,9 @@ TProof::~TProof()
    SafeDelete(fUniqueMonitor);
    SafeDelete(fCondor);
 
-   gProof = 0;
+   if (gProof == this) {
+      gProof = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -152,6 +151,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // of the arguments see the TProof ctor.
 
    Assert(gSystem);
+
+   fValid = kFALSE;
 
    TUrl *u;
    if (!masterurl || !*masterurl)
@@ -380,6 +381,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       }
    }
 
+   // we are now properly initialized
+   fValid = kTRUE;
+
    // De-activate monitor (will be activated in Collect)
    fAllMonitor->DeActivateAll();
 
@@ -413,8 +417,7 @@ void TProof::Close(Option_t *)
       }
 
       fSlaves->Delete();
-      // is 0 if Init() returned 0
-      if (fActiveSlaves) fActiveSlaves->Clear("nodelete"); 
+      fActiveSlaves->Clear("nodelete");
       fUniqueSlaves->Clear("nodelete");
       fBadSlaves->Clear("nodelete");
    }
@@ -475,7 +478,6 @@ Int_t TProof::GetNumberOfSlaves() const
 {
    // Return number of slaves as described in the config file.
 
-   if (!fSlaves) return 0;
    return fSlaves->GetSize();
 }
 
@@ -485,7 +487,6 @@ Int_t TProof::GetNumberOfActiveSlaves() const
    // Return number of active slaves, i.e. slaves that are valid and in
    // the current computing group.
 
-   if (!fActiveSlaves) return 0;
    return fActiveSlaves->GetSize();
 }
 
@@ -495,7 +496,6 @@ Int_t TProof::GetNumberOfUniqueSlaves() const
    // Return number of unique slaves, i.e. active slaves that have each a
    // unique different user files system.
 
-   if (!fUniqueSlaves) return 0;
    return fUniqueSlaves->GetSize();
 }
 
@@ -505,7 +505,6 @@ Int_t TProof::GetNumberOfBadSlaves() const
    // Return number of bad slaves. This are slaves that we in the config
    // file, but refused to startup or that died during the PROOF session.
 
-   if (!fBadSlaves) return 0;
    return fBadSlaves->GetSize();
 }
 
@@ -661,9 +660,9 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 Int_t TProof::GetParallel() const
 {
    // Returns number of slaves active in parallel mode. Returns 0 in case
-   // there are no active slaves.
+   // there are no active slaves. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    if (IsMaster())
       return GetNumberOfActiveSlaves();
@@ -676,8 +675,9 @@ Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
 {
    // Broadcast a message to all slaves in the specified list. Returns
    // the number of slaves the message was successfully sent to.
+   // Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -702,9 +702,7 @@ Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 {
    // Broadcast a message to all slaves in the specified list (either
    // all slaves or only the active slaves). Returns the number of slaves
-   // the message was successfully sent to.
-
-   if (!IsValid()) return 0;
+   // the message was successfully sent to. Returns -1 in case of error.
 
    TList *slaves = 0;
    if (list == kAll)    slaves = fSlaves;
@@ -719,7 +717,7 @@ Int_t TProof::Broadcast(const char *str, Int_t kind, TList *slaves)
 {
    // Broadcast a character string buffer to all slaves in the specified
    // list. Use kind to set the TMessage what field. Returns the number of
-   // slaves the message was sent to.
+   // slaves the message was sent to. Returns -1 in case of error.
 
    TMessage mess(kind);
    if (str) mess.WriteString(str);
@@ -732,7 +730,7 @@ Int_t TProof::Broadcast(const char *str, Int_t kind, ESlaves list)
    // Broadcast a character string buffer to all slaves in the specified
    // list (either all slaves or only the active slaves). Use kind to
    // set the TMessage what field. Returns the number of slaves the message
-   // was sent to.
+   // was sent to. Returns -1 in case of error.
 
    TMessage mess(kind);
    if (str) mess.WriteString(str);
@@ -744,7 +742,7 @@ Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, TList *slaves)
 {
    // Broadcast an object to all slaves in the specified list. Use kind to
    // set the TMEssage what field. Returns the number of slaves the message
-   // was sent to.
+   // was sent to. Returns -1 in case of error.
 
    TMessage mess(kind);
    mess.WriteObject(obj);
@@ -756,7 +754,7 @@ Int_t TProof::BroadcastObject(const TObject *obj, Int_t kind, ESlaves list)
 {
    // Broadcast an object to all slaves in the specified list. Use kind to
    // set the TMEssage what field. Returns the number of slaves the message
-   // was sent to.
+   // was sent to. Returns -1 in case of error.
 
    TMessage mess(kind);
    mess.WriteObject(obj);
@@ -768,8 +766,9 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, TList *slaves)
 {
    // Broadcast a raw buffer of specified length to all slaves in the
    // specified list. Returns the number of slaves the buffer was sent to.
+   // Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    if (slaves->GetSize() == 0) return 0;
 
@@ -794,8 +793,7 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 {
    // Broadcast a raw buffer of specified length to all slaves in the
    // specified list. Returns the number of slaves the buffer was sent to.
-
-   if (!IsValid()) return 0;
+   // Returns -1 in case of error.
 
    TList *slaves = 0;
    if (list == kAll)    slaves = fSlaves;
@@ -954,6 +952,8 @@ Int_t TProof::Collect(TMonitor *mon)
 
          case kPROOF_LOGDONE:
             (*mess) >> fStatus >> fParallel;
+            PDB(kGlobal,2) Info("Collect","kPROOF_PROGRESS: status %d parallel %d",
+               fStatus, fParallel);
             mon->DeActivate(s);
             if (!mon->GetActive()) loop = 0;
             break;
@@ -1199,6 +1199,8 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
    // Process a data set (TDSet) using the specified selector (.C) file.
    // Returns -1 in case of error, 0 otherwise.
 
+   if (!IsValid()) return -1;
+
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
 
@@ -1215,6 +1217,8 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
 {
    // Process a data set (TDSet) using the specified selector (.C) file.
    // Returns -1 in case of error, 0 otherwise.
+
+   if (!IsValid()) return -1;
 
    if (!fPlayer)
       fPlayer = new TProofPlayerRemote(this);
@@ -1314,8 +1318,10 @@ Int_t TProof::SendGroupView()
 {
    // Send to all active slaves servers the current slave group size
    // and their unique id. Returns number of active slaves.
+   // Returns -1 in case of error.
 
-   if (!IsValid() || !IsMaster()) return 0;
+   if (!IsValid()) return -1;
+   if (!IsMaster()) return 0;
    if (!fSendGroupView) return 0;
    fSendGroupView = kFALSE;
 
@@ -1363,7 +1369,7 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
    // to the PROOF cluster. Returns -1 in case of error, >=0 in case of
    // succes.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    TString s = cmd;
    s = s.Strip(TString::kBoth);
@@ -1408,9 +1414,9 @@ Int_t TProof::SendCommand(const char *cmd, ESlaves list)
    // transfered to the PROOF cluster. In that case use TProof::Exec().
    // Returns the status send by the remote server as part of the
    // kPROOF_LOGDONE message. Typically this is the return code of the
-   // command on the remote side.
+   // command on the remote side. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    Broadcast(cmd, kMESS_CINT, list);
    Collect(list);
@@ -1423,8 +1429,9 @@ Int_t TProof::SendCurrentState(ESlaves list)
 {
    // Transfer the current state of the master to the active slave servers.
    // The current state includes: the current working directory, etc.
+   // Returns the number of active slaves. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    // Go to the new directory, reset the interpreter environment and
    // tell slave to delete all objects from its new current directory.
@@ -1438,8 +1445,9 @@ Int_t TProof::SendInitialState()
 {
    // Transfer the initial (i.e. current) state of the master to all
    // slave servers. Currently the initial state includes: log level.
+   // Returns the number of active slaves. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    SetLogLevel(fLogLevel, gProofDebugMask);
 
@@ -1546,8 +1554,8 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
    // file system image, -1 in case of error. If bin is true binary
    // file transfer is used, otherwise ASCII mode.
 
-   if (!IsValid()) return 0;
-   
+   if (!IsValid()) return -1;
+
    TList *slaves = fActiveSlaves;
 
    if (slaves->GetSize() == 0) return 0;
@@ -1629,10 +1637,10 @@ Int_t TProof::SendFile(const char *file, Bool_t bin)
 //______________________________________________________________________________
 Int_t TProof::SendObject(const TObject *obj, ESlaves list)
 {
-   // Send object to master or slave servers. Returns number slaves object
-   // was sent to, 0 in case of error.
+   // Send object to master or slave servers. Returns number of slaves object
+   // was sent to, -1 in case of error.
 
-   if (!IsValid() || !obj) return 0;
+   if (!IsValid() || !obj) return -1;
 
    TMessage mess(kMESS_OBJECT);
 
@@ -1643,9 +1651,10 @@ Int_t TProof::SendObject(const TObject *obj, ESlaves list)
 //______________________________________________________________________________
 Int_t TProof::SendPrint(Option_t *option)
 {
-   // Send print command to master server.
+   // Send print command to master server. Returns number of slaves message
+   // was sent to. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    Broadcast(option, kPROOF_PRINT, kActive);
    return Collect(kActive);
@@ -1668,18 +1677,23 @@ void TProof::SetLogLevel(Int_t level, UInt_t mask)
 Int_t TProof::SetParallel(Int_t nodes)
 {
    // Tell RPOOF how many slaves to use in parallel. Returns the number of
-   // parallel slaves.
+   // parallel slaves. Returns -1 in case of error.
 
-   if (!IsValid()) return 0;
+   if (!IsValid()) return -1;
 
    if (IsMaster()) {
       GoParallel(nodes);
       return SendCurrentState();
    } else {
+      PDB(kGlobal,1) Info("SetParallel", "request %d node%s", nodes,
+         nodes == 1 ? "" : "s");
       TMessage mess(kPROOF_PARALLEL);
       mess << nodes;
       Broadcast(mess);
       Collect();
+      PDB(kGlobal,1) Info("SetParallel", "got %d node%s", fParallel,
+         fParallel == 1 ? "" : "s");
+
       return fParallel;
    }
 }
@@ -1689,9 +1703,12 @@ Int_t TProof::GoParallel(Int_t nodes)
 {
    // Go in parallel mode with at most "nodes" slaves. Since the fSlaves
    // list is sorted by slave performace the active list will contain first
-   // the most performant nodes.
+   // the most performant nodes. Returns the number of active slaves.
+   // Returns -1 in case of error.
 
-   if (nodes <= 0) nodes = 1;
+   if (!IsValid()) return -1;
+
+   if (nodes < 0) nodes = 0;
 
    fActiveSlaves->Clear();
    fActiveMonitor->RemoveAll();
@@ -1722,12 +1739,13 @@ Int_t TProof::GoParallel(Int_t nodes)
 
    Int_t n = GetNumberOfActiveSlaves();
    if (IsMaster()) {
-      if (n > 1)
+      if (n > 0)
          printf("PROOF set to parallel mode (%d slaves)\n", n);
       else
          printf("PROOF set to sequential mode\n");
    }
 
+   PDB(kGlobal,1) Info("GoParallel", "got %d node%s", n, n == 1 ? "" : "s");
    return n;
 }
 
