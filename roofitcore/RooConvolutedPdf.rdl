@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.1 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,6 +15,7 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
+#include "RooFitCore/RooDataSet.hh"
 
 class RooResolutionModel ;
 class RooRealVar ;
@@ -33,19 +34,33 @@ public:
 
   Int_t declareBasis(const char* expression, const RooArgSet& params) ;
   virtual Double_t evaluate(const RooDataSet* dset) const ;
-  virtual Bool_t selfNormalized(const RooAbsArg& dep) const ;
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
+
+  // Analytical integration support
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code) const ;
+  
+  // Coefficient Analytical integration support
+  virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code) const ;
+
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
+  
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+  void dump(const RooDataSet* dset) const ;
     
 protected:
 
-  // Following pointer are only used during 
+  // Following pointers are only used during 
   // construction and need not to be proxied
   RooResolutionModel* _model   ; // Original resolution model
   RooRealVar* _convVar ;         // Convolution variable
 
+
+  const RooRealVar* convVar() const ;  // Convolution variable 
   RooSetProxy _convSet  ;        // Set of resModel X basisFunc convolution
+  RooDataSet _convDummyDataSet ; // Dummy data set for convolution integrations
 
   ClassDef(RooConvolutedPdf,1) // Abstract Resolution Model
 };

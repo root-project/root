@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.15 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.16 2001/06/12 19:06:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -141,7 +141,8 @@ void RooAbsPdf::syncNormalization(const RooDataSet* dset) const
 {
   if (dset == _lastDataSet) return ;
 
-  if (_verboseEval) cout << "RooAbsPdf:syncNormalization(" << GetName() << ") recalculating normalization" << endl ;
+  if (_verboseEval) cout << "RooAbsPdf:syncNormalization(" << GetName() 
+			 << ") recalculating normalization" << endl ;
   _lastDataSet = (RooDataSet*) dset ;
 
   // Update dataset pointers of proxies

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.14 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.15 2001/06/09 05:08:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,6 +47,7 @@ public:
   // Analytical integration support
   virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
   virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
   virtual Bool_t selfNormalized(const RooArgSet& dependents) const ;
@@ -70,7 +71,7 @@ public:
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   Double_t getVal(const RooDataSet* dset=0) const ;
   Double_t getLogVal(const RooDataSet* dset=0) const ;
-  Double_t getNorm(const RooDataSet* dset=0) const ;
+  virtual Double_t getNorm(const RooDataSet* dset=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
 
@@ -92,7 +93,7 @@ protected:
 
   static Bool_t _verboseEval ;
 
-  void syncNormalization(const RooDataSet* dset) const ;
+  virtual void syncNormalization(const RooDataSet* dset) const ;
 
   // support interface for generating toy MC samples
   virtual Double_t generateEnvelope(const RooArgSet &whatVars);

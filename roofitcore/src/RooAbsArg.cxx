@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.36 2001/06/16 20:28:19 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.37 2001/06/18 21:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -486,6 +486,7 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
     RooAbsArg* client ;
     while (client=(RooAbsArg*)_clientShapeIter->Next()) {
       client->setShapeDirty(kTRUE,source) ;
+      client->setValueDirty(kTRUE,source) ;
     }
   }
 
@@ -607,6 +608,12 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
 }
 
 
+void RooAbsArg::unRegisterProxy(RooArgProxy& proxy)  
+{
+  // Remove proxy from proxy list
+  _proxyList.Remove(&proxy) ;
+}
+
 
 
 void RooAbsArg::registerProxy(RooSetProxy& proxy) 
@@ -623,6 +630,16 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
   // Register proxy itself
   _proxyList.Add(&proxy) ;  
 }
+
+
+void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)  
+{
+  // Remove proxy from proxy list
+  _proxyList.Remove(&proxy) ;
+}
+
+
+
 
 
 

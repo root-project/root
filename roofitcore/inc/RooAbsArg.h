@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.32 2001/06/16 20:28:19 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.33 2001/06/18 21:04:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -135,6 +135,8 @@ protected:
   friend class RooSetProxy ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
+  void unRegisterProxy(RooArgProxy& proxy) ;
+  void unRegisterProxy(RooSetProxy& proxy) ;
   RooAbsProxy* getProxy(Int_t index) const ;
   void setProxyDataSet(const RooDataSet* dset) ;
   Int_t numProxies() const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.10 2001/06/06 00:06:39 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.11 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -40,6 +40,7 @@ public:
 
 protected:
 
+  enum OperMode { Hybrid, Analytic, Unity } ;
   friend class RooAbsPdf ;
 
   void initNumIntegrator() ;
@@ -62,6 +63,7 @@ protected:
   mutable RooSetProxy _anaList ;
   mutable RooSetProxy _jacList ;
   Int_t _mode ;
+  OperMode _operMode ;
 
   mutable RooAbsIntegrator* _numIntEngine ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.1 2001/06/08 05:51:06 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.2 2001/06/09 05:08:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -55,14 +55,14 @@ void RooTruthModel::changeBasis(RooFormulaVar* basis)
 
   // Remove client-server link to old basis
   if (_basis) {
-    cout << "RooTruthModel::changeBasis(" << GetName() << "," << (void*)this << ") removing basis " << _basis->GetName() << " as server" << endl ;
+    //cout << "RooTruthModel::changeBasis(" << GetName() << "," << (void*)this << ") removing basis " << _basis->GetName() << " as server" << endl ;
     removeServer(*_basis) ;
   }
 
   // Change basis pointer and update client-server link
   _basis = basis ;
   if (_basis) {
-    cout << "RooTruthModel::changeBasis(" << GetName() << "," << (void*)this << " adding basis " << _basis->GetName() << " as server" << endl ;
+    //cout << "RooTruthModel::changeBasis(" << GetName() << "," << (void*)this << " adding basis " << _basis->GetName() << " as server" << endl ;
     addServer(*_basis,kTRUE,kFALSE) ;
   }
 

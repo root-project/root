@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.16 2001/06/06 00:06:39 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.17 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,19 +44,30 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _intList("intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
-  _numIntEngine(0) 
+  _numIntEngine(0), _operMode(Hybrid)
 {
   // Constructor
   RooArgSet intDepList ;
+  RooAbsArg *arg ;
+
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * 0) Check for dependents that the PDF insists on integrating *
+  //      analytically iself                                       *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+  RooArgSet anIntOKDepList ;
+  TIterator* depIter = depList.MakeIterator() ;
+  while(arg=(RooAbsArg*)depIter->Next()) {
+    if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
+  }
+  delete depIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * A) Make list of servers that can be integrated analytically *
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntOKDepList ;
   TIterator *sIter = function.serverIterator() ;
-  RooAbsArg *arg ;
   while(arg=(RooAbsArg*)sIter->Next()) {
 
     // Dependent or parameter?
@@ -163,9 +174,18 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(depList)) {
       
-      // Expand server in final dependents and add to numerical integration list      
+      // Expand server in final dependents 
       RooArgSet *argDeps = arg->getDependents(&depList) ;
-      numIntDepList.add(*argDeps) ;
+
+      // Add final dependents, that are not forcibly integrated analytically, 
+      // to numerical integration list      
+      TIterator* iter = argDeps->MakeIterator() ;
+      RooAbsArg* dep ;
+      while(dep=(RooAbsArg*)iter->Next()) {
+	if (!function.forceAnalyticalInt(*dep))
+	  numIntDepList.add(*dep) ;
+      }      
+      delete iter ;
       delete argDeps ; 
     }
   }
@@ -187,6 +207,18 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   delete numIter ;
 
   initNumIntegrator() ;
+
+  // Determine operating mode
+  if (numIntDepList.GetSize()>0) {
+    // Numerical and optional Analytical integration
+    _operMode = Hybrid ;
+  } else if (_anaList.GetSize()>0) {
+    // Purely analytical integration
+    _operMode = Analytic ;    
+  } else {
+    // No integration performed
+    _operMode = Unity ;
+  }
 }
 
 
@@ -219,7 +251,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _intList("intList",this,other._intList), 
   _sumList("sumList",this,other._sumList),
   _anaList("anaList",this,other._anaList),
-  _jacList("jacList",this,other._jacList) 
+  _jacList("jacList",this,other._jacList),
+  _operMode(other._operMode)
 {
   // Copy constructor
   initNumIntegrator() ;
@@ -235,22 +268,37 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate(const RooDataSet* dset) const 
 {
-  // Calculate integral
+  switch (_operMode) {
 
-  // Save current integral dependent values 
-  RooArgSet *saveInt = _intList.snapshot() ;
-  RooArgSet *saveSum = _sumList.snapshot() ;
+  case Hybrid: 
+    {
+      // Calculate integral
+      
+      // Save current integral dependent values 
+      RooArgSet *saveInt = _intList.snapshot() ;
+      RooArgSet *saveSum = _sumList.snapshot() ;
+      
+      // Evaluate sum/integral
+      Double_t retVal = sum() / jacobianProduct() ;
+      
+      // Restore integral dependent values
+      _intList=*saveInt ;
+      _sumList=*saveSum ;
+      delete saveInt ;
+      delete saveSum ;
 
-  // Evaluate sum/integral
-  Double_t retVal = sum() / jacobianProduct() ;
+      return retVal ;
+    }
+  case Analytic:
+    {
+      return ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+    }
 
-  // Restore integral dependent values
-  _intList=*saveInt ;
-  _sumList=*saveSum ;
-  delete saveInt ;
-  delete saveSum ;
-
-  return retVal ;
+  case Unity:
+    {
+      return 1.0 ;
+    }
+  }
 }
 
 
@@ -274,10 +322,12 @@ Double_t RooRealIntegral::sum() const
 {
   // Perform summation of list of category dependents to be integrated
   if (_sumList.GetSize()!=0) {
-
+ 
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;
     RooMultiCatIter sumIter(_sumList) ;
+    Int_t counter(0) ;
+
     while(sumIter.Next()) {
       total += integrate() / jacobianProduct() ;
     }
@@ -286,7 +336,8 @@ Double_t RooRealIntegral::sum() const
   } else {
 
     // Simply return integral 
-    return integrate() ;
+    Double_t ret = integrate() ;
+    return ret ;
   }
 }
 
@@ -298,10 +349,14 @@ Double_t RooRealIntegral::integrate() const
   // Perform hybrid numerical/analytical integration over all real-valued dependents
 
   // Trivial case, fully analytical integration
-  if (!_numIntEngine) return ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+  if (!_numIntEngine) {
+    Double_t ret = ((RooAbsPdf&)_function.arg()).analyticalIntegral(_mode) ;
+    return ret ;
+  }
 
   // Partial or complete numerical integration
-  return _numIntEngine->integral() ;
+  Double_t ret = _numIntEngine->integral() ;
+  return ret ;
 }
 
 
@@ -334,6 +389,8 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     _function.arg().printToStream(os,Standard);
     TString deeper(indent);
     deeper.Append("  ");
+    os << indent << "  operating mode is " 
+       << (_operMode==Hybrid?"Hybrid":(_operMode==Analytic?"Analytic":"Unity")) << endl ;
     os << indent << "  Summed discrete args are ";
     _sumList.printToStream(os,Standard,deeper);
     os << indent << "  Numerically integrated args are ";
@@ -380,6 +437,7 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
     os << " AnaInt(" ;
     while (arg=(RooAbsArg*)aIter->Next()) {
       os << (first?"":",") << arg->GetName() ;
+      if (((RooAbsPdf&)_function.arg()).forceAnalyticalInt(*arg)) os << "!" ;
       first=kFALSE ;
     }
     delete aIter ;

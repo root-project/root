@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.1 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.2 2001/06/09 05:08:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -66,7 +66,6 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis) const
   RooResolutionModel* conv = (RooResolutionModel*) clone(newName) ;
   
   conv->SetTitle(TString(conv->GetTitle()).Append(" convoluted with basis function ").Append(basis->GetName())) ;
-  cout << "RRM:convolution of " << GetName() << " chaning basis to " << basis->GetName() << endl ;
   conv->changeBasis(basis) ;
 
   return conv ;
@@ -108,7 +107,7 @@ const RooFormulaVar& RooResolutionModel::basis() const {
 }
 
 
-const RooRealVar& RooResolutionModel::convVar() const 
+const RooRealVar& RooResolutionModel::basisConvVar() const 
 {
   // Convolution variable is by definition first server of basis function
   TIterator* sIter = basis().serverIterator() ;
@@ -116,6 +115,12 @@ const RooRealVar& RooResolutionModel::convVar() const
   delete sIter ;
 
   return *var ;
+}
+
+
+RooRealVar& RooResolutionModel::convVar() const 
+{
+  return (RooRealVar&) x.arg() ;
 }
 
 
@@ -138,7 +143,6 @@ Double_t RooResolutionModel::getVal(const RooDataSet* dset) const
 
 
 
-
 Bool_t RooResolutionModel::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) 
 {
   if (!_basis) return kFALSE ;
@@ -148,3 +152,14 @@ Bool_t RooResolutionModel::redirectServersHook(const RooArgSet& newServerList, B
 
   return (mustReplaceAll && !newBasis) ;
 }
+
+
+
+Bool_t RooResolutionModel::traceEvalHook(Double_t value) const 
+{
+  // Floating point error checking and tracing for given float value
+
+  // check for a math error or negative value
+  return isnan(value) ;
+}
+
