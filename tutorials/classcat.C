@@ -5,10 +5,11 @@
    gSystem->Load("libProof");
    gSystem->Load("libTreePlayer");
    gSystem->Load("libTreeViewer");
+   gSystem->Load("$PYTHIA6/libPythia6");
    gSystem->Load("libEG");
    gSystem->Load("libEGPythia6");
-   gSystem->Load("libPainter");
    gSystem->Load("libPhysics");
+   gSystem->Load("libGeom");
    
    TCanvas c1("c1");
    TClassTree ct("ClassTree");
@@ -24,9 +25,14 @@
    c1.Print("classcat_container.ps");
 
    //histogram and minimisation classes
-   ct.Draw("*TH1:*TFormula:TMinuit:TAxis");
+   ct.Draw("*TH1:*TFormula:TMinuit:TAxis:TFitter:TVirtualfitter");
    c1.Print("classcat_hist.gif");
    c1.Print("classcat_hist.ps");
+   
+   //physics vectors classes
+   ct.Draw("TFeldmanCousins:TGenPhaseSpace:TLorentz*:TRotation:TVector2D:TVector3D");
+   c1.Print("classcat_physics.gif");
+   c1.Print("classcat_physics.ps");
 
    //tree classes
    ct.Draw("*TTree:*TBranch:*TLeaf:*TKey:*TDirectory:TCut*:TEventList:TChain*:TTreeFormula:*TSelector:TTree*");
@@ -44,9 +50,14 @@
    c1.Print("classcat_gpad.ps");
 
    //3-d graphics classes
-   ct.Draw("*TShape:*TNode:TGeometry:TLego:TView:TPoly*:TRotMatrix:*TMaterial");
+   ct.Draw("*TShape:*TNode:TGeometry:TPainter3dAlgorithms:TView:TPoly*:TRotMatrix:*TMaterial");
    c1.Print("classcat_graf3d.gif");
    c1.Print("classcat_graf3d.ps");
+   
+   //Detector geometry classes
+   ct.Draw("TGeo*");
+   c1.Print("classcat_geometry.gif");
+   c1.Print("classcat_geometry.ps");
 
    //GUI classes
    ct.Draw("*TGFrame");
