@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.11 2003/06/23 22:18:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.12 2003/09/23 22:03:34 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -235,25 +235,53 @@ TIterator *TMap::MakeIterator(Bool_t dir) const
 }
 
 //______________________________________________________________________________
-void TMap::Print(Option_t *option) const
+void TMap::Print(Option_t *wildcard) const
 {
    // Print all objects in this collection.
-   // Wildcarding supported, eg option="xxx*" prints only objects
-   // with names xxx*.
+   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
+   // with names matching xxx*.
 
-   TRegexp re(option,kTRUE);
-   Int_t nch = strlen(option);
+   if (!wildcard) wildcard = "";
+   TRegexp re(wildcard, kTRUE);
+   Int_t nch = strlen(wildcard);
    TIter next(fTable);
    TPair *a;
 
    while ((a = (TPair*) next())) {
       TString s = a->Key()->GetName();
-      if (nch && s != option && s.Index(re) == kNPOS) continue;
+      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
+      printf("Key:   ");
+      a->Key()->Print();
+      if (TStorage::IsOnHeap(a->Value())) {
+         printf("Value: ");
+         a->Value()->Print();
+      } else
+         printf("Value: 0x%lx\n", (ULong_t) a->Value());
+   }
+}
+
+//______________________________________________________________________________
+void TMap::Print(Option_t *wildcard, Option_t *option) const
+{
+   // Print all objects in this collection, passing option to the
+   // objects Print() method.
+   // Wildcarding is supported, e.g. wildcard="xxx*" prints only objects
+   // with names matching xxx*.
+
+   if (!wildcard) wildcard = "";
+   TRegexp re(wildcard, kTRUE);
+   Int_t nch = strlen(wildcard);
+   TIter next(fTable);
+   TPair *a;
+
+   while ((a = (TPair*) next())) {
+      TString s = a->Key()->GetName();
+      if (nch && s != wildcard && s.Index(re) == kNPOS) continue;
       printf("Key:   ");
       a->Key()->Print(option);
       if (TStorage::IsOnHeap(a->Value())) {
          printf("Value: ");
-         a->Value()->Print();
+         a->Value()->Print(option);
       } else
          printf("Value: 0x%lx\n", (ULong_t) a->Value());
    }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.14 2003/06/23 22:18:37 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.15 2003/09/23 22:03:34 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -65,7 +65,8 @@ public:
    TObject          *GetValue(const char *keyname) const;
    TObject          *GetValue(const TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
-   void              Print(Option_t *option="") const;
+   void              Print(Option_t *wildcard="") const;
+   void              Print(Option_t *wildcard, Option_t *option) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
 

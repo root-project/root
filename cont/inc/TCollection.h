@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.13 2004/07/30 01:12:27 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.14 2004/10/11 22:58:18 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -95,7 +95,8 @@ public:
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
    virtual void       Paint(Option_t *option="");
-   virtual void       Print(Option_t *option="") const;
+   virtual void       Print(Option_t *wildcard="") const;
+   virtual void       Print(Option_t *wildcard, Option_t *option) const;
    virtual void       RecursiveRemove(TObject *obj);
    virtual TObject   *Remove(TObject *obj) = 0;
    virtual void       RemoveAll(TCollection *col);
