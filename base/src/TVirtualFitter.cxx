@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.2 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.3 2003/05/05 16:38:02 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -34,6 +34,7 @@ TVirtualFitter::~TVirtualFitter()
 {
    // Cleanup virtual fitter.
 
+   delete fMethodCall;
    fgFitter    = 0;
    fgMaxpar    = 0;
    fMethodCall = 0;
@@ -155,6 +156,7 @@ void TVirtualFitter::SetFCN(void *fcn)
 
    char *funcname = G__p2f2funcname(fcn);
    if (funcname) {
+      delete fMethodCall;
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
     }
