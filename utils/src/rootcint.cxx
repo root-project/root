@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.97 2002/09/09 15:21:39 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.98 2002/09/11 12:58:08 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2155,12 +2155,13 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
             }
          }
       } else {
+         string baseclass = b.Fullname();
          if (outside) {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>( (::%s*) obj ), R__insp, R__parent, false);\n",
-                    b.Name(), b.Name(), cl.Fullname());
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< ::%s *>( (::%s*) obj ), R__insp, R__parent, false);\n",
+                    baseclass.c_str(), baseclass.c_str(), cl.Fullname());
          } else {
-            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< %s *>(this ), R__insp, R__parent, false);\n",
-                    b.Name(), b.Name());
+            fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", dynamic_cast< ::%s *>(this ), R__insp, R__parent, false);\n",
+                     baseclass.c_str(),  baseclass.c_str());
          }
       }
    }
@@ -2399,7 +2400,11 @@ void WriteShadowClass(G__ClassInfo &cl)
             fprintf(fp, " public ");
          else
             fprintf(fp, " UNKNOWN inheritance ");
-         fprintf(fp, "%s", b.Fullname());
+         string type_name = b.Fullname();
+         if ( type_name.find("::")!= string::npos )
+            fprintf(fp, "::%s", b.Fullname());
+         else
+            fprintf(fp, "%s", b.Fullname());
       }
       fprintf(fp, " {\n");
       fprintf(fp, "         public:\n");
