@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.89 2001/08/17 14:39:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.90 2001/10/02 16:54:06 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
+#include "TObjectRef.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
@@ -1048,7 +1049,6 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[j]);}
       case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
       case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kBits:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[j]);}
@@ -1061,7 +1061,6 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[j]);}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kBits:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }
@@ -1106,7 +1105,6 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[k]);}
       case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[k]);}
-      case kOffsetL + kBits:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[k]);}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[k]);}
@@ -1119,7 +1117,6 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
-      case kOffsetP + kBits:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
          // array counter //[n] 
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }
@@ -1254,7 +1251,6 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<aleng;j++) printf("%ld ",val[j]); break;}
-      case kOffsetL + kBits:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<aleng;j++) printf("%d ",val[j]);  break;}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
@@ -1267,7 +1263,6 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
-      case kOffsetP + kBits:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // Class *  derived from TObject with comment field  //->
@@ -1413,7 +1408,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
       case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  for(j=0;j<fLength[i];j++) printf("%ld ",val[j]); break;}
-      case kOffsetL + kBits:   {UInt_t *val   = (UInt_t*)ladd;   for(j=0;j<fLength[i];j++) printf("%d ",val[j]);  break;}
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
@@ -1426,7 +1420,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
       case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
-      case kOffsetP + kBits:   {UInt_t **val   = (UInt_t**)ladd;   Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%d ",(*val)[j]);  break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
          // Class *  derived from TObject with comment field  //->
@@ -1707,7 +1700,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kUShort:            ReadBasicType(UShort_t)
          case kUInt:              ReadBasicType(UInt_t)
          case kULong:             ReadBasicType(ULong_t)
-         case kBits:              ReadBasicType(UInt_t)
 
          // read array of basic types  array[8]
          case kOffsetL + kChar:   ReadBasicArray(Char_t)
@@ -1720,7 +1712,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kUShort: ReadBasicArray(UShort_t)
          case kOffsetL + kUInt:   ReadBasicArray(UInt_t)
          case kOffsetL + kULong:  ReadBasicArray(ULong_t)
-         case kOffsetL + kBits:   ReadBasicArray(UInt_t)
 
          // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   ReadBasicPointer(Char_t)
@@ -1733,7 +1724,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUShort: ReadBasicPointer(UShort_t)
          case kOffsetP + kUInt:   ReadBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadBasicPointer(ULong_t)
-         case kOffsetP + kBits:   ReadBasicPointer(UInt_t)
+
+         // special case for TObject::fBits in case of a referenced object
+         case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b >> *x;
+                       if ((*x & kIsReferenced) != 0) TObjectRef::ReadRef((TObject*)pointer,b,gFile);
+                       break;
+                     }
+
 
          // Class *  derived from TObject with comment field  //->
          case kObjectp: {
@@ -1887,7 +1884,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kSkipL + kUShort: SkipBasicArray(UShort_t)
          case kSkipL + kUInt:   SkipBasicArray(UInt_t)
          case kSkipL + kULong:  SkipBasicArray(ULong_t)
-         case kSkipL + kBits:   SkipBasicArray(UInt_t)
 
          // skip pointer to an array of basic types  array[n]
          case kSkipP + kChar:   SkipBasicPointer(Char_t)
@@ -1900,7 +1896,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kSkipP + kUShort: SkipBasicPointer(UShort_t)
          case kSkipP + kUInt:   SkipBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipBasicPointer(ULong_t)
-         case kSkipP + kBits:   SkipBasicPointer(UInt_t)
 
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
@@ -1982,7 +1977,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kConvL + kUShort: ConvBasicArray(UShort_t)
          case kConvL + kUInt:   ConvBasicArray(UInt_t)
          case kConvL + kULong:  ConvBasicArray(ULong_t)
-         case kConvL + kBits:   ConvBasicArray(UInt_t)
 
          // convert pointer to an array of basic types  array[n]
          case kConvP + kChar:   ConvBasicPointer(Char_t)
@@ -1995,7 +1989,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kConvP + kUShort: ConvBasicPointer(UShort_t)
          case kConvP + kUInt:   ConvBasicPointer(UInt_t)
          case kConvP + kULong:  ConvBasicPointer(ULong_t)
-         case kConvP + kBits:   ConvBasicPointer(UInt_t)
       }
    }
    return 0;
@@ -2095,7 +2088,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kUShort:            ReadCBasicType(UShort_t)
          case kUInt:              ReadCBasicType(UInt_t)
          case kULong:             ReadCBasicType(ULong_t)
-         case kBits:              ReadCBasicType(UInt_t)
 
          // write array of basic types  array[8]
          case kOffsetL + kChar:   ReadCBasicArray(Char_t)
@@ -2108,7 +2100,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetL + kUShort: ReadCBasicArray(UShort_t)
          case kOffsetL + kUInt:   ReadCBasicArray(UInt_t)
          case kOffsetL + kULong:  ReadCBasicArray(ULong_t)
-         case kOffsetL + kBits:   ReadCBasicArray(UInt_t)
 
          // write pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   ReadCBasicPointer(Char_t)
@@ -2121,7 +2112,16 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetP + kUShort: ReadCBasicPointer(UShort_t)
          case kOffsetP + kUInt:   ReadCBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadCBasicPointer(ULong_t)
-         case kOffsetP + kBits:   ReadCBasicPointer(UInt_t)
+
+         // special case for TObject::fBits in case of a referenced object
+         case kBits: { 
+               for (Int_t k=0;k<nc;k++) {
+                  UInt_t *x=(UInt_t*)((char*)clones->UncheckedAt(k)+offset); b >> *x;
+                  pointer = (char*)clones->UncheckedAt(k); 
+                  if ((*x & kIsReferenced) != 0) TObjectRef::ReadRef((TObject*)pointer,b,gFile);
+               }
+            }
+            break;
 
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: {
@@ -2321,7 +2321,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kSkipL + kUShort: SkipCBasicArray(UShort_t)
          case kSkipL + kUInt:   SkipCBasicArray(UInt_t)
          case kSkipL + kULong:  SkipCBasicArray(ULong_t)
-         case kSkipL + kBits:   SkipCBasicArray(UInt_t)
 
          // skip pointer to an array of basic types  array[n]
          case kSkipP + kChar:   SkipCBasicPointer(Char_t)
@@ -2334,7 +2333,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kSkipP + kUShort: SkipCBasicPointer(UShort_t)
          case kSkipP + kUInt:   SkipCBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipCBasicPointer(ULong_t)
-         case kSkipP + kBits:   SkipCBasicPointer(UInt_t)
 
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
@@ -2538,7 +2536,6 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kUShort:            WriteBasicType(UShort_t)
          case kUInt:              WriteBasicType(UInt_t)
          case kULong:             WriteBasicType(ULong_t)
-         case kBits:              WriteBasicType(UInt_t)
 
          // write array of basic types  array[8]
          case kOffsetL + kChar:   WriteBasicArray(Char_t)
@@ -2551,7 +2548,6 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kUShort: WriteBasicArray(UShort_t)
          case kOffsetL + kUInt:   WriteBasicArray(UInt_t)
          case kOffsetL + kULong:  WriteBasicArray(ULong_t)
-         case kOffsetL + kBits:   WriteBasicArray(UInt_t)
 
          // write pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   WriteBasicPointer(Char_t)
@@ -2564,7 +2560,13 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUShort: WriteBasicPointer(UShort_t)
          case kOffsetP + kUInt:   WriteBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteBasicPointer(ULong_t)
-         case kOffsetP + kBits:   WriteBasicPointer(UInt_t)
+
+         // special case for TObject::fBits in case of a referenced object
+         case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
+                       if ((*x & kIsReferenced) != 0) TObjectRef::SaveRef((TObject*)pointer,b,gFile);
+                       break;
+                     }
+
 
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: { TObject **obj = (TObject**)(pointer+fOffset[i]);
@@ -2754,7 +2756,6 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kUShort:            WriteCBasicType(UShort_t)
          case kUInt:              WriteCBasicType(UInt_t)
          case kULong:             WriteCBasicType(ULong_t)
-         case kBits:              WriteCBasicType(UInt_t)
 
          // write array of basic types  array[8]
          case kOffsetL + kChar:   WriteCBasicArray(Char_t)
@@ -2767,7 +2768,6 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetL + kUShort: WriteCBasicArray(UShort_t)
          case kOffsetL + kUInt:   WriteCBasicArray(UInt_t)
          case kOffsetL + kULong:  WriteCBasicArray(ULong_t)
-         case kOffsetL + kBits:   WriteCBasicArray(UInt_t)
 
          // write pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   WriteCBasicPointer(Char_t)
@@ -2780,7 +2780,16 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetP + kUShort: WriteCBasicPointer(UShort_t)
          case kOffsetP + kUInt:   WriteCBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteCBasicPointer(ULong_t)
-         case kOffsetP + kBits:   WriteCBasicPointer(UInt_t)
+
+         // special case for TObject::fBits in case of a referenced object
+         case kBits: { 
+               for (Int_t k=0;k<nc;k++) {
+                  pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+                  UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
+                  if ((*x & kIsReferenced) != 0) TObjectRef::SaveRef((TObject*)pointer,b,gFile);
+               }
+            }
+            break;
 
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: {
