@@ -27,7 +27,7 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint utils base cont meta net zip clib matrix new \
+MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
                 hist tree graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg
 
@@ -104,7 +104,7 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
                 pythia6 venus star mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd
+                rootd proofd dcache hbook
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
