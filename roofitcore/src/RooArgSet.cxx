@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.27 2001/08/03 22:07:25 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.28 2001/08/09 01:02:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -448,12 +448,7 @@ RooArgSet* RooArgSet::selectByAttrib(const char* name, Bool_t value) const
   }
   delete iter ;
 
-  // Return set if not empty
-  if (sel->GetSize()) return sel ;
-
-  // Destroy empty set and return null
-  delete sel ;
-  return 0 ;
+  return sel ;
 }
 
 

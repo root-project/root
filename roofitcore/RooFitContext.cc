@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.18 2001/08/18 02:13:10 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.19 2001/08/21 01:46:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -89,11 +89,15 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
   RooArgSet* paramList = _pdfClone->getParameters(_dataClone) ;
 
   _floatParamList = paramList->selectByAttrib("Constant",kFALSE) ; 
-  _floatParamList->Sort() ;
+  if (_floatParamList->GetSize()>1) {
+    _floatParamList->Sort() ;
+  }
   _floatParamList->SetName("floatParamList") ;
 
   _constParamList = paramList->selectByAttrib("Constant",kTRUE) ;
-  _constParamList->Sort() ;
+  if (_constParamList->GetSize()>1) {
+    _constParamList->Sort() ;
+  }
   _constParamList->SetName("constParamList") ;
 
   delete paramList ;
@@ -108,6 +112,7 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
       _floatParamList->remove(*arg) ;
     }
   }
+
   _nPar      = _floatParamList->GetSize() ;  
   delete pIter ;
 
