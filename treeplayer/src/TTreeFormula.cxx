@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.5 2000/06/05 07:27:12 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.6 2000/06/09 16:26:11 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -283,7 +283,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
   Int_t i,pos,pos2,int1,int2,real_instance;
   Float_t aresult;
   Double_t tab[kMAXFOUND];
-  Float_t param[kMAXFOUND];
+  Double_t param[kMAXFOUND];
   Double_t dexp;
   char *tab2[kMAXSTRINGFOUND];
 
@@ -292,8 +292,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
         TCutG *gcut = (TCutG*)fMethods.At(0);
         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-        Float_t xcut = fx->EvalInstance(instance);
-        Float_t ycut = fy->EvalInstance(instance);
+        Double_t xcut = fx->EvalInstance(instance);
+        Double_t ycut = fy->EvalInstance(instance);
         return gcut->IsInside(xcut,ycut);
      }
      TLeaf *leaf = GetLeaf(0);
@@ -314,8 +314,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
         TCutG *gcut = (TCutG*)fMethods.At(i);
         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-        Float_t xcut = fx->EvalInstance(instance);
-        Float_t ycut = fy->EvalInstance(instance);
+        Double_t xcut = fx->EvalInstance(instance);
+        Double_t ycut = fy->EvalInstance(instance);
         param[i] = gcut->IsInside(xcut,ycut);
      } else {
         TLeaf *leaf = GetLeaf(i);
@@ -495,7 +495,7 @@ Int_t TTreeFormula::GetNdata()
 }
 
 //______________________________________________________________________________
-Float_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
+Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 {
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
@@ -510,12 +510,12 @@ Float_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
    if (r == kLong) {
       Long_t l;
       m->Execute(thisobj, l);
-      return (Float_t) l;
+      return (Double_t) l;
    }
    if (r == kDouble) {
       Double_t d;
       m->Execute(thisobj, d);
-      return (Float_t) d;
+      return (Double_t) d;
    }
    m->Execute(thisobj);
    return 0;
