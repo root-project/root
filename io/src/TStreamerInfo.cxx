@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.75 2001/05/31 08:52:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.76 2001/05/31 10:01:59 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -190,7 +190,8 @@ void TStreamerInfo::Build()
             }
             dmref = refcount->GetDataMember();
             TDataType *reftype = dmref->GetDataType();
-            if (!reftype || reftype->GetType() != 3) {
+            Bool_t isInteger = reftype->GetType() == 3 || reftype->GetType() == 13;
+               if (!reftype || !isInteger) {
                Error("Build","%s, discarding: %s %s, illegal [%s] (must be Int_t)\n",GetName(),dm->GetFullTypeName(),dm->GetName(),dm->GetArrayIndex());
                continue;
             }
