@@ -19,8 +19,14 @@ ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
 ROOTCINTTMP  := $(MODDIRS)/rootcint_tmp$(EXEEXT)
 ROOTCINT     := bin/rootcint$(EXEEXT)
 
+##### rlibmap #####
+RLIBMAPS     := $(MODDIRS)/rlibmap.cxx
+RLIBMAPO     := $(RLIBMAPS:.cxx=.o)
+RLIBMAPDEP   := $(RLIBMAPO:.o=.d)
+RLIBMAP      := bin/rlibmap$(EXEEXT)
+
 # include all dependency files
-INCLUDEFILES += $(ROOTCINTDEP)
+INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)
 
 ##### local rules #####
 $(ROOTCINT):    $(CINTLIB) $(ROOTCINTO) $(MAKEINFO) $(IOSENUM)
@@ -33,15 +39,19 @@ $(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTS) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
 			$(ROOTCINTTMPO) $(CINTTMPO) $(CILIBS)
 
-all-utils:      $(ROOTCINTTMP) $(ROOTCINT)
+$(RLIBMAP):     $(RLIBMAPO)
+		$(LD) $(LDFLAGS) -o $@ $<
+
+all-utils:      $(ROOTCINTTMP) $(ROOTCINT) $(RLIBMAP)
 
 clean-utils:
-		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO)
+		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO)
 
 clean::         clean-utils
 
 distclean-utils: clean-utils
 		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMP) $(ROOTCINT) \
+		   $(RLIBMAPDEP) $(RLIBMAP) \
 		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
 
 distclean::     distclean-utils

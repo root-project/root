@@ -309,7 +309,7 @@ endif
 include build/dummy.d          # must be last include
 endif
 
-rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT)
+rootcint:       all-cint all-utils
 
 rootlibs:       rootcint compiledata $(ALLLIBS)
 
