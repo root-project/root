@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.3 2003/08/27 16:06:17 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.4 2003/09/05 10:40:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -899,17 +899,16 @@ Double_t TNeuron::GetValue()
       return fValue;
    }
    fNewValue = false;
-   if (!fpre.GetEntriesFast()) {
+   Int_t nentries = fpre.GetEntriesFast();
+   if (!nentries) {
       Double_t branch = GetBranch();
       return (fValue = (branch - fNorm[1]) / fNorm[0]);
    } else {
-      TObjArrayIter *it = (TObjArrayIter *) fpre.MakeIterator();
-      TSynapse *preSynapse;
       Double_t input = fWeight;
-      while ((preSynapse = (TSynapse *) it->Next())) {
+      for (Int_t i=0;i<nentries;i++) {
+         TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
          input += preSynapse->GetValue();
       }
-      delete it;
       switch (fType) {
       case TNeuron::kOff:
          return (fValue = 0);
@@ -934,13 +933,12 @@ Double_t TNeuron::GetDerivative()
    if (!fNewDeriv)
       return fDerivative;
    fNewDeriv = false;
-   TObjArrayIter *it = (TObjArrayIter *) fpre.MakeIterator();
-   TSynapse *preSynapse;
+   Int_t nentries = fpre.GetEntriesFast();
    Double_t input = fWeight;
-   while ((preSynapse = (TSynapse *) it->Next())) {
+   for (Int_t i=0;i<nentries;i++) {
+      TSynapse *preSynapse = (TSynapse*)fpre.UncheckedAt(i);
       input += preSynapse->GetValue();
    }
-   delete it;
    switch (fType) {
    case TNeuron::kOff:
       return (fDerivative = 0);
@@ -974,13 +972,12 @@ Double_t TNeuron::GetDeDw()
       return fDeDw;
    fNewDeDw = false;
    fDeDw = GetError();
-   TObjArrayIter *it = (TObjArrayIter *) fpost.MakeIterator();
-   TSynapse *postSynapse;
-   while ((postSynapse = (TSynapse *) it->Next())) {
+   Int_t nentries = fpre.GetEntriesFast();
+   for (Int_t i=0;i<nentries;i++) {
+      TSynapse *postSynapse = (TSynapse*)fpre.UncheckedAt(i);
       fDeDw +=
           (postSynapse->GetWeight() * postSynapse->GetPost()->GetDeDw());
    }
-   delete it;
    fDeDw *= GetDerivative();
    return fDeDw;
 }
