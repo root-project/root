@@ -40,6 +40,9 @@ On HP-UX do:
 On Solaris, Linux, SGI, Alpha/OSF do:
    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ROOTSYS/lib
 
+On MacOS X do:
+   export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$ROOTSYS/lib
+
 On AIX do:
    [ -z "$LIBPATH" ] && export LIBPATH=/lib:/usr/lib
    export LIBPATH=$LIBPATH:$ROOTSYS/lib

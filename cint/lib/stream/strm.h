@@ -17,7 +17,11 @@
 #ifndef __CINT__
 
 #ifndef G__NEWSTDHEADER
+#if defined(__APPLE__)
+#include <iostream.h>
+#else
 #include <stream.h>
+#endif
 #endif
 
 #else

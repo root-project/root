@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.3 2001/02/09 21:08:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.4 2001/05/07 00:22:45 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -229,7 +229,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 
    // allocate color now (can be delayed when we have a large colormap)
 #ifndef R__WIN32
-   if (nplanes < 16)
+   if (nplanes < 15)
 #endif
       Allocate();
 

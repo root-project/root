@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.2 2000/11/21 20:41:36 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -463,7 +463,7 @@ void THaarMatrix::FillIn(TMatrix &m) const
 }
 
 
-#ifdef R__HPUX
+#if defined(R__HPUX) || defined(R__MACOSX)
 
 //______________________________________________________________________________
 //  These functions should be inline

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.5 2000/12/26 14:20:00 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TMatrix::Draw(Option_t *option)
 {
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrix" by default and no title
-   
+
    gROOT->ProcessLine(Form("TH2F *R__TV = new TH2F((TMatrix&)((TMatrix*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
       (Long_t)this,option));
 }
@@ -1325,7 +1325,7 @@ void TMatrix::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TMatrix::IsA());
       //====end of old versions
-      
+
    } else {
       TMatrix::Class()->WriteBuffer(R__b,this);
    }
@@ -1448,7 +1448,7 @@ void VerifyMatrixIdentity(const TMatrix &m1, const TMatrix &m2)
 }
 
 
-#ifdef R__HPUX
+#if defined(R__HPUX) || defined(R__MACOSX)
 
 //______________________________________________________________________________
 //  These functions should be inline

@@ -17,10 +17,12 @@
 #ifndef __CINT__
 
 #ifndef G__NEWSTDHEADER
-#ifndef _WINDOWS
-#include <stdiostream.h>
-#else
+#if defined(__APPLE__)
+#include <iostream.h>
+#elif defined(_WINDOWS)
 #include <stdiostr.h>
+#else
+#include <stdiostream.h>
 #endif
 #endif
 

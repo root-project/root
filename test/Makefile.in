@@ -352,13 +352,13 @@ endif
 ifeq ($(ARCH),macosx)
 # MacOS X with cc (GNU cc 2.95.2)
 CXX           = c++
-CXXFLAGS      = -O -pipe -W -Wall -fPIC
+CXXFLAGS      = -O -pipe -Wall
 LD            = c++
-LDFLAGS       = -O
+LDFLAGS       = -O -Xlinker -bind_at_load
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
-SOFLAGS       = -dylib -r -nostartfiles -Wl,-x
+SOFLAGS       = -dylib -r -nostdlib
 endif
 
 ifeq ($(ARCH),hiux)

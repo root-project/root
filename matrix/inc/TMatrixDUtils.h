@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.2 2000/11/21 20:38:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.3 2000/11/21 21:58:19 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -282,7 +282,7 @@ public:
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef R__HPUX
+#if !defined(R__HPUX) && !defined(R__MACOSX)
 
 #ifndef __CINT__
 

@@ -1,11 +1,11 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.3 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.4 2001/02/28 11:04:06 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
-// 
-// 
+//
+//
 // Begin_Html
-/* 
+/*
 </pre>
 <H1><A NAME="SECTION00010000000000000000">
 Multidimensional Fits in ROOT</A>
@@ -19,7 +19,7 @@ Overview
 <P>
 A common problem encountered in different fields of applied science is
 to find an expression for one physical quantity in terms of several
-others, which are directly measurable. 
+others, which are directly measurable.
 
 <P>
 An example in high energy physics is the evaluation of the momentum of
@@ -33,7 +33,7 @@ The exact functional relationship between the measured quantities
 (e.g., the space-points) and the dependent quantity (e.g., the
 momentum) is in general not known, but one possible way of solving the
 problem, is to find an expression which reliably approximates the
-dependence of the momentum on the observations. 
+dependence of the momentum on the observations.
 
 <P>
 This explicit function of the observations can be obtained by a
@@ -41,7 +41,7 @@ This explicit function of the observations can be obtained by a
 sample of the data, for which the dependent quantity (e.g., momentum)
 and the independent observations are known. The function can then be
 used to compute the quantity of interest for new observations of the
-independent variables. 
+independent variables.
 
 <P>
 This class <TT>TMultiDimFit</TT> implements such a procedure in
@@ -51,7 +51,7 @@ ROOT. It is largely based on the CERNLIB MUDIFI package
 therefore kept, a few implementation details have changed, and this
 class can take advantage of MINUIT [<A
  HREF="TMultiFimFit.html#minuit">4</A>] to improve the errors
-of the fitting, thanks to the class <TT>TMinuit</TT>.  
+of the fitting, thanks to the class <TT>TMinuit</TT>.
 
 <P>
 In [<A
@@ -60,12 +60,12 @@ In [<A
 of this procedure in the context of tracking, magnetic field
 parameterisation, and so on. The outline of the method used in this
 class is based on Winds discussion, and I refer these two excellents
-text for more information. 
+text for more information.
 
 <P>
 And example of usage is given in
 <A NAME="tex2html1"
-  HREF=" 
+  HREF="
   ./examples/multidimfit.C"><TT>$ROOTSYS/tutorials/multidimfit.C</TT></A>.
 
 <P>
@@ -96,7 +96,7 @@ on the observable quantities <!-- MATH
  ALT="$ \mathbf{x}$">. Given a training sample of <IMG
  WIDTH="21" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img10.gif"
- ALT="$ M$"> tuples of the form, 
+ ALT="$ M$"> tuples of the form,
 (<A NAME="tex2html2"
   HREF="
   ./TMultiDimFit.html#TMultiDimFit:AddRow"><TT>TMultiDimFit::AddRow</TT></A>)
@@ -138,11 +138,11 @@ and <IMG
  ALT="$ E_j$"> is the square error in <IMG
  WIDTH="24" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img14.gif"
- ALT="$ D_j$">, the class 
+ ALT="$ D_j$">, the class
 <A NAME="tex2html3"
   HREF="./TMultiDimFit.html"><TT>TMultiDimFit</TT></A>
 will
-try to find the parameterization 
+try to find the parameterization
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="Dp"></A><!-- MATH
  \begin{equation}
@@ -160,7 +160,7 @@ D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right)
 (1)</TD></TR>
 </TABLE></DIV>
 <BR CLEAR="ALL"><P></P>
-such that 
+such that
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="S"></A><!-- MATH
  \begin{equation}
@@ -190,7 +190,7 @@ polynomials, labelled <!-- MATH
 <IMG
  WIDTH="87" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img20.gif"
- ALT="$ l = 1, \ldots, L$">, in each variable 
+ ALT="$ l = 1, \ldots, L$">, in each variable
 <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
@@ -200,7 +200,7 @@ polynomials, labelled <!-- MATH
 <IMG
  WIDTH="91" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img22.gif"
- ALT="$ i=1, \ldots, N$">. 
+ ALT="$ i=1, \ldots, N$">.
 
 <P>
 So what <TT>TMultiDimFit</TT> does, is to determine the number of
@@ -223,10 +223,10 @@ coefficients <IMG
  ALT="$ c_l$">, so that <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
- ALT="$ S$"> is minimal 
+ ALT="$ S$"> is minimal
 (<A NAME="tex2html4"
   HREF="
-  ./TMultiDimFit.html#TMultiDimFit:FindParameterization"><TT>TMultiDimFit::FindParameterization</TT></A>).   
+  ./TMultiDimFit.html#TMultiDimFit:FindParameterization"><TT>TMultiDimFit::FindParameterization</TT></A>).
 
 <P>
 Of course it's more than a little unlikely that <IMG
@@ -239,11 +239,11 @@ user is asked to provide a minimum relative error <IMG
  SRC="gif/multidimfit_img27.gif"
  ALT="$ \epsilon$">
 (<A NAME="tex2html5"
-  HREF=" 
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:SetMinRelativeError"><TT>TMultiDimFit::SetMinRelativeError</TT></A>), and <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
- ALT="$ S$"> 
+ ALT="$ S$">
 will be considered minimized when
 <!-- MATH
  \begin{displaymath}
@@ -272,12 +272,12 @@ F_L$
  SRC="gif/multidimfit_img29.gif"
  ALT="$ F_1, \ldots,
 F_L$"> (<A NAME="tex2html6"
-  HREF=" 
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:SetPowers"><TT>TMultiDimFit::SetPowers</TT></A>). In that case, only the
 coefficients <IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img25.gif"
- ALT="$ c_l$"> is calculated by the class. 
+ ALT="$ c_l$"> is calculated by the class.
 
 <P>
 
@@ -287,7 +287,7 @@ Limiting the Number of Terms
 </H2>
 
 <P>
-As always when dealing with fits, there's a real chance of 
+As always when dealing with fits, there's a real chance of
 <I>over fitting</I>. As is well-known, it's always possible to fit an
 <IMG
  WIDTH="46" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
@@ -319,7 +319,7 @@ limit, <IMG
  SRC="gif/multidimfit_img35.gif"
  ALT="$ D_p$">
 (<A NAME="tex2html7"
-  HREF="  
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:SetMaxTerms"><TT>TMultiDimFit::SetMaxTerms</TT></A>).
 
 <P>
@@ -339,7 +339,7 @@ user is asked to give the maximum power. <IMG
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$">
 (<A NAME="tex2html8"
-  HREF="  
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:SetMaxPowers"><TT>TMultiDimFit::SetMaxPowers</TT></A>).
 
 <P>
@@ -366,7 +366,7 @@ least-square fit over <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img7.gif"
  ALT="$ D$"> [<A
- HREF="TMultiFimFit.html#wind72">5</A>]. 
+ HREF="TMultiFimFit.html#wind72">5</A>].
 
 <P>
 There are still a huge amount of possible choices for <IMG
@@ -386,12 +386,12 @@ asked to set a <I>power control limit</I>, <IMG
  SRC="gif/multidimfit_img39.gif"
  ALT="$ Q$">
 (<A NAME="tex2html9"
-  HREF="   
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:SetPowerLimit"><TT>TMultiDimFit::SetPowerLimit</TT></A>), and a function
 <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
- ALT="$ F_l$"> is only accepted if 
+ ALT="$ F_l$"> is only accepted if
 <!-- MATH
  \begin{displaymath}
 Q_l = \sum_{i=1}^{N} \frac{P_{li}}{P_{max,i}} < Q
@@ -415,13 +415,13 @@ where <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">. (<A NAME="tex2html10"
-  HREF="   
+  HREF="
 
 ./TMultiDimFit.html#TMultiDimFit:MakeCandidates"><TT>TMultiDimFit::MakeCandidates</TT></A>). So the number of
 functions increase with <IMG
  WIDTH="17" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img39.gif"
- ALT="$ Q$"> (1, 2 is fine, 5 is way out). 
+ ALT="$ Q$"> (1, 2 is fine, 5 is way out).
 
 <P>
 
@@ -436,7 +436,7 @@ only those functions that significantly reduce <IMG
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> is chosen. What
 `significant' means, is chosen by the user, and will be
-discussed below (see&nbsp;<A HREF="TMultiFimFit.html#sec:selectiondetail">2.3</A>). 
+discussed below (see&nbsp;<A HREF="TMultiFimFit.html#sec:selectiondetail">2.3</A>).
 
 <P>
 The functions <IMG
@@ -461,10 +461,10 @@ functions <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> from each function in turn, and we may delay the actual inversion
-of the curvature-matrix 
+of the curvature-matrix
 (<A NAME="tex2html11"
   HREF="
-  ./TMultiDimFit.html#TMultiDimFit:MakeGramSchmidt"><TT>TMultiDimFit::MakeGramSchmidt</TT></A>). 
+  ./TMultiDimFit.html#TMultiDimFit:MakeGramSchmidt"><TT>TMultiDimFit::MakeGramSchmidt</TT></A>).
 
 <P>
 So we are let to consider an <IMG
@@ -477,7 +477,7 @@ So we are let to consider an <IMG
  WIDTH="13" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img43.gif"
  ALT="$ \mathsf{F}$">, an
-element of which is given by  
+element of which is given by
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:Felem"></A><!-- MATH
  \begin{equation}
@@ -541,7 +541,7 @@ the term (or function) numbered <IMG
 succeed [<A
  HREF="TMultiFimFit.html#wind72">5</A>]
 (<A NAME="tex2html12"
-  HREF="  
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:MakeNormalized"><TT>TMultiDimFit::MakeNormalized</TT></A>). We then define a
 matrix <!-- MATH
  $\mathsf{W}$
@@ -555,7 +555,7 @@ matrix <!-- MATH
 <IMG
  WIDTH="24" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img52.gif"
- ALT="$ \mathbf{w}_j$"> are given by   
+ ALT="$ \mathbf{w}_j$"> are given by
 <BR>
 <DIV ALIGN="CENTER"><A NAME="eq:wj"></A><!-- MATH
  \begin{eqnarray}
@@ -617,7 +617,7 @@ to <!-- MATH
  SRC="gif/multidimfit_img60.gif"
  ALT="$ \mathbf{w}_{1}, \ldots, \mathbf{w}_{l-1}$">. Hence we obtain
 [<A
- HREF="TMultiFimFit.html#golub">3</A>], 
+ HREF="TMultiFimFit.html#golub">3</A>],
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:worto"></A><!-- MATH
  \begin{equation}
@@ -646,7 +646,7 @@ We now take as a new model <!-- MATH
  WIDTH="28" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img63.gif"
  ALT="$ \mathsf{W}\mathbf{a}$">. We thus want to
-minimize  
+minimize
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:S"></A><!-- MATH
  \begin{equation}
@@ -674,7 +674,7 @@ dependent quantity in the sample. Differentiation with respect to
 <IMG
  WIDTH="19" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img66.gif"
- ALT="$ a_j$"> gives, using&nbsp;(<A HREF="TMultiFimFit.html#eq:worto">6</A>),  
+ ALT="$ a_j$"> gives, using&nbsp;(<A HREF="TMultiFimFit.html#eq:worto">6</A>),
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:dS"></A><!-- MATH
  \begin{equation}
@@ -715,12 +715,12 @@ Let <IMG
  WIDTH="12" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img46.gif"
  ALT="$ j$"> functions
-into account. Then 
+into account. Then
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:Sj"></A><!-- MATH
  \begin{equation}
 S_l = \left[\mathbf{D} - \sum^l_{k=1} a_k\mathbf{w}_k\right]^2
-      = \mathbf{D}^2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k 
+      = \mathbf{D}^2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k
         + \sum^l_{k=1} a_k^2\mathbf{w}_k^2
 \end{equation}
  -->
@@ -811,8 +811,8 @@ where <!-- MATH
  SRC="gif/multidimfit_img77.gif"
  ALT="$ a_l$"> by
 (<A HREF="TMultiFimFit.html#eq:dS2">9</A>). Thus, using the Gram-Schmidt orthogonalisation, we
-can decide if we want to include this function in the final model, 
-<I>before</I> the matrix inversion.  
+can decide if we want to include this function in the final model,
+<I>before</I> the matrix inversion.
 
 <P>
 
@@ -832,7 +832,7 @@ problem now is to consider the <!-- MATH
 <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
- ALT="$ L^{\mbox{th}}$"> function. 
+ ALT="$ L^{\mbox{th}}$"> function.
 
 <P>
 The sum of squares of residuals can be written as
@@ -861,7 +861,7 @@ contribution of the <!-- MATH
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$"> function to the reduction of S, is
-given by 
+given by
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:dSN"></A><!-- MATH
  \begin{equation}
@@ -887,7 +887,7 @@ Two test are now applied to decide whether this <!-- MATH
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$">
-function is to be included in the final expression, or not. 
+function is to be included in the final expression, or not.
 
 <P>
 
@@ -959,12 +959,12 @@ squares of residuals. The test consists then in calculating the angle
 <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img3.gif"
- ALT="$ \textbf {f}_L$"> 
+ ALT="$ \textbf {f}_L$">
 (see also figure&nbsp;<A HREF="TMultiFimFit.html#fig:thetaphi">1</A>) and requiring that it's
-<I>greater</I> then a threshold value which the user must set 
+<I>greater</I> then a threshold value which the user must set
 (<A NAME="tex2html14"
-  HREF="    
-  ./TMultiDimFit.html#TMultiDimFit:SetMinAngle"><TT>TMultiDimFit::SetMinAngle</TT></A>). 
+  HREF="
+  ./TMultiDimFit.html#TMultiDimFit:SetMinAngle"><TT>TMultiDimFit::SetMinAngle</TT></A>).
 
 <P>
 
@@ -1083,8 +1083,8 @@ functions contributing most to the reduction of <IMG
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> are chosen first
 (<A NAME="tex2html16"
-  HREF="     
-  ./TMultiDimFit.html#TMultiDimFit:TestFunction"><TT>TMultiDimFit::TestFunction</TT></A>). 
+  HREF="
+  ./TMultiDimFit.html#TMultiDimFit:TestFunction"><TT>TMultiDimFit::TestFunction</TT></A>).
 
 <P>
 In case <IMG
@@ -1135,8 +1135,8 @@ where  <IMG
  WIDTH="41" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> is the total number
-of functions allowed in the final expression of the fit (defined by 
-user).   
+of functions allowed in the final expression of the fit (defined by
+user).
 
 <P>
 From this we see, that by restricting <IMG
@@ -1144,7 +1144,7 @@ From this we see, that by restricting <IMG
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> -- the number of
 terms in the final model -- the fit is more difficult to perform,
-since the above selection criteria is more limiting. 
+since the above selection criteria is more limiting.
 
 <P>
 The more coefficients we evaluate, the more the sum of squares of
@@ -1161,7 +1161,7 @@ residuals <IMG
 <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img90.gif"
- ALT="$ \mathsf{B}$"> as shown below. 
+ ALT="$ \mathsf{B}$"> as shown below.
 
 <P>
 
@@ -1196,8 +1196,8 @@ functions, that the evaluation of the <IMG
 <IMG
  WIDTH="12" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img91.gif"
- ALT="$ \mathbf{c}$">, we first note that 
-equation&nbsp;(<A HREF="TMultiFimFit.html#eq:wj">4</A>) can be written as 
+ ALT="$ \mathbf{c}$">, we first note that
+equation&nbsp;(<A HREF="TMultiFimFit.html#eq:wj">4</A>) can be written as
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:FF"></A><!-- MATH
  \begin{equation}
@@ -1267,7 +1267,7 @@ The model <!-- MATH
 <IMG
  WIDTH="28" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img63.gif"
- ALT="$ \mathsf{W}\mathbf{a}$"> can therefore be written as 
+ ALT="$ \mathsf{W}\mathbf{a}$"> can therefore be written as
 <!-- MATH
  \begin{displaymath}
 (\mathsf{F}\mathsf{B}^{-1})\mathbf{a} =
@@ -1289,7 +1289,7 @@ The original model <!-- MATH
  WIDTH="21" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img96.gif"
  ALT="$ \mathsf{F}\mathbf{c}$"> is therefore identical with
-this if  
+this if
 <P></P>
 <DIV ALIGN="CENTER"><A NAME="eq:id:cond"></A><!-- MATH
  \begin{equation}
@@ -1336,16 +1336,16 @@ The reason we use <!-- MATH
  SRC="gif/multidimfit_img90.gif"
  ALT="$ \mathsf{B}$">
 (<A NAME="tex2html17"
-  HREF="      
+  HREF="
   ./TMultiDimFit.html#TMultiDimFit:MakeCoefficients"><TT>TMultiDimFit::MakeCoefficients</TT></A>). The errors in
 the coefficients is calculated by inverting the curvature matrix
 of the non-orthogonal functions <IMG
  WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img100.gif"
  ALT="$ f_{lj}$"> [<A
- HREF="TMultiFimFit.html#bevington">1</A>] 
+ HREF="TMultiFimFit.html#bevington">1</A>]
 (<A NAME="tex2html18"
-  HREF="      
+  HREF="
 
 ./TMultiDimFit.html#TMultiDimFit:MakeCoefficientErrors"><TT>TMultiDimFit::MakeCoefficientErrors</TT></A>).
 
@@ -1362,7 +1362,7 @@ representive of the problem at hand, in particular along the borders
 of the region of interest. This is because the algorithm presented
 here, is a <I>interpolation</I>, rahter then a <I>extrapolation</I>
 [<A
- HREF="TMultiFimFit.html#wind72">5</A>].  
+ HREF="TMultiFimFit.html#wind72">5</A>].
 
 <P>
 Also, the independent variables <IMG
@@ -1385,7 +1385,7 @@ original variables <IMG
 then use the transformed variable as input to this class [<A
  HREF="TMultiFimFit.html#wind72">5</A>]
 [<A
- HREF="TMultiFimFit.html#wind81">6</A>].   
+ HREF="TMultiFimFit.html#wind81">6</A>].
 
 <P>
 H. Wind also outlines a method for parameterising a multidimensional
@@ -1393,7 +1393,7 @@ dependence over a multidimensional set of variables. An example
 of the method from [<A
  HREF="TMultiFimFit.html#wind72">5</A>], is a follows (please refer to
 [<A
- HREF="TMultiFimFit.html#wind72">5</A>] for a full discussion): 
+ HREF="TMultiFimFit.html#wind72">5</A>] for a full discussion):
 
 <P>
 
@@ -1424,7 +1424,7 @@ of the method from [<A
 <IMG
  WIDTH="123" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img105.gif"
- ALT="$ \mathbf{x} = (x_1, \ldots, x_N)$">. 
+ ALT="$ \mathbf{x} = (x_1, \ldots, x_N)$">.
 </LI>
 <LI>Use the simulated observations to determine, with a simple
   approximation, the values of <!-- MATH
@@ -1440,7 +1440,7 @@ of the method from [<A
 <IMG
  WIDTH="122" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img107.gif"
- ALT="$ \mathbf{P}^\prime_j, j = 1, \ldots, M$">. 
+ ALT="$ \mathbf{P}^\prime_j, j = 1, \ldots, M$">.
 </LI>
 <LI>Determine from <!-- MATH
  $\mathbf{x}$
@@ -1462,7 +1462,7 @@ of the method from [<A
   <A NAME="tex2html20"
   HREF="./TPrincipal.html"><TT>TPrincipal</TT></A>), and use
 
-to get a linear transformation 
+to get a linear transformation
   <!-- MATH
  $\mathbf{x} \rightarrow \mathbf{x}^\prime$
  -->
@@ -1476,9 +1476,9 @@ to get a linear transformation
 <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img108.gif"
- ALT="$ \mathbf{x}^\prime$"> are constrained and linear independent. 
+ ALT="$ \mathbf{x}^\prime$"> are constrained and linear independent.
 </LI>
-<LI>Perform a Principal Component Analysis on 
+<LI>Perform a Principal Component Analysis on
   <!-- MATH
  $Q_i = P_i / P^\prime_i\, i = 1, \ldots, 5$
  -->
@@ -1521,7 +1521,7 @@ to get a linear transformation
 <IMG
  WIDTH="17" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img113.gif"
- ALT="$ \mathbf{c}_i$">. 
+ ALT="$ \mathbf{c}_i$">.
 </LI>
 </OL>
 
@@ -1537,7 +1537,7 @@ To process data, using this parameterisation, do
  SRC="gif/multidimfit_img9.gif"
  ALT="$ \mathbf{x}$"> within the domain of
   the parameterization, using the result from the Principal Component
-  Analysis. 
+  Analysis.
 </LI>
 <LI>Determine <!-- MATH
  $\mathbf{P}^\prime$
@@ -1545,7 +1545,7 @@ To process data, using this parameterisation, do
 <IMG
  WIDTH="21" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img114.gif"
- ALT="$ \mathbf{P}^\prime$"> as before. 
+ ALT="$ \mathbf{P}^\prime$"> as before.
 </LI>
 <LI>Detetmine <!-- MATH
  $\mathbf{x}^\prime$
@@ -1561,7 +1561,7 @@ To process data, using this parameterisation, do
 <IMG
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img111.gif"
- ALT="$ \mathbf{Q}^\prime$">. 
+ ALT="$ \mathbf{Q}^\prime$">.
 </LI>
 <LI>Transform back to <!-- MATH
  $\mathbf{P}$
@@ -1576,7 +1576,7 @@ To process data, using this parameterisation, do
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img111.gif"
  ALT="$ \mathbf{Q}^\prime$">, using
-  the result from the Principal Component Analysis. 
+  the result from the Principal Component Analysis.
 </LI>
 </OL>
 
@@ -1591,8 +1591,8 @@ Testing the parameterization
 The class also provides functionality for testing the, over the
 training sample, found parameterization
 (<A NAME="tex2html21"
-  HREF="  
-  ./TMultiDimFit.html#TMultiDimFit:Fit"><TT>TMultiDimFit::Fit</TT></A>). This is done by passing 
+  HREF="
+  ./TMultiDimFit.html#TMultiDimFit:Fit"><TT>TMultiDimFit::Fit</TT></A>). This is done by passing
 the class a test sample of <IMG
  WIDTH="25" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img115.gif"
@@ -1621,11 +1621,11 @@ variables, <IMG
 the square error in <IMG
  WIDTH="33" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img118.gif"
- ALT="$ D_{t,j}$"> 
+ ALT="$ D_{t,j}$">
 (<A NAME="tex2html22"
-  HREF=" 
+  HREF="
 
-./TMultiDimFit.html#TMultiDimFit:AddTestRow"><TT>TMultiDimFit::AddTestRow</TT></A>).  
+./TMultiDimFit.html#TMultiDimFit:AddTestRow"><TT>TMultiDimFit::AddTestRow</TT></A>).
 
 <P>
 The parameterization is then evaluated at every <!-- MATH
@@ -1635,7 +1635,7 @@ The parameterization is then evaluated at every <!-- MATH
  WIDTH="19" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img120.gif"
  ALT="$ \mathbf{x}_t$"> in the
-test sample, and 
+test sample, and
 <!-- MATH
  \begin{displaymath}
 S_t \equiv \sum_{j=1}^{M_t} \left(D_{t,j} -
@@ -1650,7 +1650,7 @@ S_t \equiv \sum_{j=1}^{M_t} \left(D_{t,j} -
 D_p\left(\mathbf{x}_{t,j}\right)\right)^2
 $">
 </DIV><P></P>
-is evaluated. The relative error over the test sample 
+is evaluated. The relative error over the test sample
 <!-- MATH
  \begin{displaymath}
 R_t = \frac{S_t}{\sum_{j=1}^{M_t} D_{t,j}^2}
@@ -1674,13 +1674,13 @@ the problem. A large difference in the reduced <IMG
  SRC="gif/multidimfit_img124.gif"
  ALT="$ \chi^2$"> over the two
 samples indicate an over fit, and the maximum number of terms in the
-parameterisation should be reduced.  
+parameterisation should be reduced.
 
 <P>
 It's possible to use <A NAME="tex2html23"
   HREF="./TMinuit.html"><I>Minuit</I></A>
 [<A
- HREF="TMultiFimFit.html#minuit">4</A>] to further improve the fit, using the test sample. 
+ HREF="TMultiFimFit.html#minuit">4</A>] to further improve the fit, using the test sample.
 
 <P>
 <DIV ALIGN="RIGHT">
@@ -1733,7 +1733,7 @@ H.&nbsp;Wind.
 </DL>
 <pre>
  */
-//End_Html 
+//End_Html
 //
 
 #include <fstream.h>
@@ -1757,16 +1757,16 @@ H.&nbsp;Wind.
 #define HIST_RTRAI     6
 #define HIST_RTEST     7
 #define PARAM_MAXSTUDY 1
-#define PARAM_SEVERAL  2   
+#define PARAM_SEVERAL  2
 #define PARAM_RELERR   3
-#define PARAM_MAXTERMS 4 
+#define PARAM_MAXTERMS 4
 
 
 //____________________________________________________________________
 static void mdfHelper(int&, double*, double&, double*, int);
 
 //____________________________________________________________________
-ClassImp(TMultiDimFit); 
+ClassImp(TMultiDimFit);
 
 //____________________________________________________________________
 // Static instance. Used with mdfHelper and TMinuit
@@ -1774,19 +1774,19 @@ TMultiDimFit* TMultiDimFit::fgInstance = 0;
 
 
 //____________________________________________________________________
-TMultiDimFit::TMultiDimFit() 
+TMultiDimFit::TMultiDimFit()
 {
   // Empty CTOR. Do not use
   fMeanQuantity            = 0;
-  fMaxQuantity             = 0; 
-  fMinQuantity             = 0; 
+  fMaxQuantity             = 0;
+  fMinQuantity             = 0;
   fSumSqQuantity           = 0;
   fSumSqAvgQuantity        = 0;
   fPowerLimit              = 1;
-  
+
   fMaxAngle                = 0;
   fMinAngle                = 1;
-    
+
   fNVariables              = 0;
   fMaxVariables            = 0;
   fMinVariables            = 0;
@@ -1796,11 +1796,11 @@ TMultiDimFit::TMultiDimFit()
   fMinAngle                = 0;
 
   fPolyType                = kMonomials;
-  fShowCorrelation         = kFALSE; 
+  fShowCorrelation         = kFALSE;
 
   fIsUserFunction          = kFALSE;
 
-  fPowers                  = 0;  
+  fPowers                  = 0;
   fMaxPowers               = 0;
   fMaxPowersFinal          = 0;
 
@@ -1808,7 +1808,7 @@ TMultiDimFit::TMultiDimFit()
   fHistogramMask           = 0;
 
   fQuantity(0);
-  fVariables(0);        
+  fVariables(0);
   fMaxVariables(0);
   fMinVariables(0);
   fMeanVariables(0);
@@ -1818,13 +1818,13 @@ TMultiDimFit::TMultiDimFit()
 
 
 //____________________________________________________________________
-TMultiDimFit::TMultiDimFit(Int_t dimension, 
-			   EMDFPolyType type, 
+TMultiDimFit::TMultiDimFit(Int_t dimension,
+			   EMDFPolyType type,
 			   Option_t *option)
   : TNamed("multidimfit","Multi-dimensional fit object"),
-    fQuantity(dimension), 
+    fQuantity(dimension),
     fSqError(dimension),
-    fVariables(dimension*100), 
+    fVariables(dimension*100),
     fMeanVariables(dimension),
     fMaxVariables(dimension),
     fMinVariables(dimension)
@@ -1835,32 +1835,32 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
   //      TMultiDimFit::kMonomials
   //      TMultiDimFit::kChebyshev
   //      TMultiDimFit::kLegendre
-  // 
+  //
   // Options:
-  //   K      Compute (k)correlation matrix 
-  //   V      Be verbose 
-  // 
+  //   K      Compute (k)correlation matrix
+  //   V      Be verbose
+  //
   // Default is no options.
-  // 
- 
+  //
+
   fgInstance = this;
 
   // remove any previous object named "multidimfit" in the list of
-  // special objects 
+  // special objects
   TObject *obj = gROOT->GetListOfSpecials()->FindObject(GetName());
   if (obj) delete obj;
   gROOT->GetListOfSpecials()->Add(this);
-  
+
   fMeanQuantity           = 0;
-  fMaxQuantity            = 0; 
-  fMinQuantity            = 0; 
+  fMaxQuantity            = 0;
+  fMinQuantity            = 0;
   fSumSqQuantity          = 0;
   fSumSqAvgQuantity       = 0;
   fPowerLimit             = 1;
-  
+
   fMaxAngle               = 0;
   fMinAngle               = 1;
-    
+
   fNVariables             = dimension;
   fMaxVariables           = 0;
   fMinVariables           = 0;
@@ -1873,21 +1873,21 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
   fParameterisationCode   = 0;
 
   fPolyType               = type;
-  fShowCorrelation        = kFALSE; 
+  fShowCorrelation        = kFALSE;
   fIsVerbose              = kFALSE;
 
   TString opt             = option;
   opt.ToLower();
 
-  if (opt.Contains("k")) fShowCorrelation = kTRUE; 
-  if (opt.Contains("v")) fIsVerbose       = kTRUE; 
+  if (opt.Contains("k")) fShowCorrelation = kTRUE;
+  if (opt.Contains("v")) fIsVerbose       = kTRUE;
 
   fIsUserFunction         = kFALSE;
 
   fHistograms             = 0;
   fHistogramMask          = 0;
 
-  fPowers                 = 0;  
+  fPowers                 = 0;
   fMaxPowers              = new Int_t[dimension];
   fMaxPowersFinal         = new Int_t[dimension];
   fFitter                 = 0;
@@ -1895,12 +1895,12 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
 
 
 //____________________________________________________________________
-TMultiDimFit::~TMultiDimFit() 
+TMultiDimFit::~TMultiDimFit()
 {
   // DTOR
   TObject *obj = gROOT->GetListOfSpecials()->FindObject(GetName());
   if(obj)
-    gROOT->GetListOfSpecials()->Remove(this);  
+    gROOT->GetListOfSpecials()->Remove(this);
   delete [] fPowers;
   delete [] fMaxPowers;
   delete [] fMaxPowersFinal;
@@ -1911,7 +1911,7 @@ TMultiDimFit::~TMultiDimFit()
 
 
 //____________________________________________________________________
-void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E) 
+void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
 {
   // Add a row consisting of fNVariables independent variables, the
   // known, dependent quantity, and optionally, the square error in
@@ -1919,12 +1919,12 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
   // parameterization.
   // The mean of the variables and quantity is calculated on the fly,
   // as outlined in TPrincipal::AddRow.
-  // This sample should be representive of the problem at hand. 
+  // This sample should be representive of the problem at hand.
   // Please note, that if no error is given Poisson statistics is
   // assumed and the square error is set to the value of dependent
-  // quantity.  See also the 
+  // quantity.  See also the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-  if (!x) 
+  if (!x)
     return;
 
   if (++fSampleSize == 1) {
@@ -1942,117 +1942,117 @@ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
   }
 
 
-  // If the vector isn't big enough to hold the new data, then 
-  // expand the vector by half it's size. 
+  // If the vector isn't big enough to hold the new data, then
+  // expand the vector by half it's size.
   Int_t size = fQuantity.GetNrows();
   if (fSampleSize > size) {
     fQuantity.ResizeTo(size + size/2);
     fSqError.ResizeTo(size + size/2);
   }
-  
+
   // Store the value
   fQuantity(fSampleSize-1) = D;
   fSqError(fSampleSize-1) = (E == 0 ? D : E);
-  
+
   // Store data point in internal vector
-  // If the vector isn't big enough to hold the new data, then 
+  // If the vector isn't big enough to hold the new data, then
   // expand the vector by half it's size
   size = fVariables.GetNrows();
   if (fSampleSize * fNVariables > size)
     fVariables.ResizeTo(size + size/2);
 
-  
-   // Increment the data point counter   
-  Int_t i,j;   
+
+   // Increment the data point counter
+  Int_t i,j;
   for (i = 0; i < fNVariables; i++) {
-    if (fSampleSize == 1) {     
-      fMeanVariables(i) = x[i];   
+    if (fSampleSize == 1) {
+      fMeanVariables(i) = x[i];
       fMaxVariables(i)  = x[i];
       fMinVariables(i)  = x[i];
     }
     else {
       fMeanVariables(i) *= 1 - 1./Double_t(fSampleSize);
-      fMeanVariables(i) += x[i] / Double_t(fSampleSize);       
-	
+      fMeanVariables(i) += x[i] / Double_t(fSampleSize);
+
       // Update the maximum value for this component
       if (x[i] >= fMaxVariables(i)) fMaxVariables(i)  = x[i];
-      
+
       // Update the minimum value for this component
-      if (x[i] <= fMinVariables(i)) fMinVariables(i)  = x[i]; 
+      if (x[i] <= fMinVariables(i)) fMinVariables(i)  = x[i];
 
     }
-    
-    // Store the data. 
+
+    // Store the data.
     j = (fSampleSize-1) * fNVariables + i;
     fVariables(j) = x[i];
-  }  
+  }
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E) 
+void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 {
   // Add a row consisting of fNVariables independent variables, the
   // known, dependent quantity, and optionally, the square error in
-  // the dependent quantity, to the test sample to be used for the 
-  // test of the parameterization. 
-  // This sample needn't be representive of the problem at hand. 
+  // the dependent quantity, to the test sample to be used for the
+  // test of the parameterization.
+  // This sample needn't be representive of the problem at hand.
   // Please note, that if no error is given Poisson statistics is
   // assumed and the square error is set to the value of dependent
-  // quantity.  See also the 
+  // quantity.  See also the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   if (fTestSampleSize++ == 0) {
     fTestQuantity.ResizeTo(fNVariables);
     fTestSqError.ResizeTo(fNVariables);
     fTestVariables.ResizeTo(fNVariables * 100);
   }
-  
-  // If the vector isn't big enough to hold the new data, then 
-  // expand the vector by half it's size. 
+
+  // If the vector isn't big enough to hold the new data, then
+  // expand the vector by half it's size.
   Int_t size = fTestQuantity.GetNrows();
   if (fTestSampleSize > size) {
     fTestQuantity.ResizeTo(size + size/2);
     fTestSqError.ResizeTo(size + size/2);
   }
-  
+
   // Store the value
   fTestQuantity(fTestSampleSize-1) = D;
   fTestSqError(fTestSampleSize-1) = (E == 0 ? D : E);
 
   // Store data point in internal vector
-  // If the vector isn't big enough to hold the new data, then 
+  // If the vector isn't big enough to hold the new data, then
   // expand the vector by half it's size
   size = fTestVariables.GetNrows();
   if (fTestSampleSize * fNVariables > size)
     fTestVariables.ResizeTo(size + size/2);
 
-  
-   // Increment the data point counter   
-  Int_t i,j;   
+
+   // Increment the data point counter
+  Int_t i,j;
   for (i = 0; i < fNVariables; i++) {
     j = fNVariables * (fTestSampleSize - 1) + i;
-    fTestVariables(j) = x[i]; 
-    
+    fTestVariables(j) = x[i];
+
     if (x[i] > fMaxVariables(i))
       Warning("AddTestRow", "variable %d (row: %d) too large: %f > %f",
 	       i, fTestSampleSize, x[i], fMaxVariables(i));
     if (x[i] < fMinVariables(i))
       Warning("AddTestRow", "variable %d (row: %d) too small: %f < %f",
-	       i, fTestSampleSize, x[i], fMinVariables(i));      
+	       i, fTestSampleSize, x[i], fMinVariables(i));
   }
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::Browse(TBrowser* b) 
+void TMultiDimFit::Browse(TBrowser* b)
 {
-  // Browse the TMultiDimFit object in the TBrowser. 
+  // Browse the TMultiDimFit object in the TBrowser.
   if (fHistograms) {
     TIter next(fHistograms);
     TH1* h = 0;
-    while ((h = (TH1*)next())) 
+    while ((h = (TH1*)next()))
       b->Add(h,h->GetName());
-  }  
+  }
   if (fVariables.IsValid())
     b->Add(&fVariables, "Variables (Training)");
   if (fQuantity.IsValid())
@@ -2095,12 +2095,12 @@ void TMultiDimFit::Browse(TBrowser* b)
 
 
 //____________________________________________________________________
-void TMultiDimFit::Clear(Option_t *option) 
+void TMultiDimFit::Clear(Option_t *option)
 {
   // Clear internal structures and variables
   Int_t i, j, n = fNVariables, m = fMaxFunctions;
 
-  // Training sample, dependent quantity 
+  // Training sample, dependent quantity
   fQuantity.Zero();
   fSqError.Zero();
   fMeanQuantity                 = 0;
@@ -2110,97 +2110,97 @@ void TMultiDimFit::Clear(Option_t *option)
   fSumSqAvgQuantity             = 0;
 
   // Training sample, independent variables
-  fVariables.Zero();     
+  fVariables.Zero();
   fNVariables                   = 0;
   fSampleSize                   = 0;
   fMeanVariables.Zero();
   fMaxVariables.Zero();
   fMinVariables.Zero();
 
-  // Test sample 
-  fTestQuantity.Zero();   
+  // Test sample
+  fTestQuantity.Zero();
   fTestSqError.Zero();
-  fTestVariables.Zero();   
+  fTestVariables.Zero();
   fTestSampleSize               = 0;
 
-  // Functions 
+  // Functions
   fFunctions.Zero();
   for (i = 0; i < fMaxTerms; i++) {
     fFunctionCodes[i]           = 0;
     fPowerIndex[i]              = 0;
   }
   fMaxFunctions                 = 0;
-  fMaxStudy                     = 0;  
+  fMaxStudy                     = 0;
   fOrthFunctions.Zero();
   fOrthFunctionNorms.Zero();
 
-  // Control parameters 
-  fMinRelativeError             = 0; 
-  fMinAngle                     = 0; 
-  fMaxAngle                     = 0; 
-  fMaxTerms                     = 0; 
+  // Control parameters
+  fMinRelativeError             = 0;
+  fMinAngle                     = 0;
+  fMaxAngle                     = 0;
+  fMaxTerms                     = 0;
 
-  // Powers 
+  // Powers
   for (i = 0; i < n; i++) {
-    fMaxPowers[i]               = 0; 
+    fMaxPowers[i]               = 0;
     fMaxPowersFinal[i]          = 0;
-    for (j = 0; j < m; j++) 
+    for (j = 0; j < m; j++)
       fPowers[i * n + j]        = 0;
   }
-  fPowerLimit                   = 0; 
+  fPowerLimit                   = 0;
 
-  // Residuals 
+  // Residuals
   fMaxResidual                  = 0;
   fMinResidual                  = 0;
   fMaxResidualRow               = 0;
   fMinResidualRow               = 0;
   fSumSqResidual                = 0;
 
-  // Fit 
+  // Fit
   fNCoefficients                = 0;
   fOrthCoefficients             = 0;
   fOrthCurvatureMatrix          = 0;
-  fRMS                          = 0; 
+  fRMS                          = 0;
   fCorrelationMatrix.Zero();
-  fError                        = 0; 
-  fTestError                    = 0; 
-  fPrecision                    = 0; 
-  fTestPrecision                = 0; 
+  fError                        = 0;
+  fTestError                    = 0;
+  fPrecision                    = 0;
+  fTestPrecision                = 0;
 
-  // Coefficients 
-  fCoefficients.Zero();   
+  // Coefficients
+  fCoefficients.Zero();
   fCoefficientsRMS.Zero();
-  fResiduals.Zero(); 
+  fResiduals.Zero();
   fHistograms->Clear(option);
 
-  // Options 
+  // Options
   fPolyType                     = kMonomials;
   fShowCorrelation              = kFALSE;
-  fIsUserFunction               = kFALSE;  
+  fIsUserFunction               = kFALSE;
 }
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) 
+Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
 {
   // Evaluate parameterization at point x. Optional argument coeff is
   // a vector of coefficients for the parameterisation, fNCoefficients
-  // elements long. 
+  // elements long.
   Double_t returnValue = fMeanQuantity;
   Double_t term        = 0;
   Int_t    i, j;
 
   for (i = 0; i < fNCoefficients; i++) {
-    // Evaluate the ith term in the expansion 
+    // Evaluate the ith term in the expansion
     term = (coeff ? coeff[i] : fCoefficients(i));
     for (j = 0; j < fNVariables; j++) {
       // Evaluate the factor (polynomial) in the j-th variable.
       Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
-      Double_t X  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j)) 
+      Double_t X  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
 	* (x[j] - fMaxVariables(j));
       term        *= EvalFactor(p,X);
     }
-    // Add this term to the final result 
+    // Add this term to the final result
     returnValue += term;
   }
   return returnValue;
@@ -2208,14 +2208,14 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff)
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::EvalControl(const Int_t *iv) 
+Double_t TMultiDimFit::EvalControl(const Int_t *iv)
 {
   // PRIVATE METHOD:
   // Calculate the control parameter from the passed powers
   Double_t s = 0;
   Double_t epsilon = 1e-6; // a small number
   for (Int_t i = 0; i < fNVariables; i++) {
-    if (fMaxPowers[i] != 1) 
+    if (fMaxPowers[i] != 1)
       s += (epsilon + iv[i] - 1) / (epsilon + fMaxPowers[i] - 1);
   }
   return s;
@@ -2243,7 +2243,7 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
     p2 = x;
     for (i = 3; i <= p; i++) {
       p3 = p2 * x;
-      if (fPolyType == kLegendre) 
+      if (fPolyType == kLegendre)
 	p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
       else if (fPolyType == kChebyshev)
 	p3 = 2 * x * p2 - p1;
@@ -2252,20 +2252,20 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x)
     }
     r = p3;
   }
-  
+
   return r;
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::FindParameterization(Option_t *option) 
+void TMultiDimFit::FindParameterization(Option_t *option)
 {
-  // Find the parameterization 
-  // 
+  // Find the parameterization
+  //
   // Options:
   //     None so far
-  // 
-  // For detailed description of what this entails, please refer to the 
+  //
+  // For detailed description of what this entails, please refer to the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   MakeNormalized();
   MakeCandidates();
@@ -2276,14 +2276,14 @@ void TMultiDimFit::FindParameterization(Option_t *option)
 }
 
 //____________________________________________________________________
-void TMultiDimFit::Fit(Option_t *option) 
+void TMultiDimFit::Fit(Option_t *option)
 {
-  // Try to fit the found parameterisation to the test sample. 
-  // 
+  // Try to fit the found parameterisation to the test sample.
+  //
   // Options
-  //     M     use Minuit to improve coefficients 
-  // 
-  // Also, refer to 
+  //     M     use Minuit to improve coefficients
+  //
+  // Also, refer to
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   Int_t i, j;
   Double_t*      x    = new Double_t[fNVariables];
@@ -2294,7 +2294,7 @@ void TMultiDimFit::Fit(Option_t *option)
 
   // Calculate the residuals over the test sample
   for (i = 0; i < fTestSampleSize; i++) {
-    for (j = 0; j < fNVariables; j++) 
+    for (j = 0; j < fNVariables; j++)
       x[j] = fTestVariables(i * fNVariables + j);
     Double_t res =  fTestQuantity(i) - Eval(x);
     sumD         += fTestQuantity(i);
@@ -2312,11 +2312,11 @@ void TMultiDimFit::Fit(Option_t *option)
 
   TString opt(option);
   opt.ToLower();
-  
+
   if (!opt.Contains("m"))
     MakeChi2();
-  
-  if (fNCoefficients * 50 > fTestSampleSize) 
+
+  if (fNCoefficients * 50 > fTestSampleSize)
     Warning("Fit", "test sample is very small");
 
   if (!opt.Contains("m"))
@@ -2325,7 +2325,7 @@ void TMultiDimFit::Fit(Option_t *option)
   fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
   fFitter->SetFCN(mdfHelper);
 
-  const Int_t  maxArgs = 16; 
+  const Int_t  maxArgs = 16;
   Int_t           args = 1;
   Double_t*   arglist  = new Double_t[maxArgs];
   arglist[0]           = -1;
@@ -2334,7 +2334,7 @@ void TMultiDimFit::Fit(Option_t *option)
   for (i = 0; i < fNCoefficients; i++) {
     Double_t startVal = fCoefficients(i);
     Double_t startErr = fCoefficientsRMS(i);
-    fFitter->SetParameter(i, Form("coeff%02d",i), 
+    fFitter->SetParameter(i, Form("coeff%02d",i),
 			  startVal, startErr, 0, 0);
   }
 
@@ -2345,110 +2345,110 @@ void TMultiDimFit::Fit(Option_t *option)
 
   for (i = 0; i < fNCoefficients; i++) {
     Double_t val = 0, err = 0, low = 0, high = 0;
-    fFitter->GetParameter(i, Form("coeff%02d",i), 
+    fFitter->GetParameter(i, Form("coeff%02d",i),
 			 val, err, low, high);
     fCoefficients(i)    = val;
     fCoefficientsRMS(i) = err;
-  }  
+  }
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeCandidates() 
+void TMultiDimFit::MakeCandidates()
 {
   // PRIVATE METHOD:
   // Create list of candidate functions for the parameterisation. See
-  // also  
+  // also
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   Int_t i = 0;
   Int_t j = 0;
   Int_t k = 0;
 
   // The temporary array to store the powers in. We don't need to
-  // initialize this array however. 
+  // initialize this array however.
   Int_t *powers = new Int_t[fNVariables * fMaxFunctions];
 
   // store of `control variables'
   Double_t* control  = new Double_t[fMaxFunctions];
 
-  // We've better initialize the variables 
+  // We've better initialize the variables
   Int_t *iv = new Int_t[fNVariables];
   for (i = 0; i < fNVariables; i++)
     iv[i] = 1;
-   
+
   if (!fIsUserFunction) {
 
     // Number of funcs selected
-    Int_t     numberFunctions = 0;    
+    Int_t     numberFunctions = 0;
 
     // Absolute max number of functions
     Int_t maxNumberFunctions = 1;
     for (i = 0; i < fNVariables; i++)
       maxNumberFunctions *= fMaxPowers[i];
-    
+
     while (kTRUE) {
       // Get the control value for this function
       Double_t s = EvalControl(iv);
-      
+
       if (s <= fPowerLimit) {
-	
+
 	// Call over-loadable method Select, as to allow the user to
-	// interfere with the selection of functions. 
+	// interfere with the selection of functions.
 	if (Select(iv)) {
 	  numberFunctions++;
-	  
+
 	  // If we've reached the user defined limit of how many
-	  // functions we can consider, break out of the loop 
+	  // functions we can consider, break out of the loop
 	  if (numberFunctions > fMaxFunctions)
 	  break;
-	  
+
 	  // Store the control value, so we can sort array of powers
-	  // later on 
+	  // later on
 	  control[numberFunctions-1] = s;
-	  
-	  // Store the powers in powers array. 
+
+	  // Store the powers in powers array.
 	  for (i = 0; i < fNVariables; i++) {
 	    j = (numberFunctions - 1) * fNVariables + i;
 	    powers[j] = iv[i];
 	  }
 	} // if (Select())
       } // if (s <= fPowerLimit)
-      
+
       for (i = 0; i < fNVariables; i++)
-	if (iv[i] < fMaxPowers[i]) 
+	if (iv[i] < fMaxPowers[i])
 	  break;
-      
+
       // If all variables have reached their maximum power, then we
       // break out of the loop
       if (i == fNVariables) {
 	fMaxFunctions = numberFunctions;
 	break;
       }
-      
+
       // Next power in variable i
       iv[i]++;
-      
+
       for (j = 0; j < i; j++)
 	iv[j] = 1;
     } // while (kTRUE)
   }
   else {
-    // In case the user gave an explicit function 
+    // In case the user gave an explicit function
     for (i = 0; i < fMaxFunctions; i++) {
       // Copy the powers to working arrays
       for (j = 0; j < fNVariables; j++) {
 	powers[i * fNVariables + j] = fPowers[i * fNVariables + j];
 	iv[j]                 = fPowers[i * fNVariables + j];
       }
-      
+
       control[i] = EvalControl(iv);
     }
   }
-  
+
   // Now we need to sort the powers according to least `control
   // variable'
   Int_t *order = new Int_t[fMaxFunctions];
-  for (i = 0; i < fMaxFunctions; i++) 
+  for (i = 0; i < fMaxFunctions; i++)
     order[i] = i;
   fPowers = new Int_t[fMaxFunctions * fNVariables];
 
@@ -2456,7 +2456,7 @@ void TMultiDimFit::MakeCandidates()
     Double_t x = control[i];
     Int_t    l = order[i];
     k = i;
-    
+
     for (j = i; j < fMaxFunctions; j++) {
       if (control[j] <= x) {
 	x = control[j];
@@ -2464,7 +2464,7 @@ void TMultiDimFit::MakeCandidates()
 	k = j;
       }
     }
-      
+
     if (k != i) {
       control[k] = control[i];
       control[i] = x;
@@ -2474,9 +2474,9 @@ void TMultiDimFit::MakeCandidates()
   }
 
   for (i = 0; i < fMaxFunctions; i++)
-    for (j = 0; j < fNVariables; j++) 
+    for (j = 0; j < fNVariables; j++)
       fPowers[i * fNVariables + j] = powers[order[i] * fNVariables + j];
-  
+
   delete [] control;
   delete [] powers;
   delete [] order;
@@ -2485,29 +2485,29 @@ void TMultiDimFit::MakeCandidates()
 
 
 //____________________________________________________________________
-Double_t TMultiDimFit::MakeChi2(const Double_t* coeff) 
+Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 {
   // Calculate Chi square over either the test sample. The optional
   // argument coeff is a vector of coefficients to use in the
   // evaluation of the parameterisation. If coeff == 0, then the found
-  // coefficients is used. 
-  // Used my MINUIT for fit (see TMultDimFit::Fit) 
+  // coefficients is used.
+  // Used my MINUIT for fit (see TMultDimFit::Fit)
   fChi2 = 0;
   Int_t i, j;
   Double_t* x = new Double_t[fNVariables];
   for (i = 0; i < fTestSampleSize; i++) {
-    // Get the stored point 
+    // Get the stored point
     for (j = 0; j < fNVariables; j++)
       x[j] = fTestVariables(i * fNVariables + j);
-    
-    // Evaluate function. Scale to shifted values 
+
+    // Evaluate function. Scale to shifted values
     Double_t f = Eval(x,coeff);
 
-    // Calculate contribution to Chic square 
-    fChi2 += 1. / TMath::Max(fTestSqError(i),1e-20) 
-      * (fTestQuantity(i) - f) * (fTestQuantity(i) - f);  
+    // Calculate contribution to Chic square
+    fChi2 += 1. / TMath::Max(fTestSqError(i),1e-20)
+      * (fTestQuantity(i) - f) * (fTestQuantity(i) - f);
   }
-  
+
   // Clean up
   delete x;
 
@@ -2516,33 +2516,33 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeCode(const char* filename, Option_t *option) 
+void TMultiDimFit::MakeCode(const char* filename, Option_t *option)
 {
   // Generate the file <filename> with .C appended if argument doesn't
   // end in .cxx or .C. The contains the implementation of the
-  // function: 
-  // 
+  // function:
+  //
   //   Double_t <funcname>(Double_t *x)
-  // 
+  //
   // which does the same as TMultiDimFit::Eval. Please refer to this
-  // method. 
-  // 
+  // method.
+  //
   // Further, the static variables:
-  // 
+  //
   //     Int_t    gNVariables
-  //     Int_t    gNCoefficients 
-  //     Double_t gDMean 
-  //     Double_t gXMean[] 
-  //     Double_t gXMin[] 
-  //     Double_t gXMax[] 
-  //     Double_t gCoefficient[] 
-  //     Int_t    gPower[] 
-  // 
+  //     Int_t    gNCoefficients
+  //     Double_t gDMean
+  //     Double_t gXMean[]
+  //     Double_t gXMin[]
+  //     Double_t gXMax[]
+  //     Double_t gCoefficient[]
+  //     Int_t    gPower[]
+  //
   // are initialized. The only ROOT header file needed is Rtypes.h
-  // 
+  //
   // See TMultiDimFit::MakeRealCode for a list of options
 
-  
+
   TString outName(filename);
   if (!outName.EndsWith(".C") && !outName.EndsWith(".cxx"))
     outName += ".C";
@@ -2553,11 +2553,11 @@ void TMultiDimFit::MakeCode(const char* filename, Option_t *option)
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeCoefficientErrors() 
+void TMultiDimFit::MakeCoefficientErrors()
 {
   // PRIVATE METHOD:
   // Compute the errors on the coefficients. For this to be done, the
-  // curvature matrix of the non-orthogonal functions, is computed.  
+  // curvature matrix of the non-orthogonal functions, is computed.
   Int_t    i = 0;
   Int_t    j = 0;
   Int_t    k = 0;
@@ -2573,33 +2573,33 @@ void TMultiDimFit::MakeCoefficientErrors()
     for (j = 0; j <= i; j++) {
       jF = TMatrixDRow(fFunctions,j);
       for (k = 0; k < fSampleSize; k++)
-	curvatureMatrix(i,j) += 
+	curvatureMatrix(i,j) +=
 	  1 / TMath::Max(fSqError(k), 1e-20) * iF(k) * jF(k);
       curvatureMatrix(j,i) = curvatureMatrix(i,j);
     }
   }
 
-  // Calculate Chi Square 
+  // Calculate Chi Square
   fChi2 = 0;
   for (i = 0; i < fSampleSize; i++) {
     Double_t f = 0;
-    for (j = 0; j < fNCoefficients; j++) 
+    for (j = 0; j < fNCoefficients; j++)
       f += fCoefficients(j) * fFunctions(j,i);
-    fChi2 += 1. / TMath::Max(fSqError(i),1e-20) * (fQuantity(i) - f) 
-      * (fQuantity(i) - f);  
+    fChi2 += 1. / TMath::Max(fSqError(i),1e-20) * (fQuantity(i) - f)
+      * (fQuantity(i) - f);
   }
-  
-  // Invert the curvature matrix 
+
+  // Invert the curvature matrix
   Double_t det = 1;
   curvatureMatrix.Invert(&det);
   if (det == 0)
     Warning("MakeCoefficientErrors", "curvature matrix is singular");
-  
+
   if (fIsVerbose)
     cout << "Determinant of curvature matrix: " << det << endl;
 
-  for (i = 0; i < fNCoefficients; i++) 
-    fCoefficientsRMS(i) = TMath::Sqrt(curvatureMatrix(i,i));  
+  for (i = 0; i < fNCoefficients; i++)
+    fCoefficientsRMS(i) = TMath::Sqrt(curvatureMatrix(i,i));
 }
 
 
@@ -2610,45 +2610,45 @@ void TMultiDimFit::MakeCoefficients()
   // Invert the model matrix B, and compute final coefficients. For a
   // more thorough discussion of what this means, please refer to the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-  // 
+  //
   // First we invert the lower triangle matrix fOrthCurvatureMatrix
-  // and store the inverted matrix in the upper triangle. 
+  // and store the inverted matrix in the upper triangle.
 
   Int_t i = 0, j = 0;
   Int_t col = 0, row = 0;
 
-  // Invert the B matrix 
+  // Invert the B matrix
   for (col = 1; col < fNCoefficients; col++) {
     for (row = col - 1; row > -1; row--) {
       fOrthCurvatureMatrix(row,col) = 0;
-      for (i = row; i <= col ; i++) 
- 	fOrthCurvatureMatrix(row,col) -= 
-	  fOrthCurvatureMatrix(i,row) 
+      for (i = row; i <= col ; i++)
+ 	fOrthCurvatureMatrix(row,col) -=
+	  fOrthCurvatureMatrix(i,row)
 	  * fOrthCurvatureMatrix(i,col);
     }
   }
-  
+
   // Compute the final coefficients
   fCoefficients.ResizeTo(fNCoefficients);
-  
+
   for (i = 0; i < fNCoefficients; i++) {
     Double_t sum = 0;
-    for (j = i; j < fNCoefficients; j++) 
+    for (j = i; j < fNCoefficients; j++)
       sum += fOrthCurvatureMatrix(i,j) * fOrthCoefficients(j);
     fCoefficients(i) = sum;
   }
-  
+
   // Compute the final residuals
   fResiduals.ResizeTo(fSampleSize);
-  for (i = 0; i < fSampleSize; i++) 
+  for (i = 0; i < fSampleSize; i++)
     fResiduals(i) = fQuantity(i);
 
   for (i = 0; i < fNCoefficients; i++)
-    for (j = 0; j < fSampleSize; j++) 
+    for (j = 0; j < fSampleSize; j++)
       fResiduals(j) -= fCoefficients(i) * fFunctions(i,j);
 
   // Compute the max and minimum, and squared sum of the evaluated
-  // residuals 
+  // residuals
   fMinResidual = 10e10;
   fMaxResidual = -10e10;
   Double_t sqRes  = 0;
@@ -2667,8 +2667,8 @@ void TMultiDimFit::MakeCoefficients()
   fCorrelationCoeff = fSumSqResidual / fSumSqAvgQuantity;
   fPrecision        = TMath::Sqrt(sqRes / fSumSqQuantity);
 
-  // If we use histograms, fill some more 
-  if (TESTBIT(fHistogramMask,HIST_RD) || 
+  // If we use histograms, fill some more
+  if (TESTBIT(fHistogramMask,HIST_RD) ||
       TESTBIT(fHistogramMask,HIST_RTRAI) ||
       TESTBIT(fHistogramMask,HIST_RX)) {
     for (i = 0; i < fSampleSize; i++) {
@@ -2679,12 +2679,12 @@ void TMultiDimFit::MakeCoefficients()
 	((TH1D*)fHistograms->FindObject("res_train"))->Fill(fResiduals(i));
 
       if (TESTBIT(fHistogramMask,HIST_RX))
-	for (j = 0; j < fNVariables; j++) 
+	for (j = 0; j < fNVariables; j++)
 	  ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
 	    ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
     }
-  } // If histograms 
-  
+  } // If histograms
+
 }
 
 
@@ -2697,34 +2697,34 @@ void TMultiDimFit::MakeCorrelation()
     return;
 
   fCorrelationMatrix.ResizeTo(fNVariables,fNVariables+1);
-  
+
   Double_t d2      = 0;
   Double_t DdotXi  = 0;
   Double_t XiNorm  = 0;
   Double_t XidotXj = 0;
   Double_t XjNorm  = 0;
-  
+
   Int_t i, j, k, l;
-  for (i = 0; i < fSampleSize; i++) 
+  for (i = 0; i < fSampleSize; i++)
     d2 += fQuantity(i) * fQuantity(i);
-  
+
   for (i = 0; i < fNVariables; i++) {
     for (j = 0; j< fSampleSize; j++) {
-      // Index of sample j of variable i 
+      // Index of sample j of variable i
       k =  j * fNVariables + i;
       DdotXi += fQuantity(j) * (fVariables(k) - fMeanVariables(i));
-      XiNorm += (fVariables(k) - fMeanVariables(i)) 
+      XiNorm += (fVariables(k) - fMeanVariables(i))
 	* (fVariables(k) - fMeanVariables(i));
     }
     fCorrelationMatrix(i,0) = DdotXi / TMath::Sqrt(d2 * XiNorm);
-  
+
     for (j = 0; j < i; j++) {
       for (k = 0; k < fSampleSize; k++) {
-	// Index of sample j of variable i 
+	// Index of sample j of variable i
 	l =  j * fNVariables + k;
 	XidotXj += (fVariables(i) - fMeanVariables(i))
 	  * (fVariables(l) - fMeanVariables(j));
-	XjNorm  += (fVariables(l) - fMeanVariables(j)) 
+	XjNorm  += (fVariables(l) - fMeanVariables(j))
 	  * (fVariables(l) - fMeanVariables(j));
       }
       fCorrelationMatrix(i+1,j) = XidotXj / TMath::Sqrt(XiNorm * XjNorm);
@@ -2740,7 +2740,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
   // PRIVATE METHOD:
   // Make Gram-Schmidt orthogonalisation. The class description gives
   // a thorough account of this algorithm, as well as
-  // references. Please refer to the 
+  // references. Please refer to the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
 
 
@@ -2773,33 +2773,33 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
     Double_t fdw = 0;
     // Calculate (f_fNCoefficients dot w_j) / w_j^2
     for (k = 0; k < fSampleSize; k++) {
-      fdw += fFunctions(fNCoefficients, k) * fOrthFunctions(j,k) 
+      fdw += fFunctions(fNCoefficients, k) * fOrthFunctions(j,k)
 	/ fOrthFunctionNorms(j);
     }
-        
+
     fOrthCurvatureMatrix(fNCoefficients,j) = fdw;
     // and subtract it from the current value of w_ij
     for (k = 0; k < fSampleSize; k++)
-      fOrthFunctions(fNCoefficients,k) -= fdw * fOrthFunctions(j,k);	
+      fOrthFunctions(fNCoefficients,k) -= fdw * fOrthFunctions(j,k);
   }
 
-  for (j = 0; j < fSampleSize; j++) {      
+  for (j = 0; j < fSampleSize; j++) {
     // calculate squared length of w_fNCoefficients
-    fOrthFunctionNorms(fNCoefficients) += 
-      fOrthFunctions(fNCoefficients,j) 
-      * fOrthFunctions(fNCoefficients,j); 
-    
-    // calculate D dot w_fNCoefficients in A
-    fOrthCoefficients(fNCoefficients) += fQuantity(j) 
-      * fOrthFunctions(fNCoefficients, j); 
-  }    
+    fOrthFunctionNorms(fNCoefficients) +=
+      fOrthFunctions(fNCoefficients,j)
+      * fOrthFunctions(fNCoefficients,j);
 
-  // First test, but only if didn't user specify  
-  if (!fIsUserFunction) 
-    if (TMath::Sqrt(fOrthFunctionNorms(fNCoefficients) / (f2 + 1e-10)) 
+    // calculate D dot w_fNCoefficients in A
+    fOrthCoefficients(fNCoefficients) += fQuantity(j)
+      * fOrthFunctions(fNCoefficients, j);
+  }
+
+  // First test, but only if didn't user specify
+  if (!fIsUserFunction)
+    if (TMath::Sqrt(fOrthFunctionNorms(fNCoefficients) / (f2 + 1e-10))
 	< TMath::Sin(fMinAngle*DEGRAD))
       return 0;
-  
+
   // The result found by this code for the first residual is always
   // much less then the one found be MUDIFI. That's because it's
   // supposed to be. The cause is the improved precision of Double_t
@@ -2808,7 +2808,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
   Double_t b = fOrthCoefficients(fNCoefficients);
   fOrthCoefficients(fNCoefficients) /= fOrthFunctionNorms(fNCoefficients);
 
-  // Calculate the residual from including this fNCoefficients. 
+  // Calculate the residual from including this fNCoefficients.
   Double_t dResidur = fOrthCoefficients(fNCoefficients) * b;
 
   return dResidur;
@@ -2816,75 +2816,75 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeHistograms(Option_t *option) 
+void TMultiDimFit::MakeHistograms(Option_t *option)
 {
   // Make histograms of the result of the analysis. This message
   // should be sent after having read all data points, but before
-  // finding the parameterization 
-  // 
+  // finding the parameterization
+  //
   // Options:
-  //     A         All the below 
+  //     A         All the below
   //     X         Original independent variables
-  //     D         Original dependent variables 
+  //     D         Original dependent variables
   //     N         Normalised independent variables
-  //     S         Shifted dependent variables 
+  //     S         Shifted dependent variables
   //     R1        Residuals versus normalised independent variables
   //     R2        Residuals versus dependent variable
   //     R3        Residuals computed on training sample
   //     R4        Residuals computed on test sample
-  // 
+  //
   // For a description of these quantities, refer to
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   TString opt(option);
   opt.ToLower();
-  
-  if (opt.Length() < 1) 
+
+  if (opt.Length() < 1)
     return;
 
-  if (!fHistograms) 
+  if (!fHistograms)
     fHistograms = new TList;
 
-  // Counter variable 
+  // Counter variable
   Int_t i = 0;
 
-  // Histogram of original variables 
+  // Histogram of original variables
   if (opt.Contains("x") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_XORIG);
-    for (i = 0; i < fNVariables; i++) 
+    for (i = 0; i < fNVariables; i++)
       if (!fHistograms->FindObject(Form("x_%d_orig",i)))
-	fHistograms->Add(new TH1D(Form("x_%d_orig",i), 
-				  Form("Original variable # %d",i), 
+	fHistograms->Add(new TH1D(Form("x_%d_orig",i),
+				  Form("Original variable # %d",i),
 				  100, fMinVariables(i),
 				  fMaxVariables(i)));
   }
-  
+
   // Histogram of original dependent variable
   if (opt.Contains("d") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_DORIG);
-    if (!fHistograms->FindObject("d_orig")) 
-      fHistograms->Add(new TH1D("d_orig", "Original Quantity", 
+    if (!fHistograms->FindObject("d_orig"))
+      fHistograms->Add(new TH1D("d_orig", "Original Quantity",
 				100, fMinQuantity, fMaxQuantity));
   }
-  
-  // Histograms of normalized variables 
+
+  // Histograms of normalized variables
   if (opt.Contains("n") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_XNORM);
     for (i = 0; i < fNVariables; i++)
       if (!fHistograms->FindObject(Form("x_%d_norm",i)))
-	fHistograms->Add(new TH1D(Form("x_%d_norm",i), 
-				  Form("Normalized variable # %d",i), 
+	fHistograms->Add(new TH1D(Form("x_%d_norm",i),
+				  Form("Normalized variable # %d",i),
 				  100, -1,1));
   }
-  
+
   // Histogram of shifted dependent variable
   if (opt.Contains("s") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_DSHIF);
-    if (!fHistograms->FindObject("d_shifted")) 
-      fHistograms->Add(new TH1D("d_shifted", "Shifted Quantity", 
-				100, fMinQuantity - fMeanQuantity, 
+    if (!fHistograms->FindObject("d_shifted"))
+      fHistograms->Add(new TH1D("d_shifted", "Shifted Quantity",
+				100, fMinQuantity - fMeanQuantity,
 				fMaxQuantity - fMeanQuantity));
   }
-  
+
   // Residual from training sample versus independent variables
   if (opt.Contains("r1") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RX);
@@ -2893,40 +2893,40 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 	fHistograms->Add(new TH2D(Form("res_x_%d",i),
 				  Form("Computed residual versus x_%d", i),
 				  100, -1,    1,
-				  35,  
-				  fMinQuantity - fMeanQuantity, 
+				  35,
+				  fMinQuantity - fMeanQuantity,
 				  fMaxQuantity - fMeanQuantity));
   }
-  
-  // Residual from training sample versus. dependent variable 
+
+  // Residual from training sample versus. dependent variable
   if (opt.Contains("r2") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RD);
     if (!fHistograms->FindObject("res_d"))
       fHistograms->Add(new TH2D("res_d",
 				"Computed residuals vs Quantity",
-				100, 
-				fMinQuantity - fMeanQuantity, 
-				fMaxQuantity - fMeanQuantity, 
-				35,  
-				fMinQuantity - fMeanQuantity, 
+				100,
+				fMinQuantity - fMeanQuantity,
+				fMaxQuantity - fMeanQuantity,
+				35,
+				fMinQuantity - fMeanQuantity,
 				fMaxQuantity - fMeanQuantity));
   }
-  
+
   // Residual from training sample
   if (opt.Contains("r3") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RTRAI);
     if (!fHistograms->FindObject("res_train"))
-      fHistograms->Add(new TH1D("res_train", 
-				"Computed residuals over training sample", 
-				100, fMinQuantity - fMeanQuantity, 
+      fHistograms->Add(new TH1D("res_train",
+				"Computed residuals over training sample",
+				100, fMinQuantity - fMeanQuantity,
 				fMaxQuantity - fMeanQuantity));
 
   }
   if (opt.Contains("r4") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RTEST);
     if (!fHistograms->FindObject("res_test"))
-      fHistograms->Add(new TH1F("res_test", 
-				"Distribution of residuals from test", 
+      fHistograms->Add(new TH1F("res_test",
+				"Distribution of residuals from test",
 				100,fMinQuantity - fMeanQuantity,
 				fMaxQuantity - fMeanQuantity));
   }
@@ -2938,47 +2938,47 @@ void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)
 {
   // Generate the file <classname>MDF.cxx which contains the
   // implementation of the method:
-  // 
+  //
   //   Double_t <classname>::MDF(Double_t *x)
-  // 
+  //
   // which does the same as  TMultiDimFit::Eval. Please refer to this
-  // method. 
-  // 
+  // method.
+  //
   // Further, the public static members:
-  // 
+  //
   //   Int_t    <classname>::fgNVariables
-  //   Int_t    <classname>::fgNCoefficients 
-  //   Double_t <classname>::fgDMean 
-  //   Double_t <classname>::fgXMean[]       //[fgNVariables] 
-  //   Double_t <classname>::fgXMin[]        //[fgNVariables] 
-  //   Double_t <classname>::fgXMax[]        //[fgNVariables] 
-  //   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents] 
-  //   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables] 
-  // 
+  //   Int_t    <classname>::fgNCoefficients
+  //   Double_t <classname>::fgDMean
+  //   Double_t <classname>::fgXMean[]       //[fgNVariables]
+  //   Double_t <classname>::fgXMin[]        //[fgNVariables]
+  //   Double_t <classname>::fgXMax[]        //[fgNVariables]
+  //   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents]
+  //   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables]
+  //
   // are initialized, and assumed to exist. The class declaration is
   // assumed to be in <classname>.h and assumed to be provided by the
   // user.
-  // 
+  //
   // See TMultiDimFit::MakeRealCode for a list of options
-  // 
+  //
   // The minimal class definition is:
   //
   //   class <classname> {
   //   public:
   //     Int_t    <classname>::fgNVariables;     // Number of variables
-  //     Int_t    <classname>::fgNCoefficients;  // Number of terms 
+  //     Int_t    <classname>::fgNCoefficients;  // Number of terms
   //     Double_t <classname>::fgDMean;          // Mean from training sample
   //     Double_t <classname>::fgXMean[];        // Mean from training sample
   //     Double_t <classname>::fgXMin[];         // Min from training sample
   //     Double_t <classname>::fgXMax[];         // Max from training sample
-  //     Double_t <classname>::fgCoefficient[];  // Coefficients 
+  //     Double_t <classname>::fgCoefficient[];  // Coefficients
   //     Int_t    <classname>::fgPower[];        // Function powers
-  // 
+  //
   //     Double_t Eval(Double_t *x);
   //   };
-  // 
+  //
   // Whether the method <classname>::Eval should be static or not, is
-  // up to the user. 
+  // up to the user.
 
   MakeRealCode(Form("%sMDF.cxx", classname), classname, option);
 }
@@ -2990,7 +2990,7 @@ void TMultiDimFit::MakeNormalized()
 {
   // PRIVATE METHOD:
   // Normalize data to the interval [-1;1]. This is needed for the
-  // classes method to work. 
+  // classes method to work.
 
   Int_t i = 0;
   Int_t j = 0;
@@ -2999,13 +2999,13 @@ void TMultiDimFit::MakeNormalized()
   for (i = 0; i < fSampleSize; i++) {
     if (TESTBIT(fHistogramMask,HIST_DORIG))
       ((TH1F*)fHistograms->FindObject("d_orig"))->Fill(fQuantity(i));
-    
+
     fQuantity(i) -= fMeanQuantity;
-    fSumSqAvgQuantity  += fQuantity(i) * fQuantity(i); 
+    fSumSqAvgQuantity  += fQuantity(i) * fQuantity(i);
 
     if (TESTBIT(fHistogramMask,HIST_DSHIF))
       ((TH1F*)fHistograms->FindObject("d_shifted"))->Fill(fQuantity(i));
-    
+
     for (j = 0; j < fNVariables; j++) {
       Double_t range = 1. / (fMaxVariables(j) - fMinVariables(j));
       k              = i * fNVariables + j;
@@ -3013,37 +3013,37 @@ void TMultiDimFit::MakeNormalized()
       // Fill histograms of original independent variables
       if (TESTBIT(fHistogramMask,HIST_XORIG))
 	((TH1F*)fHistograms->FindObject(Form("x_%d_orig",j)))
-	  ->Fill(fVariables(k)); 
+	  ->Fill(fVariables(k));
 
-      // Normalise independent variables 
+      // Normalise independent variables
       fVariables(k) = 1 + 2 * range * (fVariables(k) - fMaxVariables(j));
 
       // Fill histograms of normalised independent variables
       if (TESTBIT(fHistogramMask,HIST_XNORM))
 	((TH1F*)fHistograms->FindObject(Form("x_%d_norm",j)))
-	  ->Fill(fVariables(k)); 
+	  ->Fill(fVariables(k));
 
     }
   }
-  // Shift min and max of dependent variable 
+  // Shift min and max of dependent variable
   fMaxQuantity -= fMeanQuantity;
   fMinQuantity -= fMeanQuantity;
 
-  // Shift mean of independent variables 
+  // Shift mean of independent variables
   for (i = 0; i < fNVariables; i++) {
     Double_t range = 1. / (fMaxVariables(i) - fMinVariables(i));
-    fMeanVariables(i) = 1 + 2 * range * (fMeanVariables(i) 
-					 - fMaxVariables(i)); 
+    fMeanVariables(i) = 1 + 2 * range * (fMeanVariables(i)
+					 - fMaxVariables(i));
   }
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeParameterization() 
+void TMultiDimFit::MakeParameterization()
 {
   // PRIVATE METHOD:
   // Find the parameterization over the training sample. A full account
-  // of the algorithm is given in the 
+  // of the algorithm is given in the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
 
   Int_t     i              = -1;
@@ -3051,9 +3051,9 @@ void TMultiDimFit::MakeParameterization()
   Int_t     k              = 0;
   Int_t     maxPass        = 3;
   Int_t     studied        = 0;
-  Double_t  squareResidual = fSumSqAvgQuantity; 
+  Double_t  squareResidual = fSumSqAvgQuantity;
   fNCoefficients            = 0;
-  fSumSqResidual           = fSumSqAvgQuantity; 
+  fSumSqResidual           = fSumSqAvgQuantity;
   fFunctions.ResizeTo(fMaxTerms,fSampleSize);
   fOrthFunctions.ResizeTo(fMaxTerms,fSampleSize);
   fOrthFunctionNorms.ResizeTo(fMaxTerms);
@@ -3071,22 +3071,22 @@ void TMultiDimFit::MakeParameterization()
   // increment inspection counter
   while(kTRUE) {
 
-    // Reach user defined limit of studies 
+    // Reach user defined limit of studies
     if (studied++ >= fMaxStudy) {
       fParameterisationCode = PARAM_MAXSTUDY;
       break;
     }
 
-    // Considered all functions several times 
+    // Considered all functions several times
     if (k >= maxPass) {
       fParameterisationCode = PARAM_SEVERAL;
       break;
     }
 
-    // increment function counter 
+    // increment function counter
     i++;
 
-    // If we've reached the end of the functions, restart pass 
+    // If we've reached the end of the functions, restart pass
     if (i == fMaxFunctions) {
       if (fMaxAngle != 0)
 	fMaxAngle += (90 - fMaxAngle) / 2;
@@ -3095,18 +3095,18 @@ void TMultiDimFit::MakeParameterization()
       k++;
       continue;
     }
-    
+
     if (studied == 1)
       fFunctionCodes[i] = 0;
-    else if (fFunctionCodes[i] >= 2) 
+    else if (fFunctionCodes[i] >= 2)
       continue;
-    
-    // Print a happy message 
+
+    // Print a happy message
     if (fIsVerbose && studied == 1)
       cout << "Coeff   SumSqRes    Contrib   Angle      QM   Func"
 	   << "     Value        W^2  Powers" << endl;
 
-    // Make the Gram-Schmidt 
+    // Make the Gram-Schmidt
     Double_t dResidur = MakeGramSchmidt(i);
 
     if (dResidur == 0) {
@@ -3115,19 +3115,19 @@ void TMultiDimFit::MakeParameterization()
       fFunctionCodes[i] = 1;
       continue;
     }
-      
-    // If user specified function, assume she/he knows what he's doing 
+
+    // If user specified function, assume she/he knows what he's doing
     if (!fIsUserFunction) {
       // Flag this function as considered
       fFunctionCodes[i] = 2;
 
-      // Test if this function contributes to the fit 
+      // Test if this function contributes to the fit
       if (!TestFunction(squareResidual, dResidur)) {
 	fFunctionCodes[i] = 1;
 	continue;
       }
     }
-    
+
     // If we get to here, the function currently considered is
     // fNCoefficients, so we increment the counter
     // Flag this function as OK, and store and the number in the
@@ -3137,43 +3137,51 @@ void TMultiDimFit::MakeParameterization()
     fNCoefficients++;
 
     // We add the current contribution to the sum of square of
-    // residuals; 
+    // residuals;
     squareResidual -= dResidur;
-    
+
 
     // Calculate control parameter from this function
     for (j = 0; j < fNVariables; j++) {
-      if (fNCoefficients == 1 
-	  || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1) 
+      if (fNCoefficients == 1
+	  || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1)
 	fMaxPowersFinal[j] = fPowers[i * fNVariables + j] - 1;
     }
     Double_t s = EvalControl(&fPowers[i * fNVariables]);
 
     // Print the statistics about this function
     if (fIsVerbose) {
+#ifndef R__MACOSX
       cout << setw(5)  << fNCoefficients << " "
-	   << setw(10) << setprecision(4) << squareResidual << " "  
-	   << setw(10) << setprecision(4) << dResidur << " " 
-	   << setw(7)  << setprecision(3) << fMaxAngle << " " 
-	   << setw(7)  << setprecision(3) << s << " " 
-	   << setw(5)  << i << " " 
-	   << setw(10) << setprecision(4) 
-	   << fOrthCoefficients(fNCoefficients-1) << " " 
-	   << setw(10) << setprecision(4) 
-	   << fOrthFunctionNorms(fNCoefficients-1) << " " 
+	   << setw(10) << setprecision(4) << squareResidual << " "
+	   << setw(10) << setprecision(4) << dResidur << " "
+	   << setw(7)  << setprecision(3) << fMaxAngle << " "
+	   << setw(7)  << setprecision(3) << s << " "
+	   << setw(5)  << i << " "
+	   << setw(10) << setprecision(4)
+	   << fOrthCoefficients(fNCoefficients-1) << " "
+	   << setw(10) << setprecision(4)
+	   << fOrthFunctionNorms(fNCoefficients-1) << " "
 	   << flush;
+#else
+      printf("%d5 %g10.4 %g10.4 %g7.3 %g7.3 %d5 %g10.4 %g10.4 ",
+             fNCoefficients, squareResidual, dResidur, fMaxAngle, s, i,
+             fOrthCoefficients(fNCoefficients-1),
+             fOrthFunctionNorms(fNCoefficients-1));
+      fflush(stdout);
+#endif
       for (j = 0; j < fNVariables; j++)
 	cout << " " << fPowers[i * fNVariables + j] - 1 << flush;
       cout << endl;
     }
-    
+
     if (fNCoefficients >= fMaxTerms && fIsVerbose) {
       fParameterisationCode = PARAM_MAXTERMS;
       break;
     }
 
     Double_t err  = TMath::Sqrt(TMath::Max(1e-20,squareResidual) /
-				fSumSqAvgQuantity); 
+				fSumSqAvgQuantity);
     if (err < fMinRelativeError) {
       fParameterisationCode = PARAM_RELERR;
       break;
@@ -3188,15 +3196,15 @@ void TMultiDimFit::MakeParameterization()
 
 
 //____________________________________________________________________
-void TMultiDimFit::MakeRealCode(const char *filename, 
-				const char *classname, 
-				Option_t *opt)  
+void TMultiDimFit::MakeRealCode(const char *filename,
+				const char *classname,
+				Option_t *opt)
 {
   // PRIVATE METHOD:
   // This is the method that actually generates the code for the
-  // evaluation the parameterization on some point. 
+  // evaluation the parameterization on some point.
   // It's called by TMultiDimFit::MakeCode and TMultiDimFit::MakeMethod.
-  // 
+  //
   // The options are: NONE so far
   Int_t i, j;
 
@@ -3204,16 +3212,16 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   const char *prefix   = (isMethod ? Form("%s::", classname) : "");
   const char *cv_qual  = (isMethod ? "" : "static ");
 
-  ofstream outFile(filename,ios::out|ios::trunc); 
+  ofstream outFile(filename,ios::out|ios::trunc);
   if (!outFile) {
-    Error("MakeRealCode","couldn't open output file '%s'",filename); 
+    Error("MakeRealCode","couldn't open output file '%s'",filename);
     return;
   }
-  
-  if (fIsVerbose) 
+
+  if (fIsVerbose)
     cout << "Writing on file \"" << filename << "\" ... " << flush;
   //
-  // Write header of file 
+  // Write header of file
   //
   // Emacs mode line ;-)
   outFile << "// -*- mode: c++ -*-" << endl;
@@ -3225,12 +3233,12 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   TDatime date;
   outFile << "// on " << date.AsString() << endl;
   // ROOT version info
-  outFile << "// ROOT version " << gROOT->GetVersion() 
+  outFile << "// ROOT version " << gROOT->GetVersion()
           << endl << "//" << endl;
   // General information on the code
   outFile << "// This file contains the function " << endl
           << "//" << endl
-          << "//    Double_t  " << prefix << "MDF(Double_t *x); " << endl 
+          << "//    Double_t  " << prefix << "MDF(Double_t *x); " << endl
           << "//" << endl
           << "// For evaluating the parameterization obtained" << endl
 	  << "// from TMultiDimFit and the point x" << endl
@@ -3239,106 +3247,106 @@ void TMultiDimFit::MakeRealCode(const char *filename,
           << "information " << endl << "// " << endl;
   // Header files
   outFile << "#ifndef __CINT__" << endl;
-  if (isMethod) 
-    // If these are methods, we need the class header 
+  if (isMethod)
+    // If these are methods, we need the class header
     outFile << "#include \"" << classname << ".h\"" << endl;
-  else 
+  else
     // otherwise, we need the typedefs of Int_t and Double_t
     outFile << "#include <Rtypes.h> // needed for Double_t etc" << endl;
   // Finish the preprocessor block
   outFile << "#endif" << endl << endl;
 
-  // 
+  //
   // Now for the data
   //
-  outFile << "//" << endl 
+  outFile << "//" << endl
           << "// Static data variables"  << endl
           << "//" << endl;
-  outFile << cv_qual << "Int_t    " << prefix << "gNVariables    = " 
+  outFile << cv_qual << "Int_t    " << prefix << "gNVariables    = "
           << fNVariables << ";" << endl;
-  outFile << cv_qual << "Int_t    " << prefix << "gNCoefficients = " 
+  outFile << cv_qual << "Int_t    " << prefix << "gNCoefficients = "
           << fNCoefficients << ";" << endl;
   outFile << cv_qual << "Double_t " << prefix << "gDMean         = "
           << fMeanQuantity << ";" << endl;
 
   // Assignment to mean vector.
   outFile << "// Assignment to mean vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix 
+  outFile << cv_qual << "Double_t " << prefix
           << "gXMean[] = {" << endl;
-  for (i = 0; i < fNVariables; i++) 
+  for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMeanVariables(i) << flush;
   outFile << " };" << endl << endl;
 
-  // Assignment to minimum vector. 
+  // Assignment to minimum vector.
   outFile << "// Assignment to minimum vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix 
+  outFile << cv_qual << "Double_t " << prefix
           << "gXMin[] = {" << endl;
-  for (i = 0; i < fNVariables; i++) 
+  for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMinVariables(i) << flush;
   outFile << " };" << endl << endl;
 
-  // Assignment to maximum vector. 
+  // Assignment to maximum vector.
   outFile << "// Assignment to maximum vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix 
+  outFile << cv_qual << "Double_t " << prefix
           << "gXMax[] = {" << endl;
-  for (i = 0; i < fNVariables; i++) 
+  for (i = 0; i < fNVariables; i++)
     outFile << (i != 0 ? ", " : "  ") << fMaxVariables(i) << flush;
   outFile << " };" << endl << endl;
 
-  // Assignment to coefficients vector. 
+  // Assignment to coefficients vector.
   outFile << "// Assignment to coefficients vector." << endl;
-  outFile << cv_qual << "Double_t " << prefix 
+  outFile << cv_qual << "Double_t " << prefix
           << "gCoefficient[] = {" << flush;
-  for (i = 0; i < fNCoefficients; i++) 
+  for (i = 0; i < fNCoefficients; i++)
     outFile << (i != 0 ? "," : "") << endl
             << "  " << fCoefficients(i) << flush;
   outFile << endl << " };" << endl << endl;
 
-  // Assignment to powers vector. 
+  // Assignment to powers vector.
   outFile << "// Assignment to powers vector." << endl
-	  << "// The powers are stored row-wise, that is" << endl 
-	  << "//  p_ij = " << prefix 
+	  << "// The powers are stored row-wise, that is" << endl
+	  << "//  p_ij = " << prefix
 	  << "gPower[i * NVariables + j];" << endl;
-  outFile << cv_qual << "Int_t    " << prefix 
-          << "gPower[] = {" << flush; 
+  outFile << cv_qual << "Int_t    " << prefix
+          << "gPower[] = {" << flush;
   for (i = 0; i < fNCoefficients; i++) {
     for (j = 0; j < fNVariables; j++) {
       if (j != 0) outFile << flush << "  ";
       else        outFile << endl << "  ";
-      outFile << fPowers[fPowerIndex[i] * fNVariables + j] 
-	      << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",") 
+      outFile << fPowers[fPowerIndex[i] * fNVariables + j]
+	      << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",")
 	      << flush;
     }
   }
   outFile << endl << "};" << endl << endl;
 
 
-  // 
+  //
   // Finally we reach the function itself
-  // 
+  //
   outFile << "// " << endl
-          << "// The " 
+          << "// The "
           << (isMethod ? "method " : "function ")
-          << "  Double_t " << prefix 
-          << "MDF(Double_t *x)" 
+          << "  Double_t " << prefix
+          << "MDF(Double_t *x)"
           << endl << "// " << endl;
-  outFile << "Double_t " << prefix 
+  outFile << "Double_t " << prefix
           << "MDF(Double_t *x) {" << endl
 	  << "  Double_t returnValue = " << prefix << "gDMean;" << endl
 	  << "  Int_t    i = 0, j = 0;" << endl
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
-	  << "    Double_t term = " << prefix << "gCoefficient[i]; <<" 
+	  << "    Double_t term = " << prefix << "gCoefficient[i]; <<"
 	  << endl
 	  << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
 	  << endl
 	  << "      // Evaluate the polynomial in the jth variable." << endl
-	  << "      Int_t power = "<< prefix << "gPower[" 
-	  << prefix << "gNVariables * i + j]; " << endl 
-	  << "      Double_t p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl 
+	  << "      Int_t power = "<< prefix << "gPower["
+	  << prefix << "gNVariables * i + j]; " << endl
+	  << "      Double_t p1 = 1, p2 = 0, p3 = 0, r = 0;" << endl
 	  << "      Double_t v =  1 + 2. / ("
-	  << prefix << "gXMax[j] - " << prefix 
+	  << prefix << "gXMax[j] - " << prefix
 	  << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << endl
 	  << "      // what is the power to use!" << endl
 	  << "      switch(power) {" << endl
@@ -3348,8 +3356,8 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 	  << "        p2 = v; " << endl
 	  << "        for (i = 3; i <= power; i++) { " << endl
 	  << "          p3 = p2 * v;" << endl;
-  if (fPolyType == kLegendre) 
-    outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)" 
+  if (fPolyType == kLegendre)
+    outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
 	    << " / (i - 1);" << endl;
   if (fPolyType == kChebyshev)
     outFile << "          p3 = 2 * v * p2 - p1; " << endl;
@@ -3363,10 +3371,10 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
   // EOF
   outFile << "// EOF for " << filename << endl;
-  
-  // Close the file 
+
+  // Close the file
   outFile.close();
-  
+
   if (fIsVerbose)
     cout << "done" << endl;
 }
@@ -3376,13 +3384,13 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 void TMultiDimFit::Print(Option_t *option) const
 {
   // Print statistics etc.
-  // Options are 
+  // Options are
   //   P        Parameters
-  //   S        Statistics 
-  //   C        Coefficients 
-  //   R        Result of parameterisation 
-  //   F        Result of fit  
-  // 
+  //   S        Statistics
+  //   C        Coefficients
+  //   R        Result of parameterisation
+  //   F        Result of fit
+  //
   Int_t i = 0;
   Int_t j = 0;
 
@@ -3390,7 +3398,7 @@ void TMultiDimFit::Print(Option_t *option) const
   opt.ToLower();
 
   if (opt.Contains("p")) {
-    // Print basic parameters for this object 
+    // Print basic parameters for this object
     cout << "User parameters:" << endl
 	 << "----------------" << endl
 	 << " Variables:                    " << fNVariables << endl
@@ -3403,43 +3411,70 @@ void TMultiDimFit::Print(Option_t *option) const
 	 << " Min angle:                    " << fMinAngle << endl
 	 << " Relative Error accepted:      " << fMinRelativeError << endl
 	 << " Maximum Powers:               " << flush;
-    for (i = 0; i < fNVariables; i++) 
+    for (i = 0; i < fNVariables; i++)
       cout << " " << fMaxPowers[i] - 1 << flush;
-    cout << endl << endl 
+    cout << endl << endl
 	 << " Parameterisation will be done using " << flush;
-    if (fPolyType == kChebyshev) 
+    if (fPolyType == kChebyshev)
       cout << "Chebyshev polynomials" << endl;
-    else if (fPolyType == kLegendre) 
+    else if (fPolyType == kLegendre)
       cout << "Legendre polynomials" << endl;
     else
       cout << "Monomials" << endl;
     cout << endl;
   }
-  
+
   if (opt.Contains("s")) {
     // Print statistics for read data
     cout << "Sample statistics:" << endl
 	 << "------------------" << endl
 	 << "                 D"  << flush;
-    for (i = 0; i < fNVariables; i++) 
-      cout << " " << setw(10) << i+1 << flush; 
-    cout << endl << " Max:   " << setw(10) << setprecision(7) 
+#ifndef R__MACOSX
+    for (i = 0; i < fNVariables; i++)
+      cout << " " << setw(10) << i+1 << flush;
+    cout << endl << " Max:   " << setw(10) << setprecision(7)
 	 << fMaxQuantity << flush;
-    for (i = 0; i < fNVariables; i++) 
-      cout << " " << setw(10) << setprecision(4) 
-	   << fMaxVariables(i) << flush; 
-    cout << endl << " Min:   " << setw(10) << setprecision(7) 
+    for (i = 0; i < fNVariables; i++)
+      cout << " " << setw(10) << setprecision(4)
+	   << fMaxVariables(i) << flush;
+    cout << endl << " Min:   " << setw(10) << setprecision(7)
 	 << fMinQuantity << flush;
-    for (i = 0; i < fNVariables; i++) 
-      cout << " " << setw(10) << setprecision(4) 
-	   << fMinVariables(i) << flush; 
-    cout << endl << " Mean:  " << setw(10) << setprecision(7) 
+    for (i = 0; i < fNVariables; i++)
+      cout << " " << setw(10) << setprecision(4)
+	   << fMinVariables(i) << flush;
+    cout << endl << " Mean:  " << setw(10) << setprecision(7)
 	 << fMeanQuantity << flush;
-    for (i = 0; i < fNVariables; i++) 
-      cout << " " << setw(10) << setprecision(4) 
-	   << fMeanVariables(i) << flush; 
+    for (i = 0; i < fNVariables; i++)
+      cout << " " << setw(10) << setprecision(4)
+	   << fMeanVariables(i) << flush;
     cout << endl << " Function Sum Squares:         " << fSumSqQuantity
-	 << endl << endl; 
+	 << endl << endl;
+#else
+    for (i = 0; i < fNVariables; i++) {
+      fprintf(stdout," %d10",i+1);
+      fflush(stdout);
+    }
+    fprintf(stdout,"\n Max:   %g10.7",fMaxQuantity);
+    fflush(stdout);
+    for (i = 0; i < fNVariables; i++) {
+      fprintf(stdout," %g10.4",fMaxVariables(i));
+      fflush(stdout);
+    }
+    fprintf(stdout,"\n Min:   %g10.7",fMinQuantity);
+    fflush(stdout);
+    for (i = 0; i < fNVariables; i++) {
+      fprintf(stdout," %g10.4",fMinVariables(i));
+      fflush(stdout);
+    }
+    fprintf(stdout,"\n Mean:  %g10.7",fMeanQuantity);
+    fflush(stdout);
+    for (i = 0; i < fNVariables; i++) {
+      fprintf(stdout," %g10.4",fMeanVariables(i));
+      fflush(stdout);
+    }
+    fprintf(stdout,"\n Function Sum Squares:         %g10.4\n\n",
+	    fSumSqQuantity);
+#endif
   }
 
   if (opt.Contains("r")) {
@@ -3447,22 +3482,22 @@ void TMultiDimFit::Print(Option_t *option) const
 	 << "----------------------------" << endl
 	 << " Total reduction of square residuals    "
 	 << fSumSqResidual << endl
-	 << " Relative precision obtained:           " 
+	 << " Relative precision obtained:           "
 	 << fPrecision   << endl
-	 << " Error obtained:                        " 
+	 << " Error obtained:                        "
 	 << fError << endl
-	 << " Multiple correlation coefficient:      " 
+	 << " Multiple correlation coefficient:      "
 	 << fCorrelationCoeff   << endl
-	 << " Reduced Chi square over sample:        " 
+	 << " Reduced Chi square over sample:        "
 	 << fChi2 / (fSampleSize - fNCoefficients) << endl
-	 << " Maximum residual value:                " 
+	 << " Maximum residual value:                "
 	 << fMaxResidual << endl
-	 << " Minimum residual value:                " 
+	 << " Minimum residual value:                "
 	 << fMinResidual << endl
-	 << " Estimated root mean square:            " 
+	 << " Estimated root mean square:            "
 	 << fRMS << endl
 	 << " Maximum powers used:                   " << flush;
-    for (j = 0; j < fNVariables; j++) 
+    for (j = 0; j < fNVariables; j++)
       cout << fMaxPowersFinal[j] << " " << flush;
     cout << endl
 	 << " Function codes of candidate functions." << endl
@@ -3470,7 +3505,7 @@ void TMultiDimFit::Print(Option_t *option) const
 	 << "  2: too little contribution,"
 	 << "  3: accepted." << flush;
     for (i = 0; i < fMaxFunctions; i++) {
-      if (i % 60 == 0) 
+      if (i % 60 == 0)
 	cout << endl << " " << flush;
       else if (i % 10 == 0)
 	cout << " " << flush;
@@ -3478,13 +3513,13 @@ void TMultiDimFit::Print(Option_t *option) const
     }
     cout << endl << " Loop over candidates stopped because " << flush;
     switch(fParameterisationCode){
-    case PARAM_MAXSTUDY: 
+    case PARAM_MAXSTUDY:
       cout << "max allowed studies reached" << endl; break;
-    case PARAM_SEVERAL: 
+    case PARAM_SEVERAL:
       cout << "all candidates considered several times" << endl; break;
     case PARAM_RELERR:
       cout << "wanted relative error obtained" << endl; break;
-    case PARAM_MAXTERMS: 
+    case PARAM_MAXTERMS:
       cout << "max number of terms reached" << endl; break;
     default:
       cout << "some unknown reason" << endl;
@@ -3492,19 +3527,19 @@ void TMultiDimFit::Print(Option_t *option) const
     }
     cout << endl;
   }
-  
+
   if (opt.Contains("f")) {
     cout << "Results of Fit:" << endl
 	 << "---------------" << endl
-	 << " Test sample size:                      " 
+	 << " Test sample size:                      "
 	 << fTestSampleSize << endl
-	 << " Multiple correlation coefficient:      " 
+	 << " Multiple correlation coefficient:      "
 	 << fTestCorrelationCoeff << endl
-	 << " Relative precision obtained:           " 
+	 << " Relative precision obtained:           "
 	 << fTestPrecision   << endl
 	 << " Error obtained:                        "
 	 << fTestError << endl
-	 << " Reduced Chi square over sample:        " 
+	 << " Reduced Chi square over sample:        "
 	 << fChi2 / (fSampleSize - fNCoefficients) << endl
 	 << endl;
     if (fFitter) {
@@ -3512,19 +3547,29 @@ void TMultiDimFit::Print(Option_t *option) const
       cout << endl;
     }
   }
-  
+
   if (opt.Contains("c")){
     cout << "Coefficients:" << endl
 	 << "-------------" << endl
 	 << "   #         Value        Error   Powers" << endl
 	 << " ---------------------------------------" << endl;
     for (i = 0; i < fNCoefficients; i++) {
-      cout << " " << setw(3) << i << "  " 
-	   << setw(12) << fCoefficients(i) << "  " 
+#ifndef R__MACOSX
+      cout << " " << setw(3) << i << "  "
+	   << setw(12) << fCoefficients(i) << "  "
 	   << setw(12) << fCoefficientsRMS(i) << "  " << flush;
-      for (j = 0; j < fNVariables; j++) 
-	cout << " " << setw(3) 
-	     << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << flush;	
+      for (j = 0; j < fNVariables; j++)
+	cout << " " << setw(3)
+	     << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << flush;
+#else
+      fprintf(stdout," %d3 %g12.4 %g12.4 ",
+              i,fCoefficients(i),fCoefficientsRMS(i));
+      fflush(stdout);
+      for (j = 0; j < fNVariables; j++) {
+        fprintf(stdout," %d3",fPowers[fPowerIndex[i] * fNVariables + j] - 1);
+        fflush(stdout);
+      }
+#endif
       cout << endl;
     }
     cout << endl;
@@ -3533,61 +3578,61 @@ void TMultiDimFit::Print(Option_t *option) const
 
 
 //____________________________________________________________________
-Bool_t TMultiDimFit::Select(const Int_t *iv) 
+Bool_t TMultiDimFit::Select(const Int_t *iv)
 {
   // Selection method. User can override this method for specialized
   // selection of acceptable functions in fit. Default is to select
   // all. This message is sent during the build-up of the function
   // candidates table once for each set of powers in
   // variables. Notice, that the argument array contains the powers
-  // PLUS ONE. For example, to De select the function 
-  //     f = x1^2 * x2^4 * x3^5, 
-  // this method should return kFALSE if given the argument 
+  // PLUS ONE. For example, to De select the function
+  //     f = x1^2 * x2^4 * x3^5,
+  // this method should return kFALSE if given the argument
   //     { 3, 4, 6 }
   return kTRUE;
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetMaxAngle(Double_t ang) 
+void TMultiDimFit::SetMaxAngle(Double_t ang)
 {
   // Set the max angle (in degrees) between the initial data vector to
   // be fitted, and the new candidate function to be included in the
   // fit.  By default it is 0, which automatically chooses another
-  // selection criteria. See also 
+  // selection criteria. See also
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   if (ang >= 90 || ang < 0) {
-    Warning("SetMaxAngle", "angle must be in [0,90)");    
+    Warning("SetMaxAngle", "angle must be in [0,90)");
     return;
   }
-  
+
   fMaxAngle = ang;
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetMinAngle(Double_t ang) 
+void TMultiDimFit::SetMinAngle(Double_t ang)
 {
   // Set the min angle (in degrees) between a new candidate function
   // and the subspace spanned by the previously accepted
-  // functions. See also 
+  // functions. See also
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   if (ang > 90 || ang <= 0) {
     Warning("SetMinAngle", "angle must be in [0,90)");
     return;
   }
-  
+
   fMinAngle = ang;
-  
+
 }
 
 
 //____________________________________________________________________
-void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms) 
+void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
 {
-  // Define a user function. The input array must be of the form 
+  // Define a user function. The input array must be of the form
   // (p11, ..., p1N, ... ,pL1, ..., pLN)
   // Where N is the dimension of the data sample, L is the number of
-  // terms (given in terms) and the first number, labels the term, the 
-  // second the variable.  More information is given in the 
+  // terms (given in terms) and the first number, labels the term, the
+  // second the variable.  More information is given in the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   fIsUserFunction = kTRUE;
   fMaxFunctions   = terms;
@@ -3596,83 +3641,83 @@ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
   fPowers         = new Int_t[fMaxFunctions * fNVariables];
   Int_t i, j;
   for (i = 0; i < fMaxFunctions; i++)
-    for(j = 0; j < fNVariables; j++) 
+    for(j = 0; j < fNVariables; j++)
       fPowers[i * fNVariables + j] = powers[i * fNVariables + j]  + 1;
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetPowerLimit(Double_t limit) 
+void TMultiDimFit::SetPowerLimit(Double_t limit)
 {
   // Set the user parameter for the function selection. The bigger the
   // limit, the more functions are used. The meaning of this variable
-  // is defined in the 
+  // is defined in the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   fPowerLimit = limit;
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetMaxPowers(const Int_t* powers) 
+void TMultiDimFit::SetMaxPowers(const Int_t* powers)
 {
   // Set the maximum power to be considered in the fit for each
-  // variable. See also 
+  // variable. See also
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   if (!powers)
     return;
 
-  for (Int_t i = 0; i < fNVariables; i++) 
+  for (Int_t i = 0; i < fNVariables; i++)
     fMaxPowers[i] = powers[i]+1;
 }
 
 //____________________________________________________________________
-void TMultiDimFit::SetMinRelativeError(Double_t error) 
+void TMultiDimFit::SetMinRelativeError(Double_t error)
 {
   // Set the acceptable relative error for when sum of square
   // residuals is considered minimized. For a full account, refer to
-  // the 
+  // the
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
   fMinRelativeError = error;
 }
 
 
 //____________________________________________________________________
-Bool_t TMultiDimFit::TestFunction(Double_t squareResidual, 
-				  Double_t dResidur) 
+Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
+				  Double_t dResidur)
 {
   // PRIVATE METHOD:
   // Test whether the currently considered function contributes to the
-  // fit. See also 
+  // fit. See also
   // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
 
   if (fNCoefficients != 0) {
     // Now for the second test:
     if (fMaxAngle == 0) {
-      // If the user hasn't supplied a max angle do the test as, 
-      if (dResidur < 
+      // If the user hasn't supplied a max angle do the test as,
+      if (dResidur <
 	  squareResidual / (fMaxTerms - fNCoefficients + 1 + 1E-10)) {
 	return kFALSE;
       }
     }
     else {
-      // If the user has provided a max angle, test if the calculated 
-      // angle is less then the max angle. 
+      // If the user has provided a max angle, test if the calculated
+      // angle is less then the max angle.
       if (TMath::Sqrt(dResidur/fSumSqAvgQuantity) <
-	  TMath::Cos(fMaxAngle*DEGRAD)) { 
+	  TMath::Cos(fMaxAngle*DEGRAD)) {
 	return kFALSE;
       }
     }
   }
-  // If we get here, the function is OK 
+  // If we get here, the function is OK
   return kTRUE;
 }
 
 
 //____________________________________________________________________
-void mdfHelper(int& npar, double* divs, double& chi2, 
-	       double* coeffs, int flag) 
+void mdfHelper(int& npar, double* divs, double& chi2,
+	       double* coeffs, int flag)
 {
-  // Helper function for doing the minimisation of Chi2 using Minuit 
+  // Helper function for doing the minimisation of Chi2 using Minuit
 
-  // Get pointer  to current TMultiDimFit object. 
+  // Get pointer  to current TMultiDimFit object.
   TMultiDimFit* mdf = TMultiDimFit::Instance();
   chi2     = mdf->MakeChi2(coeffs);
 }

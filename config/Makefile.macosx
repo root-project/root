@@ -13,28 +13,39 @@ endif
 # Compiler:
 CXX           = c++
 CC            = cc
-CXXFLAGS      = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+CXXFLAGS      = -pipe -W -Wall -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+CINTCXXFLAGS  = -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__REGEXP $(EXTRA_CXXFLAGS) -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
-CINTCFLAGS    = -pipe -W -Wall -fPIC -fsigned-char -fno-common -dynamic \
+CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = c++
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -dylib -r -nostartfiles -Wl,-x
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS) -Xlinker -bind_at_load
+SOFLAGS       = -dynamiclib -undefined suppress -nodefaultlibs -install_name
 SOEXT         = dylib
 
 # System libraries:
-SYSLIBS       = -lm
+SYSLIBS       = -lm -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -ldl
 
+# Fortran:
+F77           = g77
+F77LIBS       = -lg2c
+
 # Override default in Makefile.config
-INSTALL        := cp -pR
-INSTALLDATA    := cp -pR
+INSTALL      := cp -pPR
+INSTALLDATA  := cp -pPR
+
+# Extras
+CORELIBDEP    = $(ROOTSYS)/lib/macosx-fpsave.o
+CORELIBEXTRA  = $(ROOTSYS)/lib/macosx-fpsave.o
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -lXmu -lXext -lX11
+X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11

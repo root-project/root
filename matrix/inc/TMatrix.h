@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.4 2000/12/13 15:13:52 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.5 2001/04/11 14:24:16 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -178,7 +178,7 @@ void VerifyElementValue(const TMatrix &m, Real_t val);
 void VerifyMatrixIdentity(const TMatrix &m1, const TMatrix &m2);
 
 
-#ifndef R__HPUX
+#if !defined(R__HPUX) && !defined(R__MACOSX)
 inline Bool_t TMatrix::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
 #endif
@@ -190,7 +190,7 @@ inline Bool_t TMatrix::IsValid() const
 
 //----- inlines ----------------------------------------------------------------
 
-#ifndef R__HPUX
+#if !defined(R__HPUX) && !defined(R__MACOSX)
 
 #ifndef __CINT__
 
