@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjectTable.cxx,v 1.2 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -110,10 +110,26 @@ TObjectTable::~TObjectTable()
 }
 
 //______________________________________________________________________________
-void TObjectTable::Print(Option_t *) const
+void TObjectTable::Print(Option_t *option) const
 {
    // Print the object table.
+   // if option ="all" prints the list of all objects with the format
+   //  object number, pointer, class name, object name
+   
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("all")) {
+      TObject *obj;
+      int i,num=0;
+      for (i=0;i<fSize;i++) {
+         if (!fTable[i]) continue;
+         num++;
+         obj = fTable[i];
+         printf("obj[%5d] at %x %s : %s\n",num,obj,obj->ClassName(),obj->GetName());
+      }
+   }
 
+   //print the number of instances per class
    InstanceStatistics();
 }
 
