@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.6 2000/10/17 12:34:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.7 2001/11/12 14:17:02 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -241,7 +241,7 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    TGCompositeFrame(p, w, h, options, back)
 {
    // Create a list view container. This is the (large) frame that contains
-   // all the list items. It will be show through a TGViewPort (which is
+   // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas derived TGListView).
 
    fMsgWindow  = p;
