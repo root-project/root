@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.6 2002/11/15 15:48:42 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.7 2002/11/15 17:53:14 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -164,7 +164,9 @@ class TVirtualMC : public TNamed {
         // tracking particle 
         // dynamic properties
     virtual void     TrackPosition(TLorentzVector& position) const =0;
+    virtual void     TrackPosition(Double_t &x, Double_t &y, Double_t &z) const =0;
     virtual void     TrackMomentum(TLorentzVector& momentum) const =0;
+    virtual void     TrackMomentum(Double_t &px, Double_t &py, Double_t &pz, Double_t &etot) const =0;
     virtual Double_t TrackStep() const =0;
     virtual Double_t TrackLength() const =0; 
     virtual Double_t TrackTime() const =0;
