@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.27 2004/09/24 15:55:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.28 2004/10/28 11:01:42 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1308,6 +1308,7 @@ Bool_t TGTextEntry::HandleCrossing(Event_t *event)
    // only turn off/on cursor if widget does not have the focus
    if (gVirtualX->GetInputFocus() != fId) {
       if (event->fType == kEnterNotify) {
+         SetFocus();
          fCursorOn = kTRUE;
          if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
          fCurBlink->Reset();
