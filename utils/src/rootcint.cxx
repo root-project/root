@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.23 2000/12/12 12:19:18 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.25 2000/12/18 09:15:56 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1743,6 +1743,7 @@ int main(int argc, char **argv)
    fprintf(fp, "#include \"TBuffer.h\"\n");
    fprintf(fp, "#include \"TMemberInspector.h\"\n");
    fprintf(fp, "#include \"TError.h\"\n\n");
+   fprintf(fp, "#define G__ROOT\n\n");
 
    // Loop over all command line arguments and write include statements.
    // Skip options and any LinkDef.h.
