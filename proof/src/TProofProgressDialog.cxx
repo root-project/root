@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.2 2003/04/04 06:38:28 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.cxx,v 1.3 2003/04/04 10:20:44 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -58,7 +58,7 @@ TProofProgressDialog::TProofProgressDialog(TVirtualProof *proof,
                      new TGLayoutHints(kLHintsNormal, 10, 10, 20, 0));
    fDialog->AddFrame(new TGLabel(fDialog, selector),
                      new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
-   sprintf(buf, "%d files, number of events %ld, starting event %ld",
+   sprintf(buf, "%d files, number of events %lld, starting event %lld",
            fFiles, fEntries, fFirst);
    fFilesEvents = new TGLabel(fDialog, buf);
    fDialog->AddFrame(fFilesEvents, new TGLayoutHints(kLHintsNormal, 10, 10, 5, 0));
@@ -172,7 +172,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    char buf[256];
    if (fEntries == -1) {
       fEntries = total;
-      sprintf(buf, "%d files, number of events %ld, starting event %ld",
+      sprintf(buf, "%d files, number of events %lld, starting event %lld",
               fFiles, fEntries, fFirst);
       fFilesEvents->SetText(buf);
    }
@@ -189,7 +189,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 
    if (processed == total) {
       fProcessed->SetText("Processed:");
-      sprintf(buf, "%ld events in %.1f sec", total, Long_t(tdiff)/1000.);
+      sprintf(buf, "%lld events in %.1f sec", total, Long_t(tdiff)/1000.);
       fTotal->SetText(buf);
 
       if (fProof)
@@ -199,7 +199,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
       if (!fgKeep)
          DoClose();
    } else {
-      sprintf(buf, "%.1f sec (%ld events of %ld processed)", eta, processed,
+      sprintf(buf, "%.1f sec (%lld events of %lld processed)", eta, processed,
               total);
       fTotal->SetText(buf);
       sprintf(buf, "%.1f events/sec", Float_t(processed)/Long_t(tdiff)*1000.);
