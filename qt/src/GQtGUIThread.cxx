@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUIThread.cxx,v 1.5 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUIThread.cxx,v 1.6 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -266,6 +266,8 @@ Bool_t  TQtThread::CreatePictureFromData(Drawable_t id, char **data,
   VOIDACTION8(QueryPointer,Window_t, id, Window_t &,rootw, Window_t &,childw,
                                      Int_t&,root_x, Int_t&,root_y, Int_t&,win_x,
                                     Int_t&,win_y, UInt_t&,mask);
+//______________________________________________________________________________
+  VOIDACTION2(SetBackground,GContext_t,gc, ULong_t,background);
 //______________________________________________________________________________
   VOIDACTION2(SetForeground,GContext_t,gc, ULong_t,foreground);
 //______________________________________________________________________________

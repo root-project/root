@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.12 2005/03/04 07:11:54 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.13 2005/03/07 07:44:12 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -160,15 +161,22 @@ class TQWidgetCollection {
    //______________________________________________________________________________
    inline Int_t RemoveByPointer(QPaintDevice *device)
    {
-       Int_t id = TGQt::iwid(device);
-       fWidgetCollection.take(id);
-       fFreeWindowsIdStack.push(id);
-       if (fIDMax == id) fIDMax--;
-       return id;
+      // method to provide the ROOT "cast" from (QPaintDevice*) to ROOT windows "id"
+      Int_t intWid = kNone;             // TGQt::iwid(device);
+      if ((ULong_t) device != (ULong_t) -1) {
+          intWid = find( device);
+          if ( intWid != -1 && fWidgetCollection.take(intWid)) {
+             fFreeWindowsIdStack.push(intWid);
+             if (fIDMax == intWid) fIDMax--;
+          } else {
+             intWid = kNone;
+          }
+      }
+      return intWid;
    }
 
    //______________________________________________________________________________
-   inline void  DeleteById(Int_t Id)
+   inline const QPaintDevice *DeleteById(Int_t Id)
    {
      QPaintDevice *device = fWidgetCollection[Id];
      if (device) {
@@ -176,6 +184,7 @@ class TQWidgetCollection {
         fFreeWindowsIdStack.push(Id);
         if (fIDMax == Id) fIDMax--;
      }
+     return device;
    }
    //______________________________________________________________________________
    inline uint count() const { return fWidgetCollection.count();}
@@ -211,11 +220,8 @@ Int_t         TGQt::iwid(QPaintDevice *wid)
    if ((ULong_t) wid == (ULong_t) -1) intWid = -1;
    else {
       intWid = fWidgetArray->find(wid);
-      //assert(intWid != -1);
-      if (intWid == -1) {
-         //printf("error intWid = %d\n",intWid);
-         intWid = Int_t(wid);
-      }
+      assert(intWid != -1);
+      // if (intWid == -1) intWid = Int_t(wid);
    }
    return intWid;
 }
@@ -605,7 +611,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.91 2005/03/06 16:45:46 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.92 2005/03/25 18:30:55 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -727,10 +733,11 @@ Int_t  TGQt::RegisterWid(QPaintDevice *wid)
    return id;
 }
 //______________________________________________________________________________
-void  TGQt::UnRegisterWid(QPaintDevice *wid)
+Int_t  TGQt::UnRegisterWid(QPaintDevice *wid)
 {
    // unregister QWidget to the TCanvas
-   fWidgetArray->RemoveByPointer(wid);
+   // return  = Root registration Id or zero if the wid was not registered
+   return fWidgetArray->RemoveByPointer(wid);
 }
 //______________________________________________________________________________
 Int_t TGQt::InitWindow(ULong_t window)
@@ -883,8 +890,11 @@ void  TGQt::DeleteSelectedObj()
         wrapper->hide();
         DestroyWindow(rootwid(wrapper) );
      } else {
-        ((QWidget *)fSelectedWindow)->hide();
-        ((QWidget *)fSelectedWindow)->close(true);
+        // check whether we are still registered
+        if(UnRegisterWid(fSelectedWindow) != (Int_t) kNone) {
+           ((QWidget *)fSelectedWindow)->hide();
+           ((QWidget *)fSelectedWindow)->close(true);
+        }
      }
   } else {
      UnRegisterWid(fSelectedWindow);

@@ -1,5 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.8 2005/03/07 07:44:12 brun Exp $
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.137 2005/03/23 22:08:44 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.9 2005/03/24 07:16:02 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -10,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 #include <assert.h>
 #include "TGQt.h"
@@ -99,6 +99,7 @@ public:
    void              DumpMask() const;
    bool              HasValid(EContext bit) const { return TESTBIT (fMask , bit); }
    Mask_t            Mask() const { return fMask; }
+   void              SetBackground(ULong_t background);
    void              SetMask(Mask_t mask){ fMask = mask;}
    void              SetForeground(ULong_t foreground);
    GContext_t        gc() const { return (GContext_t)this; }
@@ -313,9 +314,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
 	 // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
    }
    if ((mask & kGCBackground)) {
-         SETBIT(fMask,kBrush);
-         setPaletteBackgroundColor(QtColor(gval.fBackground));
-        // setEraseColor(QtColor(gval.fForeground));
+       SetBackground(gval.fBackground);
         // fprintf(stderr," kGCBackgroun %s \n", (const char*)QtColor(gval.fBackground).name());
    }
    if ((mask & kGCLineWidth)) {
@@ -421,6 +420,14 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       fClipMask = (QBitmap *) gval.fClipMask;
    }
    return *this;
+}
+//______________________________________________________________________________
+void   QtGContext::SetBackground(ULong_t background)
+{
+    // reset the context background color
+    SETBIT(fMask,kBrush);
+    setPaletteBackgroundColor(QtColor(background));
+    setEraseColor(QtColor(background));
 }
 //______________________________________________________________________________
 void   QtGContext::SetForeground(ULong_t foreground)
@@ -2188,6 +2195,16 @@ void  TGQt::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
 
    mask = 0;
 }
+//______________________________________________________________________________
+void         TGQt::SetBackground(GContext_t gc, ULong_t background)
+{
+   // Set foreground color in graphics context (shortcut for ChangeGC with
+   // only foreground mask set).
+   // The interface is confusing . This function MUST be not here (VF 07/07/2003)
+   
+   qtcontext(gc).SetBackground(background);
+}
+
 //______________________________________________________________________________
 void         TGQt::SetForeground(GContext_t gc, ULong_t foreground)
 {

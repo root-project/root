@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.5 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.6 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -244,6 +244,7 @@ public:
    virtual void         QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
                                      Int_t &root_x, Int_t &root_y, Int_t &win_x,
                                      Int_t &win_y, UInt_t &mask);
+   virtual void         SetBackground(GContext_t gc, ULong_t background);
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);

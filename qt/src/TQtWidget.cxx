@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.51 2005/03/23 22:08:44 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.52 2005/03/25 18:30:55 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -159,9 +159,16 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
 TQtWidget::~TQtWidget()
 {
   qApp->lock();
-  fCanvas =0;
-  TGQt::UnRegisterWid(this);
+  TCanvas *savCanvas = fCanvas; fCanvas = 0;
   qApp->unlock();
+
+  TGQt::UnRegisterWid(this);
+  if (fEmbedded) {
+      TGQt::UnRegisterWid(this); // to block the double deleting from the 
+                                 // TQt::Delete
+      if (savCanvas  && savCanvas->GetCanvasID()) 
+             delete savCanvas;
+   }
 }
 
 //_____________________________________________________________________________

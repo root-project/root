@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.4 2005/03/03 00:56:18 fine Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.interface.h,v 1.5 2005/03/25 18:30:54 fine Exp $
 // Author: Valeri Fine   28/07/2004
 
 //
@@ -85,7 +85,8 @@ public:
    virtual void      SetTextMagnitude(Float_t mgn);
    virtual void      SetTextSize(Float_t textsize);
    virtual void      UpdateWindow(Int_t mode);
-   virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
+   virtual void      Warp(Int_t ix, Int_t iy){ Warp(ix,iy,0); }
+   virtual void      Warp(Int_t ix, Int_t iy, Window_t id);
    virtual Int_t     WriteGIF(char *name);
    virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
@@ -212,6 +213,7 @@ public:
    virtual void         QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
                                      Int_t &root_x, Int_t &root_y, Int_t &win_x,
                                      Int_t &win_y, UInt_t &mask);
+   virtual void         SetBackground(GContext_t gc, ULong_t background);
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
