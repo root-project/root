@@ -118,10 +118,14 @@ N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
 
+N: Ivana Hrivnacova
+E: Ivana.Hrivnacova@cern.ch
+D: VirtualMC design and implementation + corresponding web pages
+
 N: Jacek M. Holeczek
 E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
-D: generator, many comments on the Users Guide
+D: generator, many comments on the Users Guide, HowtoMC
 
 N: Christian Holm Christensen
 E: cholm@nbi.dk
