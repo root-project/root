@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.14 2001/01/27 20:43:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.15 2001/01/28 13:55:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -206,7 +206,7 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
 //______________________________________________________________________________
 TStreamerBase::~TStreamerBase()
 {
-   // TStreamerBase dtor.
+   // TStreamerBase dtor
 }
 
 //______________________________________________________________________________
@@ -228,7 +228,7 @@ void TStreamerBase::Init(TObject *)
 //______________________________________________________________________________
 const char *TStreamerBase::GetInclude() const
 {
-   if (fBaseClass->GetClassInfo()) sprintf(includeName,"\"%s\"",fBaseClass->GetDeclFileName());
+   if (fBaseClass && fBaseClass->GetClassInfo()) sprintf(includeName,"\"%s\"",fBaseClass->GetDeclFileName());
    else                            sprintf(includeName,"\"%s.h\"",GetName());
    return includeName;
 }
