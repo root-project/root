@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.11 2003/07/10 09:55:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.12 2003/07/10 10:53:40 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -180,6 +180,9 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
          fPositionX[i] = hin->GetBinCenter(bin);
          fPositionY[i] = hin->GetBinContent(bin);
       }
+      delete [] source;
+      delete [] dest;
+      
       if (strstr(option, "goff"))
          return npeaks;
       TPolyMarker * pm = (TPolyMarker*)hin->GetListOfFunctions()->FindObject("TPolyMarker");
@@ -1555,59 +1558,87 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
 }
 
 
-//______________________________________________________________________________
-const char *TSpectrum::Smooth1(float *spectrum, int size, int points) 
+//_____________________________________________________________________________
+const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
 {
-   
 /////////////////////////////////////////////////////////////////////////////
-/*	ONE-DIMENSIONAL SPECTRUM SMOOTHING FUNCTION                        */ 
-/*                                              			   */ 
-/*	This function calculates smoothed spectrum from source spectrum.   */ 
-/*	The result is placed in the vector pointed by spectrum pointer.    */ 
-/*									   */ 
-/*	Function parameters:						   */ 
-/*	spectrum-pointer to the vector of source spectrum		   */ 
-/*	size-length of spectrum                         		   */ 
-/*	points-width of smoothing window                		   */ 
-/*									   */ 
+/*	ONE-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION                 */
+/*                                              			   */
+/*	This function calculates smoothed spectrum from source spectrum    */
+/*      based on Markov chain method.                                      */
+/*	The result is placed in the array pointed by source pointer.       */
+/*									   */
+/*	Function parameters:						   */
+/*	source-pointer to the array of source spectrum   		   */
+/*	size length of source array					   */
+/*	aver_window-width of averaging smoothing window                	   */
+/*									   */
 /////////////////////////////////////////////////////////////////////////////
-   int i, j, k;
-   double a, b, c, d;
-   float coef[7][8] = { 
-          {2, 1, 0, 0, 0, 0, 0, 0}, 
-       {17, 12, -3, 0, 0, 0, 0, 0}, 
-       {7, 6, 3, -2, 0, 0, 0, 0}, 
-       {59, 54, 39, 14, -21, 0, 0, 0}, 
-       {89, 84, 69, 44, 9, -36, 0, 0}, 
-       {25, 24, 21, 16, 9, 0, -11, 0}, 
-       {167, 162, 147, 122, 87, 42, -13, -78} 
-   };
-   float men[7] = { 4, 35, 21, 231, 429, 143, 1105 };
-   if (size <= 0)
-      return "Wrong Parameters";
-   if (points < 3 || points > 15 || points % 2 == 0)
-      return ("Incorrect Number of Smoothing Points");
-   float *working_space = new float[size];
-   k = points / 2 - 1;
-   b = men[k];
-   for (i = 0; i < size; i++) {
-      a = 0;
-      for (j = i - points / 2; j <= i + points / 2; j++) {
-         if (j >= 0 && j < size) {
-            d = spectrum[j];
-            c = coef[k][TMath::Abs(i - j)];
-            a += c * d;
-         }
+   int xmin, xmax, i, l;
+   float a, b, maxch;
+   float nom, nip, nim, sp, sm, plocha = 0;
+   if(aver_window <= 0)
+      return "Averaging Window must be positive";   
+   float *working_space = new float[size];      
+   xmin = 0,xmax = size - 1;
+   for(i = 0, maxch = 0; i < size; i++){
+      working_space[i]=0;
+      if(maxch < source[i])
+         maxch = source[i];
+         
+      plocha += source[i];
+   }
+   if(maxch == 0)
+      return 0 ;
+      
+   nom = 1;
+   working_space[xmin] = 1;
+   for(i = xmin; i < xmax; i++){
+      nip = source[i] / maxch;
+      nim = source[i + 1] / maxch;
+      sp = 0,sm = 0;
+      for(l = 1; l <= aver_window; l++){
+         if((i + l) > xmax)
+            a = source[xmax] / maxch;
+            
+         else
+            a = source[i + l] / maxch;
+         b = a - nip;
+         if(a + nip <= 0)
+            a = 1;
+            
+         else
+       	    a = TMath::Sqrt(a + nip);            
+	 b = b / a;
+	 b = TMath::Exp(b);                        	                                                             
+       	 sp = sp + b;
+         if((i - l + 1) < xmin)
+            a = source[xmin] / maxch;
+            
+         else
+            a = source[i - l + 1] / maxch;
+         b = a - nim;
+         if(a + nim <= 0)
+            a = 1;
+            
+         else
+       	    a = TMath::Sqrt(a + nim);            
+	 b = b / a;
+	 b = TMath::Exp(b);                        	                                                                      
+       	 sm = sm + b;
       }
-      working_space[i] = a / b;
+      a = sp / sm;
+      a = working_space[i + 1] = working_space[i] * a;
+      nom = nom + a;
    }
-   for (i = 0; i < size; i++) {
-      spectrum[i] = working_space[i];
+   for(i = xmin; i <= xmax; i++){
+      working_space[i] = working_space[i] / nom;
    }
+   for(i = 0; i < size; i++)
+      source[i] = working_space[i] * plocha;
    delete[]working_space;
-   return 0;
+   return 0;      
 }
-
 
 //_______________________________________________________________________________
 const char *TSpectrum::Deconvolution1(float *source, const float *resp,

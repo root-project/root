@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum2.h,v 1.1 2003/04/14 12:56:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum2.h,v 1.2 2003/05/08 09:12:51 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -214,8 +214,7 @@ public:
    Float_t    *GetPositionX() const {return fPositionX;}
    Float_t    *GetPositionY() const {return fPositionY;}
    int         PeakEvaluate(const double *temp,int size,int xmax,double xmin,bool markov);
-   virtual Int_t       Search(TH1 *hist, Double_t sigma, Option_t *option="goff");
-   Int_t       Search2(float **source,int sizex,int sizey,double sigma);
+   virtual Int_t Search(TH1 *hist, Double_t sigma, Option_t *option="goff", Double_t threshold=0.05);
    void        SetResolution(Float_t resolution=1);
 
    //new functions April 2003
@@ -224,10 +223,13 @@ public:
    const char *Background2RectangularRidgesY(float **spectrum,int sizex,int sizey,int number_of_iterations,int direction,int filter_order);
    const char *Background2SkewRidges(float **spectrum,int sizex,int sizey,int number_of_iterations_x,int number_of_iterations_y,int direction,int filter_order);
    const char *Background2NonlinearRidges(float **spectrum,int sizex,int sizey,int number_of_iterations_x,int number_of_iterations_y,int direction,int filter_order);
-   const char *Smooth2(float **spectrum,int sizex,int sizey,int pointsx,int pointsy);
-   void DecFourier2(double *working_space,int num,int iter,int inv);
+   const char *Smooth2Markov(float **source, int sizex, int sizey, int aver_window);
+   void        DecFourier2(double *working_space,int num,int iter,int inv);
    const char *Deconvolution2HighResolution(float** source,const float** resp,int sizex,int sizey,int number_of_iterations,int number_of_repetitions,double boost);
-   Int_t Search2General(float **source,int sizex,int sizey,double sigma,double threshold,bool markov,int aver_window);
+   Int_t       Search2HighRes(float **source,float **dest, int sizex, int sizey,
+                              double sigma, double threshold,
+                              bool background_remove,int decon_iterations,
+                              bool markov, int aver_window);
    double      Lls(double a);
 
       //auxiliary functions for 2. parameter fit functions

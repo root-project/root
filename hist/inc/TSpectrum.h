@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.7 2003/07/10 09:55:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.h,v 1.8 2003/07/10 10:53:39 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /*************************************************************************
@@ -168,7 +168,7 @@ public:
 
    //new functions April 2003
    const char *Background1General(float *spectrum,int size,int number_of_iterations,int direction,int filter_order,bool compton);
-   const char *Smooth1(float *spectrum,int size,int points);
+   const char *Smooth1Markov(float *source, int size, int aver_window);
    const char *Deconvolution1HighResolution(float *source,const float *resp,int size,int number_of_iterations,int number_of_repetitions,double boost);
    const char *Deconvolution1Unfolding(float *source,const float **resp,int sizex,int sizey,int number_of_iterations);
    Int_t Search1HighRes(float *source,float *dest, int size, float sigma, double threshold,
