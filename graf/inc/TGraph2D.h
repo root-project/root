@@ -34,6 +34,7 @@
 #include "TF2.h"
 #endif
 
+class TView;
 class TDirectory;
 
 class TGraph2D : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -58,6 +59,7 @@ protected:
    Double_t    fXoffset;     //!
    Double_t    fYoffset;     //!Parameters used to normalize fX and fY
    Double_t    fScaleFactor; //!
+   Double_t   *fGridLevels;  //!Grid levels along Z axis
    Double_t    fMargin;      // Extra space (in %) around interpolated area for 2D histo
    Double_t    fMinimum;     // Minimum value for plotting along z
    Double_t    fMaximum;     // Maximum value for plotting along z
@@ -65,6 +67,7 @@ protected:
    Double_t   *fDist;        //!Array used to order mass points by distance
    Int_t       fMaxIter;     //!Maximum number of iterations to find Delaunay triangles
    Int_t       fTriedSize;   //!Real size of the fxTried arrays
+   Int_t       fNbLevels;    //|Number of Grid levels
    Int_t      *fPTried;      //!
    Int_t      *fNTried;      //!Delaunay triangles storage
    Int_t      *fMTried;      //!
@@ -73,19 +76,26 @@ protected:
    TList      *fFunctions;   // Pointer to list of functions (fits and user)
    TH2D       *fHistogram;   //!2D histogram of z values linearly interpolated
    TDirectory *fDirectory;   //!Pointer to directory holding this 2D graph
+   TView      *fView;        //!TView used to paint the triangles
    
    void     Build(Int_t n);
    Double_t ComputeZ(Double_t x, Double_t y);
+   void     DefineGridLevels();
    Bool_t   Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const;
    void     FileIt(Int_t P, Int_t N, Int_t M);
    void     FindAllTriangles();
    void     FindHull();
    Bool_t   InHull(Int_t E, Int_t X) const;
    Double_t InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const;
+   void     PaintOneTriangle(Int_t *T,Double_t *x, Double_t *y);
    void     PaintTriangles(Option_t *option="");
    void     Reset(Int_t level=0);
 
 public:
+    // TGraph2D status bits
+   enum {
+      kFitInit = BIT(19)
+   };
 
    TGraph2D();
    TGraph2D(Int_t n, Option_t *option="");
@@ -113,6 +123,9 @@ public:
    Double_t         GetMarginBinsContent() const {return fZout;}
    TH2D            *GetHistogram(Option_t *option="") const;
    TList           *GetListOfFunctions() const { return fFunctions; }
+   virtual Double_t GetErrorX(Int_t bin) const;
+   virtual Double_t GetErrorY(Int_t bin) const;
+   virtual Double_t GetErrorZ(Int_t bin) const;
    Int_t            GetN() const {return fNpoints;}
    Double_t        *GetX() const {return fX;}
    Double_t        *GetY() const {return fY;}

@@ -18,6 +18,8 @@
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
 #include "TView.h"
+#include "THLimitsFinder.h"
+#include "TStyle.h"
 
 ClassImp(TGraph2D)
 
@@ -68,6 +70,7 @@ ClassImp(TGraph2D)
 //            An hidden surface drawing technique is used
 //   "TRIW" : the Delaunay triangles are drawn as wire frame
 //   "P"    : draw a marker at each vertex
+//   "P0"   : draw a circle at each vertex. Each circle background is white.
 //
 // A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram. 
 //
@@ -675,6 +678,37 @@ L90:
 
 
 //______________________________________________________________________________
+void TGraph2D::DefineGridLevels()
+{
+   // Define the grid levels drawn on the triangles.
+   // The grid levels are aligned on the  Z axis' main tick marks.
+   // The function assumes that fView has been defined.
+
+   Int_t i, nbins;
+   Double_t BinLow, BinHigh, BinWidth;
+
+   // Find the main tick marks positions.
+   Double_t *rmin = fView->GetRmin();
+   Double_t *rmax = fView->GetRmax();
+   Int_t ndivz = fHistogram->GetZaxis()->GetNdivisions()%100;
+
+   if (ndivz > 0) {
+      THLimitsFinder::Optimize(rmin[2], rmax[2], ndivz,
+                               BinLow, BinHigh, nbins, BinWidth, " ");
+   } else {
+      nbins = TMath::Abs(ndivz);
+      BinLow = rmin[2];
+      BinHigh = rmax[2];
+      BinWidth = (BinHigh-BinLow)/nbins;
+   }
+   // Define the grid levels
+   fNbLevels = nbins+1;
+   fGridLevels = new Double_t[fNbLevels];
+   for (i = 0; i < fNbLevels; ++i) fGridLevels[i] = BinLow+i*BinWidth;
+}
+
+
+//______________________________________________________________________________
 Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Computes distance from point px,py to a graph
@@ -1112,6 +1146,9 @@ void TGraph2D::Build(Int_t n)
    fPTried     = 0;
    fNTried     = 0;
    fMTried     = 0;
+   fGridLevels = 0;
+   fNbLevels   = 0;
+   fView       = 0;
 
    SetMaxIter();
 
@@ -1427,7 +1464,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    }
 
 //*-*- Is a Fit range specified?
-///Int_t gxfirst, gxlast;
+   Int_t gxfirst, gxlast;
 ///if (fitOption.Range) {
 ///   f2->GetRange(xmin, ymin, xmax, ymax);
 ///   gxfirst = fNpoints +1;
@@ -1438,8 +1475,8 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 ///   }
 ///} else {
 ///   f2->SetRange(xmin, ymin, xmax, ymax);
-///   gxfirst = 0;
-///   gxlast  = fNpoints-1;
+      gxfirst = 0;
+      gxlast  = fNpoints-1;
 ///}
 
    // Some initialisations
@@ -1451,7 +1488,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    }
 
    // Set error criterion for chisquare
-   arglist[0] = TVirtualFitter::GetErrorDef();
+   arglist[0] = 1;
    if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {
@@ -1485,16 +1522,16 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 
    // Compute sum of squares of errors in the bin range
    Bool_t hasErrors = kFALSE;
-   Double_t sumw2=0;
-///Double_t ex, ey, sumw2=0;
-///for (i=gxfirst;i<=gxlast;i++) {
-///   ex = GetErrorX(i);
-///   ey = GetErrorY(i);
-///   if (ex > 0 || ey > 0) hasErrors = kTRUE;
-///   sumw2 += ey*ey;
-///}
+   Double_t ex, ey, ez, sumw2=0;
+   for (i=gxfirst;i<=gxlast;i++) {
+      ex = GetErrorX(i);
+      ey = GetErrorY(i);
+      ez = GetErrorZ(i);
+      if (ex > 0 || ey > 0 || ez > 0) hasErrors = kTRUE;
+      sumw2 += ez*ez;
+   }
 //*-*- Perform minimization
-///if (!InheritsFrom("TGraphErrors")) SetBit(kFitInit);
+   if (!InheritsFrom("TGraph2DErrors")) SetBit(kFitInit);
    arglist[0] = TVirtualFitter::GetMaxIterations();
    arglist[1] = sumw2*TVirtualFitter::GetPrecision();
    grFitter->ExecuteCommand("MIGRAD",arglist,2);
@@ -1552,6 +1589,36 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
       if (gPad) gPad->Modified();
    }
    return fitResult;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2D::GetErrorX(Int_t) const
+{
+   // This function is called by Graph2DFitChisquare.
+   // It always returns a negative value. Real implementation in TGraph2DErrors
+
+   return -1;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2D::GetErrorY(Int_t) const
+{
+   // This function is called by Graph2DFitChisquare.
+   // It always returns a negative value. Real implementation in TGraph2DErrors
+
+   return -1;
+}
+
+
+//______________________________________________________________________________
+Double_t TGraph2D::GetErrorZ(Int_t) const
+{
+   // This function is called by Graph2DFitChisquare.
+   // It always returns a negative value. Real implementation in TGraph2DErrors
+
+   return -1;
 }
 
 
@@ -1756,6 +1823,59 @@ void TGraph2D::Paint(Option_t *option)
    }
 }
 
+//______________________________________________________________________________
+void TGraph2D::PaintOneTriangle(Int_t *T,Double_t *x, Double_t *y)
+{
+   // Paints one triangle
+
+   Int_t P0=T[0]-1;
+   Int_t P1=T[1]-1;
+   Int_t P2=T[2]-1;
+   Double_t xl[2],yl[2];
+   Double_t Zl, R21, R20, R10;
+   Double_t X0 = x[0]  , X2 = x[0];
+   Double_t Y0 = y[0]  , Y2 = y[0];
+   Double_t Z0 = fZ[P0], Z2 = fZ[P0];
+   Int_t I0=0;
+   Int_t I1=0;
+   Int_t I2=0;
+
+   if(fZ[P1]<Z0){Z0=fZ[P1];X0=x[1];Y0=y[1];I0=1;}
+   if(fZ[P2]<Z0){Z0=fZ[P2];X0=x[2];Y0=y[2];I0=2;}
+   if(fZ[P1]>Z2){Z2=fZ[P1];X2=x[1];Y2=y[1];I2=1;}
+   if(fZ[P2]>Z2){Z2=fZ[P2];X2=x[2];Y2=y[2];I2=2;}
+
+   I1 = 3-I2-I0;
+   Double_t X1 = x[I1];
+   Double_t Y1 = y[I1];
+   Double_t Z1 = fZ[T[I1]-1];
+
+   SetLineStyle(3);
+   TAttLine::Modify();
+
+   for(Int_t i=0; i<fNbLevels; i++){
+      Zl=fGridLevels[i];
+      if(Zl >= Z0 && Zl <=Z2) {
+         R21=(Zl-Z1)/(Z2-Z1);
+         R20=(Zl-Z0)/(Z2-Z0);
+         R10=(Zl-Z0)/(Z1-Z0);
+         xl[0]=R20*(X2-X0)+X0;
+         yl[0]=R20*(Y2-Y0)+Y0;
+         if(Zl >= Z1 && Zl <=Z2) {
+            xl[1]=R21*(X2-X1)+X1;
+            yl[1]=R21*(Y2-Y1)+Y1;
+         } else {
+            xl[1]=R10*(X1-X0)+X0;
+            yl[1]=R10*(Y1-Y0)+Y0;
+         }
+         gPad->PaintPolyLine(2,xl,yl);
+      }
+   }
+///Int_t ncolors  = gStyle->GetNumberOfColors();
+///color = Int_t(0.01+(z-zmin)*scale);
+   SetLineStyle(1);
+   TAttLine::Modify();
+}
 
 //______________________________________________________________________________
 void TGraph2D::PaintTriangles(Option_t *option)
@@ -1768,6 +1888,7 @@ void TGraph2D::PaintTriangles(Option_t *option)
    TString opt = option;
    Bool_t triangles = opt.Contains("tri"); 
    Bool_t markers   = opt.Contains("p");
+   Bool_t markers0  = opt.Contains("p0");
    Bool_t wire      = opt.Contains("w");
    Bool_t same      = opt.Contains("s");
    Bool_t backbox   = opt.Contains("bb");
@@ -1792,12 +1913,12 @@ void TGraph2D::PaintTriangles(Option_t *option)
       if (!axis) fHistogram->Paint("abb");
    }
 
-   TView *view = gPad->GetView();
-   if (!view) {
+   fView = gPad->GetView();
+   if (!fView) {
       Error("PaintTriangles", "No TView in current pad");
       return;
    }
-
+   DefineGridLevels();
    // Compute minimums and maximums
    TAxis *xaxis = fHistogram->GetXaxis();
    Int_t first = xaxis->GetFirst();
@@ -1817,8 +1938,8 @@ void TGraph2D::PaintTriangles(Option_t *option)
    // the triangles from back to front. 
    if (triangles) {
       FindAllTriangles();
-      Double_t cp = TMath::Cos(view->GetLongitude()*TMath::Pi()/180.);
-      Double_t sp = TMath::Sin(view->GetLongitude()*TMath::Pi()/180.);
+      Double_t cp = TMath::Cos(fView->GetLongitude()*TMath::Pi()/180.);
+      Double_t sp = TMath::Sin(fView->GetLongitude()*TMath::Pi()/180.);
       if (fOrder) {delete [] fOrder; fOrder = 0;}
       if (fDist)  {delete [] fDist; fDist = 0;}
       fOrder = new Int_t[fNdt];
@@ -1862,19 +1983,28 @@ void TGraph2D::PaintTriangles(Option_t *option)
          if (logx) temp1[0] = TMath::Log10(temp1[0]);
          if (logy) temp1[1] = TMath::Log10(temp1[1]);
          if (logz) temp1[2] = TMath::Log10(temp1[2]);
-         view->WCtoNDC(temp1, &temp2[0]);
+         fView->WCtoNDC(temp1, &temp2[0]);
          xm[IT] = temp2[0];
          ym[IT] = temp2[1];
       }
-      SetMarkerStyle(20);
-      SetMarkerSize(0.4);
-      SetMarkerColor(0);
-      TAttMarker::Modify();
-      gPad->PaintPolyMarker(fNpoints,xm,ym);
-      SetMarkerStyle(24);
-      SetMarkerColor(1);
-      TAttMarker::Modify();
-      gPad->PaintPolyMarker(fNpoints,xm,ym);
+      if (markers0) {
+         SetMarkerStyle(20);
+         SetMarkerSize(GetMarkerSize());
+         Int_t MC = GetMarkerColor();
+         SetMarkerColor(0);
+         TAttMarker::Modify();
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
+         SetMarkerStyle(24);
+         SetMarkerColor(MC);
+         TAttMarker::Modify();
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
+      } else {
+         SetMarkerStyle(GetMarkerStyle());
+         SetMarkerSize(GetMarkerSize());
+         SetMarkerColor(GetMarkerColor());
+         TAttMarker::Modify();
+         gPad->PaintPolyMarker(fNpoints,xm,ym);
+      }
       delete [] xm;
       delete [] ym;
 
@@ -1885,6 +2015,7 @@ void TGraph2D::PaintTriangles(Option_t *option)
       TAttFill::Modify();
       SetLineColor(GetLineColor());
       TAttLine::Modify();
+      Int_t LS = GetLineStyle();
       for (IT=0; IT<fNdt; IT++) {
          T[0] = fPTried[fOrder[IT]];
          T[1] = fNTried[fOrder[IT]];
@@ -1900,26 +2031,40 @@ void TGraph2D::PaintTriangles(Option_t *option)
             if (logx) temp1[0] = TMath::Log10(temp1[0]);
             if (logy) temp1[1] = TMath::Log10(temp1[1]);
             if (logz) temp1[2] = TMath::Log10(temp1[2]);
-            view->WCtoNDC(temp1, &temp2[0]);
+            fView->WCtoNDC(temp1, &temp2[0]);
             x[t] = temp2[0];
             y[t] = temp2[1];
          }
          x[3] = x[0];
          y[3] = y[0];
-         if (!wire) gPad->PaintFillArea(3,x,y);
+         if (!wire) {
+            gPad->PaintFillArea(3,x,y);
+            PaintOneTriangle(T,x,y);
+         }
          gPad->PaintPolyLine(4,x,y);
          if (markers) {
-            SetMarkerStyle(20);
-            SetMarkerSize(0.4);
-            SetMarkerColor(0);
-            TAttMarker::Modify();
-            gPad->PaintPolyMarker(3,x,y);
-            SetMarkerStyle(24);
-            SetMarkerColor(1);
-            TAttMarker::Modify();
-            gPad->PaintPolyMarker(3,x,y);
+            if (markers0) {
+               SetMarkerStyle(20);
+               SetMarkerSize(GetMarkerSize());
+               Int_t MC = GetMarkerColor();
+               SetMarkerColor(0);
+               TAttMarker::Modify();
+               gPad->PaintPolyMarker(3,x,y);
+               SetMarkerStyle(24);
+               SetMarkerColor(MC);
+               TAttMarker::Modify();
+               gPad->PaintPolyMarker(3,x,y);
+            } else {
+               SetMarkerStyle(GetMarkerStyle());
+               SetMarkerSize(GetMarkerSize());
+               SetMarkerColor(GetMarkerColor());
+               TAttMarker::Modify();
+               gPad->PaintPolyMarker(3,x,y);
+            }
          }
       }
+      SetLineStyle(LS);
+      TAttLine::Modify();
       delete [] fOrder; fOrder = 0;
       delete [] fDist; fDist = 0;
    }
