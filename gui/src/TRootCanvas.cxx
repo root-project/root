@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.31 2004/02/20 16:30:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.32 2004/02/20 17:09:33 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -449,7 +449,7 @@ TRootCanvas::~TRootCanvas()
    delete fCanvasContainer;
    delete fCanvasWindow;
 
-   delete fEditor;
+   if (fEditor) delete fEditor;
    delete fEditorFrame;
    delete fEditorLayout;
    delete fMainFrame;

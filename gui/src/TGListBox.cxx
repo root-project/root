@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.16 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.17 2004/02/19 15:36:46 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -197,12 +197,11 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
 
    gcv.fMask = kGCLineStyle  | kGCLineWidth | kGCFillStyle;
    gcv.fLineStyle  = kLineSolid;
-   gcv.fLineWidth  = 1;
+   fLineWidth = gcv.fLineWidth  = w;
    gcv.fFillStyle  = kFillSolid;
    fLineGC = fClient->GetGC(&gcv, kTRUE);
- 
-   fLineStyle = style;
-   fLineWidth = w;
+
+   SetLineStyle(style);
 
    int max_ascent, max_descent;
    
@@ -229,11 +228,8 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
    //
 
    TGTextLBEntry::Update(e);
-   fLineWidth = ((TGLineLBEntry *)e)->GetLineWidth();
-   fLineStyle = ((TGLineLBEntry *)e)->GetLineStyle();
-
-   if (fLineStyle) SetLineStyle(fLineStyle);
-   else SetLineWidth(fLineWidth);
+   SetLineWidth(((TGLineLBEntry *)e)->GetLineWidth());
+   SetLineStyle(((TGLineLBEntry *)e)->GetLineStyle());
 }
 
 //______________________________________________________________________________
@@ -246,12 +242,9 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
    static const char* dasheddotted = "\x5\x3\x1\x3";
 
    if (linestyle <= 1)  {
-      fLineGC->SetDashOffset(0);
       fLineGC->SetLineStyle(kLineSolid);
    } else {
-      fLineGC->SetLineStyle(kLineOnOffDash);
       fLineGC->SetDashOffset(0);
-
       switch (linestyle) {
          case 2:
             fLineGC->SetDashList(dashed, 2);
@@ -264,9 +257,8 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
             break;
       }
    }
+   fLineGC->SetCapStyle(0); // flat cap
    fLineStyle = linestyle;
- fLineGC->SetLineWidth(1);
-   fLineGC->SetAttributes((GCValues_t*)fLineGC->GetAttributes());
 }
 
 //______________________________________________________________________________
@@ -276,7 +268,6 @@ void TGLineLBEntry::SetLineWidth(Int_t width)
 
    fLineWidth = width;
    fLineGC->SetLineWidth(fLineWidth);
-//   fLineGC->SetAttributes((GCValues_t*)fLineGC->GetAttributes());
 }
 
 //______________________________________________________________________________
@@ -285,10 +276,6 @@ void TGLineLBEntry::DoRedraw()
    // Redraw text listbox entry.
 
    TGTextLBEntry::DoRedraw();
-  
-   if (fLineStyle) SetLineStyle(fLineStyle);
-   else SetLineWidth(fLineWidth);
-
    gVirtualX->DrawLine(fId, fLineGC->GetGC(), fTWidth + 5, fHeight/2, 
                        fWidth - 5, fHeight/2);
 }
