@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMatrixDCramerInv.cxx,v 1.3 2004/02/17 16:20:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Jan 2004
 
 /*************************************************************************
@@ -72,10 +72,9 @@ Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
   const Double_t c21 = pM[2] * pM[3] - pM[0] * pM[5];
   const Double_t c22 = pM[0] * pM[4] - pM[1] * pM[3];
 
-  const Double_t t0  = TMath::Abs(pM[0]);
-  const Double_t t1  = TMath::Abs(pM[3]);
-  const Double_t t2  = TMath::Abs(pM[6]);
-
+  const Double_t t0 = TMath::Abs(pM[0]);
+  const Double_t t1 = TMath::Abs(pM[3]);
+  const Double_t t2 = TMath::Abs(pM[6]);
   Double_t det;
   Double_t tmp;
   if (t0 >= t1) {
@@ -94,23 +93,25 @@ Int_t TMatrixDCramerInv::Inv3x3(TMatrixD &m,Double_t *determ)
     det = c02*c21-c01*c22;
   }
 
+  if ( det == 0 )
+    return kFALSE;
+  if ( tmp == 0 )
+    return kFALSE;
+  det /= tmp;
+
   if (determ)
     *determ = det;
 
-  if ( det == 0 )
-    return kFALSE;
-
-  const Double_t s = tmp/det;
-  pM[0] = s * c00;
-  pM[1] = s * c01;
-  pM[2] = s * c02;
-  pM[3] = s * c10;
-  pM[4] = s * c11;
-  pM[5] = s * c12;
-  pM[6] = s * c20;
-  pM[7] = s * c21;
-  pM[8] = s * c22;
-
+  pM[0] = c00/det;
+  pM[1] = c01/det;
+  pM[2] = c02/det;
+  pM[3] = c10/det;
+  pM[4] = c11/det;
+  pM[5] = c12/det;
+  pM[6] = c20/det;
+  pM[7] = c21/det;
+  pM[8] = c22/det;
+  
   return kTRUE;
 }
 
