@@ -2235,11 +2235,13 @@ void G__platformMacro()
 #ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
+#ifndef _AIX
 #ifdef __xlC__ /* IBM xlC compiler */
   sprintf(temp,"G__XLC=%ld",(long)__xlC__); G__add_macro(temp); 
 #endif
 #ifdef __xlc__ /* IBM xlc compiler */
   sprintf(temp,"G__XLC=%ld",(long)__xlc__); G__add_macro(temp);
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION1689
   G__initcxx(); 
