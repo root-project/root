@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooIntegratorConfig.cc,v 1.1 2002/03/22 22:11:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -21,7 +21,8 @@ RooIntegratorConfig::RooIntegratorConfig()
   // 1D integrator
   _rule = RooIntegrator1D::Trapezoid ;
   _maxSteps = 20 ;
-  _eps = 1e-6 ;
+  _epsRel = 1e-6 ;
+  _epsAbs = 1e-6 ;
 
   // MC Integrator
   _mode = RooMCIntegrator::Importance ;
@@ -42,7 +43,8 @@ RooIntegratorConfig::RooIntegratorConfig(const RooIntegratorConfig& other)
   // 1D integrator
   _rule = other._rule ;
   _maxSteps = other._maxSteps ;
-  _eps = other._eps ;
+  _epsRel = other._epsRel ;
+  _epsAbs = other._epsAbs ;
 
   // MC Integrator
   _mode = other._mode ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooIntegratorConfig.rdl,v 1.1 2002/03/22 22:11:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
@@ -27,7 +27,8 @@ public:
   // 1D accessors
   RooIntegrator1D::SummationRule summationRule1D() const { return _rule ; }
   Int_t maxSteps1D() const { return _maxSteps ; }
-  Double_t epsilon1D() const { return _eps ; }
+  Double_t epsilonRel1D() const { return _epsRel ; }
+  Double_t epsilonAbs1D() const { return _epsAbs ; }
   
   // MC accessors
   RooMCIntegrator::SamplingMode samplingModeMC() const { return _mode ; }
@@ -41,7 +42,8 @@ public:
   // 1D modifiers
   void setSummationRule1D(RooIntegrator1D::SummationRule rule) { _rule = rule ; }
   void setMaxSteps1D(Int_t maxSteps) { _maxSteps = maxSteps ; }
-  void setEpsilon1D(Double_t eps) { _eps = eps ; }
+  void setEpsilonAbs1D(Double_t eps) { _epsAbs = eps ; }
+  void setEpsilonRel1D(Double_t eps) { _epsRel = eps ; }
 
   // MC modifiers
   void setSamplingModeMC(RooMCIntegrator::SamplingMode mode) { _mode = mode ; }
@@ -57,7 +59,8 @@ protected:
   // 1D integrator
   RooIntegrator1D::SummationRule _rule ;
   Int_t _maxSteps ;
-  Double_t _eps ;
+  Double_t _epsAbs ;
+  Double_t _epsRel ;
 
   // MC Integrator
   RooMCIntegrator::SamplingMode _mode ;

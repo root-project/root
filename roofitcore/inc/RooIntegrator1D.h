@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.9 2001/09/15 00:26:03 david Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.10 2002/03/22 22:43:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,7 +45,8 @@ protected:
   // Integrator configuration
   SummationRule _rule;
   Int_t _maxSteps ;
-  Double_t _eps ;
+  Double_t _epsAbs ;
+  Double_t _epsRel ;
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions
