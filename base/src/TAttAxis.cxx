@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.6 2002/02/02 11:56:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttAxis.cxx,v 1.7 2002/05/03 10:48:53 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -64,8 +64,8 @@ void TAttAxis::ResetAttAxis(Option_t *option)
       fTickLength  = gStyle->GetTickLength(option);
       fTitleOffset = gStyle->GetTitleOffset(option);
       fTitleSize   = gStyle->GetTitleSize(option);
-      fTitleColor  = gStyle->GetTitleTextColor();
-      fTitleFont   = gStyle->GetTitleFont();
+      fTitleColor  = gStyle->GetTitleColor(option);
+      fTitleFont   = gStyle->GetTitleFont(option);
    } else {
       fNdivisions  = 510;
       fAxisColor   = 1;

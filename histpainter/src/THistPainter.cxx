@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.120 2003/02/20 22:39:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.121 2003/02/21 11:33:41 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4831,13 +4831,13 @@ void THistPainter::PaintTitle()
              gStyle->GetTitleY(),"blNDC");
 
 //     box with the histogram title
-   ptitle->SetFillColor(gStyle->GetTitleColor());
+   ptitle->SetFillColor(gStyle->GetTitleFillColor());
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
    ptitle->SetName("title");
    ptitle->SetBorderSize(gStyle->GetTitleBorderSize());
    ptitle->SetTextColor(gStyle->GetTitleTextColor());
-   ptitle->SetTextFont(gStyle->GetTitleFont());
-   if (gStyle->GetTitleFont()%10 > 2)
+   ptitle->SetTextFont(gStyle->GetTitleFont(""));
+   if (gStyle->GetTitleFont("")%10 > 2)
       ptitle->SetTextSize(gStyle->GetTitleFontSize());
    ptitle->AddText(fH->GetTitle());
    ptitle->SetBit(kCanDelete);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.94 2002/12/03 11:20:10 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.95 2002/12/04 08:18:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4853,8 +4853,8 @@ void TPad::UseCurrentStyle()
 
    TPaveText *title  = (TPaveText*)FindObject("title");
    if (title) {
-      title->SetFillColor(gStyle->GetTitleColor());
-      title->SetTextFont(gStyle->GetTitleFont());
+      title->SetFillColor(gStyle->GetTitleFillColor());
+      title->SetTextFont(gStyle->GetTitleFont(""));
       title->SetTextColor(gStyle->GetTitleTextColor());
       title->SetBorderSize(gStyle->GetTitleBorderSize());
       if (!gStyle->GetOptTitle()) delete title;
