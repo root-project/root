@@ -62,6 +62,7 @@ for c in $options ; do eval $c="yes" ; done
 
 enable_afs=no
 enable_explicitlink=no
+enable_pythia=no
 enable_rpath=no
 enable_shadowpw=
 enable_soversion=no
