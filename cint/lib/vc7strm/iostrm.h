@@ -529,9 +529,29 @@ extern ostream cout ;
 extern ostream cerr ;
 extern ostream clog ;
 
-//ios&		dec(ios&) ; 
-//ios&		hex(ios&) ;
-//ios&		oct(ios&) ; 
+#ifndef G__OLDIMPLEMENTATION1938
+ios_base&	dec(ios_base&) ; 
+ios_base&	hex(ios_base&) ;
+ios_base&	oct(ios_base&) ; 
+ios_base&       fixed(ios_base&);
+ios_base&       scientific(ios_base&);
+ios_base&       right(ios_base&);
+ios_base&       left(ios_base&);
+ios_base&       internal(ios_base&);
+ios_base&       nouppercase(ios_base&);
+ios_base&       uppercase(ios_base&);
+ios_base&       noskipws(ios_base&);
+ios_base&       skipws(ios_base&);
+ios_base&       noshowpos(ios_base&);
+ios_base&       showpos(ios_base&);
+ios_base&       noshowpoint(ios_base&);
+ios_base&       showpoint(ios_base&);
+ios_base&       noshowbase(ios_base&);
+ios_base&       showbase(ios_base&);
+ios_base&       noboolalpha(ios_base&);
+ios_base&       boolalpha(ios_base&);
+#endif
+
 istream&	ws(istream&) ;
 
 ostream&	endl(ostream& i) ;

@@ -34,7 +34,9 @@ typedef double DWORDLONG;
 #define APIENTRY
 
 /* VC++5.0 */
+#if defined(_MSC_VER) && (_MSC_VER<1300) /* block for VC7, more refinment? */
 #define MIDL_PASS
+#endif
 struct _SID { };
 typedef unsigned long ULONGLONG;
 typedef double LONGLONG;

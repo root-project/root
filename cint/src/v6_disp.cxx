@@ -1397,7 +1397,11 @@ char *name;
       fprintf(fout,"#define %s(",deffuncmacro->name);
       charlist = &deffuncmacro->def_para;
       while(charlist) {
+#ifndef G__OLDIMPLEMENTATION1936
+	if(charlist->string) fprintf(fout,"%s%s",charlist->string,"");
+#else
 	if(charlist->string) fprintf(fout,"%s",charlist->string);
+#endif
 	charlist=charlist->next;
 	if(charlist && charlist->next) fprintf(fout,",");
       }

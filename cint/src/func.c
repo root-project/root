@@ -41,6 +41,12 @@ int G__dlclose G__P((void *handle));
 */
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1937
+#ifndef __CINT__
+int G__set_history_size G__P((int s));
+#endif
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1142
 #ifndef __CINT__
 int G__optimizemode G__P((int optimizemode));
@@ -5309,6 +5315,15 @@ int hash;
     *result7 = G__null;
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION1937
+  if(strcmp(funcname,"G__set_history_size")==0) {
+    if(G__no_exec_compile) return(1);
+    G__set_history_size((int)G__int(libp->para[0]));
+    *result7 = G__null;
+    return(1);
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1485
   if(strcmp(funcname,"G__set_errmsgcallback")==0) {

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150110
-#define G__CINTVERSIONSTR  "5.15.110, Nov 9 2003"
+#define G__CINTVERSION      50150112
+#define G__CINTVERSIONSTR  "5.15.112, Nov 19 2003"
 
 
 /**********************************************************************
@@ -703,8 +703,13 @@ typedef int (*G__IgnoreInclude)();
 #define G__TAGNEST       20  /* depth of nested class */
 
 #ifdef G__WIN32
+#if defined(_MSC_VER) && (_MSC_VER>1300)
+#define G__MAXSTRUCT  16000  /* struct table */
+#define G__MAXTYPEDEF  8000  /* typedef table */
+#else
 #define G__MAXSTRUCT   4000  /* struct table */
 #define G__MAXTYPEDEF  8000  /* typedef table */
+#endif
 #else
 #define G__MAXSTRUCT   4000  /* struct table */
 #define G__MAXTYPEDEF  4000  /* typedef table */

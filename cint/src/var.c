@@ -3297,6 +3297,16 @@ struct G__var_array *varglobal,*varlocal;
 	G__letpointer2memfunc(var,paran,ig15,item,p_inc,&result
 			      ,G__struct_offset);
 	break;
+
+#ifndef G__OLDIMPLEMENTATION1939
+      case 'T': /* macro char* */
+	if((G__globalcomp==G__NOLINK)&&(G__prerun==0)&&
+	   (G__double(result)!=G__double(G__getitem(item)))) {
+	  G__changeconsterror(varname ,"enforced macro");
+	}
+	*(long*)var->p[ig15] = result.obj.i;
+	break;
+#endif
 	
       case 'p': /* macro int */
       case 'P': /* macro double */
@@ -6791,6 +6801,19 @@ int parameter00;
 #ifdef G__VARIABLEFPOS
   var->filenum[var->allvar] = G__ifile.filenum;
   var->linenum[var->allvar] = G__ifile.line_number;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1940
+ {
+   char* pp;
+   pp = strchr(varname,'-');
+   if(!pp) pp = strchr(varname,'+');
+   if(pp) {
+     G__fprinterr(G__serr,"Error: Variable name has bad character '%s'"
+	,varname);
+     G__genericerror((char*)NULL);
+   }
+ }
 #endif
   
   /*****************************************************************

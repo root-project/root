@@ -527,7 +527,7 @@ int lenbuf;
 #define G__ASSIGN_CNDJMP
 #endif
 
-
+#define G__OLDIMPLEMENTATION1910
 #ifndef G__OLDIMPLEMENTATION1910
 /******************************************************************
 * G__exec_evalall

@@ -2577,7 +2577,7 @@ char *path;
 #endif
 #ifndef G__OLDIMPLEMENTATION928
   store_allincludepath = realloc((void*)G__allincludepath
-				 ,strlen(G__allincludepath)+strlen(temp)+5);
+				 ,strlen(G__allincludepath)+strlen(temp)+6);
   if(store_allincludepath) {
 #ifndef G__OLDIMPLEMENTATION1553
     int i=0,flag=0;

@@ -24,6 +24,24 @@
 int G__quiet=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1937
+static int G__history_size_max = 51;
+static int G__history_size_min = 30;
+/************************************************************
+* G__set_history_size()
+*************************************************************/
+void G__set_history_size(s)
+int s;
+{
+  if(s>0) {
+    G__history_size_min = s;
+    G__history_size_max = s+20;
+  }
+  else {
+    G__fprinterr(G__serr,"!!! %s ignored. You must set positive number\n",s);
+  }
+}
+#endif
 
 #ifdef G__GNUREADLINE
 extern char *readline G__P((char* prompt));
@@ -88,7 +106,11 @@ char *string;
     fclose(fp);
     *state = (*state)+1;
     strcpy(prevstring,string);
+#ifndef G__OLDIMPLEMENTATION1937
+    if(*state<G__history_size_max) return;
+#else
     if(*state<51) return;
+#endif
   }
   else {
     return;
@@ -111,7 +133,11 @@ char *string;
   if(tmp&&fp) {
     while(G__readline(fp,G__oneline,G__argbuf,&argn,arg)!=0){
       ++line;
+#ifndef G__OLDIMPLEMENTATION1937
+      if(line>G__history_size_max-G__history_size_min) fprintf(tmp,"%s\n",arg[0]);
+#else
       if(line>30) fprintf(tmp,"%s\n",arg[0]);
+#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION1918
