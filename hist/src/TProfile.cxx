@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.3 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.4 2000/07/11 10:36:07 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -678,7 +678,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
 }
 
 //______________________________________________________________________________
-TProfile *TProfile::Rebin(Int_t ngroup, const char*newname)
+TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
 {
 //*-*-*-*-*Rebin this profile grouping ngroup bins together*-*-*-*-*-*-*-*-*
 //*-*      ================================================
