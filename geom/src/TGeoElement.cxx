@@ -59,6 +59,8 @@ TGeoElementTable::TGeoElementTable()
 // default constructor
    fNelements = 0;
    fList      = 0;
+   if (fgInstance) Error("ctor", "Element table already instantiated");
+   else fgInstance = this;
 }
 
 //______________________________________________________________________________
@@ -67,8 +69,12 @@ TGeoElementTable::TGeoElementTable(Int_t /*nelements*/)
 // constructor
    fNelements = 0;
    fList = new TObjArray(128);
-   fgInstance = this;
-   BuildDefaultElements();
+   if (fgInstance) {
+      Error("ctor", "Element table already instantiated");
+   } else {
+      fgInstance = this;
+      BuildDefaultElements();
+   }   
 }
 
 //______________________________________________________________________________
