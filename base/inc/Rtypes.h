@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.31 2002/07/27 13:44:58 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.32 2002/08/20 10:51:49 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -239,7 +239,7 @@ public: \
 #endif
 
 #define R__UseDummy(name) \
-   class _NAME2_(name,_c) { _NAME2_(name,_c)() { if (name) { } } }
+   class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
 #define ClassImpUnique(name,key) \
 namespace ROOT { \
