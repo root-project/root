@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.5 2001/01/15 01:26:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.6 2001/01/16 17:22:32 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -52,7 +52,8 @@ private:
    Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
 
 public:
-   TNetFile(const char *url, Option_t *option="", const char *ftitle="", Int_t compress=1);
+   TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
+            Int_t compress = 1, Int_t netopt = 0);
    virtual ~TNetFile();
 
    void    Close(Option_t *option=""); // *MENU*

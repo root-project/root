@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.12 2001/01/15 01:26:59 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.13 2001/01/16 17:22:32 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -97,7 +97,8 @@ const char *kRootdErrStr[] = {
 ClassImp(TNetFile)
 
 //______________________________________________________________________________
-TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress)
+TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
+                   Int_t compress, Int_t netopt)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
    // Create a NetFile object. A net file is the same as a TFile
@@ -111,12 +112,15 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    // sure this is not the case you can force open the file by preceding the
    // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
    // in cases when you are very sure nobody else is using the file.
+   // The netopt argument can be used to specify the size of the tcp window in
+   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
+   // The default and minimum tcp window size is 65535 bytes.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
    TAuthenticate *auth;
    EMessageTypes kind;
-   Int_t sec;
+   Int_t sec, tcpwindowsize = 65535;
 
    fOffset = 0;
 
@@ -146,8 +150,11 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
       goto zombie;
    }
 
+   if (netopt > tcpwindowsize)
+      tcpwindowsize = netopt;
+
    // Open connection to remote rootd server
-   fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
    if (!fSocket->IsValid()) {
       Error("TNetFile", "can't open connection to rootd on host %s at port %d",
             fUrl.GetHost(), fUrl.GetPort());
@@ -156,8 +163,6 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
 
    // Set some socket options
    fSocket->SetOption(kNoDelay, 1);
-   fSocket->SetOption(kSendBuffer, 65536);
-   fSocket->SetOption(kRecvBuffer, 65536);
 
    // Get rootd protocol level
    fSocket->Send(kROOTD_PROTOCOL);
