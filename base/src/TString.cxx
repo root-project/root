@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.31 2004/06/18 11:05:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.32 2004/07/01 18:45:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -421,7 +421,6 @@ TString& TString::Append(char c, Ssiz_t rep)
    return *this;
 }
 
-// Change the string capacity, returning the new capacity
 //______________________________________________________________________________
 Ssiz_t TString::Capacity(Ssiz_t nc)
 {
