@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.17 2003/08/11 08:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.18 2003/08/20 07:59:47 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -805,6 +805,7 @@ Stat_t TProfile2D::GetBinError(Int_t bin) const
       Stat_t scont, ssum, serr2;
       scont = ssum = serr2 = 0;
       for (Int_t i=1;i<fNcells;i++) {
+         if (fSumw2.fArray[i] <= 0) continue; //added in 3.10/02
          scont += fArray[i];
          ssum  += fBinEntries.fArray[i];
          serr2 += fSumw2.fArray[i];
