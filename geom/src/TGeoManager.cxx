@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.104 2004/12/07 14:24:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.105 2004/12/14 19:46:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1466,6 +1466,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
+      if (!TGeoElementTable::Instance()) new TGeoElementTable(200);
       if (!fTopNode) {
          if (!fMasterVolume) {
             Error("CloseGeometry", "Master volume not streamed");
@@ -2747,8 +2748,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       }
       if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
       else fSafety = Safety();
+      fSafety = TMath::Abs(fSafety);
       memcpy(fLastPoint, fPoint, kN3);
       fLastSafety = fSafety;
+      if (fSafety<TGeoShape::Tolerance()) fIsOnBoundary = kTRUE;
+      else fIsOnBoundary = kFALSE;
       fStep = stepmax;
       if (stepmax<fSafety) {
          fStep = stepmax;
