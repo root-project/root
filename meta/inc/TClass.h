@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.2 2000/08/01 23:45:48 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.3 2000/09/05 09:21:23 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -62,6 +62,7 @@ private:
 
    TMethod          *GetClassMethod(Long_t faddr);
 
+   static Bool_t     fgCallingNew;     //True when TClass:New is executing
    static Int_t      fgClassCount;     //provides unique id for a each class
                                        //stored in TObject::fUniqueID
 public:
@@ -121,6 +122,7 @@ public:
    void          SetStreamerInfo(const char *info="");
    Long_t        Property() const;
 
+   static Bool_t IsCallingNew() {return fgCallingNew;}
    static TClass *Load(TBuffer &b);
    void           Store(TBuffer &b) const;
 

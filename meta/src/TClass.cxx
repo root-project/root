@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.4 2000/08/15 13:06:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.5 2000/09/08 16:05:22 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -47,8 +47,8 @@
 extern long G__globalvarpointer;
 #endif
 
-Int_t TClass::fgClassCount;
-
+Int_t  TClass::fgClassCount;
+Bool_t TClass::fgCallingNew = kFALSE;
 
 class TBuildRealData : public TMemberInspector {
 
@@ -791,7 +791,9 @@ void *TClass::New()
 
    if (!fClassInfo) return 0;
 
+   fgCallingNew = kTRUE;
    void *p = GetClassInfo()->New();
+   fgCallingNew = kFALSE;
    if (!p) Error("New", "no default ctor for class %s", GetName());
 
    return p;
