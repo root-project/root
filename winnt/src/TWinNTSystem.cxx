@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.42 2003/02/12 14:15:18 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.43 2003/02/27 18:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1201,7 +1201,7 @@ int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
    if (!AccessPathName(t) && !overwrite)
       return -2;
 
-   Bool_t ret = ::CopyFile(f, t, kFALSE);
+   Bool_t ret = ::CopyFileA(f, t, kFALSE);
    if (!ret)
       return -1;
    return 0;

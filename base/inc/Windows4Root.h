@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.2 2001/05/31 10:04:30 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Windows4Root.h,v 1.3 2001/10/01 16:02:38 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -48,6 +48,7 @@
 #undef ClosePixmap
 #undef CloseWindow
 #undef CopyPixmap
+#undef CopyFile
 #undef DrawBox
 #undef DrawCellArray
 #undef DrawFillArea
