@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.76 2001/05/24 16:41:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.77 2001/05/24 17:24:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2286,6 +2286,7 @@ Bool_t TTree::Notify()
    TLeaf *leaf;
    while ((leaf = (TLeaf*)next())) {
       leaf->Notify();
+      leaf->GetBranch()->Notify();
    }
    return kTRUE;
 }
