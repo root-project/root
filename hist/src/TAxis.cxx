@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.52 2003/11/25 17:12:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.53 2003/11/27 15:15:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -313,7 +313,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
          if (ratio2 - ratio1 > 0.05) {
             TH1 *hobj = (TH1*)fParent;
-            if (axisNumber == 3 && hobj) {
+            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
                Float_t zmin = hobj->GetMinimum();
                Float_t zmax = hobj->GetMaximum();
                Float_t newmin = zmin + (zmax-zmin)*ratio1;
