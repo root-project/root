@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.2 2002/06/26 15:43:22 rdm Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2002/07/19 11:41:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.2 2002/06/26 15:43:22 rdm Exp $
+// $Id: Ttypes.h,v 1.3 2002/07/19 11:41:01 rdm Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -53,17 +53,8 @@ void className::Streamer(TBuffer &R__b) {                           \
 
 //___________________________________________________________________
 #define TableClassImp(className,structName)                         \
-   const char* className::TableDictionary() {                       \
-      char *structBuf = new char[strlen(_QUOTE2_(structName,.h))+2];\
-      strcpy(structBuf,_QUOTE2_(structName,.h));                    \
-      char *s = strstr(structBuf,"_st.h");                          \
-      if (s) { *s = 0;  strcat(structBuf,".h"); }                   \
-      TClass *r = ROOT::CreateClass(_QUOTE_(structName),            \
-                                    Class_Version(), structBuf,     \
-                                    structBuf, 1,  1 );             \
-      fgColDescriptors = new TTableDescriptor(r);                   \
-      return _QUOTE_(structName);                                   \
-   }                                                                \
+   const char* className::TableDictionary()\
+   {return TTable::TableDictionary(_QUOTE_(className),_QUOTE_(structName),fgColDescriptors);}\
    _TableClassImp_(className,structName)
 
 //___________________________________________________________________

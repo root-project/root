@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.2 2002/07/25 18:03:46 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -78,6 +78,8 @@ protected:
    virtual void  SetDescriptorPointer(TTableDescriptor *list);
 
    void       ReAlloc(Int_t newsize);
+
+   static const char *TableDictionary(const char *className,const char *structName,TTableDescriptor *&ColDescriptors);
 
 public:
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.28 2002/04/12 21:52:56 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.1  2002/05/27 16:26:59  rdm
+// rename star to table.
+//
 // Revision 1.28  2002/04/12 21:52:56  brun
 // Patch from Valery:
 // There was a minor memory leak during reading.
@@ -2311,6 +2314,17 @@ void TTable::Update(TDataSet *set, UInt_t opt)
              "This table is <%s> but the updating one has a wrong type <%s>",GetTitle(),set->GetTitle());
   }
   TDataSet::Update(set,opt);
+}
+
+//_______________________________________________________________________
+const char *TTable::TableDictionary(const char *className,const char *structName,TTableDescriptor *&ColDescriptors)
+{   
+   // Quiry the TClass instance for the C-stucture dicitonary
+   // This method is to be used form with TableImp CPP macro (see $ROOTSYS/table/inc/Ttypes.h 
+   if (className){/*NotUsed*/}; 
+   TClass *r = gROOT->GetClass(structName,1);
+   ColDescriptors = new TTableDescriptor(r);
+   return structName;
 }
 
  //  ----   Table descriptor service   ------

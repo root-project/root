@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.3 2002/06/18 21:59:41 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.2 2002/05/27 16:46:21 rdm Exp $
+// $Id: TTableDescriptor.cxx,v 1.3 2002/06/18 21:59:41 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -136,8 +136,8 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 	//
 	///////////////////////////////////////////////////////////
 	TTableDescriptor *dsc = 0;
-//    TClass *cl = gROOT->GetClass(structName, kFALSE);
-    TClass *cl = new TClass(structName,1,0,0);
+        TClass *cl = gROOT->GetClass(structName, kTRUE);
+//        TClass *cl = new TClass(structName,1,0,0);
 	assert(cl);
 	dsc = new TTableDescriptor(cl);
 	return dsc;
@@ -173,16 +173,6 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 //
 
   if (!classPtr) return;
-
-  if (!classPtr->GetListOfRealData()) {
-	  const char *name = classPtr->GetName();
-	   char buffer[512];
-	   sprintf(buffer," new %s();",name);
- 	   void *p = (void *)gInterpreter->Calc(buffer);
- 	   classPtr->BuildRealData(p);
-  	   sprintf(buffer,"delete ((%s *)(0x%lx);",name,(Long_t)p);
-
-  }
   if (!(classPtr->GetNdata())) return;
 
   Char_t *varname;
@@ -230,7 +220,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
     }
     else Error("LearnTable","Wrong data type for <%s> structure",classPtr->GetName());
     elementDescriptor.fSize   =  globalIndex * (elementDescriptor.fTypeSize);
-    elementDescriptor.fOffset = member->GetOffsetCint();
+    elementDescriptor.fOffset = member->GetOffset();
     AddAt(&elementDescriptor,columnIndex); columnIndex++;
     (new TDataSet(varname,comments))->SetTitle(member->GetTitle());
   }
