@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.39 2004/09/13 12:27:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.40 2004/09/14 06:38:44 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -116,10 +116,12 @@ public:
         virtual Double_t GetRMS(Int_t axis=1) const;
         Int_t            GetMaxSize() const {return fMaxSize;}
         Int_t            GetN() const {return fNpoints;}
-        Double_t        *GetX() const {return fX;}
-        Double_t        *GetY() const {return fY;}
-        TAxis           *GetXaxis() const ;
-        TAxis           *GetYaxis() const ;
+        Double_t         *GetX() const {return fX;}
+        Double_t         *GetY() const {return fY;}
+        virtual Double_t *GetEX() const {return 0;}
+        virtual Double_t *GetEY() const {return 0;}
+        TAxis            *GetXaxis() const ;
+        TAxis            *GetYaxis() const ;
         virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y) const;
         virtual void     InitExpo(Int_t first=0, Int_t last=0);
         virtual void     InitGaus(Int_t first=0, Int_t last=0);
