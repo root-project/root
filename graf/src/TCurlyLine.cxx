@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -34,7 +34,7 @@
 ClassImp(TCurlyLine)
 
 //______________________________________________________________________________
-TCurlyLine::TCurlyLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2, Float_t tl, Float_t rad)
+TCurlyLine::TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Double_t tl, Double_t rad)
 {
  // create a new TCurlyLine with starting point (x1, y1), end point (x2,y2)
  // The wavelength and amplitude are given in percent of the pad height
@@ -55,46 +55,46 @@ void TCurlyLine::Build()
 //*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) line*-*-*-*-*-*
 //*-*                  ===========================================
 
-   Float_t pixwave,pixampl;
+   Double_t pixwave,pixampl;
    if (gPad) {
-      Float_t hpixels   = gPad->GetAbsHNDC()*gPad->GetWh();
+      Double_t hpixels  = gPad->GetAbsHNDC()*gPad->GetWh();
       Int_t px1         = gPad->XtoAbsPixel(fX1);
       Int_t py1         = gPad->YtoAbsPixel(fY1);
       Int_t px2         = gPad->XtoAbsPixel(fX2);
       Int_t py2         = gPad->YtoAbsPixel(fY2);
-      Float_t pl2       = Float_t((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
-      Float_t pixlength = TMath::Sqrt(pl2);
+      Double_t pl2      = Double_t((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
+      Double_t pixlength = TMath::Sqrt(pl2);
       pixwave           = hpixels*fWaveLength/pixlength;
       pixampl           = hpixels*fAmplitude/pixlength;
    } else {
       pixwave           = fWaveLength;
       pixampl           = fAmplitude;
    }
-   Float_t anglestep = 20;
-   Float_t phimaxle  = TMath::Pi() * 2. / anglestep ;
-   Float_t length    = TMath::Sqrt((fX2-fX1)*(fX2-fX1) + (fY2-fY1)*(fY2-fY1));
-   Float_t  ampl     = length*pixampl;
-   Float_t wave      = length*pixwave;
-   Float_t dx        = wave/25;
-   Float_t len2pi    = dx * anglestep;
+   Double_t anglestep = 20;
+   Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
+   Double_t length    = TMath::Sqrt((fX2-fX1)*(fX2-fX1) + (fY2-fY1)*(fY2-fY1));
+   Double_t  ampl     = length*pixampl;
+   Double_t wave      = length*pixwave;
+   Double_t dx        = wave/25;
+   Double_t len2pi    = dx * anglestep;
    if(length <= 4 * ampl){
       cout << "CurlyLine:: too short " << length << endl;
       SetBit(kTooShort);
       return;
    }
-   Float_t angle = TMath::ATan2(fY2-fY1, fX2-fX1);
+   Double_t angle = TMath::ATan2(fY2-fY1, fX2-fX1);
    if(angle < 0) angle += 2*TMath::Pi();
-   Float_t  lengthcycle = 0.5*len2pi + 2*ampl;
+   Double_t  lengthcycle = 0.5*len2pi + 2*ampl;
    Int_t nperiods = (Int_t)((length - lengthcycle) / len2pi);
-   Float_t restlenght = 0.5 * (length - nperiods * len2pi - lengthcycle);
+   Double_t restlenght = 0.5 * (length - nperiods * len2pi - lengthcycle);
    fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 +4);
    SetPolyLine(fNsteps);
-   Float_t *xv = GetX();
-   Float_t *yv = GetY();
+   Double_t *xv = GetX();
+   Double_t *yv = GetY();
    xv[0] = 0;          yv[0] = 0;
    xv[1] = restlenght; yv[1] = 0;
-   Float_t phase =  1.5 * TMath::Pi();
-   Float_t x0 = ampl + restlenght;
+   Double_t phase =  1.5 * TMath::Pi();
+   Double_t x0 = ampl + restlenght;
    Int_t i;
    for(i = 2; i < fNsteps-1; i++){
 //  distinguish between curly and wavy
@@ -105,9 +105,9 @@ void TCurlyLine::Build()
       x0    += dx;
    }
    xv[fNsteps-1] = length; yv[fNsteps-1] = 0;
-   Float_t cosang = TMath::Cos(angle);
-   Float_t sinang = TMath::Sin(angle);
-   Float_t xx, yy;
+   Double_t cosang = TMath::Cos(angle);
+   Double_t sinang = TMath::Sin(angle);
+   Double_t xx, yy;
    for(i = 0; i < fNsteps; i++){
       xx = xv[i] * cosang - yv[i] * sinang;
       yy = xv[i] * sinang + yv[i] * cosang;
@@ -261,23 +261,23 @@ void TCurlyLine::SetWavy()
    fIsCurly = kFALSE;
    Build();
 }
-void TCurlyLine::SetWaveLength(Float_t x)
+void TCurlyLine::SetWaveLength(Double_t x)
 {
    fWaveLength = x;
    Build();
 }
-void TCurlyLine::SetAmplitude(Float_t x)
+void TCurlyLine::SetAmplitude(Double_t x)
 {
    fAmplitude = x;
    Build();
 }
-void TCurlyLine::SetStartPoint(Float_t x, Float_t y)
+void TCurlyLine::SetStartPoint(Double_t x, Double_t y)
 {
    fX1 = x;
    fY1 = y;
    Build();
 }
-void TCurlyLine::SetEndPoint(Float_t x, Float_t y)
+void TCurlyLine::SetEndPoint(Double_t x, Double_t y)
 {
    fX2 = x;
    fY2 = y;
