@@ -15,7 +15,7 @@
 #include "iccstrm.cxx"
 
 
-#elif deined(__GNUC__)  /* gcc/g++  GNU C/C++ compiler major version */
+#elif defined(__GNUC__)  /* gcc/g++  GNU C/C++ compiler major version */
 
 #if (__GNUC__>=3)
 #include "gcc3strm.cxx"
