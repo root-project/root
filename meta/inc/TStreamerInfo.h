@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.2 2000/11/22 12:16:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.3 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -57,6 +57,16 @@ private:
    void              Compile();
            
 public:
+
+   enum EReadWrite {
+      kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
+      kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat   =  5, kDouble  =  8,
+      kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
+      kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTStringp=46,
+      kTString= 65,  kTObject = 66,  kTNamed  = 67,  kMissing = 99999,
+      kSkip   =100,  kSkipL   =120,  kSkipP   =140,
+      kConv   =200,  kConvL   =220,  kConvP   =240,  kStreamer=500
+   };
 
    TStreamerInfo();
    TStreamerInfo(TClass *cl, const char *info);

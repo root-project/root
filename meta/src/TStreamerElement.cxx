@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.3 2000/11/22 12:16:13 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.4 2000/11/22 15:47:19 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -93,7 +93,7 @@ void TStreamerElement::SetArrayDim(Int_t dim)
    // Set number of array dimensions.
    
    fArrayDim = dim;
-   if (dim) fType += kOffsetL;
+   if (dim) fType += TStreamerInfo::kOffsetL;
    fNewType = fType;
 }
 
@@ -117,7 +117,7 @@ void TStreamerElement::SetStreamer(char *streamer)
    if (streamer) {
       if (fArrayLength == 0 && fType != kSTL) return;
       //printf("Changing type of %s from %d to kStreamer\n",GetName(),fType);
-      fType = kStreamer;
+      fType = TStreamerInfo::kStreamer;
       fNewType = fType;
    }
 }
@@ -140,12 +140,12 @@ TStreamerBase::TStreamerBase()
 
 //______________________________________________________________________________
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,kBase,"BASE")
+        : TStreamerElement(name,title,offset,TStreamerInfo::kBase,"BASE")
 {
    // Create a TStreamerBase object.
 
-   if (strcmp(name,"TObject") == 0) fType = kTObject;
-   if (strcmp(name,"TNamed")  == 0) fType = kTNamed;
+   if (strcmp(name,"TObject") == 0) fType = TStreamerInfo::kTObject;
+   if (strcmp(name,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
    fNewType = fType;
    Init();
 }
@@ -159,7 +159,7 @@ TStreamerBase::~TStreamerBase()
 //______________________________________________________________________________
 void TStreamerBase::Init(TObject *)
 {
-   if (fType == kTObject || fType == kTNamed) return;
+   if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(gROOT->GetClass(GetName()),"StreamerNVirtual","TBuffer &");
 }
@@ -196,7 +196,7 @@ TStreamerBasicPointer::TStreamerBasicPointer(const char *name, const char *title
 {
    // Create a TStreamerBasicPointer object.
 
-   fType += kOffsetP;
+   fType += TStreamerInfo::kOffsetP;
    fCountName    = countName;
    fCountClass   = countClass;
    fCountVersion = countVersion;
@@ -228,7 +228,7 @@ void TStreamerBasicPointer::Init(TObject *)
    fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl,fCountVersion);
    //at this point the counter is may be declared to skip
    if (fCounter) {
-      if (fCounter->GetType() < kCounter) fCounter->SetType(kCounter); 
+      if (fCounter->GetType() < TStreamerInfo::kCounter) fCounter->SetType(TStreamerInfo::kCounter); 
    }  
 }
 
@@ -251,7 +251,7 @@ TStreamerTStringPointer::TStreamerTStringPointer()
 
 //______________________________________________________________________________
 TStreamerTStringPointer::TStreamerTStringPointer(const char *name, const char *title, Int_t offset, const char *countName, const char *countClass, Int_t countVersion, const char *typeName)
-        : TStreamerElement(name,title,offset,kTStringp,typeName)
+        : TStreamerElement(name,title,offset,TStreamerInfo::kTStringp,typeName)
 {
    // Create a TStreamerTStringPointer object.
 
@@ -285,7 +285,7 @@ void TStreamerTStringPointer::Init(TObject *)
    fCounter = TStreamerInfo::GetElementCounter(fCountName.Data(),cl,fCountVersion);
    //at this point the counter is may be declared to skip
    if (fCounter) {
-      if (fCounter->GetType() < kCounter) fCounter->SetType(kCounter); 
+      if (fCounter->GetType() < TStreamerInfo::kCounter) fCounter->SetType(TStreamerInfo::kCounter); 
    }  
 }
 
@@ -332,7 +332,8 @@ ULong_t TStreamerBasicType::GetMethod()
 {
    // return address of counter
    
-   if (fType == kCounter || fType == (kCounter+kSkip)) return (ULong_t)&fCounter;
+   if (fType ==  TStreamerInfo::kCounter || 
+       fType == (TStreamerInfo::kCounter+TStreamerInfo::kSkip)) return (ULong_t)&fCounter;
    return 0;
 }
 
@@ -361,9 +362,9 @@ TStreamerObject::TStreamerObject(const char *name, const char *title, Int_t offs
 {
    // Create a TStreamerObject object.
 
-   fType = kObject;
-   if (strcmp(typeName,"TObject") == 0) fType = kTObject;
-   if (strcmp(typeName,"TNamed")  == 0) fType = kTNamed;
+   fType = TStreamerInfo::kObject;
+   if (strcmp(typeName,"TObject") == 0) fType = TStreamerInfo::kTObject;
+   if (strcmp(typeName,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
    fNewType = fType;
    Init();
 }
@@ -409,7 +410,7 @@ TStreamerObjectAny::TStreamerObjectAny()
 
 //______________________________________________________________________________
 TStreamerObjectAny::TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName)
-        : TStreamerElement(name,title,offset,kAny,typeName)
+        : TStreamerElement(name,title,offset,TStreamerInfo::kAny,typeName)
 {
    // Create a TStreamerObjectAny object.
 
@@ -458,11 +459,11 @@ TStreamerObjectPointer::TStreamerObjectPointer()
 
 //______________________________________________________________________________
 TStreamerObjectPointer::TStreamerObjectPointer(const char *name, const char *title, Int_t offset, const char *typeName)
-        : TStreamerElement(name,title,offset,kObjectP,typeName)
+        : TStreamerElement(name,title,offset,TStreamerInfo::kObjectP,typeName)
 {
    // Create a TStreamerObjectPointer object.
 
-   if (strncmp(title,"->",2) == 0) fType = kObjectp;
+   if (strncmp(title,"->",2) == 0) fType = TStreamerInfo::kObjectp;
    fNewType = fType;
    Init();
 }
@@ -507,7 +508,7 @@ TStreamerString::TStreamerString()
 
 //______________________________________________________________________________
 TStreamerString::TStreamerString(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,kTString,"TString")
+        : TStreamerElement(name,title,offset,TStreamerInfo::kTString,"TString")
 {
    // Create a TStreamerString object.
 
@@ -558,7 +559,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    else if (strstr(s,"multimap")) fSTLtype = kSTLmultimap;
    else if (strstr(s,"multiset")) fSTLtype = kSTLmultiset;
    if (fSTLtype == 0) { delete [] s; return;}
-   if (dmPointer) fSTLtype += kOffsetP;
+   if (dmPointer) fSTLtype += TStreamerInfo::kOffsetP;
    
    // find STL contained type
     while (*sopen==' ') sopen++;
@@ -574,21 +575,17 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
    if (dt) {
-//      printf("found datatype type=%d\n",dt->GetType());
       fCtype = dt->GetType();
-      if (isPointer) fCtype += kOffsetP;
+      if (isPointer) fCtype += TStreamerInfo::kOffsetP;
    } else {
       TClass *cl = gROOT->GetClass(sopen);
       if (cl) {
-         if (isPointer) fCtype = kObjectp;
-         else           fCtype = kObject;
-//         printf("found class: %s\n",cl->GetName());
+         if (isPointer) fCtype = TStreamerInfo::kObjectp;
+         else           fCtype = TStreamerInfo::kObject;
       } else {
          printf ("UNKNOW type, sopen=%s\n",sopen);
       }
    }
-//   printf("Building STL element: %s %s, fSTLtype=%d, fCtype=%d\n",
-//      typeName,GetName(),fSTLtype,fCtype);
    delete [] s;
    
 }

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.4 2000/11/22 15:47:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.5 2000/11/24 14:40:38 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -25,18 +25,6 @@
 #include "TNamed.h"
 #endif
 
-enum EReadWrite {
-   kBase   =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,
-   kChar   =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat   =  5, kDouble  =  8,
-   kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
-   kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,  kTStringp=46,
-   kTString= 65,  kTObject = 66,  kTNamed  = 67,  kMissing = 99999,
-   kSkip   =100,  kSkipL   =120,  kSkipP   =140,  kSTL     = 300,
-   kConv   =200,  kConvL   =220,  kConvP   =240,  kSTLstring=365,
-   kSTLvector= 1, kSTLlist = 2,   kSTLdeque=  3,  kSTLmap  =   4,
-   kSTLset =  5,  kSTLmultimap=6, kSTLmultiset=7, kStreamer=500
-};
-
 class TMethodCall;
 class TClass;
 class TStreamerBasicType;
@@ -55,6 +43,10 @@ protected:
    char         *fStreamer;        //!pointer to element Streamer      
    TMethodCall  *fMethod;          //!pointer to TMethodCall
 public:
+
+   enum ESTLtype { kSTL       = 300, kSTLstring  =365,   kSTLvector = 1,
+                   kSTLlist   =  2,  kSTLdeque   =  3,   kSTLmap    = 4,
+                   kSTLset    =  5,  kSTLmultimap=6,     kSTLmultiset=7};
 
    TStreamerElement();
    TStreamerElement(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);

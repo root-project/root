@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.10 2000/11/24 14:42:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.11 2000/11/27 10:45:39 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 Int_t   TStreamerInfo::fgCount = 0;
 
-const Int_t kRegrouped = kOffsetL;
+const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
 typedef void (*Streamer_t)(TBuffer &, char*);
 
