@@ -134,11 +134,11 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
    DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",(level>0));
 
    // Test on vector of numerical type
-//    tree->Draw("fVClosestDistance>>hVClosestDistance","","goff");
-//    tree->Draw("fVClosestDistance[2]>>hVClosestDistance2","","goff");
-//    tree->Draw("fVClosestDistance[9]>>hVClosestDistance9","","goff");
-//    DrawSkippable(tree,"fVClosestDistance[fNvertex/2]","hVClosestDistanceIndex",
-//                  (level>0));
+   tree->Draw("fVClosestDistance>>hVClosestDistance","","goff");
+   tree->Draw("fVClosestDistance[2]>>hVClosestDistance2","","goff");
+   tree->Draw("fVClosestDistance[9]>>hVClosestDistance9","","goff");
+   DrawSkippable(tree,"fVClosestDistance[fNvertex/2]","hVClosestDistanceIndex",
+                 (level>0));
 
    // Test on vector of objects:
    DrawSkippable(tree,"fVEvtHdr.fRun","hVRun",(level>2));
@@ -148,7 +148,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
    
    // Test on vector of pointer
    DrawSkippable(tree,"fVTracks.fPx","hVPx",(level>2));
-   DrawSkippable(tree,"fVTracks.fCharge","hVCharge","fVTracks.fPx < 0",(level>2));
+   DrawSkippable(tree,"fVTracks.fCharge","fVTracks.fPx < 0","hVCharge",(level>2));
 
    // Test of simple function calls
    DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));   

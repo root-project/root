@@ -174,8 +174,10 @@ void MakeHisto(TTree *tree, TDirectory* To) {
             refVRunFunc->Fill( run );
             if (i==2) refVRun2->Fill( run );
             if (i==(Nvertex/2)) refVRunIndex->Fill( run );
+            ++i;
             ++eiter;
          }
+         if (i<=(Nvertex/2)) refVRunIndex->Fill( 0 );
       }
       {
          std::vector<Track*>::const_iterator titer = event->fVTracks.begin();
@@ -183,8 +185,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          while(titer != event->fVTracks.end()) {
             float px = (*titer)->GetPx();
             float charge = (*titer)->GetCharge();
-//             if (px<0) refVCharge->Fill(charge);
-//             refVPx->Fill(px);
+            if (px<0) refVCharge->Fill(charge);
+            refVPx->Fill(px);
             ++titer;
          }
       }
