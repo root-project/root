@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.31 2004/03/09 13:43:15 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.32 2004/03/09 16:44:57 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -186,6 +186,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    Int_t version = fSelector->Version();
 
+   TCleanup clean(this);
    SetupFeedback();
 
    fSelector->SetOption(option);
@@ -298,9 +299,24 @@ Int_t TProofPlayer::DrawSelect(TDSet *set, const char *varexp,
                                const char *selection, Option_t *option,
                                Long64_t nentries, Long64_t firstentry)
 {
-   if (set || varexp || selection || option || nentries || firstentry) { }
-   MayNotUse("DrawSelect");
-   return -1;
+   TNamed *varexpobj = new TNamed("varexp", varexp);
+   TNamed *selectionobj = new TNamed("selection", selection);
+   
+   fInput->Clear();  // good idea? what about a feedbacklist, but old query
+                     // could have left objs? clear at end? no, may want to
+                     // rerun, separate player?
+   
+   fInput->Add(varexpobj);
+   fInput->Add(selectionobj);
+   
+   Int_t r = Process(set, "TProofDraw", option, nentries, firstentry);
+   
+   fInput->Remove(varexpobj);
+   fInput->Remove(selectionobj);
+   delete varexpobj;
+   delete selectionobj;
+   
+   return r;
 }
 
 
@@ -402,6 +418,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       fSelector->Begin(0);
    }
 
+   TCleanup clean(this);
    SetupFeedback();
 
    TString opt = option;
@@ -431,23 +448,6 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    return 0;
 }
 
-//______________________________________________________________________________
-Int_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
-                                     const char *selection, Option_t *option,
-                                     Long64_t nentries, Long64_t firstentry)
-{
-   if (set || varexp || selection || option || nentries || firstentry) { }
-   Info("DrawSelect","Not implemented");
-   return 0;
-
-   // Analyze options
-
-
-   // Process query
-
-
-   // Display results
-}
 
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
@@ -771,7 +771,7 @@ void TProofPlayerSlave::StopFeedback()
 
    fFeedbackTimer->Stop();
    delete fFeedbackTimer;
-   fFeedback = 0;
+   fFeedbackTimer = 0;
 }
 
 //______________________________________________________________________________
@@ -807,4 +807,15 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
 
    delete fb;
    return kFALSE; // ignored?
+}
+
+
+//______________________________________________________________________________
+Int_t TProofPlayerSlave::DrawSelect(TDSet * /*set*/, const char * /*varexp*/,
+                               const char * /*selection*/, Option_t * /*option*/,
+                               Long64_t /*nentries*/, Long64_t /*firstentry*/)
+{
+   MayNotUse("DrawSelect");
+   
+   return -1;
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.19 2003/06/12 05:34:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.20 2003/10/24 00:40:40 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -338,6 +338,17 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
+         continue;
+      } else if ( reply->What() == kPROOF_LOGFILE ) {
+         PDB(kPacketizer,3) Info("TPacketizer2","Got logfile");
+         Int_t size;
+         (*reply) >> size;
+         ((TProof*)gProof)->RecvLogFile(sock, size);
+         mon.Activate(sock);
+         continue;
+      } else if ( reply->What() == kPROOF_LOGDONE ) {
+         PDB(kPacketizer,3) Info("TPacketizer2","Got logdone");
+         mon.Activate(sock);
          continue;
       } else if ( reply->What() != kPROOF_REPORTSIZE ) {
          // Help! unexpected message type

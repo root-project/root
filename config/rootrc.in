@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.66 2004/02/19 08:04:39 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.67 2004/02/22 17:23:14 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -168,6 +168,9 @@ Proofd.Authentication:  0
 # Set this to 1 if you want full SRP authentication in Proof
 # (Client-to-Master and Master-to-Slave)
 Proofd.SendSRPPwd:      0
+
+# Proof.DebugLevel:	0
+# Proof.DebugMask:	-1
 
 # Default login name (if not defined is taken from $(HOME))
 # UsrPwd.Login:           qwerty

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.14 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.15 2003/11/26 21:48:27 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #endif
 #ifndef ROOT_TQObject
 #include "TQObject.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 
 
@@ -64,6 +67,14 @@ protected:
    virtual void SetupFeedback();  // specialized setup
    virtual void StopFeedback();   // specialized teardown
 
+   class TCleanup {
+   private:
+      TProofPlayer *fPlayer;
+   public:
+      TCleanup(TProofPlayer *p) : fPlayer(p) {}
+      ~TCleanup() {gSystem->Syslog(kLogErr, "!!!cleanup!!!"); fPlayer->StopFeedback();}
+   };
+
 public:
    TProofPlayer();
    virtual ~TProofPlayer();
@@ -83,8 +94,8 @@ public:
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
    virtual void      StoreFeedback(TSlave *slave, TList *out); // Adopts the list
-   virtual void      Progress(Long64_t total, Long64_t processed); //*SIGNAL*
-   virtual void      Feedback(TList *objs); //*SIGNAL*
+   virtual void      Progress(Long64_t total, Long64_t processed); // *SIGNAL*
+   virtual void      Feedback(TList *objs); // *SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
    void              UpdateAutoBin(const char *name,
@@ -134,10 +145,6 @@ public:
                     Long64_t nentries = -1, Long64_t firstentry = 0,
                     TEventList *evl = 0);
 
-   Int_t    DrawSelect(TDSet *set, const char *varexp,
-                       const char *selection, Option_t *option = "",
-                       Long64_t nentries = -1, Long64_t firstentry = 0);
-
    void     StopProcess(Bool_t abort);
 
    void     StoreOutput(TList *out);   // Adopts the list
@@ -166,6 +173,10 @@ protected:
 public:
    TProofPlayerSlave();
    TProofPlayerSlave(TSocket *socket);
+
+   Int_t    DrawSelect(TDSet *set, const char *varexp,
+                       const char *selection, Option_t *option = "",
+                       Long64_t nentries = -1, Long64_t firstentry = 0);
 
    ClassDef(TProofPlayerSlave,0)  // PROOF player running on slave server
 };

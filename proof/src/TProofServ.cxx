@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.66 2004/01/14 08:45:25 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.67 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -673,6 +673,7 @@ void TProofServ::HandleSocketInput()
 
             TMessage answ(kPROOF_REPORTSIZE);
             answ << entries;
+            SendLogFile(); // in case of error messages            
             fSocket->Send(answ);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_REPORTSIZE", "Done");
          }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.9 2003/11/13 16:52:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.10 2003/11/15 19:11:47 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -539,6 +539,7 @@ void TDSet::AddFriend(TDSet *friendset)
    }
 
    // to be implemented
+   Error("AddFriend", "not implemented");
 }
 
 //______________________________________________________________________________
