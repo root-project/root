@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.20 2001/03/05 10:06:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.21 2001/03/06 19:16:31 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -254,6 +254,7 @@ void TObject::AppendPad(Option_t *option)
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
    }
+   if (!gPad->IsEditable()) return;
    SetBit(kMustCleanup);
    gPad->GetListOfPrimitives()->Add(this,option);
    gPad->Modified(kTRUE);
