@@ -33,7 +33,7 @@ GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
                 TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
-                TGTextEdit.h TGDoubleSlider.h
+                TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.4 2000/07/07 17:30:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.5 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -31,18 +31,20 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGTextEdit.h"
+#include "TGTextEditDialogs.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
 #include "TGMenu.h"
+#include "TGMsgBox.h"
+#include "TGFileDialog.h"
 #include "KeySymbols.h"
 
 
-enum {
-   kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_CLOSE, kM_FILE_SAVE, kM_FILE_SAVEAS,
-   kM_FILE_PRINT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_SELECTALL,
-   kM_SEARCH_FIND, kM_SEARCH_FINDAGAIN, kM_SEARCH_GOTO
-};
+const char *filetypes[] = { "All files",     "*",
+                            "Text files",    "*.txt",
+                            "ROOT macros",   "*.C",
+                            0,               0 };
 
 
 ClassImp(TGTextEdit)
@@ -88,6 +90,7 @@ TGTextEdit::~TGTextEdit()
 
    delete fCurBlink;
    delete fMenu;
+   delete fSearch;
 }
 
 //______________________________________________________________________________
@@ -114,6 +117,7 @@ void TGTextEdit::Init()
    fCurrent.fY  = fCurrent.fX = 0;
    fInsertMode  = kInsert;
    fCurBlink    = 0;
+   fSearch      = 0;
 
    // create popup menu with default editor actions
    fMenu = new TGPopupMenu(fClient->GetRoot());
@@ -139,6 +143,45 @@ void TGTextEdit::Init()
 }
 
 //______________________________________________________________________________
+void TGTextEdit::SetMenuState()
+{
+   // Enable/disable menu items in function of what is possible.
+
+   if (fText->RowCount() == 1 && fText->GetLineLength(0) <= 0) {
+      fMenu->DisableEntry(kM_FILE_CLOSE);
+      fMenu->DisableEntry(kM_FILE_SAVE);
+      fMenu->DisableEntry(kM_FILE_SAVEAS);
+      fMenu->DisableEntry(kM_FILE_PRINT);
+      fMenu->DisableEntry(kM_EDIT_SELECTALL);
+      fMenu->DisableEntry(kM_SEARCH_FIND);
+      fMenu->DisableEntry(kM_SEARCH_FINDAGAIN);
+      fMenu->DisableEntry(kM_SEARCH_GOTO);
+   } else {
+      fMenu->EnableEntry(kM_FILE_CLOSE);
+      fMenu->EnableEntry(kM_FILE_SAVE);
+      fMenu->EnableEntry(kM_FILE_SAVEAS);
+      fMenu->EnableEntry(kM_FILE_PRINT);
+      fMenu->EnableEntry(kM_EDIT_SELECTALL);
+      fMenu->EnableEntry(kM_SEARCH_FIND);
+      fMenu->EnableEntry(kM_SEARCH_FINDAGAIN);
+      fMenu->EnableEntry(kM_SEARCH_GOTO);
+   }
+
+   if (IsSaved())
+      fMenu->DisableEntry(kM_FILE_SAVE);
+   else
+      fMenu->EnableEntry(kM_FILE_SAVE);
+
+   if (fIsMarked) {
+      fMenu->EnableEntry(kM_EDIT_CUT);
+      fMenu->EnableEntry(kM_EDIT_COPY);
+   } else {
+      fMenu->DisableEntry(kM_EDIT_CUT);
+      fMenu->DisableEntry(kM_EDIT_COPY);
+   }
+}
+
+//______________________________________________________________________________
 Long_t TGTextEdit::ReturnLongestLineWidth()
 {
    // Return width of longest line in widget.
@@ -159,9 +202,24 @@ void TGTextEdit::Clear(Option_t *)
 }
 
 //______________________________________________________________________________
-Bool_t TGTextEdit::SaveFile(const char *filename)
+Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
 {
-   // Save file.
+   // Save file. If filename==0 ask user via dialog for a filename, if in
+   // addition saveas==kTRUE always ask for new filename. Returns
+   // kTRUE if file was correctly saved, kFALSE otherwise.
+
+   if (!filename) {
+      Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
+      if (untitled || saveas) {
+         TGFileInfo fi;
+         fi.fFileTypes = (char **)filetypes;
+         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
+         if (fi.fFilename && strlen(fi.fFilename))
+            return fText->Save(fi.fFilename);
+         return kFALSE;
+      }
+      return fText->Save(fText->GetFileName());
+   }
 
    return fText->Save(filename);
 }
@@ -208,8 +266,6 @@ void TGTextEdit::Delete(Option_t *)
 {
    // Delete selection.
 
-   TGLongPosition pos, endPos;
-
    if (!fIsMarked)
       return;
 
@@ -225,6 +281,7 @@ void TGTextEdit::Delete(Option_t *)
       return;
    }
 
+   TGLongPosition pos, endPos;
    Bool_t dellast = kFALSE;
 
    endPos.fX = fMarkedEnd.fX-1;
@@ -262,7 +319,8 @@ void TGTextEdit::Delete(Option_t *)
 Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
                           Bool_t caseSensitive)
 {
-   // Search for string in the specified direction.
+   // Search for string in the specified direction. If direction is true
+   // the search will be in forward direction.
 
    TGLongPosition pos;
    if (!fText->Search(&pos, fCurrent, string, direction, caseSensitive))
@@ -271,13 +329,13 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
    fIsMarked = kTRUE;
    fMarkedStart.fY = fMarkedEnd.fY = pos.fY;
    fMarkedStart.fX = pos.fX;
-   fMarkedEnd.fX = fMarkedStart.fX + strlen(string)-1;
-   fMarkedEnd.fX++;
+   fMarkedEnd.fX = fMarkedStart.fX + strlen(string);
+
    if (direction)
       SetCurrent(fMarkedEnd);
    else
       SetCurrent(fMarkedStart);
-   fMarkedEnd.fX--;
+
    pos.fY = ToObjYCoord(fVisible.fY);
    if (fCurrent.fY < pos.fY ||
        ToScrYCoord(fCurrent.fY) >= (Int_t)fCanvas->GetHeight())
@@ -308,14 +366,13 @@ Bool_t TGTextEdit::Replace(TGLongPosition textPos, const char *oldText,
    fIsMarked = kTRUE;
    fMarkedStart.fY = fMarkedEnd.fY = textPos.fY;
    fMarkedStart.fX = textPos.fX;
-   fMarkedEnd.fX = fMarkedStart.fX + strlen(newText)-1;
-   fMarkedEnd.fX++;
+   fMarkedEnd.fX = fMarkedStart.fX + strlen(newText);
 
    if (direction)
       SetCurrent(fMarkedEnd);
    else
       SetCurrent(fMarkedStart);
-   fMarkedEnd.fX--;
+
    pos.fY = ToObjYCoord(fVisible.fY);
    if (fCurrent.fY < pos.fY ||
        ToScrYCoord(fCurrent.fY) >= (Int_t)fCanvas->GetHeight())
@@ -338,14 +395,23 @@ Bool_t TGTextEdit::Goto(Long_t line)
 {
    // Goto the specified line.
 
-   TGLongPosition pos;
-   if (line-1 >= fText->RowCount())
-      return kFALSE;
-   pos.fY = line;
-   pos.fX = 0;
-   SetVsbPosition((ToScrYCoord(line-1)+fVisible.fY)/fScrollVal.fY);
+   if (line < 0)
+      line = 0;
+   if (line >= fText->RowCount())
+      line = fText->RowCount() - 1;
+
+   TGLongPosition gotopos, pos;
+   gotopos.fY = line;
+   gotopos.fX = 0;
+   SetCurrent(gotopos);
+
+   pos.fY = ToObjYCoord(fVisible.fY);
+   if (fCurrent.fY < pos.fY ||
+       ToScrYCoord(fCurrent.fY) >= (Int_t)fCanvas->GetHeight())
+      pos.fY = gotopos.fY;
+
+   SetVsbPosition((ToScrYCoord(pos.fY)+fVisible.fY)/fScrollVal.fY);
    SetHsbPosition(0);
-   SetCurrent(pos);
 
    return kTRUE;
 }
@@ -605,6 +671,7 @@ Bool_t TGTextEdit::HandleButton(Event_t *event)
             gVirtualX->ConvertPrimarySelection(fId, fClipboard, event->fTime);
       }
       if (event->fCode == kButton3) {
+         SetMenuState();
          fMenu->PlaceMenu(event->fXRoot, event->fYRoot, kFALSE, kTRUE);
       }
    }
@@ -877,13 +944,103 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          switch(GET_SUBMSG(msg)) {
             case kCM_MENU:
                switch (parm1) {
+                  case kM_FILE_NEW:
+                  case kM_FILE_CLOSE:
                   case kM_FILE_OPEN:
-                     printf("file open\n");
+                     if (!IsSaved()) {
+                        Int_t retval;
+                        Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
+                        char msg[512];
+
+                        sprintf(msg, "Save \"%s\"?",
+                                untitled ? "Untitled" : fText->GetFileName());
+                        new TGMsgBox(fClient->GetRoot(), this, "Save...", msg,
+                           kMBIconExclamation, kMBYes|kMBNo|kMBCancel, &retval);
+
+                        if (retval == kMBCancel)
+                           return kTRUE;
+                        if (retval == kMBYes)
+                           if (!SaveFile(0))
+                              return kTRUE;
+                     }
+                     Clear();
+                     if (parm1 == kM_FILE_OPEN) {
+                        TGFileInfo fi;
+                        fi.fFileTypes = (char **)filetypes;
+                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+                        if (fi.fFilename && strlen(fi.fFilename))
+                           LoadFile(fi.fFilename);
+                     }
                      break;
                   case kM_FILE_SAVE:
-                     printf("file save\n");
+                     SaveFile(0);
+                     break;
+                  case kM_FILE_SAVEAS:
+                     SaveFile(0, kTRUE);
+                     break;
+                  case kM_FILE_PRINT:
+                     {
+                        Int_t ret;
+                        char *printer = StrDup("892_2_cor"); // use gEnv
+                        char *printProg = StrDup("xprint");
+                        new TGPrintDialog(fClient->GetRoot(), this, 400, 150,
+                                          &printer, &printProg, &ret);
+                        if (ret) {
+                           printf("%s -P%s\n", printProg, printer);
+                        }
+                     }
+                     break;
+                  case kM_EDIT_CUT:
+                     Cut();
+                     break;
+                  case kM_EDIT_COPY:
+                     Copy();
+                     break;
+                  case kM_EDIT_PASTE:
+                     Paste();
+                     break;
+                  case kM_EDIT_SELECTALL:
+                     SelectAll();
+                     break;
+                  case kM_SEARCH_FIND:
+                     {
+                        Int_t ret = 0;
+                        if (!fSearch)
+                           fSearch = new TGSearchType;
+                        new TGSearchDialog(fClient->GetRoot(), this, 400, 150,
+                                           fSearch, &ret);
+                        if (ret) {
+                           if (!Search(fSearch->fBuffer, fSearch->fDirection,
+                                       fSearch->fCaseSensitive)) {
+                              char msg[256];
+                              sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
+                              new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                                           kMBIconExclamation, kMBOk, 0);
+                           }
+                        }
+                     }
+                     break;
+                  case kM_SEARCH_FINDAGAIN:
+                     if (!Search(fSearch->fBuffer, fSearch->fDirection,
+                                 fSearch->fCaseSensitive)) {
+                        char msg[256];
+                        sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
+                        new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                                     kMBIconExclamation, kMBOk, 0);
+                     }
+                     break;
+                  case kM_SEARCH_GOTO:
+                     {
+                        Long_t ret = fCurrent.fY+1;
+                        new TGGotoDialog(fClient->GetRoot(), this, 400, 150, &ret);
+                        if (ret > -1) {
+                           ret--;   // user specifies lines starting at 1
+                           Goto(ret);
+                        }
+                     }
                      break;
                   default:
+                     printf("No action implemented for menu id %ld\n", parm1);
                      break;
                }
             default:

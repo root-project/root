@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.5 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.6 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -395,6 +395,8 @@ Bool_t TGTextView::SelectAll()
    if (fMarkedEnd.fX < 0)
       fMarkedEnd.fX = 0;
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
+   Copy();
+
    return kTRUE;
 }
 
@@ -547,6 +549,7 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    len = 0;
    for (count = 0; count < fClipText->RowCount(); count++)
       len += fClipText->GetLineLength(count)+1;
+   len--;  // remove \n for last line
 
    pos.fY = pos.fX = 0;
    buffer = new char[len+1];
@@ -555,9 +558,12 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
       temp_len = fClipText->GetLineLength(pos.fY);
       temp_buffer = fClipText->GetLine(pos, temp_len);
       strncpy(buffer+prev_len, temp_buffer, (UInt_t)temp_len);
-      buffer[prev_len+temp_len] = 10;   // \n
+      if (pos.fY < fClipText->RowCount()-1) {
+         buffer[prev_len+temp_len] = 10;   // \n
+         prev_len += temp_len+1;
+      } else
+         prev_len += temp_len;
       delete [] temp_buffer;
-      prev_len += temp_len+1;
    }
    buffer[len] = '\0';
 

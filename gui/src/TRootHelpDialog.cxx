@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.cxx,v 1.2 2000/07/03 18:55:32 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -20,7 +20,8 @@
 
 #include "TRootHelpDialog.h"
 #include "TGButton.h"
-#include "TGTextView.h"
+//#include "TGTextView.h"
+#include "TGTextEdit.h"
 
 
 ClassImp(TRootHelpDialog)
@@ -32,7 +33,8 @@ TRootHelpDialog::TRootHelpDialog(const TGWindow *main,
 {
    // Create a help text dialog.
 
-   fView = new TGTextView(this, w, h, kSunkenFrame | kDoubleBorder);
+//   fView = new TGTextView(this, w, h, kSunkenFrame | kDoubleBorder);
+   fView = new TGTextEdit(this, w, h, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    AddFrame(fView, fL1);
 
@@ -82,7 +84,8 @@ void TRootHelpDialog::SetText(const char *helpText)
 {
    // Set help text from helpText buffer in TGTextView.
 
-   fView->LoadBuffer(helpText);
+   //fView->LoadBuffer(helpText);
+   fView->LoadFile("/user/rdm/root/test/Makefile");
 }
 
 //______________________________________________________________________________

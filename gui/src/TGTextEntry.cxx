@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.2 2000/07/06 16:50:55 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -28,6 +28,8 @@
 //                                                                      //
 // Changing text in the text entry widget will generate the event:      //
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
+// Hitting the enter key will generate:                                 //
+// kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
 //                                                                      //
 // This widget has the behaviour e.g. of the "Location" field in        //
 // netscape. That includes handling Control/Shift key modifiers and     //

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.2 2000/07/03 18:50:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.h,v 1.3 2000/07/07 17:30:59 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -23,8 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObjString
-#include "TObjString.h"
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 #ifndef ROOT_TGDimension
@@ -66,6 +66,7 @@ public:
 class TGText {
 
 protected:
+   TString      fFilename;       // name of opened file ("" if open buffer)
    Bool_t       fIsSaved;        // false if text needs to be saved
    TGTextLine  *fFirst;          // first line of text
    TGTextLine  *fCurrent;        // current line
@@ -93,6 +94,7 @@ public:
    Bool_t  Save(const char *fn);
    Bool_t  Append(const char *fn);
    Bool_t  IsSaved() const { return fIsSaved; }
+   const char *GetFileName() const { return fFilename.Data(); }
 
    Bool_t  DelChar(TGLongPosition pos);
    Bool_t  InsChar(TGLongPosition pos, char c);

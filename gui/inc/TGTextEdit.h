@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.2 2000/07/07 00:29:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.3 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #endif
 
 class TGPopupMenu;
+class TGSearchType;
 
 
 class TGTextEdit : public TGTextView {
@@ -35,7 +36,12 @@ class TGTextEdit : public TGTextView {
 friend class TGClient;
 
 public:
-   enum   EInsertMode { kInsert, kReplace };
+   enum EInsertMode { kInsert, kReplace };
+   enum {
+      kM_FILE_NEW, kM_FILE_OPEN, kM_FILE_CLOSE, kM_FILE_SAVE, kM_FILE_SAVEAS,
+      kM_FILE_PRINT, kM_EDIT_CUT, kM_EDIT_COPY, kM_EDIT_PASTE, kM_EDIT_SELECTALL,
+      kM_SEARCH_FIND, kM_SEARCH_FINDAGAIN, kM_SEARCH_GOTO
+   };
 
 protected:
    GContext_t       fCursor0GC;     // graphics context for erasing cursor
@@ -43,13 +49,15 @@ protected:
    Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
    TViewTimer      *fCurBlink;      // cursor blink timer
    TGPopupMenu     *fMenu;          // popup menu with editor actions
+   TGSearchType    *fSearch;        // structure used by search dialog
    TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // text insertion mode (kInsert (default) , kReplace)
+   EInsertMode      fInsertMode;    // text insertion mode (kInsert (default), kReplace)
 
    static Cursor_t  fgDefaultCursor;
 
    void Init();
 
+   virtual void SetMenuState();
    virtual void CursorOn();
    virtual void CursorOff();
    virtual void DrawCursor(Int_t mode);
@@ -79,7 +87,7 @@ public:
 
    virtual ~TGTextEdit();
 
-   virtual Bool_t SaveFile(const char *fname);
+   virtual Bool_t SaveFile(const char *fname, Bool_t saveas = kFALSE);
    virtual void   Clear(Option_t * = "");
    virtual Bool_t Copy();
    virtual Bool_t Cut();
@@ -91,6 +99,7 @@ public:
    virtual Bool_t Goto(Long_t line);
    virtual void   SetInsertMode(EInsertMode mode = kInsert);
    EInsertMode    GetInsertMode() const { return fInsertMode; }
+   TGPopupMenu   *GetMenu() const { return fMenu; }
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);

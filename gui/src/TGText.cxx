@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.5 2000/07/07 17:30:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.6 2000/07/10 01:07:19 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -288,6 +288,7 @@ void TGText::Clear()
    fRowCount    = 1;
    fLongestLine = 0;
    fIsSaved     = kTRUE;
+   fFilename    = "";
 }
 
 //______________________________________________________________________________
@@ -364,8 +365,10 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
    fRowCount = i;
    if (fRowCount == 0)
       fRowCount++;
-   fIsSaved = kTRUE;
+   fIsSaved  = kTRUE;
+   fFilename = fn;
    LongestLine();
+
    return kTRUE;
 }
 
@@ -375,7 +378,7 @@ Bool_t TGText::LoadBuffer(const char *txtbuf)
    // Load a 0 terminated buffer. Lines will be split a '\n'.
 
    Bool_t      isFirst = kTRUE;
-   Bool_t      finished = kFALSE;
+   Bool_t      finished = kFALSE, lastnl = kFALSE;
    Long_t      i, cnt;
    TGTextLine *travel, *temp;
    char        buf[kMaxLen], c, *src, *dst, *buffer, *buf2, *s;
@@ -446,6 +449,12 @@ next:
    ++i;
    delete [] buf2;
 
+   // make sure that \n generates a single empty line in the TGText
+   if (!lastnl && !*tbuf && *(tbuf-1) == '\n') {
+      tbuf--;
+      lastnl = kTRUE;
+   }
+
    if (!finished && tbuf && strlen(tbuf))
       goto next;
 
@@ -453,8 +462,10 @@ next:
    fRowCount = i;
    if (fRowCount == 0)
       fRowCount++;
-   fIsSaved = kTRUE;
+   fIsSaved  = kTRUE;
+   fFilename = "";
    LongestLine();
+
    return kTRUE;
 }
 
