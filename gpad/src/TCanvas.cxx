@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.21 2001/03/14 11:10:39 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.22 2001/05/10 14:31:48 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -213,9 +213,11 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    //  form = 5    500x500 at 50,50
 
    if (gThreadXAR) {
-      void *arr[5];
-      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&form;
-      if ((*gThreadXAR)("CANV", 5, arr, NULL)) return;
+      void *arr[6];
+      static Int_t ww = 500;
+      static Int_t wh = 500;
+      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
+      if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
 
    // Make sure the application environment exists.
