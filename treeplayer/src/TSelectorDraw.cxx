@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.19 2003/12/04 00:18:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.20 2003/12/10 20:27:25 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -119,7 +119,7 @@ void TSelectorDraw::Begin(TTree *tree)
    fCleanElist = kFALSE;
    fTreeElist = inElist;
    if ( inElist && inElist->GetReapplyCut() ) {
-      realSelection = realSelection && inElist->GetTitle();
+      realSelection *= inElist->GetTitle();
    }
 
    // what each variable should contain:
@@ -739,13 +739,13 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
    // if varexp is empty, take first column by default
    nch = strlen(varexp);
    if (nch == 0) {
-      fDimension = 0; 
+      fDimension = 0;
       fManager = new TTreeFormulaManager();
       if (fSelect) fManager->Add(fSelect);
       fTree->ResetBit(TTree::kForceRead);
-      
+
       fManager->Sync();
-      
+
       if (fManager->GetMultiplicity()==-1) fTree->SetBit(TTree::kForceRead);
       if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
 
@@ -1007,7 +1007,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
             }
 
          } else {
-            
+
             if (!TestBit(kWarn)) {
                Warning("ProcessFillObject",
                        "Not implemented for %s",
@@ -1128,7 +1128,7 @@ void TSelectorDraw::TakeAction()
             pms->AddAt(pm3d,col);
          }
       }
-      for (i=0;i<fNfill;i++) { 
+      for (i=0;i<fNfill;i++) {
          col = Int_t(fV4[i]);
          if (col < 0) col = 0;
          if (col > ncolors-1) col = ncolors-1;
