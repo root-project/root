@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.14 2002/10/31 07:27:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.15 2002/11/27 08:19:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -164,6 +164,8 @@ public:
         Style_t          GetLabelFont(Option_t *axis="X") const;
         Float_t          GetLabelOffset(Option_t *axis="X") const;
         Float_t          GetLabelSize(Option_t *axis="X") const;
+        Color_t          GetTitleColor(Option_t *axis="X") const;  //return axis title color of pad title color
+        Style_t          GetTitleFont(Option_t *axis="X") const;   //return axis title font of pad title font
         Float_t          GetTitleOffset(Option_t *axis="X") const; //return axis title offset
         Float_t          GetTitleSize(Option_t *axis="X") const;   //return axis title size
         Float_t          GetTickLength(Option_t *axis="X") const;
@@ -242,10 +244,9 @@ public:
         Float_t          GetStatH() const     {return fStatH;}
         Int_t            GetStripDecimals() const {return fStripDecimals;}
         Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
-        Color_t          GetTitleColor() const {return fTitleColor;}  //return histogram title fill area color
+        Color_t          GetTitleFillColor() const {return fTitleColor;}  //return histogram title fill area color
         Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
         Style_t          GetTitleStyle() const  {return fTitleStyle;}
-        Style_t          GetTitleFont() const  {return fTitleFont;} //return histogram title font
         Float_t          GetTitleFontSize() const  {return fTitleFontSize;} //return histogram title font size
         Width_t          GetTitleBorderSize() const {return fTitleBorderSize;} //return border size of histogram title TPaveLabel
         Float_t          GetTitleXOffset() const {return GetTitleOffset("X");} //return X axis title offset
@@ -276,8 +277,10 @@ public:
         void             SetLegoInnerR(Float_t rad=0.5) {fLegoInnerR = rad;}
         void             SetScreenFactor(Float_t factor=1) {fScreenFactor = factor;}
         void             SetTickLength(Float_t length=0.03, Option_t *axis="X");
+        void             SetTitleColor(Color_t color=1, Option_t *axis="X"); //set axis title color or pad title color
+        void             SetTitleFont(Style_t font=62, Option_t *axis="X"); //set axis title font or pad title font
         void             SetTitleOffset(Float_t offset=1, Option_t *axis="X"); //set axis title offset
-        void             SetTitleSize(Float_t size=0.02, Option_t *axis="X");  //set axis title size
+        void             SetTitleSize(Float_t size=0.02, Option_t *axis="X");  //set axis title size or pad title size
         void             SetNumberContours(Int_t number=20);
         void             SetOptDate(Int_t datefl=1);
         void             SetOptFile(Int_t file=1) {fOptFile = file;}
@@ -348,10 +351,9 @@ public:
         void             SetStatH(Float_t h=0.1)  {fStatH=h;}
         void             SetStripDecimals(Bool_t strip=kTRUE);
         void             SetTimeOffset(Double_t toffset);
-        void             SetTitleColor(Int_t color=19)      {fTitleColor=color;}
-        void             SetTitleTextColor(Int_t color=1)   {fTitleTextColor=color;}
+        void             SetTitleFillColor(Color_t color=1)   {fTitleColor=color;}
+        void             SetTitleTextColor(Color_t color=1)   {fTitleTextColor=color;}
         void             SetTitleStyle(Style_t style=1001)  {fTitleStyle=style;}
-        void             SetTitleFont(Style_t font=62)      {fTitleFont=font;}
         void             SetTitleFontSize(Float_t size=0)   {fTitleFontSize=size;}
         void             SetTitleBorderSize(Width_t size=2) {fTitleBorderSize=size;}
         void             SetTitleXOffset(Float_t offset=1)  {SetTitleOffset(offset,"X");}

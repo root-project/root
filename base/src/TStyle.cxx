@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.24 2002/10/31 07:27:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.25 2002/11/27 08:19:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -101,7 +101,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetPadBorderMode(0);
       SetPadColor(0);
       SetCanvasColor(0);
-      SetTitleColor(0);
+      SetTitleFillColor(0);
       SetTitleBorderSize(1);
       SetStatColor(0);
       SetStatBorderSize(1);
@@ -134,7 +134,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetTitleSize(0.06,"Y");
       SetTitleSize(0.06,"Z");
       SetTitleOffset(1.3,"Y");
-      SetTitleColor(10);
+      SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
       SetStatColor(10);
       return;
@@ -162,7 +162,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetTitleSize(0.08,"X");
       SetTitleSize(0.08,"Y");
       SetTitleSize(0.08,"Z");
-      SetTitleColor(10);
+      SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
       SetStatColor(10);
       SetFuncWidth(8);
@@ -200,7 +200,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
       SetTitleSize(0.06,"Y");
       SetTitleSize(0.06,"Z");
       SetTitleOffset(1.3,"Y");
-      SetTitleColor(10);
+      SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
       return;
    }
@@ -466,9 +466,10 @@ void TStyle::Reset(Option_t *)
 Int_t TStyle::AxisChoice( Option_t *axis) const
 {
    char achoice = toupper(axis[0]);
+   if (achoice == 'X') return 1;
    if (achoice == 'Y') return 2;
    if (achoice == 'Z') return 3;
-   return 1;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -573,6 +574,26 @@ Float_t TStyle::GetTickLength( Option_t *axis) const
 }
 
 //______________________________________________________________________________
+Color_t TStyle::GetTitleColor( Option_t *axis) const
+{
+   Int_t ax = AxisChoice(axis);
+   if (ax == 1) return fXaxis.GetTitleColor();
+   if (ax == 2) return fYaxis.GetTitleColor();
+   if (ax == 3) return fZaxis.GetTitleColor();
+   return fTitleTextColor;
+}
+
+//______________________________________________________________________________
+Style_t TStyle::GetTitleFont( Option_t *axis) const
+{
+   Int_t ax = AxisChoice(axis);
+   if (ax == 1) return fXaxis.GetTitleFont();
+   if (ax == 2) return fYaxis.GetTitleFont();
+   if (ax == 3) return fZaxis.GetTitleFont();
+   return fTitleFont;
+}
+
+//______________________________________________________________________________
 Float_t TStyle::GetTitleOffset( Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
@@ -589,7 +610,7 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
    if (ax == 1) return fXaxis.GetTitleSize();
    if (ax == 2) return fYaxis.GetTitleSize();
    if (ax == 3) return fZaxis.GetTitleSize();
-   return 0;
+   return fTitleFontSize;
 }
 
 //______________________________________________________________________________
@@ -945,6 +966,46 @@ void TStyle::SetTickLength(Float_t length, Option_t *axis)
 }
 
 //______________________________________________________________________________
+void TStyle::SetTitleColor(Color_t color, Option_t *axis)
+{
+// if axis =="x"  set the X axis title color
+// if axis =="y"  set the Y axis title color
+// if axis =="z"  set the Z axis title color
+// any other value of axis will set the pad title color
+//
+// if axis="xyz" set all 3 axes
+
+   TString opt = axis;
+   opt.ToLower();
+
+   Bool_t set = kFALSE;
+   if (opt.Contains("x")) {fXaxis.SetTitleColor(color); set = kTRUE;}
+   if (opt.Contains("y")) {fYaxis.SetTitleColor(color); set = kTRUE;}
+   if (opt.Contains("z")) {fZaxis.SetTitleColor(color); set = kTRUE;}
+   if (!set) fTitleColor = color;
+}
+
+//______________________________________________________________________________
+void TStyle::SetTitleFont(Style_t font, Option_t *axis)
+{
+// if axis =="x"  set the X axis title font
+// if axis =="y"  set the Y axis title font
+// if axis =="z"  set the Z axis title font
+// any other value of axis will set the pad title font
+//
+// if axis="xyz" set all 3 axes
+
+   TString opt = axis;
+   opt.ToLower();
+
+   Bool_t set = kFALSE;
+   if (opt.Contains("x")) {fXaxis.SetTitleFont(font); set = kTRUE;}
+   if (opt.Contains("y")) {fYaxis.SetTitleFont(font); set = kTRUE;}
+   if (opt.Contains("z")) {fZaxis.SetTitleFont(font); set = kTRUE;}
+   if (!set) fTitleFont = font;
+}
+
+//______________________________________________________________________________
 void TStyle::SetTitleOffset(Float_t offset, Option_t *axis)
 {
 // Specify a parameter offset to control the distance between the axis
@@ -967,17 +1028,21 @@ void TStyle::SetTitleOffset(Float_t offset, Option_t *axis)
 //______________________________________________________________________________
 void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 {
-// Set the axis title size.
+// if axis =="x"  set the X axis title size
+// if axis =="y"  set the Y axis title size
+// if axis =="z"  set the Z axis title size
+// any other value of axis will set the pad title size
 //
-// axis specifies which axis ("x","y","z"), default = "x"
 // if axis="xyz" set all 3 axes
 
    TString opt = axis;
    opt.ToLower();
 
-   if (opt.Contains("x")) fXaxis.SetTitleSize(size);
-   if (opt.Contains("y")) fYaxis.SetTitleSize(size);
-   if (opt.Contains("z")) fZaxis.SetTitleSize(size);
+   Bool_t set = kFALSE;
+   if (opt.Contains("x")) {fXaxis.SetTitleSize(size); set = kTRUE;}
+   if (opt.Contains("y")) {fYaxis.SetTitleSize(size); set = kTRUE;}
+   if (opt.Contains("z")) {fZaxis.SetTitleSize(size); set = kTRUE;}
+   if (!set) fTitleFontSize = size;
 }
 
 //______________________________________________________________________________
