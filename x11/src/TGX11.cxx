@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.41 2004/08/12 09:55:05 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.42 2004/08/12 10:44:38 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1038,8 +1038,8 @@ ULong_t TGX11::GetPixel(Color_t ci)
    TColor *color = gROOT->GetColor(ci);
    if (color)
       SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-   else
-      Warning("GetPixel", "color with index %d not defined", ci);
+//   else
+//      Warning("GetPixel", "color with index %d not defined", ci);
 
    XColor_t &col = GetColor(ci);
    return col.pixel;
@@ -2058,8 +2058,8 @@ void  TGX11::SetColor(GC gc, int ci)
    TColor *color = gROOT->GetColor(ci);
    if (color)
       SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-   else
-      Warning("SetColor", "color with index %d not defined", ci);
+//   else
+//      Warning("SetColor", "color with index %d not defined", ci);
 
    XColor_t &col = GetColor(ci);
    if (fColormap && !col.defined) {
