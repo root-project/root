@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.7 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.8 2004/08/09 15:23:40 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -727,10 +727,7 @@ void TGeoXtru::Paint(Option_t *option)
    buff->fPols[indx++] = c+2;
    buff->fPols[indx++] = nvert;
    indx2 = 0;
-/*   for (j=0; j<nvert; j++) {
-      buff->fPols[indx++] = indx2+j;
-   }*/
-   for (Int_t j = nvert - 1; j >= 0; --j) {
+   for (j = nvert - 1; j >= 0; --j) {
       buff->fPols[indx++] = indx2+j;
    }
 
@@ -738,7 +735,7 @@ void TGeoXtru::Paint(Option_t *option)
    buff->fPols[indx++] = nvert;
    indx2 = (nz-1)*nvert;
  
-   for (Int_t j=0; j<nvert; j++) {
+   for (j=0; j<nvert; j++) {
       buff->fPols[indx++] = indx2+j;
    }
 
