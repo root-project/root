@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.3 2000/11/21 20:50:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.4 2000/12/06 07:31:29 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -73,7 +73,8 @@ void TLeafObject::FillBasket(TBuffer &b)
       object->Streamer(b);
    } else {
      if (fClass) {
-        object = (TObject *)fClass->New();
+        if (fClass->Property() & kIsAbstract) object = new TObject;
+        else                                  object = (TObject *)fClass->New();
         object->SetBit(kInvalidObject);
         object->SetUniqueID(123456789);
         object->Streamer(b);
