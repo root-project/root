@@ -1,14 +1,14 @@
 # PROOF config file. It has a very simple format:
 #
-# node <hostname> [image=<imagename>]
-# slave <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
+# master <hostname> [image=<imagename>]
+# worker <hostname> [perf=<perfindex>] [image=<imagename>] [port=<portnumber>]
 # user <username> on <hostname>
 #
-# For each unique node in the cluster add a "node" line.
-# For each node in the cluster that can run a slave server add a "slave" line.
-# A single node can run multiple slaves (e.g. an SMP machine). In that case
-# repeat the slave line N times, where N is the number of CPU's in the machine.
-# Perfindex is a number specifying the relative speed of each slave CPU in the
+# For each node in the cluster that can run a master add a "master" line.
+# For each node in the cluster that can run a worker add a "worker" line.
+# A single node can run multiple workers (e.g. an SMP machine). In that case
+# repeat the worker line N times, where N is the number of CPU's in the machine.
+# Perfindex is a number specifying the relative speed of each CPU in the
 # cluster. Say, the fastest CPU is 100, a CPU 30% slower has perf=70. The
 # perfindex is used for load balancing. By default perf=100. The perfindex
 # is mostly an indication since the parallel algorithm is adaptive and will
@@ -17,18 +17,18 @@
 # nodes/CPU's in the cluster. For example if all nodes share a common user
 # directory, like with AFS, set image=afs (<imagename> is arbitrary but should
 # be unique for each different image). By default imagename is the hostname.
-# Port is used to tell PROOF to connect to the slave servers on the specified
-# port (in case proofd was started by the user as opposed to via inetd).
+# Port is used to tell PROOF to connect to the workers on the specified
+# port (in case proofd was started by the user instead of via inetd).
 # 
-# Users can be redirected to have their master server run on a predetermined
+# Users can be redirected to have their master server run on a pre-determined
 # node. For that use the "user" line.
 #
-# For backward compatibility it is still possible to specify the methods to 
-# used for slave authentication as a list following the 'slave <hostname>'
-# (eg slave <slave_name> uidgid usrpwd srp); this is however deprecated;
-# it is strongly advised to make use of the $ROOTSYS/etc/system.rootauthrc
+# For backward compatibility it is still possible to specify the methods
+# used for worker authentication as a list following the 'worker <hostname>'
+# (e.g. worker <hostname> uidgid usrpwd srp), this is however deprecated.
+# It is strongly advised to make use of the $ROOTSYS/etc/system.rootauthrc
 # and/or $HOME/.rootauthrc files to give authentication directives. See
-# $ROOTSYS/etc/system.rootauthrc for details
+# $ROOTSYS/etc/system.rootauthrc for details.
 #
 
 #node pcna49a image=nfs
@@ -42,8 +42,7 @@
 #user rdm on pcna49d
 
 
-node localhost
+master localhost
 
-slave localhost
-slave localhost
-
+worker localhost
+worker localhost
