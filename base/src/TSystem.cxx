@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.78 2004/01/10 10:52:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.79 2004/01/24 23:07:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -139,12 +139,6 @@ TSystem::~TSystem()
       fHelpers->Delete();
       SafeDelete(fHelpers);
    }
-
-   delete fReadmask;
-   delete fWritemask;
-   delete fReadready;
-   delete fWriteready;
-   delete fSignals;
 
    if (gSystem == this)
       gSystem = 0;
@@ -1677,7 +1671,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       if ( G__unloadfile( (char*) filename ) != 0 ) {
          // We can not unload it.
-         return kFALSE; 
+         return kFALSE;
       }
    }
 
@@ -1750,7 +1744,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 #ifndef WIN32
       const char * stderrfile = "/dev/null";
 #else
-      TString stderrfile; 
+      TString stderrfile;
       AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
 #endif
 
@@ -1915,7 +1909,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                 build_loc.Data());
       if (emergency_loc == build_dir ) {
          ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
-         return kFALSE; 
+         return kFALSE;
       }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());

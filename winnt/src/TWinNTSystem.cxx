@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.64 2004/01/24 23:07:47 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.65 2004/01/25 15:48:49 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -68,34 +68,22 @@ unsigned thread1ID;
 
 
 
-//////////////////// Windows TFdSet ////////////////////////////////////////////////
-class TWinFdSet : public TFdSet {
+//------------------- WinNT TFdSet ---------------------------------------------
+class TFdSet {
 private:
    fd_set *fds_bits;     // file descriptors (maximum is 64)
 public:
-   TWinFdSet() { fds_bits = new fd_set; fds_bits->fd_count = 0; }
-   virtual ~TWinFdSet() { delete fds_bits; }
-   void  Copy(TFdSet &fd) const { memcpy((void*)((TWinFdSet&)fd).fds_bits, fds_bits, sizeof(fd_set)); }
-   void  Zero() { fds_bits->fd_count = 0; }
-   void  Set(Int_t fd) { fds_bits->fd_array[fds_bits->fd_count++] = (SOCKET)fd; }
-   void  Clr(Int_t fd) 
-   { 
-      int i; 
-      for (i=0; i<fds_bits->fd_count; i++) {
-         if (fds_bits->fd_array[i]==(SOCKET)fd) {
-            while (i<fds_bits->fd_count-1) {
-               fds_bits->fd_array[i] = fds_bits->fd_array[i+1];
-               i++;
-            }
-            fds_bits->fd_count--;
-            break;
-         }
-      }
-   }
-   Int_t IsSet(Int_t fd) { return __WSAFDIsSet((SOCKET)fd, fds_bits); }
-   Int_t *GetBits() { return fds_bits->fd_count ? (Int_t*)fds_bits : 0; }
-   UInt_t GetCount() { return (UInt_t)fds_bits->fd_count; }
-   Int_t GetFd(Int_t i) { return i<fds_bits->fd_count ? fds_bits->fd_array[i] : 0; } 
+   TFdSet() { fds_bits = new fd_set; Zero(); }
+   ~TFdSet() { delete fds_bits; }
+   TFdSet(const TFdSet &org) { *fds_bits = *org.fds_bits; }
+   TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { *fds_bits = *rhs.fds_bits; } return *this; }
+   void   Zero() { FD_ZERO(fds_bits); }
+   void   Set(Long_t fd) { FD_SET(fd, fds_bits); }
+   void   Clr(Long_t fd) { FD_CLR(fd, fds_bits); }
+   Int_t  IsSet(Long_t fd) { return (Int_t) FD_ISSET(fd, fds_bits); }
+   Int_t *GetBits() { return fds_bits->fd_count ? (Int_t *) fds_bits : 0; }
+   UInt_t GetCount() const { return (UInt_t) fds_bits->fd_count; }
+   Long_t GetFd(Int_t i) const { return i < fds_bits->fd_count ? (Long_t) fds_bits->fd_array[i] : 0; }
 };
 
 
@@ -306,10 +294,17 @@ TWinNTSystem::~TWinNTSystem()
       ImageList_Destroy(fhSmallIconList);
       fhSmallIconList = 0;
    }
+
    if (fhNormalIconList) {
       ImageList_Destroy(fhNormalIconList);
       fhNormalIconList = 0;
    }
+
+   delete fReadmask;
+   delete fWritemask;
+   delete fReadready;
+   delete fWriteready;
+   delete fSignals;
 
 #ifdef GDK_WIN32
    if (hThread1) ::CloseHandle(hThread1);
@@ -328,14 +323,11 @@ Bool_t TWinNTSystem::Init()
    if (TSystem::Init())
       return kTRUE;
 
-   fReadmask = new TWinFdSet;
-   fWritemask = new TWinFdSet;
-   fReadready = new TWinFdSet;
-   fWriteready = new TWinFdSet;
-   fSignals = new TWinFdSet;
-   fNfd    = 0;
-   fMaxrfd = 0;
-   fMaxwfd = 0;
+   fReadmask   = new TFdSet;
+   fWritemask  = new TFdSet;
+   fReadready  = new TFdSet;
+   fWriteready = new TFdSet;
+   fSignals    = new TFdSet;
 
    //--- install default handlers
    WinNTSignal(kSigChild,                 SigHandler);
@@ -628,7 +620,7 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
 
    TSystem::AddFileHandler(h);
    if (h) {
-      int fd = h->GetFd();
+      Long_t fd = h->GetFd();
       if (!fd) return;
 
       if (h->HasReadInterest()) {
@@ -653,7 +645,7 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
       fWritemask->Zero();
 
       while ((th = (TFileHandler *) next())) {
-         int fd = th->GetFd();
+         Long_t fd = th->GetFd();
          if (!fd) return oh;
 
          if (th->HasReadInterest()) {
@@ -841,19 +833,18 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    // nothing ready, so setup select call
    if (!fReadmask->GetBits() && !fWritemask->GetBits()) return; // no fds
-
-   fReadmask->Copy(*fReadready);
-   fWritemask->Copy(*fWriteready);
+   *fReadready  = *fReadmask;
+   *fWriteready = *fWritemask;
 
    fNfd = WinNTSelect(fReadready, fWriteready, NextTimeOut(kTRUE));
 
-   // serious error has happened -> reset all file descrptors  
+   // serious error has happened -> reset all file descrptors
    if ((fNfd < 0) && (fNfd != -2)) {
       int fd, rc, i;
 
       for (i = 0; i < fReadmask->GetCount(); i++) {
-         TWinFdSet t;
-         Int_t fd = fReadmask->GetFd(i);
+         TFdSet t;
+         Long_t fd = fReadmask->GetFd(i);
          t.Set(fd);
          if (fReadmask->IsSet(fd)) {
             rc = WinNTSelect(&t, 0, 0);
@@ -865,8 +856,8 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
       }
 
       for (i = 0; i < fWritemask->GetCount(); i++) {
-         TWinFdSet t;
-         Int_t fd = fWritemask->GetFd(i);
+         TFdSet t;
+         Long_t fd = fWritemask->GetFd(i);
          t.Set(fd);
 
          if (fWritemask->IsSet(fd)) {
@@ -962,7 +953,7 @@ Bool_t TWinNTSystem::CheckDescriptors()
 
    TOrdCollectionIter it((TOrdCollection*)fFileHandler);
    while ((fh = (TFileHandler*) it.Next())) {
-      Int_t fd = fh->GetFd();
+      Long_t fd = fh->GetFd();
       if (!fd) continue; // ignore TTermInputHandler
 
       if ((fReadready->IsSet(fd) && fddone == -1) ||
@@ -2029,7 +2020,7 @@ Double_t TWinNTSystem::GetRealTime()
    SYSTEMTIME st;
    ::GetSystemTime(&st);
    ::SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
-   
+
    return (Double_t)ftRealTime.ftInt64 * gTicks;
 }
 
@@ -2598,7 +2589,7 @@ int TWinNTSystem::AcceptConnection(int socket)
    int soc = -1;
    SOCKET sock = socket;
 
-   while ((soc = ::accept(sock, 0, 0)) == INVALID_SOCKET && 
+   while ((soc = ::accept(sock, 0, 0)) == INVALID_SOCKET &&
           (::WSAGetLastError() == WSAEINTR)) {
       ResetErrno();
    }

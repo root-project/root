@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.33 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.34 2004/01/24 23:07:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #endif
 
 class TSeqCollection;
+class TFdSet;
 
 
 enum EAccessMode {
@@ -134,40 +135,17 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFdSet                                                               //
-//                                                                      //
-// Wrapper class around the fd_set bit mask macros used by select().    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-class TFdSet {
-public:
-   TFdSet() {}
-   virtual ~TFdSet() {}
-   virtual void  Copy(TFdSet&) const = 0;
-   virtual void  Zero() = 0;
-   virtual void  Set(Int_t) = 0;
-   virtual void  Clr(Int_t) = 0;
-   virtual Int_t IsSet(Int_t) = 0;
-   virtual Int_t *GetBits() = 0;
-   virtual UInt_t GetCount() { return 256; }
-   virtual Int_t GetFd(Int_t) { return 0; }
-};
-
-
 class TSystem : public TNamed {
 
 public:
    enum EAclicMode { kDefault, kDebug, kOpt };
 
 protected:
-   TFdSet           *fReadmask;        //!Files that should be checked for read events
-   TFdSet           *fWritemask;       //!Files that should be checked for write events
-   TFdSet           *fReadready;       //!Files with reads waiting
-   TFdSet           *fWriteready;      //!Files with writes waiting
-   TFdSet           *fSignals;         //!Signals that were trapped
+   TFdSet          *fReadmask;         //!Files that should be checked for read events
+   TFdSet          *fWritemask;        //!Files that should be checked for write events
+   TFdSet          *fReadready;        //!Files with reads waiting
+   TFdSet          *fWriteready;       //!Files with writes waiting
+   TFdSet          *fSignals;          //!Signals that were trapped
    Int_t            fNfd;              //Number of fd's in masks
    Int_t            fMaxrfd;           //Largest fd in read mask
    Int_t            fMaxwfd;           //Largest fd in write mask
