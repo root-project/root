@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.25 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.26 2002/08/12 15:10:57 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -157,6 +157,8 @@
 #include "TMatrix.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TPluginManager.h"
+#include "TVirtualUtilHist.h"
 
 ClassImp(TMatrix)
 
@@ -222,9 +224,19 @@ void TMatrix::Draw(Option_t *option)
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrix" by default and no title
 
-   delete gDirectory->FindObject("TMatrix");
-   gROOT->ProcessLine(Form("TH2F *R__TMatrix = new TH2F((TMatrix&)((TMatrix*)(0x%lx)));R__TMatrix->SetBit(kCanDelete);R__TMatrix->Draw(\"%s\");",
-      (Long_t)this,option));
+
+   //create the hist utility manager (a plugin)
+   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+      }
+   }
+   util->PaintMatrix(*this,option);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.14 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.15 2002/08/12 15:10:57 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -43,7 +43,8 @@
 #include "TMatrix.h"
 #include "TROOT.h"
 #include "TClass.h"
-
+#include "TPluginManager.h"
+#include "TVirtualUtilHist.h"
 
 ClassImp(TVector)
 
@@ -112,9 +113,18 @@ void TVector::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVector" by default and no title
 
-   delete gDirectory->FindObject("TVector");
-   gROOT->ProcessLine(Form("TH1F *R__TVector = new TH1F((TVector&)((TVector*)(0x%lx)));R__TVector->SetBit(kCanDelete);R__TVector->Draw(\"%s\");",
-      (Long_t)this,option));
+   //create the hist utility manager (a plugin)
+   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+   if (!util) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
+          if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
+          util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+      }
+   }
+   util->PaintVector(*this,option);
 }
 
 
