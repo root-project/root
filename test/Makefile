@@ -159,6 +159,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),sgicc64)
+# SGI
+CXX           = CC -64  -I/usr/include/CC.sgi
+CXXFLAGS      = -O
+LD            = CC -64  -I/usr/include/CC.sgi
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),sgiegcs)
 # SGI 6.x with EGCS
 CXX           = g++

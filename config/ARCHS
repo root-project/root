@@ -33,6 +33,7 @@ lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc
 mklinux              for MkLinux gcc and glibc
 sgicc                for SGI IRIX 6.x CC
+sgicc64              for SGI IRIX 6.x CC 64 bits
 sgiegcs              for SGI IRIX 6.x egcs 1.1.x
 sgikcc               for SGI IRIX 6.x KCC
 sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI

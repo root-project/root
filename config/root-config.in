@@ -105,6 +105,12 @@ sgicc)
    auxlibs="-lm -ldl"
    auxglibs=${auxlibs}
    ;;
+sgicc64)
+   # SGI
+   auxcflags="-64 -LANG:std"
+   auxlibs="-lm"
+   auxglibs=${auxlibs}
+   ;;
 sgiegcs)
    # SGI 6.x with EGCS
    auxcflags="-fsigned-char"

@@ -69,6 +69,9 @@ $(ASTEPLIBA):   $(ASTEPDIRS).tar.gz
 		if [ $(CC) = "icc" ]; then \
 			ACC="icc"; \
 		fi; \
+		if [ $(ARCH) = "sgicc64" ]; then \
+			ACC="gcc -mabi=64"; \
+		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
 		--with-ttf=no --with-gif=no --with-afterbase=no \

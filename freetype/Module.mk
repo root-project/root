@@ -67,7 +67,11 @@ else
 		if [ $(ARCH) = "alphacxx6" ]; then \
 			FREECC="cc"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic CC=$$FREECC CFLAGS=-O2; \
+		if [ $(ARCH) = "sgicc64" ]; then \
+			FREECC="cc"; \
+			ARCH_CFLAGS="-64"; \
+		fi; \
+		GNUMAKE=$(MAKE) ./configure --with-pic CC=$$FREECC CFLAGS=\"$$ARCH_CFLAGS -O2\"; \
 		$(MAKE))
 endif
 
