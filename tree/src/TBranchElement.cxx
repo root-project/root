@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.142 2004/08/24 10:41:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.143 2004/09/20 16:44:01 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1140,7 +1140,10 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
     
    // if Tree has a TBranchRef, set the ReadEntry in the TBranchRef
    TBranchRef *bref = fTree->GetBranchRef();
-   if (bref) bref->SetReadEntry(entry);
+   if (bref) {
+      bref->SetParent(this);
+      bref->SetReadEntry(entry);
+   }
 
    if (fTree->Debug() > 0) {
       if (entry >= fTree->GetDebugMin() && entry <= fTree->GetDebugMax()) {
