@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -179,6 +179,7 @@ TDrawPanelHist::TDrawPanelHist(const char *name, const char *title, UInt_t ww, U
 
    Modified(kTRUE);
    Update();
+   SetEditable(kFALSE);
 
    fRefPad->cd();
 }
