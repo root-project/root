@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.2 2000/06/13 11:12:13 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
         virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
         virtual void     SaveStyle(); // *MENU*
         virtual void     SetAllWith(const char *, Option_t *, Double_t) {;}
-        virtual void     SetMargin(Double_t) {;}
+        virtual void     SetMargin(Float_t) {;}
         virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
         virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
         void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
