@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.32 2004/06/19 09:18:07 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.33 2004/06/21 06:05:05 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -101,6 +101,7 @@ void TSelectorDraw::Begin(TTree *tree)
    ResetBit(kCustomHistogram);
    fSelectedRows   = 0;
    fTree = tree;
+   fDimension = 0;
 
    const char *varexp0   = fInput->FindObject("varexp")->GetTitle();
    const char *selection = fInput->FindObject("selection")->GetTitle();
@@ -336,7 +337,15 @@ void TSelectorDraw::Begin(TTree *tree)
          }
 
       } else { // if (i)                       // make selection list (i.e. varexp0 starts with ">>")
-         elist = (TEventList*)gDirectory->Get(hname);
+         TObject *oldObject = gDirectory->Get(hname);
+         elist = dynamic_cast<TEventList*>(oldObject);
+
+         if (elist==0 && oldObject!=0) {
+            Error("Begin","An object of type '%s' has the same name as the requested event list (%s)",
+                  oldObject->IsA()->GetName(),hname);
+            SetStatus(-1);
+            return;
+         }
          if (!elist) {
             elist = new TEventList(hname,realSelection.GetTitle(),1000,0);
          }
