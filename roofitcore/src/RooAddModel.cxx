@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.8 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.9 2001/09/06 20:49:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -419,5 +419,17 @@ void RooAddModel::syncNormalization(const RooArgSet* nset) const
     model->syncNormalization(nset) ;
   }
   delete pIter ;
+
+  // Create unit basis in case model is used as a regular PDF
+  if (_basisCode==0) {
+    if (_verboseEval>0) {
+      cout << "RooAddModel::syncNormalization(" << GetName() 
+	   << ") creating unit normalization object" << endl ;
+    }
+
+    TString nname(GetName()) ; nname.Append("Norm") ;
+    TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
+    _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;    
+  }
   
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.rdl,v 1.1 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.rdl,v 1.2 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,6 +15,7 @@
 
 #include "Rtypes.h"
 #include "TList.h"
+#include "TString.h"
 #include "RooFitCore/RooArgSet.hh"
 class RooAbsCategoryLValue ; 
 class RooAbsCategory ;
@@ -27,23 +28,35 @@ public:
 
   // Constructors, assignment etc
   RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
+  RooPdfCustomizer(const RooAbsPdf& pdf, const char* name) ;
   virtual ~RooPdfCustomizer() ;
   
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
+  void replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) ;
   RooAbsPdf* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
+  RooAbsPdf* build(Bool_t verbose=kFALSE) ;
 
   const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
-  const RooArgSet& cloneLeafList() const { return _cloneLeafList ; }
+  const RooArgSet& cloneLeafList() const { return *_cloneLeafList ; }
 
   RooArgSet* fullParamList(const RooArgSet* depList) const ;
 
 protected:
   
   RooPdfCustomizer(const RooPdfCustomizer&) ;
+  void initialize() ;
+  
+  RooAbsPdf* doBuild(const char* masterCatState, Bool_t verbose) ;
+
+  Bool_t _sterile ;
+  TString _name ;
 
   TList _splitArgList ;
   TList _splitCatList ;
+
+  TList _replaceArgList ;
+  TList _replaceSubList ;
 
   // Master nodes are not owned
   RooAbsPdf* _masterPdf ;
@@ -60,7 +73,7 @@ protected:
   RooArgSet _cloneBranchList ;
 
   // Cloned leafs are owned by the user supplied list in the ctor
-  RooArgSet& _cloneLeafList ;
+  RooArgSet* _cloneLeafList ;
 
   ClassDef(RooPdfCustomizer,0) // PDF customizer 
 } ;

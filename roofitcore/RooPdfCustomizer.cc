@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.6 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.7 2001/09/17 18:48:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -26,11 +26,27 @@ ClassImp(RooPdfCustomizer)
 
 
 RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
-  _masterPdf((RooAbsPdf*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(splitLeafs),
+  _masterPdf((RooAbsPdf*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
-  _cloneBranchList("cloneBranchList")
+  _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
+{
+  initialize() ;
+}
 
 
+
+RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const char* name) :
+  _masterPdf((RooAbsPdf*)&pdf), _masterCat(0), _cloneLeafList(0),
+  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
+  _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
+{
+  initialize() ;
+}
+
+
+
+
+void RooPdfCustomizer::initialize() 
 {
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
   _masterPdf->leafNodeServerList(&_masterUnsplitLeafList) ;
@@ -38,7 +54,6 @@ RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLVa
 
   _masterLeafListIter = _masterLeafList.createIterator() ;
   _masterBranchListIter = _masterBranchList.createIterator() ;
-
 }
 
 
@@ -56,6 +71,11 @@ RooPdfCustomizer::~RooPdfCustomizer()
   
 void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
 {
+  if (_sterile) {
+    cout << "RooPdfCustomizer::splitArgs(" << _name 
+	 << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
+    return ;
+  }
   TIterator* iter = set.createIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()){
@@ -66,8 +86,21 @@ void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& spl
 
 void RooPdfCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) 
 {
+  if (_sterile) {
+    cout << "RooPdfCustomizer::splitArg(" << _name 
+	 << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
+    return ;
+  }
+
   _splitArgList.Add((RooAbsArg*)&arg) ;
   _splitCatList.Add((RooAbsCategory*)&splitCat) ;
+}
+
+
+void RooPdfCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) 
+{
+  _replaceArgList.Add((RooAbsArg*)&orig) ;
+  _replaceSubList.Add((RooAbsArg*)&subst) ;
 }
 
 
@@ -79,7 +112,7 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
   RooArgList list(listName) ;
 
   list.add(_masterUnsplitLeafList) ;
-  list.add(_cloneLeafList) ;
+  list.add(*_cloneLeafList) ;
 
   TIterator* iter = depList->createIterator() ;
   RooAbsArg* dep ;
@@ -95,22 +128,46 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
 
 
 
+
+
+RooAbsPdf* RooPdfCustomizer::build(Bool_t verbose) 
+{
+  doBuild(_name,verbose) ;
+}
+
+
+
 RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose) 
 {
-  // Set masterCat to given state
+  if (_sterile) {
+    cout << "RooPdfCustomizer::build(" << _name 
+	 << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
+    return 0 ;
+  }
+
   if (_masterCat->setLabel(masterCatState)) {
     cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState 
 	 << "' not defined for master splitting category " << _masterCat->GetName() << endl ;
     return 0 ;
   }
 
+  return doBuild(masterCatState,verbose) ;
+}
+
+
+RooAbsPdf* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
+{
+  // Set masterCat to given state
+
   // Find leafs that must be split according to provided description, Clone leafs, change their names
   RooArgSet masterLeafsToBeSplit("masterLeafsToBeSplit") ;
+  RooArgSet masterLeafsToBeReplaced("masterLeafsToBeReplaced") ;
+  RooArgSet masterReplacementLeafs("masterReplacementLeafs") ;
   RooArgSet clonedMasterLeafs("clonedMasterLeafs") ;
   _masterLeafListIter->Reset() ;
   RooAbsArg* leaf ;
   while(leaf=(RooAbsArg*)_masterLeafListIter->Next()) {
-    RooAbsArg* splitArg = (RooAbsArg*) _splitArgList.FindObject(leaf->GetName()) ;
+    RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(leaf->GetName()):0 ;
     if (splitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(splitArg)) ;
       if (verbose) {
@@ -126,10 +183,10 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
       newName.Append(splitCat->getLabel()) ;	
 
       // Check if this leaf instance already exists
-      if (_cloneLeafList.find(newName)) {
+      if (_cloneLeafList->find(newName)) {
 
 	// Copy instance to one-time use list for this build
-	clonedMasterLeafs.add(*_cloneLeafList.find(newName)) ;
+	clonedMasterLeafs.add(*_cloneLeafList->find(newName)) ;
 
       } else {
 
@@ -149,13 +206,30 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 
 	// Add to one-time use list and life-time use list
 	clonedMasterLeafs.add(*clone) ;
-	_cloneLeafList.add(*clone) ;	
+	_cloneLeafList->add(*clone) ;	
+      }
+      masterLeafsToBeSplit.add(*leaf) ;     
+    }
+
+    RooAbsArg* replaceArg = (RooAbsArg*) _replaceArgList.FindObject(leaf->GetName()) ;
+    if (replaceArg) {
+      RooAbsArg* substArg = (RooAbsArg*) _replaceSubList.At(_replaceArgList.IndexOf(replaceArg)) ;
+      if (verbose) {
+	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() 
+	     << "): PDF leaf " << leaf->GetName() << " will be replaced by " << substArg->GetName() << endl ;
       }
 
-      masterLeafsToBeSplit.add(*leaf) ;
+      // Affix attribute with old name to support name changing server redirect
+      TString nameAttrib("ORIGNAME:") ;
+      nameAttrib.Append(leaf->GetName()) ;
+      substArg->setAttribute(nameAttrib) ;
+
+      // Add to list
+      masterLeafsToBeReplaced.add(*leaf) ;
+      masterReplacementLeafs.add(*substArg) ;
     }
   }
-  _cloneLeafList.add(clonedMasterLeafs) ;
+  if (!_sterile) _cloneLeafList->add(clonedMasterLeafs) ;
 
 
   // Find branches that are affected by splitting and must be cloned
@@ -167,6 +241,12 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
       if (verbose) {
 	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
 	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
+      }
+      masterBranchesToBeCloned.add(*branch) ;
+    } else if (branch->dependsOn(masterLeafsToBeReplaced)) {
+      if (verbose) {
+	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
+	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     }
@@ -201,6 +281,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
   while(branch=(RooAbsArg*)iter->Next()) {
     branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
     branch->redirectServers(clonedMasterLeafs,kFALSE,kTRUE) ;
+    branch->redirectServers(masterReplacementLeafs,kFALSE,kTRUE) ;
   }
   delete iter ;  
 
