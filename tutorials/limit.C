@@ -82,6 +82,12 @@ void limit() {
   cout << "< CLsb > : " << mynewconfidence->GetExpectedCLsb_b() << endl;
   cout << "< CLb >  : " << mynewconfidence->GetExpectedCLb_b()  << endl;
 
+// show canonical -2lnQ plots in a new canvas
+// - The histogram of -2lnQ for background hypothesis (full)
+// - The histogram of -2lnQ for signal and background hypothesis (dashed)
+  TCanvas *c2 = new TCanvas("c2");
+  myconfidence->Draw();
+  
 // clean up (except histograms and canvas)
   delete myconfidence;
   delete mydatasource;
