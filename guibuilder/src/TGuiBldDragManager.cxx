@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.24 2004/10/18 15:59:23 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.25 2004/10/19 15:10:49 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2393,13 +2393,19 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
 
       if (event->fWindow == main->GetId()) {
          fClient->SetRoot(0);
-         main->Cleanup();
 
-         delete fBuilder;
+         if (main != fBuilder) {
+            main->Cleanup();
+            if (fEditor && !fEditor->IsEmbedded()) {
+               delete fEditor;
+               fEditor = 0;
+            }
+            return kFALSE;
+         }
+
+         //delete fBuilder;
          fBuilder = 0;
          gGuiBuilder = 0;
-
-         delete fEditor;
          fEditor = 0;
 
          delete fFrameMenu;
@@ -2412,14 +2418,12 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
          fPimpl->fGrid = 0;
          Init();
          if (fPimpl) fPimpl->ResetParams();
-      }
 
-      if (fBuilder && (event->fWindow == fBuilder->GetId())) {
+      } else if (fBuilder && (event->fWindow == fBuilder->GetId())) {
          fBuilder = 0;
          gGuiBuilder = 0;
-      }
 
-      if (fEditor && (event->fWindow == fEditor->GetMainFrame()->GetId())) {
+      } else if (fEditor && (event->fWindow == fEditor->GetMainFrame()->GetId())) {
          TQObject::Disconnect(fEditor);
          fEditor = 0;
       }
