@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.144 2004/05/12 22:43:06 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.145 2004/05/13 09:54:59 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -671,7 +671,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case kLong_t:     return (Double_t)(*(Long_t*)(thisobj+fOffset));
       case kULong_t:    return (Double_t)(*(ULong_t*)(thisobj+fOffset));
       case kLong64_t:   return (Double_t)(*(Long64_t*)(thisobj+fOffset));
-      case kULong64_t:  return (Double_t)(*(Long64_t*)(thisobj+fOffset));
+      case kULong64_t:  return (Double_t)(*(Long64_t*)(thisobj+fOffset)); //cannot cast to ULong64_t with VC++6
       case kFloat_t:    return (Double_t)(*(Float_t*)(thisobj+fOffset));
       case kDouble_t:   return (Double_t)(*(Double_t*)(thisobj+fOffset));
       case kDouble32_t: return (Double_t)(*(Double_t*)(thisobj+fOffset));
@@ -705,7 +705,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + kULong_t:
          {ULong_t *val   = (ULong_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kULong64_t:
-         {ULong64_t *val = (Long64_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Long64_t *val = (Long64_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
 
          // pointer to an array of basic types  array[n]
       case TStreamerInfo::kOffsetP + kChar_t:
@@ -733,7 +733,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetP + kULong_t:
          {ULong_t **val   = (ULong_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
       case TStreamerInfo::kOffsetP + kULong64_t:
-         {ULong64_t **val = (Long64_t**)(thisobj+fOffset);  return Double_t((*val)[instance]);}
+         {Long64_t **val = (Long64_t**)(thisobj+fOffset);   return Double_t((*val)[instance]);}
 
       case kOther_t:
       default:        return 0;
