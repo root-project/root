@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.168 2003/11/14 11:11:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.169 2003/12/16 09:01:47 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3428,9 +3428,11 @@ void TTree::ResetBranchAddresses()
 //______________________________________________________________________________
 Int_t  TTree::Scan(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
-//*-*-*-*-*-*-*-*-*Loop on Tree & print entries following selection*-*-*-*-*-*
-//*-*              ===============================================
-
+   // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
+   // then print only first 8 columns. If varexp = "*" print all columns.
+   // Otherwise a columns selection can be made using "var1:var2:var3".
+   // see TTreePlayer::Scan for more information
+   
    GetPlayer();
    if (fPlayer) return fPlayer->Scan(varexp,selection,option,nentries,firstentry);
    else         return -1;
