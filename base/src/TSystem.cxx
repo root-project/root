@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.117 2005/02/08 18:04:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.118 2005/03/29 12:51:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2053,7 +2053,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    if ( !recompile ) {
       // Generate the dependency filename
       TString depdir = build_loc;
-      if (!canWrite) depdir = emergency_loc;
       TString depfilename;
       AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
       depfilename += "_" + extension + ".d";
@@ -2090,6 +2089,12 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          }
 
          if (needDependencies) {
+            if (!canWrite) {
+               depdir = emergency_loc;
+               AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
+               depfilename += "_" + extension + ".d";
+               bakdepfilename = depfilename + ".bak";
+            }
             gSystem->Unlink(depfilename);
 
             // Generate the dependency via standard output, not searching the
