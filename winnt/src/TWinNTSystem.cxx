@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.80 2004/04/20 17:01:35 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.81 2004/04/20 21:21:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2538,10 +2538,14 @@ UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
       return ug;
    }
    struct passwd *pwd = 0;
-   for(int i=0;i<fNbUsers;i++) {
-      if (uid == fPasswords[i].pw_uid) {
-         pwd = &fPasswords[i];
-         break;
+   if (uid == 0)
+      pwd = &fPasswords[fActUser];
+   else {
+      for (int i = 0; i < fNbUsers; i++) {
+         if (uid == fPasswords[i].pw_uid) {
+            pwd = &fPasswords[i];
+            break;
+         }
       }
    }
    if (pwd) {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.17 2004/04/20 15:08:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.19 2004/04/20 21:20:22 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -40,16 +40,32 @@
 #ifndef R__LYNXOS
 #include <sys/stat.h>
 #endif
-#ifndef WIN32
-#include <pwd.h>
-#include <grp.h>
-#else
+#ifdef WIN32
 #define lstat(name, sbuf) _stat(name, sbuf)
-#define S_ISLNK(mode) mode & _S_IFCHR
+#define stat _stat
+#define S_ISCHR(type) type & _S_IFCHR
 #define S_ISDIR(type) type & _S_IFDIR
 #define S_ISREG(type) type & _S_IFREG
-#define S_IXUSR _S_IEXEC
-#define stat _stat
+#define S_ISBLK(type)   (0)
+#define S_ISLNK(type)   (0)
+#define S_ISSOCK(type)  (0)
+#define S_ISFIFO(type)  (0)
+
+#define S_IRWXU      00700   // read, write, execute: owner
+#define S_IRUSR      00400   // read permission: owner
+#define S_IWUSR      00200   // write permission: owner
+#define S_IXUSR      00100   // execute permission: owner
+#define S_IRWXG      00070   // read, write, execute: group
+#define S_IRGRP      00040   // read permission: group
+#define S_IWGRP      00020   // write permission: group
+#define S_IXGRP      00010   // execute permission: group
+#define S_IRWXO      00007   // read, write, execute: other
+#define S_IROTH      00004   // read permission: other
+#define S_IWOTH      00002   // write permission: other
+#define S_IXOTH      00001   // execute permission: other
+#define S_ISUID      0x800   // set user id on execution
+#define S_ISGID      0x400   // set group id on execution
+#define S_ISVTX      0
 #endif
 
 
@@ -202,7 +218,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
 
    fSubnames = new TGString* [5];
 
-#ifndef WIN32
    // file type
    sprintf(tmp, "%c%c%c%c%c%c%c%c%c%c",
                 (fIsLink ?
@@ -246,79 +261,19 @@ TGFileItem::TGFileItem(const TGWindow *p,
    fSubnames[1] = new TGString(tmp);
 
    {
-      struct group *grp;
-      struct passwd *pwd;
-      char   tmp[256];
-
-      pwd = getpwuid(fUid);
-      if (pwd) {
-         fSubnames[2] = new TGString(pwd->pw_name);
-      } else {
-         sprintf(tmp, "%d", fUid);
-         fSubnames[2] = new TGString(tmp);
-      }
-      grp = getgrgid(fGid);
-      if (grp) {
-         fSubnames[3] = new TGString(grp->gr_name);
-      } else {
-         sprintf(tmp, "%d", fGid);
-         fSubnames[3] = new TGString(tmp);
-      }
-   }
-
-   fSubnames[4] = 0;
-
-   int i;
-   for (i = 0; fSubnames[i] != 0; ++i)
-      ;
-   fCtw = new int[i+1];
-   fCtw[i] = 0;
-   for (i = 0; fSubnames[i] != 0; ++i)
-      fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                     fSubnames[i]->GetLength());
-#else
-   char *temp;
-   sprintf(tmp, "%c%c%c%c",
-                (fIsLink ?
-                 'l' :
-                 ((type & _S_IFREG) ?
-                  '-' :
-                  ((type & _S_IFDIR) ?
-                   'd' : '?'))),
-                 ((type & _S_IREAD) ? 'r' : '-'),
-                 ((type & S_IWRITE) ? 'w' : '-'),
-                 ((type & S_IEXEC) ? 'x' : '-'));
-   fSubnames[0] = new TGString(tmp);
-
-   // file size
-   fsize = bsize = fSize;
-   if (fsize > 1024) {
-      fsize /= 1024;
-      if (fsize > 1024) {
-         // 3.7MB is more informative than just 3MB
-         sprintf(tmp, "%ld.%ldM", fsize/1024, (fsize%1024)/103);
-      } else {
-         sprintf(tmp, "%ld.%ldK", bsize/1024, (bsize%1024)/103);
-      }
-   } else {
-      sprintf(tmp, "%ld", bsize);
-   }
-   fSubnames[1] = new TGString(tmp);
-   {
       struct UserGroup_t *user_group;
-      char   tmp[256];
-      user_group = gSystem->GetUserInfo("");
+
+      user_group = gSystem->GetUserInfo(fUid);
       if (user_group) {
          fSubnames[2] = new TGString(user_group->fUser);
          fSubnames[3] = new TGString(user_group->fGroup);
+         delete user_group;
       } else {
-         if (temp = getenv("USERNAME"))
-            fSubnames[2] = new TGString(temp);
-         else
-            fSubnames[2] = new TGString("user");
-         fSubnames[3] = new TGString("group");
+         fSubnames[2] = new TGString(Form("%d", fUid));
+         fSubnames[3] = new TGString(Form("%d", fGid));
       }
    }
+
    fSubnames[4] = 0;
 
    int i;
@@ -329,7 +284,6 @@ TGFileItem::TGFileItem(const TGWindow *p,
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
-#endif
 }
 
 //______________________________________________________________________________
