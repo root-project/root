@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.2 2001/01/19 17:28:00 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.3 2001/05/28 06:24:22 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -278,12 +278,12 @@ void TFitPanel::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!fRefPad) return;
    fRefPad->cd();
-   fRefPad->GetCanvas()->FeedbackMode(kTRUE);
-   gVirtualX->SetLineWidth(2);
 
    switch (event) {
 
    case kButton1Down:
+      fRefPad->GetCanvas()->FeedbackMode(kTRUE);
+      gVirtualX->SetLineWidth(2);
       gVirtualX->SetLineColor(-1);
       if (done) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       done = kTRUE;

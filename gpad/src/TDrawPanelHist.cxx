@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDrawPanelHist.cxx,v 1.2 2001/06/14 21:48:17 rdm Exp $
 // Author: Rene Brun   26/11/96
 
 /*************************************************************************
@@ -283,6 +283,7 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // We return in the first case.
    // When called by the slider,  px = 0 and py = 0
 
+   //if (event == kMouseLeave || event == kMouseEnter || (px && py)) {
    if (px && py) {
       SetCursor(kCross);
       return;
@@ -300,12 +301,12 @@ void TDrawPanelHist::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (!fRefPad) return;
    fRefPad->cd();
-   fRefPad->GetCanvas()->FeedbackMode(kTRUE);
-   gVirtualX->SetLineWidth(2);
 
    switch (event) {
 
    case kButton1Down:
+      fRefPad->GetCanvas()->FeedbackMode(kTRUE);
+      gVirtualX->SetLineWidth(2);
       gVirtualX->SetLineColor(-1);
       if (done) gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
       done = kTRUE;
