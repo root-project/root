@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.51 2001/10/02 16:51:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.52 2001/11/28 14:50:59 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -271,7 +271,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
-   fList        = new TList;
+   fList        = new THashList(1000,3);
    fFiles       = new TList;
    fMappedFiles = new TList;
    fSockets     = new TList;
