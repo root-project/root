@@ -1,0 +1,11 @@
+#!/bin/bash
+
+mkdir $1
+cp root/Makefile.template $1
+
+cvs add $1
+
+cd $1
+mv Makefile.template Makefile
+cvs add Makefile
+cvs commit -m "Makefile" Makefile
