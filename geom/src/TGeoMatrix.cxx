@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.24 2004/09/03 16:08:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.25 2004/09/06 10:23:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -983,7 +983,7 @@ void TGeoRotation::CheckMatrix()
 {
    // performes an orthogonality check and finds if the matrix is a reflection
 //   Warning("CheckMatrix", "orthogonality check not performed yet");
-   if (Determinant() < 0) SetBit(kGeoReflection);
+   if (Determinant() < 0) {SetBit(kGeoReflection);printf("%s reflection\n", GetName());}
    Double_t dd = fRotationMatrix[0] + fRotationMatrix[4] + fRotationMatrix[8] - 3.;
    if (TMath::Abs(dd) < 1.E-12) ResetBit(kGeoRotation);
    else                         SetBit(kGeoRotation);
@@ -1164,6 +1164,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
    if (rot.IsRotation()) {
       SetBit(kGeoRotation);   
       fRotation = new TGeoRotation(rot);
+      SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
    }   
 }   
 
@@ -1333,6 +1334,7 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation *rot)
 // Copy the rotation from another one.
    if (rot->IsRotation()) {
       SetBit(kGeoRotation);
+      SetBit(kGeoReflection, rot->TestBit(kGeoReflection));
       const TGeoRotation &r = *rot;
       if (!fRotation) fRotation = new TGeoRotation(r);
    } else {   
@@ -1348,6 +1350,7 @@ void TGeoCombiTrans::SetRotation(const TGeoRotation &rot)
 // Copy the rotation from another one.
    if (rot.IsRotation()) {
       SetBit(kGeoRotation);
+      SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
       if (!fRotation) fRotation = new TGeoRotation(rot);
    } else {
       if (!IsRotation()) return;
@@ -1705,6 +1708,7 @@ void TGeoHMatrix::Multiply(const TGeoMatrix *right)
       if (right->IsRotation()) {
          SetBit(kGeoRotation);
          memcpy(fRotationMatrix,r_rot,kN9);
+         if (right->IsReflection()) SetBit(kGeoReflection, !TestBit(kGeoReflection));
       }
       if (right->IsScale()) {
          SetBit(kGeoScale);
@@ -1719,7 +1723,10 @@ void TGeoHMatrix::Multiply(const TGeoMatrix *right)
    Int_t i, j;
    Double_t new_rot[9]; 
 
-   if (right->IsRotation())    SetBit(kGeoRotation);
+   if (right->IsRotation())    {
+      SetBit(kGeoRotation);
+      if (right->IsReflection()) SetBit(kGeoReflection, !TestBit(kGeoReflection));
+   }   
    if (right->IsScale())       SetBit(kGeoScale);
    if (right->IsTranslation()) SetBit(kGeoTranslation);
 
@@ -1759,6 +1766,7 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
    const Double_t *l_scl = left->GetScale();
    if (IsIdentity()) {
       if (left->IsRotation()) {
+         if (left->IsReflection()) SetBit(kGeoReflection, !TestBit(kGeoReflection));
          SetBit(kGeoRotation);
          memcpy(fRotationMatrix,l_rot,kN9);
       }
@@ -1776,7 +1784,10 @@ void TGeoHMatrix::MultiplyLeft(const TGeoMatrix *left)
    Double_t new_tra[3]; 
    Double_t new_rot[9]; 
 
-   if (left->IsRotation())    SetBit(kGeoRotation);
+   if (left->IsRotation()) {
+      SetBit(kGeoRotation);
+      if (left->IsReflection()) SetBit(kGeoReflection, !TestBit(kGeoReflection));
+   }
    if (left->IsScale())       SetBit(kGeoScale);
    if (left->IsTranslation()) SetBit(kGeoTranslation);
 
