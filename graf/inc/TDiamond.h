@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TDiamond.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -36,7 +36,7 @@ class TDiamond :  public TPaveText {
 
 public:
    TDiamond();
-   TDiamond(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2);
+   TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TDiamond(const TDiamond &diamond);
    virtual ~TDiamond();
            void  Copy(TObject &diamond);

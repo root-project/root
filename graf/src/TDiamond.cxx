@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TDiamond::TDiamond(): TPaveText()
 }
 
 //______________________________________________________________________________
-TDiamond::TDiamond(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2)
+TDiamond::TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
      :TPaveText(x1,y1,x2,y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Diamond standard constructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -133,7 +133,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p;
    static Int_t Tx,Ty,Lx,Ly,Rx,Ry,Bx,By;
-   static float X1c,X2c,X3c,X4c;
+   static Double_t X1c,X2c,X3c,X4c;
    static Bool_t T, L, R, B, INSIDE;
    static Int_t i,x[5], y[5];
    Int_t  wx, wy;
@@ -373,17 +373,17 @@ void TDiamond::Paint(Option_t *)
 //*-*-*-*-*-*-*-*-*-*-*Paint this diamond with its current attributes*-*-*-*-*
 //*-*                  ==============================================
 
-   Float_t x[7],y[7],Depx,Depy;
-   Float_t x1 = fX1;
-   Float_t y1 = fY1;
-   Float_t x2 = fX2;
-   Float_t y2 = fY2;
+   Double_t x[7],y[7],Depx,Depy;
+   Double_t x1 = fX1;
+   Double_t y1 = fY1;
+   Double_t x2 = fX2;
+   Double_t y2 = fY2;
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
    Int_t linecolor = GetLineColor();
    if (fBorderSize) {
-     Float_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
-     Float_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
+     Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
+     Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
      //*-*- Draw the frame top right
      if (y2-y1>x2-x1) {
         Depx = wx;
