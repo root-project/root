@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.43 2001/02/16 11:53:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.44 2001/02/21 07:45:41 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1853,8 +1853,8 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 { \
    for (Int_t k=0;k<nc;k++) { \
       pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
-      name x = (name)*(pointer+fOffset[i]); \
-      b << x; \
+      name *x = (name*)(pointer+fOffset[i]); \
+      b << *x; \
    } \
    break; \
 }
