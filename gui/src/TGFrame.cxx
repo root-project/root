@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.83 2004/09/14 11:52:38 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.84 2004/09/14 15:38:03 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -754,6 +754,7 @@ void TGFrame::StartGuiBuilding(Bool_t on)
 {
    //
 
+   if (IsEditDisabled()) return;
    if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
    if (!gDragManager) return;
 
@@ -840,6 +841,8 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->SetEditable(0);
    //    m->MapWindow();
    //
+
+   if (on && IsEditDisabled()) return;
 
    if (on) {
       fClient->SetRoot(this);
@@ -1170,6 +1173,9 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
+
+      if (IsEditDisabled()) return kFALSE;
+
       Float_t r, g, b;
       TColor::Pixel2RGB(fBackground, r, g, b);
       r *= 0.9;
@@ -1189,6 +1195,9 @@ Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
 
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
+
+      if (IsEditDisabled()) return kFALSE;
+
       gVirtualX->SetWindowBackground(fId, fBackground);
       return kTRUE;
    }
@@ -1212,6 +1221,9 @@ Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
 
    if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) &&
        (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
+
+      if (IsEditDisabled()) return kFALSE;
+
       frame->ReparentWindow(this, x, y);
       AddFrame(frame, lo);
       frame->MapWindow();
