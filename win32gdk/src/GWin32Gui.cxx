@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.18 2003/03/28 21:27:48 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.19 2003/04/28 10:35:37 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -420,25 +420,28 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
       fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
           GDK_PROPERTY_CHANGE_MASK;
 //                          GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK;
-      if (x >= 0)
+      if (x >= 0) {
          fThreadP.xattr.x = x;
-      else
+      } else {
          fThreadP.xattr.x = -1.0 * x;
-      if (y >= 0)
+      }
+      if (y >= 0) {
          fThreadP.xattr.y = y;
-      else
+      } else {
          fThreadP.xattr.y = -1.0 * y;
+      }
       fThreadP.pRet = NULL;
       PostThreadMessage(fIDThread, WIN32_GDK_CMAP_GET_SYSTEM, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       fThreadP.xattr.colormap = (GdkColormap *)fThreadP.pRet;
       fThreadP.xattr.cursor = NULL;
       fThreadP.xattr.override_redirect = TRUE;
-      if ((fThreadP.xattr.y > 0) && (fThreadP.xattr.x > 0))
+      if ((fThreadP.xattr.y > 0) && (fThreadP.xattr.x > 0)) {
          xmask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP |
              GDK_WA_WMCLASS | GDK_WA_NOREDIR;
-      else
+      } else {
          xmask = GDK_WA_COLORMAP | GDK_WA_WMCLASS | GDK_WA_NOREDIR;
+      }
       if (visual != NULL) {
          fThreadP.xattr.visual = (GdkVisual *) visual;
          xmask |= GDK_WA_VISUAL;
@@ -518,53 +521,75 @@ void TGWin32::MapEventMask(UInt_t & emask, UInt_t & xemask, Bool_t tox)
 
    if (tox) {
       Long_t lxemask = 0L;
-      if ((emask & kKeyPressMask))
+      if ((emask & kKeyPressMask)) {
          lxemask |= GDK_KEY_PRESS_MASK;
-      if ((emask & kKeyReleaseMask))
+      }
+      if ((emask & kKeyReleaseMask)) {
          lxemask |= GDK_KEY_RELEASE_MASK;
-      if ((emask & kButtonPressMask))
+      }
+      if ((emask & kButtonPressMask)) {
          lxemask |= GDK_BUTTON_PRESS_MASK;
-      if ((emask & kButtonReleaseMask))
+      }
+      if ((emask & kButtonReleaseMask)) {
          lxemask |= GDK_BUTTON_RELEASE_MASK;
-      if ((emask & kPointerMotionMask))
+      }
+      if ((emask & kPointerMotionMask)) {
          lxemask |= GDK_POINTER_MOTION_MASK;
-      if ((emask & kButtonMotionMask))
+      }
+      if ((emask & kButtonMotionMask)) {
          lxemask |= GDK_BUTTON_MOTION_MASK;
-      if ((emask & kExposureMask))
+      }
+      if ((emask & kExposureMask)) {
          lxemask |= GDK_EXPOSURE_MASK;
-      if ((emask & kStructureNotifyMask))
+      }
+      if ((emask & kStructureNotifyMask)) {
          lxemask |= GDK_STRUCTURE_MASK;
-      if ((emask & kEnterWindowMask))
+      }
+      if ((emask & kEnterWindowMask)) {
          lxemask |= GDK_ENTER_NOTIFY_MASK;
-      if ((emask & kLeaveWindowMask))
+      }
+      if ((emask & kLeaveWindowMask)) {
          lxemask |= GDK_LEAVE_NOTIFY_MASK;
-      if ((emask & kFocusChangeMask))
+      }
+      if ((emask & kFocusChangeMask)) {
          lxemask |= GDK_FOCUS_CHANGE_MASK;
+      }
       xemask = (UInt_t) lxemask;
    } else {
       emask = 0;
-      if ((xemask & GDK_KEY_PRESS_MASK))
+      if ((xemask & GDK_KEY_PRESS_MASK)) {
          emask |= kKeyPressMask;
-      if ((xemask & GDK_KEY_RELEASE_MASK))
+      }
+      if ((xemask & GDK_KEY_RELEASE_MASK)) {
          emask |= kKeyReleaseMask;
-      if ((xemask & GDK_BUTTON_PRESS_MASK))
+      }
+      if ((xemask & GDK_BUTTON_PRESS_MASK)) {
          emask |= kButtonPressMask;
-      if ((xemask & GDK_BUTTON_RELEASE_MASK))
+      }
+      if ((xemask & GDK_BUTTON_RELEASE_MASK)) {
          emask |= kButtonReleaseMask;
-      if ((xemask & GDK_POINTER_MOTION_MASK))
+      }
+      if ((xemask & GDK_POINTER_MOTION_MASK)) {
          emask |= kPointerMotionMask;
-      if ((xemask & GDK_BUTTON_MOTION_MASK))
+      }
+      if ((xemask & GDK_BUTTON_MOTION_MASK)) {
          emask |= kButtonMotionMask;
-      if ((xemask & GDK_EXPOSURE_MASK))
+      }
+      if ((xemask & GDK_EXPOSURE_MASK)) {
          emask |= kExposureMask;
-      if ((xemask & GDK_STRUCTURE_MASK))
+      }
+      if ((xemask & GDK_STRUCTURE_MASK)) {
          emask |= kStructureNotifyMask;
-      if ((xemask & GDK_ENTER_NOTIFY_MASK))
+      }
+      if ((xemask & GDK_ENTER_NOTIFY_MASK)) {
          emask |= kEnterWindowMask;
-      if ((xemask & GDK_LEAVE_NOTIFY_MASK))
+      }
+      if ((xemask & GDK_LEAVE_NOTIFY_MASK)) {
          emask |= kLeaveWindowMask;
-      if ((xemask & GDK_FOCUS_CHANGE_MASK))
+      }
+      if ((xemask & GDK_FOCUS_CHANGE_MASK)) {
          emask |= kFocusChangeMask;
+      }
    }
 }
 
@@ -597,7 +622,6 @@ void TGWin32::MapSetWindowAttributes(SetWindowAttributes_t * attr,
          xattr.cursor = (GdkCursor *) attr->fCursor;
    }
    xattr.wclass = GDK_INPUT_OUTPUT;
-
 }
 
 //______________________________________________________________________________
@@ -664,10 +688,11 @@ void TGWin32::MapGCValues(GCValues_t & gval,
       }
       if (mask & kGCSubwindowMode) {
          xmask |= GDK_GC_SUBWINDOW;
-         if (gval.fSubwindowMode == kIncludeInferiors)
+         if (gval.fSubwindowMode == kIncludeInferiors) {
             xgval.subwindow_mode = GDK_INCLUDE_INFERIORS;
-         else
+         } else {
             xgval.subwindow_mode = GDK_CLIP_BY_CHILDREN;
+         }
       }
       if ((mask & kGCForeground)) {
          xmask |= GDK_GC_FOREGROUND;
@@ -918,12 +943,13 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
    PostThreadMessage(fIDThread, WIN32_GDK_WIN_IS_VIEWABLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    isViewable = fThreadP.iRet;
-   if (!isVisible)
+   if (!isVisible) {
       attr.fMapState = kIsUnmapped;
-   else if (!isViewable)
+   } else if (!isViewable) {
       attr.fMapState = kIsUnviewable;
-   else
+   } else {
       attr.fMapState = kIsViewable;
+   }
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -936,29 +962,29 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    // in case of failure (cannot connect to display dpyName). It also
    // initializes the TGWin32 class via Init(). Called from TGClient ctor.
 
-   if (gDebug <= 4)
+   if (gDebug <= 4) {
       gdk_debug_level = gDebug;
-   else
+   } else {
       gdk_debug_level = 0;
-
+   }
    // Init the GX11 class, sets a.o. fDisplay.
-   if (!Init())
-      return -1;
+   if (!Init()) return -1;
    return 1;
 }
 
 //______________________________________________________________________________
 void TGWin32::CloseDisplay()
 {
-
+   //
     if (fIDThread) {
+        EnterCriticalSection(flpCriticalSection);
         PostThreadMessage(fIDThread, WIN32_GDK_EXIT, 0, 0L);
         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
         CloseHandle(fThreadP.hThrSem);
         CloseHandle(hGDKThread);
+        LeaveCriticalSection(flpCriticalSection);
         DeleteCriticalSection(flpCriticalSection);
     }
-
 }
 
 //______________________________________________________________________________
@@ -972,7 +998,6 @@ Int_t TGWin32::GetDepth() const
 {
    // Get maximum number of planes.
    EnterCriticalSection(flpCriticalSection);
-
    PostThreadMessage(fIDThread, WIN32_GDK_GET_DEPTH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
@@ -994,8 +1019,9 @@ Atom_t TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
    GdkAtom a = (GdkAtom)fThreadP.ulRet;
    free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
-   if (a == None)
+   if (a == None) {
       return kNone;
+   }
    return (Atom_t) a;
 }
 
@@ -1089,8 +1115,9 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t * gval)
    GdkGCValues xgval;
    ULong_t xmask = 0;
 
-   if (gval)
+   if (gval) {
       MapGCValues(*gval, xmask, fThreadP.gcvals, kTRUE);
+   }
    fThreadP.gcvals.subwindow_mode = GDK_CLIP_BY_CHILDREN;	// GDK_INCLUDE_INFERIORS;
 
    fThreadP.pRet = NULL;
@@ -1460,10 +1487,12 @@ void TGWin32::SetDashes(GContext_t gc, Int_t offset, const char *dash_list,
    EnterCriticalSection(flpCriticalSection);
 
    int i;
-   for (i = 0; i < n; i++)
+   for (i = 0; i < n; i++) {
       fThreadP.dashes[i] = (gint8) dash_list[i];
-   for (i = n; i < 32; i++)
+   }
+   for (i = n; i < 32; i++) {
       fThreadP.dashes[i] = (gint8) 0;
+   }
 
    fThreadP.GC = (GdkGC *) gc;
    fThreadP.iParam = offset;
@@ -1482,7 +1511,6 @@ void TGWin32::MapColorStruct(ColorStruct_t * color, GdkColor & xcolor)
    xcolor.red = color->fRed;
    xcolor.green = color->fGreen;
    xcolor.blue = color->fBlue;
-
 }
 
 //______________________________________________________________________________
@@ -1585,10 +1613,10 @@ Int_t TGWin32::EventsPending()
     // Returns number of pending events.
    EnterCriticalSection(flpCriticalSection);
 
-    PostThreadMessage(fIDThread, WIN32_GDK_EVENTS_PENDING, 0, 0L);
-    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   PostThreadMessage(fIDThread, WIN32_GDK_EVENTS_PENDING, 0, 0L);
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
-    return fThreadP.iRet;
+   return fThreadP.iRet;
 }
 
 //______________________________________________________________________________
@@ -1625,46 +1653,62 @@ void TGWin32::MapModifierState(UInt_t & state, UInt_t & xstate, Bool_t tox)
 
    if (tox) {
       xstate = 0;
-      if ((state & kKeyShiftMask))
+      if ((state & kKeyShiftMask)) {
          xstate |= GDK_SHIFT_MASK;
-      if ((state & kKeyLockMask))
+      }
+      if ((state & kKeyLockMask)) {
          xstate |= GDK_LOCK_MASK;
-      if ((state & kKeyControlMask))
+      }
+      if ((state & kKeyControlMask)) {
          xstate |= GDK_CONTROL_MASK;
-      if ((state & kKeyMod1Mask))
+      }
+      if ((state & kKeyMod1Mask)) {
          xstate |= GDK_MOD1_MASK;
-      if ((state & kButton1Mask))
+      }
+      if ((state & kButton1Mask)) {
          xstate |= GDK_BUTTON1_MASK;
-      if ((state & kButton2Mask))
+      }
+      if ((state & kButton2Mask)) {
          xstate |= GDK_BUTTON2_MASK;
-      if ((state & kButton3Mask))
+      }
+      if ((state & kButton3Mask)) {
          xstate |= GDK_BUTTON3_MASK;
-      if ((state & kAnyModifier))
+      }
+      if ((state & kAnyModifier)) {
          xstate |= GDK_MODIFIER_MASK;	// or should it be = instead of |= ?
+      }
    } else {
       state = 0;
-      if ((xstate & GDK_SHIFT_MASK))
+      if ((xstate & GDK_SHIFT_MASK)) {
          state |= kKeyShiftMask;
-      if ((xstate & GDK_LOCK_MASK))
+      }
+      if ((xstate & GDK_LOCK_MASK)) {
          state |= kKeyLockMask;
-      if ((xstate & GDK_CONTROL_MASK))
+      }
+      if ((xstate & GDK_CONTROL_MASK)) {
          state |= kKeyControlMask;
-      if ((xstate & GDK_MOD1_MASK))
+      }
+      if ((xstate & GDK_MOD1_MASK)) {
          state |= kKeyMod1Mask;
-      if ((xstate & GDK_BUTTON1_MASK))
+      }
+      if ((xstate & GDK_BUTTON1_MASK)) {
          state |= kButton1Mask;
-      if ((xstate & GDK_BUTTON2_MASK))
+      }
+      if ((xstate & GDK_BUTTON2_MASK)) {
          state |= kButton2Mask;
-      if ((xstate & GDK_BUTTON3_MASK))
+      }
+      if ((xstate & GDK_BUTTON3_MASK)) {
          state |= kButton3Mask;
-      if ((xstate & GDK_MODIFIER_MASK))
+      }
+      if ((xstate & GDK_MODIFIER_MASK)) {
          state |= kAnyModifier; // idem
+      }
    }
 }
 
 void _set_event_time(GdkEvent * event, UInt_t time)
 {
-   if (event)
+   if (event) {
       switch (event->type) {
       case GDK_MOTION_NOTIFY:
          event->motion.time = time;
@@ -1699,6 +1743,7 @@ void _set_event_time(GdkEvent * event, UInt_t time)
       default:                 /* use current time */
          break;
       }
+   }
 }
 
 //______________________________________________________________________________
@@ -1933,22 +1978,20 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fWindow = (Window_t) xev.focus_change.window;
          ev.fCode = kNotifyNormal;
          ev.fState = 0;
-         if (xev.focus_change.in == TRUE)
+         if (xev.focus_change.in == TRUE) {
             ev.fType = kFocusIn;
-         else
+         } else {
             ev.fType = kFocusOut;
+         }
       }
       if (ev.fType == kGKeyPress || ev.fType == kKeyRelease) {
          ev.fWindow = (Window_t) xev.key.window;
          MapModifierState(ev.fState, xev.key.state, kFALSE);	// key mask
          ev.fCode = (xev.key.keyval);	// key code
          ev.fUser[1] = xev.key.length;
-         if (xev.key.length > 0)
-            ev.fUser[2] = xev.key.string[0];
-         if (xev.key.length > 1)
-            ev.fUser[3] = xev.key.string[1];
-         if (xev.key.length > 2)
-            ev.fUser[4] = xev.key.string[2];
+         if (xev.key.length > 0) ev.fUser[2] = xev.key.string[0];
+         if (xev.key.length > 1) ev.fUser[3] = xev.key.string[1];
+         if (xev.key.length > 2) ev.fUser[4] = xev.key.string[2];
          fThreadP.pRet = NULL;
          fThreadP.Drawable = (GdkDrawable *) xev.key.window;
          PostThreadMessage(fIDThread, WIN32_GW_CHILD, 0, 0L);
@@ -1956,13 +1999,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          HWND tmpwin = (HWND) fThreadP.pRet;
 //         HWND tmpwin = GetWindow((HWND) GDK_DRAWABLE_XID(xev.key.window), GW_CHILD);
          if (tmpwin) {
-             fThreadP.Drawable = (GdkDrawable *) tmpwin;
+             fThreadP.pParam = (void *) tmpwin;
              PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
-         }
-         else
+         } else {
             ev.fUser[0] = (ULong_t) xev.key.window;
+         }
       }
       if (ev.fType == kButtonPress || ev.fType == kButtonRelease) {
          ev.fWindow = (Window_t) xev.button.window;
@@ -1971,8 +2014,9 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fXRoot = xev.button.x_root;
          ev.fYRoot = xev.button.y_root;
          MapModifierState(ev.fState, xev.button.state, kFALSE);	// button mask
-         if (ev.fType == kButtonRelease)
+         if (ev.fType == kButtonRelease) {
             ev.fState |= kButtonReleaseMask;
+         }
          ev.fCode = xev.button.button;	// button code
 
          fThreadP.Drawable = (GdkDrawable *) xev.button.window;
@@ -1983,13 +2027,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
-             fThreadP.Drawable = (GdkDrawable *) tmpwin;
+             fThreadP.pParam = (void *) tmpwin;
              PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
-         }
-         else
+         } else {
             ev.fUser[0] = (ULong_t) 0;
+         }
       }
       if (ev.fType == kMotionNotify) {
          ev.fWindow = (Window_t) xev.motion.window;
@@ -2007,13 +2051,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
-             fThreadP.Drawable = (GdkDrawable *) tmpwin;
+             fThreadP.pParam = (void *) tmpwin;
              PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
-         }
-         else
+         } else {
             ev.fUser[0] = (ULong_t) xev.motion.window;
+         }
       }
       if (ev.fType == kEnterNotify || ev.fType == kLeaveNotify) {
          ev.fWindow = (Window_t) xev.crossing.window;
@@ -2077,10 +2121,11 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       }
       if (xev.type == GDK_SCROLL) {
          ev.fType = kButtonRelease;
-         if (xev.scroll.direction == GDK_SCROLL_UP)
+         if (xev.scroll.direction == GDK_SCROLL_UP) {
             ev.fCode = kButton4;
-         else if (xev.scroll.direction == GDK_SCROLL_DOWN)
+         } else if (xev.scroll.direction == GDK_SCROLL_DOWN) {
             ev.fCode = kButton5;
+         }
          ev.fWindow = (Window_t) xev.scroll.window;
          ev.fX = xev.scroll.x;
          ev.fY = xev.scroll.y;
@@ -2095,13 +2140,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          WaitForSingleObject(fThreadP.hThrSem, INFINITE);
          HWND tmpwin = (HWND)fThreadP.pRet;
          if (tmpwin) {
-             fThreadP.Drawable = (GdkDrawable *) tmpwin;
+             fThreadP.pParam = (void *) tmpwin;
              PostThreadMessage(fIDThread, WIN32_GDK_XID_TABLE_LOOKUP, 0, 0L);
              WaitForSingleObject(fThreadP.hThrSem, INFINITE);
              ev.fUser[0] = (ULong_t) fThreadP.lRet;
-         }
-         else
+         } else {
             ev.fUser[0] = (ULong_t) 0;
+         }
       }
    }
    LeaveCriticalSection(flpCriticalSection);
@@ -2241,7 +2286,6 @@ void TGWin32::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1,
    PostThreadMessage(fIDThread, WIN32_GDK_DRAW_LINE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
-
 }
 
 //______________________________________________________________________________
@@ -2296,8 +2340,7 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 {
    // Send event ev to window id.
 
-   if (!ev)
-      return;
+   if (!ev) return;
 
    GdkEvent xev;
 
@@ -2476,10 +2519,11 @@ void TGWin32::SetClassHints(Window_t id, char *className,
          s += len_nm + 1;
       } else
          *s++ = '\0';
-      if (len_cl)
+      if (len_cl) {
          strcpy(s, className);
-      else
+      } else {
          *s = '\0';
+      }
       fThreadP.Drawable = (GdkDrawable *) id;
       fThreadP.ulParam = XA_WM_CLASS;
       fThreadP.ulParam1 = XA_STRING;
@@ -2891,11 +2935,13 @@ Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
    int i;
    int n = event->fUser[1];
    if (n > 0) {
-      for (i = 0; i < n; i++)
+      for (i = 0; i < n; i++) {
          buf[i] = event->fUser[2 + i];
+      }
       buf[n] = 0;
-   } else
+   } else {
       buf[0] = 0;
+   }
    if (event->fCode <= 0x20) {
       strncpy(buf, keyCodeToString[event->fCode], buflen - 1);
    }
@@ -2956,7 +3002,6 @@ void TGWin32::MapKeySym(UInt_t & keysym, UInt_t & xkeysym, Bool_t tox)
          }
       }
    }
-
 }
 
 //______________________________________________________________________________
@@ -2993,7 +3038,6 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    }
    LeaveCriticalSection(flpCriticalSection);
-
 }
 
 //______________________________________________________________________________
@@ -3016,8 +3060,9 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
    PostThreadMessage(fIDThread, WIN32_GDK_TRANSLATE_COORDINATES, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    child = (Window_t) fThreadP.pRet;
-   if (child == src)
+   if (child == src) {
       child = (Window_t) 0;
+   }
    dest_x = fThreadP.x1;
    dest_y = fThreadP.y1;
    LeaveCriticalSection(flpCriticalSection);
@@ -3128,16 +3173,19 @@ void TGWin32::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,
    Int_t i;
    GdkRectangle *grects = new GdkRectangle[n];
    for (i = 0; i < n; i++) {
-      grects[i].x = recs[i].fX;
-      grects[i].y = recs[i].fY;
+      grects[i].x = x+recs[i].fX;
+      grects[i].y = y+recs[i].fY;
       grects[i].width = recs[i].fWidth;
       grects[i].height = recs[i].fHeight;
    }
    fThreadP.GC = (GdkGC *) gc;
    fThreadP.pParam = (void *) grects;
+
+   // fixme!!
    PostThreadMessage(fIDThread, WIN32_GDK_GC_SET_CLIP_RECT, 1, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
+   delete [] grects;
 }
 
 //______________________________________________________________________________
@@ -3204,20 +3252,14 @@ Region_t TGWin32::PolygonRegion(Point_t * points, Int_t np, Bool_t winding)
    // If winding is true use WindingRule else EvenOddRule as fill rule.
    EnterCriticalSection(flpCriticalSection);
 
-   int i;
-   GdkPoint *xy = new GdkPoint[np];
-
-   for (i = 0; i < np; i++) {
-      xy[i].x = points[i].fX;
-      xy[i].y = points[i].fY;
-   }
-   fThreadP.pParam = (void *) xy;
+   fThreadP.pParam = (void *) points;
    fThreadP.iParam = np;
    fThreadP.iParam1 = winding;
    fThreadP.pRet = NULL;
    PostThreadMessage(fIDThread, WIN32_GDK_REGION_POLYGON, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
+
    return (Region_t) fThreadP.pRet;
 }
 
@@ -3403,12 +3445,13 @@ void TGWin32::GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height)
 void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
 {
    GdkImage *image = (GdkImage *)id;
-   if (image->depth == 1)
-      if (pixel & 1)
+   if (image->depth == 1) {
+      if (pixel & 1) {
          ((UChar_t *) image->mem)[y * image->bpl + (x >> 3)] |= (1 << (7 - (x & 0x7)));
-      else
+      } else {
          ((UChar_t *) image->mem)[y * image->bpl + (x >> 3)] &= ~(1 << (7 - (x & 0x7)));
-   else {
+      }
+   } else {
       UChar_t *pixelp = (UChar_t *) image->mem + y * image->bpl + x * image->bpp;
       // Windows is always LSB, no need to check image->byte_order.
       switch (image->bpp) {
@@ -3542,10 +3585,12 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    PostThreadMessage(fIDThread, WIN32_GDK_INIT_PIXEL_FORMAT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
-   if(fThreadP.iRet == -1)
+   if(fThreadP.iRet == -1) {
       Error("InitGLWindow", "Barf! ChoosePixelFormat Failed");
-   if(fThreadP.iRet == -2)
+   }
+   if(fThreadP.iRet == -2) {
       Error("InitGLWindow", "Barf! SetPixelFormat Failed");
+   }
    LeaveCriticalSection(flpCriticalSection);
    return (Window_t)GLWin;
 }
