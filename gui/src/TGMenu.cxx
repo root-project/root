@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.39 2004/07/06 10:57:20 brun Exp $
+// @(#)root/gui:$Name: v4-00-08-patches $:$Id: TGMenu.cxx,v 1.40 2004/07/06 14:46:54 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -139,22 +139,22 @@ void TGMenuBar::BindKeys(Bool_t on)
    if (!main) return;
 
    if (on) {
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
-      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Left), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Right), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Up), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Down), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Enter), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Return), 0);
+      main->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Escape), 0);
    } else {
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), kAnyModifier);
-      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier);
-   } 
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left), 0);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), 0r);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up), 0);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down), 0);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Enter), 0);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Return), 0);
+      main->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Escape), 0);
+   }
 }
 
 //______________________________________________________________________________
@@ -1592,7 +1592,7 @@ TGMenuTitle::TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    Resize(tw + 8, max_ascent + max_descent + 7);
-         
+
    if (p->InheritsFrom(TGMenuBar::Class())) {
       TGMenuBar *bar = (TGMenuBar*)p;
       fMenu->SetMenuBar(bar);
