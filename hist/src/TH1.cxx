@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.18 2000/08/14 16:54:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.19 2000/08/16 06:32:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -274,9 +274,9 @@
 //*-*  Drawing histograms
 //*-*  ==================
 //*-*  Histograms are drawn via the THistPainter class. Each histogram has
-//*-*  a pointer to its own pointer (to be usable in a multithreaded program).
+//*-*  a pointer to its own painter (to be usable in a multithreaded program).
 //*-*  Many drawing options are supported.
-//*-*  See TH1::Draw for more details
+//*-*  See THistPainter::Paint for more details.
 //*-*  The same histogram can be drawn with different options in different pads.
 //*-*  When an histogram drawn in a pad is deleted, the histogram is
 //*-*  automatically removed from the pad or pads where it was drawn.
@@ -1095,85 +1095,33 @@ void TH1::Draw(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*Draw this histogram with options*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
 //*-*
-//*-*  This histogram is added in the list of objects to be drawn in the
-//*-*  current pad.
-//*-*  It is important to note that only a reference to this histogram is added.
-//*-*  This means that if the histogram contents change between pad redraws,
-//*-*  the current histogram contents will be shown.
-//*-*  Use function DrawCopy to force a copy of the histogram at the time
-//*-*  of the Draw operation in the Pad list.
+//*-*  Histograms are drawn via the THistPainter class. Each histogram has
+//*-*  a pointer to its own painter (to be usable in a multithreaded program).
+//*-*  The same histogram can be drawn with different options in different pads.
+//*-*  When an histogram drawn in a pad is deleted, the histogram is
+//*-*  automatically removed from the pad or pads where it was drawn.
+//*-*  If an histogram is drawn in a pad, then filled again, the new status
+//*-*  of the histogram will be automatically shown in the pad next time
+//*-*  the pad is updated. One does not need to redraw the histogram.
+//*-*  To draw the current version of an histogram in a pad, one can use
+//*-*     h->DrawCopy();
+//*-*  This makes a clone of the histogram. Once the clone is drawn, the original 
+//*-*  histogram may be modified or deleted without affecting the aspect of the 
+//*-*  clone.
+//*-*  By default, TH1::Draw clears the current pad.
 //*-*
-//*-*  The following options are supported on all types:
-//*-*    "AXIS"   : Draw only axis
-//*-*    "HIST"   : Draw only histo contour. (if histo has errors, errors are not drawn)
-//*-*    "SAME"   : Superimpose on previous picture in the same pad
-//*-*    "CYL"    : Use Cylindrical coordinates
-//*-*    "POL"    : Use Polar coordinates
-//*-*    "SPH"    : Use Spherical coordinates
-//*-*    "PSR"    : Use PseudoRapidity/Phi coordinates
-//*-*    "LEGO"   : Draw a lego plot with hidden line removal
-//*-*    "LEGO1"  : Draw a lego plot with hidden surface removal
-//*-*    "LEGO2"  : Draw a lego plot using colors to show the cell contents
-//*-*    "SURF"   : Draw a surface plot with hidden line removal
-//*-*    "SURF1"  : Draw a surface plot with hidden surface removal
-//*-*    "SURF2"  : Draw a surface plot using colors to show the cell contents
-//*-*    "SURF3"  : same as SURF with in addition a contour view drawn on the top
-//*-*    "SURF4"  : Draw a surface using Gouraud shading
+//*-*  One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
+//*-*  value for the maximum or the minimum scale on the plot.
 //*-*
-//*-*  The following options are supported for 1-D types:
-//*-*    "AH"     : Draw histogram, but not the axis labels and tick marks
-//*-*    "B"      : Bar chart option
-//*-*    "C"      : Draw a smooth Curve througth the histogram bins
-//*-*    "E"      : Draw error bars
-//*-*    "E0"     : Draw error bars including bins with o contents
-//*-*    "E1"     : Draw error bars with perpendicular lines at the edges
-//*-*    "E2"     : Draw error bars with rectangles
-//*-*    "E3"     : Draw a fill area througth the end points of the vertical error bars
-//*-*    "E4"     : Draw a smoothed filled area through the end points of the error bars
-//*-*    "L"      : Draw a line througth the bin contents
-//*-*    "P"      : Draw current marker at each bin
-//*-*    "*H"     : Draw histogram with a * at each bin
+//*-*  TH1::UseCurrentStyle can be used to change all histogram graphics
+//*-*  attributes to correspond to the current selected style.
+//*-*  This function must be called for each histogram.
+//*-*  In case one reads and draws many histograms from a file, one can force
+//*-*  the histograms to inherit automatically the current graphics style
+//*-*  by calling before gROOT->ForceStyle();
 //*-*
-//*-*
-//*-*  The following options are supported for 2-D types:
-//*-*    "ARR"    : arrow mode. Shows gradient between adjacent cells
-//*-*    "BOX"    : a box is drawn for each cell with surface proportional to contents
-//*-*    "COL"    : a box is drawn for each cell with a color scale varying with contents
-//*-*    "COLZ"   : same as "COL". In addition the color mapping is also drawn
-//*-*    "CONT"   : Draw a contour plot (same as CONT0)
-//*-*    "CONT0"  : Draw a contour plot using surface colors to distinguish contours
-//*-*    "CONT1"  : Draw a contour plot using line styles to distinguish contours
-//*-*    "CONT2"  : Draw a contour plot using the same line style for all contours
-//*-*    "CONT3"  : Draw a contour plot using fill area colors
-//*-*    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
-//*-*    "LIST"   : Generate a list of TGraph objects for each contour (see THistPainter::PaintContour)
-//*-*    "FB"     : With LEGO or SURFACE, suppress the Front-Box
-//*-*    "BB"     : With LEGO or SURFACE, suppress the Back-Box
-//*-*    "SCAT"   : Draw a scatter-plot (default)
-//*-*
-//*-*  Note that most options above can be concatenated, example:
-//*-*  h-Draw("e1same");
-//*-*  Options are case insensitive
-//*-*
-//*-*  When using the options "BOX", "COL" or "COLZ", the color palette used
-//*-*  is the one defined in the current style (see TStyle::SetPalette)
-//*-*
-//*-*  When using the "CONT" or "SURF" or "LEGO" options, the number
-//*-*  of contour levels can be changed via TH1::SetContour.
-//*-*  (default is 20 equidistant levels)
-//*-*
-//*-*  One can set a default drawing option via TH1::SetOption. If an option 
-//*-*  is set, it will be the default drawing option.
-//*-*
-//*-*  When option "same" is specified, the statistic box is not drawn.
-//*-*  Specify option "sames" to force painting statistics with option "same"
-//*-*  When option "sames" is given, one can use the following technique
-//*-*  to rename a previous "stats" box and/or change its position
-//*-*  Root > TPaveStats *st = (TPaveStats*)gPad->GetPrimitive("stats")
-//*-*  Root > st->SetName(newname)
-//*-*  Root > st->SetX1NDC(newx1); //new x start position
-//*-*  Root > st->SetX2NDC(newx2); //new x end position
-//*-*  Root > newhist->Draw("sames")
+//*-*  See THistPainter::Paint for a description of all the drawing options
+//*-*  =======================
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
