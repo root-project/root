@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.2 2003/09/23 14:03:15 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCApplication.h"
@@ -37,6 +37,7 @@ TVirtualMCApplication::TVirtualMCApplication()
   //
   // Default constructor
   //
+  fgInstance = this;
 }
 
 //_____________________________________________________________________________
