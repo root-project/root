@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.43 2003/09/02 17:16:30 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.44 2003/10/02 11:44:40 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -530,7 +530,6 @@ ofstream classFile;
          }
 
          classFile << "</h2>" << endl;
-         classFile << "<pre>" << endl;
 
 
          // make a loop on member functions
@@ -603,6 +602,16 @@ ofstream classFile;
 
             num[mtype]++;
          }
+
+	 const char* tab4nbsp="&nbsp;&nbsp;&nbsp;&nbsp;";
+	 if (classPtr->Property() & kIsAbstract) 
+	    classFile << "&nbsp;<br><b>" 
+		      << tab4nbsp << "This is an abstract class, constructors will not be documented.<br>" << endl
+		      << tab4nbsp << "Look at the <a href=\""
+		      << GetFileName((const char *) classPtr->GetDeclFileName())
+		      << "\">header</a> to check for available constructors.</b><br>" << endl;
+
+         classFile << "<pre>" << endl;
 
          Int_t i, j;
 
