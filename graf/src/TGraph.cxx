@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.79 2002/08/09 08:29:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.80 2002/08/15 14:18:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1058,6 +1058,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    else if (special == 200)      InitExpo(gxfirst,gxlast);
    else if (special == 299+npar) InitPolynom(gxfirst,gxlast);
 
+//*-*- Some initialisations
+   if (!fitOption.Verbose) {
+      arglist[0] = -1;
+      grFitter->ExecuteCommand("SET PRINT", arglist,1);
+      arglist[0] = 0;
+      grFitter->ExecuteCommand("SET NOW",   arglist,0);
+   }
+
 //*-*- Set error criterion for chisquare
    arglist[0] = 1;
    if (!fitOption.User) grFitter->SetFCN(GraphFitChisquare);
@@ -1069,14 +1077,6 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
         Warning("Fit","Abnormal termination of minimization.");
      }
      return fitResult;
-   }
-
-//*-*- Some initialisations
-   if (!fitOption.Verbose) {
-      arglist[0] = -1;
-      grFitter->ExecuteCommand("SET PRINT", arglist,1);
-      arglist[0] = 0;
-      grFitter->ExecuteCommand("SET NOW",   arglist,0);
    }
 
 //*-*- Transfer names and initial values of parameters to Minuit
