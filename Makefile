@@ -268,6 +268,10 @@ ifeq ($(CXX),KCC)
 clean::
 	@find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1
 endif
+ifeq ($(SUNCC5),true)
+clean::
+	@find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1
+endif
 
 distclean:: clean
 	@mv -f include/config.h include/config.hh
