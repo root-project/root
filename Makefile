@@ -385,7 +385,11 @@ distclean:: clean
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	-@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
+	-@mv -f tutorials/galaxy.pal.root tutorials/galaxy.pal.roott
+	-@mv -f tutorials/galaxy.root tutorials/galaxy.roott
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
+	-@mv -f tutorials/galaxy.pal.roott tutorials/galaxy.pal.root
+	-@mv -f tutorials/galaxy.roott tutorials/galaxy.root
 	@rm -f tutorials/pca.C tutorials/*.so work.pc work.pcl
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
