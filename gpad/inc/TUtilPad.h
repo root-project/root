@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.2 2004/07/02 13:46:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.h,v 1.3 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #ifndef ROOT_TVirtualUtilPad
 #include "TVirtualUtilPad.h"
 #endif
+
+class TVirtualPad;
 
 class TUtilPad : public TVirtualUtilPad {
 
