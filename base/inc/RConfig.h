@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.17 2001/04/03 10:07:29 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.18 2001/04/06 14:17:41 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -239,6 +239,7 @@
 #   ifndef WIN32
 #      define WIN32
 #   endif
+#   define R__BYTESWAP
 #endif
 
 #ifdef BORLAND
@@ -258,19 +259,23 @@
 #   elif WIN32
 #      define NEED_STRING
 #      define NEED_STRCASECMP
+#      define NEED_SNPRINTF
 #      define ANSICPP
 #   else
 #      define MSDOS
 #      define NEED_STRCASECMP
+#      define R__BYTESWAP
 #   endif
 #endif
 
-#ifdef R__WIN32
+#ifdef VISUAL_CPLUSPLUS
+#   define R__VISUAL_CPLUSPLUS
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define NEED_SNPRINTF
 #   define ANSICPP
-#   define R__BYTESWAP
+#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #endif
 
 #ifdef __MWERKS__
@@ -279,6 +284,7 @@
 #   define ANSICPP
 #   define NEED_STRING
 #   define NEED_STRCASECMP
+#   define NEED_SNPRINTF
 #endif
 
 
