@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.25 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.26 2002/05/10 21:32:09 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -45,6 +45,8 @@ class TGlobal;
 class TFunction;
 class TFolder;
 class TPluginManager;
+class TProcessUUID;
+
 namespace ROOT {
    class TMapTypeToTClass;
 }
@@ -105,6 +107,7 @@ protected:
    TSeqCollection  *fCleanups;            //List of recursiveRemove collections
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
+   TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
    TPluginManager  *fPluginManager;       //Keeps track of plugin library handlers
@@ -182,6 +185,7 @@ public:
    Int_t             GetNclasses() const {return fClasses->GetSize();}
    Int_t             GetNtypes() const {return fTypes->GetSize();}
    TFolder          *GetRootFolder() const {return fRootFolder;}
+   TProcessUUID     *GetUUIDs() const {return fUUIDs;}
    void              Idle(UInt_t idleTimeInSec, const char *command=0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
