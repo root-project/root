@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.9 2002/04/19 18:24:02 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.10 2002/07/17 12:29:38 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -32,6 +32,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TTree.h"
 #include "THashList.h"
 #include "TError.h"
@@ -101,7 +102,12 @@ TSelector *TSelector::GetSelector(const char *filename)
 
    //loop on all classes known to CINT to find the class on filename
    //that derives from TSelector
-   strcpy(localname,filename);
+   const char *basename = gSystem->BaseName(filename);
+   if (basename==0) {
+      ::Error("TSelector::GetSelector","Unable to determine the classname for file %s",filename);
+      return 0;
+   }
+   strcpy(localname,basename);
    char *IsCompiled = strchr(localname,'+');
    char *dot        = strchr(localname,'.');
    if (dot) dot[0] = 0;
