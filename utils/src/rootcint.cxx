@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.61 2002/04/27 07:06:40 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.62 2002/05/03 14:30:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -224,7 +224,10 @@ const char *help =
 
 #include <time.h>
 #include <string>
-using std::string;
+
+namespace std {}
+using namespace std;
+
 //#include <fstream>
 //#include <strstream>
 
