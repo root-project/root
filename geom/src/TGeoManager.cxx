@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.47 2003/02/18 15:37:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.48 2003/03/11 09:58:38 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2573,7 +2573,13 @@ TGeoVolume *TGeoManager::MakeBox(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a box shape with given medium.
    TGeoBBox *box = new TGeoBBox(dx, dy, dz);
-   TGeoVolume *vol = new TGeoVolume(name, box, medium);
+   TGeoVolume *vol = 0;
+   if (box->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(box);
+   } else {   
+      vol = new TGeoVolume(name, box, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2588,7 +2594,13 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const TGeoMedium *medium,
    }
    TGeoPara *para=0;
    para = new TGeoPara(dx, dy, dz, alpha, theta, phi);
-   TGeoVolume *vol = new TGeoVolume(name, para, medium);
+   TGeoVolume *vol = 0;
+   if (para->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(para);
+   } else {   
+      vol = new TGeoVolume(name, para, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2606,8 +2618,17 @@ TGeoVolume *TGeoManager::MakeTube(const char *name, const TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium.
+   if (rmin>rmax) {
+      Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name,rmin,rmax);
+   }   
    TGeoTube *tube = new TGeoTube(rmin, rmax, dz);
-   TGeoVolume *vol = new TGeoVolume(name, tube, medium);
+   TGeoVolume *vol = 0;
+   if (tube->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(tube);
+   } else {   
+      vol = new TGeoVolume(name, tube, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2617,7 +2638,13 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a tube segment shape with given medium.
    TGeoTubeSeg *tubs = new TGeoTubeSeg(rmin, rmax, dz, phi1, phi2);
-   TGeoVolume *vol = new TGeoVolume(name, tubs, medium);
+   TGeoVolume *vol = 0;
+   if (tubs->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(tubs);
+   } else {   
+      vol = new TGeoVolume(name, tubs, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2626,7 +2653,13 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a tube shape with given medium
    TGeoEltu *eltu = new TGeoEltu(a, b, dz);
-   TGeoVolume *vol = new TGeoVolume(name, eltu, medium);
+   TGeoVolume *vol = 0;
+   if (eltu->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(eltu);
+   } else {   
+      vol = new TGeoVolume(name, eltu, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2646,7 +2679,13 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a cone shape with given medium.
    TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
-   TGeoVolume *vol = new TGeoVolume(name, cone, medium);
+   TGeoVolume *vol = 0;
+   if (cone->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(cone);
+   } else {   
+      vol = new TGeoVolume(name, cone, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2657,7 +2696,13 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a cone segment shape with given medium
    TGeoConeSeg *cons = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
-   TGeoVolume *vol = new TGeoVolume(name, cons, medium);
+   TGeoVolume *vol = 0;
+   if (cons->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(cons);
+   } else {   
+      vol = new TGeoVolume(name, cons, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2684,7 +2729,13 @@ TGeoVolume *TGeoManager::MakeTrd1(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
    TGeoTrd1 *trd1 = new TGeoTrd1(dx1, dx2, dy, dz);
-   TGeoVolume *vol = new TGeoVolume(name, trd1, medium);
+   TGeoVolume *vol = 0;
+   if (trd1->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(trd1);
+   } else {   
+      vol = new TGeoVolume(name, trd1, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________
@@ -2694,7 +2745,13 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, const TGeoMedium *medium,
 {
 // Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
    TGeoTrd2 *trd2 = new TGeoTrd2(dx1, dx2, dy1, dy2, dz);
-   TGeoVolume *vol = new TGeoVolume(name, trd2, medium);
+   TGeoVolume *vol = 0;
+   if (trd2->IsRunTimeShape()) {
+      vol = MakeVolumeMulti(name, medium);
+      vol->SetShape(trd2);
+   } else {   
+      vol = new TGeoVolume(name, trd2, medium);
+   }   
    return vol;
 }
 //_____________________________________________________________________________

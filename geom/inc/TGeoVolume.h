@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.23 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.24 2003/02/17 11:57:30 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -144,7 +144,7 @@ public:
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
    void           *Make3DBuffer() const {return fShape->Make3DBuffer(this);}
-   TGeoVolume     *MakeCopyVolume();
+   virtual TGeoVolume *MakeCopyVolume(TGeoShape *newshape);
    void            MakeCopyNodes(const TGeoVolume *other);
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
@@ -209,6 +209,7 @@ public:
    Int_t           GetNdiv() const {return fNdiv;}
    Double_t        GetStart() const {return fStart;}
    Double_t        GetStep() const {return fStep;}
+   virtual TGeoVolume *MakeCopyVolume(TGeoShape *newshape);
    virtual void    SetLineColor(Color_t lcolor);
    virtual void    SetLineStyle(Style_t lstyle);
    virtual void    SetLineWidth(Width_t lwidth);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.28 2003/02/17 11:57:31 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.29 2003/03/11 09:58:38 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -269,8 +269,7 @@ void TGeoVolume::CheckShapes()
                    GetName(),old_vol->GetName());
             continue;
          }         
-         TGeoVolume *new_volume = old_vol->MakeCopyVolume();
-         new_volume->SetShape(new_shape);
+         TGeoVolume *new_volume = old_vol->MakeCopyVolume(new_shape);
 //         printf(" new volume %s shape params :\n", new_volume->GetName());
 //         new_volume->InspectShape();
          new_node->SetVolume(new_volume);
@@ -459,6 +458,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
       }   
    }   
    if (range <=0) {
+      InspectShape();
       Fatal("Divide", "cannot divide volume %s (%s) on %s axis", GetName(), stype.Data(), fShape->GetAxisName(iaxis));
       return 0;
    }
@@ -706,17 +706,14 @@ void TGeoVolume::GrabFocus()
 }   
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoVolume::MakeCopyVolume()
+TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 {
     // make a copy of this volume
 //    printf("   Making a copy of %s\n", GetName());
     char *name = new char[strlen(GetName())+1];
     sprintf(name, "%s", GetName());
     // build a volume with same name, shape and medium
-    Bool_t is_runtime = fShape->IsRunTimeShape();
-    if (is_runtime) fShape->SetRuntime(kFALSE);
-    TGeoVolume *vol = new TGeoVolume(name, fShape, fMedium);
-    if (is_runtime) fShape->SetRuntime();
+    TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
     Int_t i=0;
     // copy volume attributes
     vol->SetVisibility(IsVisible());
@@ -1160,6 +1157,59 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
    return fDivision;
 }
 
+//_____________________________________________________________________________
+TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
+{
+    // make a copy of this volume
+//    printf("   Making a copy of %s\n", GetName());
+    char *name = new char[strlen(GetName())+1];
+    sprintf(name, "%s", GetName());
+    // build a volume with same name, shape and medium
+    TGeoVolume *vol = new TGeoVolume(name, newshape, fMedium);
+    Int_t i=0;
+    // copy volume attributes
+    vol->SetVisibility(IsVisible());
+    vol->SetLineColor(GetLineColor());
+    vol->SetLineStyle(GetLineStyle());
+    vol->SetLineWidth(GetLineWidth());
+    vol->SetFillColor(GetFillColor());
+    vol->SetFillStyle(GetFillStyle());
+    // copy field
+    vol->SetField(fField);
+    // if divided, copy division object
+//    if (fFinder) {
+//       Error("MakeCopyVolume", "volume %s divided", GetName());
+//       vol->SetFinder(fFinder);
+//    }
+   if (fDivision) {
+      TGeoVolume *cell;
+      TGeoVolumeMulti *div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
+//      div->MakeCopyNodes(fDivision);
+      for (Int_t i=0; i<div->GetNvolumes(); i++) {
+         cell = div->GetVolume(i);
+         fDivision->AddVolume(cell);
+//         cell->MakeCopyNodes(fDivision);
+      }
+   }      
+              
+   
+    if (!fNodes) return vol;
+    TGeoNode *node;
+    Int_t nd = fNodes->GetEntriesFast();
+    if (!nd) return vol;
+    // create new list of nodes
+    TObjArray *list = new TObjArray();
+    // attach it to new volume
+    vol->SetNodes(list);
+    ((TObject*)vol)->SetBit(kVolumeImportNodes);
+    for (i=0; i<nd; i++) {
+       //create copies of nodes and add them to list
+       node = GetNode(i)->MakeCopyNode();
+       node->SetMotherVolume(vol);
+       list->Add(node);
+    }
+    return vol;       
+}    
 //_____________________________________________________________________________
 void TGeoVolumeMulti::SetLineColor(Color_t lcolor) 
 {

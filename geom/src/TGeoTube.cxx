@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.18 2003/02/11 12:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.19 2003/02/12 14:49:37 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -545,6 +545,7 @@ Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t r
 //-----------------------------------------------------------------------------
 void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
 {
+/*
    if (rmin>=0) {
       if (rmax>0) {
          if (rmin<=rmax) {
@@ -567,6 +568,9 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
       fRmin = rmin;
       fRmax = rmax;
    }               
+*/
+   fRmin = rmin;
+   fRmax = rmax;
    fDz   = dz;
 }   
 //-----------------------------------------------------------------------------
@@ -1243,7 +1247,7 @@ void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
    fPhi1 = phi1;
    if (fPhi1 < 0) fPhi1+=360.;
    fPhi2 = phi2;
-   while (fPhi2<fPhi1) fPhi2+=360.;
+   while (fPhi2<=fPhi1) fPhi2+=360.;
    if (fPhi1==fPhi2) Error("SetTubsDimensions", "Invalid phi1=%g, phi2=%g\n", fPhi1, fPhi2);
 }   
 //-----------------------------------------------------------------------------
