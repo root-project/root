@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.28 2001/02/01 18:04:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.29 2001/02/21 11:00:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -502,8 +502,18 @@ Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Dou
    }
 
 //Compute the first endpoint codes.
-   Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
-   Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
+   //Int_t code1 = ClippingCode(x[0],y[0],xclipl,yclipb,xclipr,yclipt);
+   //Int_t code2 = ClippingCode(x[1],y[1],xclipl,yclipb,xclipr,yclipt);
+   Int_t code1 = 0;
+   if (x[0] < xclipl) code1 = code1 | 0x1;
+   if (x[0] > xclipr) code1 = code1 | 0x2;
+   if (y[0] < yclipb) code1 = code1 | 0x4;
+   if (y[0] > yclipt) code1 = code1 | 0x8;
+   Int_t code2 = 0;
+   if (x[1] < xclipl) code2 = code2 | 0x1;
+   if (x[1] > xclipr) code2 = code2 | 0x2;
+   if (y[1] < yclipb) code2 = code2 | 0x4;
+   if (y[1] > yclipt) code2 = code2 | 0x8;
 
    Double_t xt=0, yt=0;
    Int_t clipped = 0; //this variable could be used in a future version
