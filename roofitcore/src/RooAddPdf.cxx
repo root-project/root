@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.41 2002/06/12 23:53:26 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.42 2002/06/19 20:59:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,8 +59,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE),
   _projectCoefs(kFALSE),
-  _lastCoefProjSet(0),
-  _lastCoefProjIntSet(0),
   _lastSupNormSet(0)
 {
   // Dummy constructor 
@@ -83,8 +81,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE),
   _projectCoefs(kFALSE),
-  _lastCoefProjSet(0),
-  _lastCoefProjIntSet(0),
   _lastSupNormSet(0)
 {
   // Special constructor with two PDFs and one coefficient (most frequent use case)
@@ -111,8 +107,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE),
   _projectCoefs(kFALSE),
-  _lastCoefProjSet(0),
-  _lastCoefProjIntSet(0),
   _lastSupNormSet(0)
 { 
   // Generic constructor from list of PDFs and list of coefficients.
@@ -188,8 +182,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   _haveLastCoef(kFALSE),
   _allExtendable(kTRUE),
   _projectCoefs(kFALSE),
-  _lastCoefProjSet(0),
-  _lastCoefProjIntSet(0),
   _lastSupNormSet(0)
 { 
   // Generic constructor from list of extended PDFs. There are no coefficients as the expected
@@ -234,8 +226,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable),
   _projectCoefs(other._projectCoefs),
-  _lastCoefProjSet(0),
-  _lastCoefProjIntSet(0),
   _lastSupNormSet(0)
 {
   // Copy constructor
@@ -269,7 +259,7 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
   _projectCoefs = kTRUE ;  
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
-  _lastCoefProjSet = 0 ;
+  _lastSetCache.clear() ;
 }
 
 
@@ -279,40 +269,41 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
   if (!_projectCoefs) return ;
 
   // Update the list of supplemental normalization objects
-  if ((nset && (nset != _lastCoefProjSet)) ||
-      (iset && (iset != _lastCoefProjIntSet))){
+  if (!_lastSetCache.contains(nset,iset)) {
 
     // Check if null-transformation is requested
     RooArgSet* nset2 = nset ? getDependents(*nset) : new RooArgSet ;
     _doProjectCoefs = !nset2->equals(_refCoefNorm) ;
     if (!_doProjectCoefs) {
-      _lastCoefProjSet = (RooArgSet*)nset ; // wve test
-      _lastCoefProjIntSet = (RooArgSet*)iset ; // wve test
+      // register this iset/nset as equivalent
+      _lastSetCache.clear() ;
+      _lastSetCache.add(nset,iset) ;
       delete nset2 ;
       return ;
     }
 
     // Second screening: compare contents of iset/nset with reference names sets
     RooArgSet* iset2 = iset ? getDependents(*iset) : new RooArgSet ;
-    if (_lastCoefProjSet) {
-      RooNameSet nnset,niset ;
-      nnset.refill(*nset2) ;
-      niset.refill(*iset2) ;
 
-      if (nnset==_lastCoefProjNameSet&&niset==_lastCoefProjIntNameSet) {
-	delete iset2 ;
-	delete nset2 ;
-	return ;	
-      }
-    }
-
+    RooNameSet nnset,niset ;
+    nnset.refill(*nset2) ;
+    niset.refill(*iset2) ;
+    
+    if (nnset==_lastCoefProjNameSet&&niset==_lastCoefProjIntNameSet) {
+      delete iset2 ;
+      delete nset2 ;
+      // register this iset/nset as equivalent
+      _lastSetCache.add(nset,iset) ;
+      return ;	
+    }    
+    
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") updating PDF projection integrals" << endl ;
     cout << "  current normalization  : "  ; nset2->Print("1") ;
     cout << "  reference normalization: "  ; _refCoefNorm.Print("1") ; 
 
     // Store the iset/nset pointer for quick screening of repeat calls
-    _lastCoefProjSet = (RooArgSet*)nset ;
-    _lastCoefProjIntSet = (RooArgSet*)iset ;
+    _lastSetCache.clear() ;
+    _lastSetCache.add(nset,iset) ;
     _lastCoefProjNameSet.refill(*nset2) ;
     _lastCoefProjIntNameSet.refill(*iset2) ;
     

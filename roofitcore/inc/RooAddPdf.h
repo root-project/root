@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.rdl,v 1.27 2002/03/29 03:19:00 verkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.28 2002/06/12 23:53:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooAICRegistry.hh"
+#include "RooFitCore/RooNormSetCache.hh"
 #include "RooFitCore/RooNameSet.hh"
 
 class RooAddPdf : public RooAbsPdf {
@@ -61,8 +62,7 @@ protected:
   mutable Bool_t _doProjectCoefs ;
 
   void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0) const ;
-  mutable RooArgSet* _lastCoefProjSet ;
-  mutable RooArgSet* _lastCoefProjIntSet ;
+  mutable RooNormSetCache  _lastSetCache ;
   mutable RooNameSet _lastCoefProjNameSet ;
   mutable RooNameSet _lastCoefProjIntNameSet ;
   mutable RooListProxy _pdfProjList ;
