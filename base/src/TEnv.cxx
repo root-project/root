@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.7 2001/08/31 17:47:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.8 2001/09/25 16:16:21 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -65,25 +65,21 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "RConfig.h"
-#ifndef WIN32
-# ifdef ANSILIB
-#  include <sstream.h>
-# else
-#  include <strstream.h>
-# endif
-#else
-# ifdef ANSILIB
-#  include <strstream>
-# else
-#  include <strstrea.h>
-# endif
-#endif
 #include "TEnv.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TOrdCollection.h"
 #include "TError.h"
+
+#if defined(R__ANSISTREAM)
+#  include <strstream>
+#else
+#  ifndef R__WIN32
+#    include <strstream.h>
+#  else
+#    include <strstrea.h>
+#  endif
+#endif
 
 
 TEnv *gEnv;
