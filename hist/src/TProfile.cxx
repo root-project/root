@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.53 2005/01/25 07:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.54 2005/02/11 20:51:12 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1343,6 +1343,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
   }
   Bool_t computeErrors = kFALSE;
   Bool_t binEntries    = kFALSE;
+  if (opt.Contains("b")) binEntries = kTRUE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
 
