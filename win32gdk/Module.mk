@@ -70,6 +70,7 @@ $(GDKDLL):      $(GDKLIBA)
 
 $(GDKLIBA):     $(GDKSRC)
 		@(echo "*** Building $@..."; \
+                  cd $(GDKDIRS); \
 		  unset MAKEFLAGS; \
                   cd $(GDKDIRS)/win32; \
 		  nmake -nologo -f makefile.msc; \
