@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.1 2001/06/05 16:41:54 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -61,6 +61,8 @@ TGApplication::TGApplication(const char *appClassName,
    gROOT->SetName(appClassName);
 
    GetOptions(argc, argv);
+   if (argv && argv[0])
+      gSystem->SetProgname(argv[0]);
 
    LoadGraphicsLibs();
 
@@ -88,9 +90,6 @@ TGApplication::TGApplication(const char *appClassName,
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).
    InitializeColors();
-
-   if (argv && argv[0])
-      gSystem->SetProgname(argv[0]);
 
    // Set default screen factor (if not disabled in rc file)
    if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
