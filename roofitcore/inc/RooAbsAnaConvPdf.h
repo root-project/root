@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.1 2004/11/29 20:21:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,6 +59,8 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;
+
+  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
     
 protected:
 

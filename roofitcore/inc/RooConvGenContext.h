@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.rdl,v 1.7 2004/11/29 20:23:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,9 +27,12 @@ class RooAcceptReject;
 class TRandom;
 class TIterator;
 class RooRealVar ;
+class RooNumConvPdf ;
 
 class RooConvGenContext : public RooAbsGenContext {
 public:
+  RooConvGenContext(const RooNumConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
 		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooConvGenContext();

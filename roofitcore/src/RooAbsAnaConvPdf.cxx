@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsAnaConvPdf.cc,v 1.1 2004/11/29 20:21:53 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -256,6 +256,18 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   
   // Any other resolution model: use specialized generator context
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
+}
+
+
+Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const 
+{
+  // All direct generation of convolution arg if model is truth model
+  if (!TString(_convVar->GetName()).CompareTo(arg.GetName()) && 
+      dynamic_cast<RooTruthModel*>(_model)) {
+    return kTRUE ;
+  }
+
+  return kFALSE ;
 }
 
 

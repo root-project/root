@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNumConvPdf.cc,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -63,6 +63,9 @@
 #include "RooFitCore/RooCustomizer.hh"
 #include "RooFitCore/RooConvIntegrandBinding.hh"
 #include "RooFitCore/RooNumIntFactory.hh"
+#include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooConvGenContext.hh"
+
 using std::cout ;
 using std::endl ;
 
@@ -133,7 +136,7 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
 }
 
 
-void RooNumConvPdf::initialize(RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& model)
+void RooNumConvPdf::initialize() const
 {
   // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
   // model that are connected to x' rather than x (convVar)
@@ -146,20 +149,23 @@ void RooNumConvPdf::initialize(RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& m
 
   // Customize a copy of origPdf that is connected to x' rather than x
   // store all cloned components in _clonePdfSet as well as x' itself
-  _cloneVar = new RooRealVar(Form("%s_prime",convVar.GetName()),"Convolution Variable",0) ;
+  _cloneVar = new RooRealVar(Form("%s_prime",_origVar.arg().GetName()),"Convolution Variable",0) ;
 
-  RooCustomizer mgr1(pdf,"RooNumConvPdfPDF") ;
+  RooCustomizer mgr1(pdf(),"NumConv_PdfClone") ;
   mgr1.setCloneBranchSet(_ownedClonedPdfSet) ;
-  mgr1.replaceArg(convVar,*_cloneVar) ;
+  mgr1.replaceArg(var(),*_cloneVar) ;
   _clonePdf = (RooAbsReal*) mgr1.build() ;
 
-  RooCustomizer mgr2(model,"RooNumConvPdfMDL") ;
+  RooCustomizer mgr2(model(),"NumConv_ModelClone") ;
   mgr2.setCloneBranchSet(_ownedClonedModelSet) ;
-  mgr2.replaceArg(convVar,*_cloneVar) ;
+  mgr2.replaceArg(var(),*_cloneVar) ;
   _cloneModel = (RooAbsReal*) mgr2.build() ;
 
+  // Change name back to original name
+  _cloneVar->SetName(var().GetName()) ;
+  
   // Create Convolution integrand
-  _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,(RooAbsReal&)_origVar.arg(),0) ;
+  _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),0) ;
  
   // Instantiate integrator for convolution integrand
   _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1) ;
@@ -181,7 +187,7 @@ Double_t RooNumConvPdf::evaluate() const
   // Calculate convolution integral
 
   // Check if deferred initialization has occurred
-  if (!_init) const_cast<RooNumConvPdf*>(this)->initialize((RooRealVar&)_origVar.arg(),(RooAbsPdf&)_origPdf.arg(),(RooAbsPdf&)_origModel.arg()) ;
+  if (!_init) initialize() ;
 
   // Retrieve current value of convolution variable
   Double_t x = _origVar ;
@@ -302,3 +308,27 @@ void RooNumConvPdf::printCompactTreeHook(ostream& os, const char* indent)
   os << indent << "RooNumConvPdf end cache" << endl ;
 }
 
+
+RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
+					    const RooArgSet* auxProto, Bool_t verbose) const 
+{
+  // Check if physics PDF and resolution model can both directly generate the convolution variable
+
+  RooArgSet* modelDep = model().getDependents(&vars) ;
+  modelDep->remove(var(),kTRUE,kTRUE) ;
+  Int_t numAddDep = modelDep->getSize() ;
+  delete modelDep ;
+
+  RooArgSet dummy ;
+  Bool_t pdfCanDir = (  pdf().getGenerator(var(),dummy) != 0 && pdf().isDirectGenSafe(var())) ;
+  Bool_t resCanDir = (model().getGenerator(var(),dummy) !=0  && model().isDirectGenSafe(var())) ;
+
+  if (numAddDep>0 || !pdfCanDir || !resCanDir) {
+    // Any resolution model with more dependents than the convolution variable
+    // or pdf or resmodel do not support direct generation
+    return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
+  } 
+  
+  // Any other resolution model: use specialized generator context
+  return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
+}

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.11 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.12 2004/11/29 20:23:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 
 #include "RooFitCore/RooConvGenContext.hh"
 #include "RooFitCore/RooAbsAnaConvPdf.hh"
+#include "RooFitCore/RooNumConvPdf.hh"
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -38,7 +39,9 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
 	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
-  // Constructor. Build a generator for the physics PDF convoluted with the truth model
+  // Constructor for analytical convolutions. 
+  // 
+  // Build a generator for the physics PDF convoluted with the truth model
   // and a generator for the resolution model as PDF.
 
   // Clone PDF and change model to internal truth model
@@ -74,6 +77,34 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;
   _modelGen = modelClone->genContext(*_modelVars,prototype,auxProto,verbose) ;
+
+  if (prototype) {
+    _pdfVars->add(*prototype->get()) ;
+    _modelVars->add(*prototype->get()) ;  
+  }
+}
+
+
+
+RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet &vars, 
+	 			     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
+  RooAbsGenContext(model,vars,prototype,auxProto,verbose)
+{
+  // Constructor for numeric convolutions.
+  //
+  // Build a generator for the physics PDF convoluted with the truth model
+  // and a generator for the resolution model as PDF.
+
+  // Create generator for physics X truth model
+  _pdfVars = (RooArgSet*) model.clonePdf().getDependents(&vars)->snapshot(kTRUE) ;
+  _pdfGen = model.clonePdf().genContext(*_pdfVars,prototype,auxProto,verbose) ;  
+  _pdfCloneSet = 0 ;
+
+  // Create generator for resolution model as PDF
+  _modelVars = (RooArgSet*) model.cloneModel().getDependents(&vars)->snapshot(kTRUE) ;
+  _convVarName = model.cloneVar().GetName() ;
+  _modelGen = model.cloneModel().genContext(*_modelVars,prototype,auxProto,verbose) ;
+  _modelCloneSet = 0 ;
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;

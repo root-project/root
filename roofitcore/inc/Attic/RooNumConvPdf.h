@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNumConvPdf.rdl,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,28 +48,41 @@ public:
   void setCallProfiling(Bool_t flag, Int_t nbinX = 40, Int_t nbinCall = 40, Int_t nCallHigh=1000) ;
   const TH2* profileData() const { return _doProf ? _callHist : 0 ; }
 
+  // Access components
+  RooRealVar&  var() const { return (RooRealVar&) _origVar.arg() ; }
+  RooAbsPdf&   pdf() const { return (RooAbsPdf&) _origPdf.arg() ; }
+  RooAbsPdf&   model() const { return (RooAbsPdf&) _origModel.arg() ; }
+
 protected:
 
-  Bool_t _init ;
-  void initialize(RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& model) ;
+  mutable Bool_t _init ;
+  void initialize() const ;
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
   virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
 
+  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+
   RooNumIntConfig _convIntConfig ; // Configuration of numeric convolution integral ;
-  RooConvIntegrandBinding* _integrand ; //! Binding of Convolution Integrand function
-  RooAbsIntegrator* _integrator ;  //! Numeric integrator of convolution integrand
+  mutable RooConvIntegrandBinding* _integrand ; //! Binding of Convolution Integrand function
+  mutable RooAbsIntegrator* _integrator ;  //! Numeric integrator of convolution integrand
 
   RooRealProxy _origVar ;         // Original convolution variable
   RooRealProxy _origPdf ;         // Original input PDF
   RooRealProxy _origModel ;       // Original resolution model
 
-  RooArgSet    _ownedClonedPdfSet ;   // Owning set of cloned PDF components
-  RooArgSet    _ownedClonedModelSet ; // Owning set of cloned model components
+  mutable RooArgSet    _ownedClonedPdfSet ;   // Owning set of cloned PDF components
+  mutable RooArgSet    _ownedClonedModelSet ; // Owning set of cloned model components
 
-  RooAbsReal*  _cloneVar ;        // Pointer to cloned convolution variable
-  RooAbsReal*  _clonePdf ;        // Pointer to cloned PDF 
-  RooAbsReal*  _cloneModel ;      // Pointer to cloned model
+  mutable RooAbsReal*  _cloneVar ;        // Pointer to cloned convolution variable
+  mutable RooAbsReal*  _clonePdf ;        // Pointer to cloned PDF 
+  mutable RooAbsReal*  _cloneModel ;      // Pointer to cloned model
+
+  friend class RooConvGenContext ;
+  RooRealVar&  cloneVar()   const { if (!_init) initialize() ; return (RooRealVar&) *_cloneVar ; }
+  RooAbsPdf&   clonePdf()   const { if (!_init) initialize() ; return (RooAbsPdf&)  *_clonePdf ; }
+  RooAbsPdf&   cloneModel() const { if (!_init) initialize() ; return (RooAbsPdf&)  *_cloneModel ; }
 
   Bool_t       _useWindow   ;     // Switch to activate window convolution
   Double_t     _windowScale ;     // Scale factor for window parameter
