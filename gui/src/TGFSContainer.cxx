@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.20 2004/04/21 10:13:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.21 2004/04/22 18:23:44 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -36,37 +36,6 @@
 #include "TList.h"
 #include "TSystem.h"
 #include "Riostream.h"
-
-#ifndef R__LYNXOS
-#include <sys/stat.h>
-#endif
-#ifdef WIN32
-#define lstat(name, sbuf) _stat(name, sbuf)
-#define stat _stat
-#define S_ISCHR(type) type & _S_IFCHR
-#define S_ISDIR(type) type & _S_IFDIR
-#define S_ISREG(type) type & _S_IFREG
-#define S_ISBLK(type)   (0)
-#define S_ISLNK(type)   (0)
-#define S_ISSOCK(type)  (0)
-#define S_ISFIFO(type)  (0)
-
-#define S_IRWXU      00700   // read, write, execute: owner
-#define S_IRUSR      00400   // read permission: owner
-#define S_IWUSR      00200   // write permission: owner
-#define S_IXUSR      00100   // execute permission: owner
-#define S_IRWXG      00070   // read, write, execute: group
-#define S_IRGRP      00040   // read permission: group
-#define S_IWGRP      00020   // write permission: group
-#define S_IXGRP      00010   // execute permission: group
-#define S_IRWXO      00007   // read, write, execute: other
-#define S_IROTH      00004   // read permission: other
-#define S_IWOTH      00002   // write permission: other
-#define S_IXOTH      00001   // execute permission: other
-#define S_ISUID      0x800   // set user id on execution
-#define S_ISGID      0x400   // set group id on execution
-#define S_ISVTX      0
-#endif
 
 
 ClassImp(TGFileContainer)
@@ -112,7 +81,7 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 {
    // Sort frame elements in file selection list view container.
 
-  int type1, type2;
+  Int_t type1, type2;
 
   TGFileItem *f1 = (TGFileItem *) fFrame;
   TGFileItem *f2 = (TGFileItem *) ((TGFrameElement *) obj)->fFrame;
@@ -130,31 +99,19 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
         //--- use posix macros
 
-        if (S_ISDIR(type1)) type1 = 1;
-        #if defined(S_IFLNK)
-        else if ((type1 & S_IFMT) == S_IFLNK) type1 = 2;
-        #endif
-        #if defined(S_IFSOCK)
-        else if ((type1 & S_IFMT) == S_IFSOCK) type1 = 3;
-        #endif
-        #if defined(S_ISFIFO)
-        else if (S_ISFIFO(type1)) type1 = 4;
-        #endif
-        else if (S_ISREG(type1) && (type1 & S_IXUSR)) type1 = 5;
-        else type1 = 6;
+        if (R_ISDIR(type1))         type1 = 1;
+        else if (R_ISLNK(type1))    type1 = 2;
+        else if (R_ISSOCK(type1))   type1 = 3;
+        else if (R_ISFIFO(type1))   type1 = 4;
+        else if (R_ISREG(type1) && (type1 & kS_IXUSR)) type1 = 5;
+        else                        type1 = 6;
 
-        if (S_ISDIR(type2)) type2 = 1;
-        #if defined(S_IFLNK)
-        else if ((type2 & S_IFMT) == S_IFLNK) type2 = 2;
-        #endif
-        #if defined(S_IFSOCK)
-        else if ((type2 & S_IFMT) == S_IFSOCK) type2 = 3;
-        #endif
-        #if defined(S_ISFIFO)
-        else if (S_ISFIFO(type2)) type2 = 4;
-        #endif
-        else if (S_ISREG(type2) && (type2 & S_IXUSR)) type2 = 5;
-        else type2 = 6;
+        if (R_ISDIR(type2))         type2 = 1;
+        else if (R_ISLNK(type2))    type2 = 2;
+        else if (R_ISSOCK(type2))   type2 = 3;
+        else if (R_ISFIFO(type2))   type2 = 4;
+        else if (R_ISREG(type2) && (type2 & kS_IXUSR)) type2 = 5;
+        else                        type2 = 6;
 
         if (type1 < type2) return -1;
         if (type1 > type2) return 1;
@@ -191,7 +148,7 @@ void TGFileIcon::DoRedraw()
 TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *bpic, const TGPicture *blpic,
                        const TGPicture *spic, const TGPicture *slpic,
-                       TGString *name, Int_t type, ULong_t size, Int_t uid,
+                       TGString *name, Int_t type, Long64_t size, Int_t uid,
                        Int_t gid, EListViewMode viewMode, UInt_t options,
                        ULong_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
@@ -199,7 +156,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    // Create a list view item.
 
    char tmp[256];
-   ULong_t fsize, bsize;
+   Long64_t fsize, bsize;
 
    fLcurrent =
    fBlpic = blpic;
@@ -222,27 +179,27 @@ TGFileItem::TGFileItem(const TGWindow *p,
    sprintf(tmp, "%c%c%c%c%c%c%c%c%c%c",
                 (fIsLink ?
                  'l' :
-                 (S_ISREG(type) ?
+                 R_ISREG(type) ?
                   '-' :
-                  (S_ISDIR(type) ?
+                  (R_ISDIR(type) ?
                    'd' :
-                    (S_ISCHR(type) ?
+                    (R_ISCHR(type) ?
                      'c' :
-                     (S_ISBLK(type) ?
+                     (R_ISBLK(type) ?
                       'b' :
-                      (S_ISFIFO(type) ?
+                      (R_ISFIFO(type) ?
                        'p' :
-                       (S_ISSOCK(type) ?
-                        's' : '?' ))))))),
-                 ((type & S_IRUSR) ? 'r' : '-'),
-                 ((type & S_IWUSR) ? 'w' : '-'),
-                 ((type & S_ISUID) ? 's' : ((type & S_IXUSR) ? 'x' : '-')),
-                 ((type & S_IRGRP) ? 'r' : '-'),
-                 ((type & S_IWGRP) ? 'w' : '-'),
-                 ((type & S_ISGID) ? 's' : ((type & S_IXGRP) ? 'x' : '-')),
-                 ((type & S_IROTH) ? 'r' : '-'),
-                 ((type & S_IWOTH) ? 'w' : '-'),
-                 ((type & S_ISVTX) ? 't' : ((type & S_IXOTH) ? 'x' : '-')));
+                       (R_ISSOCK(type) ?
+                        's' : '?' )))))),
+                 ((type & kS_IRUSR) ? 'r' : '-'),
+                 ((type & kS_IWUSR) ? 'w' : '-'),
+                 ((type & kS_ISUID) ? 's' : ((type & kS_IXUSR) ? 'x' : '-')),
+                 ((type & kS_IRGRP) ? 'r' : '-'),
+                 ((type & kS_IWGRP) ? 'w' : '-'),
+                 ((type & kS_ISGID) ? 's' : ((type & kS_IXGRP) ? 'x' : '-')),
+                 ((type & kS_IROTH) ? 'r' : '-'),
+                 ((type & kS_IWOTH) ? 'w' : '-'),
+                 ((type & kS_ISVTX) ? 't' : ((type & kS_IXOTH) ? 'x' : '-')));
    fSubnames[0] = new TGString(tmp);
 
    // file size
@@ -251,12 +208,12 @@ TGFileItem::TGFileItem(const TGWindow *p,
       fsize /= 1024;
       if (fsize > 1024) {
          // 3.7MB is more informative than just 3MB
-         sprintf(tmp, "%ld.%ldM", fsize/1024, (fsize%1024)/103);
+         sprintf(tmp, "%lld.%lldM", fsize/1024, (fsize%1024)/103);
       } else {
-         sprintf(tmp, "%ld.%ldK", bsize/1024, (bsize%1024)/103);
+         sprintf(tmp, "%lld.%lldK", bsize/1024, (bsize%1024)/103);
       }
    } else {
-      sprintf(tmp, "%ld", bsize);
+      sprintf(tmp, "%lld", bsize);
    }
    fSubnames[1] = new TGString(tmp);
 
@@ -420,10 +377,10 @@ Bool_t TGFileContainer::HandleTimer(TTimer *)
    // Refresh container contents. Check every 5 seconds to see if the
    // directory modification date has changed.
 
-   struct stat sbuf;
+   FileStat_t sbuf;
 
-   if (stat(fDirectory.Data(), &sbuf) == 0)
-      if (fMtime != (ULong_t)sbuf.st_mtime) DisplayDirectory();
+   if (gSystem->GetPathInfo(fDirectory, sbuf) == 0)
+      if (fMtime != sbuf.fMtime) DisplayDirectory();
 
    return kTRUE;
 }
@@ -460,9 +417,9 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
    *pic = fClient->GetMimeTypeList()->GetIcon(name, small);
    if (*pic == 0) {
       *pic = small ? fDoc_t : fDoc_s;
-      if (S_ISREG(file_type) && (file_type) & S_IXUSR)
+      if (R_ISREG(file_type) && (file_type) & kS_IXUSR)
          *pic = small ? fApp_t : fApp_s;
-      if (S_ISDIR(file_type))
+      if (R_ISDIR(file_type))
          *pic = small ? fFolder_t : fFolder_s;
    }
    if (is_link)
@@ -512,8 +469,9 @@ void TGFileContainer::CreateFileList()
    TString savdir = gSystem->WorkingDirectory();
    if (!gSystem->ChangeDirectory(fDirectory.Data())) return;
 
-   struct stat sbuf;
-   if (stat(".", &sbuf) == 0) fMtime = sbuf.st_mtime;
+   FileStat_t sbuf;
+   if (gSystem->GetPathInfo(".", sbuf) == 0)
+      fMtime = sbuf.fMtime;
 
    void *dirp;
    if ((dirp = gSystem->OpenDirectory(".")) == 0) {
@@ -538,31 +496,25 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
 
    Bool_t      is_link;
    Int_t       type, uid, gid;
-   ULong_t     size;
+   Long64_t    size;
    TString     filename;
    TGFileItem *item = 0;
    const TGPicture *pic, *lpic, *spic, *slpic;
 
-   struct stat sbuf;
+   FileStat_t sbuf;
 
-   type = 0;
-   size = 0;
-   uid  = 0;
-   gid  = 0;
-
+   type    = 0;
+   size    = 0;
+   uid     = 0;
+   gid     = 0;
    is_link = kFALSE;
-   if (lstat(name, &sbuf) == 0) {
-      is_link = S_ISLNK(sbuf.st_mode);
-      type = sbuf.st_mode;
-      size = sbuf.st_size;
-      uid = sbuf.st_uid;
-      gid = sbuf.st_gid;
-      if (is_link) {
-         if (stat(name, &sbuf) == 0) {
-            type = sbuf.st_mode;
-            size = sbuf.st_size;
-         }
-      }
+
+   if (gSystem->GetPathInfo(name, sbuf) == 0) {
+      is_link = sbuf.fIsLink;
+      type    = sbuf.fMode;
+      size    = sbuf.fSize;
+      uid     = sbuf.fUid;
+      gid     = sbuf.fGid;
    } else {
       char msg[256];
 
@@ -574,7 +526,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
    }
 
    filename = name;
-   if (S_ISDIR(type) || fFilter == 0 ||
+   if (R_ISDIR(type) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
       GetFilePictures(&pic, &lpic, type, is_link, name, kFALSE);
       GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -51,7 +51,7 @@ class TViewUpdateTimer;
 class TGFileIcon;
 class TGFileItem;
 
-#ifndef __CINT__
+
 class TGFileItem : public TGLVEntry {
 
 protected:
@@ -61,7 +61,7 @@ protected:
    Int_t             fType;         // file type
    Int_t             fUid, fGid;    // file uid and gid
    Bool_t            fIsLink;       // true if symbolic link
-   ULong_t           fSize;         // file size
+   Long64_t          fSize;         // file size
 
    virtual void DoRedraw();
 
@@ -69,7 +69,7 @@ public:
    TGFileItem(const TGWindow *p = 0,
               const TGPicture *bpic = 0, const TGPicture *blpic = 0,
               const TGPicture *spic = 0, const TGPicture *slpic = 0,
-              TGString *name = 0, Int_t type = 0, ULong_t size = 1,
+              TGString *name = 0, Int_t type = 0, Long64_t size = 1,
               Int_t uid = 0, Int_t gid = 0,
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
@@ -81,7 +81,7 @@ public:
    Int_t   GetType() const { return fType; }
    ULong_t GetSize() const { return fSize; }
 };
-#endif
+
 
 class TGFileContainer : public TGLVContainer {
 
