@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.82 2002/06/28 22:56:01 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.83 2002/06/29 13:06:00 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -247,17 +247,17 @@ char *StrDup(const char *str);
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
-const unsigned int kInfo     =   0;
-const unsigned int kWarning  =   1000;
-const unsigned int kError    =   2000;
-const unsigned int kSysError =   3000;
-const unsigned int kFatal    =   4000;
-static unsigned int gErrorIgnoreLevel = kError;
+const int kInfo     =   0;
+const int kWarning  =   1000;
+const int kError    =   2000;
+const int kSysError =   3000;
+const int kFatal    =   4000;
+static int gErrorIgnoreLevel = kError;
 
 //______________________________________________________________________________
-void LevelPrint(bool prefix, unsigned int level, const char *location, 
-                const char *fmt, va_list ap) {
-
+void LevelPrint(bool prefix, int level, const char *location,
+                const char *fmt, va_list ap)
+{
    if (level < gErrorIgnoreLevel)
       return;
 
@@ -273,7 +273,7 @@ void LevelPrint(bool prefix, unsigned int level, const char *location,
       type = "SysError";
    if (level >= kFatal)
       type = "Fatal";
-   
+
    if (!location || strlen(location) == 0) {
       if (prefix) fprintf(stderr, "%s: ", type);
       vfprintf(stderr, (char*)va_(fmt), ap);
@@ -285,7 +285,6 @@ void LevelPrint(bool prefix, unsigned int level, const char *location,
 
    fflush(stderr);
 }
-   
 
 //______________________________________________________________________________
 void Error(const char *location, const char *va_(fmt), ...)
@@ -385,7 +384,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
         strstr(methodinfo.FileName(),"TBuffer.h")!=0 ||
         strstr(methodinfo.FileName(),"Rtypes.h" )!=0) {
 
-      Error(0, 
+      Error(0,
             "In this version of ROOT, the option '!' used in a linkdef file\n"
             "       implies the actual existence of customized operator.\n"
             "       The following declaration is now required:\n"
@@ -395,7 +394,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
    } else {
       //fprintf(stderr, "DEBUG: %s %d\n",methodinfo.FileName(),methodinfo.LineNumber());
    }
-  
+
    delete proto;
    return has_input_error;
 }
@@ -428,19 +427,19 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
       struct G__Definedtemplateclass *templ = G__defined_templateclass(templatename);
       if (templ) {
          G__SourceFileInfo fileinfo(templ->filenum);
-         // We are trying to discover wether the class was automatically 
-         // instantiated or not.  Sorrowfully CINT reports the starting line of 
+         // We are trying to discover wether the class was automatically
+         // instantiated or not.  Sorrowfully CINT reports the starting line of
          // a class template as the line containing the 'template' keyword.  BUT it
-         // reports the stating line of an automatically instantiated class as the 
+         // reports the stating line of an automatically instantiated class as the
          // line containing the keyword 'class'.  Those 2 can be different:
          //            template <class T>
          //            class Class2 { .....
          // So until we get a better idea, we use the heuristic that the 2 keywords
          // should be within 3 lines.
-         
+
          //fprintf(stderr,"DEBUG: temp line %d, cl line %d\ntemp file %s, cl file %s\n",
          //        templ->line ,cl.LineNumber(),
-         //        cl.FileName(), 
+         //        cl.FileName(),
          //        fileinfo.Name());
          if (abs(templ->line-cl.LineNumber())<=3 &&
              strcmp(cl.FileName(), fileinfo.Name())==0) {
@@ -2262,10 +2261,10 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
    string subQualifiedName = "";
 
    fullyQualifiedName = "::";
-   
+
    string name = cl.Fullname();
    G__ClassInfo arg;
-   
+
    int len = name.length();
    int nesting = 0;
    const char *current, *next;
@@ -2284,7 +2283,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                    //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
                 }
                 nesting++; break;
-      case '>': nesting--; 
+      case '>': nesting--;
                 if (nesting==0) {
                    name[c] = 0;
                    current = next;
@@ -2339,14 +2338,14 @@ void WriteShadowClass(G__ClassInfo &cl) {
   int closing_brackets = WriteNamespaceHeader(cl);
   if (closing_brackets) fprintf(fp,"\n");
   if (cl.HasMethod("Class_Name")) {
-     
+
      string fullname;
 	  GetFullyQualifiedName(cl,fullname);
      fprintf(fp,"      typedef %s %s;\n",fullname.c_str(),classname.c_str());
 
   } else {
 
-     Info( 0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n", 
+     Info( 0, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n",
               cl.Fullname());
 
      const char *prefix = "";
@@ -2727,8 +2726,8 @@ int main(int argc, char **argv)
    if (!strcmp(argv[ic], "-v")) {
       gErrorIgnoreLevel = kInfo; // The default is kError
       ic++;
-   } 
-   
+   }
+
 
    if (!strcmp(argv[ic], "-f")) {
       force = 1;
