@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.3 2000/10/15 01:27:45 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.4 2000/10/17 12:21:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -66,7 +66,7 @@
 #pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;
-#pragma link C++ class TQObject;
+#pragma link C++ class TQObject-;
 #pragma link C++ class TQObjSender;
 #pragma link C++ class TQClass;
 #pragma link C++ class TQConnection;
