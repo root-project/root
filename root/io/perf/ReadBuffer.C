@@ -2,7 +2,7 @@
 #include "TClass.h"
 #include "TStreamerInfo.h"
 
-class allints {
+class allint {
 public:
    int a1;
    int a2;
@@ -13,10 +13,10 @@ public:
    int a7;
    int a8;
    int a9;
-   allints() : a1(0),a2(0),a3(0),a4(0),a5(0),a6(0),a7(0),a8(0),a9(0) {}
+   allint() : a1(0),a2(0),a3(0),a4(0),a5(0),a6(0),a7(0),a8(0),a9(0) {}
 };
 
-class floatint {
+class fltint {
 public:
    int a1;
    float a2;
@@ -27,7 +27,7 @@ public:
    int a7;
    float a8;
    int a9;
-   floatint() : a1(0),a2(0),a3(0),a4(0),a5(0),a6(0),a7(0),a8(0),a9(0) {}
+   fltint() : a1(0),a2(0),a3(0),a4(0),a5(0),a6(0),a7(0),a8(0),a9(0) {}
 
 };
 
@@ -36,7 +36,7 @@ void ReadBuffer(int siz=10) {
 
    TBuffer b(TBuffer::kWrite,32000);
 
-   allints obj;
+   allint obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
    cl->Streamer(&obj,b);
 
@@ -53,7 +53,7 @@ void ReadBufferMix(int siz=10) {
 
    TBuffer b(TBuffer::kWrite,32000);
 
-   floatint obj;
+   fltint obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
    cl->Streamer(&obj,b);
    
@@ -70,7 +70,7 @@ void InfoReadBuffer(int siz=10) {
 
    TBuffer b(TBuffer::kWrite,32000);
 
-   allints obj;
+   allint obj;
 #if ROOT_VERSION_CODE<= 199169
 
 #else
@@ -103,7 +103,7 @@ void InfoReadBufferMix(int siz=10) {
 
    TBuffer b(TBuffer::kWrite,32000);
 
-   floatint obj;
+   fltint obj;
 #if ROOT_VERSION_CODE<= 199169
 
 #else
@@ -135,8 +135,8 @@ void InfoReadBufferMix(int siz=10) {
 
 
 #ifdef __MAKECINT__
-#pragma link C++ class allints+;
-#pragma link C++ class floatint+;
+#pragma link C++ class allint+;
+#pragma link C++ class fltint+;
 #pragma link C++ function ReadBuffer;
 #endif
 
