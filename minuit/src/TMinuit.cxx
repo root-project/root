@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.25 2003/03/05 11:00:39 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.26 2003/03/05 11:04:27 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -751,7 +751,7 @@ void TMinuit::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 }
 
 //______________________________________________________________________________
-void InteractiveFCN(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
+void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
 {
 //*-*-*-*-*-*-*Static function called when SetFCN is called in interactive mode
 //*-*          ===============================================
@@ -785,7 +785,7 @@ void TMinuit::SetFCN(void *fcn)
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
     }
-   fFCN = InteractiveFCN;
+   fFCN = InteractiveFCNm;
 }
 
 //______________________________________________________________________________
