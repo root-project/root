@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.7 2000/09/06 14:11:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.8 2000/09/08 07:33:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -363,6 +363,7 @@ void TObject::DrawClone(Option_t *option)
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
       pad->Modified(kTRUE);
+      pad->Update();
       return;
    }
    if (strlen(option))  newobj->Draw(option);
