@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.rdl,v 1.3 2002/09/05 04:33:17 verkerke Exp $
+ *    File: $Id: RooChi2Var.rdl,v 1.4 2003/04/07 21:39:15 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,7 @@ protected:
 
 RooCmdArg Extended() ;
 RooCmdArg DataError(RooDataHist::ErrorType) ;
-RooCmdArg numCPU(Int_t nCPU) ;
+RooCmdArg NumCPU(Int_t nCPU) ;
 
 
 #endif
