@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.4 2000/09/06 09:29:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.5 2000/09/08 07:38:33 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -82,8 +82,14 @@
 #include "TFolder.h"
 #include "TBrowser.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TError.h"
 #include "TRegexp.h"
+
+const int kMAXDEPTH = 64;
+static const char *d[kMAXDEPTH];
+static Int_t level = -1;
+static char path[512];
 
 ClassImp(TFolder)
 
@@ -177,6 +183,56 @@ void TFolder::Clear(Option_t *option)
 
 }
 
+
+//______________________________________________________________________________
+const char *TFolder::FindFullPathName(const char *name) const
+{
+// return the full pathname corresponding to subpath name
+// The returned path will be re-used by the next call to GetPath().
+   
+   TObject *obj = FindObject(name);
+   if (obj || !fFolders) {
+      level++;
+      d[level] = GetName();
+      path[0] = '/';
+      path[1] = 0;
+      for (Int_t l=0;l<=level;l++) {
+         strcat(path,"/");
+         strcat(path,d[l]);
+     }
+      strcat(path,"/");
+      strcat(path,name);
+      level = -1;
+      return path;
+   }
+   if (name[0] == '/') return 0;
+   TIter next(fFolders);
+   TFolder *folder;
+   const char *found;
+   level++;
+   d[level] = GetName();
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TFolder::Class())) continue;
+      if (obj->IsA() == TClass::Class()) continue;
+      folder = (TFolder*)obj;
+      found = folder->FindFullPathName(name);
+      if (found) return found;
+   }
+   level--;
+   return 0;
+}
+
+
+//______________________________________________________________________________
+const char *TFolder::FindFullPathName(TObject *obj) const
+{
+// return the full pathname corresponding to subpath name
+// The returned path will be re-used by the next call to GetPath().
+   
+   Error("FindFullPathname","Not yet implemented");
+   return 0;
+}
+
 //______________________________________________________________________________
 TObject *TFolder::FindObject(TObject *) const
 {
@@ -203,7 +259,14 @@ TObject *TFolder::FindObject(const char *name) const
 //     name
    
    if (name == 0) return 0;
-   if (name[0] == '/') return gROOT->GetRootFolder()->FindObject(name+1);
+   if (name[0] == '/') {
+      if (name[1] == '/') {
+         if (!strstr(name,"//root/")) return 0;
+         return gROOT->GetRootFolder()->FindObject(name+7);
+      } else {
+         return gROOT->GetRootFolder()->FindObject(name+1);
+      }
+   }
    char cname[1024];
    strcpy(cname,name);
    TObject *obj;
@@ -218,58 +281,29 @@ TObject *TFolder::FindObject(const char *name) const
    }
 }
 
+
 //______________________________________________________________________________
 TObject *TFolder::FindObjectAny(const char *name) const
 {
 // return a pointer to the first object with name starting at this folder
    
+   TObject *obj = FindObject(name);
+   if (obj || !fFolders) return obj;
+
+//   if (!obj->InheritsFrom(TFolder::Class())) continue;
+   if (name[0] == '/') return 0;
    TIter next(fFolders);
-   TObject *obj;
    TFolder *folder;
+   TObject *found;
+   d[level] = GetName();
    while ((obj=next())) {
       if (!obj->InheritsFrom(TFolder::Class())) continue;
+      if (obj->IsA() == TClass::Class()) continue;
       folder = (TFolder*)obj;
-      return folder->FindObjectAny(name);
+      found = folder->FindObjectAny(name);
+      if (found) return found;
    }
    return 0;
-}
-
-//______________________________________________________________________________
-const char *TFolder::GetPath() const
-{
-// Returns the full path of the folder. E.g. file://root/dir1/dir2.
-// The returned path will be re-used by the next call to GetPath().
-
-   static char *path = 0;
-   const int kMAXDEPTH = 128;
-   const TFolder *d[kMAXDEPTH];
-   const TFolder *cur = this;
-   int depth = 0, len = 0;
-
-   d[depth++] = cur;
-   len = strlen(cur->GetName()) + 1;  // +1 for the /
-
-//   while (cur->fMother && depth < kMAXDEPTH) {
-//      cur = (TFolder *)cur->fMother;
-//      d[depth++] = cur;
-//      len += strlen(cur->GetName()) + 1;
-//   }
-
-   if (path) delete [] path;
-   path = new char[len+2];
-
-   for (int i = depth-1; i >= 0; i--) {
-      if (i == depth-1) {    // file or TROOT name
-         strcpy(path, d[i]->GetName());
-         strcat(path, ":");
-         if (i == 0) strcat(path, "/");
-      } else {
-         strcat(path, "/");
-         strcat(path, d[i]->GetName());
-      }
-   }
-
-   return path;
 }
 
 //______________________________________________________________________________
