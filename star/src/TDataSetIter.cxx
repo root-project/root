@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1.1.3 2001/01/22 12:59:37 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.5 2001/03/24 21:25:59 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -604,9 +604,16 @@ TDataSet *TDataSetIter::Find(const Char_t *path, TDataSet *rootset,
 NOTFOUND:
    if (mkdirflag)
    {
-     // create dir
+     // create dir the same type as the type of the fRootDataSet if present
+     // Create TDataSet by default.
      char buf[512];buf[0]=0; strncat(buf,name,len);
-     ds = new TDataSet(buf);
+     if (!fRootDataSet) 
+       ds = new TDataSet(buf);
+     else {
+       ds = fRootDataSet->Instance();
+       ds->SetName(buf);
+     }
+
      if (!fRootDataSet)         fRootDataSet    = ds;
      if (!fWorkingDataSet)      fWorkingDataSet = ds;
      if (dataset)

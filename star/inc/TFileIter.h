@@ -1,4 +1,4 @@
-// $Id: TFileIter.h,v 1.2 2001/03/09 21:00:10 brun Exp $
+// $Id: TFileIter.h,v 1.5 2001/05/07 22:16:45 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 //
@@ -73,6 +73,7 @@ class TFileIter : public TListIter {
     TFileIter(TFile *file=0);
     TFileIter(const TFileIter &) {;}
     virtual ~TFileIter();
+// --- draft !!!     virtual Int_t Copy(TFile *destFile);
     Int_t   CurrentCursorPosition() const;
     virtual const TFile *GetTFile() const;
     virtual TObject *NextEventGet(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
@@ -145,7 +146,7 @@ inline TFileIter &TFileIter::operator+=(Int_t shift)
 { SkipObjects(shift); return *this;}
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator-=(Int_t shift) 
-{ SkipObjects(-shift); return *this;}
+{ return operator+=(-shift);}
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator++() 
 { SkipObjects( 1); return *this;}

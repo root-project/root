@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.2 2001/03/12 22:48:45 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.4 2001/03/16 22:56:00 fine Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.2 2001/03/12 22:48:45 fine Exp $
+// $Id: TFileSet.cxx,v 1.4 2001/03/16 22:56:00 fine Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -37,7 +37,7 @@ ClassImp(TFileSet)
 }
 
 //______________________________________________________________________________
-TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, Int_t maxDeep)
+TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, Int_t maxDepth)
            : TDataSet()
 {
   //
@@ -56,7 +56,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
   //             (=10 by default)
   //
 
-  if (!maxDeep) return;
+  if (!maxDepth) return;
 
   Long_t id, size, flags, modtime;
   TString dirbuf = dirname;
@@ -91,7 +91,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
          Char_t *file = gSystem->ConcatFileName(dirbuf,name);
          TString nextdir = file;
          delete [] file;
-         Add(new TFileSet(nextdir,name,kFALSE,maxDeep-1));
+         Add(new TFileSet(nextdir,name,kFALSE,maxDepth-1));
 
       }
       gSystem->FreeDirectory(dir);
