@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.71 2004/06/21 10:47:20 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.72 2004/06/23 20:46:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -553,21 +553,22 @@ void TCanvas::Destructor()
 }
 
 //______________________________________________________________________________
-void TCanvas::cd(Int_t subpadnumber)
+TVirtualPad *TCanvas::cd(Int_t subpadnumber)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Set current canvas & pad*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ========================
-//
-//    see TPad::cd for explanation of parameter
+   // Set current canvas & pad. Returns the new current pad,
+   // or 0 in case of failure.
+   // See TPad::cd() for an explanation of the parameter.
 
-   if (fCanvasID == -1) return;
+   if (fCanvasID == -1) return 0;
 
    TPad::cd(subpadnumber);
 
    // in case doublebuffer is off, draw directly onto display window
-   if (IsBatch()) return;
-   if (!fDoubleBuffer)
-      gVirtualX->SelectWindow(fCanvasID);
+   if (!IsBatch()) {
+      if (!fDoubleBuffer)
+         gVirtualX->SelectWindow(fCanvasID);
+   }
+   return gPad;
 }
 
 //______________________________________________________________________________
@@ -1245,7 +1246,7 @@ TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
          Selected(fSelectedPad, fSelected, fEvent);  // emit signal
          fSelectedX = px;
          fSelectedY = py;
-      }   
+      }
    }
    return pad;
 }
@@ -1502,7 +1503,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    cd();
    if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-//   Write canvas options related to pad editor 
+//   Write canvas options related to pad editor
    out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<endl;
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<endl;

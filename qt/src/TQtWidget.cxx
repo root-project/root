@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.4 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -116,29 +116,31 @@ void TQtWidget::erase ()
   fPixmapID.fill();
 }
 //_____________________________________________________________________________
-void TQtWidget::cd()
+TVirtualPad *TQtWidget::cd()
 {
- // [slot] to make this embedded canvas the current one
-  cd(0);
+   // [slot] to make this embedded canvas the current one
+   cd(0);
 }
- //______________________________________________________________________________
-void TQtWidget::cd(int subpadnumber)
+//______________________________________________________________________________
+TVirtualPad *TQtWidget::cd(int subpadnumber)
 {
- // [slot] to make this embedded canvas / pad the current one
-  qApp->lock();
-  TCanvas *c = fCanvas;
-  if (c) c->cd(subpadnumber);
-  qApp->unlock();
+   // [slot] to make this embedded canvas / pad the current one
+   qApp->lock();
+   TCanvas *c = fCanvas;
+   TVirtualPad *result = 0;
+   if (c) result = c->cd(subpadnumber);
+   qApp->unlock();
+   return result;
 }
 //______________________________________________________________________________
 void TQtWidget::Disconnect()
 {
    // Disconnect the Qt widget from CTanvas object before deleting
    // to avoid the dead lock
-  qApp->lock();
- // one has to set CanvasID = 0 to disconnect things properly.
-  TCanvas *c = fCanvas; fCanvas = 0; delete c;
-  qApp->unlock();
+   qApp->lock();
+   // one has to set CanvasID = 0 to disconnect things properly.
+   TCanvas *c = fCanvas; fCanvas = 0; delete c;
+   qApp->unlock();
 }
 //_____________________________________________________________________________
 void TQtWidget::Refresh()

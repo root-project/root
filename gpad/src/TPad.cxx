@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.135 2004/07/09 09:00:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.136 2004/07/20 09:26:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -358,29 +358,29 @@ void TPad::Browse(TBrowser *b)
 
 
 //______________________________________________________________________________
-void TPad::cd(Int_t subpadnumber)
+TVirtualPad *TPad::cd(Int_t subpadnumber)
 {
-//*-*-*-*-*-*-*-*-*Set Current Pad*-*-*-*-*-**-*-*-*-*-*-*-*
-//*-*              ====================
-//  When a canvas/pad is divided via TPad::Divide, one can directly
-//  set the current path to one of the subdivisions.
-//  See TPad::Divide for the convention to number subpads.
-//  For example:
-//    c1.Divide(2,3); // create 6 pads (2 divisions along x, 3 along y).
-//    To set the current pad to the bottom right pad, do
-//    c1.cd(6);
-//  Note1:  c1.cd() is equivalent to c1.cd(0) and sets the current pad
-//          to c1 itself.
-//  Note2:  after a statement like c1.cd(6), the global variable gPad
-//          points to the current pad. One can use gPad to set attributes
-//          of the current pad.
-//  Note3:  One can get a pointer to one of the sub-pads of pad with:
-//          TPad *subpad = (TPad*)pad->GetPad(subpadnumber);
+   // Set Current pad.
+   // When a canvas/pad is divided via TPad::Divide, one can directly
+   //  set the current path to one of the subdivisions.
+   //  See TPad::Divide for the convention to number subpads.
+   //  Returns the new current pad, or 0 in case of failure.
+   //  For example:
+   //    c1.Divide(2,3); // create 6 pads (2 divisions along x, 3 along y).
+   //    To set the current pad to the bottom right pad, do
+   //    c1.cd(6);
+   //  Note1:  c1.cd() is equivalent to c1.cd(0) and sets the current pad
+   //          to c1 itself.
+   //  Note2:  after a statement like c1.cd(6), the global variable gPad
+   //          points to the current pad. One can use gPad to set attributes
+   //          of the current pad.
+   //  Note3:  One can get a pointer to one of the sub-pads of pad with:
+   //          TPad *subpad = (TPad*)pad->GetPad(subpadnumber);
 
    if (!subpadnumber) {
       gPad = this;
       if (!gPad->IsBatch()) gVirtualX->SelectWindow(fPixmapID);
-      return;
+      return gPad;
    }
 
    TObject *obj;
@@ -389,11 +389,11 @@ void TPad::cd(Int_t subpadnumber)
       if (obj->InheritsFrom(TPad::Class())) {
          Int_t n = ((TPad*)obj)->GetNumber();
          if (n == subpadnumber) {
-            ((TPad*)obj)->cd();
-            return;
+            return ((TPad*)obj)->cd();
          }
       }
    }
+   return 0;
 }
 
 //______________________________________________________________________________

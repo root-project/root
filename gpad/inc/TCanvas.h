@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.26 2004/06/02 15:17:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.27 2004/06/18 15:48:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ public:
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
    virtual ~TCanvas();
 
-   void              cd(Int_t subpadnumber=0);
+   TVirtualPad      *cd(Int_t subpadnumber=0);
    virtual void      Browse(TBrowser *b);
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.24 2004/07/08 17:18:08 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.25 2004/07/20 09:26:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -148,7 +148,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   void              cd(Int_t subpadnumber=0);
+   TVirtualPad*      cd(Int_t subpadnumber=0);
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
    virtual Int_t     Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt);

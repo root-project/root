@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -100,8 +100,8 @@ protected:
    virtual void stretchWidget(QResizeEvent *e);
 
 public slots:
-   virtual void cd();
-   virtual void cd(int subpadnumber);
+   virtual TVirtualPad *cd();
+   virtual TVirtualPad *cd(int subpadnumber);
    void Disconnect();
    void Refresh();
 signals:
