@@ -1,0 +1,44 @@
+class TopLevel { public: virtual ~TopLevel() {} };
+class BottomOne : public TopLevel {};
+#ifndef __CINT__
+class BottomMissing : public TopLevel {};
+#endif
+
+#include "Riostream.h"
+#include "TClass.h"
+
+void missingInfo() {
+   TopLevel *one = new BottomOne;
+   TopLevel *missing = new BottomMissing;
+
+   TClass *cl;
+   
+   cl = gROOT->GetClass(typeid(TopLevel));
+   if (cl) {
+      cout << "For toplevel found " << endl; 
+      //cout << (void*)cl << endl;
+      cl->Print();
+   } else {
+      cout << "For toplevel cl is missing \n";
+   }
+
+   cl = gROOT->GetClass(typeid(*one));
+   if (cl) {
+      cout << "For one found " << endl; 
+      //cout << (void*)cl << endl;
+      cl->Print();
+   } else {
+      cout << "For one cl is missing \n";
+   }
+
+   cl = gROOT->GetClass(typeid(*missing));
+   if (cl) {
+      cout << "For missing found " << endl; 
+      //cout << (void*)cl << endl;
+      cl->Print();
+   } else {
+      cout << "For missing cl is missing \n";
+   }
+
+
+}
