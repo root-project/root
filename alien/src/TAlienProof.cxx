@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienProof.cxx,v 1.0 2003/09/05 11:29:24 peters Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienProof.cxx,v 1.1 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters 05/09/2003
 
 /*************************************************************************
@@ -95,7 +95,6 @@ Bool_t TAlienProof::Request(TDSet *dse)
       printf("--------------------------------------------------------\n");
       ps(((TAliEnAPI::ProofSession_T *) fProofSession)->sessionId);
       printf("--------------------------------------------------------\n");
-      const char *siteblob = GetSiteBlob();
       DSetProofServiceAnswer(dse);
       DSetRepack(dse);
       return kTRUE;
