@@ -140,11 +140,14 @@ ifneq ($(CERNLIBS),)
 MODULES      += hbook
 endif
 
+-include MyModules.mk   # allow local modules
+
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
-                rootx rootd proofd dcache chirp hbook alien asimage ldap
-MODULES      := $(sort $(MODULES))  # removes duplicates
+                rootx rootd proofd dcache chirp hbook alien asimage ldap \
+                krb5auth
+MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
 MODULES      += main   # must be last, $(ALLLIBS) must be fully formed
@@ -686,6 +689,9 @@ showbuild:
 	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
 	@echo "LDAPINCDIR         = $(LDAPINCDIR)"
 	@echo "LDAPCLILIB         = $(LDAPCLILIB)"
+	@echo "QTLIBDIR           = $(QTLIBDIR)"
+	@echo "QTLIB              = $(QTLIB)"
+	@echo "QTINCDIR           = $(QTINCDIR)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo "SHADOWFLAGS        = $(SHADOWFLAGS)"
 	@echo ""
@@ -698,3 +704,7 @@ showbuild:
 	@echo "MAKEDISTSRC        = $(MAKEDISTSRC)"
 	@echo "MAKEVERSION        = $(MAKEVERSION)"
 	@echo "IMPORTCINT         = $(IMPORTCINT)"
+	@echo ""
+	@echo "The list of modules to be built:"
+	@echo "--------------------------------"
+	@echo "$(MODULES)"
