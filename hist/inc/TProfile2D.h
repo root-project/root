@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.2 2000/06/13 10:36:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.3 2000/08/15 08:51:37 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
                        { MayNotUse("SetBins(Int_t, Double_t, Double_t, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t"); }
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile2D,2)  //Profile2D histogram class
+    ClassDef(TProfile2D,3)  //Profile2D histogram class
 };
 
 #endif

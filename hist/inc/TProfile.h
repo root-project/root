@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.5 2000/07/11 13:58:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.6 2000/08/15 08:24:10 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -85,7 +85,7 @@ public:
     virtual void    SetBins(Int_t nbins, Double_t xmin, Double_t xmax);
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile,2)  //Profile histogram class
+    ClassDef(TProfile,3)  //Profile histogram class
 };
 
 #endif
