@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.4 2001/02/13 07:54:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TNamed.h,v 1.5 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed() { }
+   virtual void     Clear(Option_t *option ="");
    virtual TObject *Clone(const char *newname="") const;
    virtual Int_t    Compare(const TObject *obj) const;
    virtual void     Copy(TObject &named) const;
