@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.41 2003/06/10 20:51:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.42 2003/06/12 05:34:05 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1549,6 +1549,7 @@ void TProofServ::Terminate(int status)
 
    // Cleanup session directory
    if (status == 0) {
+      gSystem->ChangeDirectory("/"); // make sure we remain in a "connected" directory
       gSystem->MakeDirectory(fSessionDir+"/.delete");  // needed in case fSessionDir is on NFS ?!
       gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
    }
