@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.5 2001/09/26 09:58:02 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.6 2001/09/26 13:22:36 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -483,7 +483,7 @@ static void *get_stack_pointer(int level)
    // For other compiler one will need to implement this again !
 
    void *p = 0;
-#if defined(R__GNU) && defined(R__LINUX)
+#if defined(R__GNU) && defined(R__LINUX) && !defined(__alpha__)
    switch (level) {
    case 0:
       if (__builtin_frame_address(1))
