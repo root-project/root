@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.169 2004/09/10 19:36:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.170 2004/10/01 09:18:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2671,7 +2671,10 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          for (ui=0;ui<ncols;++ui) {
             TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
             if (var[ui]->GetNdim()) onerow += Form(numbFormat.Data(),var[ui]->PrintValue(0,inst,colFormats[ui].Data()));
-            else onerow += Form("* %d % 9c ",colSizes[ui],' ');
+            else {
+               TString emptyForm = Form("* %%%dc ",colSizes[ui]);
+               onerow += Form(emptyForm.Data(),' ');
+            }
          }
          fSelectedRows++;
          if (fScanRedirect)
