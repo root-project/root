@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.42 2002/02/27 16:13:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.43 2002/02/28 17:07:07 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -110,7 +110,7 @@ TChain::~TChain()
 //*-*        ==============================
 
    fDirectory = 0;
-   fFile = 0;
+   delete fFile; fFile = 0;
    gROOT->GetListOfSpecials()->Remove(this);
    delete [] fTreeOffset;
    fFiles->Delete();
