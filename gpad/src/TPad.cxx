@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.7 2000/06/30 12:10:56 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.8 2000/07/12 15:14:57 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2145,9 +2145,11 @@ void TPad::Update()
 //______________________________________________________________________________
 TFrame *TPad::GetFrame()
 {
-   if (fFrame && !GetListOfPrimitives()->FindObject(fFrame)) fFrame = 0;
+   TFrame     *frame = (TFrame*)GetListOfPrimitives()->FindObject(fFrame);
+   if (!frame) frame = (TFrame*)GetListOfPrimitives()->FindObject("TFrame");
+   fFrame = frame;
    if (!fFrame) {
-      fFrame = new TFrame(0,0,1,1);
+      if (!frame) fFrame = new TFrame(0,0,1,1);
       Int_t framecolor = GetFrameFillColor();
       if (!framecolor) framecolor = GetFillColor();
       fFrame->SetFillColor(framecolor);
