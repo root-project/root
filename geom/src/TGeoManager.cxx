@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.7 2002/07/15 15:56:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.8 2002/07/17 13:27:58 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -58,7 +58,7 @@
 // can become the actual top volume at run time (see TGeoManager::SetTopVolume()).
 // All functionalities of the modeler will behave in this case as if only the
 // corresponding branch starting from this volume is the registered geometry.
-
+//
 //Begin_Html
 /*
 <img src="gif/t_graf.jpg">
@@ -140,7 +140,7 @@
 //   replica->SetVisibility(kFALSE);
 //   TGeoVolume *rootbox = geom->MakeBox("ROOT", "mat1", 110., 50., 5.);
 //   rootbox->SetVisibility(kFALSE); // this will hold word 'ROOT'
-   
+//   
 //   //--- make letter 'R'
 //   TGeoVolume *R = geom->MakeBox("R", "mat1", 25., 25., 5.);
 //   R->SetVisibility(kFALSE);
