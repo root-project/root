@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.41 2001/02/21 07:38:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.42 2001/02/23 10:32:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -448,7 +448,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
 }
 
 //______________________________________________________________________________
-TH1::TH1(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*Normal constructor for variable bin size histograms*-*-*-*-*-*-*
@@ -470,7 +470,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Float_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t *xbins)
+TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*Normal constructor for variable bin size histograms*-*-*-*-*-*-*
@@ -1283,7 +1283,7 @@ Int_t TH1::Fill(Axis_t x, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TH1::FillN(Int_t ntimes, Axis_t *x, Double_t *w, Int_t stride)
+void TH1::FillN(Int_t ntimes, const Axis_t *x, const Double_t *w, Int_t stride)
 {
 //*-*-*-*-*-*-*-*Fill this histogram with an array x and weights w*-*-*-*-*
 //*-*            =================================================
@@ -3534,7 +3534,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TH1::SetContent(Stat_t *content)
+void TH1::SetContent(const Stat_t *content)
 {
 //*-*-*-*-*-*-*-*Replace bin contents by the contents of array content*-*-*-*
 //*-*            =====================================================
@@ -3581,7 +3581,7 @@ Double_t TH1::GetContourLevel(Int_t level) const
 
 
 //______________________________________________________________________________
-void TH1::SetContour(Int_t  nlevels, Double_t *levels)
+void TH1::SetContour(Int_t  nlevels, const Double_t *levels)
 {
 //*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
 //*-*            ===========================================
@@ -3889,7 +3889,7 @@ void TH1::SetDirectory(TDirectory *dir)
 
 
 //______________________________________________________________________________
-void TH1::SetError(Stat_t *error)
+void TH1::SetError(const Stat_t *error)
 {
 //*-*-*-*-*-*-*-*-*Replace bin errors by values in array error*-*-*-*-*-*-*-*-*
 //*-*              ===========================================
@@ -4134,7 +4134,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1C::TH1C(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
 {
 //
@@ -4146,7 +4146,7 @@ TH1C::TH1C(const char *name,const char *title,Int_t nbins,Float_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1C::TH1C(const char *name,const char *title,Int_t nbins,Double_t *xbins)
+TH1C::TH1C(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayC(nbins+2)
 {
 //
@@ -4302,7 +4302,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1S::TH1S(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
 {
 //
@@ -4314,7 +4314,7 @@ TH1S::TH1S(const char *name,const char *title,Int_t nbins,Float_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1S::TH1S(const char *name,const char *title,Int_t nbins,Double_t *xbins)
+TH1S::TH1S(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayS(nbins+2)
 {
 //
@@ -4469,7 +4469,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
 {
 //
@@ -4481,7 +4481,7 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,Float_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const char *name,const char *title,Int_t nbins,Double_t *xbins)
+TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayF(nbins+2)
 {
 //
@@ -4628,7 +4628,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH1D::TH1D(const char *name,const char *title,Int_t nbins,Float_t *xbins)
+TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
 {
 //
@@ -4640,7 +4640,7 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,Float_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t *xbins)
+TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
      : TH1(name,title,nbins,xbins), TArrayD(nbins+2)
 {
 //

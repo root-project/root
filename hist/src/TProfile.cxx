@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.10 2001/02/07 21:01:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.11 2001/02/21 14:57:37 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -103,7 +103,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,Float_t *xbins,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Float_t *xbins,Option_t *option)
     : TH1D(name,title,nbins,xbins)
 {
 //*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
@@ -116,7 +116,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Float_t *xbins
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t *xbins,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Double_t *xbins,Option_t *option)
     : TH1D(name,title,nbins,xbins)
 {
 //*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
@@ -545,7 +545,7 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
 
 
 //______________________________________________________________________________
-void TProfile::FillN(Int_t ntimes, Axis_t *x, Axis_t *y, Stat_t *w, Int_t stride)
+void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_t *w, Int_t stride)
 {
 //*-*-*-*-*-*-*-*-*-*-*Fill a Profile histogram with weights*-*-*-*-*-*-*-*
 //*-*                  =====================================

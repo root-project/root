@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.5 2001/02/07 20:59:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.6 2001/02/20 11:17:06 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -515,7 +515,7 @@ void TF2::SavePrimitive(ofstream &out, Option_t *option)
 
 
 //______________________________________________________________________________
-void TF2::SetContour(Int_t  nlevels, Double_t *levels)
+void TF2::SetContour(Int_t  nlevels, const Double_t *levels)
 {
 //*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
 //*-*            ===========================================

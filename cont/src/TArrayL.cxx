@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayL::TArrayL(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayL::TArrayL(Int_t n, Long_t *array)
+TArrayL::TArrayL(Int_t n, const Long_t *array)
 {
    // Create TArrayL object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayL::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayL::Set(Int_t n, Long_t *array)
+void TArrayL::Set(Int_t n, const Long_t *array)
 {
    // Set size of this array to n longs and set the contents.
 

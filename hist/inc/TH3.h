@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.10 2001/01/08 14:24:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.11 2001/02/13 11:57:30 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -37,12 +37,12 @@ public:
    TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                   ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                   ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
-   TH3(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
-                                         ,Int_t nbinsy,Float_t *ybins
-                                         ,Int_t nbinsz,Float_t *zbins);
-   TH3(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
-                                         ,Int_t nbinsy,Double_t *ybins
-                                         ,Int_t nbinsz,Double_t *zbins);
+   TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                         ,Int_t nbinsy,const Float_t *ybins
+                                         ,Int_t nbinsz,const Float_t *zbins);
+   TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                         ,Int_t nbinsy,const Double_t *ybins
+                                         ,Int_t nbinsz,const Double_t *zbins);
    virtual ~TH3();
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
@@ -78,12 +78,12 @@ public:
    TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                   ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                   ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
-   TH3C(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
-                                          ,Int_t nbinsy,Float_t *ybins
-                                          ,Int_t nbinsz,Float_t *zbins);
-   TH3C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
-                                          ,Int_t nbinsy,Double_t *ybins
-                                          ,Int_t nbinsz,Double_t *zbins);
+   TH3C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                          ,Int_t nbinsy,const Float_t *ybins
+                                          ,Int_t nbinsz,const Float_t *zbins);
+   TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins
+                                          ,Int_t nbinsz,const Double_t *zbins);
    TH3C(const TH3C &h3c);
    virtual ~TH3C();
    virtual void    AddBinContent(Int_t bin);
@@ -118,12 +118,12 @@ public:
    TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                   ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                   ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
-   TH3S(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
-                                          ,Int_t nbinsy,Float_t *ybins
-                                          ,Int_t nbinsz,Float_t *zbins);
-   TH3S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
-                                          ,Int_t nbinsy,Double_t *ybins
-                                          ,Int_t nbinsz,Double_t *zbins);
+   TH3S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                          ,Int_t nbinsy,const Float_t *ybins
+                                          ,Int_t nbinsz,const Float_t *zbins);
+   TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins
+                                          ,Int_t nbinsz,const Double_t *zbins);
    TH3S(const TH3S &h3s);
    virtual ~TH3S();
    virtual void    AddBinContent(Int_t bin);
@@ -159,12 +159,12 @@ public:
    TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                   ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                   ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
-   TH3F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
-                                          ,Int_t nbinsy,Float_t *ybins
-                                          ,Int_t nbinsz,Float_t *zbins);
-   TH3F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
-                                          ,Int_t nbinsy,Double_t *ybins
-                                          ,Int_t nbinsz,Double_t *zbins);
+   TH3F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                          ,Int_t nbinsy,const Float_t *ybins
+                                          ,Int_t nbinsz,const Float_t *zbins);
+   TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins
+                                          ,Int_t nbinsz,const Double_t *zbins);
    TH3F(const TH3F &h3f);
    virtual ~TH3F();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}
@@ -200,12 +200,12 @@ public:
    TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                   ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                   ,Int_t nbinsz,Axis_t zlow,Axis_t zup);
-   TH3D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
-                                          ,Int_t nbinsy,Float_t *ybins
-                                          ,Int_t nbinsz,Float_t *zbins);
-   TH3D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
-                                          ,Int_t nbinsy,Double_t *ybins
-                                          ,Int_t nbinsz,Double_t *zbins);
+   TH3D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+                                          ,Int_t nbinsy,const Float_t *ybins
+                                          ,Int_t nbinsz,const Float_t *zbins);
+   TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                          ,Int_t nbinsy,const Double_t *ybins
+                                          ,Int_t nbinsz,const Double_t *zbins);
    TH3D(const TH3D &h3d);
    virtual ~TH3D();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}

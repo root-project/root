@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.4 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.5 2001/02/07 20:59:46 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -69,7 +69,7 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetNpy(Int_t npy=100); // *MENU*
-   virtual void     SetContour(Int_t nlevels=20, Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    virtual void     SetRange(Double_t xmin, Double_t xmax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.7 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.8 2001/02/07 20:58:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
 
         TAxis();
         TAxis(Int_t nbins, Axis_t xmin, Axis_t xmax);
-        TAxis(Int_t nbins, Axis_t *xbins);
+        TAxis(Int_t nbins, const Axis_t *xbins);
         TAxis(const TAxis &axis);
         virtual ~TAxis();
         virtual void    CenterTitle(Bool_t center=kTRUE);  // *MENU*
@@ -85,8 +85,8 @@ public:
         virtual void    RotateTitle(Bool_t rotate=kTRUE); // *MENU*
         virtual void    SaveAttributes(ofstream &out, const char *name, const char *subname);
         virtual void    Set(Int_t nbins, Axis_t xmin, Axis_t xmax);
-        virtual void    Set(Int_t nbins, Float_t *xbins);
-        virtual void    Set(Int_t nbins, Axis_t *xbins);
+        virtual void    Set(Int_t nbins, const Float_t *xbins);
+        virtual void    Set(Int_t nbins, const Axis_t *xbins);
         virtual void    SetBinLabel(Int_t bin, char *label);
         virtual void    SetLabel(const char *label);
         virtual void    SetLimits(Axis_t xmin, Axis_t xmax);

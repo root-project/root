@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.14 2001/01/22 12:47:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.15 2001/02/07 20:58:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -57,7 +57,7 @@ TAxis::TAxis(Int_t nbins,Axis_t xlow,Axis_t xup): TNamed(), TAttAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(Int_t nbins,Axis_t *xbins): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,const Axis_t *xbins): TNamed(), TAttAxis()
 {
 //*-*-*-*-*-*-*-*Axis constructor for variable bin size*-*-*-*-*-*-*-*-*-*-*
 //*-*            ======================================
@@ -547,7 +547,7 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
 }
 
 //______________________________________________________________________________
-void TAxis::Set(Int_t nbins, Float_t *xbins)
+void TAxis::Set(Int_t nbins, const Float_t *xbins)
 {
 //*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================================
@@ -573,7 +573,7 @@ void TAxis::Set(Int_t nbins, Float_t *xbins)
 }
 
 //______________________________________________________________________________
-void TAxis::Set(Int_t nbins, Axis_t *xbins)
+void TAxis::Set(Int_t nbins, const Axis_t *xbins)
 {
 //*-*-*-*-*-*-*-*-*Initialize axis with variable bins*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==================================

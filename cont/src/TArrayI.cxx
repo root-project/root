@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayI::TArrayI(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayI::TArrayI(Int_t n, Int_t *array)
+TArrayI::TArrayI(Int_t n, const Int_t *array)
 {
    // Create TArrayI object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayI::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayI::Set(Int_t n, Int_t *array)
+void TArrayI::Set(Int_t n, const Int_t *array)
 {
    // Set size of this array to n ints and set the contents.
 

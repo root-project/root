@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayF.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayF::TArrayF(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayF::TArrayF(Int_t n, Float_t *array)
+TArrayF::TArrayF(Int_t n, const Float_t *array)
 {
    // Create TArrayF object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayF::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayF::Set(Int_t n, Float_t *array)
+void TArrayF::Set(Int_t n, const Float_t *array)
 {
    // Set size of this array to n floats and set the contents.
 

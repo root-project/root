@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayD.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayD::TArrayD(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayD::TArrayD(Int_t n, Double_t *array)
+TArrayD::TArrayD(Int_t n, const Double_t *array)
 {
    // Create TArrayD object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayD::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayD::Set(Int_t n, Double_t *array)
+void TArrayD::Set(Int_t n, const Double_t *array)
 {
    // Set size of this array to n doubles and set the contents
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.15 2001/01/12 08:27:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.16 2001/02/13 11:57:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -106,8 +106,8 @@ public:
 
     TH1();
     TH1(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1(const char *name,const char *title,Int_t nbinsx,Float_t *xbins);
-    TH1(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     virtual ~TH1();
 
     virtual void     Add(TF1 *h1, Double_t c1=1);
@@ -129,8 +129,8 @@ public:
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual Int_t    Fill(Axis_t x);
     virtual Int_t    Fill(Axis_t x, Stat_t w);
-    virtual void     FillN(Int_t ntimes, Axis_t *x, Double_t *w, Int_t stride=1);
-    virtual void     FillN(Int_t, Axis_t *, Axis_t *, Double_t *, Int_t) {;}
+    virtual void     FillN(Int_t ntimes, const Axis_t *x, const Double_t *w, Int_t stride=1);
+    virtual void     FillN(Int_t, const Axis_t *, const Axis_t *, const Double_t *, Int_t) {;}
     virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
     virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
     virtual Int_t    FindBin(Axis_t x, Axis_t y=0, Axis_t z=0);
@@ -232,12 +232,12 @@ public:
     virtual void     SetBinsLength(Int_t) {;} //refefined in derived classes
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);
-    virtual void     SetContent(Stat_t *content);
-    virtual void     SetContour(Int_t nlevels, Double_t *levels=0);
+    virtual void     SetContent(const Stat_t *content);
+    virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
     virtual void     SetContourLevel(Int_t level, Double_t value);
     virtual void     SetDirectory(TDirectory *dir);
     virtual void     SetEntries(Stat_t n) {fEntries = n;};
-    virtual void     SetError(Stat_t *error);
+    virtual void     SetError(const Stat_t *error);
     virtual void     SetLabelColor(Color_t color=1, Option_t *axis="X");
     virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
     virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
@@ -274,8 +274,8 @@ class TH1C : public TH1, public TArrayC {
 public:
     TH1C();
     TH1C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1C(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
-    TH1C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     TH1C(const TH1C &h1c);
     virtual ~TH1C();
 
@@ -310,8 +310,8 @@ class TH1S : public TH1, public TArrayS {
 public:
     TH1S();
     TH1S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1S(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
-    TH1S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     TH1S(const TH1S &h1s);
     virtual ~TH1S();
 
@@ -346,8 +346,8 @@ class TH1F : public TH1, public TArrayF {
 public:
     TH1F();
     TH1F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1F(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
-    TH1F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     TH1F(const TVector &v);
     TH1F(const TH1F &h1f);
     virtual ~TH1F();
@@ -384,8 +384,8 @@ class TH1D : public TH1, public TArrayD {
 public:
     TH1D();
     TH1D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1D(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
-    TH1D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
     TH1D(const TVectorD &v);
     TH1D(const TH1D &h1d);
     virtual ~TH1D();

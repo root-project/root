@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArrayC.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayC::TArrayC(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayC::TArrayC(Int_t n, Char_t *array)
+TArrayC::TArrayC(Int_t n, const Char_t *array)
 {
    // Create TArrayC object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayC::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayC::Set(Int_t n, Char_t *array)
+void TArrayC::Set(Int_t n, const Char_t *array)
 {
    // Set size of this array to n chars and set the contents.
 
