@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.25 2004/03/18 20:41:31 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.26 2004/04/30 07:03:17 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TList.h"
 #include "Riostream.h"
 
@@ -73,6 +74,178 @@ THStack::THStack(const char *name, const char *title)
    fMaximum   = -1111;
    fMinimum   = -1111;
    gROOT->GetListOfCleanups()->Add(this);   
+}
+
+
+//______________________________________________________________________________
+THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/, 
+                 const char *name /*=0*/, const char *title /*=0*/,
+                 Int_t firstbin /*=-1*/, Int_t lastbin /*=-1*/, 
+                 Int_t firstbin2 /*=-1*/, Int_t lastbin2 /*=-1*/, 
+                 Option_t* proj_option /*=""*/, Option_t* draw_option /*=""*/): TNamed(name, title) {
+// Creates a new THStack from a TH2 or TH3
+// It is filled with the 1D histograms from GetProjectionX or GetProjectionY
+// for each bin of the histogram. It illustrates the differences and total 
+// sum along an axis.
+// 
+// Parameters:
+// - hist:  the histogram used for the projections. Can be an object deriving 
+//          from TH2 or TH3.
+// - axis:  for TH2: "x" for ProjectionX, "y" for ProjectionY.
+//          for TH3: see TH3::Project3D.
+// - name:  fName is set to name if given, otherwise to histo's name with 
+//          "_stack_<axis>" appended, where <axis> is the value of the 
+//          parameter axis.
+// - title: fTitle is set to title if given, otherwise to histo's title
+//          with ", stack of <axis> projections" appended.
+// - firstbin, lastbin:
+//          for each bin within [firstbin,lastbin] a stack entry is created.
+//          See TH2::ProjectionX/Y for use overflow bins.
+//          Defaults to "all bins"
+// - firstbin2, lastbin2:
+//          Other axis range for TH3::Project3D, defaults to "all bins".
+//          Ignored for TH2s
+// - proj_option:
+//          option passed to TH2::ProjectionX/Y and TH3::Project3D (along 
+//          with axis)
+// - draw_option:
+//          option passed to THStack::Add.
+   fHists     = 0;
+   fStack     = 0;
+   fHistogram = 0;
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   gROOT->GetListOfCleanups()->Add(this);   
+
+   if (!axis) {
+      Warning("THStack", "Need an axis.");
+      return;
+   }
+   if (!hist) {
+      Warning("THStack", "Need a histogram.");
+      return;
+   }
+   Bool_t isTH2=hist->IsA()->InheritsFrom(TH2::Class());
+   Bool_t isTH3=hist->IsA()->InheritsFrom(TH3::Class());
+   if (!isTH2 && !isTH3) {
+      Warning("THStack", "Need a histogram deriving from TH2 or TH3.");
+      return;
+   }
+
+   if (!fName.Length())
+      fName=Form("%s_stack%s", hist->GetName(), axis);
+   if (!fTitle.Length())
+      if (hist->GetTitle() && strlen(hist->GetTitle()))
+         fTitle=Form("%s, stack of %s projections", hist->GetTitle(), axis);
+      else
+         fTitle=Form("stack of %s projections", axis);
+
+   if (isTH2) {
+      TH2* hist2=(TH2*) hist;
+      Bool_t useX=(strchr(axis,'x')) || (strchr(axis,'X'));
+      Bool_t useY=(strchr(axis,'y')) || (strchr(axis,'Y'));
+      if (!useX && !useY || (useX && useY)) {
+         Warning("THStack", "Need parameter axis=\"x\" or \"y\" for a TH2, not none or both.");
+         return;
+      }
+      TAxis* haxis= useX ? hist->GetYaxis() : hist->GetXaxis();
+      if (!haxis) {
+         Warning("HStack","Histogram axis is NULL");
+         return;
+      }
+      Int_t nbins = haxis->GetNbins();
+      if (firstbin < 0) firstbin = 1;
+      if (lastbin  < 0) lastbin  = nbins;
+      if (lastbin  > nbins+1) lastbin = nbins;
+      for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
+         TH1* hProj=0;
+         if (useX) hProj=hist2->ProjectionX(Form("_px%d",iBin), iBin, iBin, proj_option);
+         else hProj=hist2->ProjectionY(Form("_py%d",iBin), iBin, iBin, proj_option);
+         Add(hProj, draw_option);
+      }
+   } else {
+      // hist is a TH3
+      TH3* hist3=(TH3*) hist;
+      TString sAxis(axis);
+      sAxis.ToLower();
+      Int_t dim=3-sAxis.Length();
+      if (dim<1 || dim>2) {
+         Warning("THStack", "Invalid length for parameter axis.");
+         return;
+      }
+
+      if (dim==1) {
+         TAxis* haxis = 0;
+         // look for the haxis _not_ in axis
+         if (sAxis.First('x')==kNPOS) 
+            haxis=hist->GetXaxis();
+         else if (sAxis.First('y')==kNPOS) 
+            haxis=hist->GetYaxis();
+         else if (sAxis.First('z')==kNPOS) 
+            haxis=hist->GetZaxis();
+         if (!haxis) {
+            Warning("HStack","Histogram axis is NULL");
+            return;
+         }
+
+         Int_t nbins = haxis->GetNbins();
+         if (firstbin < 0) firstbin = 1;
+         if (lastbin  < 0) lastbin  = nbins;
+         if (lastbin  > nbins+1) lastbin = nbins;
+         Int_t iFirstOld=haxis->GetFirst();
+         Int_t iLastOld=haxis->GetLast();
+         for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
+            haxis->SetRange(iBin, iBin);
+            // build projection named axis_iBin (passed through "option")
+            TH1* hProj=hist3->Project3D(Form("%s%s_%d", axis, proj_option, iBin));
+            Add(hProj, draw_option);
+         }
+         haxis->SetRange(iFirstOld, iLastOld);
+      }  else {
+         // if dim==2
+         TAxis* haxis1 = 0;
+         TAxis* haxis2 = 0;
+         // look for the haxis _not_ in axis
+         if (sAxis.First('x')!=kNPOS) {
+            haxis1=hist->GetYaxis();
+            haxis2=hist->GetZaxis();
+         } else if (sAxis.First('y')!=kNPOS) {
+            haxis1=hist->GetXaxis();
+            haxis2=hist->GetZaxis();
+         } else if (sAxis.First('z')!=kNPOS) {
+            haxis1=hist->GetXaxis();
+            haxis2=hist->GetYaxis();
+         }
+         if (!haxis1 || !haxis2) {
+            Warning("HStack","Histogram axis is NULL");
+            return;
+         }
+
+         Int_t nbins1 = haxis1->GetNbins();
+         Int_t nbins2 = haxis2->GetNbins();
+         if (firstbin < 0) firstbin = 1;
+         if (lastbin  < 0) lastbin  = nbins1;
+         if (lastbin  > nbins1+1) lastbin = nbins1;
+         if (firstbin2 < 0) firstbin2 = 1;
+         if (lastbin2  < 0) lastbin2  = nbins2;
+         if (lastbin2  > nbins2+1) lastbin2 = nbins2;
+         Int_t iFirstOld1=haxis1->GetFirst();
+         Int_t iLastOld1=haxis1->GetLast();
+         Int_t iFirstOld2=haxis2->GetFirst();
+         Int_t iLastOld2=haxis2->GetLast();
+         for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
+            haxis1->SetRange(iBin, iBin);
+            for (Int_t jBin=firstbin2; jBin<=lastbin2; jBin++) {
+               haxis2->SetRange(jBin, jBin);
+               // build projection named axis_iBin (passed through "option")
+               TH1* hProj=hist3->Project3D(Form("%s%s_%d", axis, proj_option, iBin));
+               Add(hProj, draw_option);
+            }
+         }
+         haxis1->SetRange(iFirstOld1, iLastOld1);
+         haxis2->SetRange(iFirstOld2, iLastOld2);
+      }
+   } // if hist is TH2 or TH3
 }
 
 //______________________________________________________________________________

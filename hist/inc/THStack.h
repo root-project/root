@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.6 2002/08/13 21:17:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.7 2004/04/30 07:03:17 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -46,6 +46,11 @@ public:
 
         THStack();
         THStack(const char *name, const char *title);
+        THStack(const TH1* hist, Option_t *axis="x", 
+                const char *name=0, const char *title=0,
+                Int_t firstbin=-1, Int_t lastbin=-1, 
+                Int_t firstbin2=-1, Int_t lastbin2=-1, 
+                Option_t* proj_option="", Option_t* draw_option="");
         THStack(const THStack &hstack);
         virtual ~THStack();
         virtual void     Add(TH1 *h, Option_t *option="");
