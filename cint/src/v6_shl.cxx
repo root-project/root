@@ -885,6 +885,11 @@ char *shlfile;
   }
   else ++G__allsl;
 
+#ifdef G__ROOT
+  /* this pointer must be set before calling dlopen! */
+  G__initpermanentsl = (void (*)())NULL;
+#endif
+  
   G__sl_handle[allsl] = G__dlopen(shlfile);
 
 #ifndef G__OLDIMPLEMENTATION1525
@@ -1069,9 +1074,6 @@ char *shlfile;
     G__CALL_SETUP(dllid);
   }
 #ifdef G__ROOT
-#ifndef G__OLDKIMPLEMENTATION1207
-  G__initpermanentsl = (void (*)())NULL;
-#endif
   if (sharedlib_func==NULL) G__call_setup_funcs();
 #endif
 
