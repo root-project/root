@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.46 2003/05/22 21:02:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.47 2003/07/02 21:18:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -287,7 +287,7 @@ public:
     virtual void     SetTickLength(Float_t length=0.02, Option_t *axis="X");
     virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
     virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
-    virtual void     SetTitle(const char *title);
+    virtual void     SetTitle(const char *title);  // *MENU*
     virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
     virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
     virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}
