@@ -71,9 +71,12 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   // loop over all keys in this directory
   TChain *globChain = 0;
   TIter nextkey( current_sourcedir->GetListOfKeys() );
-  TKey *key;
+  TKey *key, *oldkey=0;
   while ( (key = (TKey*)nextkey())) {
 
+    //keep only the highest cycle number for each key
+    if (oldkey && !strcmp(oldkey->GetName(),key->GetName())) continue;
+     
     // read object from first source file
     first_source->cd( path );
     TObject *obj = key->ReadObj();
@@ -156,10 +159,11 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
        else
           obj->Write( key->GetName() );
     }
+    oldkey = key;
 
   } // while ( ( TKey *key = (TKey*)nextkey() ) )
 
   // save modifications to target file
-  target->Write();
+  target->SaveSelf(kTRUE);
 
 }
