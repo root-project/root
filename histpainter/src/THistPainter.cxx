@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.36 2001/03/13 10:41:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.37 2001/03/22 07:26:06 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2046,8 +2046,6 @@ void THistPainter::PaintErrors()
       ey1 = factor*fH->GetBinError(k);
       ex2 = ex1;
       ey2 = ey1;
-      if (ey1 <= 0 && yp <= 0) goto L30;
-      if (Hoption.Logy && yp <= 0) goto L30;
 
       xi4 = xp;
       xi3 = xp;
@@ -2156,8 +2154,14 @@ L30:
       TGraph graph;
       graph.SetFillStyle(fH->GetFillStyle());
       graph.SetFillColor(fH->GetFillColor());
+      Int_t logx = gPad->GetLogx();
+      Int_t logy = gPad->GetLogy();
+      gPad->SetLogx(0);
+      gPad->SetLogy(0);
       if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
       else         graph.PaintGraph(2*npoints,xline,yline,"F");
+      gPad->SetLogx(logx);
+      gPad->SetLogy(logy);
       delete [] xline;
       delete [] yline;
    }
