@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.34 2002/11/06 06:33:37 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.35 2002/11/16 07:58:13 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1357,7 +1357,12 @@ TMatrix &TMatrix::InvertPosDef()
 
    // step 1: Cholesky decomposition
    if (Pdcholesky(pa,pu,n))
-     Error("InvertPosDef","matrix not positive definite ?");
+   {
+     Error("InvertPosDef","matrix not positive definite ?, Gauss-Jordan inversion applied");
+     delete [] pu;
+     Invert(0);
+     return *this;
+   }
 
    const Int_t off_n = (n-1)*n;
    Int_t i,l;
