@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.2 2000/06/13 10:37:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.3 2000/07/06 15:58:21 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -349,8 +349,19 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fXmin       = xmin;
    fXmax       = xmax;
    fNpx        = 100;
-   fType       = 1;
-   fFunction   = fcn;
+   char *funcname = G__p2f2funcname(fcn);
+   if (funcname) {
+      fType       = 2;
+      SetTitle(funcname);
+      fMethodCall = new TMethodCall();
+      fMethodCall->InitWithPrototype(funcname,"Double_t*,Double_t*");
+      fNumber = -1;
+      fFunction   = 0;
+   } else {
+      fType       = 1;
+      fMethodCall = 0;
+      fFunction   = fcn;
+   }   if (npar > 0 ) fNpar = npar;
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
@@ -381,7 +392,6 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fHistogram  = 0;
    fMinimum    = -1111;
    fMaximum    = -1111;
-   fMethodCall = 0;
    fNdim       = 1;
 //*-*- Store formula in linked list of formula in ROOT
 
