@@ -12,7 +12,7 @@ GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
 G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
 G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
-ifeq ($(ARCH),win32gdk)
+ifeq ($(ARCH),win32)
 WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
 WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
                       Opengl32.lib
@@ -69,7 +69,7 @@ MLPLIBEXTRA         = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
 QUADPLIBDEP         = $(MATRIXLIB) 
 QUADPLIBEXTRA       = lib/libMatrix.lib
 
-ifeq ($(ARCH),win32gdk)
+ifeq ($(ARCH),win32)
 GLLIBDEP            = $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
 else

@@ -47,13 +47,13 @@ MODULES       = build cint metautils utils base cont meta net zip clib matrix \
                 histpainter treeplayer treeviewer proof physics postscript \
                 rint html eg geom geompainter vmc fumili mlp gedold ged quadp
 
-ifeq ($(ARCH),win32)
+ifeq ($(ARCH),win32old)
 MODULES      += winnt win32 gl
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
-ifeq ($(ARCH),win32gdk)
+ifeq ($(ARCH),win32)
 MODULES      += winnt win32gdk gl
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)

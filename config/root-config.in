@@ -276,6 +276,13 @@ win32)
    forcelibs=$rootulibs
    forceglibs=$rootuglibs
    ;;
+win32old)
+   # Win32 old native interface
+   auxcflags="-MD"
+   auxlibs=
+   forcelibs=$rootulibs
+   forceglibs=$rootuglibs
+   ;;
 win32gcc)
    # Win32 with cygwin gcc
    auxcflags="-MD"

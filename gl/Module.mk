@@ -13,12 +13,12 @@ GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
 GLH          := $(wildcard $(MODDIRI)/*.h)
-ifeq ($(ARCH),win32gdk)
+ifeq ($(ARCH),win32)
 GLS          := TGdkGLKernel.cxx
 else
 GLS          := TGLKernel.cxx
 endif
-ifeq ($(ARCH),win32)
+ifeq ($(ARCH),win32old)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
 else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
@@ -75,7 +75,7 @@ distclean-gl:   clean-gl
 distclean::     distclean-gl
 
 ##### extra rules ######
-ifeq ($(ARCH),win32gdk)
+ifeq ($(ARCH),win32)
 $(GLO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -I$(WIN32GDKDIR)/gdk/src \
 	   -I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
