@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.30 2002/02/18 23:08:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.31 2002/03/21 16:51:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -307,6 +307,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
                hobj->SetMinimum(newmin);
                hobj->SetMaximum(newmax);
+               hobj->SetBit(TH1::kIsZoomed);
             } else {
                if (fFirst > 0) first = fFirst;
                else            first = 1;
@@ -365,6 +366,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                if (hobj->GetDimension() == 1) {
                   hobj->SetMinimum(xmin);
                   hobj->SetMaximum(xmax);
+                  hobj->SetBit(TH1::kIsZoomed);
                } else {
                   SetRange(bin1,bin2);
                }
@@ -379,6 +381,7 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          	  if(newmax > zmax)newmax = hobj->GetBinContent(hobj->GetMaximumBin());
          	  hobj->SetMinimum(newmin);
          	  hobj->SetMaximum(newmax);
+                  hobj->SetBit(TH1::kIsZoomed);
                   ResetBit(kPalette);
                }
             }
@@ -905,6 +908,7 @@ void TAxis::UnZoom()
       if (hobj->GetDimension() == 2 && strstr(GetName(),"zaxis")) {
          hobj->SetMinimum();
          hobj->SetMaximum();
+         hobj->ResetBit(TH1::kIsZoomed);
          return;
       }
       if (strcmp(hobj->GetName(),"hframe") == 0 ) {
@@ -913,6 +917,7 @@ void TAxis::UnZoom()
       } else {
          hobj->SetMinimum();
          hobj->SetMaximum();
+         hobj->ResetBit(TH1::kIsZoomed);
       }
    }
 }
