@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.23 2002/11/01 19:12:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.24 2002/11/01 20:41:40 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -430,8 +430,9 @@ TObject *TKey::ReadObj()
 //  Example2: Special case:
 //      class MyClass : public AnotherClass, public TObject
 //   then on return, one must do:
-//    MyClass *obj = (MyClass*)((void*)key->ReadObj());
+//    MyClass *obj = dynamic_cast<MyClass*>(key->ReadObj());
 //
+//  Of course, dynamic_cast<> can also be used in the example 1.
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
@@ -516,7 +517,7 @@ CLEAR:
    fBuffer    = 0;
    gDirectory = cursav;
 
-   return (TObject*)pobj;
+   return tobj;
 }
 
 //______________________________________________________________________________
