@@ -7,7 +7,7 @@
  * Description:
  *  Utility to read source file
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -43,7 +43,7 @@ int c;
   case G__SJIS:
     if(c<=0x1f || (0x60<=c && c<=0x7c)) return(1);
     else                                return(0);
-  case G__ONEBYTE:
+  case G__ONEBYTE: 
     return(0);
   }
   return(1);

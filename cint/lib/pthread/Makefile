@@ -5,9 +5,11 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux_RH6.2_gcc3
+# platform/linux_RH6.2_gcc3_mtso
 #  Platform dependent information for LINUX 2.0 RedHatH6.2 or later
 #  using gcc-3.00
+#  Build libcint.so instead of G__ci.a. And creates multi-thread safe DLLs.
+#  Based on Christoph Bugel's proposal about multi-threading.
 ############################################################
 
 # Tools
@@ -28,17 +30,18 @@ LDDLLOPT    = -shared
 OPTIMIZE    = -O2
 LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic 
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK
-OTHMACRO    = -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
+OTHMACRO    = -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION $(CCDLLPOST) -DG__MULTITHREADLIBCINT
 SYSIPATH    =
 
 # libraries
 MAINO	    = $(CINTSYSDIR)/main/G__cppmain.o
-CINTLIB     = $(CINTSYSDIR)/src/G__ci.a
-READLINEA   = /usr/lib/libreadline.a
+CINTLIB     = $(CINTSYSDIR)/libcint.so
+#READLINEA   = /usr/lib/libreadline.a
+READLINEA   = 
 APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc.o Typedf.o Apiif.o Token.o
 RANLIB	    = /usr/bin/ranlib
 STDLIBS     = gcc3strm.o stdstrct.o
-PLATFORM    =
+PLATFORM    = $(CINTSYSDIR)/main/G__setup.o
 
 # source code postfix
 CSRCPOST    = .c

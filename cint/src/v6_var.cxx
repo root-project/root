@@ -62,7 +62,7 @@ case 'p': /* var = expr; assign to value */                               \
 		break;                                                    \
 	}                                                                 \
 	else if(G__funcheader && paran==0 && isupper(result.type)) {      \
-		/* K&$ style 'type a[]' initialization */                 \
+		/* K&R style 'type a[]' initialization */                 \
 	    /* if(var->p[ig15]!=G__PINVALID) free((void*)var->p[ig15]);*/ \
 		if(var->p[ig15]!=G__PINVALID &&   /* ON457 */             \
 		   G__COMPILEDGLOBAL!=var->statictype[ig15])              \
@@ -5466,7 +5466,7 @@ long G__struct_offset; /* used to be int */
       break;
     } /* end of if(var->varlabel[ig15][paran+1]==0) */
     else if(G__funcheader && paran==0 && isupper(result->type)) {
-      /* K&$ style 'type a[]' initialization */
+      /* K&R style 'type a[]' initialization */
       if(var->p[ig15]!=G__PINVALID&&G__COMPILEDGLOBAL!=var->statictype[ig15])
 	free((void*)var->p[ig15]);
       var->p[ig15] = result->obj.i; 

@@ -3486,11 +3486,32 @@ fpos_t *ppos;
   /**************************************************************
   * store funcname and hash
   **************************************************************/
+#ifndef G__OLDIMPLEMENTATION1655
+  {
+    char *p;
+    deftmpfunc->name=(char*)malloc(strlen(funcname)+1);
+    strcpy(deftmpfunc->name,funcname);
+    p = G__strrstr(deftmpfunc->name,"::");
+    if(p) {
+      *p = 0;
+      deftmpfunc->parent_tagnum = G__defined_tagname(deftmpfunc->name,0);
+      p = G__strrstr(funcname,"::");
+      strcpy(deftmpfunc->name,p+2);
+      G__hash(deftmpfunc->name,deftmpfunc->hash,tmp);
+    }
+    else {
+      strcpy(deftmpfunc->name,funcname);
+      G__hash(funcname,deftmpfunc->hash,tmp);
+      deftmpfunc->parent_tagnum = G__get_envtagnum();
+    }
+  }
+#else
   deftmpfunc->name=(char*)malloc(strlen(funcname)+1);
   strcpy(deftmpfunc->name,funcname);
   G__hash(funcname,deftmpfunc->hash,tmp);
 #ifndef G__OLDIMPLEMENTATION687
   deftmpfunc->parent_tagnum = G__get_envtagnum();
+#endif
 #endif
 #ifndef G__OLDIMPLEMENTATION972
   deftmpfunc->friendtagnum = G__friendtagnum;

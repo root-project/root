@@ -4923,6 +4923,14 @@ int recursive;
 	    ifunc->hash[ifn] = hash;
 	  }
 #endif
+#ifndef G__OLDIMPLEMENTATION1655
+	  if(0==ifunc->pentry[ifn]->p) {
+	    /* This was only a prototype template, search for definition
+	     * template */
+	    deftmpfunc = deftmpfunc->next;
+	    continue;
+	  }
+#endif
 	  funclist = G__funclist_add(funclist,ifunc,ifn,0);
 	  if(ifunc->para_nu[ifn]<libp->paran ||
 	     (ifunc->para_nu[ifn]>libp->paran&&

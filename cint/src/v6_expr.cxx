@@ -1693,12 +1693,24 @@ G__value *presult;
     for(ifn=0;ifn<memfunc->allifunc;ifn++) {
       if(strcmp(item,memfunc->funcname[ifn])==0) {
 #ifndef G__OLDIMPLEMENTATION1289
+#ifndef G__OLDIMPLEMENTATION1653
+	/* For the time being, pointer to member function can only be handled
+	 * as function name */
+	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+	/* 
+	if(memfunc->pentry[ifn]->filenum>=0) 
+	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
+	else 
+	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
+	*/
+#else
 	if(memfunc->pentry[ifn]->tp2f) {
 	  G__letint(presult,'Y',(long)memfunc->pentry[ifn]->tp2f);
 	}
 	else {
 	  G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 	}
+#endif
 #else
 	G__letint(presult,'C',(long)memfunc->funcname[ifn]);
 #endif

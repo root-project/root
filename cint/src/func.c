@@ -647,6 +647,9 @@ int *known3;
     mem+=3;
     opx="->";
   }
+  else {
+    opx="";
+  }
  
   res = G__getexpr(mem);
   if(!res.type) {
@@ -662,6 +665,8 @@ int *known3;
     return(G__null);
   }
 
+  /* For the time being, pointer to member function can only be handed as
+   * function name */
   strcpy(buf2,*(char**)res.obj.i);
 
   sprintf(expr,"%s%s%s%s",buf,opx,buf2,parameter1);
@@ -690,6 +695,25 @@ int *known3;
   result3 = G__getitem(item);
   if(0==result3.type) return(G__null);
   *known3 = 1;
+
+#ifndef G__OLDIMPLEMENTATION1660
+  if(2==libp->paran && strstr(libp->parameter[1],"][")) {
+    char arg[G__ONELINE];
+    char *p=arg;
+    int k;
+    strcpy(p,libp->parameter[1]);
+    i=1;
+    while(*p) {
+      k=0;
+      if(*p=='[') ++p; 
+      while(*p && *p!=']') libp->parameter[i][k++] = *p++;
+      libp->parameter[i][k++] = 0;
+      if(*p==']') ++p; 
+      ++i;
+    }
+    libp->paran = i;
+  }
+#endif
 
   for(i=1;i<libp->paran;i++) {
     char arg[G__ONELINE];
@@ -974,6 +998,13 @@ int memfunc_flag;
    * put null char to the end of function name
    ******************************************************/
   funcname[ig15++]='\0';
+
+#ifndef G__OLDIMPLEMENTATION1657
+  if(strchr(funcname,'.') || strstr(funcname,"->")) {
+    result3=G__null;
+    return(result3);
+  }
+#endif
   
 #ifndef G__OLDIMPLEMENTATION1560
   /******************************************************

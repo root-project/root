@@ -2393,6 +2393,9 @@ FILE *hfp;
 #endif
 #endif
 	     ) {
+#ifndef G__OLDIMPLEMENTATION1656
+	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
+#endif
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      /* constructor need special handling */
 	      if(0==G__struct.isabstract[i]&&0==isnonpublicnew
@@ -2449,7 +2452,11 @@ FILE *hfp;
 #endif
 	  }
 	} /* for(j) */
-	if(NULL==ifunc->next)
+	if(NULL==ifunc->next
+#ifndef G__OLDIMPLEMENTATON1656
+	   && G__NOLINK==G__struct.iscpplink[i]
+#endif
+	   )
 	  G__cppif_gendefault(fp,hfp,i,j,ifunc
 			      ,isconstructor
 			      ,iscopyconstructor
@@ -5341,6 +5348,9 @@ FILE *fp;
 #endif
 #endif
 	     ) {
+#ifndef G__OLDIMPLEMENTATION1656
+	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
+#endif
 	    /* check if constructor */
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      if(G__struct.isabstract[i]) continue;
@@ -5553,7 +5563,11 @@ FILE *fp;
 
 	} /* end for(j) */
 
-	if(NULL==ifunc->next) {
+	if(NULL==ifunc->next
+#ifndef G__OLDIMPLEMENTATON1656
+	   && G__NOLINK==G__struct.iscpplink[i]
+#endif
+	   ) {
 	  page=ifunc->page;
 	  if(j==G__MAXIFUNC) {
 	    j=0;
@@ -6252,9 +6266,25 @@ G__incsetup setup_memfunc;
 #ifndef G__OLDIMPLEMENTATION1362
      && 'n'!=G__struct.type[tagnum]
 #endif
-     && G__asm_dbg ) {
-    G__fprinterr(G__serr,"Warning: Try to reload %s from DLL. Ignored\n"
-            ,G__fulltagname(tagnum,1));
+     ) {
+#ifndef G__OLDIMPLEMENTATION1656
+    if(G__struct.incsetup_memvar[tagnum])
+      (*G__struct.incsetup_memvar[tagnum])();
+    if(G__struct.incsetup_memfunc[tagnum])
+      (*G__struct.incsetup_memfunc[tagnum])();
+    G__struct.incsetup_memvar[tagnum] = setup_memvar;
+    G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
+    if(G__struct.incsetup_memvar[tagnum])
+      (*G__struct.incsetup_memvar[tagnum])();
+    if(G__struct.incsetup_memfunc[tagnum])
+      (*G__struct.incsetup_memfunc[tagnum])();
+    G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
+    G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
+#endif
+    if(G__asm_dbg ) {
+      G__fprinterr(G__serr,"Warning: Try to reload %s from DLL\n"
+		   ,G__fulltagname(tagnum,1));
+    }
     return(0);
   }
 #endif

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015036
-#define G__CINTVERSIONSTR  "5.15.36, Apr 23 2002"
+#define G__CINTVERSION      5015037
+#define G__CINTVERSIONSTR  "5.15.37, Apr 30 2002"
 
 
 /**********************************************************************
@@ -34,6 +34,13 @@
 #ifndef G__CPPCONSTSTRING
 #define G__CPPCONSTSTRING
 #endif
+#endif
+
+/* Activate pointer to member function handling in interpreted code. 
+ * Seamless access of pointer to member between interpreted and compiled code
+ * is not implemented yet. */
+#ifndef G__PTR2MEMFUNC
+#define G__PTR2MEMFUNC
 #endif
 
 /* 1649 is not ready yet */

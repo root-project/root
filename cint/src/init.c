@@ -1100,7 +1100,7 @@ char *argv[] ;
 #ifdef G__SHAREDLIB
       G__more(G__sout,"  -l [dynamiclinklib] : link dynamic link library\n");
 #endif
-      G__more(G__sout,"  -m : Support 8bit char comment (Disable multi-byte char)\n");
+      G__more(G__sout,"  -m : Support ISO-8859-x Eurpoean char set (disabling multi-byte char)\n");
       G__more(G__sout,"* -M [newdelmask] : operator new/delete mask for precompiled interface method\n");
       G__more(G__sout,"* -n [linkname] : Specify precompiled interface method filename\n");
       G__more(G__sout,"* -N [DLL_name] : Specify DLL interface method name\n");

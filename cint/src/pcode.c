@@ -331,6 +331,10 @@ long localmem;
   int sp;               /* data stack pointer */
   int strosp=0;           /* struct offset stack pointer */
   long struct_offset_stack[G__MAXSTRSTACK]; /*struct offset stack, was int */
+#ifndef G__OLDIMPLEMENTATION1659
+  int gvpp=0;           /* struct offset stack pointer */
+  long store_globalvarpointer[G__MAXSTRSTACK]; /**/
+#endif
   char *funcname;         /* function name */
   int (*pfunc)();
   struct G__param fpara;  /* func,var parameter buf */
@@ -2439,8 +2443,23 @@ long localmem;
       ***************************************/
 #ifdef G__ASM_DBG
       if(G__asm_dbg) 
-	G__fprinterr(G__serr,"%3x,%d: SETGVP %d\n",pc,sp,G__asm_inst[pc+1]);
+	G__fprinterr(G__serr,"%3x,%d: SETGVP %d %d\n",pc,sp,G__asm_inst[pc+1],gvpp);
 #endif
+#ifndef G__OLDIMPLEMENTATION1659
+      switch(G__asm_inst[pc+1]) {
+      case -1:
+	if(gvpp) G__globalvarpointer = store_globalvarpointer[--gvpp];
+	break;
+      case 0:
+	store_globalvarpointer[gvpp++] = G__globalvarpointer;
+	G__globalvarpointer = G__asm_stack[sp-1].obj.i;
+	break;
+      default:
+	store_globalvarpointer[gvpp++] = G__globalvarpointer;
+	G__globalvarpointer = G__asm_inst[pc+1];
+	break;
+      }
+#else
       if(G__asm_inst[pc+1]) {
 	G__globalvarpointer = G__asm_inst[pc+1];
       }
@@ -2448,6 +2467,7 @@ long localmem;
 	G__globalvarpointer = G__asm_stack[sp-1].obj.i;
 	/* --sp; */
       }
+#endif
       pc+=2;
 #ifdef G__ASM_DBG
       break;
