@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.18 2001/05/29 06:57:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.19 2001/06/06 07:21:15 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -375,10 +375,10 @@ if (err==0) {
     if (chaine(i-1,1)=="&" && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
     if (chaine(i-1,1)=="|" && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
     if (chaine(i-1,2)==">>" && compt==0 && compt2==0 && rshift==0) {puiss10=0; rshift=i;}
-    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0) 
+    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0)
         {puiss10=0; grand=i;}
     if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
-    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0) 
+    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0)
         {puiss10=0; petit=i;}
     if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
         && peteg==0) {peteg=i; puiss10=0; petit=0;}
@@ -833,7 +833,7 @@ if (err==0) {
                  fExpr[fNoper] = "sqrt";
                  fOper[fNoper] = 22;
                  fNoper++;
-			
+
 //*-*- Look for an exponential
 //*-*  =======================
                } else if (chaine(0,4)=="expo" || chaine(1,4)=="expo" || chaine(2,4)=="expo") {
@@ -1390,6 +1390,8 @@ Int_t TFormula::Compile(const char *expression)
       fExpr[i] = "";
       fOper[i] = 0;
   }
+  for (i=0; i<MAXCONST; i++)
+      fConst[i] = 0;
 
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
@@ -1410,7 +1412,7 @@ Int_t TFormula::Compile(const char *expression)
              if (chaine(i-1,2) == "--") {
                 chaine = chaine(0,i-1) + "+" + chaine(i+1,lc-i-1);
                 i=0;
-             } else 
+             } else
                if (chaine(i-1,2) == "->") {
                   chaine = chaine(0,i-1) + "." + chaine(i+1,lc-i-1);
                   i=0;
@@ -1489,11 +1491,36 @@ void TFormula::Copy(TObject &obj)
    ((TFormula&)obj).fNconst = fNconst;
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fNval   = fNval;
-   if (fNoper)  ((TFormula&)obj).fExpr   = new TString[fNoper];
-   if (fNoper)  ((TFormula&)obj).fOper   = new Int_t[fNoper];
-   if (fNconst) ((TFormula&)obj).fConst  = new Double_t[fNconst];
-   if (fNpar)   ((TFormula&)obj).fParams = new Double_t[fNpar];
-   if (fNpar)   ((TFormula&)obj).fNames  = new TString[fNpar];
+   ((TFormula&)obj).fExpr   = 0;
+   ((TFormula&)obj).fOper   = 0;
+   ((TFormula&)obj).fConst  = 0;
+   ((TFormula&)obj).fParams = 0;
+   ((TFormula&)obj).fNames  = 0;
+   if (fExpr) {
+      ((TFormula&)obj).fExpr = new TString[MAXOP];
+      for (i=0; i<MAXOP; i++)
+         ((TFormula&)obj).fExpr[i] = "";
+   }
+   if (fOper) {
+      ((TFormula&)obj).fOper = new Int_t[MAXOP];
+      for (i=0; i<MAXOP; i++)
+         ((TFormula&)obj).fOper[i] = 0;
+   }
+   if (fConst) {
+      ((TFormula&)obj).fConst = new Double_t[MAXCONST];
+      for (i=0; i<MAXCONST; i++)
+         ((TFormula&)obj).fConst[i] = 0;
+   }
+   if (fParams) {
+      ((TFormula&)obj).fParams = new Double_t[MAXPAR];
+      for (i=0; i<MAXPAR; i++)
+         ((TFormula&)obj).fParams[i] = 0;
+   }
+   if (fNames) {
+      ((TFormula&)obj).fNames = new TString[MAXPAR];
+      for (i=0; i<MAXPAR; i++)
+         ((TFormula&)obj).fNames[i] = "";
+   }
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
    for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
@@ -1787,7 +1814,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 Double_t TFormula::GetParameter(const char *parName) const
 {
   //return value of parameter named parName
-   
+
   const Double_t kNaN = 1e-300;
   Int_t index = GetParNumber(parName);
   if (index==-1) {
@@ -1812,7 +1839,7 @@ const char *TFormula::GetParName(Int_t ipar) const
 Int_t TFormula::GetParNumber(const char *parName) const
 {
   // return parameter number by name
-   
+
    for (Int_t i=0; i<fNpar; i++) {
       if (fNames[i] == parName) return i;
    }
@@ -1948,7 +1975,7 @@ void TFormula::Streamer(TBuffer &b)
       gROOT->GetListOfFunctions()->Add(this);
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
       //====end of old versions
-      
+
    } else {
       TFormula::Class()->WriteBuffer(b,this);
    }
