@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.46 2004/09/17 10:29:28 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.47 2005/01/18 21:07:27 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -625,7 +625,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // use hierarchical cleaning for container
    fContainer->SetCleanup(kDeepCleanup);
 
-   // Fill canvas with 256 colored frames 
+   // Fill canvas with 256 colored frames
    for (int i=0; i < 256; ++i)
       fCanvasWindow->AddFrame(new TGFrame(fCanvasWindow->GetContainer(),
                                           32, 32, 0, (i+1)&255),
@@ -679,6 +679,7 @@ TestMainFrame::~TestMainFrame()
    delete fCascade2Menu;
    delete fMenuNew1;
    delete fMenuNew2;
+   delete fContainer;
 }
 
 void TestMainFrame::CloseWindow()
@@ -1649,7 +1650,7 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t data[])
 
    TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX,
                                         5, 5, 5, 0);
- 
+
    item = new TGShutterItem(fShutter, new TGHotString(name), id++);
    container = (TGCompositeFrame *) item->GetContainer();
 

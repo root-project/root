@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.48 2004/12/09 22:55:06 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.49 2005/01/18 21:07:27 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -764,6 +764,7 @@ TestMainFrame::~TestMainFrame()
    delete fMenuNew1;
    delete fMenuNew2;
 
+   delete fContainer;
    delete fMain;
 }
 
