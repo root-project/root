@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.96 2004/05/06 16:47:51 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.97 2004/05/07 16:35:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -573,16 +573,16 @@ void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::SigAlarmInterruptsSyscall(Bool_t set)
+void TUnixSystem::SigAlarmInterruptsSyscalls(Bool_t set)
 {
    // When the argument is true the SIGALRM signal handler is set so that
    // interrupted syscalls will not be restarted by the kernel. This is
    // typically used in case one wants to put a timeout on an I/O operation.
    // By default interrupted syscalls will always be restarted (for all
    // signals). This can be controlled for each a-synchronous TTimer via
-   // the method TTimer::SetInterruptSyscall().
+   // the method TTimer::SetInterruptSyscalls().
 
-   UnixSigAlarmInterruptsSyscall(set);
+   UnixSigAlarmInterruptsSyscalls(set);
 }
 
 //______________________________________________________________________________
@@ -2802,14 +2802,14 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::UnixSigAlarmInterruptsSyscall(Bool_t set)
+void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
 {
    // When the argument is true the SIGALRM signal handler is set so that
    // interrupted syscalls will not be restarted by the kernel. This is
    // typically used in case one wants to put a timeout on an I/O operation.
    // By default interrupted syscalls will always be restarted (for all
    // signals). This can be controlled for each a-synchronous TTimer via
-   // the method TTimer::SetInterruptSyscall().
+   // the method TTimer::SetInterruptSyscalls().
 
    if (gSignalMap[kSigAlarm].handler) {
       struct sigaction sigact;
@@ -2840,7 +2840,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscall(Bool_t set)
 #endif
       }
       if (sigaction(gSignalMap[kSigAlarm].code, &sigact, 0) < 0)
-         ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscall", "sigaction");
+         ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscalls", "sigaction");
    }
 }
 

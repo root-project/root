@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.8 2004/05/07 16:32:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.9 2004/05/10 08:15:12 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -82,10 +82,10 @@ TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
    // derive from TTimer and override Notify() or connect slots to the
    // signals Timeout(), TurnOn() and TurnOff().
 
-   fObject     = 0;
-   fCommand    = "";
-   fSync       = mode;
-   fIntSyscall = kFALSE;
+   fObject      = 0;
+   fCommand     = "";
+   fSync        = mode;
+   fIntSyscalls = kFALSE;
    Reset();
 }
 
@@ -97,10 +97,10 @@ TTimer::TTimer(TObject *obj, Long_t ms, Bool_t mode) : fTime(ms)
    // Add a timer to the system eventloop by calling TurnOn().
    // The object's HandleTimer() will be called by Notify().
 
-   fObject     = obj;
-   fCommand    = "";
-   fSync       = mode;
-   fIntSyscall = kFALSE;
+   fObject      = obj;
+   fCommand     = "";
+   fSync        = mode;
+   fIntSyscalls = kFALSE;
    Reset();
 }
 
@@ -112,10 +112,10 @@ TTimer::TTimer(const char *command, Long_t ms, Bool_t mode) : fTime(ms)
    // Add a timer to the system eventloop by calling TurnOn().
    // The interpreter will execute command from Notify().
 
-   fObject     = 0;
-   fCommand    = command;
-   fSync       = mode;
-   fIntSyscall = kFALSE;
+   fObject      = 0;
+   fCommand     = command;
+   fSync        = mode;
+   fIntSyscalls = kFALSE;
    Reset();
 }
 
@@ -181,7 +181,7 @@ void TTimer::SetObject(TObject *object)
 }
 
 //______________________________________________________________________________
-void TTimer::SetInterruptSyscall(Bool_t set)
+void TTimer::SetInterruptSyscalls(Bool_t set)
 {
    // When the argument is true the a-synchronous timer (SIGALRM) signal
    // handler is set so that interrupted syscalls will not be restarted
@@ -189,7 +189,7 @@ void TTimer::SetInterruptSyscall(Bool_t set)
    // timeout on an I/O operation. By default interrupted syscalls will
    // be restarted.
 
-   fIntSyscall = set;
+   fIntSyscalls = set;
 }
 
 //___________________________________________________________________

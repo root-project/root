@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.83 2004/04/16 17:03:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.84 2004/05/07 16:35:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -412,10 +412,10 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
    }
 
    if (to && to->IsAsync() && timeout > 0) {
-      if (to->InterruptsSyscall())
-         SigAlarmInterruptsSyscall(kTRUE);
+      if (to->IsInterruptingSyscalls())
+         SigAlarmInterruptsSyscalls(kTRUE);
       else
-         SigAlarmInterruptsSyscall(kFALSE);
+         SigAlarmInterruptsSyscalls(kFALSE);
    }
 
    return timeout;
