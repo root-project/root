@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.1 2001/10/01 14:37:51 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -176,7 +176,7 @@ void TMD5::Print() const
    }
 
    for (int i = 0; i < 16; i++)
-      printf("%.2hhx", fDigest[i]);
+      printf("%.2hx", (UShort_t)fDigest[i]);
    printf("\n");
 }
 
@@ -195,7 +195,7 @@ const char *TMD5::AsString() const
    static char s[33];
 
    for (int i = 0; i < 16; i++)
-      sprintf((s+2*i), "%.2hhx", fDigest[i]);
+      sprintf((s+2*i), "%.2hx", (UShort_t)fDigest[i]);
    s[32] = 0;
 
    return s;
