@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.8 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.9 2001/02/03 15:42:55 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -110,7 +110,7 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
-   virtual TObject    *Clone() const;
+   virtual TObject    *Clone(const char *newname="") const;
    virtual Int_t       Compare(const TObject *obj) const;
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*

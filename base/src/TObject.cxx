@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.15 2001/02/08 11:45:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.16 2001/02/08 11:56:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -276,23 +276,24 @@ const char *TObject::ClassName() const
 }
 
 //______________________________________________________________________________
-TObject *TObject::Clone() const
+TObject *TObject::Clone(const char *) const
 {
    // Make a clone of an object using the Streamer facility.
-   
+   // if the object derives from TNamed, this function is called
+   // by TNamed::Clone. TNamed::Clone uses the optional argument to set
+   // a new name to the new created object.
+      
    //create a buffer where the object will be streamed
    TFile *filsav = gFile;
    gFile = 0;
    const Int_t bufsize = 10000;
    TBuffer *buffer = new TBuffer(TBuffer::kWrite,bufsize);
-   //buffer->WriteObject(this);
    ((TObject*)this)->Streamer(*buffer);
    
    // read new object from buffer
    buffer->SetReadMode();
    buffer->ResetMap();
    buffer->SetBufferOffset(0);
-   //TObject *newobj = buffer->ReadObject(IsA());
    TObject *newobj = (TObject *)IsA()->New();
    newobj->Streamer(*buffer);
    gFile = filsav;
