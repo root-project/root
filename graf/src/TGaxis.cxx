@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.49 2003/04/12 21:48:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.50 2003/05/15 13:31:14 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -448,8 +448,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 // Time representation.
 // --------------------
 //
-//   Axis labels may be considered as times, plotted in
-//   a defined time format. The format id set with SetTimeFormat().
+//   Axis labels may be considered as times, plotted in a defined time format.
+//   The format is set with SetTimeFormat().
+//   wmin and wmax are considered as two time values in seconds.
+//   The time axis will be spread around the time offset value (set with
+//   SetTimeOffset() ). Actually it will go from TimeOffset+wmin to 
+//   TimeOffset+wmax.
+//   see examples in tutorials timeonaxis.C and timeonaxis2.C 
 //
 //       chopt='t': Plot times with a defined format instead of values
 //
