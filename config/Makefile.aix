@@ -33,7 +33,7 @@ SOEXT         = a
 
 # System libraries:
 SYSLIBS       = -lm -lld
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -lld
 
 # Fortran:
@@ -66,13 +66,13 @@ X3DLIBEXTRA         = -lGraf3d -lGui -lX11
 EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
 EGLIBEXTRA          = -lGraf3d -lGraf
 PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = -lEG  -lGraf $(PYTHIA)
+PYTHIALIBEXTRA      = -lEG -lGraf $(FPYTHIA)
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = -lEG -lGraf $(PYTHIA6)
+PYTHIA6LIBEXTRA     = -lEG -lGraf $(FPYTHIA6)
 VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = -lEG
 X11TTFLIBDEP        = $(X11LIB)
 X11TTFLIBEXTRA      = -lGX11 -L$(TTFLIBDIR) -lttf -lX11
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
-GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLULIB) \
+GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
                       $(OPENGLLIB) -lX11 -lXext -lXmu -lXi

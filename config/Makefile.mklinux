@@ -31,7 +31,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lg++ -lm -ldl
-XLIBS         = -L/usr/X11R6/lib -lX11 -lSM -lICE -lXpm -lg++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lSM -lICE -lg++
 CILIBS        = -lm -ltermcap -lbsd -ldl -lg++
 
 # Fortran:

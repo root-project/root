@@ -32,7 +32,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = -L/usr/X11R6/lib -lX11 -lSM -lICE -lXpm
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lSM -lICE
 CILIBS        = -lm -ltermcap -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
@@ -42,4 +42,5 @@ F77FLAGS      = -fPIC
 F77LIBS       = -lg2c
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu

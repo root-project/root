@@ -31,7 +31,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIB) -L/usr/lib32 -lX11 -lg++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/lib32 -lX11 -lg++
 CILIBS        = -lm -lgen
 
 

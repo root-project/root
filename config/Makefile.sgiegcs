@@ -30,11 +30,11 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lgen -lstdc++ -lm
-XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        =  -lm -lgen -lbsd -lstdc++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -lgen -lbsd -lstdc++
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
 
 # Fortran:
 F77LIBS       = -lftn

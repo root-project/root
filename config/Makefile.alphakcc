@@ -20,8 +20,7 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifeq (thread,$(findstring thread,$(ROOTBUILD)))
-THREAD        += "USE"
+ifneq ($(OSTHREADLIB),)
 CXXOPT        += --thread_safe -g3
 OPT           += -g
 endif
@@ -60,7 +59,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd
 CRYPTLIBS     = -lcrypt
 
@@ -70,4 +69,5 @@ F77FLAGS      = -O0 -recursive -nofor_main
 F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -lX11 -lXext -lXmu -lXi -lm

@@ -1,17 +1,20 @@
 # Makefile definitions included by the top Makefile
 
 ARCH           := @architecture@
+@rootbuild@
 USECONFIG      := @useconfig@
 
-EXTRA_CFLAGS   := -Iinclude @cflags
-EXTRA_CXXFLAGS := -Iinclude @cflags
+EXTRA_CFLAGS   := -Iinclude @cflags@
+EXTRA_CXXFLAGS := -Iinclude @cflags@
 EXTRA_LDFLAGS  := @ldflags@
 
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
 INCDIR         := @incdir@
 ETCDIR         := @etcdir@
+MANDIR         := @mandir@
 DATADIR        := @datadir@
+PROOFDATADIR   := @proofdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
@@ -20,28 +23,45 @@ DOCDIR         := @docdir@
 TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
 
+XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
+
+OSTHREADLIBDIR := @threadlibdir@
+OSTHREADLIB    := @threadlib@
 
 TTFLIBDIR      := @ttflibdir@
 TTFFONTDIR     := @ttffontdir@
 TTFINCDIR      := @ttfincdir@
+TTFLIB         := @ttflib@
 
+OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := @openglincdir@
 
-MYSQLINCDIR    := @mysqlincdir@
-MYSQLLIBDIR    := @mysqllibdir@
-
 CERNLIBDIR     := @cernlibdir@
-THREAD         := @thread@
-RFIO           := @rfio@
+CERNLIBS       := @cernlibs@
+
+MYSQLLIBDIR    := @mysqllibdir@
+MYSQLCLILIB    := @mysqllib@
+MYSQLINCDIR    := @mysqlincdir@
+
+SHIFTLIBDIR    := @shiftlibdir@
+SHIFTLIB       := @shiftlib@
+
+FPYTHIALIBDIR  := @pythialibdir@
+FPYTHIALIB     := @pythialib@
+
+FPYTHIA6LIBDIR := @pythia6libdir@
+FPYTHIA6LIB    := @pythia6lib@
+
+FVENUSLIBDIR   := @venuslibdir@
+FVENUSLIB      := @venuslib@
+
 SRPDIR         := @srpdir@
 AFSDIR         := @afsdir@
 
-PYTHIA         := @pythialib@
-PYTHIA6        := @pythia6lib@
-VENUS          := @venuslib@
+STAR           := @enable_star@
 
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR

@@ -29,14 +29,14 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lnsl -lsocket -lgen
-XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 
 # Fortran:
 F77           = /opt/SUNWspro/bin/f77
-F77LIBS       = $(CERNLIB)/libpacklib.a -lM77 -lF77 -lsunmath -lsocket -lnsl
+F77LIBS       = -lM77 -lF77 -lsunmath -lsocket -lnsl
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/openwin/lib -lX11 -lXext -lXmu -lXi -lm
 

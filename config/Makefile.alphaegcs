@@ -29,7 +29,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ltermcap
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
@@ -38,4 +38,5 @@ F77           = g77
 F77LD         = g77
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -lX11 -lXext -lXmu -lXi -lm

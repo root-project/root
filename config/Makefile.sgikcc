@@ -30,8 +30,7 @@ else
 ABI           = -32 -mips2
 endif
 
-ifeq (thread,$(findstring thread,$(ROOTBUILD)))
-THREAD        += "USE"
+ifneq ($(OSTHREADLIB),)
 CXXOPT        += --thread_safe -g
 OPT           += -g
 endif
@@ -69,7 +68,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd -ldl -lgen
 CRYPTLIBS     = -lcrypt
 
@@ -83,5 +82,5 @@ F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
 

@@ -6,23 +6,15 @@
 # Author: Fons Rademakers, 06/06/99
 
 arch=@architecture@
+libdir=@libdir@
+incdir=@incdir@
 
 ### ROOT libraries ###
 
-if [ "$arch" = "win32" ]; then
-   newlib="%prefix%/libNew.lib"
-   rootlibs="%prefix%/libCore.lib %prefix%/libCint.lib %prefix%/libHist.lib \
-             %prefix%/libGraf.lib %prefix%/libGraf3d.lib %prefix%/libGpad.lib \
-             %prefix%/libTree.lib %prefix%/libRint.lib \
-             %prefix%/libPostscript.lib %prefix%/libMatrix.lib \
-             %prefix%/libPhysics.lib"
-   rootglibs="%prefix%/libGui.lib"
-else
-   newlib="-lNew"
-   rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
-             -lPostscript -lMatrix -lPhysics"
-   rootglibs="-lGui"
-fi
+newlib="-lNew"
+rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
+          -lPostscript -lMatrix -lPhysics"
+rootglibs="-lGui"
 
 ### machine dependent settings ###
 
@@ -190,6 +182,12 @@ linuxia64gcc)
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
+linuxia64sgi)
+   # Itanium Linux with SGI compiler
+   auxcflags=
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
 linuxalphaegcs)
    # Alpha Linux with egcs
    auxcflags=
@@ -237,7 +235,7 @@ esac
 
 
 prefix=@prefix@
-if [ "$arch" = "win32" ]; then
+if test "$arch" = "win32"; then
    prefix=`cygpath -u ${prefix}`
 fi
 exec_prefix=${prefix}
@@ -248,35 +246,45 @@ usage="\
 Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--nonew] [--libs] [--glibs] [--cflags]"
 
 if test $# -eq 0; then
-      echo "${usage}" 1>&2
-      exit 1
+   echo "${usage}" 1>&2
+   exit 1
 fi
 
 while test $# -gt 0; do
   case "$1" in
   -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
-  *) optarg= ;;
+  *)    optarg= ;;
   esac
 
   case $1 in
     --prefix=*)
-      if [ "$arch" = "win32" ]; then
+      if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
+      incdir=${prefix}/include
+      libdir=${prefix}/lib
+      if test "$arch" = "win32"; then
+         incdir=`cygpath -u $incdir`
+         libdir=`cygpath -u $libdir`
+      fi
       if test $exec_prefix_set = no ; then
-        exec_prefix=$optarg
+         exec_prefix=$optarg
       fi
       ;;
     --prefix)
       echo $prefix
       ;;
     --exec-prefix=*)
-      if [ "$arch" = "win32" ]; then
+      if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
       exec_prefix_set=yes
+      libdir=${exec_prefix}/lib
+      if test "$arch" = "win32"; then
+         libdir=`cygpath -u $libdir`
+      fi
       ;;
     --exec-prefix)
       echo $exec_prefix
@@ -285,55 +293,55 @@ while test $# -gt 0; do
       nonew_set=yes
       ;;
     --version)
-      if test -r ${prefix}/include/RVersion.h ; then
-         echo `cat ${prefix}/include/RVersion.h | sed -e "s/.*ROOT_RELEASE //" \
+      if test -r ${incdir}/RVersion.h; then
+         echo `cat ${incdir}/RVersion.h | sed -e "s/.*ROOT_RELEASE //" \
                -e "s/.*#.*$//" -e "s/.*\*.*$//" -e "s/\"//g" -e "/^$/d"`
       else
-         echo "cannot read ${prefix}/include/RVersion.h"
+         echo "cannot read ${incdir}/RVersion.h"
       fi
       ;;
     --cflags)
-      if test ${prefix}/include != /usr/include ; then
-         if [ "$arch" = "win32" ]; then
-            includes=-I\'`cygpath -w ${prefix}/include`\'
+      if test ${incdir} != /usr/include; then
+         if test "$arch" = "win32"; then
+            includes=-I\'`cygpath -w ${incdir}`\'
          else
-            includes=-I${prefix}/include
+            includes=-I${incdir}
          fi
       fi
       echo ${auxcflags} $includes
       ;;
     --libs)
-      if test $nonew_set = no ; then
-        libs="${newlib} ${rootlibs}"
+      if test $nonew_set = no; then
+         libs="${newlib} ${rootlibs}"
       else
-        libs=${rootlibs}
+         libs=${rootlibs}
       fi
-      if [ "$arch" = "win32" ]; then
-         nlibs=`echo $libs | sed "s@%prefix%@${exec_prefix}/lib@g"`
+      if test "$arch" = "win32"; then
+         nlibs=`echo $libs | sed "s@-l\([a-zA-Z]*\)@${libdir}/lib\1.lib@g"`
          libs=
          for i in $nlibs; do
             libs="$libs '`cygpath -w $i`'"
          done
          echo $libs ${auxlibs}
       else
-         echo -L${exec_prefix}/lib $libs ${auxlibs}
+         echo -L${libdir} $libs ${auxlibs}
       fi
       ;;
     --glibs)
-      if test $nonew_set = no ; then
-        glibs="${newlib} ${rootlibs} ${rootglibs}"
+      if test $nonew_set = no; then
+         glibs="${newlib} ${rootlibs} ${rootglibs}"
       else
-        glibs="${rootlibs} ${rootglibs}"
+         glibs="${rootlibs} ${rootglibs}"
       fi
-      if [ "$arch" = "win32" ]; then
-         nlibs=`echo $glibs | sed "s@%prefix%@${exec_prefix}/lib@g"`
+      if test "$arch" = "win32"; then
+         nlibs=`echo $glibs | sed "s@-l\([a-zA-Z]*\)@${libdir}/lib\1.lib@g"`
          glibs=
          for i in $nlibs; do
             glibs="$glibs '`cygpath -w $i`'"
          done
          echo $glibs ${auxglibs}
       else
-         echo -L${exec_prefix}/lib $glibs ${auxglibs}
+         echo -L${libdir} $glibs ${auxglibs}
       fi
       ;;
     *)

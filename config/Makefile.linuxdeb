@@ -28,11 +28,12 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -rdynamic
-XLIBS         = -lXpm -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -lncurses -ldl -rdynamic
 
 # Fortran:
 
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu

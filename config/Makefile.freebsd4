@@ -28,7 +28,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lstdc++ -lm
-XLIBS         = -L/usr/X11R6/lib -lXpm -lX11 -lstdc++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lstdc++
 CILIBS        = -lm -ltermcap -lstdc++
 CRYPTLIBS     = -lcrypt
 

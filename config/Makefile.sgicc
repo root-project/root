@@ -28,8 +28,8 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -lPW -ldl
-XLIBS         = $(XPMLIB) -lX11
-CILIBS        =  -lm -ltermcap -lbsd -lgen -ldl
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
+CILIBS        = -lm -ltermcap -lbsd -lgen -ldl
 
 # Fortran:
 F77           = f77
@@ -40,5 +40,5 @@ else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB)
 

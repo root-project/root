@@ -30,7 +30,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
@@ -38,4 +38,5 @@ F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
 
 # Extras
 CORELIBDEP    = $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -lX11 -lXext -lXmu -lXi -lm

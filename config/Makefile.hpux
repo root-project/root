@@ -15,10 +15,12 @@ CXX           = CC
 CC            = cc
 CXXFLAGS      = +a1 -z +Z -I/usr/include/X11R5 $(EXTRA_CXXFLAGS)
 CFLAGS        = -Ae -z +Z -I/usr/include/X11R5 $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = +a1 -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
-                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -Ae -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL \
-                -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = +a1 -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX \
+                -DG__HPUXCPPDLL -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT \
+                -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -Ae -z +Z -I/opt/CC/include -DG__REGEXP -DG__UNIX \
+                -DG__HPUXCPPDLL -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT \
+                -DG__REDIRECTIO $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = CC
@@ -28,7 +30,7 @@ SOEXT         = sl
 
 # System libraries:
 SYSLIBS       = -lm -ldld
-XLIBS         = $(XPMLIB) -L/usr/lib/X11R5 -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/lib/X11R5 -lX11
 CILIBS        = -lm -Wl,-E -ldld -lcurses
 CRYPTLIBS     =
 
@@ -40,4 +42,5 @@ F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/lib -lXext -lXi -lX11
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/lib -lXext -lXi -lX11

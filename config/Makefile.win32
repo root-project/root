@@ -48,7 +48,6 @@ SYSLIBS       =
 XLIBS         =
 CILIBS        =
 CRYPTLIBS     =
-THREAD        =
 
 # Fortran:
 F77           = build/win/f77.sh
@@ -84,9 +83,9 @@ TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
 EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
 EGLIBEXTRA          = lib/libGraf3d.lib lib/libGraf.lib
 PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib $(PYTHIA)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib $(FPYTHIA)
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib $(PYTHIA6)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib $(FPYTHIA6)
 VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = lib/libEG.lib
 GLLIBDEP            = $(G3DLIB) $(WIN32LIB)

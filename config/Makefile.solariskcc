@@ -43,7 +43,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl -lsocket -lnsl
-XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 CRYPTLIBS     =
 

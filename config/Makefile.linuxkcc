@@ -1,18 +1,19 @@
 # Makefile of ROOT for Linux with glibc and KCC compiler
 
-# When changing OPT to -O you can also change +K0 to +K1
-# When changing OPT to -g you can also change +K1 to +K0
+# When changing OPT to -O you can also change +K0 to +K3
+# When changing OPT to -g you can also change +K3 to +K0
 
 PLATFORM      = linux
 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g -O0
-CXXOPT        = +K0 -g -O0
+COPT          =
+CXXOPT        = +K0
 NOOPT         =
 else
 OPT           = -O2
 COPT          = -m486 -malign-loops=4 -malign-functions=4 -malign-jumps=4
-CXXOPT        = +K3 -O2 --backend -m486 --backend -malign-loops=4 --backend \
+CXXOPT        = +K3 --backend -m486 --backend -malign-loops=4 --backend \
                 -malign-functions=4 --backend -malign-jumps=4
 NOOPT         =
 endif
@@ -23,8 +24,7 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifeq (thread,$(findstring thread,$(ROOTBUILD)))
-THREAD        += "USE"
+ifneq ($(OSTHREADLIB),)
 CXXOPT        += --thread_safe -g
 OPT           += -g
 endif
@@ -51,15 +51,15 @@ endif
 
 # Linker:
 LD            = KCC
-LDFLAGS       = $(CXXOPT) $(EXCEPTION) $(EXTRA_LDFLAGS)
+LDFLAGS       = $(OPT) $(CXXOPT) $(EXCEPTION) $(EXTRA_LDFLAGS)
 AR            = KCC
-ARFLAGS       = $(CXXOPT) $(EXCEPTION)
+ARFLAGS       = $(OPT) $(CXXOPT) $(EXCEPTION)
 SOFLAGS       =
 SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = $(XPMLIB) -L/usr/X11R6/lib -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
 CILIBS        = -lm -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
@@ -72,4 +72,5 @@ F77LIBS       = -lf2c -lnsl
 
 # fix for libGui.so that needs lstat
 GUILIBEXTRA   = -lc
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu

@@ -30,7 +30,7 @@ SOEXT         = sl
 
 # System libraries:
 SYSLIBS       = -lm -ldld
-XLIBS         = $(XPMLIB) -lX11
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -lX11
 CILIBS        = -lm -Wl,-E -ldld -lcurses
 
 # Fortran:
@@ -41,5 +41,5 @@ F77LDFLAGS    = -K +ppu $(OPT)
 F77LIBS       =
 
 # Extras
-GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) \
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -L/usr/contrib/X11R6/lib -lXext -lXmu -lXi -lX11

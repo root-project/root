@@ -28,7 +28,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lg++ -lm
-XLIBS         = -L/usr/X11R6/lib -lXpm -lX11 -lg++
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11 -lg++
 CILIBS        = -lm -ltermcap -lg++
 
 
