@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.23 2001/06/26 16:32:35 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.24 2001/07/23 17:27:51 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -236,8 +236,8 @@
 #   define ANSICPP
 #endif
 
-#ifdef __ECC
-#   define R__ECC
+#ifdef __INTEL_COMPILER
+#   define R__INTEL_COMPILER
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */

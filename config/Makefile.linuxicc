@@ -1,0 +1,44 @@
+# Makefile of ROOT for Linux with glibc and Intel icc compiler
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = icc
+CC            = icc
+CXXFLAGS      = -KPIC $(EXTRA_CXXFLAGS)
+CFLAGS        = -KPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -KPIC $(EXTRA_CXXFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+
+# Linker:
+LD            = icc
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Qoption,ld,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -ldl -rdynamic
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+F77           = ifc
+F77FLAGS      =
+F77LIBS       =
+
+# Extras
+GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                -L/usr/X11R6/lib -lXmu

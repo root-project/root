@@ -71,6 +71,7 @@ CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),aix3)
+CINTS1       += $(MODDIRS)/dlfcn.c
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),aix)
@@ -92,9 +93,6 @@ endif
 ifeq ($(PLATFORM),sunos)
 CINTS1       += $(MODDIRS)/sunos.c
 endif
-ifeq ($(PLATFORM),aix3)
-CINTS1       += $(MODDIRS)/dlfcn.c
-endif
 ifeq ($(PLATFORM),macos)
 CINTS1       += $(MODDIRS)/macos.c
 CINTS2       += $(MODDIRS)/fakestrm.cxx
@@ -110,6 +108,10 @@ CINTS1       += $(MODDIRS)/winnt.c
 CINTS2       += $(MODDIRS)/vcstrm.cxx
 endif
 ifeq ($(PLATFORM),vms)
+CINTS2       += $(MODDIRS)/fakestrm.cxx
+endif
+ifeq ($(CXX),icc)
+CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(CXX),ecc)

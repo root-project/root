@@ -288,6 +288,15 @@ LDFLAGS       = -O
 SOFLAGS       =
 endif
 
+ifeq ($(ARCH),linuxicc)
+# Linux with Intel icc compiler
+CXX           = icc
+CXXFLAGS      = -O -KPIC
+LD            = icc
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),linuxppcegcs)
 # MkLinux with egcs/glibc
 CXX           = g++
@@ -318,7 +327,7 @@ endif
 ifeq ($(ARCH),linuxia64ecc)
 # Itanium Linux with Intel ecc
 CXX           = ecc
-CXXFLAGS      = -O -kPIC
+CXXFLAGS      = -O -KPIC
 LD            = ecc
 LDFLAGS       = -O
 SOFLAGS       = -shared

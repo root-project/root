@@ -5,7 +5,8 @@ linuxrh51            for Linux gcc 2.7.x.x and glibc
 linuxrh42            for Linux gcc 2.7.x.x and libc5
 linuxdeb             for Linux (Debian) egcs and glibc
 linuxdeb2            for Linux (Debian v2.0) egcs and glibc
-linuxkcc             for Linux KCC and glibc
+linuxkcc             for Linux KAI's KCC and glibc
+linuxicc             for Linux Intel's icc and glibc
 linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
 linuxpgcc            for Linux pgcc and glibc
 linuxppcegcs         for PPC Linux egcs and glibc
