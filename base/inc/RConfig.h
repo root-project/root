@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.35 2002/05/01 17:06:57 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.36 2002/05/03 14:30:41 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -282,11 +282,6 @@
 #      define WIN32
 #   endif
 #   define R__BYTESWAP
-#   define R__ACCESS_IN_SYMBOL
-    /* Disable warning about truncated symboles (usually coming from stl) */
-#   pragma warning (disable: 4786)
-    /* Disable warning about inconsistent dll linkage (dllexport assumed) */
-#   pragma warning (disable: 4273)
 #endif
 
 
