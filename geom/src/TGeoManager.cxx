@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name: HEAD $:$Id: TGeoManager.cxx,v 1.85 2004/06/28 08:46:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.86 2004/08/02 14:46:06 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -613,9 +613,10 @@ Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
       Error("AddMaterial", "invalid material");
       return -1;
    }
-   Int_t index = GetMaterialIndex(material->GetName());
-   if (index >= 0) return index;
-   index = fMaterials->GetSize();
+//   Int_t index = GetMaterialIndex(material->GetName());
+//   if (index >= 0) return index;
+   Int_t index = fMaterials->GetSize();
+   ((TGeoMaterial*)material)->SetIndex(index);
    fMaterials->Add((TGeoMaterial*)material);
    return index;
 }
@@ -1327,10 +1328,10 @@ void TGeoManager::ClearAttributes()
    TGeoVolume *vol = 0;
    while ((vol=(TGeoVolume*)next())) {
       if (!vol->IsVisTouched()) continue;
-      vol->SetVisibility(kTRUE);
-      vol->SetVisDaughters(kTRUE);
-      vol->SetLineStyle(gStyle->GetLineStyle());
-      vol->SetLineWidth(gStyle->GetLineWidth());
+//      vol->SetVisibility(kTRUE);
+//      vol->SetVisDaughters(kTRUE);
+//      vol->SetLineStyle(gStyle->GetLineStyle());
+//      vol->SetLineWidth(gStyle->GetLineWidth());
       vol->SetVisTouched(kFALSE);
    }
 }

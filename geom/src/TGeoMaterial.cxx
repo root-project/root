@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.11 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.12 2004/06/28 08:46:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -166,8 +166,8 @@ Bool_t TGeoMaterial::IsEq(const TGeoMaterial *other) const
 void TGeoMaterial::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
-   printf("index=%i: %s   %s   A=%g Z=%g rho=%g\n", fIndex, GetName(), GetTitle(),
-          fA,fZ,fDensity);
+   printf("Material %s %s   A=%g Z=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
+          fA,fZ,fDensity, fRadLen, fIndex);
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoMaterial::GetDefaultColor() const
@@ -315,7 +315,8 @@ Bool_t TGeoMixture::IsEq(const TGeoMaterial *other) const
 void TGeoMixture::Print(const Option_t * /*option*/) const
 {
 // print characteristics of this material
-   printf("%s   %s\n", GetName(), GetTitle());
+   printf("Mixture %s %s   Aeff=%g Zeff=%g rho=%g radlen=%g index=%i\n", GetName(), GetTitle(),
+          fA,fZ,fDensity, fRadLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
       printf("   Element #%i : Z=%6.2f A=%6.2f w=%6.2f\n", i, fZmixture[i],
              fAmixture[i], fWeights[i]);
