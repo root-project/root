@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.31 2002/11/13 17:04:39 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.32 2002/12/02 18:50:05 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1820,7 +1820,9 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    // been defined in the current file (see label 200).
    if (fPatterns[ipat] == 0) {
 
-   // Define the Patterns.
+   // Define the Patterns. Line width must be 1
+      fLineWidth = 1;
+      PrintFast(5," 1 lw");
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
       switch (ipat) {
          case 1 :
