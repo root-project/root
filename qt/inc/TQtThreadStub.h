@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtThreadStub.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -108,6 +108,50 @@ void _NAME1_(THREADCLASS)::method()        \
     TGQt::PostQtEvent(this,e);            \
   } else {                                 \
     _NAME1_(PROXYDIRECTCLASS)::method();          \
+  }                                        \
+}
+
+#define SENDTYPEACTION0(type,method)       \
+type _NAME1_(THREADCLASS)::method()        \
+{                                          \
+ if (!TQtApplication::IsThisGuiThread())   \
+  {                                        \
+    class ev : public TQtEvent {           \
+    public:                                \
+            ev(QObject *obj):TQtEvent(0){setData(obj);} \
+      void ExecuteCB()                     \
+      {                                    \
+        ((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(); \
+      }                                    \
+    };                                     \
+    ev *e = new ev(_NAME1_(PROXYPOINTER)); \
+    TGQt::PostQtEvent(this,e);             \
+  } else {                                 \
+    return _NAME1_(PROXYDIRECTCLASS)::method();   \
+  }                                        \
+  return 0;                                \
+}
+
+
+#define SENDTYPEACTION1(type,method,type1,par1)\
+type _NAME1_(THREADCLASS)::method(type1 par1)\
+{                                          \
+ if (!TQtApplication::IsThisGuiThread())   \
+  {                                        \
+    class ev : public TQtEvent {           \
+    public:                                \
+          type1 par1;                      \
+      ev(QObject *obj,type1 p1): TQtEvent(0), par1(p1) {setData(obj);}   \
+      void ExecuteCB()                     \
+      {                                    \
+        ((_NAME1_(PROXYCLASS) *)data())->_NAME1_(BASECLASS)::method(par1);\
+      }                                    \
+    };                                     \
+    ev *e = new ev(_NAME1_(PROXYPOINTER),par1);                           \
+    TGQt::PostQtEvent(this,e);             \
+    return (type)0;                        \
+  } else {                                 \
+    return PROXYDIRECTCLASS::method(par1); \
   }                                        \
 }
 

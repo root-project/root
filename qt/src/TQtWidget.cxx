@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.9 2004/08/13 06:05:17 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.10 2004/09/12 11:00:22 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TROOT.h"
 #include "TRint.h"
 #include "TSystem.h"
+#include "Getline.h"
 #include "TGQt.h"
 #include "TCanvas.h"
 #include "Buttons.h"
@@ -72,7 +73,9 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     static int argc;
     if (!gApplication) {
         argc = qApp->argc();
-        new TRint("Rint", &argc ,qApp->argv()); 
+        TRint *rint = new TRint("Rint", &argc ,qApp->argv());
+        // To mimic what TRint::Run(kTRUE) does.
+        Getlinem(kInit, rint->GetPrompt());
         TQtTimer::Create()->start(0,TRUE);
     }         
     Bool_t batch = gROOT->IsBatch();

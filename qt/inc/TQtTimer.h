@@ -1,5 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.h,v 1.1 2004/08/13 06:21:09 brun Exp $
-// Author: Valeri Fine   09/08/2004
+// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.3 2004/09/12 11:00:22 brun Exp $
+// Author: Valery Fine  09/08/2004
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -27,7 +27,9 @@ protected:
 
 public:
   static TQtTimer *Create(QObject *parent=0, const char *name=0);
+  static TQtTimer *QtTimer();
 };
+inline TQtTimer *TQtTimer::QtTimer(){ return fgQTimer; }
 
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.4 2004/12/06 07:22:55 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -39,6 +39,8 @@
 #include <qptrqueue.h>
 #include <qptrlist.h>
 #include <qptrvector.h>
+#include <qfontdatabase.h>
+
 #include "TQtClientGuard.h"
 
 #else
@@ -144,7 +146,7 @@ protected:
     TQtClientWidget       *fPointerGrabber;
     QTextCodec            *fCodec;        // The Current text decoder
     QString                fFontTextCode; // The default code text code page (from the Gui.DefaultFont)
-
+    const char            *fSymbolFontFamily; // the name of the font to substitute the non-standard "Symbol"
 
 
 //
@@ -213,7 +215,7 @@ public:
 #endif
    virtual Int_t LoadQt(const char *shareLibFileName);
    static void PostQtEvent(QObject *receiver, QEvent *event);
-   virtual Int_t processQtEvents();
+   virtual Int_t processQtEvents(Int_t maxtime=300); //milliseconds
    // temporary thuis should be moved to the QTGL interface
    private:
       static int fgCoinFlag; // no coin viewer;

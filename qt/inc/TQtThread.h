@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.h,v 1.4 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -276,6 +276,7 @@ public:
            bool event(QEvent *e);
 #endif
    virtual Int_t LoadQt(const char *shareLibFileName);
+   virtual Int_t processQtEvents(Int_t maxtime=300);
    ClassDef(TQtThread,0)  //Interface to Qt GUI
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.6 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.7 2004/08/13 06:21:09 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -55,6 +55,7 @@
 #include "TQtBrush.h"
 #include "TQtClientFilter.h"
 #include "TQtEventQueue.h"
+#include "TQtSymbolCodec.h"
 
 #include "TSystem.h"
 #ifdef R__QTWIN32
@@ -75,6 +76,31 @@
 TGQt *gQt=0;
 TVirtualX *TGQt::fgTQt = 0; // to remember the poiner fulishing ROOT PluginManager later.
 static const int kDefault=2;
+
+//----- Terminal Input file handler --------------------------------------------
+//______________________________________________________________________________
+class TQtEventInputHandler : public TTimer {
+protected: // singleton
+   TQtEventInputHandler() : TTimer(340,kFALSE ) { 
+      if (gSystem) {
+         gSystem->AddTimer(this);
+         Added(); // emit Added() signal
+      }
+   }
+   static TQtEventInputHandler *gfQtEventInputHandler;
+public:
+
+   static TQtEventInputHandler *Instance() { 
+     if (!gfQtEventInputHandler)
+       gfQtEventInputHandler =  new  TQtEventInputHandler();
+       return gfQtEventInputHandler;
+   }
+   Bool_t Notify()     { return gQt->processQtEvents();}
+   Bool_t ReadNotify() { return Notify(); }
+};
+
+TQtEventInputHandler *TQtEventInputHandler::gfQtEventInputHandler = 0;
+
 //______________________________________________________________________________
 //  static methods:
 //______________________________________________________________________________
@@ -83,6 +109,7 @@ static const int kDefault=2;
 // kNone    =  no window
 // kDefault =  means default desktopwindow
 //  else the pointer to the QPaintDevice
+
 //______________________________________________________________________________
 Int_t         TGQt::iwid(QPaintDevice *wid)
 {
@@ -249,7 +276,7 @@ class TQtInputHandler : public TFileHandler
     }
   public:
     //_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-    TQtInputHandler(int fd=-1,int mask=0):TFileHandler(fd,mask)
+    TQtInputHandler(int fd=-1,int mask=1):TFileHandler(fd,mask)
     {
       gXDisplay = this;
       OpenDisplay();
@@ -389,7 +416,7 @@ TQtApplication *TGQt::CreateQtApplicationImp()
 //______________________________________________________________________________
 void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 {
-   // Qt annnouced that QThread;;postEvent to become obsolete and
+   // Qt announced that QThread::postEvent to become obsolete and
    // we have to switch to the QAppication instead.
 #if (QT_VERSION < 0x030200)
   QThread::postEvent(receiver,event);
@@ -400,7 +427,7 @@ void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 
 //______________________________________________________________________________
 TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuffer(0)
-,fCodec(0)
+,fCodec(0),fSymbolFontFamily("Symbol")
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
@@ -413,12 +440,14 @@ TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fQClientFilterBuf
 //______________________________________________________________________________
 TGQt::TGQt(const char *name, const char *title) : TVirtualX(name,title),fDisplayOpened(kFALSE)
 ,fQPainter(0),fCursors(kNumCursors),fQClientFilter(0),fQClientFilterBuffer(0),fPointerGrabber(0)
-,fCodec(0)
+,fCodec(0),fSymbolFontFamily("Symbol")
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Normal Constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ==================                              *-*
    fgTQt = this;
    gQt   = this;
+   fSelectedBuffer = 0;
+   fSelectedWindow = fPrevWindow = NoOperation;
 #ifndef R__QTGUITHREAD
    CreateQtApplicationImp();
    Init();
@@ -447,7 +476,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.6 2004/07/28 00:12:40 rdm Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.76 2005/02/04 21:26:51 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -531,12 +560,30 @@ Bool_t TGQt::Init(void* /*display*/)
    fFontTextCode = fontName.section('-',13).upper();
    if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-1";
 
+   // Check whether "Symbol" font is available
+
+    QFontDatabase fdb;
+    QStringList families = fdb.families();
+    Bool_t symbolFontFound = kFALSE;
+    for ( QStringList::Iterator f = families.begin(); f != families.end(); ++f ) {
+        if ( *f == fSymbolFontFamily) { symbolFontFound = kTRUE; break; }
+    }
+    if (!symbolFontFound) {
+        fprintf(stderr, "The font \"symbol.ttf\" was not installed yet\n");
+         //  provide the replacement and the codec
+        fSymbolFontFamily = "Arial";
+        fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
+        fprintf(stderr, " You are advised to install \"symbol.ttf\" to get the proper support for ROOT TLatex class\n");
+        // create a custom codec
+        new QSymbolCodec();
+    }
 
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
    // QApplication::desktop()->installEventFilter(QClientFilter());
 
    fDisplayOpened = kTRUE;
+   TQtEventInputHandler::Instance();
    return fDisplayOpened;
 }
 
@@ -575,6 +622,7 @@ Int_t TGQt::OpenPixmap(UInt_t w, UInt_t h)
    QPixmap *obj =  new QPixmap(w,h);
    return iwid(obj);
 }
+
 //______________________________________________________________________________
 QColor &TGQt::ColorIndex(Color_t ic)
 {
@@ -1086,6 +1134,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       // Add rotation if any
       if (TMath::Abs(angle) > 0.1 )  fQPainter->rotate(-angle);
 
+ 
       fQPainter->drawText (0, 0, GetTextDecoder()->toUnicode (text));
 
       fQPainter->restore();
@@ -1189,12 +1238,23 @@ void  TGQt::GetRGB(int index, float &r, float &g, float &b)
 //______________________________________________________________________________
 const QTextCodec *TGQt::GetTextDecoder()
 {
+   static  QTextCodec  *fGreekCodec = 0;
    if (!fCodec) {
       fCodec =  QTextCodec::codecForName(fFontTextCode); //CP1251
       if (!fCodec)
          fCodec=QTextCodec::codecForLocale();
       else
          QTextCodec::setCodecForLocale(fCodec);
+   }
+   if (fTextFont/10 == 12 ) {
+        // We expect the Greek letters and should apply the right Code
+      if (!fGreekCodec) {
+         if (QString(fSymbolFontFamily).contains("Symbol")) 
+            fGreekCodec  = fCodec;
+         else 
+            fGreekCodec  = QTextCodec::codecForName("symbol"); // ISO8859-7
+      }
+      return fGreekCodec;
    }
    return fCodec;
 }
@@ -1216,7 +1276,7 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    qApp->lock();
    if (fQFont) {
       QFontMetrics metrics(*fQFont);
-      w = metrics.width(mess);
+      w = metrics.width( GetTextDecoder()->toUnicode(mess) );
       h = metrics.height();
    }
    qApp->unlock();
@@ -2098,8 +2158,9 @@ void  TGQt::SetTextFont(Font_t fontnumber)
       break;
    case 12:
       italic = 0;
-      bold   = 6;
-      fontName = "Symbol";
+      bold   = 5;
+      fontName = fSymbolFontFamily;
+//      fontName = "Monospace";
       break;
    case 13:
       italic = 0;
@@ -2326,10 +2387,10 @@ Int_t TGQt::LoadQt(const char *shareLibFileName)
 }
 
 //______________________________________________________________________________
-Int_t TGQt::processQtEvents()
+Int_t TGQt::processQtEvents(Int_t maxtime)
 {
    // Force processing the Qt events only without entering the ROOT event loop
-   qApp->processEvents();
+   qApp->processEvents(maxtime);
    // QEventLoop::ExcludeUserInput QEventLoop::ExcludeSocketNotifiers
    return 0;
  }

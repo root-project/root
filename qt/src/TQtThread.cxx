@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtThread.cxx,v 1.5 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.cxx,v 1.6 2004/08/13 06:05:17 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -190,6 +190,8 @@ TQtThread::~TQtThread(){;}
 
 //______________________________________________________________________________
     RETURNACTION1(Int_t,LoadQt, const char *,shareLibFileName);
+//______________________________________________________________________________
+    SENDTYPEACTION1(Int_t,processQtEvents, Int_t, maxtime);
 //______________________________________________________________________________
 UInt_t   TQtThread::ExecCommand(TGWin32Command *code)
  { return TGQt::ExecCommand(code); }

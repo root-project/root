@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.7 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -98,7 +98,7 @@ protected:
 public:
    virtual QSize       sizeHint () const;        //  returns the preferred size of the widget.
    virtual QSize       minimumSizeHint () const; // returns the smallest size the widget can have.
-   virtual QSizePolicy sizePolicy () const;      //  returns a QSizePolicy; a value describing the space requirements of the
+   virtual QSizePolicy sizePolicy () const;      //  returns a QSizePolicy; a value describing the space requirements
 protected:
    // -- A special event handler
    virtual void exitSizeEvent ();
@@ -111,8 +111,8 @@ public slots:
    void Refresh();
    virtual bool Save(const QString &fileName) const;
    virtual bool Save(const char *fileName) const;
-   virtual bool Save(const QString &fileName,const char *format,int quality=-1) const;
-   virtual bool Save(const char *fileName,const char *format,int quality=-1) const;
+   virtual bool Save(const QString &fileName,const char *format,int quality=60) const;
+   virtual bool Save(const char *fileName,const char *format,int quality=60) const;
 signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
    void CanvasPainted();  // Signal the TCanvas has been oainted ionto the screen

@@ -1,9 +1,9 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTimer.cxx,v 1.2 2004/08/13 17:03:46 rdm Exp $
-// Author: Valery Fine  09/08/2004
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.10 2004/09/12 11:00:22 brun Exp $
+// Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
+ * Copyright (C) 2003 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,15 +14,18 @@
 #include "TQtTimer.h"
 #include "TSystem.h"
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//
+////////////////////////////////////////////////////////////////////////////////
 
 TQtTimer *TQtTimer::fgQTimer=0;
-
 //______________________________________________________________________________
 void TQtTimer::AwakeRootEvent(){
-   gSystem->DispatchOneEvent(kTRUE);
+     // proceess the ROOT events inside of Qt event loop
+     gSystem->DispatchOneEvent(kFALSE);
    start(300,TRUE);
 }
-
 //______________________________________________________________________________
 TQtTimer * TQtTimer::Create(QObject *parent, const char *name)
 {
