@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.12 2001/12/05 14:59:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.13 2001/12/17 17:06:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 // The following names are reserved to create special styles
 //   -Default: the default style set in TStyle::Reset
 //   -Plain: a black&white oriented style
-//   -Bold: 
+//   -Bold:
 //   -Video;
 //   -Pub:
 //     (see the definition of these styles below).
@@ -88,10 +88,10 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //  When calling myStyle->cd(), gStyle is set to myStyle.
 //  One can also use gROOT to change the current style, eg
 //    gROOT->SetStyle("Plain") will change the current style gStyle to the "Plain" style
-//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle     
-          
+//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
+
    Reset();
-   
+
    gROOT->GetListOfStyles()->Add(this);
 
    //may be a standard style to be initialyzed
@@ -435,7 +435,7 @@ void TStyle::Reset(Option_t *)
    fHeaderPS       = "";
    fTitlePS        = "";
    fStripDecimals  = kTRUE;
-   
+
    SetDateX();
    SetDateY();
    fAttDate.SetTextSize(0.025);
@@ -1077,14 +1077,13 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //______________________________________________________________________________
 void TStyle::SetTimeOffset(Double_t toffset)
 {
-//*-*-*-*-*-*-*-*-*-*-*Change the time offset for time plotting *-*-*-*-*-*-*-*
-//*-*                  ========================================
-//   Times are expressed in UTC (Coordinated Universal Time), in seconds
-//   The corresponding numbers usually have 9 digits (or more if one
-//   takes into account fractions of seconds).
-//   Thus, since it is very inconvenient to plot very large numbers on a scale,
-//   one has to set an offset (UTC) time that will be added to the axis begining,
-//   in order to plot times correctly and conveniently
+// Change the time offset for time plotting.
+// Times are expressed in seconds. The corresponding numbers usually have 9
+// digits (or more if one takes into account fractions of seconds).
+// Thus, since it is very inconvenient to plot very large numbers on a scale,
+// one has to set an offset time that will be added to the axis begining,
+// in order to plot times correctly and conveniently. A convenient way to
+// set the time offset is to use TDatime::Convert().
 
    fTimeOffset = toffset;
 }
@@ -1098,6 +1097,6 @@ void TStyle::SetStripDecimals(Bool_t strip)
 //  If this function is called with strip=kFALSE, TGAxis::PaintAxis will
 //  draw labels with the same number of digits after the dot
 //  Ex: (0.0,0.5,1.0,1.5,2.0,2.5,etc}
-   
+
    fStripDecimals = strip;
 }

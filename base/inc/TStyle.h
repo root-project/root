@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.7 2001/12/05 14:59:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.8 2001/12/17 17:06:06 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -138,7 +138,7 @@ private:
         TString       fTitlePS;           //User defined Postscript file title
         TString       fFitFormat;         //Printing format for fit parameters
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
-        Double_t      fTimeOffset;        //Time offset (UTC) to the beginning of an axis
+        Double_t      fTimeOffset;        //Time offset to the beginning of an axis
 
 public:
         enum EPaperSize { kA4, kUSLetter };
