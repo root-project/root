@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.13 2002/09/07 20:55:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.14 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -65,6 +65,7 @@ private:
         Int_t         fOptFit;            //=1 if option Fit is selected
         Int_t         fErrorMarker;       //marker for error bars
         Int_t         fShowEventStatus;   //Show event status panel
+        Int_t         fNumberContours;    //default number of contours for 2-d plots
         TAttText      fAttDate;           //canvas date attribute
         Float_t       fDateX;             //X position of the date in the canvas (in NDC)
         Float_t       fDateY;             //Y position of the date in the canvas (in NDC)
@@ -215,6 +216,7 @@ public:
         Style_t          GetHistLineStyle() const {return fHistLineStyle;}
         Width_t          GetHistLineWidth() const {return fHistLineWidth;}
         Float_t          GetLegoInnerR() const {return fLegoInnerR;}
+        Int_t            GetNumberContours() const {return fNumberContours;}
         Int_t            GetOptDate() const {return fOptDate;}
         Int_t            GetOptFile() const {return fOptFile;}
         Int_t            GetOptFit() const {return fOptFit;}
@@ -276,6 +278,7 @@ public:
         void             SetTickLength(Float_t length=0.03, Option_t *axis="X");
         void             SetTitleOffset(Float_t offset=1, Option_t *axis="X"); //set axis title offset
         void             SetTitleSize(Float_t size=0.02, Option_t *axis="X");  //set axis title size
+        void             SetNumberContours(Int_t number=20);
         void             SetOptDate(Int_t datefl=1);
         void             SetOptFile(Int_t file=1) {fOptFile = file;}
         void             SetOptFit(Int_t fit=1);
@@ -362,7 +365,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,8)  //A collection of all graphics attributes
+        ClassDef(TStyle,9)  //A collection of all graphics attributes
 };
 
 

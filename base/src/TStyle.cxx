@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.23 2002/09/25 16:13:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.24 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -335,6 +335,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
    ((TStyle&)obj).fStripDecimals  = fStripDecimals;
+   ((TStyle&)obj).fNumberContours = fNumberContours;
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -441,6 +442,7 @@ void TStyle::Reset(Option_t *)
    fHeaderPS       = "";
    fTitlePS        = "";
    fStripDecimals  = kTRUE;
+   fNumberContours = 20;
 
    SetDateX();
    SetDateY();
@@ -757,6 +759,19 @@ void TStyle::SetLineStyleString(Int_t i, const char *text)
    delete [] st;
 }
 
+
+//______________________________________________________________________________
+void TStyle::SetNumberContours(Int_t number)
+{
+// set the default number of contour levels when drawing 2-d plots
+   
+   if (number > 0 && number < 1000) {
+      fNumberContours = number;
+      return;
+   }
+   
+   Error("SetNumberContours","Illegal number of contours: %d, myst be > 0 and < 1000",number);
+}
 
 //______________________________________________________________________________
 void TStyle::SetOptDate(Int_t optdate)
