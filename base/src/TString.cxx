@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.13 2002/01/09 15:18:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.14 2002/01/15 00:53:48 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -776,6 +776,7 @@ void TString::ReadBuffer(char *&buffer)
    for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
 }
 
+//______________________________________________________________________________
 TString* TString::ReadString(TBuffer &b, const TClass *clReq)
 {
    // Read TString object from buffer. Simplified version of
