@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.8 2004/01/05 17:44:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.9 2004/04/06 21:19:23 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -55,9 +55,9 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    fFontStruct  = font;
    fNormGC      = norm;
    fHasOwnFont  = kFALSE;
+   fDisabled    = kFALSE;
 
    int max_ascent, max_descent;
-
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
@@ -77,6 +77,7 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    fFontStruct  = font;
    fNormGC      = norm;
    fHasOwnFont  = kFALSE;
+   fDisabled    = kFALSE;
 
    int max_ascent, max_descent;
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
@@ -143,7 +144,12 @@ void TGLabel::DoRedraw()
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-   fText->Draw(fId, fNormGC, x, y + max_ascent);
+   if (!fDisabled)
+      fText->Draw(fId, fNormGC, x, y + max_ascent);
+   else {
+      fText->Draw(fId, GetHilightGC()(), x + 1, y + 1 + max_ascent);
+      fText->Draw(fId, GetShadowGC()(), x, y + max_ascent);
+   }
 }
 
 //______________________________________________________________________________

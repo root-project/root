@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.10 2004/01/05 17:44:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.11 2004/04/06 21:19:23 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -44,6 +44,7 @@ protected:
    GContext_t     fNormGC;       // graphics context used for drawing label
    FontStruct_t   fFontStruct;   // font to draw label
    Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
+   Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
 
    virtual void DoRedraw();
 
@@ -77,6 +78,9 @@ public:
    virtual void SetTextFont(const char *fontName, Bool_t global = kFALSE);
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
+   virtual void Disable() { fDisabled = kTRUE; }
+   virtual void Enable() { fDisabled = kFALSE; }
+   Bool_t IsDisabled() const { return fDisabled; }
    Bool_t HasOwnFont() const;
 
    virtual void SavePrimitive(ofstream &out, Option_t *option);
