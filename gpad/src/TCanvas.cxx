@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.3 2000/06/14 16:33:28 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.4 2000/07/12 15:20:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -643,16 +643,35 @@ void TCanvas::DrawClonePad()
    // the canvas context menu item DrawClonePad.
    // Note that the original canvas may have subpads.
 
+  TPad *padsav = (TPad*)gPad;
   TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  this->cd();
   TObject *obj, *clone;
+  //copy pad attributes
+  pad->Range(fX1,fY1,fX2,fY2);
+  pad->SetTickx(GetTickx());
+  pad->SetTicky(GetTicky());
+  pad->SetGridx(GetGridx());
+  pad->SetGridy(GetGridy());
+  pad->SetLogx(GetLogx());
+  pad->SetLogy(GetLogy());
+  pad->SetLogz(GetLogz());
+  pad->SetBorderSize(GetBorderSize());
+  pad->SetBorderMode(GetBorderMode());
+  TAttLine::Copy((TAttLine&)*pad);
+  TAttFill::Copy((TAttFill&)*pad);
+  TAttPad::Copy((TAttPad&)*pad);
+  
+  //copy primitives
   TIter next(GetListOfPrimitives());
   while ((obj=next())) {
      gROOT->SetSelectedPad(pad);
      clone = obj->Clone();
-     pad->GetListOfPrimitives()->Add(clone);
+     pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
   }
   pad->Modified();
   pad->Update();
+  padsav->cd();
 }
 
 
