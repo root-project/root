@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.25 2004/06/25 11:59:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.26 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -973,9 +973,9 @@ void TGeoSphere::Paint(Option_t *option)
          buff->fPols[indx++] = c+2;
          buff->fPols[indx++] = 4;
          buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-         buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-         buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
          buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
+         buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
+         buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
          i = 1;
          buff->fPols[indx++] = c+2;
          buff->fPols[indx++] = 4;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.2 2004/07/10 05:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.3 2004/08/03 16:01:18 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -376,9 +376,9 @@ void TGeoParaboloid::Paint(Option_t *option)
    for (j=0; j<n; j++) {
       buff->fPols[indx++] = c+1;
       buff->fPols[indx++] = 3;
-      buff->fPols[indx++] = (2*n+1)*n+j;
-      buff->fPols[indx++] = 2*n*(n+1)+((j+1)%n);
       buff->fPols[indx++] = 2*n*(n+1)+j;
+      buff->fPols[indx++] = 2*n*(n+1)+((j+1)%n);
+      buff->fPols[indx++] = (2*n+1)*n+j;
    }
 
    // Paint gPad->fBuffer3D

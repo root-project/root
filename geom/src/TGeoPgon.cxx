@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.37 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.38 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1260,19 +1260,23 @@ void TGeoPgon::Paint(Option_t *option)
    if (!specialCase) {
       indx2 = nz*2*(n-1);
       for (k = 0; k < (nz-1); k++) {
-         for (i = 0; i < 2; i++) {
-            buff->fPols[indx++] = c+2;
-            buff->fPols[indx++] = 4;
-            buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-            buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
-            buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
-            buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
-         }
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2 : indx2+2*nz*n+2*(k-1);
+         buff->fPols[indx++] = indx2+2*(k+1)*n;
+         buff->fPols[indx++] = indx2+2*nz*n+2*k;
+         buff->fPols[indx++] = indx2+(2*k+3)*n;
+            
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;//a
+         buff->fPols[indx++] = indx2+(2*k+3)*n+n-1;//d
+         buff->fPols[indx++] = indx2+2*nz*n+2*k+1;//c
+         buff->fPols[indx++] = indx2+2*(k+1)*n+n-1;//b
       }
       buff->fPols[indx-8] = indx2+n;
       buff->fPols[indx-2] = indx2+2*n-1;
    }
-
    // Paint gPad->fBuffer3D
    buff->Paint(option);
 }

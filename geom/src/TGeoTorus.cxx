@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.10 2004/06/25 11:59:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.11 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -672,22 +672,22 @@ void TGeoTorus::Paint(Option_t *option)
       for (j=0; j<n-1; j++) {
          buff->fPols[indx++] = c+1;
          buff->fPols[indx++] = np;
-         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row 0
-         buff->fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0
-         if (hasrmin)
-         buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row 0
-         buff->fPols[indx++] = startcap+j;        // endcap j on row 0
+         buff->fPols[indx++] = j;         // seg j on outer row 0  a
+	 buff->fPols[indx++] = startcap+j;        // endcap j on row 0  d
+         if(hasrmin)
+	    buff->fPols[indx++] = indp+j; // seg j on inner row 0  c
+         buff->fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0  b
       }
 
       i=n-1; // row n-1
       for (j=0; j<n-1; j++) {
          buff->fPols[indx++] = c+1;
          buff->fPols[indx++] = np;
-         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1
-         buff->fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1
+         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1 a
+	 buff->fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1 d
          if (hasrmin)
-         buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1
-         buff->fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1
+            buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1 c
+         buff->fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1 b
       }
    }
 
