@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.5 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.6 2000/10/17 12:34:52 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -37,6 +37,7 @@
 #endif
 
 class TBlinkTimer;
+class TGToolTip;
 
 
 class TGTextEntry : public TGFrame, public TGWidget {
@@ -63,6 +64,7 @@ protected:
    GContext_t        fSelGC, fSelbackGC; // selection mode drawing contexts
    Atom_t            fClipboard;         // clipboard property
    TBlinkTimer      *fCurBlink;          // cursor blink timer
+   TGToolTip        *fTip;               // associated tooltip
    Int_t             fMaxLen;            // maximum length of text
    Bool_t            fDeleteGC;          // if kTRUE delete the fNormGC and fSelGC
    Bool_t            fEdited;            // kFALSE, if the line edit's contents have not been changed since the construction
@@ -71,35 +73,15 @@ protected:
    EInsertMode       fInsertMode;        // text insertion mode (kInsert(default) , kReplace)
    ETextJustification fAlignment;        // alignment mode available (kTextLeft(default), kTextRight, kTextCenterX defined in TGWidget.h)
 
-            Int_t       GetCharacterIndex(Int_t xcoord);
-   virtual  void        DoRedraw();
-   virtual  Bool_t      IsCursorOutOfFrame();
-   virtual  void        PastePrimary(Window_t wid, Atom_t property, Bool_t del);
-
-            void        MarkWord(Int_t pos);
-            Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
-            Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
-
-   virtual  void        UpdateOffset();
-   virtual  void        ScrollByChar();
-   virtual  void        Init();
-   virtual  void        SetCursorPosition(Int_t pos);
-            void        NewMark(Int_t pos);
-            TString     GetDisplayText() const;
-
-            void        CursorLeft(Bool_t mark = kFALSE , Int_t steps = 1);
-            void        CursorRight(Bool_t mark = kFALSE , Int_t steps = 1);
-            void        CursorWordForward(Bool_t mark = kFALSE);
-            void        CursorWordBackward(Bool_t mark = kFALSE);
-            void        Backspace();
-            void        Del();
-            void        Remove();
-            void        Home(Bool_t mark = kFALSE);
-            void        End(Bool_t mark = kFALSE);
-            void        Cut();
             void        CopyText() const;
+   virtual  void        DoRedraw();
+            Int_t       GetCharacterIndex(Int_t xcoord);
+   virtual  void        Init();
+   virtual  Bool_t      IsCursorOutOfFrame();
             void        Paste();
-   virtual  void        Insert(const char *);
+   virtual  void        PastePrimary(Window_t wid, Atom_t property, Bool_t del);
+   virtual  void        ScrollByChar();
+   virtual  void        UpdateOffset();
 
    static TString      *fgClipboardText; // application clipboard text
    static Atom_t        fgClipboard;
@@ -124,47 +106,72 @@ public:
 
    virtual ~TGTextEntry();
 
+   virtual  void        AppendText(const char *text);
+            void        Backspace();
+            void        Clear(Option_t *option="");
+            void        CursorLeft(Bool_t mark = kFALSE , Int_t steps = 1);
+            void        CursorRight(Bool_t mark = kFALSE , Int_t steps = 1);
+            void        CursorWordForward(Bool_t mark = kFALSE);
+            void        CursorWordBackward(Bool_t mark = kFALSE);
+            void        Cut();
+            void        Del();
+            void        Deselect();
+   virtual  void        DrawBorder();
+            void        End(Bool_t mark = kFALSE);
+   ETextJustification   GetAlignment() const       { return fAlignment; }
+       TGTextBuffer    *GetBuffer() const { return fText; }
+            Int_t       GetCursorPosition() const  { return fCursorIX; }
+            TString     GetDisplayText() const;
+       EEchoMode        GetEchoMode() const        { return fEchoMode; }
+       EInsertMode      GetInsertMode() const      { return fInsertMode; }
+            TString     GetMarkedText() const;
+            Int_t       GetMaxLength() const    { return fMaxLen; }
+   const    char       *GetText() const { return fText->GetString(); }
+            Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
+            void        Home(Bool_t mark = kFALSE);
+   virtual  void        Insert(const char *);
+   virtual  void        InsertText(const char *text, Int_t pos);
+            Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
+            Bool_t      IsEdited() const           { return fEdited; }
+            void        MarkWord(Int_t pos);
+            Int_t       MaxMark() const { return fStartIX > fEndIX ? fStartIX : fEndIX; }
+            Int_t       MinMark() const { return fStartIX < fEndIX ? fStartIX : fEndIX; }
+            void        NewMark(Int_t pos);
+            void        Remove();
+   virtual  void        RemoveText(Int_t start, Int_t end);
+            void        SelectAll();
+   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);
+   virtual  void        SetCursorPosition(Int_t pos);
+   virtual  void        SetEchoMode(EEchoMode mode = kNormal);
+            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
+            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }
+   virtual  void        SetFocus();
+   virtual  void        SetFont(FontStruct_t font);
+            void        SetFont(const char* fontName);
+   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
+   virtual  void        SetInsertMode(EInsertMode mode = kInsert);
+   virtual  void        SetMaxLength(Int_t maxlen);
+   virtual  void        SetState(Bool_t state);
+   virtual  void        SetText(const char *text);
+   virtual  void        SetToolTipText(const char *text, Long_t delayms = 1000);
+
    virtual  Bool_t      HandleButton(Event_t *event);
    virtual  Bool_t      HandleDoubleClick(Event_t *event);
+   virtual  Bool_t      HandleCrossing(Event_t *event);
    virtual  Bool_t      HandleMotion(Event_t *event);
    virtual  Bool_t      HandleKey(Event_t *event);
    virtual  Bool_t      HandleFocusChange(Event_t *event);
    virtual  Bool_t      HandleSelection(Event_t *event);
    virtual  Bool_t      HandleTimer(TTimer *t);
    virtual  Bool_t      HandleConfigureNotify(Event_t *event);
-   virtual  void        DrawBorder();
-   virtual  void        SetState(Bool_t state);
-   virtual  void        SetFont(FontStruct_t  font);
-            void        SetFont(const char* fontName);
-       TGTextBuffer    *GetBuffer() const { return fText; }
-   const    char       *GetText() const { return fText->GetString(); }
-   virtual  void        SetText(const char *text);
-   virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
-   virtual  void        AppendText(const char *text);
-   virtual  void        InsertText(const char *text, Int_t pos);
-   virtual  void        RemoveText(Int_t start, Int_t end);
-            Bool_t      IsFrameDrawn() const       { return fFrameDrawn; }
-            Bool_t      IsEdited() const           { return fEdited; }
-   virtual  void        SetEchoMode(EEchoMode mode = kNormal);
-       EEchoMode        GetEchoMode() const        { return fEchoMode; }
-   virtual  void        SetInsertMode(EInsertMode mode = kInsert);
-       EInsertMode      GetInsertMode() const      { return fInsertMode; }
-   virtual  void        SetAlignment(ETextJustification mode = kTextLeft);
-   ETextJustification   GetAlignment() const       { return fAlignment; }
-            void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }
-            Int_t       GetCursorPosition() const  { return fCursorIX; }
-            Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
-            TString     GetMarkedText() const;
-            void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
-            Int_t       GetMaxLength() const    { return fMaxLen; }
-   virtual  void        SetMaxLength(Int_t maxlen);
-            void        SelectAll();
-            void        Deselect();
-            void        Clear(Option_t *option="");
-   virtual  void        SetFocus();
-//          Bool_t      HasFocus();
+
    virtual  void        TextChanged(const char *text = 0);      //*SIGNAL*
    virtual  void        ReturnPressed();                        //*SIGNAL*
+   virtual  void        CursorOutLeft();                        //*SIGNAL*
+   virtual  void        CursorOutRight();                       //*SIGNAL*
+   virtual  void        CursorOutUp();                          //*SIGNAL*
+   virtual  void        CursorOutDown();                        //*SIGNAL*
+   virtual  void        DoubleClicked();                        //*SIGNAL*
 
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();

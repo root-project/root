@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.6 2000/10/17 12:34:53 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -166,8 +166,34 @@ All other keys with valid ASCII codes insert themselves into the line.
 //    This signal is emitted every time the text has changed.
 //    The argument is the new text.
 //
+//______________________________________________________________________________
+// TGTextEntry::CursorOutLeft()
+//
+// This signal is emitted when cursor is going out of left side.
+//
+//______________________________________________________________________________
+// TGTextEntry::CursorOutRight()
+//
+// This signal is emitted when cursor is going out of right side.
+//
+//______________________________________________________________________________
+// TGTextEntry::CursorOutUp()
+//
+// This signal is emitted when cursor is going out of upper side.
+//
+//______________________________________________________________________________
+// TGTextEntry::CursorOutDown()
+//
+// This signal is emitted when cursor is going out of bottom side.
+//
+//______________________________________________________________________________
+// TGTextEntry::DoubleClicked()
+//
+// This signal is emitted when widget is double clicked.
+
 
 #include "TGTextEntry.h"
+#include "TGToolTip.h"
 #include "TSystem.h"
 #include "TMath.h"
 #include "TTimer.h"
@@ -260,6 +286,7 @@ TGTextEntry::~TGTextEntry()
    }
    delete fText;
    delete fCurBlink;
+   delete fTip;
 }
 
 //______________________________________________________________________________
@@ -290,6 +317,7 @@ void TGTextEntry::Init()
    fCursorIX    = fStartIX = fEndIX = fOffset = 0;
    fSelectionOn = fCursorOn = kFALSE;
    fCurBlink    = 0;
+   fTip         = 0;
    fClipboard   = fgClipboard;
 
    gVirtualX->SetCursor(fId, fgDefaultCursor);
@@ -297,11 +325,12 @@ void TGTextEntry::Init()
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
-   AddInput(kKeyPressMask | kFocusChangeMask);
+   AddInput(kKeyPressMask | kFocusChangeMask |
+            kEnterWindowMask | kLeaveWindowMask);
 }
 
 //______________________________________________________________________________
-void  TGTextEntry::ReturnPressed()
+void TGTextEntry::ReturnPressed()
 {
    // This signal is emitted when the return or enter key is pressed.
 
@@ -312,7 +341,7 @@ void  TGTextEntry::ReturnPressed()
 }
 
 //______________________________________________________________________________
-void  TGTextEntry::TextChanged(const char *)
+void TGTextEntry::TextChanged(const char *)
 {
    // This signal is emitted every time the text has changed.
 
@@ -320,6 +349,46 @@ void  TGTextEntry::TextChanged(const char *)
    fClient->ProcessLine(fCommand, MK_MSG(kC_TEXTENTRY, kTE_TEXTCHANGED),fWidgetId, 0);
 
    Emit("TextChanged(char*)", GetText());  // The argument is the new text.
+}
+
+//______________________________________________________________________________
+void TGTextEntry::CursorOutLeft()
+{
+   // This signal is emitted when cursor is going out of left side.
+
+   Emit("CursorOutLeft()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::CursorOutRight()
+{
+   // This signal is emitted when cursor is going out of right side.
+
+   Emit("CursorOutRight()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::CursorOutUp()
+{
+   // This signal is emitted when cursor is going out of upper side.
+
+   Emit("CursorOutUp()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::CursorOutDown()
+{
+   // This signal is emitted when cursor is going out of bottom side.
+
+   Emit("CursorOutDown()");
+}
+
+//______________________________________________________________________________
+void TGTextEntry::DoubleClicked()
+{
+   // This signal is emitted when widget is double clicked.
+
+   Emit("DoubleClicked()");
 }
 
 //______________________________________________________________________________
@@ -596,8 +665,20 @@ void TGTextEntry::SetCursorPosition(Int_t newPos)
    Int_t x = fOffset + offset;
    Int_t len = dt.Length();
 
-   Int_t pos = newPos < len ? newPos : len;
-   fCursorIX = pos < 0 ? 0 : pos;
+   Int_t pos;
+
+   if (newPos < len)
+      pos = newPos;
+   else {
+      pos = len;
+      if (newPos > len) CursorOutRight();
+   }
+
+   if (pos < 0) {
+      fCursorIX = 0;
+      CursorOutLeft();
+   } else
+      fCursorIX = pos;
 
    fCursorX = x + gVirtualX->TextWidth(fFontStruct, dt.Data() , fCursorIX);
 
@@ -1053,6 +1134,8 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
    char   tmp[10];
    UInt_t keysym;
 
+   if (fTip && event->fType == kGKeyPress) fTip->Hide();
+
    if (!IsEnabled()) return kTRUE;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
@@ -1122,6 +1205,12 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    } else {
       switch ((EKeySym)keysym) {
+      case kKey_Down:
+         CursorOutDown();
+         break;
+      case kKey_Up:
+         CursorOutUp();
+         break;
       case kKey_Left:
          CursorLeft(event->fState & kKeyShiftMask);
          break;
@@ -1159,6 +1248,8 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
 {
    // Handle mouse button event in text entry widget.
 
+   if (fTip) fTip->Hide();
+
    if (!IsEnabled()) return kTRUE;
 
    if (event->fType == kButtonPress) {
@@ -1185,6 +1276,20 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
 }
 
 //______________________________________________________________________________
+Bool_t TGTextEntry::HandleCrossing(Event_t *event)
+{
+   // Handle mouse crossing event.
+
+   if (fTip) {
+      if (event->fType == kEnterNotify)
+         fTip->Reset();
+      else
+         fTip->Hide();
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TGTextEntry::HandleMotion(Event_t *event)
 {
    // Handle mouse motion event in the text entry widget.
@@ -1192,7 +1297,7 @@ Bool_t TGTextEntry::HandleMotion(Event_t *event)
    if (!IsEnabled() ||  (GetEchoMode() == kNoEcho)) return kTRUE;
 
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
-   Int_t x = fOffset + offset ;
+   Int_t x = fOffset + offset;
    Int_t position = GetCharacterIndex(event->fX - x); // + 1;
    fSelectionOn = kTRUE;
    NewMark(position);
@@ -1211,6 +1316,7 @@ Bool_t TGTextEntry::HandleDoubleClick(Event_t *event)
    Int_t offset =  IsFrameDrawn() ? 4 : 0;
    Int_t x = fOffset + offset ;
 
+   DoubleClicked();
    SetFocus();
    if (fEchoMode == kNoEcho) return kTRUE;
 
@@ -1367,6 +1473,22 @@ void TGTextEntry::SetFocus()
    // Gives the keyboard input focus to this text entry widget.
 
    gVirtualX->SetInputFocus(fId);
+}
+
+//______________________________________________________________________________
+void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
+{
+   // Set tool tip text associated with this text entry. The delay is in
+   // milliseconds (minimum 250). To remove tool tip call method with
+   // text = 0.
+
+   if (fTip) {
+      delete fTip;
+      fTip = 0;
+   }
+
+   if (text && strlen(text))
+      fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
 }
 
 //_____________________________________________________________________
