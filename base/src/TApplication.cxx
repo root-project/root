@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.15 2001/06/25 16:28:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.16 2001/07/04 11:19:06 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -833,7 +833,8 @@ void TApplication::CreateApplication()
 
    if (!gApplication) {
       new TApplication("RootApp", 0, 0, 0, 0);
-      Printf("<TApplication::CreateApplication>: "
-             "created default TApplication");
+      if (gDebug > 0)
+         Printf("<TApplication::CreateApplication>: "
+                "created default TApplication");
    }
 }
