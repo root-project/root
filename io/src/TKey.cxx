@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.44 2004/06/24 23:34:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.45 2004/08/19 10:17:41 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -935,10 +935,6 @@ void TKey::Streamer(TBuffer &b)
       fTitle.Streamer(b);
    } else {
       b << fNbytes;
-
-      // just in case the TKey/TBasket has been created before the file
-      // had reached the status of big file, we have to correct fVersion
-      if(fSeekKey > TFile::kStartBigFile && fVersion <= 1000) fVersion += 1000;
       version = (Version_t)fVersion;
       b << version;
       b << fObjlen;

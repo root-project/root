@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.27 2004/08/03 14:50:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.28 2004/08/09 16:35:23 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,10 +63,10 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    fDisplacement= 0;  //Must be set to 0 before calling Sizeof
    fBuffer      = 0;  //Must be set to 0 before calling Sizeof
    fBufferRef   = new TBuffer(TBuffer::kWrite, fBufferSize);
+   fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
       fBufferRef->SetParent(file);
-      if (file && file->GetEND() > TFile::kStartBigFile) fVersion += 1000;
    }
    fHeaderOnly  = kTRUE;
    fLast        = 0; // RDK: Must initialize before calling Streamer()
