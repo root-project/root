@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -79,6 +79,7 @@
 #include "TControlBar.h"
 #include "TGuiFactory.h"
 #include "TList.h"
+#include "TStyle.h"
 
 
 ClassImp(TControlBar)
@@ -107,7 +108,9 @@ TControlBar::TControlBar(const char *orientation, const char *title, Int_t x, In
             : TControlBarButton(title, "", "", "button")
 
 {
-    Initialize(x, y);
+    Int_t xs = (Int_t)(x*gStyle->GetScreenFactor());
+    Int_t ys = (Int_t)(y*gStyle->GetScreenFactor());
+    Initialize(xs, ys);
     SetOrientation( orientation );
 }
 
