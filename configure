@@ -905,8 +905,8 @@ if test ! "x$enable_qt" = "xno"; then
     qtinc=$found_hdr
     qtincdir=$found_dir
 
-    check_library "libqt-mt libqt" "$enable_shared" "$qtlibdir" \
-        $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
+    check_library "libqt-mt libqt qt-mt320 qt-mt qt" "$enable_shared" \
+        "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
         /usr/lib /usr/qt/lib
     qtlib=$found_lib
     qtlibdir=$found_dir
