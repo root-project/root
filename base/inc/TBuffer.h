@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.21 2002/09/21 08:12:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.22 2002/09/21 20:46:11 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -427,7 +427,9 @@ inline TBuffer &TBuffer::operator>>(ULong_t &l)
 template <>
 #endif
 inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
-   { buf.WriteObject(obj); return buf; }
+   { TClass *cl = (obj) ? obj->IsA() : 0;
+     buf.WriteObject(obj, cl);
+     return buf; }
 //______________________________________________________________________________
 //inline TBuffer &operator>>(TBuffer &buf, TObject *&obj)
 //   { obj = buf.ReadObject(0); return buf; }

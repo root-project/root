@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.33 2002/06/18 17:58:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.34 2002/07/18 11:04:15 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1543,7 +1543,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          MapObject(obj, fMapCount);
 
       // let the object read itself
-      StreamObject(obj,clRef);
+      clRef->Streamer(obj, *this);
 
       CheckByteCount(startpos, tag, clRef);
    }
@@ -1603,7 +1603,7 @@ void TBuffer::WriteObject(const void *obj, TClass *actualClass)
       // let the object write itself (cast const away)
       //      ((TObject *)obj)->Streamer(*this);
       //Could try to see if we have a streamer stored in the class
-      StreamObject((void*)obj,actualClass);
+      actualClass->Streamer((void*)obj,*this);
 
       // write byte count
       SetByteCount(cntpos);
