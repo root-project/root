@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.16 2001/06/01 11:01:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.17 2001/06/18 02:16:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -110,7 +110,7 @@ void frombufOld(char *&buf, Long_t *x)
 // implementation of Long_t/ULong_t. These types should not have been used at all.
 // However, because some users had already written many files with these types
 // we provide this dirty patch for "backward compatibility"
-   
+
 #ifdef R__BYTESWAP
 #ifdef R__B64
    char *sw = (char *)x;
@@ -142,14 +142,18 @@ TBuffer &TBuffer::operator>>(Long_t &l)
       frombufOld(fBufCur, &l);
    } else {
       frombuf(fBufCur, &l);
-   }   
+   }
    return *this;
 }
 
 //______________________________________________________________________________
 void TBuffer::SetBuffer(void *buf, UInt_t newsiz)
 {
-   // Set buffer address
+   // Adopt new buffer. First deletes existing buffer. Expects buf to
+   // have been allocated with new char [].
+
+   if (fBuffer)
+      delete [] fBuffer;
 
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
@@ -248,11 +252,9 @@ void TBuffer::Expand(Int_t newsize)
 {
    // Expand the I/O buffer to newsize bytes.
 
-   Int_t l = Length();
-
-   fBuffer = (char *) TStorage::ReAlloc(fBuffer,
-                                        (newsize+kExtraSpace) * sizeof(char),
-                                        (fBufSize+kExtraSpace) * sizeof(char));
+   Int_t l  = Length();
+   fBuffer  = TStorage::ReAllocChar(fBuffer, newsize+kExtraSpace,
+                                    fBufSize+kExtraSpace);
    fBufSize = newsize;
    fBufCur  = fBuffer + l;
    fBufMax  = fBuffer + fBufSize;
@@ -1292,7 +1294,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
             return 0;
             // exception
          }
-      } 
+      }
 
       obj = (TObject *) fReadMap->GetValue(tag);
       if (obj && clReq && !obj->IsA()->InheritsFrom(clReq)) {

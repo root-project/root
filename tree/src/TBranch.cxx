@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.29 2001/10/18 13:06:46 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.30 2001/11/09 14:17:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -440,15 +440,14 @@ Int_t TBranch::Fill()
            //Increase BasketEntry buffer of a minimum of 10 locations
            // and a maximum of 50 per cent of current size
          Int_t newsize = TMath::Max(10,Int_t(1.5*fMaxBaskets));
-         Int_t *newbuf = (Int_t*)TStorage::ReAlloc(fBasketEntry,
-                         newsize*sizeof(Int_t),fMaxBaskets*sizeof(Int_t));
-         fBasketEntry  = newbuf;
-                newbuf = (Int_t*)TStorage::ReAlloc(fBasketBytes,
-                         newsize*sizeof(Int_t),fMaxBaskets*sizeof(Int_t));
-         fBasketBytes  = newbuf;
-         Seek_t *nseek = (Seek_t*)TStorage::ReAlloc(fBasketSeek,
-                         newsize*sizeof(Seek_t),fMaxBaskets*sizeof(Seek_t));
-         fBasketSeek   = nseek;
+         fBasketEntry  = TStorage::ReAllocInt(fBasketEntry, newsize, fMaxBaskets);
+         fBasketBytes  = TStorage::ReAllocInt(fBasketBytes, newsize, fMaxBaskets);
+#ifndef R__LARGEFILE64
+         fBasketSeek   = TStorage::ReAllocInt(fBasketSeek, newsize, fMaxBaskets);
+#else
+         fBasketSeek   = (Seek_t*)TStorage::ReAlloc(fBasketSeek,
+                             newsize*sizeof(Seek_t),fMaxBaskets*sizeof(Seek_t));
+#endif
          fMaxBaskets   = newsize;
       }
       fBasketEntry[fWriteBasket] = fEntryNumber;
@@ -1030,7 +1029,7 @@ void TBranch::SetFile(TFile *file)
    fDirectory = (TDirectory*)file;
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
-   
+
    //apply to sub-branches as well
    TIter next(GetListOfBranches());
    TBranch *branch;
@@ -1062,7 +1061,7 @@ void TBranch::SetFile(const char *fname)
 
    fFileName  = fname;
    fDirectory = 0;
-   
+
    //apply to sub-branches as well
    TIter next(GetListOfBranches());
    TBranch *branch;

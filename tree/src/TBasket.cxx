@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.7 2001/05/13 10:49:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.8 2001/08/28 10:47:12 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -94,7 +94,7 @@ void TBasket::AdjustSize(Int_t newsize)
 {
 //      Increase the size of the current fBuffer up to newsize
 
-   char *newbuf = (char*)TStorage::ReAlloc(fBuffer,newsize,fBufferSize);
+   char *newbuf = TStorage::ReAllocChar(fBuffer,newsize,fBufferSize);
    fBufferSize  = newsize;
    fBuffer      = newbuf;
 }
@@ -163,7 +163,6 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
          Error("ReadBasketBuffers", "fObjlen = %d, nout = %d", fObjlen, nout);
          badread = 1;
       }
-      delete [] buffer;
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
    } else {
       fBuffer = fBufferRef->Buffer();
@@ -269,7 +268,7 @@ void TBasket::Streamer(TBuffer &b)
       Int_t curLast = fBufferRef->Length();
       if (fBufferRef && !fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
       if (fLast > fBufferSize) fBufferSize = fLast;
-      
+
       b << fBufferSize;
       b << fNevBufSize;
       b << fNevBuf;
@@ -300,11 +299,11 @@ void TBasket::Update(Int_t offset, Int_t skipped)
    if (fEntryOffset) {
       if (fNevBuf+1 >= fNevBufSize) {
          Int_t newsize = TMath::Max(10,2*fNevBufSize);
-         Int_t *newoff = (Int_t*)TStorage::ReAlloc(fEntryOffset,
-                               newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
+         Int_t *newoff = TStorage::ReAllocInt(fEntryOffset, newsize,
+                                              fNevBufSize);
          if (fDisplacement) {
-            Int_t *newdisp = (Int_t*)TStorage::ReAlloc(fDisplacement,
-                               newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
+            Int_t *newdisp = TStorage::ReAllocInt(fDisplacement, newsize,
+                                                  fNevBufSize);
             fDisplacement = newdisp;
          }
          fEntryOffset  = newoff;
