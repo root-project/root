@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.172 2004/04/16 09:08:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.173 2004/05/12 12:36:55 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1878,13 +1878,48 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 
    Double_t z, xk,xstep, yk, ystep, xcent, ycent, xlow, xup, ylow, yup;
-   Double_t dz  = Hparam.zmax - Hparam.zmin;
    Double_t ux1 = gPad->PixeltoX(1);
    Double_t ux0 = gPad->PixeltoX(0);
    Double_t uy1 = gPad->PixeltoY(1);
    Double_t uy0 = gPad->PixeltoY(0);
    Double_t dxmin = 0.51*(gPad->PadtoX(ux1)-gPad->PadtoX(ux0));
    Double_t dymin = 0.51*(gPad->PadtoY(uy0)-gPad->PadtoY(uy1));
+
+   Double_t zmin = Hparam.zmin;
+   Double_t zmax = Hparam.zmax;
+
+   // In case of option SAME, zmin and zmax values are taken from the
+   // first plotted 2D histogram.
+   if (Hoption.Same) {
+      TH2 *h2;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((h2 = (TH2 *)next())) {
+	 if (!h2->InheritsFrom(TH2::Class())) continue;
+         zmin = h2->GetMinimum();
+         zmax = h2->GetMaximum();
+	 if (Hoption.Logz) {
+            zmax = TMath::Log10(zmax);
+            if (zmin <= 0) {
+               zmin = TMath::Log10(zmax*0.001);
+            } else {
+               zmin = TMath::Log10(zmin);
+            }
+         }
+	 Double_t YMARGIN= 0.05;
+         Int_t maximum = 0;
+         Int_t minimum = 0;
+         if (fH->GetMaximumStored() != -1111) maximum = 1;
+         if (fH->GetMinimumStored() != -1111) minimum = 1;
+         if (!maximum) zmax += YMARGIN*(zmax-zmin);
+         if (!minimum) {
+            if (zmin >= 0) zmin = 0;
+            else           zmin -= YMARGIN*(zmax-zmin);
+         }
+         break;
+      }
+   }
+
+   Double_t dz  = zmax - zmin;
 
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
@@ -1899,11 +1934,11 @@ void THistPainter::PaintBoxes(Option_t *)
          z     = fH->GetBinContent(bin);
          if (Hoption.Logz) {
             if (z != 0) z = TMath::Log10(z);
-            else        z = Hparam.zmin;
+            else        z = zmin;
          }
-         if (z <= Hparam.zmin) continue;
-         if (z >  Hparam.zmax) z = Hparam.zmax;
-         xup  = xcent*(z - Hparam.zmin)/dz + xk + xcent;
+         if (z <= zmin) continue;
+         if (z >  zmax) z = zmax;
+         xup  = xcent*(z - zmin)/dz + xk + xcent;
          xlow = 2*(xk + xcent) - xup;
          if (xup-xlow < dxmin) xup = xlow+dxmin;
 
@@ -1913,7 +1948,7 @@ void THistPainter::PaintBoxes(Option_t *)
             if (xlow > 0) xlow = TMath::Log10(xlow);
             else continue;
          }
-         yup  = ycent*(z - Hparam.zmin)/dz + yk + ycent;
+         yup  = ycent*(z - zmin)/dz + yk + ycent;
          ylow = 2*(yk + ycent) - yup;
          if (yup-ylow < dymin) yup = ylow+dymin;
 
