@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.6 2000/11/22 20:57:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.7 2000/11/23 10:39:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -237,6 +237,7 @@ void TStreamerInfo::Build()
                   continue;
                } else {
                   Error("Build","Pointer to an array of objects not yet supported");
+                  printf("Member:%s, title:%s, refcount=%x\n",dm->GetName(),dm->GetTitle(),refcount);
                   continue;
                }
             } else {
@@ -674,6 +675,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, char *&streamer)
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
+//printf("rdmc=%s, dm->GetName()=%s\n",rdmc,dm->GetName());
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
          streamer = rdm->GetStreamer();
@@ -875,7 +877,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
    
    //loop on all active members
    for (Int_t i=0;i<fNdata;i++) {
-//printf("StreamerInfo, class:%s, fType[%d]=%d\n",fClass->GetName(),i,fType[i]);
+      if (gDebug > 1) {
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName());
+      }
       switch (fType[i]) {
          // read basic types
          case kChar:              ReadBasicType(Char_t)
@@ -916,7 +921,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
          // Class *  derived from TObject with comment field  //->
          case kObjectp: {
                          TObject **obj = (TObject**)(pointer+fOffset[i]); 
-                         if (!(*obj)) *obj = (TObject*)((TClass*)fMethod[i])->New();
+                         if (!(*obj)) {
+                            TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                            *obj = (TObject*)el->GetClass()->New();
+                         }
                          (*obj)->Streamer(b); 
                          break;
                         }
@@ -964,6 +972,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
          // Any Class not derived from TObject
          //case kTString:
          //case kObject:
+         case kOffsetL + kObjectp:
+         case kOffsetL + kObjectP:
          case kAny:     {
                          Streamer_t pstreamer = (Streamer_t)fMethod[i];
                          if (pstreamer == 0) {
@@ -1259,7 +1269,10 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             for (Int_t k=0;k<nc;k++) { 
                pointer = (char*)clones->UncheckedAt(k); 
                TObject **obj = (TObject**)(pointer+fOffset[i]); 
-               if (!(*obj)) *obj = (TObject*)((TClass*)fMethod[i])->New();
+               if (!(*obj)) {
+                  TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
+                  *obj = (TObject*)el->GetClass()->New();
+               }
                (*obj)->Streamer(b);
             } 
             break;}
@@ -1527,7 +1540,10 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
 
    //loop on all active members
    for (Int_t i=0;i<fNdata;i++) {
-//printf("StreamerInfo, class:%s, fType[%d]=%d\n",fClass->GetName(),i,fType[i]);
+      if (gDebug > 1) {
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName());
+      }
       switch (fType[i]) {
          // write basic types
          case kChar:              WriteBasicType(Char_t)
@@ -1608,6 +1624,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
          // Any Class not derived from TObject
          //case kTString:
          //case kObject:
+         case kOffsetL + kObjectp:
+         case kOffsetL + kObjectP:
          case kAny:     { 
                          Streamer_t pstreamer = (Streamer_t)fMethod[i];
                          if (pstreamer == 0) {
