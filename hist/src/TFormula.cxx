@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.5 2000/07/15 05:16:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.6 2000/08/11 20:10:12 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include <math.h>
 
 #include "TROOT.h"
+#include "TClass.h"
 #include "TFormula.h"
 #include "TMath.h"
 #include "TRandom.h"
@@ -1767,7 +1768,7 @@ Int_t TFormula::GetParNumber(const char *parName)
 {
   // return parameter number by name
    
-   for (Int_t i=0; i<MAXPAR; i++) {
+   for (Int_t i=0; i<fNpar; i++) {
       if (fNames[i] == parName) return i;
    }
   return -1;
