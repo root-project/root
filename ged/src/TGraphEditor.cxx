@@ -138,7 +138,7 @@ void TGraphEditor::ConnectSignals2Slots()
    // Connect signals to slots.
  
    fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
-   fgr->Connect("Clicked(Int_t)","TGraphEditor",this,"DoShape(Int_t)"); 
+   fgr->Connect("Pressed(Int_t)","TGraphEditor",this,"DoShape(Int_t)"); 
    fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
    fInit = kFALSE;  // connect the slots to the signals only once
 }
@@ -309,9 +309,9 @@ void TGraphEditor::DoMarkerOnOff(Bool_t on)
 {
    // Slot connected to MarkerOnOff CheckBox: 
    // Set marker visible/invisible.
-   
    TString t = GetDrawOption();
    t.ToUpper();
+
    // showing the marker:
    if (on) {
       if  (!t.Contains("P")) t+="P";
