@@ -78,6 +78,7 @@ class map {
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
+#elif defined(G__AIX)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
@@ -116,6 +117,7 @@ class map {
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
+#elif defined(G__AIX)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
