@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.11 2002/07/05 22:26:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.13 2002/07/27 11:05:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -113,6 +113,7 @@ void TVectorD::Draw(Option_t *option)
    // Draw this vector using an intermediate histogram
    // The histogram is named "TVectorD" by default and no title
 
+   delete gDirectory->FindObject("TVectorD");
    gROOT->ProcessLine(Form("TH1D *R__TVectorD = new TH1D((TVectorD&)((TVectorD*)(0x%lx)));R__TVectorD->SetBit(kCanDelete);R__TVectorD->Draw(\"%s\");",
       (Long_t)this,option));
 }

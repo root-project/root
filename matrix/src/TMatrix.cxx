@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.23 2002/07/06 15:55:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.25 2002/07/27 11:05:49 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -222,6 +222,7 @@ void TMatrix::Draw(Option_t *option)
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrix" by default and no title
 
+   delete gDirectory->FindObject("TMatrix");
    gROOT->ProcessLine(Form("TH2F *R__TMatrix = new TH2F((TMatrix&)((TMatrix*)(0x%lx)));R__TMatrix->SetBit(kCanDelete);R__TMatrix->Draw(\"%s\");",
       (Long_t)this,option));
 }
