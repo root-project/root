@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,8 +28,6 @@
 
 ClassImp(RooEllipse)
 
-static const char rcsid[] =
-"$Id: RooEllipse.cc,v 1.3 2002/03/27 19:25:39 davidk Exp $";
 
 RooEllipse::RooEllipse() { }
 

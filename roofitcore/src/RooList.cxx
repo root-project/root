@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,8 +24,6 @@
 
 ClassImp(RooList)
 
-static const char rcsid[] =
-"$Id: RooList.cc,v 1.3 2001/10/08 05:20:17 verkerke Exp $";
 
 TObjOptLink *RooList::findLink(const char *name, const char *caller) const {
   // Find the link corresponding to the named object in this list.

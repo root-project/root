@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,9 +47,6 @@
 
 ClassImp(RooPlot)
   ;
-
-static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.29 2002/04/03 23:37:26 verkerke Exp $";
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id: RooAbsFunc.cc,v 1.3 2002/09/04 21:06:53 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,5 +29,16 @@
 ClassImp(RooAbsFunc)
 ;
 
-static const char rcsid[] =
-"$Id: RooAbsFunc.cc,v 1.2 2001/10/08 05:20:11 verkerke Exp $";
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,9 +43,6 @@
 #include <assert.h>
 
 ClassImp(RooCurve)
-
-static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.33 2002/08/27 00:53:23 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();

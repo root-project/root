@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,8 +31,6 @@
 ClassImp(RooQuasiRandomGenerator)
   ;
 
-static const char rcsid[] =
-"$Id: RooQuasiRandomGenerator.cc,v 1.3 2002/04/03 23:37:26 verkerke Exp $";
 
 RooQuasiRandomGenerator::RooQuasiRandomGenerator() {
   // Perform one-time initialization of our static coefficient array if necessary

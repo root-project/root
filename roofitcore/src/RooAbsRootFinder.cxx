@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,8 +25,6 @@
 ClassImp(RooAbsRootFinder)
 ;
 
-static const char rcsid[] =
-"$Id: RooAbsRootFinder.cc,v 1.2 2002/04/03 23:37:23 verkerke Exp $";
 
 RooAbsRootFinder::RooAbsRootFinder(const RooAbsFunc& function) :
   _function(&function), _valid(function.isValid())

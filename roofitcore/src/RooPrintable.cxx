@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,9 +25,6 @@
 #include "TNamed.h"
 
 ClassImp(RooPrintable)
-
-static const char rcsid[] =
-"$Id: RooPrintable.cc,v 1.8 2001/10/08 05:20:19 verkerke Exp $";
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,9 +26,6 @@
 
 ClassImp(RooInvTransform)
 ;
-
-static const char rcsid[] =
-"$Id: RooInvTransform.cc,v 1.2 2001/10/08 05:20:17 verkerke Exp $";
 
 RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   RooAbsFunc(func.getDimension()), _func(&func)

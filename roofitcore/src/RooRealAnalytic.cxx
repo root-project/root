@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,9 +27,6 @@
 
 ClassImp(RooRealAnalytic)
 ;
-
-static const char rcsid[] =
-"$Id: RooRealAnalytic.cc,v 1.5 2001/10/08 05:20:20 verkerke Exp $";
 
 Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
   // Evaluate our analytic integral at the specified values of the dependents.

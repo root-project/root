@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,5 +24,3 @@
 ClassImp(RooScaledFunc)
 ;
 
-static const char rcsid[] =
-"$Id: RooScaledFunc.cc,v 1.2 2001/10/08 05:20:21 verkerke Exp $";

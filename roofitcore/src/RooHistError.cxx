@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,8 +29,6 @@
 ClassImp(RooHistError)
   ;
 
-static const char rcsid[] =
-"$Id: RooHistError.cc,v 1.9 2002/06/27 01:33:15 verkerke Exp $";
 
 const RooHistError &RooHistError::instance() {
   // Return a reference to a singleton object that is created the

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,9 +22,6 @@
 
 ClassImp(RooAbsIntegrator)
 ;
-
-static const char rcsid[] =
-"$Id: RooAbsIntegrator.cc,v 1.10 2002/04/03 23:37:23 verkerke Exp $";
 
 RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function) :
   _function(&function), _valid(function.isValid())

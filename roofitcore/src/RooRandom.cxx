@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,8 +27,6 @@
 ClassImp(RooRandom)
   ;
 
-static const char rcsid[] =
-"$Id: RooRandom.cc,v 1.3 2002/03/27 19:25:39 davidk Exp $";
 
 TRandom *RooRandom::randomGenerator() {
   // Return a pointer to a singleton random-number generator
