@@ -3,3 +3,4 @@ opdict.*
 *.log
 templateMembersDict.*
 templateMembers.ref
+templateMembersNoMem.ref
