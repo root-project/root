@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMC.h,v 1.9 2004/11/23 14:51:59 brun Exp $
+// @(#)root/vmc:$Name: v4-02-00 $:$Id: TVirtualMC.h,v 1.10 2004/11/24 14:07:39 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -28,7 +28,7 @@ class TVirtualMC : public TNamed {
 
   public:
     TVirtualMC(const char *name, const char *title, 
-               Bool_t isRootGeometrySupported);
+               Bool_t isRootGeometrySupported = kFALSE);
     TVirtualMC();
     virtual ~TVirtualMC();
     TVirtualMC(const TVirtualMC &mc) : TNamed(mc) {}
@@ -40,6 +40,10 @@ class TVirtualMC : public TNamed {
     // methods for building/management of geometry
     // ------------------------------------------------
     //
+
+    // info about supporting geometry defined via Root
+    virtual Bool_t IsRootGeometrySupported() const { return kFALSE; }
+                      // make this function =0 with next release
 
     // functions from GCONS 
     virtual void  Gfmate(Int_t imat, char *name, Float_t &a, Float_t &z,  
@@ -117,18 +121,16 @@ class TVirtualMC : public TNamed {
     virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
     
     // set geometry from Root (built via TGeo)
-    virtual void  SetRootGeometry() {} 
+    virtual void  SetRootGeometry() = 0; 
 		               
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
     virtual Int_t NofVolumes() const = 0;
     virtual Int_t VolId2Mate(Int_t id) const = 0;
-    virtual Int_t NofVolDaughters(const char* volName) const;
-    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
-    virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const;
-    // New functions
-    // Make them = 0 with the next release
+    virtual Int_t NofVolDaughters(const char* volName) const = 0;
+    virtual const char*  VolDaughterName(const char* volName, Int_t i) const = 0;
+    virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const = 0;
 
     //
     // methods for physics management
@@ -170,7 +172,7 @@ class TVirtualMC : public TNamed {
     virtual void SetMaxStep(Double_t) = 0;
     virtual void SetMaxNStep(Int_t) = 0;
     virtual void SetUserDecay(Int_t) = 0;  
-    virtual void ForceDecayTime(Float_t) {;}
+    virtual void ForceDecayTime(Float_t) = 0;
     
     // get methods
     // tracking volume(s) 
@@ -178,9 +180,7 @@ class TVirtualMC : public TNamed {
     virtual Int_t    CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
     virtual const char* CurrentVolName() const =0;
     virtual const char* CurrentVolOffName(Int_t off) const =0;
-    virtual const char* CurrentVolPath();
-    // New function
-    // Make it = 0 with the next release
+    virtual const char* CurrentVolPath() = 0;
     virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z, 
                        Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
     virtual Int_t    CurrentEvent() const =0; 
@@ -238,13 +238,6 @@ class TVirtualMC : public TNamed {
     virtual void Gdhead(Int_t, const char*, Double_t=0) = 0;   
     virtual void Gdman(Double_t, Double_t, const char*) = 0;
 
-    // Removed unused Geant3 specific methods
-    //
-    //virtual void SetColors() = 0;
-    //virtual void Gtreve() = 0;
-    //virtual void GtreveRoot() = 0;
-    //virtual void Gfpart(Int_t, char*, Int_t&, Float_t&, Float_t&, Float_t&) = 0; 
-
     //
     // control methods
     // ------------------------------------------------
@@ -269,7 +262,7 @@ class TVirtualMC : public TNamed {
     virtual TVirtualMCStack*   GetStack() const   { return fStack; }
     virtual TVirtualMCDecayer* GetDecayer() const { return fDecayer; }
     virtual TRandom*           GetRandom() const  { return fRandom; }
-    virtual Bool_t             IsRootGeometrySupported() const;
+                                     
 
   protected:
     TVirtualMCApplication* fApplication; //! User MC application
@@ -282,37 +275,9 @@ class TVirtualMC : public TNamed {
     TVirtualMCStack*    fStack;   //! Particles stack
     TVirtualMCDecayer*  fDecayer; //! External decayer
     TRandom*            fRandom;  //! Random number generator
-    Bool_t              fIsRootGeometrySupported; // Info about support for
-                                  //  geometries defined directly via TGeo 
 
   ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
-
-// inline fuctions
-
- // Temporary implementation of new functions
- // To be removed with the next release
-
- inline Int_t TVirtualMC::NofVolDaughters(const char* /*volName*/) const {
-   Warning("NofVolDaughters", "New function - not yet implemented.");
-   return 0;
- }
-
- inline const char*  TVirtualMC::VolDaughterName(const char* /*volName*/, Int_t /*i*/) const {
-   Warning("VolDaughterName", "New function - not yet implemented.");
-   return "";
- }
-
- inline Int_t  TVirtualMC::VolDaughterCopyNo(const char* /*volName*/, Int_t /*i*/) const {
-   Warning("VolDaughterCopyNo", "New function - not yet implemented.");
-   return 0;
- }
-
- inline const char* TVirtualMC::CurrentVolPath() {
-   Warning("CurrentVolPath", "New function - not yet implemented.");
-   return "";
- }
-
 
 R__EXTERN TVirtualMC *gMC;
 

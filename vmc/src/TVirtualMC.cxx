@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.3 2004/01/18 12:06:43 brun Exp $
+// @(#)root/mc:$Name: v4-02-00 $:$Id: TVirtualMC.cxx,v 1.4 2004/06/08 10:26:42 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
@@ -27,12 +27,11 @@ TVirtualMC* gMC;
 
 //_____________________________________________________________________________
 TVirtualMC::TVirtualMC(const char *name, const char *title,
-                       Bool_t isRootGeometrySupported) 
+                       Bool_t /*isRootGeometrySupported*/) 
   : TNamed(name,title),
     fStack(0),
     fDecayer(0),
-    fRandom(0),
-    fIsRootGeometrySupported(isRootGeometrySupported)
+    fRandom(0)
 {
   //
   // Standard constructor
@@ -59,8 +58,7 @@ TVirtualMC::TVirtualMC()
     fApplication(0),
     fStack(0),
     fDecayer(0),
-    fRandom(0),
-    fIsRootGeometrySupported(kFALSE)
+    fRandom(0)
 {    
   //
   // Default constructor
@@ -110,13 +108,3 @@ void TVirtualMC::SetRandom(TRandom* random)
    gRandom = random;
    fRandom = random; 
 }
-
-//_____________________________________________________________________________
-Bool_t TVirtualMC::IsRootGeometrySupported() const
-{
-//
-// Returns info whether Root geometry defined directly by TGeo
-// is supported.
-//
-   return fIsRootGeometrySupported;
-}   
