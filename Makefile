@@ -18,8 +18,8 @@ include config/Makefile.$(ARCH)
 
 ##### Modules to build #####
 
-MODULES       = build cint utils base cont meta net zip clib new hist \
-                tree graf g3d gpad gui matrix minuit histpainter proof \
+MODULES       = build cint utils base cont meta net zip clib matrix new \
+                hist tree graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg
 
 ifneq ($(ARCH),win32)
