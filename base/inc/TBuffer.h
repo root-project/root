@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.14 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.16 2002/05/09 20:21:59 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -171,6 +171,10 @@ public:
    void     ReadFastArray(Float_t  *f, Int_t n);
    void     ReadFastArray(Double_t *d, Int_t n);
 
+   void     StreamObject(void *obj,const type_info& typeinfo);
+   void     StreamObject(void *obj,const char *className);
+   void     StreamObject(void *obj,TClass *cl);
+
    void     WriteFastArray(const Bool_t   *b, Int_t n);
    void     WriteFastArray(const Char_t   *c, Int_t n);
    void     WriteFastArray(const UChar_t  *c, Int_t n);
@@ -217,6 +221,8 @@ public:
    static void  SetGlobalWriteParam(Int_t mapsize);
    static Int_t GetGlobalReadParam();
    static Int_t GetGlobalWriteParam();
+   static TClass *GetClass(const type_info& typeinfo);
+   static TClass *GetClass(const char *className);
 
    ClassDef(TBuffer,0)  //Buffer base class used for serializing objects
 };
@@ -238,13 +244,20 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 
    // This implementation only works for classes inheriting from
    // TObject.  This enables a clearer error message from the compiler.
-   const TObject *verify = obj; if (verify) { }
 
-   obj = (Tmpl *) buf.ReadObject(Tmpl::Class());
+   TClass *cl = TBuffer::GetClass(typeid(Tmpl));
+   obj = (Tmpl *) buf.ReadObject(cl);
+   return buf;
+}
+template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
+{
+   TClass *cl = (obj)? TBuffer::GetClass(typeid(*obj)):0;
+   buf.WriteObject(obj,cl);
    return buf;
 }
 #else
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
+template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
 #endif
 #endif
 
