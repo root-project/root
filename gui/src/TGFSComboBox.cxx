@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.5 2001/04/27 22:33:59 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -42,10 +42,10 @@
 //--- this is temp here...
 
 struct lbc_t {
-  char   *name;
-  char   *path;
-  char   *pixmap;
-  Int_t   id, indent, flags;
+  const char *name;
+  const char *path;
+  const char *pixmap;
+  Int_t       id, indent, flags;
 };
 
 static struct lbc_t gLbc[] = {
@@ -295,7 +295,7 @@ void TGFSComboBox::Update(const char *path)
       if (*tailpath == '/') ++tailpath;
       if (*tailpath)
          while (1) {
-            char *picname;
+            const char *picname;
             const char *semi = strchr(tailpath, '/');
             if (semi == 0) {
                strcpy(dirname, tailpath);

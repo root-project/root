@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.42 2001/05/16 06:39:18 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.43 2001/06/08 07:40:15 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -217,27 +217,26 @@ const char *help =
 
 #include <time.h>
 
-char *autold = "G__autoLinkDef.h";
+const char *autold = "G__autoLinkDef.h";
 enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
 FILE *fp;
 
 //______________________________________________________________________________
-int GetClassVersion(G__ClassInfo &cl) 
+int GetClassVersion(G__ClassInfo &cl)
 {
    // Return the version number of the class or -1
-   // if the function Class_Version does not exist. 
+   // if the function Class_Version does not exist.
 
-  if (!cl.HasMethod("Class_Version")) return -1;
+   if (!cl.HasMethod("Class_Version")) return -1;
 
-  char * function = "::Class_Version()";
-  const char * classname = cl.Fullname();
-  char * name = new char[strlen(classname)+strlen(function)+1];
-  sprintf(name, "%s%s", classname, function);
-  int version = (int)G__int(G__calc(name));
-  delete name;
-  return version;
-
+   const char *function = "::Class_Version()";
+   const char *classname = cl.Fullname();
+   char *name = new char[strlen(classname)+strlen(function)+1];
+   sprintf(name, "%s%s", classname, function);
+   int version = (int)G__int(G__calc(name));
+   delete name;
+   return version;
 }
 
 //______________________________________________________________________________
@@ -762,7 +761,7 @@ const char *ShortTypeName (const char *typeDesc)
 //______________________________________________________________________________
 const char *GrabIndex(G__DataMemberInfo &member, int printError)
 {
-   // GrabIndex return a static string (so use it or copy it immediatly, do not
+   // GrabIndex returns a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
    // array data member.
    // In case of error, or if the size is not specified, GrabIndex returns 0.
@@ -772,7 +771,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
 
    const char *index = member.ValidArrayIndex(&error, &where);
    if (index==0 && printError) {
-      char *errorstring;
+      const char *errorstring;
       switch (error) {
          case G__DataMemberInfo::NOT_INT:
             errorstring = "is not an integer";
@@ -795,7 +794,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
                  member.MemberOf()->Name(), member.Name());
       } else {
          fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
-                   member.MemberOf()->Name(), member.Name(), where, errorstring);
+                 member.MemberOf()->Name(), member.Name(), where, errorstring);
       }
    }
    return index;
@@ -1824,7 +1823,7 @@ int main(int argc, char **argv)
 
    if (!il) {
       GenerateLinkdef(&argc, argv, iv);
-      argvv[argcc++] = autold;
+      argvv[argcc++] = (char *)autold;
    }
 
    G__setothermain(2);

@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.4 2001/04/04 17:17:30 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.5 2001/04/06 14:17:42 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -217,6 +217,10 @@ static void SetLibraryPath()
 #endif
 }
 
+extern "C" {
+   static void SigUsr1(int);
+}
+
 static void SigUsr1(int)
 {
    // When we get SIGUSR1 from child (i.e. ROOT) then pop down logo.
@@ -315,10 +319,10 @@ int main(int argc, char **argv)
 #if defined(__sun) && !defined(__i386) && !defined(__SVR4)
    handle.sa_handler = (void (*)())SigUsr1;
 #elif defined(__sun) && defined(__SVR4)
-   handle.sa_handler = (void (*)(int))SigUsr1;
+   handle.sa_handler = SigUsr1;
 #elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
 #   if defined(IRIX64)
-   handle.sa_handler = (void (*)(int))SigUsr1;
+   handle.sa_handler = SigUsr1;
 #   else
    handle.sa_handler = (void (*)(...))SigUsr1;
 #   endif

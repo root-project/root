@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.6 2001/02/03 15:39:14 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.7 2001/06/14 16:36:18 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -165,9 +165,9 @@ ClassImp(TTabCom)
 TTabCom* gTabCom=0;
 
 
-int gl_root_tab_hook(char* buf, int /*prompt_width*/, int* pLoc)
+extern "C" int gl_root_tab_hook(char* buf, int /*prompt_width*/, int* pLoc)
 {
-     return gTabCom ? gTabCom->Hook( buf, pLoc ) : -1;
+   return gTabCom ? gTabCom->Hook( buf, pLoc ) : -1;
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.26 2001/06/06 16:48:33 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.27 2001/06/07 10:47:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1932,6 +1932,10 @@ static struct signal_map {
    { SIGUSR2,  0, 0, "user-defined signal 2" }
 };
 
+extern "C" {
+   static void sighandler(int sig);
+}
+
 //______________________________________________________________________________
 static void sighandler(int sig)
 {
@@ -1959,12 +1963,12 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 #if defined(R__SUN)
       sigact.sa_handler = (void (*)())sighandler;
 #elif defined(R__SOLARIS)
-      sigact.sa_handler = (void (*)(int))sighandler;
+      sigact.sa_handler = sighandler;
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
 #  if defined(R__SGI64)
-       sigact.sa_handler = (void (*)(int))sighandler;
+      sigact.sa_handler = sighandler;
 #   else
-       sigact.sa_handler = (void (*)(...))sighandler;
+      sigact.sa_handler = (void (*)(...))sighandler;
 #  endif
 #else
       sigact.sa_handler = sighandler;

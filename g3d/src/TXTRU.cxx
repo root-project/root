@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.3 2000/12/13 15:13:48 brun Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.4 2001/05/07 18:41:48 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -594,8 +594,8 @@ void TXTRU::Print(Option_t *option) const
    printf("TXTRU %s Nxy=%d [of %d] Nz=%d [of %d] Option=%s\n",
           GetName(),fNxy,fNxyAlloc,fNz,fNzAlloc,option);
 
-   Char_t *shape = 0;
-   Char_t *zorder = 0;
+   const char *shape = 0;
+   const char *zorder = 0;
 
    switch (fPolygonShape) {
    case kUncheckedXY:   shape = "Unchecked  ";  break;
@@ -617,10 +617,10 @@ void TXTRU::Print(Option_t *option) const
 
    printf("  XY shape '%s', '%s'\n",shape,zorder);
 
-   Int_t   nxy, nz;
-   char *status;
-   char *used  = " ";
-   char *alloc = "  allocated";
+   Int_t       nxy, nz;
+   const char *status;
+   const char *used  = " ";
+   const char *alloc = "  allocated";
 
    if (opt.Contains("alloc")) {
       status = used;
@@ -632,8 +632,8 @@ void TXTRU::Print(Option_t *option) const
       nz    = fNzAlloc;
    }
 
+   const char *name;
    Float_t *p;
-   Char_t  *name;
    Int_t   nlimit;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");

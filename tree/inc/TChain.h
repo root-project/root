@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.11 2000/12/26 14:22:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.12 2001/04/10 16:31:18 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Fill() {MayNotUse("TChain::Fill()"); return -1;}
+    virtual Int_t     Fill() {MayNotUse("Fill()"); return -1;}
     virtual TBranch  *GetBranch(const char *name);
     virtual Int_t     GetChainEntryNumber(Int_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}

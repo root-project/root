@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.2 2000/10/02 15:46:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGGC.h,v 1.3 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   20/9/2000
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
    void SetClipYOrigin(Int_t v);
    void SetClipMask(Pixmap_t v);
    void SetDashOffset(Int_t v);
-   void SetDashList(char v[], Int_t len);
+   void SetDashList(const char v[], Int_t len);
    void SetArcMode(Int_t v);
 
    ClassDef(TGGC,0)  // Graphics context

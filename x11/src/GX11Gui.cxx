@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.16 2001/04/11 17:09:42 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.17 2001/05/11 17:20:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -153,6 +153,11 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t &ll)
    conv.i[0] = (Int_t) i1;
    conv.i[1] = (Int_t) i2;
    ll = conv.l;
+}
+
+extern "C" {
+   static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err);
+   static Int_t RootX11IOErrorHandler(Display *);
 }
 
 //______________________________________________________________________________

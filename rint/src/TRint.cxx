@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.7 2001/05/08 23:44:45 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.8 2001/06/05 11:13:13 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -73,7 +73,7 @@ Bool_t TInterruptHandler::Notify()
    gMmallocDesc = 0;
 
    if (!G__get_security_error())
-      G__genericerror("\n *** Break *** keyboard interrupt");
+      G__genericerror((char *)"\n *** Break *** keyboard interrupt");
    else {
       Printf("\n *** Break *** keyboard interrupt");
       if (TROOT::Initialized()) {

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.39 2001/05/14 06:42:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.40 2001/06/05 11:34:33 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3678,7 +3678,7 @@ void THistPainter::PaintSurface()
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
 //*-*- Initialize colors for the lighting model
-   Color_t colormain = fH->GetFillColor();
+//   Color_t colormain = fH->GetFillColor();
 //   if (colormain == 1) colormain = 17; //avoid drawing with black
    //Color_t colordark = colormain + 100;
    //fLego->SetColorMain(colormain,0);

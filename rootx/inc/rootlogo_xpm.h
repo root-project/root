@@ -1,4 +1,4 @@
-/* @(#)root/rootx:$Name:  $:$Id: rootlogo_xpm.h,v 1.5 2000/12/13 17:46:43 rdm Exp $ */
+/* @(#)root/rootx:$Name:  $:$Id: rootlogo_xpm.h,v 1.6 2001/05/21 14:14:35 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 /* XPM */
-static char *rootlogo[] = {
+static const char *rootlogo[] = {
 /* width height num_colors chars_per_pixel */
 "360 240 32 1",
 /* colors */

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.23 2001/05/31 08:53:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.24 2001/06/21 15:53:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -325,7 +325,7 @@ void TCint::ResetAll()
 {
    // Reset the CINT state to its initial state.
 
-   G__init_cint("cint");
+   G__init_cint((char *)"cint");
    G__init_process_cmd();
 }
 
@@ -451,7 +451,7 @@ void TCint::SetClassInfo(TClass *cl)
       if (cl->Property() & (kIsClass|kIsStruct) == 0) {
          cl->MakeZombie();
       }
-      
+
       if (!cl->fClassInfo->IsLoaded()) {
          // this happens when no CINT dictionary is available
          delete cl->fClassInfo;
@@ -797,7 +797,7 @@ const char* TCint::GetSharedLibs()
 }
 
 //______________________________________________________________________________
-Bool_t TCint::IsErrorMessagesEnabled() 
+Bool_t TCint::IsErrorMessagesEnabled()
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.

@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.6 2001/05/04 17:27:01 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.7 2001/05/11 09:52:15 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include <iostream.h>
 #include "TFile.h"
-#include "TDirectory.h" 
+#include "TDirectory.h"
 #include "TTree.h"
 #include "TLeafI.h"
 #include "TH1.h"
@@ -214,7 +214,7 @@ extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&,const int
 extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&);
 #endif
 
-extern void convert_directory(char*);
+extern void convert_directory(const char*);
 extern void convert_1d(Int_t id);
 extern void convert_2d(Int_t id);
 extern void convert_profile(Int_t id);
@@ -300,7 +300,7 @@ int main(int argc, char **argv)
 }
 
 //____________________________________________________________________________
-  void convert_directory(char *dir)
+void convert_directory(const char *dir)
 {
 
   printf(" Converting directory %s\n",dir);
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
 #endif
   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
   chtitl[4*nwt] = 0;
-  char *option= " ";
+  const char *option= " ";
   if (iq[lw] == 1) option = "S";
   if (iq[lw] == 2) option = "I";
   TProfile *p = new TProfile(idname,chtitl,ncx,xmin,xmax,ymin,ymax,option);
@@ -578,7 +578,7 @@ int main(int argc, char **argv)
        else last = j;
     }
     if (golower == 2) name[0] = tolower(name[0]);
-    
+
     // suppress heading blanks
     for (j=0;j<Nchar;j++) {
        if (name[j] != ' ') break;
@@ -669,7 +669,7 @@ int main(int argc, char **argv)
         if (name[j] == ' ') name[j] = 0;
      }
      if (golower == 2) name[0] = tolower(name[0]);
-     
+
      for (j=62;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
         // convert also character after [, if golower == 2

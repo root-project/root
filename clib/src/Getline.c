@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.6 2001/02/22 09:36:57 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.7 2001/04/06 14:17:42 rdm Exp $ */
 /* Author: */
 
 /*
@@ -107,7 +107,7 @@ DOS and ANSI terminal arrow key sequences are recognized, and act like:
 The programmer accesses input-edit through five functions, and optionally
 through three additional function pointer hooks.  The five functions are:
 
-char *Getline(char *prompt)
+char *Getline(const char *prompt)
 
         Prints the prompt and allows the user to edit the current line. A
         pointer to the line is returned when the user finishes by
@@ -129,7 +129,7 @@ char *Getline(char *prompt)
         the slow 1 character read()s that getline uses (note: this limitation
         has been removed).
 
-char *Getlinem(int mode, char *prompt)
+char *Getlinem(int mode, const char *prompt)
 
         mode: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup
 
@@ -230,13 +230,13 @@ static int gl_tab(char *buf, int offset, int *loc);
 
 /********************* exported interface ********************************/
 
-char   *Getline(char *prompt);   /* read a line of input */
-char   *Getlinem(int mode, char *prompt); /* allows reading char by char */
+char   *Getline(const char *prompt); /* read a line of input */
+char   *Getlinem(int mode, const char *prompt); /* allows reading char by char */
 void    Gl_config(const char *which, int value); /* set some options */
-void    Gl_setwidth(int w);      /* specify width of screen */
-void    Gl_windowchanged();      /* call after SIGWINCH signal */
-void    Gl_histinit(char *file); /* read entries from old histfile */
-void    Gl_histadd(char *buf);   /* adds entries to hist */
+void    Gl_setwidth(int w);          /* specify width of screen */
+void    Gl_windowchanged();          /* call after SIGWINCH signal */
+void    Gl_histinit(char *file);     /* read entries from old histfile */
+void    Gl_histadd(char *buf);       /* adds entries to hist */
 
 int             (*gl_in_hook)(char *buf) = 0;
 int             (*gl_out_hook)(char *buf) = 0;
@@ -269,7 +269,7 @@ static int      gl_erase_line = 0;      /* erase line before returning */
 static int      gl_pos, gl_cnt = 0;     /* position and size of input */
 static char     gl_buf[BUF_SIZE];       /* input buffer */
 static char     gl_killbuf[BUF_SIZE]=""; /* killed text */
-static char    *gl_prompt;              /* to save the prompt string */
+static const char *gl_prompt;           /* to save the prompt string */
 static char     gl_intrc = 0;           /* keyboard SIGINT char */
 static char     gl_quitc = 0;           /* keyboard SIGQUIT char */
 static char     gl_suspc = 0;           /* keyboard SIGTSTP char */
@@ -286,12 +286,12 @@ static void     gl_char_cleanup();      /* undo gl_char_init */
 static void     gl_addchar(int c);      /* install specified char */
 static void     gl_del(int loc);        /* del, either left (-1) or cur (0) */
 static void     gl_error(char *buf);    /* write error msg and die */
-static void     gl_fixup(char *p, int c, int cur); /* fixup state variables and screen */
+static void     gl_fixup(const char *p, int c, int cur); /* fixup state variables and screen */
 static int      gl_getc();              /* read one char from terminal */
 static void     gl_kill();              /* delete to EOL */
 static void     gl_newline();           /* handle \n or \r */
 static void     gl_putc(int c);         /* write one char to terminal */
-static void     gl_puts(char *buf);     /* write a line to terminal */
+static void     gl_puts(const char *buf); /* write a line to terminal */
 static void     gl_redraw();            /* issue \n and redraw all */
 static void     gl_transpose();         /* transpose two chars */
 static void     gl_yank();              /* yank killed text */
@@ -673,7 +673,7 @@ gl_putc(int c)
 /******************** fairly portable part *********************************/
 
 static void
-gl_puts(char *buf)
+gl_puts(const char *buf)
 {
     int len = strlen(buf);
 
@@ -767,7 +767,7 @@ Gl_windowchanged()
 /* -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup */
 
 char *
-Getlinem(int mode, char *prompt)
+Getlinem(int mode, const char *prompt)
 {
     int             c, loc, tmp;
     int             sig;
@@ -783,7 +783,7 @@ Getlinem(int mode, char *prompt)
            Gl_config("erase", 0);
        }
        gl_init();
-       gl_prompt = (prompt)? prompt : "";
+       gl_prompt = (prompt) ? prompt : "";
        gl_buf[0] = 0;
        if (gl_in_hook)
            gl_in_hook(gl_buf);
@@ -1004,7 +1004,7 @@ Gl_eof()
 }
 
 char *
-Getline(char *prompt)
+Getline(const char *prompt)
 {
    return Getlinem(0, prompt);
 }
@@ -1152,7 +1152,7 @@ gl_redraw()
 }
 
 static void
-gl_fixup(char *prompt, int change, int cursor)
+gl_fixup(const char *prompt, int change, int cursor)
 /*
  * This function is used both for redrawing when input changes or for
  * moving within the input line.  The parameters are:

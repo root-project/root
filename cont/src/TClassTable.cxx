@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.6 2001/04/20 17:30:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.7 2001/04/21 17:21:44 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -228,6 +228,10 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
    return 0;
 }
 
+extern "C" {
+   static int ClassComp(const void *a, const void *b);
+}
+
 //______________________________________________________________________________
 static int ClassComp(const void *a, const void *b)
 {
@@ -295,7 +299,7 @@ void TClassTable::SortTable()
          for (ClassRec_t *r = fgTable[i]; r; r = r->next)
             fgSortedTable[j++] = r;
 
-      ::qsort(fgSortedTable, fgTally, sizeof(ClassRec_t *), &::ClassComp);
+      ::qsort(fgSortedTable, fgTally, sizeof(ClassRec_t *), ::ClassComp);
       fgSorted = kTRUE;
    }
 }

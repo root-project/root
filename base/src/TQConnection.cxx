@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.4 2000/12/13 16:45:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.5 2001/03/08 14:46:04 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -106,10 +106,8 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
       // last ')' symbol with '\0'
       if ((tmp = strrchr(proto,')'))) *tmp = '\0';
+      if ((params = strchr(proto,'='))) *params = ' ';
    }
-
-   if (!proto) proto = "";
-   if (proto && (params = strchr(proto,'='))) *params = ' ';
 
    fFunc = new G__CallFunc;
 
@@ -118,21 +116,17 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    if (cl) {
       params ?
-      fFunc->SetFunc(cl->GetClassInfo(), (char*)method,
-                     (char*)params, &fOffset) :
-      fFunc->SetFuncProto(cl->GetClassInfo(), (char*)method,
-                          (char*)proto, &fOffset);
+      fFunc->SetFunc(cl->GetClassInfo(), method, params, &fOffset) :
+      fFunc->SetFuncProto(cl->GetClassInfo(), method, proto, &fOffset);
    } else {
       G__ClassInfo gcl;
       params ?
-      fFunc->SetFunc(&gcl, (char*)funcname,
-                     (char*)params, &fOffset) :
-      fFunc->SetFuncProto(&gcl, (char*)funcname,
-                          (char*)proto, &fOffset);
+      fFunc->SetFunc(&gcl, (char*)funcname, params, &fOffset) :
+      fFunc->SetFuncProto(&gcl, (char*)funcname, proto, &fOffset);
    }
 
    // cleaning
-   if (method) { delete [] method; method = 0; }
+   delete [] method;
 }
 
 //______________________________________________________________________________
@@ -166,10 +160,8 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    if ((proto =  strchr(method,'('))) {
       *proto++ = '\0';
       if ((tmp = strrchr(proto,')'))) *tmp  = '\0';
+      if ((params = strchr(proto,'='))) *params = ' ';
    }
-
-   if (!proto) proto = "";
-   if (proto && (params = strchr(proto,'='))) *params = ' ';
 
    fFunc = new G__CallFunc;
 
@@ -181,11 +173,11 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       gcl.Init(class_name);   // class
 
    if (params)
-      fFunc->SetFunc(&gcl, (char*)method, (char*)params, &fOffset);
+      fFunc->SetFunc(&gcl, method, params, &fOffset);
    else
-      fFunc->SetFuncProto(&gcl, (char*)method, (char*)proto , &fOffset);
+      fFunc->SetFuncProto(&gcl, method, proto , &fOffset);
 
-   if (method) { delete [] method; method = 0; }
+   delete [] method;
    return;
 }
 
