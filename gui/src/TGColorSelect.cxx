@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.5 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.6 2004/02/18 16:17:33 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -49,7 +49,7 @@
 // Selecting a color in this widget will generate the event:            //
 // kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
 // and the signal:                                                      //
-// ColorSelected(ULong_t pixel)                                         //
+// ColorSelected(Pixel_t color)                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -331,6 +331,7 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    SetState(kButtonUp);
    AddInput(kButtonPressMask | kButtonReleaseMask);
    SetColor(fColor);
+   ColorSelected(fColor);  // emit a signal
 }
 
 //________________________________________________________________________________
@@ -350,7 +351,7 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   SetColor(parm2);
                   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                               parm1, parm2);
-                  ColorSelected();
+                  ColorSelected(fColor);
                }
                break;
 
@@ -513,6 +514,7 @@ void TGColorSelect::SetColor(ULong_t color)
    fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
+   ColorSelected(fColor);   // emit a signal
 }
 
 //______________________________________________________________________________

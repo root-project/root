@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.2 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.3 2003/11/05 13:08:25 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -140,7 +140,8 @@ public:
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
-   virtual void ColorSelected() { Emit("ColorSelected(Pixel_t)", GetColor()); }  //*SIGNAL*
+   virtual void ColorSelected(Pixel_t color = 0) 
+           { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
 
    ClassDef(TGColorSelect,0)  // Color selection checkbutton
 };
