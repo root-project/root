@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.78 2004/06/16 08:26:52 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.79 2004/06/22 16:05:25 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -2501,13 +2501,11 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
       UInt_t dx, ddx, h;
       int i;
 
-      if(PeekMessage(&msg, (HWND)GDK_DRAWABLE_XID(CurWnd),
-          0,0,PM_NOREMOVE)) {
+      if (EventsPending()) {
          event = gdk_event_get();
-      }
-      else {
+      } else {
          gSystem->ProcessEvents();
-         SleepEx(10, kTRUE);
+         ::SleepEx(10, kTRUE);
          continue;
       }
 
@@ -2540,6 +2538,7 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
          case GDK_ENTER_NOTIFY:
             focuswindow = ::SetFocus((HWND)GDK_DRAWABLE_XID(CurWnd));
             break;
+
          case GDK_LEAVE_NOTIFY:
             ::SetFocus(focuswindow);
             break;
