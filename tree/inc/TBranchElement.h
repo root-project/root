@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.19 2001/05/31 08:56:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.20 2001/07/17 10:29:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -31,7 +31,7 @@ class TStreamerInfo;
 class TBranchElement : public TBranch {
 
 protected:
-    enum { kWarn = BIT(13), kBranchFolder = BIT(14) };
+    enum { kWarn = BIT(13), kBranchFolder = BIT(14) ,kDeleteObject = BIT(16)};
 
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
