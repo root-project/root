@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.118 2003/01/15 18:43:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.119 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1966,10 +1966,13 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 
    TDirectory *cursav = gDirectory;
    
+   fTree->SetNotify(selector);
+   
    selector->SetOption(option);
 
    selector->Begin(fTree);  //<===call user initialisation function
-
+   selector->Notify();
+   
    if (selector->GetStatus()!=-1) {
 
       //Create a timer to get control in the entry loop(s)
@@ -1988,8 +1991,8 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
          if (gROOT->IsInterrupted()) break;
          localEntry = fTree->LoadTree(entryNumber);
          if (localEntry < 0) break;
-         if (selector->ProcessCut(entryNumber))
-            selector->ProcessFill(entryNumber); //<==call user analysis function
+         if (selector->ProcessCut(localEntry))
+            selector->ProcessFill(localEntry); //<==call user analysis function
       }
       delete timer;
 
