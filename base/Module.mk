@@ -21,8 +21,20 @@ BASEDS3      := $(MODDIRS)/G__Base3.cxx
 BASEDO1      := $(BASEDS1:.cxx=.o)
 BASEDO2      := $(BASEDS2:.cxx=.o)
 BASEDO3      := $(BASEDS3:.cxx=.o)
-BASEDS       := $(BASEDS1) $(BASEDS2) $(BASEDS3)
+
+# ManualBase4 only needs to be regenerated (and then changed manually) when
+# the dictionary interface changes
+BASEL4       := $(MODDIRI)/LinkDef4.h
+BASEDS4      := $(MODDIRS)/ManualBase4.cxx
+BASEDO4      := $(BASEDS4:.cxx=.o)
+BASEH4       := TDirectory.h
+
+BASEDS       := $(BASEDS1) $(BASEDS2) $(BASEDS3) $(BASEDS4)
+ifeq ($(PLATFORM),win32)
+BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3) $(BASEDO4)
+else
 BASEDO       := $(BASEDO1) $(BASEDO2) $(BASEDO3)
+endif
 BASEDH       := $(BASEDS:.cxx=.h)
 
 BASEH1       := $(wildcard $(MODDIRI)/T*.h)
@@ -32,15 +44,12 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+ifeq ($(PLATFORM),win32)
+BASES        := $(filter-out $(MODDIRS)/ManualBase4.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+endif
 BASEO        := $(BASES:.cxx=.o)
-
-# ManualBase4 only needs to be regenerated (and then changed manually) when
-# the dictionary interface changes
-BASEL4       := $(MODDIRI)/LinkDef4.h
-BASEDS4      := $(MODDIRS)/ManualBase4.cxx
-BASEDO4      := $(BASEDS4:.cxx=.o)
-BASEH4       := TDirectory.h
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
 
