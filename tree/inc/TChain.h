@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.38 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.39 2004/10/31 09:28:06 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -95,6 +95,7 @@ public:
             Long64_t *GetTreeOffset() const {return fTreeOffset;}
             Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
     virtual Double_t  GetWeight() const;
+    virtual Int_t     LoadBaskets(Long64_t maxmemory);
             Long64_t  LoadTree(Long64_t entry);
     virtual void      Loop(Option_t *option="",Long64_t nentries=kBigNumber, Long64_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;

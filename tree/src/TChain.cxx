@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.95 2004/08/27 11:23:40 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.96 2004/10/31 09:28:06 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -737,6 +737,19 @@ Double_t TChain::GetWeight() const
       return 0;
    }
 }
+
+//______________________________________________________________________________
+Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
+{
+// This function overrides TTree::LoadBaskets and is dummy.
+// It could be implemented and load all baskets of all trees in the chain.
+// For the time being use TChain::Merge and TTree::LoadBasket
+// on the resulting tree.
+
+   Error("LoadBaskets","function not yet implemented for TChains");
+   return 0;
+}
+
 
 //______________________________________________________________________________
 Long64_t TChain::LoadTree(Long64_t entry)
