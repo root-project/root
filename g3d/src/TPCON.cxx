@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.6 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.cxx,v 1.7 2004/09/14 15:56:15 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -302,6 +302,8 @@ void TPCON::Paint(Option_t *option)
       buff->fPols[indx++] = 2*fNz*m;
       buff->fPols[indx++] = j;
 	 
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
       buff->fPols[indx++] = 2*fNz*m+n+j;
       buff->fPols[indx++] = (fNz*2-2)*m+j;
       buff->fPols[indx++] = 2*fNz*m+n;
