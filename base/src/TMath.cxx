@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.13 2001/12/07 21:55:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.14 2002/01/18 18:46:06 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -651,7 +651,7 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 
    // Gaussian approximation for large ndf
    Double_t q = Sqrt(2*chi2)-Sqrt(Double_t(2*ndf-1));
-   if (ndf > 30 && q > 0) {
+   if (ndf > 30 && q > 5) {
       Double_t v = 0.5*(1-Erf(q/Sqrt(2.)));
       return v;
    }
