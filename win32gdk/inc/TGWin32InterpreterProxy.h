@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.2 2003/12/15 16:37:49 brun Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.3 2004/01/21 22:54:58 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -71,7 +71,7 @@ public:
    void     CreateListOfMethodArgs(TFunction *m);
    TString  GetMangledName(TClass *cl, const char *method, const char *params);
    TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
-   Int_t    ExecuteMacro(const char *filename, EErrorCode *error = 0);
+   Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
    Bool_t   IsErrorMessagesEnabled();
    Bool_t   SetErrorMessages(Bool_t enable = kTRUE);
    void     ExecThreadCB(TWin32SendClass *) {}

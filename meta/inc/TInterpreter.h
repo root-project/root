@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.14 2003/11/24 10:51:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.15 2004/01/21 22:22:36 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
-   virtual Int_t    ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
+   virtual Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Bool_t   IsErrorMessagesEnabled() = 0;
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;

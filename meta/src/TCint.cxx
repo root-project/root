@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.69 2004/01/13 18:58:07 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.70 2004/01/21 22:22:36 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -867,12 +867,12 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
 }
 
 //______________________________________________________________________________
-Int_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
+Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
    if (gApplication)
-      gApplication->ProcessFile(filename, (int*)error);
+      return gApplication->ProcessFile(filename, (int*)error);
    else
       /*G__value result =*/ G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?

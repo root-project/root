@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.12 2003/06/13 06:16:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.13 2004/01/21 22:22:36 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    void    Execute(const char *function, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
-   Int_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
+   Long_t  ExecuteMacro(const char *filename, EErrorCode *error = 0);
    Bool_t  IsErrorMessagesEnabled();
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
    const char *TypeName(const char *typeDesc);
