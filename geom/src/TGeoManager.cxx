@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.18 2002/10/09 14:03:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.19 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -508,13 +508,13 @@ void TGeoManager::Init()
    fNsegments = 20;
    fCurrentMatrix = 0;
 
-   gROOT->GetListOfGeometries()->Add(this);
 }
 //-----------------------------------------------------------------------------
 TGeoManager::~TGeoManager()
 {
 // Destructor
-   gROOT->GetListOfGeometries()->Remove(this);
+   Warning("dtor", "deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
+//   gROOT->GetListOfGeometries()->Remove(this);
    gROOT->GetListOfBrowsables()->Remove(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
@@ -683,6 +683,10 @@ void TGeoManager::CloseGeometry()
       }   
       printf("### nodes in %s : %i\n", gGeoManager->GetTitle(), fNNodes);
       gROOT->GetListOfBrowsables()->Add(this);
+      TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+      TIter next(brlist);
+      TBrowser *browser = 0;
+      while ((browser=(TBrowser*)next())) browser->Refresh();
       printf("----------------modeler ready----------------\n");
       return;
    }   
@@ -697,6 +701,10 @@ void TGeoManager::CloseGeometry()
    BuildCache();
    printf("### nodes in %s : %i\n", gGeoManager->GetTitle(), fNNodes);
    gROOT->GetListOfBrowsables()->Add(this);
+   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+   TIter next(brlist);
+   TBrowser *browser = 0;
+   while ((browser=(TBrowser*)next())) browser->Refresh();
    printf("----------------modeler ready----------------\n");
 }
 //-----------------------------------------------------------------------------

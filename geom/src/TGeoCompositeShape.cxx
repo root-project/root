@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.4 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
 // Default constructor
    SetBit(TGeoShape::kGeoComb);
    SetName(name);
+   fNode  = 0;
    MakeNode(expression);
    if (!fNode) {
       char message[256];
@@ -54,6 +55,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
 {
 // Default constructor
    SetBit(TGeoShape::kGeoComb);
+   fNode  = 0;
    MakeNode(expression);
    if (!fNode) {
       char message[256];

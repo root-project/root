@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.5 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.6 2002/10/11 16:41:54 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -144,8 +144,8 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
          }  
          x = 0;
          theta = hist->GetYaxis()->GetBinCenter(j);
-         phi   = hist->GetXaxis()->GetBinCenter(i);
-         memset(&start[0], 0, 3*sizeof(Double_t));
+         phi   = hist->GetXaxis()->GetBinCenter(i)+1E-3;
+         start[0] = start[1] = start[2] = 1E-3;
          dir[0]=TMath::Sin(theta*degrad)*TMath::Cos(phi*degrad);
          dir[1]=TMath::Sin(theta*degrad)*TMath::Sin(phi*degrad);
          dir[2]=TMath::Cos(theta*degrad);
@@ -284,6 +284,8 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 
    Double_t start[3];
    Double_t dir[3];
+   Double_t eps = 0.;
+   if ((startx==0) && (starty==0) && (startz==0)) eps=1E-3;
    Double_t *point = fGeom->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
@@ -302,9 +304,9 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       if (n10) {
          if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nrays));
       }
-      start[0] = startx;
-      start[1] = starty;
-      start[2] = startz;
+      start[0] = startx+eps;
+      start[1] = starty+eps;
+      start[2] = startz+eps;
 //      printf("startpoint : %g, %g, %g\n", startx, starty, startz);
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.6 2002/10/11 16:41:53 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -429,7 +429,7 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
             }
          } 
          // propagate to next sector
-         dmin = dist + 1E-12;  // be sure to propagate INSIDE next sector
+         dmin = dist + 1E-6;  // be sure to propagate INSIDE next sector
          for (Int_t i=0; i<3; i++) point[i]+=dmin*dir[i];
          dmin += DistToOutSect(point, dir, iz, isect);
          return dmin;   
