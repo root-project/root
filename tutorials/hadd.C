@@ -65,6 +65,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   TFile *first_source = (TFile*)sourcelist->First();
   first_source->cd( path );
   TDirectory *current_sourcedir = gDirectory;
+  //gain time, do not add the objects in the list in memory
+  Bool_t status = TH1::AddDirectoryStatus();
+  TH1::AddDirectory(kFALSE);
 
   // loop over all keys in this directory
   TChain *globChain = 0;
@@ -92,11 +95,11 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
         
         // make sure we are at the correct directory level by cd'ing to path
         nextsource->cd( path );
-        TH1 *h2 = (TH1*)gDirectory->Get( h1->GetName() );
-        if ( h2 ) {
-          h1->Add( h2 );
-          delete h2; // don't know if this is necessary, i.e. if 
-                     // h2 is created by the call to gDirectory above.
+        TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
+        if (key2) {
+           TH1 *h2 = (TH1*)key2->ReadObj();
+           h1->Add( h2 );
+           delete h2;
         }
 
         nextsource = (TFile*)sourcelist->After( nextsource );
@@ -157,4 +160,5 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
   // save modifications to target file
   target->SaveSelf(kTRUE);
+  TH1::AddDirectory(status);
 }
