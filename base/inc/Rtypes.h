@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.3 2000/11/04 17:44:43 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.4 2000/11/21 15:57:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -145,7 +145,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &insp, char *parent); \
    virtual void Streamer(TBuffer &b); \
-   void StreamerNVirtual(TBuffer &b) {return name::Streamer(b);} \
+   void StreamerNVirtual(TBuffer &b) {name::Streamer(b);} \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    _ClassInit_(name) \
    static const char *DeclFileName() { return __FILE__; } \
@@ -195,7 +195,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &, char *); \
    virtual void Streamer(TBuffer &); \
-   void StreamerNVirtual(TBuffer &b) {return name::Streamer(b);} \
+   void StreamerNVirtual(TBuffer &b) {name::Streamer(b);} \
    static const char *DeclFileName() { return __FILE__; } \
    static int DeclFileLine() { return __LINE__; } \
    static const char *ImplFileName(); \
