@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.15 2003/09/19 14:10:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.16 2004/06/08 10:26:07 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -326,6 +326,12 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
       x[5] = x[4];            y[5] = y[0];
    }
    if (!mode) return;  // nop border mode option specified
+   for (Int_t i=0;i<6;i++) {
+      if (x[i] < gPad->GetX1()) x[i] = gPad->GetX1();
+      if (x[i] > gPad->GetX2()) x[i] = gPad->GetX2();
+      if (y[i] < gPad->GetY1()) y[i] = gPad->GetY1();
+      if (y[i] > gPad->GetY2()) y[i] = gPad->GetY2();
+   }
    x[6] = x[0];   y[6] = y[0];
    SetFillStyle(1001);
    SetFillColor(linecolor);
