@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.3 2004/01/21 22:20:45 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.4 2004/01/27 19:50:31 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -24,6 +24,8 @@
 #define Root__TVectorProxy_h
 
 #include "TVirtualCollectionProxy.h"
+#include "TClassEdit.h"
+#include "TDataType.h"
 
 namespace ROOT {
 
@@ -34,12 +36,13 @@ namespace ROOT {
       vec* fProxied;
       
       TClass      *fValueClass;  //! TClass of object in collection
+      EDataType    fType;        //! Type of the content (see TDataType).
       UInt_t       fNarr;        //! Allocated size of fArr
       void       **fArr;         //! [fNarr] Implementing GetPtrArray
       
    public:
       TVirtualCollectionProxy* Generate() const  { return new TVectorProxy<vec>(); }
-      TVectorProxy() : fValueClass(0), fNarr(0), fArr(0) {}
+      TVectorProxy() : fValueClass(0), fType(kNoType_t), fNarr(0), fArr(0) {}
       
       void    SetProxy(void *objstart) { fProxied = (vec*)objstart; }
 
@@ -50,6 +53,29 @@ namespace ROOT {
          if (fClass==0) { fClass=gROOT->GetClass(typeid(vec)); } 
          return fClass; 
       }
+      virtual EDataType GetType() {
+         // If the content is a simple numerical value, return its type (see TDataType)
+         if (fType!=kNoType_t) return fType;
+
+         if (GetValueClass()) fType = kOther_t;
+         else {
+            fType = (EDataType)TDataType::GetType(typeid(nested));
+            if (fType==kOther_t || fType == kDouble_t) {
+               // we could have a Double_t or a Double32_t!
+
+               TClass *cl = GetCollectionClass();
+               if (cl==0) return fType;
+
+               std::string shortname = TClassEdit::ShortType(cl->GetName(),
+                                                             TClassEdit::kDropAlloc);
+               std::string inside = TClassEdit::ShortType(shortname.c_str(), 
+                                                          TClassEdit::kInnerClass);
+               TDataType *fundType = gROOT->GetType( inside.c_str() );
+               if (fundType) fType = (EDataType)fundType->GetType();
+            }
+         }
+         return fType;
+      }
 
       void  **GetPtrArray() {
          // Return a contiguous array of pointer to the values in the container.
@@ -59,6 +85,7 @@ namespace ROOT {
          
          unsigned int n = Size();
          if (n >= fNarr) {
+            if (gDebug>3) Info("TVectorProxy::GetPtrArray","Resize cache-array  for %s at %p",GetCollectionClass()->GetName(),fProxied);
             delete [] fArr;
             // Note: heuristic for the increase in size.
             fNarr =  int(n*1.3) + 10;
@@ -68,14 +95,19 @@ namespace ROOT {
             fArr[n] = 0;
          }
          
+         if (n==0) { fArr[0]=0; return fArr; }
+
          if (fArr[0]==At(0) 
              && fArr[n-1]==At(n-1)) {
-            fArr[n]=0;
-            return fArr;            
+            if (gDebug>3) Info("TVectorProxy::GetPtrArray","Keeping old addresses for n==%d fArr[0]==%p fArr[n-1]==%p",n,fArr[0],fArr[n-1]);
+            //fArr[n]=0;
+            return fArr;
          }
          fArr[0] = At(0);
          Int_t valSize = sizeof(nested);
          for (unsigned int i=1;i<n;i++)   { fArr[i] = (char*)(fArr[i-1]) + valSize; }
+
+         if (gDebug>3) Info("TVectorProxy::GetPtrArray","Init addresses for n==%d fArr[0]==%p fArr[n-1]==%p",n,fArr[0],fArr[n-1]);
          
          fArr[n]=0;
          return fArr;
@@ -172,6 +204,9 @@ namespace ROOT {
          // Return a pointer to the TClass representing the container
          if (fClass==0) { fClass=gROOT->GetClass(typeid(vec)); } 
          return fClass; 
+      }
+      virtual EDataType GetType() {
+         return kBool_t;
       }
 
       void  **GetPtrArray() {

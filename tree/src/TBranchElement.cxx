@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.129 2004/01/22 06:32:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.130 2004/02/11 08:20:07 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -247,49 +247,67 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
          clm = fCollProxy->GetValueClass();
 
-//VP basket->DeleteEntryOffset(); //entryoffset not required for the clonesarray counter
-//VP fEntryOffsetLen = 0;
+         // See if we can split:
+         Bool_t cansplit = kTRUE;
+         
+         if (clm==0) {
 
-         if (!clm || clm==TString::Class() || clm==gROOT->GetClass("string") || fCollProxy->HasPointers() ) return;
+            cansplit = kFALSE;
 
-         if (! clm->CanSplit() ) return;
-         if ( clm->GetCollectionProxy() != 0 ) {
+         } else if (clm==TString::Class() || clm==gROOT->GetClass("string")) {
+
+            cansplit = kFALSE;
+
+         } else if (fCollProxy->HasPointers()) {
+
+            cansplit = kFALSE;
+
+         } else if ( !clm->CanSplit() ) {
+
+            cansplit = kFALSE;
+
+         } else if ( clm->GetCollectionProxy() != 0 ) {
+
             // A collection was stored in a collection, we do not know how to split it.
-            return;
+            cansplit = kFALSE;
          }
 
          // ===> Create a leafcount
-         TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
-         leaf->SetBranch(this);
-         fNleaves = 1;
-         fLeaves.Add(leaf);
-         fTree->GetListOfLeaves()->Add(leaf);
-         // Create a basket for the leafcount
-         TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
-         fBaskets.Add(basket2);
-         // ===> create sub branches for each data member of a TClonesArray
-         fType = 4;
-         //check that the contained objects class name is part of the element title
-         //This name is mandatory when reading the Tree later on and
-         //the parent class with the pointer to the TClonesArray is not available.
-         //This info will be used by TStreamerInfo::New
-         fClonesName = clm->GetName();
-         char aname[100];
-         sprintf(aname," (%s)",clm->GetName());
-         TString atitle = element->GetTitle();
-         if (!atitle.Contains(aname)) {
-            atitle += aname;
-            element->SetTitle(atitle.Data());
-         }
-         char branchname[kMaxLen];
-         sprintf(branchname,"%s_",name);
-         SetTitle(branchname);
-         leaf->SetName(branchname);
-         leaf->SetTitle(branchname);
-         Unroll(name,clm,clm,basketsize,splitlevel,41);
-         BuildTitle(name);
-         return;
+         if (cansplit) {
 
+            TLeaf *leaf     = new TLeafElement(name,fID, fStreamerType);
+            leaf->SetBranch(this);
+            fNleaves = 1;
+            fLeaves.Add(leaf);
+            fTree->GetListOfLeaves()->Add(leaf);
+            // Create a basket for the leafcount
+            TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
+            fBaskets.Add(basket2);
+
+            // ===> create sub branches for each data member of a TClonesArray
+            fType = 4;
+
+            //check that the contained objects class name is part of the element title
+            //This name is mandatory when reading the Tree later on and
+            //the parent class with the pointer to the TClonesArray is not available.
+            //This info will be used by TStreamerInfo::New
+            fClonesName = clm->GetName();
+            char aname[100];
+            sprintf(aname," (%s)",clm->GetName());
+            TString atitle = element->GetTitle();
+            if (!atitle.Contains(aname)) {
+               atitle += aname;
+               element->SetTitle(atitle.Data());
+            }
+            char branchname[kMaxLen];
+            sprintf(branchname,"%s_",name);
+            SetTitle(branchname);
+            leaf->SetName(branchname);
+            leaf->SetTitle(branchname);
+            Unroll(name,clm,clm,basketsize,splitlevel,41);
+            BuildTitle(name);
+            return;
+         }
 
       } else if (!strchr(element->GetTypeName(),'*') && 
                  (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
@@ -1393,7 +1411,6 @@ void TBranchElement::PrintValue(Int_t lenmax) const
 void TBranchElement::ReadLeaves(TBuffer &b)
 {
 // Read buffers for this branch
-
 
   if (fTree->GetMakeClass()) {
      if (fType == 3 || fType == 4) {    //top level branch of a TClonesArray

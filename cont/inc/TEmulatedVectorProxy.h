@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id:  $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -34,14 +34,14 @@ class TEmulatedVectorProxy : public TVirtualCollectionProxy, public TClassStream
    void        *fProxied;     //! Address of the proxied vector
    Int_t        fSize;        //! Sizeof the contained objects
    UInt_t       fCase;        //! type of data
-   UInt_t       fKind;        //! kind of fundamental type (should merge both).
+   EDataType    fKind;        //! kind of fundamental type 
 
    UInt_t       fNarr;        //! Allocated size of fArr
    void       **fArr;         //! [fNarr] Implementing GetPtrArray   
 
    TEmulatedVectorProxy() : 
       fValueClass(0), fProxied(0), fSize(-1), 
-      fCase(0), fKind(0),fNarr(0),fArr(0) {}
+      fCase(0), fKind(kNoType_t),fNarr(0),fArr(0) {}
    void Init();
    void Destruct(Int_t first,Int_t last,Int_t n);
 
@@ -58,8 +58,9 @@ public:
    void    SetProxy(void *objstart) { fProxied = objstart; }
    virtual void  **GetPtrArray();           // Return a contiguous array of pointer to the values in the container.
 
-   virtual Bool_t  HasPointers() const;     // Return true if the content is of type 'pointer to'
-   virtual TClass *GetValueClass();         // Return a pointer to the TClass representing the content.
+   virtual Bool_t    HasPointers() const; // Return true if the content is of type 'pointer to'
+   virtual TClass   *GetValueClass();     // Return a pointer to the TClass representing the content.
+   virtual EDataType GetType();           // If the content is a simple numerical value, return its type (see TDataType)
 
    void   *At(UInt_t idx);                       // Return the address of the value at index 'idx'
    void    Clear(const char *opt = "");          // Clear the container

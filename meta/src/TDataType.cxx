@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.9 2004/01/29 11:20:12 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.10 2004/01/29 11:57:58 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -21,6 +21,9 @@
 #include "TDataType.h"
 #include "TInterpreter.h"
 #include "Api.h"
+#ifdef R__SOLARIS
+#include <typeinfo>
+#endif
 
 ClassImp(TDataType)
 
@@ -82,6 +85,45 @@ const char *TDataType::GetFullTypeName() const
       return fInfo->TrueName();
    else
       return fName.Data();
+}
+
+//______________________________________________________________________________
+EDataType TDataType::GetType(const type_info &typeinfo)
+{
+   // Set type id depending on name.
+
+   EDataType retType = kOther_t;
+
+   if (!strcmp(typeid(unsigned int).name(), typeinfo.name())) {
+      retType = kUInt_t;
+   } else if (!strcmp(typeid(int).name(), typeinfo.name())) {
+      retType = kInt_t;
+   } else if (!strcmp(typeid(unsigned long).name(), typeinfo.name())) {
+      retType = kULong_t;
+   } else if (!strcmp(typeid(long).name(), typeinfo.name())) {
+      retType = kLong_t;
+   } else if (!strcmp(typeid(unsigned long long).name(), typeinfo.name())) {
+      retType = kULong64_t;
+   } else if (!strcmp(typeid(long long).name(), typeinfo.name())) {
+      retType = kLong64_t;
+   } else if (!strcmp(typeid(unsigned short).name(), typeinfo.name())) {
+      retType = kUShort_t;
+   } else if (!strcmp(typeid(short).name(), typeinfo.name())) {
+      retType = kShort_t;
+   } else if (!strcmp(typeid(unsigned char).name(), typeinfo.name())) {
+      retType = kUChar_t;
+   } else if (!strcmp(typeid(char).name(), typeinfo.name())) {
+      retType = kChar_t;
+   } else if (!strcmp(typeid(bool).name(), typeinfo.name())) {
+      retType = kUChar_t;
+   } else if (!strcmp(typeid(float).name(), typeinfo.name())) {
+      retType = kFloat_t;
+   } else if (!strcmp(typeid(double).name(), typeinfo.name())) {
+      retType = kDouble_t;
+   } else if (!strcmp(typeid(Double32_t).name(), typeinfo.name())) {
+      retType = kDouble32_t;
+   }
+   return retType;
 }
 
 //______________________________________________________________________________

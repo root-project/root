@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.7 2004/01/31 08:59:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.8 2004/02/03 22:19:45 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -209,6 +209,14 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
       output.push_back(CleanType(c+1,keepConst,&c));
    } while(*c!='>' && *c);
 
+   if (*c=='>') {
+      // See what's next!
+      if (*(c+1)==':') {
+         // we have a name specified inside the class/namespace
+         // For now we keep it in one piece
+         output.push_back((c+1));
+      }
+   }
    if (stars.length()) output.push_back(stars);
    return output.size();
 }
@@ -449,6 +457,11 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
    int numb = GetSplit(full.c_str(),arglist);
 
    if ( arglist[0].length()>0 && arglist[numb-1][0]=='*' ) numb--;
+   
+   if ( arglist[numb-1][0]==':' ) {
+      // we have a nested name
+      return 0;
+   }
 
    int kind = STLKind(arglist[0].c_str());
 

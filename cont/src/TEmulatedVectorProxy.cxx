@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.1 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.2 2004/01/27 19:50:31 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -44,7 +44,7 @@ enum {
 TEmulatedVectorProxy::TEmulatedVectorProxy(const char* classname) :
    TVirtualCollectionProxy(gROOT->GetClass(classname)),
    fProxiedName(classname),
-   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(0), fNarr(0),
+   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t), fNarr(0),
    fArr(0)
 {
    // Build a proxy for an emulated vector whose type is 'classname'.
@@ -56,7 +56,7 @@ TEmulatedVectorProxy::TEmulatedVectorProxy(const char* classname) :
 TEmulatedVectorProxy::TEmulatedVectorProxy(TClass *collectionClass) :
    TVirtualCollectionProxy(collectionClass),
    fProxiedName(collectionClass->GetName()),
-   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(0), fNarr(0),
+   fValueClass(0), fProxied(0), fSize(-1), fCase(0), fKind(kNoType_t), fNarr(0),
    fArr(0)
 {
    // Build a proxy for an emulated vector whose type is described by
@@ -112,7 +112,7 @@ void TEmulatedVectorProxy::Init()
             // let's just claim its an enum :(
             fCase = G__BIT_ISENUM;
             fSize = sizeof(Int_t);
-            fKind = 3;
+            fKind = kInt_t;
          }
          
       } else {
@@ -134,7 +134,7 @@ void TEmulatedVectorProxy::Init()
             
             
             TDataType *fundType = gROOT->GetType( insideTypename.c_str() );
-            fKind = fundType->GetType();
+            fKind = (EDataType)fundType->GetType();
             
             Assert(fKind>0 && fKind<20);
 
@@ -144,7 +144,7 @@ void TEmulatedVectorProxy::Init()
             
             //          fValueClass = gROOT->GetClass("ROOT::INT_T");
             fSize = sizeof(Int_t);
-            fKind = 3;
+            fKind = kInt_t;
          }
          
          fCase = P & (G__BIT_ISPOINTER|G__BIT_ISFUNDAMENTAL|G__BIT_ISENUM|G__BIT_ISCLASS);
@@ -231,11 +231,20 @@ void TEmulatedVectorProxy::Destruct(int first,int last,Int_t forceDelete)
    } //end for
 }
 
+//______________________________________________________________________________
 TClass *TEmulatedVectorProxy::GetValueClass()
 {
    //inner TClass
 
    return fValueClass;
+}
+
+//______________________________________________________________________________
+EDataType TEmulatedVectorProxy::GetType() 
+{
+   // If the content is a simple numerical value, return its type (see TDataType)
+   
+   return fKind;
 }
 
 //______________________________________________________________________________
@@ -405,7 +414,12 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                   for(Int_t k=0; k<R__n; ++k) {
                      Float_t afloat; R__b >> afloat; where[k] = (Double_t)afloat; 
                    }
-               } break;   
+               } break;
+               case kchar:
+               case kNoType_t:
+               case kOther_t:
+                  Error("TEmulatedVectorProxy","Type %d is not supported yet!\n",fKind);
+                  break;
             }
             break;
             
@@ -476,6 +490,11 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                   }
                   break;
                }
+               case kchar:
+               case kNoType_t:
+               case kOther_t:
+                  Error("TEmulatedVectorProxy","Type %d is not supported yet!\n",fKind);
+                  break;
             }
             // For simple type we know that the memory is consecutive
             // and we save in only ONE iteration instead of R__n.

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.37 2004/01/27 19:52:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.38 2004/02/13 07:12:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -259,8 +259,14 @@ namespace ROOT {
       template <typename T> bool IsPointer(const T** /* dummy */) { return true; };
    #endif
    
-   template <typename T> TClass* GetClass(const T* /* dummy */) { return gROOT->GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T** /* dummy */) { return gROOT->GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(      T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
+   template <typename T> TClass* GetClass(const T* /* dummy */)        { return GetROOT()->GetClass(typeid(T)); }
+
+   template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
+
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const char *dfil, const char *ifil,
