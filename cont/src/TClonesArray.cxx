@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.30 2002/07/16 14:33:56 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.31 2002/08/07 15:45:48 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -164,7 +164,7 @@ TClonesArray::~TClonesArray()
             } else {
                // remove any possible entries from the ObjectTable
                if (TObject::GetObjectStat() && gObjectTable)
-               gObjectTable->RemoveQuietly(fKeep->fCont[i]);
+                  gObjectTable->RemoveQuietly(fKeep->fCont[i]);
                ::operator delete(fKeep->fCont[i]);
             }
          }
@@ -306,7 +306,7 @@ void TClonesArray::Expand(Int_t newSize)
 void TClonesArray::ExpandCreate(Int_t n)
 {
    // Expand or shrink the array to n elements and create the clone
-   // objects by caling their default ctor. If n is less than the current size
+   // objects by calling their default ctor. If n is less than the current size
    // the array is shrinked and the allocated space is freed.
    // This routine is typically used to create a clonesarray into which
    // one can directly copy object data without going via the
@@ -593,7 +593,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
       Expand(TMath::Max(idx+1, GrowBy(fSize)));
 
    if (!fKeep->fCont[idx])
-      fKeep->fCont[idx] = (TObject*)::operator new(fClass->Size());
+      fKeep->fCont[idx] = (TObject*) TStorage::ObjectAlloc(fClass->Size());
 
    fCont[idx] = fKeep->fCont[idx];
 
@@ -606,11 +606,11 @@ TObject *&TClonesArray::operator[](Int_t idx)
 //______________________________________________________________________________
 TObject *TClonesArray::operator[](Int_t idx) const
 {
-   // const flavour of operator [] (read only)
+   // Return the object at position idx. Returns 0 if idx is out of bounds.
 
    if (idx < 0 || idx >= fSize) {
       Error("operator[]", "out of bounds at %d in %x", idx, this);
-      return fCont[0];
+      return 0;
    }
 
    return fCont[idx];

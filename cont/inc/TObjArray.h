@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.10 2002/04/04 11:03:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -128,21 +128,24 @@ inline Bool_t TObjArray::BoundsOk(const char *where, Int_t at) const
                   : kTRUE;
 }
 
-inline TObject *&TObjArray::operator[](Int_t at)
+inline TObject *&TObjArray::operator[](Int_t i)
 {
-   int j = at-fLowerBound;
+   // Return the object at position i. Returns address at position 0
+   // if i is out of bounds. Result may be used as an lvalue.
+   int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
-   BoundsOk("operator[]", at);
+   BoundsOk("operator[]", i);
    fLast = -2; // invalidate fLast since the result may be used as an lvalue
    return fCont[0];
 }
 
-inline TObject *TObjArray::operator[](Int_t at) const
+inline TObject *TObjArray::operator[](Int_t i) const
 {
-   int j = at-fLowerBound;
+   // Return the object at position at. Returns 0 if i is out of bounds.
+   int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
-   BoundsOk("operator[]", at);
-   return fCont[0];
+   BoundsOk("operator[] const", i);
+   return 0;
 }
 
 inline TObject *TObjArray::At(Int_t i) const
