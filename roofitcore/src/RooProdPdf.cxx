@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.34 2003/04/18 05:19:50 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.35 2003/04/28 20:42:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -649,15 +649,31 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
   for (i=0 ; i<_partListMgr.cacheSize() ; i++) {
     RooArgList* plist = _partListMgr.getNormListByIndex(i) ;    
 
-    // Only redirect owned lists in recursive mode
-    if (!isRecursive || !plist->isOwning()) continue ;
+    if (isRecursive && plist->isOwning()) {
 
-    TIterator* iter = plist->createIterator() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+      // Forward recurive redirection calls for owning lists
+      TIterator* iter = plist->createIterator() ;
+      RooAbsArg* arg ;
+      while(arg=(RooAbsArg*)iter->Next()) {
+	ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+      }
+      delete iter ;
+
+    } else if (!plist->isOwning()) {
+
+      // Update non-owning lists
+      TIterator* iter = plist->createIterator() ;
+      RooAbsArg* arg ;
+      while(arg=(RooAbsArg*)iter->Next()) {
+	RooAbsArg* newArg = arg->findNewServer(newServerList,nameChange) ;
+	if (newArg) {
+	  plist->replace(*arg,*newArg) ;
+	}
+      }
+      delete iter ;
+      
+      
     }
-    delete iter ;
   }
   return ret ;
 }

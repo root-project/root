@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.90 2003/01/13 22:54:43 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.91 2003/05/07 21:06:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -452,7 +452,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   if(0 != projectedVars) leafNodes.remove(*projectedVars,kTRUE);
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
-  cloneSet= (RooArgSet*)RooArgSet(*this).snapshot();
+  cloneSet= (RooArgSet*)RooArgSet(*this).snapshot(kTRUE);
   if (!cloneSet) {
     cout << "RooAbsPdf::createProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     return 0 ;

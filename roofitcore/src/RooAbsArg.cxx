@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.76 2002/09/30 00:57:28 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.77 2003/01/14 00:07:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1196,4 +1196,18 @@ void RooAbsArg::constOptimize(ConstOpCode opcode)
     server->constOptimize(opcode) ;
   }
   delete sIter ;
+}
+
+
+void RooAbsArg::printCompactTree(const char* indent)
+{
+  cout << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ")" << endl ;
+  TString indent2(indent) ;
+  indent2 += "  " ;
+  TIterator * iter = serverIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    arg->printCompactTree(indent2) ;
+  }
+  delete iter ;
 }
