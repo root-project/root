@@ -18,7 +18,11 @@
 EDIR=event
 
 mkdir $EDIR
-cp Event.cxx Event.h EventLinkDef.h Makefile Makefile.arch $EDIR
+
+
+SRC=$ROOTSYS/test
+cp $SRC/Event.cxx $SRC/Event.h $SRC/EventLinkDef.h $SRC/Makefile \
+   $SRC/Makefile.arch $EDIR
 mkdir $EDIR/PROOF-INF
 cd $EDIR/PROOF-INF
 
