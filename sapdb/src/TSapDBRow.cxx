@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:$:$Id:$
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -133,7 +133,7 @@ const char *TSapDBRow::GetField(Int_t field)
     }
 
    SQLINTEGER strLenOrIndPtr;
-   SQLPOINTER targetValuePtr[columnSize];
+   SQLPOINTER targetValuePtr[4000];
    bufferLength = sizeof(targetValuePtr);
 
    if (SQLGetData(fResult, columnNumber, SQL_C_DEFAULT, targetValuePtr,
