@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.10 2004/09/21 14:19:01 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.11 2004/09/21 16:23:36 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -190,8 +190,7 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
       const TGPicture *dpic = fClient->GetPicture(pname.Data());
       if (dpic) pb->SetDisabledPicture(dpic);
 
-      if ((gToolBarData[i].fId == kUndoAct) || (gToolBarData[i].fId == kRedoAct) ||
-          (gToolBarData[i].fId == kCropAct)) {
+      if ((gToolBarData[i].fId == kUndoAct) || (gToolBarData[i].fId == kRedoAct)) {
          pb->SetState(kButtonDisabled);
       }
 
@@ -918,8 +917,6 @@ void TGuiBuilder::HandleWindowClosed(Int_t id)
    fEditable = FindEditableMdiFrame(root);
  
    if (id == (Int_t)fEditable->GetId()) {
-      fEditable->SetEditable(kFALSE);
-      root->SetEditable(kFALSE);
       fEditable = 0;
    }
 }

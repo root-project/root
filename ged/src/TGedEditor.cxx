@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.9 2004/07/24 16:26:31 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.10 2004/09/21 14:17:58 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -78,7 +78,7 @@ void TGedEditor::CloseWindow()
 {
    // When closed via WM close button, just unmap (i.e. hide) editor
    // for later use.
-   
+
    Hide();
    gROOT->GetListOfCleanups()->Remove(this);
 }
@@ -87,8 +87,6 @@ void TGedEditor::CloseWindow()
 void TGedEditor::GetEditors()
 {
    // Get existing editors of selected object
-
-   fStyle->SetEditable(1);
 
    // Look in TClass::GetEditorList() for any object deriving from TGedFrame,
    Bool_t found = kFALSE;
@@ -123,7 +121,6 @@ void TGedEditor::GetEditors()
       if (list->First() != 0) GetBaseClassEditor(fModel->IsA());
    }
 
-   fStyle->SetEditable(0);
    fStyle->Layout();
    fStyle->MapSubwindows();
 }

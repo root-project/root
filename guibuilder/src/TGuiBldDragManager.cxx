@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.8 2004/09/21 13:31:34 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.9 2004/09/21 16:23:36 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1654,8 +1654,14 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
 
    if (!fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) return;
 
-   TGCompositeFrame *comp = (TGCompositeFrame*)fClient->GetRoot();
+   TGCompositeFrame *comp = 0;
    Bool_t fromGrab = kFALSE;
+
+   if (fBuilder && crop) {
+      comp = fBuilder->FindEditableMdiFrame(fClient->GetRoot());
+   } else {
+      comp = (TGCompositeFrame*)fClient->GetRoot();
+   }
 
    if (fPimpl->fGrab && !fLassoDrawn && crop &&
        fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
@@ -1706,8 +1712,18 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
       }
       if (crop && comp) {
          gVirtualX->TranslateCoordinates(comp->GetId(), comp->GetParent()->GetId(),
-                                      x0, y0, xx, yy, c);
+                                          x0, y0, xx, yy, c);
          comp->MoveResize(xx, yy, w, h);
+
+         if (comp->GetParent()->InheritsFrom(TGMdiDecorFrame::Class())) {
+            TGMdiDecorFrame *decor = (TGMdiDecorFrame *)comp->GetParent();
+
+            gVirtualX->TranslateCoordinates(decor->GetId(), decor->GetParent()->GetId(),
+                                            xx, yy, xx, yy, c);
+            Int_t b = 2 * decor->GetBorderWidth();
+            decor->MoveResize(xx, yy, comp->GetWidth() + b,
+                              comp->GetHeight() + b + decor->GetTitleBar()->GetDefaultHeight());
+         }
       }
       if (fromGrab)  {
          DeleteFrame(fPimpl->fGrab);
@@ -2487,7 +2503,7 @@ void TGuiBldDragManager::Compact(Bool_t global)
 
    if (global) {
       if (!fBuilder) comp = (TGCompositeFrame*)fClient->GetRoot()->GetMainFrame();
-      else comp = (TGCompositeFrame*)fBuilder->FindEditableMdiFrame(fClient->GetRoot())->GetParent();
+      else comp = fBuilder->FindEditableMdiFrame(fClient->GetRoot());
    } else {
       if (fPimpl->fGrab &&
           fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
@@ -2512,8 +2528,15 @@ void TGuiBldDragManager::Compact(Bool_t global)
    }
 
    comp->SetLayoutBroken(kFALSE);
-   comp->Layout();
    comp->Resize();
+
+   if (comp->GetParent()->InheritsFrom(TGMdiDecorFrame::Class())) {
+      TGMdiDecorFrame *decor = (TGMdiDecorFrame *)comp->GetParent();
+      Int_t b = 2 * decor->GetBorderWidth();
+      decor->MoveResize(decor->GetX(), decor->GetY(), comp->GetWidth() + b,
+                        comp->GetHeight() + b + decor->GetTitleBar()->GetDefaultHeight());
+   }
+
    root->SetEditable(kTRUE);
    DoRedraw();
    DrawGrabRectangles();
