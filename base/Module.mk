@@ -73,3 +73,9 @@ distclean-base: clean-base
 		@rm -f $(BASEDEP) $(BASEDS) $(BASEDH)
 
 distclean::     distclean-base
+
+##### extra rules ######
+ifeq ($(ARCH),alphacxx6)
+$(BASEDIRS)/TRandom.o: $(BASEDIRS)/TRandom.cxx
+	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<
+endif
