@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.34 2002/01/08 02:18:05 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.35 2002/03/07 06:22:23 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -452,17 +452,18 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
     }
     sprintf(buffer, fmtErr, getError());
     text->Append(buffer);
-
-    if (asymError && hasAsymError()) {
-      text->Append(" (") ;      
-      sprintf(buffer, fmtErr, getAsymErrorLo());
-      text->Append(buffer);
-      text->Append(", ") ;
-      sprintf(buffer, fmtErr, getAsymErrorHi());
-      text->Append(buffer);
-      text->Append(")") ;
-    }
   }
+  
+  if (asymError && hasAsymError()) {
+    text->Append(" (") ;      
+    sprintf(buffer, fmtErr, getAsymErrorLo());
+    text->Append(buffer);
+    text->Append(", ") ;
+    sprintf(buffer, fmtErr, getAsymErrorHi());
+    text->Append(buffer);
+    text->Append(")") ;
+  }
+
   // append our units if requested
   if(!_unit.IsNull() && showUnit) {
     text->Append(' ');
