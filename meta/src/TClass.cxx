@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.82 2002/07/18 08:05:01 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.83 2002/08/09 19:26:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -325,6 +325,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
    fInterStreamer  = 0;
+   fClassMenuList  = 0;
 
    ResetInstanceCount();
 
