@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.10 2003/03/05 16:08:56 rdm Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.11 2003/06/27 11:02:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -33,7 +33,6 @@
 #pragma link C++ class TEventIterTree+;
 #pragma link C++ class TDSetProxy+;
 #pragma link C++ class TVirtualPacketizer+;
-#pragma link C++ class TPacketizer+;
 #pragma link C++ class TPacketizer2+;
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
