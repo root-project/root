@@ -250,6 +250,10 @@ N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x
 
+N: Miroslav Morhac
+E: fyzimiro@nrmail.jinr.ru
+D: TSpectrum class
+
 N: Dave Morrison
 E: dave@bnl.gov
 D: library load path fixes, some Makefile updates
