@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.135 2004/10/06 10:31:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.136 2004/10/07 17:07:56 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -168,7 +168,7 @@ static void CleanUpROOTAtExit()
 
    if (gROOT) {
       if (gROOT->GetListOfFiles())
-         gROOT->GetListOfFiles()->Delete();
+         gROOT->GetListOfFiles()->Delete("slow");
       if (gROOT->GetListOfSockets())
          gROOT->GetListOfSockets()->Delete();
       if (gROOT->GetListOfMappedFiles())
