@@ -180,7 +180,7 @@ void TPaveStatsEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
 
-   fPaveStats = dynamic_cast<TPaveStats *>(fModel);
+   fPaveStats = (TPaveStats *)fModel;
    
    Int_t stat = fPaveStats->GetOptStat();
 

@@ -17,6 +17,7 @@
 #pragma link C++ class TGedElement;
 #pragma link C++ class TGedFrame;
 #pragma link C++ class TGedNameFrame;
+#pragma link C++ class TArrowEditor;
 #pragma link C++ class TAttFillEditor;
 #pragma link C++ class TAttLineEditor;
 #pragma link C++ class TAttMarkerEditor;

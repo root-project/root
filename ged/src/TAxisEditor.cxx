@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.5 2004/07/05 06:42:05 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAxisEditor.cxx,v 1.6 2004/08/10 09:39:56 brun Exp $
 // Author: Ilka Antcheva   11/05/04
 
 /*************************************************************************
@@ -308,7 +308,7 @@ void TAxisEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
 
-   fAxis = dynamic_cast<TAxis *>(obj);
+   fAxis = (TAxis *)fModel;
 
    Color_t c = fAxis->GetAxisColor();
    Pixel_t p = TColor::Number2Pixel(c);

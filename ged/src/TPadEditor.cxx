@@ -208,7 +208,7 @@ void TPadEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = obj;
    fPad = pad;
 
-   fPadPointer = dynamic_cast<TPad *>(fModel);
+   fPadPointer = (TPad *)fModel;
    
    Bool_t on;
 
