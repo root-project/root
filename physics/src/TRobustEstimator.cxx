@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.6 2004/10/19 16:17:24 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.7 2004/10/19 17:06:13 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -159,7 +159,7 @@ TRobustEstimator::TRobustEstimator(Int_t nvectors, Int_t nvariables, Int_t hh)
      fH=(fN+fNvar+1)/2;
   } else
      fH=hh;
-  
+
   fVarTemp=0;
   fVecTemp=0;
   fExact=0;
@@ -200,7 +200,7 @@ void TRobustEstimator::AddRow(Double_t *row)
   }
   for (Int_t i=0; i<fNvar; i++)
     fData(fVecTemp, i)=row[i];
-  
+
   fVecTemp++;
 }
 
@@ -353,7 +353,7 @@ void TRobustEstimator::Evaluate()
   Int_t nsub;
   for (ii=0; ii<5; ii++)
      indsubdat[ii]=0;
-  
+
   nsub = Partition(nmini, indsubdat);
 
   Int_t sum=0;
@@ -562,7 +562,7 @@ void TRobustEstimator::Evaluate()
     det=CStep(fN, fH, index, fData, sscp, ndist);
     if(TMath::Abs(det-detibig[minind])<kEps) {
        break;
-    } else { 
+    } else {
        detibig[minind]=det;
     }
   }
@@ -1268,6 +1268,8 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
 	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         if (isAllocated)
+            delete [] ind;
          return a[ind[rk]];
       } else {
          mid = (l+ir) >> 1; //choose median of left, center and right
@@ -1296,8 +1298,5 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
          if (j<=rk) l=i;      //contains the k_th element
       }
    }
-
-   if (isAllocated)
-      delete[] ind;
 }
 
