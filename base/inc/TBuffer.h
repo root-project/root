@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.6 2001/11/30 11:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.7 2002/01/08 22:13:00 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -31,24 +31,24 @@
 class TClass;
 class TExMap;
 
-
 class TBuffer : public TObject {
 
 protected:
-   Bool_t  fMode;          //Read or write mode
-   Int_t   fVersion;       //Buffer format version
-   Int_t   fBufSize;       //Size of buffer
-   char   *fBuffer;        //Buffer used to store objects
-   char   *fBufCur;        //Current position in buffer
-   char   *fBufMax;        //End of buffer
-   Int_t   fMapCount;      //Number of objects or classes in map
-   Int_t   fMapSize;       //Default size of map
-   Int_t   fDisplacement;  //Value to be added to the map offsets
-
+   Bool_t    fMode;          //Read or write mode
+   Int_t     fVersion;       //Buffer format version
+   Int_t     fBufSize;       //Size of buffer
+   char     *fBuffer;        //Buffer used to store objects
+   char     *fBufCur;        //Current position in buffer
+   char     *fBufMax;        //End of buffer
+   Int_t     fMapCount;      //Number of objects or classes in map
+   Int_t     fMapSize;       //Default size of map
+   Int_t     fDisplacement;  //Value to be added to the map offsets
+   
    union {
-      TExMap *fReadMap;    //Map containing id,object references during reading
-      TExMap *fWriteMap;   //Map containing object,id pairs during writing
+      TExMap *fReadMap;      //Map containing id,object references during reading
+      TExMap *fWriteMap;     //Map containing object,id pairs during writing
    };
+   TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
 
@@ -89,7 +89,9 @@ public:
    void     SetWriteParam(Int_t mapsize);
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
-
+   void     SetParent(TObject *parent) {fParent = parent;}
+   TObject *GetParent() {return fParent;} 
+     
    char    *Buffer() const { return fBuffer; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }

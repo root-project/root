@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.19 2001/11/30 11:29:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.20 2001/11/30 11:50:26 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -81,7 +81,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
    fMapSize  = fgMapSize;
    fReadMap  = 0;
    fDisplacement = 0;
-
+   fParent   = 0;
+   
    SetBit(kIsOwner);
 
    if (buf) {
@@ -145,7 +146,8 @@ void frombufOld(char *&buf, Long_t *x)
 //______________________________________________________________________________
 TBuffer &TBuffer::operator>>(Long_t &l)
 {
-   if (gFile && gFile->GetVersion() < 30006) {
+   TFile *file = (TFile*)fParent;
+   if (file && file->GetVersion() < 30006) {
       frombufOld(fBufCur, &l);
    } else {
       frombuf(fBufCur, &l);
@@ -622,7 +624,8 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
 
    if (!ll) ll = new Long_t[n];
 
-   if (gFile && gFile->GetVersion() < 30006) {
+   TFile *file = (TFile*)fParent;
+   if (file && file->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
    } else {
       for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
@@ -790,7 +793,8 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
 
    if (!ll) return 0;
 
-   if (gFile && gFile->GetVersion() < 30006) {
+   TFile *file = (TFile*)fParent;
+   if (file && file->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
    } else {
       for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
@@ -928,7 +932,8 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 
    if (n <= 0) return;
 
-   if (gFile && gFile->GetVersion() < 30006) {
+   TFile *file = (TFile*)fParent;
+   if (file && file->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
    } else {
       for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
