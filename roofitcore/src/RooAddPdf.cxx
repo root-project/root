@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.11 2001/09/24 23:05:58 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.12 2001/09/25 01:15:58 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,7 +42,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   RooAbsPdf(name,title), 
   _coefList("coefList","List of coefficients",this),
   _pdfList("pdfList","List of PDFs",this),
-  _codeReg(10)
+  _codeReg(10),
+  _haveLastCoef(kFALSE)
 {
   // Dummy constructor 
   _pdfIter  = _pdfList.createIterator() ;
@@ -55,7 +56,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
   RooAbsPdf(name,title),
   _coefList("coefList","List of coefficients",this),
   _pdfList("pdfProxyList","List of PDFs",this),
-  _codeReg(10)
+  _codeReg(10),
+  _haveLastCoef(kFALSE)
 {
   // Constructor with two PDFs
 
@@ -70,12 +72,13 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   RooAbsPdf(name,title),
   _coefList("coefList","List of coefficients",this),
   _pdfList("pdfProxyList","List of PDFs",this),
-  _codeReg(10)
+  _codeReg(10),
+  _haveLastCoef(kFALSE)
 { 
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
  
-  // Constructor with N PDFs
+  // Constructor with N PDFs and N or N-1 coefs
   TIterator* pdfIter = pdfList.createIterator() ;
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsPdf* pdf ;
@@ -83,7 +86,8 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   while(coef = (RooAbsPdf*)coefIter->Next()) {
     pdf = (RooAbsPdf*) pdfIter->Next() ;
     if (!pdf) {
-      cout << "RooAddPdf::RooAddPdf(" << GetName() << ") number of pdfs and coefficients inconsistent, must have N(pdf)=N(coef)+1" << endl ;
+      cout << "RooAddPdf::RooAddPdf(" << GetName() 
+	   << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
       assert(0) ;
     }
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -99,15 +103,15 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   }
 
   pdf = (RooAbsPdf*) pdfIter->Next() ;
-  if (!pdf) {
-    cout << "RooAddPdf::RooAddPdf(" << GetName() << ") number of pdfs and coefficients inconsistent, must have N(pdf)=N(coef)+1" << endl ;
-    assert(0) ;
+  if (pdf) {
+    if (!dynamic_cast<RooAbsReal*>(pdf)) {
+      cout << "RooAddPdf::RooAddPdf(" << GetName() << ") last pdf " << coef->GetName() << " is not of type RooAbsPdf, fatal error" << endl ;
+      assert(0) ;
+    }
+    _pdfList.add(*pdf) ;  
+  } else {
+    _haveLastCoef=kTRUE ;
   }
-  if (!dynamic_cast<RooAbsReal*>(pdf)) {
-    cout << "RooAddPdf::RooAddPdf(" << GetName() << ") last pdf " << coef->GetName() << " is not of type RooAbsPdf, fatal error" << endl ;
-    assert(0) ;
-  }
-  _pdfList.add(*pdf) ;  
 }
 
 
@@ -116,7 +120,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _coefList("coefList",this,other._coefList),
   _pdfList("pdfProxyList",this,other._pdfList),
-  _codeReg(other._codeReg)
+  _codeReg(other._codeReg),
+  _haveLastCoef(other._haveLastCoef)
 {
   // Copy constructor
 
@@ -158,30 +163,42 @@ Double_t RooAddPdf::evaluate() const
   const RooArgSet* nset = _pdfList.nset() ;
   
   Double_t value(0) ;
-  Double_t lastCoef(1) ;
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   _pdfIter->Reset() ;
   _coefIter->Reset() ;
   RooAbsReal* coef ;
   RooAbsReal* pdf ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
-    // WVE check if coef>epsilon before multiplying with pdf
-    pdf = (RooAbsReal*)_pdfIter->Next() ;
-    value += pdf->getVal(nset)*coef->getVal(nset) ;
-    lastCoef -= coef->getVal(nset) ;
+
+  if (_haveLastCoef) {
+
+    // N pdfs, N coefficients (use extended likelihood)
+    while(coef=(RooAbsReal*)_coefIter->Next()) {
+      pdf = (RooAbsReal*)_pdfIter->Next() ;
+      value += pdf->getVal(nset)*coef->getVal(nset) ;
+    }
+
+  } else {
+
+    // N pdfs, N-1 coefficients 
+    Double_t lastCoef(1) ;
+    while(coef=(RooAbsReal*)_coefIter->Next()) {
+      pdf = (RooAbsReal*)_pdfIter->Next() ;
+      value += pdf->getVal(nset)*coef->getVal(nset) ;
+      lastCoef -= coef->getVal(nset) ;
+    }
+    
+    // Add last pdf with correct coefficient
+    pdf = (RooAbsReal*) _pdfIter->Next() ;
+    value += pdf->getVal(nset)*lastCoef;
+
+    // Warn about coefficient degeneration
+    if (lastCoef<0 || lastCoef>1) {
+      cout << "RooAddPdf::evaluate(" << GetName() 
+	   << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
+	   << 1-lastCoef << endl ;
+    } 
   }
-
-  // Add last pdf with correct coefficient
-  pdf = (RooAbsReal*) _pdfIter->Next() ;
-  value += pdf->getVal(nset)*lastCoef;
-
-  // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
-    cout << "RooAddPdf::evaluate(" << GetName() 
-	 << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
-	 << 1-lastCoef << endl ;
-  } 
 
   return value ;
 }
@@ -277,7 +294,6 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
 
 Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
 {
-  //cout << "RooAddPdf::aI(" << GetName() << ") code = " << code << " normSet = " << normSet << endl ;
   // Return analytical integral defined by given scenario code
   if (code==0) return getVal() ;
 
@@ -289,7 +305,6 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 
   // Calculate the current value of this object  
   Double_t value(0) ;
-  Double_t lastCoef(1) ;
 
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   _pdfIter->Reset() ;
@@ -297,28 +312,56 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   RooAbsReal* coef ;
   RooAbsReal* pdf ;
   Int_t i(0) ;
-  while(coef=(RooAbsReal*)_coefIter->Next()) {
-    pdf = (RooAbsReal*)_pdfIter->Next() ;
-    value += pdf->analyticalIntegralWN(subCode[i],normSet)*coef->getVal(normSet) ;
-//     cout << "RooAddPdf::aI(" << GetName() << ") value += pdf->aI(" << subCode[i] << "," 
-// 	 << normSet << ")[" << pdf->analyticalIntegral(subCode[i],normSet) << "] * " << coef->getVal(normSet) << endl  ;
-    lastCoef -= coef->getVal(normSet) ;
-    i++ ;
+
+  if (_haveLastCoef) {
+
+    // N pdfs, N coefficients (use extended likelihood)
+    while(coef=(RooAbsReal*)_coefIter->Next()) {
+      pdf = (RooAbsReal*)_pdfIter->Next() ;
+      value += pdf->analyticalIntegralWN(subCode[i],normSet)*coef->getVal(normSet) ;      
+      i++ ;
+    }
+
+  } else {
+
+    // N pdfs, N-1 coefficients
+    Double_t lastCoef(1) ;
+    while(coef=(RooAbsReal*)_coefIter->Next()) {
+      pdf = (RooAbsReal*)_pdfIter->Next() ;
+      Double_t coefVal = coef->getVal(normSet) ;
+      value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;
+      lastCoef -= coefVal ;
+      i++ ;
+    }
+
+    pdf = (RooAbsReal*) _pdfIter->Next() ;
+    value += pdf->analyticalIntegralWN(subCode[i],normSet)*lastCoef ;
+
+    // Warn about coefficient degeneration
+    if (lastCoef<0 || lastCoef>1) {
+      cout << "RooAddPdf::analyticalIntegral(" << GetName() 
+	   << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
+	   << 1-lastCoef << endl ;
+    }     
   }
-
-  // Add last pdf with correct coefficient
-  pdf = (RooAbsReal*) _pdfIter->Next() ;
-//   cout << "RooAddPdf::aI(" << GetName() << ") value += pdf->aI(" << subCode[i] << "," 
-//        << normSet << ")[" << pdf->analyticalIntegral(subCode[i],normSet) << "] * " << lastCoef << endl  ;
-  value += pdf->analyticalIntegralWN(subCode[i],normSet)*lastCoef;
-
-  // Warn about coefficient degeneration
-  if (lastCoef<0 || lastCoef>1) {
-    cout << "RooAddPdf::analyticalIntegral(" << GetName() 
-	 << " WARNING: sum of PDF coefficients not in range [0-1], value=" 
-	 << 1-lastCoef << endl ;
-  } 
 
   return value ;
 }
 
+
+
+
+Double_t RooAddPdf::expectedEvents() const 
+{  
+  // Calculate the current value of this object
+  _coefIter->Reset() ;
+
+  // Do running sum of coef - for expectedTotal
+  Double_t expectedTotal(0.0);
+  RooAbsReal* coef ;
+  while(coef=(RooAbsReal*)_coefIter->Next()) {
+    expectedTotal += coef->getVal() ;
+  }   
+
+  return expectedTotal;
+}
