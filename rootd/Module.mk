@@ -36,9 +36,11 @@ SRPLIBS      := $(SRPLIBDIR) $(SRPLIB)
 endif
 
 ##### use krb5 for authentication #####
+ifneq ($(KRB5INCDIR),)
 ifneq ($(KRB5LIB),)
 KRB5FLAGS     := -DR__KRB5 -I$(KRB5INCDIR)
 KRB5LIBS      := $(KRB5LIBDIR) $(KRB5LIB)
+endif
 endif
 
 AUTHFLAGS    := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(KRB5FLAGS) \

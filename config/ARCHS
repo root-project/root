@@ -28,6 +28,7 @@ linuxppcegcs         for PPC Linux egcs and glibc
 linuxrh42            for Linux gcc 2.7.x.x and libc5
 linuxrh51            for Linux gcc 2.7.x.x and glibc
 linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
+linuxx8664gcc        for AMD Opteron (64 bit mode) Linux gcc 3.x and glibc
 lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc
 mklinux              for MkLinux gcc and glibc

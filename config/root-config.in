@@ -220,6 +220,12 @@ linuxia64ecc)
    auxlibs="-lm -ldl"
    auxglibs=${auxlibs}
    ;;
+linuxx8664gcc)
+   # AMD Opteron (64 bit mode) Linux with gcc 3.x
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
 linuxalphaegcs)
    # Alpha Linux with egcs
    auxcflags=

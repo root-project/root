@@ -128,8 +128,10 @@ endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
 endif
+ifneq ($(KRB5INCDIR),)
 ifneq ($(KRB5LIB),)
 MODULES      += krb5auth
+endif
 endif
 ifneq ($(LDAPINCDIR),)
 ifneq ($(LDAPCLILIB),)

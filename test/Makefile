@@ -366,6 +366,15 @@ LDFLAGS       = -O -i_dynamic
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxx8664gcc)
+# AMD Opteron (64 bit mode) Linux with gcc 3.x
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),linuxalphaegcs)
 # Alpha Linux with egcs
 CXX           = g++
