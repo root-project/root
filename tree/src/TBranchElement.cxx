@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.163 2005/01/19 18:30:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.164 2005/03/19 16:39:39 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -179,6 +179,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
       TClass *clm;
       if (element->CannotSplit()) {
          //printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
+         fSplitLevel = 0;
       } else if (element->IsA() == TStreamerBase::Class()) {
          // ===> develop the base class
          fType = 1;
@@ -1124,6 +1125,29 @@ Int_t TBranchElement::GetDataMemberOffset(const TClass *cl, const char *name)
 }
 
 //______________________________________________________________________________
+void TBranchElement::SetupAddresses() 
+{
+   // If the branch address had not yet been set, 
+   // we set all addresses starting with the top level parent branch
+
+   // This is requires to be done in order for GetOffset
+   // to be guarantee correct and for GetEntry to be run.
+   if (fAddress == 0 && fTree->GetMakeClass() == 0) {
+      if (TestBit(kDoNotProcess)) return;
+      TBranchElement *mother = (TBranchElement*)GetMother();
+      TClass *cl = gROOT->GetClass(mother->GetClassName());
+      if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
+      if (!mother || !cl) return;
+      if (!mother->GetAddress()) {
+         Bool_t motherStatus = mother->TestBit(kDoNotProcess);
+         mother->ResetBit(kDoNotProcess);
+         mother->SetAddress(0);
+         mother->SetBit(kDoNotProcess,motherStatus);
+      }
+   }
+}
+
+//______________________________________________________________________________
 Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 {
 //*-*-*-*-*Read all branches of a BranchElement and return total number of bytes
@@ -1141,21 +1165,8 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 
    Int_t nbytes = 0;
 
-   // if branch address is not yet set, must set all addresses starting
-   // with the top level parent branch
    if (fAddress == 0 && fTree->GetMakeClass() == 0) {
-      if (TestBit(kDoNotProcess) && !getall) return 0;
-      TBranchElement *mother = (TBranchElement*)GetMother();
-//printf("GetEntry, branch=%s, mother=%s\n",GetName(),mother->GetName());
-      TClass *cl = gROOT->GetClass(mother->GetClassName());
-      if (fInfo && fInfo->GetOffsets()) fInfo->BuildOld();
-      if (!mother || !cl) return 0;
-      if (!mother->GetAddress()) {
-         Bool_t motherStatus = mother->TestBit(kDoNotProcess);
-         mother->ResetBit(kDoNotProcess);
-         mother->SetAddress(0);
-         mother->SetBit(kDoNotProcess,motherStatus);
-      }
+      SetupAddresses();
    }
 
    if (nbranches) {

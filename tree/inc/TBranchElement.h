@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.37 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.38 2005/03/19 16:39:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -106,6 +106,7 @@ public:
     virtual void     SetBranchFolder() {SetBit(kBranchFolder);}
     virtual void     SetClassName(const char *name) {fClassName=name;}
     virtual void     SetParentName(const char *name) {fParentName=name;}
+    virtual void     SetupAddresses(); 
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.17 2005/03/11 21:46:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.18 2005/03/24 18:37:53 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -1363,7 +1363,12 @@ void * TFormLeafInfoCollection::GetValuePointer(TLeaf *leaf, Int_t instance) {
    if (fNext) {
       // Same as in TFormLeafInfoClones::GetValue
       Int_t len,index,sub_instance;
-      len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+      if (fNext->fElement && 
+         (fNext->fNext || !fNext->IsString()) ) {
+         len = fNext->GetArrayLength();
+      } else {
+         len = 0;
+      }
       if (len) {
          index = instance / len;
          sub_instance = instance % len;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.173 2005/03/24 18:37:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.174 2005/03/28 21:06:38 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -742,6 +742,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
       cl = gROOT->GetClass(bobj->GetClassName());
    } else if (leaf->InheritsFrom("TLeafElement")) {
       TBranchElement *BranchEl = (TBranchElement *)leaf->GetBranch();
+      BranchEl->SetupAddresses();
       TStreamerInfo *info = BranchEl->GetInfo();
       TStreamerElement *element = 0;
       Int_t type = BranchEl->GetStreamerType();
@@ -1179,6 +1180,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf *leaf, const char *subExpression,
             } else if (cl==TClonesArray::Class() && strcmp(work,"size")==0) {
                method = new TMethodCall(cl, "GetEntriesFast", "");
             } else if (cl->GetCollectionProxy() && strcmp(work,"size")==0) {
+               if (maininfo==0) {
+                  TFormLeafInfo* collectioninfo=0;
+                  if (useLeafCollectionObject) {
+                     collectioninfo = new TFormLeafInfoCollectionObject(cl);
+                  }
+                  maininfo=previnfo=collectioninfo;
+               }
                leafinfo = new TFormLeafInfoCollectionSize(cl);
             } else {
                if (cl->GetClassInfo()==0) {
