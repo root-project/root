@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.23 2003/05/06 08:23:43 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.24 2003/06/12 05:34:05 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -307,6 +307,7 @@ TProofPlayerRemote::~TProofPlayerRemote()
       }
    }
    delete fFeedbackLists;
+   delete fPacketizer;
 }
 
 //______________________________________________________________________________

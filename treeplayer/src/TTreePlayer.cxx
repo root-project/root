@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.125 2003/04/20 21:26:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.126 2003/06/10 20:52:50 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1492,7 +1492,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"#include \"%s\"\n",thead);
       fprintf(fpc,"#include \"%s\"\n","TH2.h");
       fprintf(fpc,"#include \"%s\"\n","TStyle.h");
-      fprintf(fpc,"#include \"%s\"\n","TCanvas.h");
       fprintf(fpc,"\n");
       // generate code for class member function Begin
       fprintf(fpc,"\n");
@@ -1518,8 +1517,8 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // when this function returns kFALSE. This function combines the\n");
       fprintf(fpc,"   // next two functions in one, avoiding to have to maintain state\n");
       fprintf(fpc,"   // in the class to communicate between these two funtions.\n");
-      fprintf(fpc,"   // You should not implement ProcessCut and ProcessFill if you write this function.\n");
-      fprintf(fpc,"   // This method is used by PROOF.\n");
+      fprintf(fpc,"   // You should not implement ProcessCut and ProcessFill if you write\n");
+      fprintf(fpc,"   // this function. This method is used by PROOF.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");

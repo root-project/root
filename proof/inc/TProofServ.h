@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.12 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.13 2003/03/04 17:29:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -122,7 +122,7 @@ public:
    void          SendLogFile(Int_t status = 0);
    void          SendStatus();
 
-   void          Terminate(int status);
+   void          Terminate(Int_t status);
 
    static Bool_t      IsActive();
    static TProofServ *This();

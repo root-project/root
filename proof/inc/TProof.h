@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.34 2003/04/08 10:53:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.35 2003/05/01 17:51:42 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -59,6 +59,8 @@ class TProofInterruptHandler;
 class TProofPlayer;
 class TProofPlayerRemote;
 class TPacketizer2;
+class TCondor;
+
 
 // protocol changes:
 // 1 -> 2: new arguments for Process() command, option added
@@ -85,6 +87,7 @@ friend class TProofPlayer;
 friend class TProofPlayerRemote;
 friend class TSlave;
 friend class TPacketizer2;
+friend class TCondor;
 
 private:
    TString   fMaster;        //name of master server (use "" if this is a master)
@@ -115,6 +118,7 @@ private:
    TSignalHandler *fIntHandler;     //interrupt signal handler (ctrl-c)
    TPluginHandler *fProgressDialog; // progress dialog plugin
    TProofPlayer   *fPlayer;         //current player
+   TCondor  *fCondor;        //proxy for our Condor pool
    struct MD5Mod_t {
       TMD5   fMD5;              //file's md5
       Long_t fModtime;          //file's modification time
@@ -125,7 +129,7 @@ private:
    enum ESlaves { kAll, kActive, kUnique };
    enum EUrgent { kHardInterrupt = 1, kSoftInterrupt, kShutdownInterrupt };
 
-   TProof() { fSlaves = fActiveSlaves = fBadSlaves = 0; }
+   TProof() { fSlaves = fActiveSlaves = fBadSlaves = 0; fCondor = 0; }
    TProof(const TProof &);           // not implemented
    void operator=(const TProof &);   // idem
 
@@ -239,6 +243,8 @@ public:
    Bool_t      IsMaster() const { return fMasterServ; }
    Bool_t      IsValid() const { return GetNumberOfActiveSlaves() > 0 ? kTRUE : kFALSE; }
    Bool_t      IsParallel() const { return GetParallel() > 1 ? kTRUE : kFALSE; }
+
+   void        SetActive(Bool_t active = kTRUE);
 
    void        Progress(Long64_t total, Long64_t processed); //*SIGNAL*
    void        Feedback(TList *objs); //*SIGNAL*

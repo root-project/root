@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.42 2003/06/12 05:34:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.43 2003/06/20 17:53:07 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -502,6 +502,8 @@ void TProofServ::HandleSocketInput()
    timer.Start();
    fNcmd++;
 
+   if (fProof) fProof->SetActive();
+
    switch (what) {
 
       case kMESS_CINT:
@@ -946,6 +948,9 @@ void TProofServ::HandleSocketInput()
          break;
    }
 
+   if (fProof) fProof->SetActive(kFALSE);
+
+
    fRealTime += (Float_t)timer.RealTime();
    fCpuTime  += (Float_t)timer.CpuTime();
 
@@ -1000,6 +1005,8 @@ void TProofServ::HandleUrgentData()
 
    PDB(kGlobal, 5)
       Info("HandleUrgentData", "got OOB byte: %d\n", oob_byte);
+
+   if (fProof) fProof->SetActive();
 
    switch (oob_byte) {
 
@@ -1075,6 +1082,8 @@ void TProofServ::HandleUrgentData()
    }
 
    SendLogFile();
+
+   if (fProof) fProof->SetActive(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -1089,7 +1098,10 @@ void TProofServ::HandleSigPipe()
       if (fSocket->Send(kPROOF_PING | kMESS_ACK) < 0) {
          Info("HandleSigPipe", "keepAlive probe failed");
          // Tell slaves we are going to close since there is no client anymore
+
+         fProof->SetActive();
          fProof->Interrupt(TProof::kShutdownInterrupt);
+         fProof->SetActive(kFALSE);
          Terminate(0);
       }
    } else {
@@ -1543,7 +1555,7 @@ void TProofServ::Setup()
 }
 
 //______________________________________________________________________________
-void TProofServ::Terminate(int status)
+void TProofServ::Terminate(Int_t status)
 {
    // Terminate the proof server.
 

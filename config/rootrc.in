@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.47 2003/05/13 06:21:47 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.48 2003/05/28 11:55:32 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -148,6 +148,7 @@ Rootd.Authentication:   0
 
 # Default authentication method for proofd (0=clear, 1=SRP, 2=Krb5)
 Proofd.Authentication:  0
+Proofd.StaticSlaves:    yes
 
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
@@ -173,7 +174,6 @@ Plugin.TVirtualPS:      ps     TPostScript   Postscript   "TPostScript()"
 +Plugin.TVirtualPS:     svg    TSVG          Postscript   "TSVG()"
 Plugin.TViewerX3D:          *  TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
-Plugin.TVirtualProof:       *  TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImage  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
 Plugin.TImage:              *  TASImage          ASImage  "TASImage()"
 Plugin.TFileDrawMap         *  TFileDrawMap  TreePlayer   "TFileDrawMap(const TFile*, const char*, const char*)"
@@ -183,7 +183,8 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
-Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
+Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
+Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

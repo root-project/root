@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.7 2003/04/11 11:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.8 2003/05/01 17:51:42 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -99,6 +99,8 @@ public:
    virtual Bool_t      IsMaster() const = 0;
    virtual Bool_t      IsValid() const = 0;
    virtual Bool_t      IsParallel() const = 0;
+
+   virtual void        SetActive(Bool_t active = kTRUE) = 0;
 
    virtual void        Progress(Long64_t total, Long64_t processed) = 0; //*SIGNAL*
    virtual void        Feedback(TList *objs) = 0; //*SIGNAL*

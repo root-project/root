@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.3 2003/04/04 10:21:16 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.4 2003/06/10 20:51:46 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -360,9 +360,8 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
 
    TFile *file = TFile::Open(filename);
 
-   if (file->IsZombie()) {
+   if (file == 0) {
       ::SysError("GetEntries","cannot open file %s", filename);
-      delete file; 
       return -1;
    }
 
@@ -372,7 +371,7 @@ Long64_t TDSet::GetEntries(Bool_t isTree, const char *filename, const char *path
       delete file;
       return -1;
    }
-   
+
    TDirectory *dir = gDirectory;
    dirsave->cd();
 

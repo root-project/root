@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.46 2003/06/12 05:34:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.47 2003/06/17 15:20:28 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TPluginManager.h"
+#include "TCondor.h"
 
 
 //----- PROOF Interrupt signal handler -----------------------------------------------
@@ -140,6 +141,7 @@ TProof::~TProof()
    SafeDelete(fAllMonitor);
    SafeDelete(fActiveMonitor);
    SafeDelete(fUniqueMonitor);
+   SafeDelete(fCondor);
 
    gProof = 0;
 }
@@ -178,6 +180,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fStatus         = 0;
    fParallel       = 0;
    fPlayer         = 0;
+   fCondor         = 0;
    fSecurity       = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
    if (!strcmp(u->GetProtocol(), "proofs"))
       fSecurity = TAuthenticate::kSRP;
@@ -219,70 +222,109 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
       PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
-      FILE *pconf;
-      if ((pconf = fopen(fconf, "r"))) {
+      Bool_t staticSlaves = gEnv->GetValue("Proofd.StaticSlaves", kTRUE);
+      Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
 
-         fConfFile = fconf;
+      if (staticSlaves) {
+         FILE *pconf;
+         if ((pconf = fopen(fconf, "r"))) {
 
-         // read the config file
-         char line[256];
-         TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
-         int  ord = 0;
+            fConfFile = fconf;
 
-         while (fgets(line, sizeof(line), pconf)) {
-            char word[7][64];
-            if (line[0] == '#') continue;   // skip comment lines
-            int nword = sscanf(line, "%s %s %s %s %s %s %s", word[0], word[1],
-                word[2], word[3], word[4], word[5], word[6]);
+            // read the config file
+            char line[256];
+            TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
+            int  ord = 0;
 
-            // see if master may run on this node
-            if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
-               TInetAddress a = gSystem->GetHostByName(word[1]);
-               if (!host.CompareTo(a.GetHostName()) ||
-                   !strcmp(word[1], "localhost")) {
-                  char *image = word[1];
-                  if (nword > 2 && !strncmp(word[2], "image=", 6))
-                     image = word[2]+6;
-                  fImage = image;
+            while (fgets(line, sizeof(line), pconf)) {
+               char word[7][64];
+               if (line[0] == '#') continue;   // skip comment lines
+               int nword = sscanf(line, "%s %s %s %s %s %s %s", word[0], word[1],
+                   word[2], word[3], word[4], word[5], word[6]);
+
+               // see if master may run on this node
+               if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
+                  TInetAddress a = gSystem->GetHostByName(word[1]);
+                  if (!host.CompareTo(a.GetHostName()) ||
+                      !strcmp(word[1], "localhost")) {
+                     char *image = word[1];
+                     if (nword > 2 && !strncmp(word[2], "image=", 6))
+                        image = word[2]+6;
+                     fImage = image;
+                  }
                }
-            }
-            // find all slave servers
-            if (nword >= 2 && !strcmp(word[0], "slave")) {
-               int perfidx  = 100;
-               int sport    = fPort;
-               int security = gEnv->GetValue("Proofd.Authentication",
-                                             TAuthenticate::kClear);
-               const char *image = word[1];
-               for (int i = 2; i < nword; i++) {
-                  if (!strncmp(word[i], "perf=", 5))
-                     perfidx = atoi(word[i]+5);
-                  if (!strncmp(word[i], "image=", 6))
-                     image = word[i]+6;
-                  if (!strncmp(word[i], "port=", 5))
-                     sport = atoi(word[i]+5);
-                  if (!strncmp(word[i], "srp", 3))
-                     security = TAuthenticate::kSRP;
-                  if (!strncmp(word[i], "krb5", 3))
-                     security = TAuthenticate::kKrb5;
+
+               // find all slave servers
+               if (nword >= 2 && !strcmp(word[0], "slave")) {
+                  int perfidx  = 100;
+                  int sport    = fPort;
+                  int security = gEnv->GetValue("Proofd.Authentication",
+                                                TAuthenticate::kClear);
+                  const char *image = word[1];
+                  for (int i = 2; i < nword; i++) {
+                     if (!strncmp(word[i], "perf=", 5))
+                        perfidx = atoi(word[i]+5);
+                     if (!strncmp(word[i], "image=", 6))
+                        image = word[i]+6;
+                     if (!strncmp(word[i], "port=", 5))
+                        sport = atoi(word[i]+5);
+                     if (!strncmp(word[i], "srp", 3))
+                        security = TAuthenticate::kSRP;
+                     if (!strncmp(word[i], "krb5", 3))
+                        security = TAuthenticate::kKrb5;
+                  }
+                  // create slave server
+                  TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
+                                             image, security, this);
+                  fSlaves->Add(slave);
+                  if (slave->IsValid()) {
+                     fAllMonitor->Add(slave->GetSocket());
+                     slave->SetInputHandler(new TProofInputHandler(this,
+                                            slave->GetSocket()));
+                  } else {
+                     fBadSlaves->Add(slave);
+                  }
                }
-               // create slave server
-               TSlave *slave = new TSlave(word[1], sport, ord++, perfidx,
-                                          image, security, this);
-               fSlaves->Add(slave);
-               if (slave->IsValid()) {
-                  fAllMonitor->Add(slave->GetSocket());
-                  slave->SetInputHandler(new TProofInputHandler(this,
-                                         slave->GetSocket()));
-               } else
-                  fBadSlaves->Add(slave);
             }
          }
-      }
-      fclose(pconf);
+         fclose(pconf);
 
-      if (fImage.Length() == 0) {
-         Error("Init", "no appropriate node line found in %s", fconf);
-         return 0;
+         if (fImage.Length() == 0) {
+            Error("Init", "no appropriate node line found in %s", fconf);
+            return 0;
+         }
+
+      } else {
+         // non static config
+
+         fCondor = new TCondor;
+
+         fImage = fCondor->GetImage(gSystem->HostName());
+         if (fImage.Length() == 0) {
+            Error("Init", "no appropriate node line found in %s", fconf);
+            return 0;
+         }
+
+         TList *claims = fCondor->Claim(9999,"dummy");
+
+         Int_t security = gEnv->GetValue("Proofd.Authentication", TAuthenticate::kClear);
+
+         TIter next(claims);
+         TCondorSlave *c;
+         Int_t ord = 0;
+         while((c = (TCondorSlave*) next()) != 0) {
+            TSlave *slave = new TSlave(
+                                       c->fHostname, c->fPort, ord++, c->fPerfIdx,
+                                       c->fImage, security, this);
+            fSlaves->Add(slave);
+            if (slave->IsValid()) {
+               fAllMonitor->Add(slave->GetSocket());
+               slave->SetInputHandler(new TProofInputHandler(this,
+                                      slave->GetSocket()));
+            } else {
+               fBadSlaves->Add(slave);
+            }
+         }
       }
    } else {
       // create master server
@@ -331,6 +373,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
    // Send relevant initial state to slaves
    SendInitialState();
+
+   SetActive(kFALSE);
 
    if (IsValid())
       gROOT->GetListOfSockets()->Add(this);
@@ -915,8 +959,10 @@ Int_t TProof::Collect(TMonitor *mon)
             {
                PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
                TList *out = (TList *) mess->ReadObject(TList::Class());
-               out->SetOwner();
-               fPlayer->StoreOutput(out); // Adopts the list
+               if (out) {
+                  out->SetOwner();
+                  fPlayer->StoreOutput(out); // Adopts the list
+               }
             }
             break;
 
@@ -1921,7 +1967,6 @@ Int_t TProof::UploadPackage(const char *tpar, Int_t parallel)
    return 0;
 }
 
-
 //______________________________________________________________________________
 void TProof::Progress(Long64_t total, Long64_t processed)
 {
@@ -1935,6 +1980,22 @@ void TProof::Progress(Long64_t total, Long64_t processed)
    parm[0] = (Long_t) (&total);
    parm[1] = (Long_t) (&processed);
    Emit("Progress(Long64_t,Long64_t)", parm);
+}
+
+//______________________________________________________________________________
+void TProof::SetActive(Bool_t active)
+{
+   // Suspend or resume PROOF via Condor.
+
+   if (fCondor) {
+      if (active) {
+         Info("SetActive","-- Condor Resume --");
+         fCondor->Resume();
+      } else {
+         Info("SetActive","-- Condor Suspend --");
+         fCondor->Suspend();
+      }
+   }
 }
 
 //______________________________________________________________________________
