@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.132 2003/02/27 18:40:38 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.133 2003/03/05 23:36:18 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -759,11 +759,15 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
    const char *proto = "";
 
    G__MethodInfo methodinfo = cl.GetMethod(cl.TmpltName(),proto,&offset);
+   G__MethodInfo tmethodinfo = cl.GetMethod(cl.Name(),proto,&offset);
+   
    if (methodinfo.IsValid()) {
-      /*fprintf(stderr,"found a constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
+      /*
+        fprintf(stderr,"found a constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
                cl.Name(),methodinfo.GetPrototype(),
                cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
-               methodinfo.NArg(),methodinfo.NDefaultArg());  */
+               methodinfo.NArg(),methodinfo.NDefaultArg());  
+      */
       // proto = methodinfo.GetPrototype();
       // if ( proto[strlen(proto)-2]!='(' && error) *error = true;
       if (methodinfo.NArg()!=methodinfo.NDefaultArg()) result = false;
@@ -779,11 +783,32 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
             result = false;
          }
       }
+   } else if (tmethodinfo.IsValid()) {
+
+      /*
+        fprintf(stderr,"found a template constructor for %s with prototype \"%s\" and %s with %d args and %d default args\n",
+               cl.Name(),tmethodinfo.GetPrototype(),
+               cl.HasMethod(cl.Name())? " has constructor " : " has no constructor ",
+               tmethodinfo.NArg(),tmethodinfo.NDefaultArg());  
+      */
+      // exactly same as above with a function with the full template name
+      
+      if (tmethodinfo.NArg()!=tmethodinfo.NDefaultArg()) result = false;
+      if (!(tmethodinfo.Property() & G__BIT_ISPUBLIC)) {
+         if (!NeedConstructor(cl) ) result = false;
+         else result = false;
+      }
+      
    } else {
-       /* fprintf(stderr,"did not find a constructor for %s and %s\n",
-                cl.Name(),
-                cl.HasMethod(cl.Name())? " has constructor " : " has no constructor "); */
+      /*
+        fprintf(stderr,"did not find a constructor for %s %s and %s and %s\n",
+              cl.TmpltName(), cl.Name(),
+              cl.HasMethod(cl.TmpltName())? "has constructor" : "has no constructor",
+              cl.HasMethod(cl.Name())? "has template constructor" : "has no template constructor"
+              ); 
+      */
       if (cl.HasMethod(cl.TmpltName())) result = false;
+      if (cl.HasMethod(cl.Name())) result = false;
    }
 
    // Check for private operator new
