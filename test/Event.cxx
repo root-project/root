@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.14 2001/11/22 15:12:25 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.15 2001/11/28 15:00:08 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -69,6 +69,7 @@
 
 #include "TRandom.h"
 #include "TDirectory.h"
+#include "TProcessID.h"
 
 #include "Event.h"
 
@@ -127,7 +128,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Float_t random = gRandom->Rndm(1);
 
   //Save current Object count
-  Int_t ObjectNumber = TRef::GetObjectCount();
+  Int_t ObjectNumber = TProcessID::GetObjectCount();
   Clear();
   fHighPt->Delete();
   fMuons->Delete();
@@ -162,7 +163,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   //To save space in the table keeping track of all referenced objects
   //we assume that our events do not address each other. We reset the 
   //object count to what it was at the beginning of the event.
-  TRef::SetObjectCount(ObjectNumber);
+  TProcessID::SetObjectCount(ObjectNumber);
 }  
 
 //______________________________________________________________________________
