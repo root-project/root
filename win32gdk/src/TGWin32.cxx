@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.79 2004/06/22 16:05:25 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.80 2004/07/08 07:23:37 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -751,6 +751,8 @@ static char *EventMask2String(UInt_t evmask)
 //______________________________________________________________________________
 static void TGWin32SetConsoleWindowName()
 {
+   //
+
    char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
    char pszOldWindowTitle[1024]; // contains original WindowTitle
 
@@ -767,6 +769,67 @@ static void TGWin32SetConsoleWindowName()
    ::ShowWindow(gConsoleWindow, SW_RESTORE);
    ::SetForegroundWindow(gConsoleWindow);
    ::SetConsoleTitle("ROOT session");
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+class TGWin32MainThread {
+
+public:
+   void     *fHandle;                     // handle of server (aka command) thread
+   DWORD    fId;                          // id of server (aka command) thread
+   static LPCRITICAL_SECTION  fCritSec;      // general mutex
+   static LPCRITICAL_SECTION  fMessageMutex; // message queue mutex
+
+   TGWin32MainThread();
+   ~TGWin32MainThread();
+   static void LockMSG();
+   static void UnlockMSG();
+};
+
+TGWin32MainThread *gMainThread = 0;
+LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
+LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
+
+
+//______________________________________________________________________________
+TGWin32MainThread::~TGWin32MainThread()
+{
+   // dtor
+
+   if (fCritSec) {
+      ::LeaveCriticalSection(fCritSec);
+      ::DeleteCriticalSection(fCritSec);
+   }
+   fCritSec = 0;
+
+   if (fMessageMutex) {
+      ::LeaveCriticalSection(fMessageMutex);
+      ::DeleteCriticalSection(fMessageMutex);
+   }
+   fMessageMutex = 0;
+
+   if(fHandle) {
+      ::PostThreadMessage(fId, WM_QUIT, 0, 0);
+      ::CloseHandle(fHandle);
+   }
+   fHandle = 0;
+}
+
+//______________________________________________________________________________
+void TGWin32MainThread::LockMSG()
+{
+   // lock message queue
+
+   if (fMessageMutex) ::EnterCriticalSection(fMessageMutex);
+}
+
+//______________________________________________________________________________
+void TGWin32MainThread::UnlockMSG()
+{
+   // unlock message queue
+
+   if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
 //______________________________________________________________________________
@@ -790,8 +853,10 @@ static Bool_t MessageProcessingFunc(MSG *msg)
             (msg->message <= WM_NCMBUTTONDBLCLK) ) {
          TGWin32ProxyBase::GlobalLock();
       }
+      TGWin32MainThread::LockMSG();
       TranslateMessage(msg);
       DispatchMessage(msg);
+      TGWin32MainThread::UnlockMSG();
    }
    return ret;
 }
@@ -814,21 +879,6 @@ public:
       return kFALSE;
    }
 };
-
-///////////////////////////////////////////////////////////////////////////////
-class TGWin32MainThread {
-
-public:
-   void     *fHandle;      // handle of GUI thread
-   DWORD    fId;           // id of GUI thread
-   static LPCRITICAL_SECTION  fCritSec; // general mutex
-
-   TGWin32MainThread();
-   ~TGWin32MainThread();
-};
-
-TGWin32MainThread* gMainThread = 0;
-LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
 
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
@@ -870,28 +920,13 @@ TGWin32MainThread::TGWin32MainThread()
 {
    // constructor
 
-   fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
    fCritSec = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fCritSec);
+   fMessageMutex = new CRITICAL_SECTION;
+   ::InitializeCriticalSection(fMessageMutex);
+   fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
 }
 
-//______________________________________________________________________________
-TGWin32MainThread::~TGWin32MainThread()
-{
-   // dtor
-
-   if (fCritSec) {
-      ::LeaveCriticalSection(fCritSec);
-      ::DeleteCriticalSection(fCritSec);
-   }
-   fCritSec = 0;
-
-   if(fHandle) {
-      ::PostThreadMessage(fId, WM_QUIT, 0, 0);
-      ::CloseHandle(fHandle);
-   }
-   fHandle = 0;
-}
 
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
@@ -5510,11 +5545,14 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
    Event_t tev;
    GdkEvent xev;
 
+   TGWin32MainThread::LockMSG();
    tev.fType = type;
    MapEvent(tev, xev, kTRUE);
    Bool_t r = gdk_check_typed_window_event((GdkWindow *) id, xev.type, &xev);
 
    if (r) MapEvent(ev, xev, kFALSE);
+   TGWin32MainThread::UnlockMSG();
+
    return r ? kTRUE : kFALSE;
 }
 
@@ -5525,9 +5563,11 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 
    if (!ev) return;
 
+   TGWin32MainThread::LockMSG();
    GdkEvent xev;
    MapEvent(*ev, xev, kTRUE);
    gdk_event_put(&xev);
+   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________
@@ -5536,7 +5576,11 @@ Int_t TGWin32::EventsPending()
     // Returns number of pending events.
 
    Int_t ret;
+
+   TGWin32MainThread::LockMSG();
    ret = (Int_t)gdk_event_queue_find_first();
+   TGWin32MainThread::UnlockMSG();
+
    return ret;
 }
 
@@ -5547,6 +5591,7 @@ void TGWin32::NextEvent(Event_t & event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
+   TGWin32MainThread::LockMSG();
    GdkEvent *xev = gdk_event_unqueue();
 
    // fill in Event_t
@@ -5556,6 +5601,7 @@ void TGWin32::NextEvent(Event_t & event)
    }
    MapEvent(event, *xev, kFALSE);
    gdk_event_free (xev);
+   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________
