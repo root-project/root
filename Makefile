@@ -235,7 +235,7 @@ build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 %.d: %.cxx $(RMKDEP)
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
+$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA)"
@@ -259,7 +259,7 @@ distclean:: clean
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
-	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif
+	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	@rm -rf htmldoc
 	@cd test && $(MAKE) distclean
 

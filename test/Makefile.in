@@ -182,7 +182,7 @@ CXX           = cxx
 CXXFLAGS      = -O0
 LD            = cxx
 LDFLAGS       = -O
-SOFLAGS       = -Wl,-expect_unresolved,* -call_shared
+SOFLAGS       = -Wl,-expect_unresolved,* -shared
 endif
 
 ifeq ($(ARCH),alphacxx)
@@ -545,7 +545,7 @@ clean:
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
-		   *.root *.ps .def
+		   *.root *.ps .def so_locations
 
 .SUFFIXES: .$(SrcSuf)
 
