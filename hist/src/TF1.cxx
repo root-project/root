@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.88 2004/08/12 20:11:11 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.89 2004/08/16 09:31:13 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -831,14 +831,21 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*  Compute the closest distance of approach from point px,py to this function.
 //*-*  The distance is computed in pixels units.
 //*-*
-//*-*  Algorithm:
+//*-*  Note that px is called with a negative value when the TF1 is in
+//*-*  TGraph or TH1 list of functions. In this case there is no point
+//*-*  looking at the histogram axis.
 //*-*
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    if (!fHistogram) return 9999;
-   Int_t distance = fHistogram->DistancetoPrimitive(px,py);
-   if (distance <= 1) return distance;
+   Int_t distance = 9999;
+   if (px >= 0) {
+      distance = fHistogram->DistancetoPrimitive(px,py);
+      if (distance <= 1) return distance;
+   } else {
+      px = -px;
+   }
 
    Double_t xx[1];
    Double_t x    = gPad->AbsPixeltoX(px);
