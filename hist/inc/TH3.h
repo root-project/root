@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.7 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.8 2001/01/08 08:34:27 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -96,6 +96,8 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Char_t (content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
            TH3C&   operator=(const TH3C &h1);
    friend  TH3C    operator*(Float_t c1, TH3C &h1);
@@ -134,6 +136,8 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Short_t (content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
            TH3S&   operator=(const TH3S &h1);
    friend  TH3S    operator*(Float_t c1, TH3S &h1);
@@ -174,6 +178,8 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Float_t (content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
            TH3F&   operator=(const TH3F &h1);
    friend  TH3F    operator*(Float_t c1, TH3F &h1);
@@ -213,6 +219,8 @@ public:
    virtual void    Reset(Option_t *option="");
    virtual void    SetBinContent(Int_t bin, Stat_t content)
                                  {fArray[bin] = Double_t (content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
+   virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
            TH3D&   operator=(const TH3D &h1);
    friend  TH3D    operator*(Float_t c1, TH3D &h1);
