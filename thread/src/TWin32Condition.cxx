@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.1 2004/11/02 13:07:57 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TWin32Condition.h"
 #include "TWin32Mutex.h"
+#include "TTimeStamp.h"
 #include "Windows4Root.h"
 
 #include <errno.h>
@@ -107,7 +108,14 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // documentation for why absolute times are better than relative.
    // Returns 0 if successfully signalled, 1 if time expired.
 
+   TTimeStamp t;
+   // Get actual time
+   ULong_t secNow     = t.GetSec();
+   ULong_t nanosecNow = t.GetNanoSec();
+   DWORD dwMillisecondsNow = (DWORD)((secNow * 1000) + (nanosecNow / 1000000));
    DWORD dwMilliseconds = (DWORD)((secs * 1000) + (nanoSecs / 1000000));
+   // Calculate delta T to obtain the real time to wait for
+   DWORD dwTimeWait = (DWORD)(dwMilliseconds - dwMillisecondsNow);
    // Avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
    fCond.waiters_count_++;
@@ -116,7 +124,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwMilliseconds, FALSE);
+   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwTimeWait, FALSE);
 
    // Reacquire lock to avoid race conditions.
    EnterCriticalSection(&fCond.waiters_count_lock_);
@@ -134,7 +142,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    if (last_waiter)
       // This call atomically signals the <waiters_done_> event and waits until
       // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness.
-      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, dwMilliseconds, FALSE);
+      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, dwTimeWait, FALSE);
    else
       // Always regain the external mutex since that's the guarantee we
       // give to our callers.
