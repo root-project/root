@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.2 2000/06/13 10:58:23 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -295,6 +295,46 @@ void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   gre->Draw("
       <<quote<<option<<quote<<");"<<endl;
+}
+
+//______________________________________________________________________________
+void TGraphErrors::Set(Int_t n)
+{
+// Set number of points in the graph
+// Existing coordinates are preserved 
+// New coordinates and errors above fNpoints are preset to 0.
+   
+   if (n < 0) n = 0;
+   if (n == fNpoints) return;
+   Double_t *x=0, *y=0, *ex=0, *ey=0;
+   if (n > 0) {
+      x  = new Double_t[n];
+      y  = new Double_t[n];
+      ex = new Double_t[n];
+      ey = new Double_t[n];
+   }
+   Int_t i;
+   for (i=0; i<fNpoints;i++) {
+      if (fX)   x[i] = fX[i];
+      if (fY)   y[i] = fY[i];
+      if (fEX) ex[i] = fEX[i];
+      if (fEY) ey[i] = fEY[i];
+   }
+   for (i=fNpoints; i<n;i++) {
+      x[i]  = 0;
+      y[i]  = 0;
+      ex[i] = 0;
+      ey[i] = 0;
+   }
+   delete [] fX;
+   delete [] fY;
+   delete [] fEX;
+   delete [] fEY;
+   fNpoints =n;
+   fX  = x;
+   fY  = y;
+   fEX = ex;
+   fEY = ey;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.10 2000/08/07 12:25:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.11 2000/08/07 13:28:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1307,7 +1307,11 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
 
 //*-*-  Create a temporary histogram and fill each channel with the function value
    if (!fHistogram) {
-      fHistogram = new TH1F(GetName(),GetTitle(),40,rwxmin,rwxmax);
+      // the graph is created with at least as many channels as there are points
+      // to permit zooming on the full range
+      npt = 100;
+      if (fNpoints > npt) npt = fNpoints;
+      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
       if (!fHistogram) return;
       fHistogram->SetMinimum(rwymin);
       fHistogram->SetBit(TH1::kNoStats);
@@ -2448,6 +2452,36 @@ void TGraph::SavePrimitive(ofstream &out, Option_t *option)
    }
    out<<"   graph->Draw("
       <<quote<<option<<quote<<");"<<endl;
+}
+
+//______________________________________________________________________________
+void TGraph::Set(Int_t n)
+{
+// Set number of points in the graph
+// Existing coordinates are preserved 
+// New coordinates above fNpoints are preset to 0.
+   
+   if (n < 0) n = 0;
+   if (n == fNpoints) return;
+   Double_t *xx=0, *yy=0;
+   if (n > 0) {
+      xx = new Double_t[n];
+      yy = new Double_t[n];
+   }
+   Int_t i;
+   for (i=0; i<fNpoints;i++) {
+      if (fX) xx[i] = fX[i];
+      if (fY) yy[i] = fY[i];
+   }
+   for (i=fNpoints; i<n;i++) {
+      xx[i] = 0;
+      yy[i] = 0;
+   }
+   delete [] fX;
+   delete [] fY;
+   fNpoints =n;
+   fX = xx;
+   fY = yy;
 }
 
 //______________________________________________________________________________
