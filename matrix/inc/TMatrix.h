@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.11 2002/01/04 08:07:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.12 2002/05/03 10:24:05 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -232,6 +232,28 @@ inline TMatrix::TMatrix(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_u
    Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
 }
 
+inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
+{
+  if (!IsValid()) {
+    Error("SetElements", "matrix is not initialized");
+    return;
+  }
+
+  TString opt = option;
+  opt.ToUpper();
+
+  if (opt.Contains("F"))
+    memcpy(fElements,elements,fNelems*sizeof(Float_t));
+  else
+  {
+    for (Int_t irow = 0; irow < fNrows; irow++)
+    {
+      for (Int_t icol = 0; icol < fNcols; icol++)
+        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
+    }
+  }
+}
+
 inline TMatrix::TMatrix(Int_t no_rows, Int_t no_cols,
                         const Float_t *elements, Option_t *option)
 {
@@ -269,28 +291,6 @@ inline void TMatrix::GetElements(Float_t *elements, Option_t *option) const
     {
       for (Int_t icol = 0; icol < fNcols; icol++)
         elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
-    }
-  }
-}
-
-inline void TMatrix::SetElements(const Float_t *elements, Option_t *option)
-{
-  if (!IsValid()) {
-    Error("SetElements", "matrix is not initialized");
-    return;
-  }
-
-  TString opt = option;
-  opt.ToUpper();
-
-  if (opt.Contains("F"))
-    memcpy(fElements,elements,fNelems*sizeof(Float_t));
-  else
-  {
-    for (Int_t irow = 0; irow < fNrows; irow++)
-    {
-      for (Int_t icol = 0; icol < fNcols; icol++)
-        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
     }
   }
 }

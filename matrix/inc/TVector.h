@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.10 2002/01/04 08:07:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.11 2002/05/03 10:24:06 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -192,16 +192,11 @@ inline TVector::TVector(Int_t lwb, Int_t upb)
    Allocate(upb-lwb+1, lwb);
 }
 
-inline TVector::TVector(Int_t n, const Float_t *elements)
+inline Bool_t TVector::IsValid() const
 {
-   Allocate(n);
-   SetElements(elements);
-}
-
-inline TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
-{
-   Allocate(upb-lwb+1, lwb);
-   SetElements(elements);
+   if (fNrows == -1)
+      return kFALSE;
+   return kTRUE;
 }
 
 inline void TVector::SetElements(const Float_t *elements)
@@ -213,11 +208,16 @@ inline void TVector::SetElements(const Float_t *elements)
   memcpy(fElements,elements,fNrows*sizeof(Float_t));
 }
 
-inline Bool_t TVector::IsValid() const
+inline TVector::TVector(Int_t n, const Float_t *elements)
 {
-   if (fNrows == -1)
-      return kFALSE;
-   return kTRUE;
+   Allocate(n);
+   SetElements(elements);
+}
+
+inline TVector::TVector(Int_t lwb, Int_t upb, const Float_t *elements)
+{
+   Allocate(upb-lwb+1, lwb);
+   SetElements(elements);
 }
 
 inline Bool_t AreCompatible(const TVector &v1, const TVector &v2)
