@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.4 2001/03/09 11:02:41 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.5 2001/04/06 07:27:18 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -115,7 +115,7 @@ const char *TTVLVEntry::ConvertAliases()
             fConvName.ReplaceAll(item->GetAlias(), item->GetTrueName());
       }
       if (fConvName == start) {
-         Warning(item->GetAlias(), "Cannot convert aliases for this expression."); 
+         Warning(item->GetAlias(), "Cannot convert aliases for this expression.");
          return(fConvName.Data());
       }
    }
@@ -644,8 +644,8 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       Window_t wdum;
       Int_t ax, ay;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(), 25,
-                                      (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                                      ax, ay, wdum);
+                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                        ax, ay, wdum);
       MoveResize(ax, ay, w, GetDefaultHeight());
       MapWindow();
    }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.4 2001/06/27 16:43:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.5 2001/11/28 16:05:41 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -253,9 +253,9 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       int      ax, ay;
       Window_t wdummy;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                                 (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                                 (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                                 ax, ay, wdummy);
+                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                        ax, ay, wdummy);
       if (ax < 0) ax = 10;
       if (ay < 0) ay = 10;
       Move(ax, ay);
