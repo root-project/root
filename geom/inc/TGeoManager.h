@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.42 2004/01/19 13:40:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.43 2004/01/20 15:44:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -115,6 +115,7 @@ private :
    Int_t                *fIntBuffer;        //! transient int buffer
    Int_t                *fOverlapClusters;  //! internal array for overlaps
    Double_t             *fDblBuffer;        //! transient dbl buffer
+   Double_t              fLastPoint[3];     //! last located point
 
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
@@ -304,6 +305,7 @@ public:
    Int_t                  GetNtracks() const {return fNtracks;}
    TVirtualGeoTrack      *GetCurrentTrack() {return fCurrentTrack;}
    TVirtualGeoTrack      *GetLastTrack() {return (TVirtualGeoTrack *)fTracks->At(fNtracks-1);}
+   const Double_t        *GetLastPoint() const {return fLastPoint;}
    TVirtualGeoTrack      *GetTrack(Int_t index)         {return (index<fNtracks)?(TVirtualGeoTrack*)fTracks->At(index):0;}
    Int_t                  GetTrackIndex(Int_t id) const;
    TVirtualGeoTrack      *GetTrackOfId(Int_t id) const;
@@ -317,6 +319,7 @@ public:
    Bool_t                 IsCheckingOverlaps() const   {return fSearchOverlaps;}
    Bool_t                 IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t change=kFALSE);
    Bool_t                 IsSameLocation() const {return fIsSameLocation;}
+   Bool_t                 IsSamePoint(Double_t x, Double_t y, Double_t z) const;
    Bool_t                 IsStartSafe() const {return fStartSafe;}
    void                   SetStartSafe(Bool_t flag=kTRUE)   {fStartSafe=flag;}
    void                   SetStep(Double_t step) {fStep=step;}
@@ -390,6 +393,8 @@ public:
    void                   SetCurrentPoint(Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
    void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) { 
                                     fPoint[0]=x; fPoint[1]=y; fPoint[2]=z;}
+   void                   SetLastPoint(Double_t x, Double_t y, Double_t z) { 
+                                    fLastPoint[0]=x; fLastPoint[1]=y; fLastPoint[2]=z;}
    void                   SetCurrentDirection(Double_t *dir) {memcpy(fDirection,dir,3*sizeof(Double_t));}
    void                   SetCurrentDirection(Double_t nx, Double_t ny, Double_t nz) { 
                                     fDirection[0]=nx; fDirection[1]=ny; fDirection[2]=nz;}

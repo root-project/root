@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.72 2004/01/23 16:34:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.73 2004/01/29 11:59:11 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -437,6 +437,7 @@
 TGeoManager *gGeoManager = 0;
 
 const char *kGeoOutsidePath = " ";
+const Int_t kN3 = 3*sizeof(Double_t);
 
 ClassImp(TGeoManager)
 
@@ -493,11 +494,12 @@ void TGeoManager::Init()
    fOverlaps = new TObjArray(256);
    fNNodes = 0;
    fLevel = 0;
+   memset(fLastPoint, 0, kN3);
    fPoint = new Double_t[3];
    fDirection = new Double_t[3];
 //   fNormalChecked = 0;
    fCldirChecked = new Double_t[3];
-   memset(fNormal, 0, 3*sizeof(Double_t));
+   memset(fNormal, 0, kN3);
    fCldir = new Double_t[3];
    fVolumes = new TObjArray(256);
    fShapes = new TObjArray(256);
@@ -2008,13 +2010,17 @@ Double_t TGeoManager::Safety(Bool_t inside)
    Double_t *boxes = voxels->GetBoxes();
    for (id=0; id<nd; id++) {
       Int_t ist = 6*id;
+      Double_t dxyz = 0.;
       Double_t dxyz0 = TMath::Abs(point[0]-boxes[ist+3])-boxes[ist];
       if (dxyz0 > fSafety) continue;
       Double_t dxyz1 = TMath::Abs(point[1]-boxes[ist+4])-boxes[ist+1];
       if (dxyz1 > fSafety) continue;
       Double_t dxyz2 = TMath::Abs(point[2]-boxes[ist+5])-boxes[ist+2];
       if (dxyz2 > fSafety) continue;
-      if (dxyz0*dxyz0+dxyz1*dxyz1+dxyz2*dxyz2 >= fSafety*fSafety) continue;
+      if (dxyz0>0) dxyz+=dxyz0*dxyz0;
+      if (dxyz1>0) dxyz+=dxyz1*dxyz1;
+      if (dxyz2>0) dxyz+=dxyz2*dxyz2;
+      if (dxyz >= fSafety*fSafety) continue;
       node = (TGeoNode*)nodes->UncheckedAt(id);
       safe = node->Safety(point, kFALSE);
 //      if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE vox of %s safe=%g\n", node->GetVolume()->GetName(),node->GetVolume()->GetShape()->ClassName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
@@ -2738,6 +2744,8 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
 TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
 {
 // Returns deepest node containing current point.
+   fSafety = 0;
+   memcpy(fLastPoint, fPoint, kN3);
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fIsEntering = fIsExiting = kFALSE;
@@ -2757,6 +2765,8 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    fPoint[0] = x;
    fPoint[1] = y;
    fPoint[2] = z;
+   fSafety = 0;
+   memcpy(fLastPoint, fPoint, kN3);
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fIsEntering = fIsExiting = kFALSE;
@@ -2812,8 +2822,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
    Double_t bigstep = 1.E6;
    Int_t i, istep;
    Int_t start = PushPath();
-   memcpy(saved_point, fPoint, 3*sizeof(Double_t));
-   memcpy(saved_direction, fDirection, 3*sizeof(Double_t));
+   memcpy(saved_point, fPoint, kN3);
+   memcpy(saved_direction, fDirection, kN3);
 //   PushPath();
       
    if (!forward) {
@@ -2823,8 +2833,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
       FindNextBoundary();
       // if it is nothing backwards, restore state and  return NULL
       if (fStep>bigstep) {
-         memcpy(fPoint, saved_point, 3*sizeof(Double_t));
-         memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+         memcpy(fPoint, saved_point, kN3);
+         memcpy(fDirection, saved_direction, kN3);
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
@@ -2842,8 +2852,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
             Error("FindNormal", "cannot reach backward boundary");
             printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
             printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
-            memcpy(fPoint, saved_point, 3*sizeof(Double_t));
-            memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+            memcpy(fPoint, saved_point, kN3);
+            memcpy(fDirection, saved_direction, kN3);
             fStep = saved_step;
             fIsEntering = is_entering;
             PopPath();
@@ -2854,12 +2864,12 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
       }
       if (!fIsStepEntering) PopPath(start);
       // restore initial direction
-      memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+      memcpy(fDirection, saved_direction, kN3);
    } else {
       FindNextBoundary();
       if (fStep>bigstep) {
-         memcpy(fPoint, saved_point, 3*sizeof(Double_t));
-         memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+         memcpy(fPoint, saved_point, kN3);
+         memcpy(fDirection, saved_direction, kN3);
          fStep = saved_step;
          fIsEntering = is_entering;
          PopPath();
@@ -2877,8 +2887,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
             Error("FindNormal", "cannot reach forward boundary");
             printf("   starting point was : (%f, %f, %f)\n", saved_point[0], saved_point[1], saved_point[2]);
             printf("   direction was      : (%f, %f, %f)\n", fDirection[0], fDirection[1], fDirection[2]);
-            memcpy(fPoint, saved_point, 3*sizeof(Double_t));
-            memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+            memcpy(fPoint, saved_point, kN3);
+            memcpy(fDirection, saved_direction, kN3);
             fStep = saved_step;
             fIsEntering = is_entering;
             PopPath();
@@ -2895,8 +2905,8 @@ Double_t *TGeoManager::FindNormal(Bool_t forward)
    MasterToLocalVect(fDirection, ldir);        
    fCurrentNode->GetVolume()->GetShape()->ComputeNormal(lpt,ldir,lnorm);
    LocalToMasterVect(lnorm, fNormal);
-   memcpy(fPoint, saved_point, 3*sizeof(Double_t));
-   memcpy(fDirection, saved_direction, 3*sizeof(Double_t));
+   memcpy(fPoint, saved_point, kN3);
+   memcpy(fDirection, saved_direction, kN3);
    fStep = saved_step;
    fIsEntering = is_entering;
    PopPath();
@@ -2908,11 +2918,22 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 {
 // Checks if point (x,y,z) is still in the current node.
    // check if this is an overlapping node
+   Double_t oldpt[3];
+   if (fSafety>0) {
+      Double_t dx = (x-fLastPoint[0]);
+      Double_t dy = (y-fLastPoint[1]);
+      Double_t dz = (z-fLastPoint[2]);
+      Double_t dsq = dx*dx+dy*dy+dz*dz;
+      if (dsq<fSafety*fSafety) return kTRUE;
+   } else return kTRUE;
    if (fCurrentOverlapping) {
 //      TGeoNode *current = fCurrentNode;
       Int_t cid = GetCurrentNodeId();
       if (!change) PushPoint();
-      gGeoManager->FindNode(x,y,z);
+      memcpy(oldpt, fPoint, kN3);
+      gGeoManager->SetCurrentPoint(x,y,z);
+      gGeoManager->SearchNode();
+      memcpy(fPoint, oldpt, kN3);
       Bool_t same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
       if (!change) PopPoint();
       return same;
@@ -2922,7 +2943,7 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
    point[0] = x;
    point[1] = y;
    point[2] = z;
-   if (change) memcpy(fPoint, point, 3*sizeof(Double_t));
+   if (change) memcpy(fPoint, point, kN3);
    TGeoVolume *vol = fCurrentNode->GetVolume();
    if (fIsOutside) {
       if (vol->GetShape()->Contains(point)) {
@@ -3007,7 +3028,17 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
    if (!change) PopPath();
    return kTRUE;
 }   
-
+//_____________________________________________________________________________
+Bool_t TGeoManager::IsSamePoint(Double_t x, Double_t y, Double_t z) const
+{
+   if (x==fLastPoint[0]) {
+      if (y==fLastPoint[1]) {
+         if (z==fLastPoint[2]) return kTRUE;
+      }
+   }
+   return kFALSE;
+}
+         
 //_____________________________________________________________________________
 Bool_t TGeoManager::IsInPhiRange() const
 {
@@ -3570,7 +3601,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       GetHMatrix();
    }   
    *fCurrentMatrix = gGeoIdentity;
-   fMasterVolume->FindMatrixOfDaughterVolume(vol);
+//   fMasterVolume->FindMatrixOfDaughterVolume(vol);
 //   fCurrentMatrix->Print();
    fTopNode = new TGeoNodeMatrix(vol, gGeoIdentity);
    char *name = new char[strlen(vol->GetName())+3];
