@@ -7,7 +7,7 @@
    // the server socket. After accepting the connection
    // the new socket is added to the monitor and immediately ready
    // for use. Once two connections are accepted the server socket
-   // us removed from the monitor and closed. The monitor continues
+   // is removed from the monitor and closed. The monitor continues
    // monitoring the sockets.
    //
    // To run this demo do the following:
