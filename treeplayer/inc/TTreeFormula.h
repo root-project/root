@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.8 2001/02/09 16:47:51 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.9 2001/04/09 08:33:50 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -63,9 +63,9 @@ protected:
    Int_t         fNdimensions[kMAXCODES];             //Number of array dimensions in each leaf
    Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
    //mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-           Int_t fUsedSizes[kMAXFORMDIM+1];           //Actual size of the dimensions as seen for this entry.
+   Int_t fUsedSizes[kMAXFORMDIM+1]; //Actual size of the dimensions as seen for this entry.
    //mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-           Int_t fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry.
+   Int_t fCumulUsedSizes[kMAXFORMDIM+1]; //Accumulated size of lower dimensions as seen for this entry.
    Int_t         fVirtUsedSizes[kMAXFORMDIM+1];       //Virtual size of lower dimensions as seen for this formula
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.

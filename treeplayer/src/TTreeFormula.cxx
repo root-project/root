@@ -366,7 +366,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                // This is a non-object leaf, it should NOT be specified more except for
                // dimensions. 
                final = kTRUE;
-               leaf = tmp_leaf;
             } 
             
             if (branch) {
@@ -393,6 +392,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                if (second[0]) strcat(second,".");
                strcat(second,work);
                current = &(work[0]);
+               leaf = tmp_leaf;
             } else {
                //We need to put the delimiter back!
                work[strlen(work)] = cname[i];
@@ -493,6 +493,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       if (leaf->InheritsFrom("TLeafObject") ) {
          TLeafObject *lobj = (TLeafObject*)leaf;
          cl = lobj->GetClass();
+         if (strlen(right)==0) strcpy(right,work);
       } else if (leaf->InheritsFrom("TLeafElement")) {
          TLeafElement * lElem = (TLeafElement*) leaf;
          if (lElem->IsOnTerminalBranch()) {
@@ -512,9 +513,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
         if (!strstr(right,"(")) {
            // There is no function calls so it has to be a 
            // data member.
-           //cl->
-           TDataMember *member = cl->GetDataMember(right);
-           fDataMembers.Add(member);
+           TStreamerElement* element = cl->GetStreamerInfo()->GetStreamerElement(right);
+           fDataMembers.Add(element);
            fMethods.Add(0);
            fIndex[code] = code-kDATAMEMBER; // This has to be changed :(
         } else {
@@ -984,45 +984,35 @@ Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf) const
    if (i>=0) return 0; // case where we do NOT have a method defined
 
    TMethodCall *m = GetMethodCall(i);
-   TDataMember *dm = GetDataMember(i);
+   //   TDataMember *dm = GetDataMember(i);
+   TStreamerElement *element = (TStreamerElement*)GetDataMember(i);
    
    if (m==0) {
-      if (dm==0) return 0;
-      m = dm->GetterMethod();
-
-      if (m==0) {
-         long offset = dm->GetOffset();
-         if (offset==0) {
-            Streamer_t dummy;
-            offset = dm->GetClass()->GetStreamerInfo()->GetDataMemberOffset(dm,dummy);
-         }
-
-         char *thisobj;
-         if (leaf->InheritsFrom("TLeafObject") ) thisobj = (char*)leaf->GetObject();
-         else {
-           TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
-           TStreamerInfo * info = branch->GetInfo();
-           Int_t offset = info->GetOffsets()[branch->GetID()];
-           thisobj = (char*) *(void**)((((char*)branch->GetAddress())+offset));
-         }
-         switch (dm->GetDataType()->GetType()) {
-            case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+offset));
-            case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+offset));
-            case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+offset));
-            case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+offset));
-            case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+offset)); 
-            case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+offset)); 
-            case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+offset));
-            case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+offset));
-            case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+offset));
-            case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+offset));
-            case kchar:     return (Double_t)(*(char*)(thisobj+offset));
-            case kOther_t:  
-            default:        return 0;
-         }
-
+      if (element==0) return 0;
+      Long_t offset = element->GetOffset();
+      char *thisobj;
+      if (leaf->InheritsFrom("TLeafObject") ) thisobj = (char*)leaf->GetObject();
+      else {
+        TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+        TStreamerInfo * info = branch->GetInfo();
+        Int_t offset = info->GetOffsets()[branch->GetID()];
+        thisobj = (char*) *(void**)((((char*)branch->GetAddress())+offset));
       }
-      
+      switch (element->GetType()) {
+         case kChar_t:   return (Double_t)(*(Char_t*)(thisobj+offset));
+         case kUChar_t:  return (Double_t)(*(UChar_t*)(thisobj+offset));
+         case kShort_t:  return (Double_t)(*(Short_t*)(thisobj+offset));
+         case kUShort_t: return (Double_t)(*(UShort_t*)(thisobj+offset));
+         case kInt_t:    return (Double_t)(*(Int_t*)(thisobj+offset)); 
+         case kUInt_t:   return (Double_t)(*(UInt_t*)(thisobj+offset)); 
+         case kLong_t:   return (Double_t)(*(Long_t*)(thisobj+offset));
+         case kULong_t:  return (Double_t)(*(ULong_t*)(thisobj+offset));
+         case kFloat_t:  return (Double_t)(*(Float_t*)(thisobj+offset));
+         case kDouble_t: return (Double_t)(*(Double_t*)(thisobj+offset));
+         case kchar:     return (Double_t)(*(char*)(thisobj+offset));
+         case kOther_t:  
+         default:        return 0;
+      }
    }
 
    void *thisobj; 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.36 2001/04/09 08:07:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.37 2001/04/09 14:20:09 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1478,6 +1478,10 @@ Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
       BuildRealData(pointer);
       sinfo->BuildOld();
    }
+   // This is necessary because it might be induced later anyway if an object
+   // of the same type is either a base class or a pointer data member of this
+   // class of any contained objects.
+   if (sinfo->IsOptimized() && !TStreamerInfo::CanOptimize()) sinfo->Compile();
 
    //write the class version number and reserve space for the byte count
    UInt_t R__c = b.WriteVersion(this, kTRUE);

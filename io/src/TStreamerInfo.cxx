@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.52 2001/04/13 12:35:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.53 2001/04/17 16:41:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -874,6 +874,26 @@ Int_t TStreamerInfo::GetSize() const
 //  return total size of all persistent elements of the class
    
    return fSize;
+}
+
+//______________________________________________________________________________
+TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember) const
+{
+//  return the streamer element for "datamember"
+
+   if (!fElements) return 0;
+   TStreamerElement *element = (TStreamerElement*)fElements->FindObject(datamember);
+   if (element) return element;
+
+   TBaseClass *base;
+   TIter nextb(fClass->GetListOfBases());
+   //iterate on list of base classes
+   while((base = (TBaseClass*)nextb())) {
+      TClass* cl = gROOT->GetClass(base->GetName());
+      element = cl->GetStreamerInfo()->GetStreamerElement(datamember);
+      if (element) return element;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
