@@ -40,7 +40,7 @@ $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(MAINLIBS) $(PYTHIA6LIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGPythia6.$(SOEXT) $@ \
 		   "$(PYTHIA6O) $(PYTHIA6DO)" \
-		   "$(PYTHIA6LIBEXTRA) $(PYTHIA6)"
+		   "$(PYTHIA6LIBEXTRA)"
 
 $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

@@ -41,7 +41,7 @@ $(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(PYTHIALIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libEGPythia.$(SOEXT) $@ \
 		   "$(PYTHIAO) $(PYTHIADO)" \
-		   "$(PYTHIALIBEXTRA) $(PYTHIA)"
+		   "$(PYTHIALIBEXTRA)"
 
 $(PYTHIADS):    $(PYTHIAH1) $(PYTHIAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
