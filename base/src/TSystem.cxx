@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.94 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/base:$Name: v4-00-08-patches $:$Id: TSystem.cxx,v 1.95 2004/07/09 07:23:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1011,9 +1011,13 @@ int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
 
    int res = GetPathInfo(path, id, &lsize, flags, modtime);
 
-   if (size && sizeof(Long_t) == 4 && lsize > kMaxInt) {
-      Error("GetPathInfo", "file %s > 2 GB, use GetPathInfo() with Long64_t size", path);
-      *size = kMaxInt;
+   if (size) {
+      if (sizeof(Long_t) == 4 && lsize > kMaxInt) {
+         Error("GetPathInfo", "file %s > 2 GB, use GetPathInfo() with Long64_t size", path);
+         *size = kMaxInt;
+      } else {
+         *size = (Long_t)lsize;
+      }
    }
 
    return res;
