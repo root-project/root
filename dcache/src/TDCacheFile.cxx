@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.18 2004/05/07 16:27:31 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.19 2004/07/13 11:33:55 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 // Modified: Tigran Mkrtchyan 29/06/2004
@@ -200,18 +200,11 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
    // Read specified byte range from remote file via dCache daemon.
    // Returns kTRUE in case of error.
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::ReadBuffer(buf, len);
@@ -225,18 +218,11 @@ Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
 
    if (!IsOpen() || !fWritable) return kTRUE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
-         Error("WriteBuffer", "error writing to cache");
+   Int_t st;
+   if ((st = WriteBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::WriteBuffer(buf, len);

@@ -1,4 +1,4 @@
-// @(#)root/chirp:$Name:$:$Id:$
+// @(#)root/chirp:$Name:  $:$Id: TChirpFile.h,v 1.3 2004/02/13 14:26:59 rdm Exp $
 // Author: Dan Bradley   17/12/2002
 
 /*************************************************************************
@@ -31,10 +31,9 @@
 class TChirpFile : public TFile {
 
 private:
-   Long64_t fOffset;
-   struct   chirp_client *chirp_client;
+   struct chirp_client *chirp_client;
 
-   TChirpFile() : fOffset(0), chirp_client(0) { }
+   TChirpFile() : chirp_client(0) { }
 
    // Interface to basic system I/O routines
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);

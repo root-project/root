@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.51 2004/07/04 17:48:43 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.52 2004/07/07 23:25:33 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -263,18 +263,11 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         Seek(off + len);
-         return result;
-      }
+      return kFALSE;
    }
 
    if (gApplication && gApplication->GetSignalHandler())
@@ -339,19 +332,11 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
-         SetBit(kWriteError);
-         Error("WriteBuffer", "error writing to cache");
+   Int_t st;
+   if ((st = WriteBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         Seek(off + len);
-         return result;
-      }
+      return kFALSE;
    }
 
    gSystem->IgnoreInterrupt();
@@ -523,7 +508,6 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    Int_t tcpwindowsize = 65535;
 
    fSocket    = 0;
-   fOffset    = 0;
    fErrorCode = -1;
 
    fOption = option;

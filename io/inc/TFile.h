@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.32 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.33 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    TArrayC      *fClassIndex;     //!Index of TStreamerInfo classes written to this file
    TCache       *fCache;          //!Page cache used to reduce number of small I/O's
    TObjArray    *fProcessIDs;     //!Array of pointers to TProcessIDs
+   Long64_t      fOffset;         //!Seek offset used by remote file classes
    TArchiveFile *fArchive;        //!Archive file from which we read this file
    Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
    Bool_t        fIsArchive;      //!True if this is a pure archive file
@@ -65,7 +66,10 @@ protected:
    static Double_t fgBytesWrite;  //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;   //Number of bytes read by all TFile objects
 
-   void Init(Bool_t create);
+   void     Init(Bool_t create);
+   Long64_t GetRelOffset() const { return fOffset - fArchiveOffset; }
+   Int_t    ReadBufferViaCache(char *buf, Int_t len);
+   Int_t    WriteBufferViaCache(const char *buf, Int_t len);
 
    // Interface to basic system I/O routines
    virtual Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);

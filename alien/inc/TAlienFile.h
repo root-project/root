@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.2 2003/12/30 13:16:50 brun Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.3 2004/01/05 13:46:07 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -42,7 +42,6 @@ class TAlienFile : public TFile {
 
 private:
    TUrl      fUrl;                 //URL of file
-   Long64_t  fOffset;              //seek offet
    TFile    *fSubFile;             //sub file (PFN)
 
    TAlienFile() : fUrl("dummy") { }

@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.8 2003/01/13 15:05:29 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.9 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -37,7 +37,6 @@ class TRFIOFile : public TFile {
 
 private:
    TUrl      fUrl;        //URL of file
-   Long64_t  fOffset;     //seek offet
 
    TRFIOFile() : fUrl("dummy") { }
 

@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.5 2004/04/29 17:05:39 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.6 2004/07/13 11:33:55 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Updated: William Tanenbaum 21/11/2003
 // Updated: Tgiran Mkrtchyan 28/06/2004
@@ -41,11 +41,10 @@
 class TDCacheFile : public TFile {
 
 private:
-   Long64_t fOffset;	// file offset
-   Bool_t fStatCached;	//! (transient) is file status cached?
+   Bool_t fStatCached;       //! (transient) is file status cached?
    struct stat fStatBuffer;  //! (transient) Cached file status buffer (for performance)
 
-   TDCacheFile() : fOffset(0), fStatCached(kFALSE) { }
+   TDCacheFile() : fStatCached(kFALSE) { }
 
    // Interface to basic system I/O routines
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.14 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.15 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -46,7 +46,6 @@ class TNetFile : public TFile {
 protected:
    TUrl      fUrl;        //URL of file
    TString   fUser;       //remote user name
-   Long64_t  fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
    Int_t     fProtocol;   //rootd protocol level
    Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
@@ -56,13 +55,13 @@ protected:
                               Int_t tcpwindowsize, Bool_t forceOpen,
                               Bool_t forceRead);
    virtual void Create(const char *url, Option_t *option, Int_t netopt);
-   void   Init(Bool_t create);
-   void   Print(Option_t *option) const;
-   void   PrintError(const char *where, Int_t err);
-   Int_t  Recv(Int_t &status, EMessageTypes &kind);
-   Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t  SysClose(Int_t fd);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   void         Init(Bool_t create);
+   void         Print(Option_t *option) const;
+   void         PrintError(const char *where, Int_t err);
+   Int_t        Recv(Int_t &status, EMessageTypes &kind);
+   Int_t        SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   Int_t        SysClose(Int_t fd);
+   Int_t        SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
 
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
@@ -91,7 +90,7 @@ private:
    TFTP       *fFTP;         // Connection to rootd
    TString     fHost;        // Remote host
    TString     fUser;        // Remote user
-              
+
    void       *GetDirPtr() const { return fDirp; }
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.4 2004/02/09 21:43:36 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.5 2004/05/26 10:34:04 rdm Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -87,7 +87,6 @@ TAlienFile::TAlienFile(const char *url, Option_t * option,
    char *optionstart;
    TUrl purl(url);
 
-   fOffset = 0;
    fOption = option;
    fOption.ToUpper();
    fSubFile = 0;

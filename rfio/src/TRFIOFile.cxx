@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.28 2003/12/30 13:16:51 brun Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.29 2004/03/08 15:03:56 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -115,7 +115,6 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
-   fOffset = 0;
    fOption = option;
    fOption.ToUpper();
 
@@ -341,8 +340,8 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
+      Long64_t off = GetRelOffset();
+      if ((st = fCache->ReadBuffer(off, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
       }
@@ -366,8 +365,8 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
+      Long64_t off = GetRelOffset();
+      if ((st = fCache->WriteBuffer(off, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
       }

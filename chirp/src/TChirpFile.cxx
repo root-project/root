@@ -1,4 +1,4 @@
-// @(#)root/chirp:$Name:$:$Id:$
+// @(#)root/chirp:$Name:  $:$Id: TChirpFile.cxx,v 1.7 2004/02/13 14:26:59 rdm Exp $
 // Author: Dan Bradley   17/12/2002
 
 /*************************************************************************
@@ -44,7 +44,6 @@ TChirpFile::TChirpFile(const char *path, Option_t *option,
 {
    //Passing option "NET" to prevent base-class from doing any local access.
 
-   fOffset = 0;
    chirp_client = 0;
 
    fOption = option;
@@ -126,18 +125,11 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
    // Read specified byte range from remote file via Chirp daemon.
    // Returns kTRUE in case of error.
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
+   Int_t st;
+   if ((st = ReadBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::ReadBuffer(buf, len);
@@ -151,18 +143,11 @@ Bool_t TChirpFile::WriteBuffer(const char *buf, Int_t len)
 
    if (!IsOpen() || !fWritable) return kTRUE;
 
-   if (fCache) {
-      Int_t st;
-      Long64_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
-         Error("WriteBuffer", "error writing to cache");
+   Int_t st;
+   if ((st = WriteBufferViaCache(buf, len))) {
+      if (st == 2)
          return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         Seek(off + len);
-         return kFALSE;
-      }
+      return kFALSE;
    }
 
    return TFile::WriteBuffer(buf, len);

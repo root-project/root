@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.128 2004/07/19 13:32:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.129 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -72,8 +72,9 @@ TFile::TFile() : TDirectory()
    fCache         = 0;
    fProcessIDs    = 0;
    fNProcessIDs   = 0;
-   fArchiveOffset = 0;
+   fOffset        = 0;
    fArchive       = 0;
+   fArchiveOffset = 0;
    fIsArchive     = kFALSE;
 
    if (gDebug)
@@ -218,6 +219,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fCache      = 0;
    fProcessIDs = 0;
    fNProcessIDs= 0;
+   fOffset     = 0;
 
    fOption.ToUpper();
 
@@ -882,13 +884,16 @@ Long64_t TFile::GetSize() const
    // be stat'ed.
 
    Long64_t size;
-   Long_t id, flags, modtime;
 
-   if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
-      Error("GetSize", "cannot stat the file %s", GetName());
-      return -1;
+   if (fArchive && fArchive->GetMember()) {
+      size = fArchive->GetMember()->GetDecompressedSize();
+   } else {
+      Long_t id, flags, modtime;
+      if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
+         Error("GetSize", "cannot stat the file %s", GetName());
+         return -1;
+      }
    }
-
    return size;
 }
 
@@ -1148,6 +1153,28 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
       return kFALSE;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
+{
+   // Read buffer via cache. Returns 0 if cache is not active, 1 in case
+   // read via cache was successful, 2 in case read via cache failed.
+
+   if (!fCache) return 0;
+
+   Int_t st;
+   Long64_t off = GetRelOffset();
+   if ((st = fCache->ReadBuffer(off, buf, len)) < 0) {
+      Error("ReadBuffer", "error reading from cache");
+      return 2;
+   }
+   if (st > 0) {
+      // fOffset might have been changed via TCache::ReadBuffer(), reset it
+      Seek(off + len);
+      return 1;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1569,6 +1596,29 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
       return kFALSE;
    }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
+{
+   // Write buffer via cache. Returns 0 if cache is not active, 1 in case
+   // write via cache was successful, 2 in case write via cache failed.
+
+   if (!fCache) return 0;
+
+   Int_t st;
+   Long64_t off = GetRelOffset();
+   if ((st = fCache->WriteBuffer(off, buf, len)) < 0) {
+      SetBit(kWriteError);
+      Error("WriteBuffer", "error writing to cache");
+      return 2;
+   }
+   if (st > 0) {
+      // fOffset might have been changed via TCache::WriteBuffer(), reset it
+      Seek(off + len);
+      return 1;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
