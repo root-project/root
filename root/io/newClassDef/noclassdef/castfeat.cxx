@@ -15,13 +15,27 @@ public:
    
    ReadCast(void* startAdd, TClass* clActual) : fStartAdd((char*)startAdd), fActualClass(clActual) {};
    
-   template <class T> operator T*() {
+   template <class T> operator T*() const {
       TClass *tcl = gROOT->GetClass(typeid(T));
       Int_t offset = fActualClass->GetBaseClassOffset(tcl);
       if (offset<0) return 0;
-      return (T*)fStartAdd+offset;
+      return (T*)(fStartAdd+offset);
    }
+   operator A*() const {
+      TClass *tcl = gROOT->GetClass(typeid(A));
+      Int_t offset = fActualClass->GetBaseClassOffset(tcl);
+      if (offset<0) return 0;
+      return (A*)(fStartAdd+offset);
+   }
+   /*operator B*() const {
+      TClass *tcl = gROOT->GetClass(typeid(B));
+      Int_t offset = fActualClass->GetBaseClassOffset(tcl);
+      if (offset<0) return 0;
+      return (B*)(fStartAdd+offset);
+   }*/
 };
+
+//operator B*(ReadCast&);
 
 class WriteCast {
 public:
@@ -40,7 +54,19 @@ public:
    }
 };
 
+WriteCast gWriteCast[20];
+
+ReadCast Read(int what) {
+   return ReadCast( gWriteCast[what].fStartAdd, gWriteCast[what].fActualClass );
+}
+
+int Write( int where, WriteCast w ) {
+   gWriteCast[where] = w;
+   return where;
+}
+
 void castfeat() {
+
    A * a = new A;
    B * b = new B;
    C * c = new C;
@@ -49,6 +75,17 @@ void castfeat() {
    A * ac = c;
    A * ad = d;
    B * bd = d;
+
+   Write(0,a);
+//   (int*)Read(0);
+   ReadCast rc = Read(0);
+   A *r_a = rc;
+   if (a!=r_a) fprintf(stderr,"simple a not read properly!\n");
+
+   B *r_b = rc;
+   if (0!=r_b) fprintf(stderr,"simple a interpreted as a b!\n");
+   if (0==r_b) fprintf(stderr,"simple a is 0 as a b\n");
+
    
    WriteCast * w;
    w = new WriteCast( a );
