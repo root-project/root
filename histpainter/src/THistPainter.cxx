@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.55 2001/12/05 17:02:50 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.56 2001/12/09 17:35:39 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2008,6 +2008,9 @@ void THistPainter::PaintErrors()
 //*-*-   '4' A smoothed filled area is drawn through the end points of the
 //*-*-       vertical error bars.
 //*-*-   '0' Turn off the symbols clipping.
+//*-*-
+//*-*- Note that for all options, the line and fill attributes of the
+//*-*- histogram are used for the errors or errors contours.
 //Begin_Html
 /*
 <img src="gif/PaintErrors.gif">
@@ -2245,6 +2248,9 @@ L30:
 
    if (option3) {
       TGraph graph;
+      graph.SetLineStyle(fH->GetLineStyle());
+      graph.SetLineColor(fH->GetLineColor());
+      graph.SetLineWidth(fH->GetLineWidth());
       graph.SetFillStyle(fH->GetFillStyle());
       graph.SetFillColor(fH->GetFillColor());
       Int_t logx = gPad->GetLogx();
