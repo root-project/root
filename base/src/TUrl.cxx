@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.15 2003/12/05 01:52:05 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.16 2004/02/16 22:49:19 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -245,6 +245,8 @@ TUrl::TUrl(const TUrl &url) : TObject(url)
 
    fUrl      = url.fUrl;
    fProtocol = url.fProtocol;
+   fUser     = url.fUser;
+   fPasswd   = url.fPasswd;
    fHost     = url.fHost;
    fFile     = url.fFile;
    fAnchor   = url.fAnchor;
@@ -261,6 +263,8 @@ TUrl &TUrl::operator=(const TUrl &rhs)
       TObject::operator=(rhs);
       fUrl      = rhs.fUrl;
       fProtocol = rhs.fProtocol;
+      fUser     = rhs.fUser;
+      fPasswd   = rhs.fPasswd;
       fHost     = rhs.fHost;
       fFile     = rhs.fFile;
       fAnchor   = rhs.fAnchor;
