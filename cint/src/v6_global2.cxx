@@ -447,6 +447,10 @@ int G__decl_obj=0;
 struct G__ConstStringList* G__SystemIncludeDir=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1476
+int G__command_eval=0 ;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

@@ -1322,6 +1322,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
       G__genericerror("Error: invalid pure virtual function initializer");
     }
     /* this is ANSI style func proto without param name */
+#ifndef G__OLDIMPLEMENTATION1477
+    if(0==G__p_ifunc->ansi[func_now]) G__p_ifunc->ansi[func_now]=1;
+#endif
     if(isparam) {
       fsetpos(G__ifile.fp,&temppos);
       G__ifile.line_number = store_line_number; 
@@ -1335,7 +1338,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	G__genericerror(
         "Limitation: Items in header must be separately specified");
     }
+#ifdef G__OLDIMPLEMENTATION1477
     G__p_ifunc->ansi[func_now]=1;
+#endif
     /* entry fp = NULL means this is header */
     G__p_ifunc->entry[func_now].p=(void*)NULL;
     G__p_ifunc->entry[func_now].line_number = -1;
@@ -1356,6 +1361,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
   else if(strcmp(paraname,"const")==0 ||
 	  strcmp(paraname,"const ")==0) {
     /* this is ANSI style func proto without param name */
+#ifndef G__OLDIMPLEMENTATION1477
+    if(0==G__p_ifunc->ansi[func_now]) G__p_ifunc->ansi[func_now]=1;
+#endif
     if(isparam) {
       fsetpos(G__ifile.fp,&temppos);
       G__ifile.line_number = store_line_number; 
@@ -1378,7 +1386,9 @@ char *funcheader;   /* funcheader = 'funcname(' */
       G__p_ifunc->entry[func_now].line_number = -1;
     }
     G__p_ifunc->ispurevirtual[func_now]=0;
+#ifdef G__OLDIMPLEMENTATION1477
     G__p_ifunc->ansi[func_now]=1;
+#endif
     G__p_ifunc->isconst[func_now]|=G__CONSTFUNC;
   }
 

@@ -1799,7 +1799,11 @@ void G__free_tempobject()
   struct G__tempobject_list *store_p_tempbuf;
 
 #ifndef G__OLDIMPLEMENTATION1164
-  if(G__xrefflag) return;
+  if(G__xrefflag
+#ifndef G__OLDIMPLEMENTATION1476
+     || G__command_eval
+#endif
+     ) return;
 #endif
 
   /*****************************************************

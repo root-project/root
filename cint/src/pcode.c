@@ -6315,13 +6315,26 @@ int i;
 
   buf.tagnum = -1;
   buf.typenum = -1;
+#ifndef G__OLDIMPLEMENTATION1495
+  buf.ref = 0;
+#endif
 
   switch(i) {
   case G__RSVD_LINE:
     G__letint(&buf,'i',(long)G__ifile.line_number);
     break;
   case G__RSVD_FILE:
+#ifndef G__OLDIMPLEMENTATION1475
+    if(0<=G__ifile.filenum && G__ifile.filenum<G__MAXFILE &&
+       G__srcfile[G__ifile.filenum].filename) {
+      G__letint(&buf,'C',(long)G__srcfile[G__ifile.filenum].filename);
+    }
+    else {
+      G__letint(&buf,'C',(long)0);
+    }
+#else
     G__letint(&buf,'C',(long)G__ifile.name);
+#endif
     break;
   case G__RSVD_ARG:
     G__letint(&buf,'i',(long)G__argn);

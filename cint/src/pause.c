@@ -3391,6 +3391,9 @@ G__value *rslt;
 	G__more_pause((FILE*)NULL,1);
 	G__SET_TEMPENV;
 	strcpy(sname,tname);
+#ifndef G__OLDIMPLEMENTATION1476
+	G__command_eval=1 ;
+#endif
 	buf=G__exec_tempfile(sname);
 	if(rslt) *rslt = buf;
 	remove(sname);
@@ -3422,6 +3425,10 @@ G__value *rslt;
 	   ) fprintf(G__sout,"%s\n",syscom);
 #ifndef G__OLDIMPLEMENTATION1474
 	noprintflag = 0;
+#endif
+#ifndef G__OLDIMPLEMENTATION1476
+	G__command_eval=0 ;
+	G__free_tempobject();
 #endif
 #ifndef G__OLDIMPLEMENTATION1004
 	if(-1==G__func_now) G__p_local=store_local;
