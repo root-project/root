@@ -38,8 +38,8 @@ include/%.h:    $(XMLDIRI)/%.h
 
 $(XMLLIB):      $(XMLO) $(XMLDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRXML.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
-		   "$(XMLLIBDIR) $(XMLCLILIB)"
+		   "$(SOFLAGS)" libRXML.$(SOEXT) $@ "$(XMLO) $(XMLDO)"
+#		   "$(XMLLIBDIR) $(XMLCLILIB)"
 
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -66,5 +66,5 @@ distclean-xml:  clean-xml
 distclean::     distclean-xml
 
 ##### extra rules ######
-$(XMLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(XMLINCDIR) -o $@ -c $<
+#$(XMLO): %.o: %.cxx
+#	$(CXX) $(OPT) $(CXXFLAGS) -I$(XMLINCDIR) -o $@ -c $<
