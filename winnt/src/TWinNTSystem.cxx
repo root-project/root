@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.96 2004/06/22 17:30:33 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.97 2004/07/08 17:55:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2064,6 +2064,17 @@ char *TWinNTSystem::ExpandPathName(const char *path)
    if (ExpandPathName(patbuf)) return 0;
 
    return StrDup(patbuf.Data());
+}
+
+//______________________________________________________________________________
+int TWinNTSystem::Chmod(const char *file, UInt_t mode)
+{
+   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+   // On windows mode can only be a combination of "user read" (0400),
+   // "user write" (0200) or "user read | user write" (0600). Any other value
+   // for mode are ignored.
+
+   return ::_chmod(file, mode);
 }
 
 //______________________________________________________________________________

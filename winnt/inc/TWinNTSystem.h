@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.29 2004/03/04 09:04:10 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.30 2004/05/18 09:33:18 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@
 #endif
 
 #ifndef MAX_SID_SIZE
-#define MAX_SID_SIZE   1024 
+#define MAX_SID_SIZE   1024
 #endif
 #define MAX_NAME_STRING   1024
 
@@ -51,7 +51,7 @@ struct passwd {
    char *pw_passwd;     // user password
    int   pw_uid;        // user ID
    int   pw_gid;        // user's group ID
-   int   pw_quota;      // 
+   int   pw_quota;      //
    char *pw_gecos;      // user's real (long) name
    char *pw_dir;        // user home directory
    char *pw_shell;      // shell command
@@ -183,6 +183,7 @@ public:
                                  Long_t *flags, Long_t *modtime);
    int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                                  Long_t *blocks, Long_t *bfree);
+   int               Chmod(const char *file, UInt_t mode);
    int               Umask(Int_t mask);
    int               Utime(const char *file, Long_t modtime, Long_t actime);
    const char       *UnixPathName(const char *unixpathname);
