@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.16 2002/05/30 19:43:07 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.17 2002/06/06 15:12:50 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -672,20 +672,34 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
    TThread *th;
    if ((th=Self())) { // we are in the thread
 
+     TConditionImp *fCondImp = fgXActCondi->fConditionImp;
+     TMutexImp *fCondMutex = fgXActCondi->GetMutex()->fMutexImp;
+     
       th->PutComm("XARequest: XActMutex Locking");
       fgXActMutex ->Lock();
       th->PutComm("XARequest: XActMutex Locked");
+
+      // Mathieu de Naurois
+      // Lock now, so the XAction signal will wait
+      // and never come before the wait
+      fCondMutex->Lock();
+
       fgXAnb = nb;
       fgXArr = ar;
-      fgXArt = 0;
+      fgXArt = 0;      
       fgXAct = (char*)xact;
+      th->PutComm((char *)fgXAct);
       // while(fgXAct) {gSystem->Sleep(10);};
       // th->PutComm("XARequest: Condition Wait");
-      th->PutComm(fgXAct);
+      //th->PutComm(fgXAct);
+
+      if(fCondImp) fCondImp->Wait();      
+      fCondMutex->UnLock();
 
       // This nasty tric for Linux only
-      // fgXActCondi->Wait();
-      while (fgXAct) {fgXActCondi->TimedWait(1);}
+      //printf("Waiting for condition\n");
+      //fgXActCondi->Wait();
+      //while (fgXAct) {fgXActCondi->TimedWait(time(NULL) + 2);}
 
       th->PutComm();
       if (iret) *iret = fgXArt;
@@ -699,6 +713,10 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
+   TConditionImp *fCondImp = fgXActCondi->fConditionImp;
+   TMutexImp *fCondMutex = fgXActCondi->GetMutex()->fMutexImp;
+   fCondMutex->Lock();
+
    char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
    enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
    int iact = strstr(acts,fgXAct) - acts;
@@ -769,8 +787,13 @@ void TThread::XAction()
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
 
+   //usleep(10000); 
+   // Sometimes the XARequest is not already waiting for the signal
+   //fgXActCondi->Signal();
    fgXAct = 0;
-   fgXActCondi->Signal();
+   if(fCondImp) fCondImp->Signal();      
+   fCondMutex->UnLock();
+
 }
 
 //______________________________________________________________________________
@@ -807,11 +830,13 @@ TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 //______________________________________________________________________________
 Bool_t TThreadTimer::Notify()
 {
+
    if( TThread::fgXAct ) { TThread::XAction();}
    Reset();
-
+  
    return( kFALSE );
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

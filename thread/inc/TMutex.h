@@ -1,4 +1,5 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.2 2002/02/14 16:12:52 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -35,9 +36,8 @@
 
 
 class TMutex : public TVirtualMutex {
-
-friend class TCondition;
-
+  friend class TCondition;
+  friend class TThread;
 private:
    TMutexImp  *fMutexImp;   // pointer to mutex implementation
    UInt_t      fId;         // id of thread which locked mutex

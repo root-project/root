@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TMutex;
 
 
 class TCondition : public TObject {
-
+  friend class TThread;
 private:
    TConditionImp  *fConditionImp;  // pointer to condition variable implementation
    TMutex         *fMutex;         // mutex used around Wait() and TimedWait()
