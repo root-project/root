@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.63 2001/10/24 14:03:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.64 2001/10/27 10:39:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -553,8 +553,12 @@ void TH1::Build()
 //______________________________________________________________________________
 void TH1::Add(TF1 *f1, Double_t c1)
 {
-   // Performs the operation: this = this + c1*f1
-   // if errors are defined (see TH1::Sumw2), errors are also recalculated.
+// Performs the operation: this = this + c1*f1
+// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Add
 
    if (!f1) {
       Error("Add","Attempt to add a non-existing function");
@@ -590,7 +594,8 @@ void TH1::Add(TF1 *f1, Double_t c1)
             Double_t error1 = GetBinError(bin);
             AddBinContent(bin,cu);
             if (fSumw2.fN) {
-               fSumw2.fArray[bin] = c1*c1*error1*error1;
+               //errors are unchanged: error on f1 assumed 0
+               fSumw2.fArray[bin] = error1*error1;
             }
          }
       }
@@ -600,10 +605,14 @@ void TH1::Add(TF1 *f1, Double_t c1)
 //______________________________________________________________________________
 void TH1::Add(TH1 *h1, Double_t c1)
 {
-   // Performs the operation: this = this + c1*h1
-   // if errors are defined (see TH1::Sumw2), errors are also recalculated.
-   // Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
-   // if not already set.
+// Performs the operation: this = this + c1*h1
+// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+// Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
+// if not already set.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Add
 
    if (!h1) {
       Error("Add","Attempt to add a non-existing histogram");
@@ -672,6 +681,9 @@ void TH1::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
 //   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
 //
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Add
 
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing histogram");
@@ -880,8 +892,12 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TH1::Divide(TF1 *f1, Double_t c1)
 {
-   // Performs the operation: this = this/(c1*f1)
-   // if errors are defined (see TH1::Sumw2), errors are also recalculated.
+// Performs the operation: this = this/(c1*f1)
+// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Divide
 
    if (!f1) {
       Error("Add","Attempt to divide by a non-existing function");
@@ -919,7 +935,8 @@ void TH1::Divide(TF1 *f1, Double_t c1)
             else    w = 0;
             SetBinContent(bin,w);
             if (fSumw2.fN) {
-               fSumw2.fArray[bin] = c1*c1*error1*error1;
+               if (cu != 0) fSumw2.fArray[bin] = error1*error1/(cu*cu);
+               else         fSumw2.fArray[bin] = 0;
             }
          }
       }
@@ -939,6 +956,10 @@ void TH1::Divide(TH1 *h1)
 //   The resulting errors are calculated assuming uncorrelated histograms.
 //   See the other TH1::Divide that gives the possibility to optionaly
 //   compute Binomial errors.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Scale
 
    if (!h1) {
       Error("Divide","Attempt to divide by a non-existing histogram");
@@ -1015,6 +1036,9 @@ void TH1::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 //   The resulting errors are calculated assuming uncorrelated histograms.
 //   However, if option ="B" is specified, Binomial errors are computed.
 //
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Divide
 
    TString opt = option;
    opt.ToLower();
@@ -2359,8 +2383,12 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
 //______________________________________________________________________________
 void TH1::Multiply(TF1 *f1, Double_t c1)
 {
-   // Performs the operation: this = this*c1*f1
-   // if errors are defined (see TH1::Sumw2), errors are also recalculated.
+// Performs the operation: this = this*c1*f1
+// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Multiply
 
    if (!f1) {
       Error("Add","Attempt to multiply by a non-existing function");
@@ -2397,7 +2425,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
             w = GetBinContent(bin)*c1*cu;
             SetBinContent(bin,w);
             if (fSumw2.fN) {
-               fSumw2.fArray[bin] = c1*c1*error1*error1;
+               fSumw2.fArray[bin] = cu*cu*error1*error1;
             }
          }
       }
@@ -2415,6 +2443,10 @@ void TH1::Multiply(TH1 *h1)
 //   If errors of this are available (TH1::Sumw2), errors are recalculated.
 //   Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
+//
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Multiply
 
    if (!h1) {
       Error("Multiply","Attempt to multiply by a non-existing histogram");
@@ -2486,6 +2518,9 @@ void TH1::Multiply(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 //   Note that if h1 or h2 have Sumw2 set, Sumw2 is automatically called for this
 //   if not already set.
 //
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Multiply
 
    TString opt = option;
    opt.ToLower();
@@ -2774,6 +2809,9 @@ void TH1::Scale(Double_t c1)
 // Note that both contents and errors(if any) are scaled.
 // This function uses the services of TH1::Add
 //
+// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// you should call Sumw2 before making this operation.
+// This is particularly important if you fit the histogram after TH1::Scale
 
    Double_t ent = fEntries;
    Add(this,this,c1,0);
