@@ -4,7 +4,7 @@
 #include <TSQLRow.h>
 #endif
    
-void select()
+void sqlselect()
 {
    TSQLServer *db = TSQLServer::Connect("mysql://localhost/test","nobody", "");
 

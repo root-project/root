@@ -1,4 +1,4 @@
-void filldb(int nfiles = 1000)
+void sqlfilldb(int nfiles = 1000)
 {
    // Fill run catalog with nfiles entries
    

@@ -1,4 +1,4 @@
-void createdb()
+void sqlcreatedb()
 {
    // Create a runcatalog table in a MySQL test database.
    
