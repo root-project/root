@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.106 2003/07/12 12:53:05 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.107 2003/07/17 19:56:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2787,11 +2787,12 @@ void TPad::PaintModified()
 }
 
 //______________________________________________________________________________
-void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *)
+void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*Paint box in CurrentPad World coordinates*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
-
+// if option[0] = 's' the box is forced to be paint with style=0
+   
    if (!gPad->IsBatch()) {
       Int_t px1 = XtoPixel(x1);
       Int_t px2 = XtoPixel(x2);
@@ -2801,7 +2802,12 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
       if (TMath::Abs(px2-px1) < 1) px2 = px1+1;
       if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
 
-      Int_t style = gVirtualX->GetFillStyle();
+      Int_t style0 = gVirtualX->GetFillStyle();
+      Int_t style  = style0;
+      if (option[0] == 's') {
+         gVirtualX->SetFillStyle(0);
+         style = 0;
+      }
       if (style) {
          if (style > 3000 && style < 4000) {
 #ifndef WIN32
@@ -2867,11 +2873,15 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
          }
       } else {
          gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kHollow);
+         if (option[0] == 's') gVirtualX->SetFillStyle(style0);
       }
    }
 
    if (gVirtualPS) {
+      Int_t style0 = gVirtualPS->GetFillStyle();
+      if (option[0] == 's') gVirtualPS->SetFillStyle(0);
       gVirtualPS->DrawBox(x1, y1, x2, y2);
+      if (option[0] == 's') gVirtualPS->SetFillStyle(style0);
    }
 
    Modified();
