@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.18 2001/10/17 08:21:33 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.19 2001/10/18 09:17:20 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -49,6 +49,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stdlib.h>
 #include "TClonesArray.h"
 #include "TMath.h"
 #include "TError.h"
@@ -403,6 +404,7 @@ void TClonesArray::Streamer(TBuffer &b)
    Int_t   nobjects;
    char    nch;
    TString s;
+   char classv[256];
    UInt_t R__s, R__c;
 
    if (b.IsReading()) {
@@ -416,9 +418,16 @@ void TClonesArray::Streamer(TBuffer &b)
       if (v > 1)
          fName.Streamer(b);
       s.Streamer(b);
-      TClass *cl = gROOT->GetClass(s.Data());
+      strcpy(classv,s.Data());
+      Int_t clv = 0;
+      char *semicolon = strchr(classv,';');
+      if (semicolon) {
+         *semicolon = 0;
+         clv = atoi(semicolon+1);
+      }
+      TClass *cl = gROOT->GetClass(classv);
       if (!cl) {
-         printf("TClonesArray::Streamer expecting class %s\n", s.Data());
+         printf("TClonesArray::Streamer expecting class %s\n", classv);
          b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
          return;
       }
@@ -444,7 +453,7 @@ void TClonesArray::Streamer(TBuffer &b)
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
 
-      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
       //must test on sinfo and not on fClass (OK when writing)
       if (CanBypassStreamer()) {
          for (Int_t i = 0; i < nobjects; i++) {
@@ -479,7 +488,8 @@ void TClonesArray::Streamer(TBuffer &b)
       R__c = b.WriteVersion(TClonesArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
-      s = fClass->GetName();
+      sprintf(classv,"%s;%d",fClass->GetName(),fClass->GetClassVersion());
+      s = classv;
       s.Streamer(b);
       nobjects = GetEntriesFast();
       b << nobjects;
