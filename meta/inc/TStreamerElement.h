@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.18 2001/04/24 14:27:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.19 2001/05/23 09:48:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
    Int_t            GetArrayDim() const {return fArrayDim;}
    Int_t            GetArrayLength() const {return fArrayLength;}
    virtual TClass  *GetClassPointer() const;
+   virtual Int_t    GetExecID() const;
    virtual const char *GetFullName() const;
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}

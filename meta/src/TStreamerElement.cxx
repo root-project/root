@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.36 2001/10/15 16:02:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.37 2001/11/22 18:10:01 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -25,8 +25,7 @@
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TFolder.h"
-#include "TExec.h"
-#include "TObjArray.h"
+#include "TRef.h"
 
 const Int_t kMaxLen = 512;
 static char gIncludeName[kMaxLen];
@@ -107,6 +106,34 @@ TClass *TStreamerElement::GetClassPointer() const
    if (fClassObject) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
    return gROOT->GetClass(className);
+}
+
+//______________________________________________________________________________
+Int_t TStreamerElement::GetExecID() const
+{
+   //returns the TExec id for the EXEC instruction in the comment field
+   //of a TRef data member
+   
+   //check if element is a TRef or TRefArray
+   if (strncmp(fTypeName.Data(),"TRef",4) != 0) return 0;
+   
+   //if the UniqueID of this element has already been set, we assume
+   //that it contains the exec id of a TRef object.
+   if (GetUniqueID()) return GetUniqueID();
+   
+   //check if an Exec is specified in the comment field
+   char *action = (char*)strstr(GetTitle(),"EXEC:");
+   if (!action) return 0;
+   char caction[512];
+   strcpy(caction,action+5);
+   char *blank = (char*)strchr(caction,' ');
+   if (blank) *blank = 0;
+   //we have found the Exec name in the comment
+   //we register this Exec to the list of Execs.
+   Int_t index = TRef::AddExec(caction);
+   //we save the Exec index as the uniqueid of this STreamerElement
+   ((TStreamerElement*)this)->SetUniqueID(index+1);
+   return index+1;
 }
 
 //______________________________________________________________________________
@@ -236,38 +263,9 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
          TStreamerElement::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         SetUniqueID(0);
          //check if element is a TRef or TRefArray
-         if (strncmp(fTypeName.Data(),"TRef",4) == 0) {
-            //check if an Exec is specified in the comment field
-            char *action = (char*)strstr(GetTitle(),"EXEC:");
-            if (action) {
-               char caction[512];
-               strcpy(caction,action+5);
-               char *blank = (char*)strchr(caction,' ');
-               if (blank) *blank = 0;
-               //we have found the Exec name in the comment
-               //now search in the list of Execs the Exec number
-               TObject *obj = gROOT->FindObjectAny("Execs");
-               if (!obj) {
-                  //we create a TObjArray to support all Execs and
-                  //we add it to the ROOT Folder structure under /Execs
-                  obj = new TObjArray(10);
-                  gROOT->GetRootFolder()->AddFolder("Execs","List of Execs",(TObjArray*)obj);
-               }
-               if (obj->InheritsFrom(TObjArray::Class())) {
-                  TObjArray *lexecs = (TObjArray*)obj;
-                  TObject *ex = lexecs->FindObject(caction);
-                  if (!ex) {
-                     //we register this Exec to the list of Execs.
-                     ex = new TExec(caction,"");
-                     lexecs->Add(ex);
-                  }
-                  //we save the Exec index as the uniqueid of this STreamerElement
-                  Int_t index = lexecs->IndexOf(ex);
-                  SetUniqueID(index+1);
-               }
-            }
-         }
+         GetExecID();
          return;
       }
       //====process old versions before automatic schema evolution
