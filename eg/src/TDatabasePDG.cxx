@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.14 2001/11/05 11:45:37 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.15 2001/11/06 19:15:13 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #ifdef HAVE_CONFIG
@@ -207,6 +207,78 @@ void TDatabasePDG::Print(Option_t *option) const
    while ((p = (TParticlePDG *)next())) {
       p->Print(option);
    }
+}
+
+//______________________________________________________________________________
+Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) {
+  // Converts Geant3 particle codes to PDG convention. (Geant4 uses
+  // PDG convention already)
+  // Source: BaBar User Guide, Neil I. Geddes,
+  //
+  //Begin_Html
+  /*
+   http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html
+  */
+  //End_Html
+  // with some fixes by PB, marked with (PB) below. Checked against
+  // PDG listings from 2000.
+  //
+  // Paul Balm, Nov 19, 2001
+
+  switch(Geant3number) {
+
+     case 1   : return 22;       // photon
+     case 25  : return -2112;    // anti-neutron
+     case 2   : return -11;      // e+
+     case 26  : return -3122;    // anti-Lambda
+     case 3   : return 11;       // e-
+     case 27  : return -3222;    // Sigma-
+     case 4   : return 12;       // e-neutrino (NB: flavour undefined by Geant)
+     case 28  : return -3212;    // Sigma0
+     case 5   : return -13;      // mu+
+     case 29  : return -3112;    // Sigma+ (PB)*/
+     case 6   : return 13;       // mu-
+     case 30  : return -3322;    // Xi0
+     case 7   : return 111;      // pi0
+     case 31  : return -3312;    // Xi+
+     case 8   : return 211;      // pi+
+     case 32  : return -3334;    // Omega+ (PB)
+     case 9   : return -211;     // pi-
+     case 33  : return -15;      // tau+
+     case 10  : return 130;      // K long
+     case 34  : return 15;       // tau-
+     case 11  : return 321;      // K+
+     case 35  : return 411;      // D+
+     case 12  : return -321;     // K-
+     case 36  : return -411;     // D-
+     case 13  : return 2112;     // n
+     case 37  : return 421;      // D0
+     case 14  : return 2212;     // p
+     case 38  : return -421;     // D0
+     case 15  : return -2212;    // anti-proton
+     case 39  : return 431;      // Ds+
+     case 16  : return 310;      // K short
+     case 40  : return -431;     // anti Ds-
+     case 17  : return 221;      // eta
+     case 41  : return 4122;     // Lamba_c+
+     case 18  : return 3122;     // Lambda
+     case 42  : return 24;       // W+
+     case 19  : return 3222;     // Sigma+
+     case 43  : return -24;      // W-
+     case 20  : return 3212;     // Sigma0
+     case 44  : return 23;       // Z
+     case 21  : return 3112;     // Sigma-
+     case 45  : return 0;        // deuteron
+     case 22  : return 3322;     // Xi0
+     case 46  : return 0;        // triton
+     case 23  : return 3312;     // Xi-
+     case 47  : return 0;        // alpha
+     case 24  : return 3334;     // Omega- (PB)
+     case 48  : return 0;        // G nu ? PDG ID 0 is undefined
+
+     default  : return 0;
+
+  }
 }
 
 //______________________________________________________________________________
