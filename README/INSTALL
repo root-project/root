@@ -63,9 +63,8 @@ version from:
    ftp://root.cern.ch/root/xpm.
 
 Then use either environment variable XPM or "configure" flags
-"--with-xpm=<dir>" to specify where you installed libXpm, if you
-didn't install it in some generally searched directory (see more
-below).
+"--with-xpm-libdir=<dir>" to specify where you installed libXpm, if you
+didn't install it in some generally searched directory (see more below).
 
 If you are using Windows make sure you've installed Cygwin
 
@@ -376,12 +375,12 @@ The flags consist of two classes:
 
    Here is a list of "--with-" flags:
 
-   * xpm
+   * xpm-libdir
      Directory containing libXpm.{so,a}. This option is special, since
      this doesn't correspond to any feature, as described
      above. However, the XPM library is needed on Un*x, and if
      installed somewhere non-standard, this option may help you.
-   * thread
+   * thread-libdir
      Directory containing libpthread.{so,a} (Posix thread
      library). It's highly unlikely that you need to specify this
      option, since libpthread is completely standard on Un*x, and
