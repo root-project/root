@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.4 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.5 2004/07/27 12:27:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -38,7 +38,6 @@ namespace PyROOT {
 
    public:
       typedef bool (*cnvfct_t)( PyObject*, G__CallFunc*, void*& );
-      enum ETopBase { kETB_TArray, kETB_TIter, kETB_TObject, kETB_TString, kETB_Other };
 
    protected:
       virtual bool initialize();
@@ -69,7 +68,7 @@ namespace PyROOT {
       void destroy_() const;
 
       bool initDispatch_();
-      void calcOffset_( long obj );
+      void calcOffset_( void* self, TClass* cls );
 
    private:
    // representation
@@ -80,13 +79,12 @@ namespace PyROOT {
       std::string  m_rtShortName;
       long         m_offset;
       long         m_tagnum;
-      ETopBase     m_topbase;
 
    // call dispatch buffers and cache
       std::vector< void* >    m_argsBuffer;
       std::vector< cnvfct_t > m_argsConverters;
       std::string             m_callString;
-      long                    m_lastObject;
+      void*                   m_lastObject;
 
    // admin
       bool m_isInitialized;

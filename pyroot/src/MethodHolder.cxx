@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.10 2004/07/17 06:32:15 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.11 2004/07/27 12:27:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -261,12 +261,11 @@ inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
    m_methodCall  = 0;
    m_offset      = 0;
    m_tagnum      = -1;
-   m_topbase     = om.m_topbase;
 
    m_argsConverters = om.m_argsConverters;
    m_callString     = om.m_callString;
    m_isInitialized  = om.m_isInitialized;
-   m_lastObject     = -2;
+   m_lastObject     = 0;
 
 // the new args buffer is clean
    m_argsBuffer.resize( om.m_argsBuffer.size() );
@@ -338,30 +337,17 @@ bool PyROOT::MethodHolder::initDispatch_() {
 }
 
 
-void PyROOT::MethodHolder::calcOffset_( long obj ) {
+void PyROOT::MethodHolder::calcOffset_( void* obj, TClass* cls ) {
 // loop optimization
    if ( obj == m_lastObject )
       return;
    m_lastObject = obj;
 
 // actual offset calculation, as needed
-   long derivedtagnum = 0;
-
-   switch( m_topbase ) {
-   case kETB_TString:
-   case kETB_TIter: {
-      m_offset = 0;
-      return;
-   }
-   default: {
-   // most objects have TObject memory layout
-      derivedtagnum = ((TObject*)obj)->IsA()->GetClassInfo()->Tagnum();
-      break;
-   }
-   }
+   long derivedtagnum = cls->GetClassInfo()->Tagnum();
 
    if ( derivedtagnum != m_tagnum ) {
-      m_offset = G__isanybase( m_class->GetClassInfo()->Tagnum(), derivedtagnum, obj );
+      m_offset = G__isanybase( m_class->GetClassInfo()->Tagnum(), derivedtagnum, (long) obj );
       m_tagnum = derivedtagnum;
    }
 }
@@ -369,21 +355,13 @@ void PyROOT::MethodHolder::calcOffset_( long obj ) {
 
 //- constructors and destructor ------------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
-      m_class( cls ), m_method( tm ), m_topbase( kETB_Other ), m_callString( "" ) {
+      m_class( cls ), m_method( tm ), m_callString( "" ) {
    m_methodCall = 0;
-   m_offset = 0;
-   m_tagnum = -1;
-   m_lastObject = -2;
+   m_offset     = 0;
+   m_tagnum     = -1;
+   m_lastObject = 0;
    m_returnType = Utility::kOther;
    m_isInitialized = false;
-   if ( m_class->GetBaseClass( "TObject" ) )
-      m_topbase = kETB_TObject;
-   else if ( m_class->GetName() == "TArray" || m_class->GetBaseClass( "TArray" ) )
-      m_topbase = kETB_TArray;
-   else if ( m_class->GetName() == "TString" || m_class->GetBaseClass( "TString" ) )
-      m_topbase = kETB_TString;
-   else if ( m_class->GetName() == "TIter" || m_class->GetBaseClass( "TIter" ) )
-      m_topbase = kETB_TIter;
 }
 
 PyROOT::MethodHolder::MethodHolder( const MethodHolder& om ) {
@@ -459,8 +437,6 @@ bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple ) {
 bool PyROOT::MethodHolder::execute( void* self ) {
    R__LOCKGUARD( gCINTMutex );
 
-   calcOffset_( (long) self );
-
    G__settemplevel( 1 );
    m_methodCall->Exec( (void*) ( (long) self + m_offset ) );
    G__settemplevel( -1 );
@@ -472,8 +448,6 @@ bool PyROOT::MethodHolder::execute( void* self ) {
 bool PyROOT::MethodHolder::execute( void* self, long& val ) {
    R__LOCKGUARD( gCINTMutex );
 
-   calcOffset_( (long) self );
-
    G__settemplevel( 1 );
    val = m_methodCall->ExecInt( (void*) ( (long) self + m_offset ) );
    G__settemplevel( -1 );
@@ -484,8 +458,6 @@ bool PyROOT::MethodHolder::execute( void* self, long& val ) {
 
 bool PyROOT::MethodHolder::execute( void* self, double& val ) {
    R__LOCKGUARD( gCINTMutex );
-
-   calcOffset_( (long) self );
 
    G__settemplevel( 1 );
    val = m_methodCall->ExecDouble( (void*) ( (long) self + m_offset ) );
@@ -510,11 +482,16 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
       return 0;                              // important: 0, not PyNone
 
 // start actual method invocation
-   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
-   if ( ! obj ) {
+   ObjectHolder* obh = Utility::getObjectHolder( PyTuple_GET_ITEM( aTuple, 0 ) );
+   if ( ! ( obh && obh->getObject() ) ) {
       PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
       return 0;
    }
+
+   void* obj = obh->getObject();
+
+// reset offset as appropriate
+   calcOffset_( obj, obh->objectIsA() );
 
 // execute the method and translate return type
    switch ( m_returnType ) {
@@ -560,8 +537,18 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
                }
                cls = ((TObject*)address)->IsA();
             }
-            else if ( m_rtShortName == "TGlobal" )
-               cls = gROOT->GetClass( ((TGlobal*)address)->GetTypeName() );
+            else if ( m_rtShortName == "TGlobal" ) {
+               TGlobal* g = (TGlobal*)address;
+               cls = gROOT->GetClass( g->GetTypeName() );
+               if ( ! cls )
+                  cls = TGlobal::Class();
+               else {
+                  if ( Utility::isPointer( g->GetFullTypeName() ) )
+                     address = (long)(*(void**)g->GetAddress());
+                  else
+                     address = (long)g->GetAddress();
+               }
+            }
          }
 
          return bindRootObject( new ObjectHolder( (void*)address, cls, false ) );

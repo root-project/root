@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.3 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.4 2004/07/27 12:27:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -23,12 +23,26 @@ namespace PyROOT {
       void* getObjectFromHolderFromArgs( PyObject* argsTuple );
 
    // data/return types
-      enum EDataType { kBool, kChar, kShort, kInt, kLong, kFloat, kDouble,
-         kString, kVoid, kOther,
-         kDoublePtr, kFloatPtr, kLongPtr, kIntPtr, kVoidPtr };
+      enum EDataType {
+         kBool        = 0x0001,
+         kChar        = 0x0002,
+         kShort       = 0x0004,
+         kInt         = 0x0008,
+         kLong        = 0x0010,
+         kFloat       = 0x0020,
+         kDouble      = 0x0040,
+         kVoid        = 0x0080,
+         kOther       = 0x0100,
+         kString      = 0x1000 | kChar,
+         kDoublePtr   = 0x1000 | kDouble,
+         kFloatPtr    = 0x1000 | kFloat,
+         kLongPtr     = 0x1000 | kLong,
+         kIntPtr      = 0x1000 | kInt,
+         kVoidPtr     = 0x1000 | kVoid
+      };
 
       EDataType effectiveType( const std::string& typeName );
-      bool isPointer( const std::string& typeName );
+      int isPointer( const std::string& typeName ); // 0 = no, 1 = yes, 2 = ref
 
    // data
       extern char* theObject_;

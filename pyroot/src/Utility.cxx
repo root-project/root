@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.3 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.4 2004/07/27 12:27:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -72,38 +72,24 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
 
    std::string shortName = TClassEdit::ShortType( G__TypeInfo( typeName.c_str() ).TrueName(), 1 );
 
-   if ( isPointer( typeName ) ) {
-      if ( shortName == "char" )
-         effType = kString;
-      else if ( shortName == "double" )
-         effType = kDoublePtr;
-      else if ( shortName == "float" )
-         effType = kFloatPtr;
-      else if ( shortName == "long" )
-         effType = kLongPtr;
-      else if ( shortName == "int" )
-         effType = kIntPtr;
-      else if ( shortName == "void" )
-         effType = kVoidPtr;
-      else
-         effType = kOther;
-   }
-   else if ( shortName == "bool" )
-      effType = kBool;
+   int mask = isPointer( typeName ) == 1 ? 0x1000 : 0;
+
+   if ( shortName == "bool" )
+      effType = EDataType( (int) kBool | mask );
    else if ( shortName == "char" )
-      effType = kChar;
+      effType = EDataType( (int) kChar | mask );
    else if ( shortName == "short" )
-      effType = kShort;
+      effType = EDataType( (int) kShort | mask );
    else if ( shortName == "int" )
-      effType = kInt;
+      effType = EDataType( (int) kInt | mask );
    else if ( shortName == "long" )
-      effType = kLong;
+      effType = EDataType( (int) kLong | mask );
    else if ( shortName == "float" )
-      effType = kFloat;
+      effType = EDataType( (int) kFloat | mask );
    else if ( shortName == "double" )
-      effType = kDouble;
+      effType = EDataType( (int) kDouble | mask );
    else if ( shortName == "void" )
-      effType = kVoid;
+      effType = EDataType( (int) kVoid | mask );
    else
       effType = kOther;
 
@@ -111,11 +97,15 @@ PyROOT::Utility::EDataType PyROOT::Utility::effectiveType( const std::string& ty
 }
 
 
-bool PyROOT::Utility::isPointer( const std::string& tn ) {
-   bool isp = false;
+int PyROOT::Utility::isPointer( const std::string& tn ) {
+   int isp = 0;
    for ( std::string::const_reverse_iterator it = tn.rbegin(); it != tn.rend(); ++it ) {
-      if ( *it == '*' || *it == '&' ) {
-         isp = true;
+      if ( *it == '*' ) {
+         isp = 1;
+         break;
+      }
+      else if ( *it == '&' ) {
+         isp = 2;
          break;
       }
       else if ( isalnum( *it ) )
