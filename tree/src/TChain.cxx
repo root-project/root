@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.18 2001/04/10 16:31:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.19 2001/04/23 14:07:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -229,10 +229,11 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    TDirectory *cursav = gDirectory;
    char *treename = (char*)GetName();
    char *dot = (char*)strstr(name,".root");
-   if (!dot) {
-      Error("AddFile","a chain element name must contain the string .root");
-      return 0;
-   }
+   //the ".root" is mandatory only if one wants to specify a treename
+   //if (!dot) {
+   //   Error("AddFile","a chain element name must contain the string .root");
+   //   return 0;
+   //}
 
    //Check enough space in fTreeOffset
    if (fNtrees+1 >= fTreeOffsetLen) {
@@ -247,14 +248,16 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
    Int_t nch = strlen(name) + strlen(treename);
    char *filename = new char[nch+1];
    strcpy(filename,name);
-   char *pos = (char*)strstr(filename,".root") + 5;
-   while (*pos) {
-      if (*pos == '/') {
-         treename = pos+1;
-         *pos = 0;
-         break;
+   if (dot) {
+      char *pos = (char*)strstr(filename,".root") + 5;
+      while (*pos) {
+         if (*pos == '/') {
+            treename = pos+1;
+            *pos = 0;
+            break;
+         }
+         pos++;
       }
-      pos++;
    }
 
    //Connect the file to get the number of entries
