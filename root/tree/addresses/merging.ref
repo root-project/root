@@ -2,15 +2,15 @@
 Processing runmerging.C...
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1430 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1474 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
-*Entries :        0 : Total  Size=        592 bytes  One basket in memory    *
+*Entries :        0 : Total  Size=        608 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :y         : y/D                                                    *
-*Entries :        0 : Total  Size=        592 bytes  One basket in memory    *
+*Entries :        0 : Total  Size=        608 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ======> EVENT:-1
@@ -18,15 +18,15 @@ Processing runmerging.C...
  y               = 0
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3030 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3074 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
-*Entries :      100 : Total  Size=       1392 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1408 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :y         : y/D                                                    *
-*Entries :      100 : Total  Size=       1392 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1408 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ======> EVENT:29
@@ -40,15 +40,15 @@ result entries = 100
 (int)0
 ******************************************************************************
 *Tree    :zzz       : Argument                                               *
-*Entries :        0 : Total =            1430 bytes  File  Size =          0 *
+*Entries :        0 : Total =            1474 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
-*Entries :        0 : Total  Size=        592 bytes  One basket in memory    *
+*Entries :        0 : Total  Size=        608 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :y         : y/D                                                    *
-*Entries :        0 : Total  Size=        592 bytes  One basket in memory    *
+*Entries :        0 : Total  Size=        608 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ======> EVENT:-1
@@ -56,15 +56,15 @@ result entries = 100
  y               = 0
 ******************************************************************************
 *Tree    :yyy       : Argument                                               *
-*Entries :      100 : Total =            3030 bytes  File  Size =          0 *
+*Entries :      100 : Total =            3074 bytes  File  Size =          0 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :x         : x/D                                                    *
-*Entries :      100 : Total  Size=       1392 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1408 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :y         : y/D                                                    *
-*Entries :      100 : Total  Size=       1392 bytes  One basket in memory    *
+*Entries :      100 : Total  Size=       1408 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 ======> EVENT:29
