@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.232 2005/02/09 07:26:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.233 2005/02/09 16:47:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2063,9 +2063,13 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  selection2 returns a weight = x+y if sqrt(z)>3.2
 //             returns a weight = 0 otherwise.
 //
-//  option is the drawing option
-//      see TH1::Draw for the list of all drawing options.
-//      If option contains the string "goff", no graphics is generated.
+//  option is the drawing option.
+//    - See TH1::Draw for the list of all drawing options.
+//    - If option COL is specified when varexp has three fields: 
+//            tree.Draw("e1:e2:e3","","col");
+//      a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color 
+//      table.
+//    - If option contains the string "goff", no graphics is generated.
 //
 //  nentries is the number of entries to process (default is all)
 //  first is the first entry to process (default is 0)
