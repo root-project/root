@@ -26,8 +26,6 @@ namespace std {} using namespace std;
 
 #include "RtypesImp.h"
 
-#include "TVectorProxy.h"
-
 namespace ROOT {
    namespace Shadow {
    } // Of namespace ROOT::Shadow
@@ -150,7 +148,7 @@ extern "C" void G__cpp_setup_typetableManualBase4() {
 -1);
    G__setnewtype(-1,"Option string (const char)",0);
    G__search_typename2("vector<TStreamerInfo*>",117,G__get_linked_tagnum(&G__ManualBase4LN_vectorlETStreamerInfomUcOallocatorlETStreamerInfomUgRsPgR),0,-1);
-   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.40 2004/02/19 00:11:18 rdm Exp $",0);
+   G__setnewtype(-1,"// @(#)root/base:$Name:  $:$Id: ManualBase4.cxx,v 1.2 2004/07/01 04:55:05 brun Exp $",0);
 }
 
 /*********************************************************
