@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.8 2002/03/27 19:25:39 davidk Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.9 2002/05/16 01:14:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -58,6 +58,12 @@ public:
 
   Double_t correlation(const char* parname1, const char* parname2) const ;
   const RooArgList* correlation(const char* parname) const ;
+
+  // Global correlation accessors
+  Double_t globalCorr(const RooAbsArg& par) { return globalCorr(par.GetName()) ; }
+  Double_t globalCorr(const char* parname) ;
+  const RooArgList* globalCorr() ;
+
 
   // Add objects to a 2D plot
   inline RooPlot *plotOn(RooPlot *frame, const RooAbsArg &par1, const RooAbsArg &par2,

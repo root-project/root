@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.12 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.13 2002/05/16 01:14:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -280,6 +280,31 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
   return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
 }
 
+
+Double_t RooFitResult::globalCorr(const char* parname) 
+{
+  // Return the global correlation of the named parameter
+  RooAbsArg* arg = _initPars->find(parname) ;
+  if (!arg) {
+    cout << "RooFitResult::globalCorr: variable " << parname << " not a floating parameter in fit" << endl ;
+    return 0 ;
+  }    
+
+  if (_globalCorr) {
+    return ((RooAbsReal*)_globalCorr->at(_initPars->index(arg)))->getVal() ;
+  } else {
+    return 1.0 ; 
+  }
+}
+
+
+const RooArgList* RooFitResult::globalCorr() 
+{
+  // Return the list of all global correlations
+  return _globalCorr ;
+}
+
+
 Double_t RooFitResult::correlation(Int_t row, Int_t col) const {
   // Return a correlation matrix element addressed with numeric indices.
 
@@ -338,7 +363,8 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
       if (_globalCorr) {
 	os << "  "    << setw(8)  << Form("%8.6f" ,((RooRealVar*)_globalCorr->at(i))->getVal()) ;
       } else {
-      } os << "  <none>" ;
+	os << "  <none>" ;
+      } 
 
       os << endl ;
     }
