@@ -11,10 +11,10 @@ NOOPT         =
 endif
 
 # Compiler:
+# used in gui/Module.mk
+SUNCC         = true
 CXX           = /opt/SUNWspro/bin/CC
 CC            = /opt/SUNWspro/bin/cc
-# use this when on Solaris 5.4
-#CXXFLAGS      = -KPIC -I/usr/openwin/include
 CXXFLAGS      = -KPIC -I/usr/openwin/include -D__SunOS_5_6 $(EXTRA_CXXFLAGS)
 CFLAGS        = -KPIC -I/usr/openwin/include $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -KPIC -DG__REGEXP1 -DG__UNIX -DG__OSFDLL \

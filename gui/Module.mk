@@ -54,6 +54,9 @@ GUILIB       := $(LPATH)/libGui.$(SOEXT)
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIH))
 ALLLIBS     += $(GUILIB)
+ifeq ($(SUNCC),true)
+CXXFLAGS    += -DR__SUNCCBUG
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GUIDEP)
