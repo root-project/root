@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.56 2004/04/24 19:36:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.57 2004/04/28 08:06:08 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ ClassImp(TMath)
 //______________________________________________________________________________
 #if defined(R__MAC) || defined(R__KCC)
 Double_t hypot(Double_t x, Double_t y) {
-  Double_t ax = Abs(x), ay = Abs(y);
+  Double_t ax = TMath::Abs(x), ay = TMath::Abs(y);
   Double_t amax, amin;
   if(ax > ay){
     amax = ax;
