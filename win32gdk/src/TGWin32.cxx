@@ -602,6 +602,8 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
                        int format, int mode, const unsigned char *data,
                        int nelements)
 {
+   //
+
    char *atomName;
    char buffer[256];
    char *p, *s;
@@ -632,7 +634,7 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 
    char *atomName;
    char *data, *destPtr;
-   char propName[8];
+   char propName[32];
    HGLOBAL handle;
    HGLOBAL hMem;
    HWND w;
@@ -733,7 +735,7 @@ LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
 {
-   // thread for processing windows messages
+   // thread for processing windows messages (aka Main, Server thread)
 
    MSG msg;
    Int_t erret;
@@ -748,16 +750,10 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
 
-      if (cur && (msg.message==WM_PAINT)) ::SetCursor(cur);
-
-      // disable resizing while updating
       if ( (last_message==TGWin32ProxyBase::fgPostMessageId) &&
            (msg.message>=WM_NCMOUSEMOVE) && 
            (msg.message<WM_NCMBUTTONDBLCLK) ) {
-         cur = ::GetCursor();
-         ::SetCursor(::LoadCursor(NULL, IDC_WAIT));
-         //if (msg.message==WM_NCLBUTTONUP) last_message = msg.message;
-         continue;
+         TGWin32ProxyBase::GlobalLock();
       }
 
       if (msg.message==TGWin32ProxyBase::fgPostMessageId) {
@@ -767,6 +763,9 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
          } else {
             endLoop = kTRUE;
          }
+      } else if (msg.message==TGWin32ProxyBase::fgPingMessageId) {
+         TGWin32ProxyBase::GlobalUnlock();
+         continue;
       } else {
          TGWin32MainThread::LockMSG();
          TranslateMessage (&msg);

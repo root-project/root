@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.6 2003/09/10 16:33:23 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.7 2003/11/24 10:51:55 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -120,8 +120,12 @@ TGWin32ProxyBasePrivate::~TGWin32ProxyBasePrivate()
    fEvent = 0;
 }
 
+
 ULong_t TGWin32ProxyBase::fgPostMessageId = 0;
+ULong_t TGWin32ProxyBase::fgPingMessageId = 0;
 ULong_t TGWin32ProxyBase::fgMainThreadId = 0;
+Long_t TGWin32ProxyBase::fgLock = 0;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
@@ -137,6 +141,7 @@ TGWin32ProxyBase::TGWin32ProxyBase()
    fPimpl = new TGWin32ProxyBasePrivate();
 
    if (!fgPostMessageId) fgPostMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Post");
+   if (!fgPingMessageId) fgPingMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Ping");
 }
 
 //______________________________________________________________________________
@@ -165,6 +170,32 @@ void TGWin32ProxyBase::Unlock()
    // leave critical section
 
    TGWin32::Unlock();
+}
+
+//______________________________________________________________________________
+void TGWin32ProxyBase::GlobalLock()
+{
+   // lock any proxy (client thread)
+
+   if (IsGloballyLocked()) return;
+   ::InterlockedIncrement(&fgLock);
+}
+
+//______________________________________________________________________________
+void TGWin32ProxyBase::GlobalUnlock()
+{
+   //  unlock any proxy (client thread)
+
+   if (!IsGloballyLocked()) return;
+   ::InterlockedDecrement(&fgLock);
+}
+
+//______________________________________________________________________________
+Bool_t TGWin32ProxyBase::Ping()
+{
+   // send ping messsage to server thread
+
+   return ::PostThreadMessage(fgMainThreadId, fgPingMessageId, (WPARAM)0, 0L);
 }
 
 //______________________________________________________________________________
@@ -228,23 +259,35 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    // returns kTRUE if callback execution is delayed (batched)
 
    Int_t wait = 0;
+
    if (!fgMainThreadId) return kFALSE;
+
+   while (IsGloballyLocked()) {
+      Ping();
+      ::SleepEx(10, 1); // take a rest
+   }
 
    Bool_t batch = !sync &&  (fListOfCallBacks->GetSize()<fBatchLimit);
 
    if (batch) {
-      fListOfCallBacks->Add(new TGWin32CallBackObject(fCallBack,fParam));
+      fListOfCallBacks->Add(new TGWin32CallBackObject(fCallBack, fParam));
       return kTRUE;
    }
 
-   while (::PostThreadMessage(fgMainThreadId,fgPostMessageId,(WPARAM)this,0L)==0) {
-      // wait because there is chance that message queue does not exist yet
+   while (::PostThreadMessage(fgMainThreadId, fgPostMessageId, (WPARAM)this, 0L)==0) {
+      // wait because there is a chance that message queue does not exist yet
       ::SleepEx(50,1);
       if (wait++>5) return kFALSE; // failed to post
    }
 
-   ::WaitForSingleObject(fPimpl->fEvent,INFINITE);
+   DWORD res = ::WaitForSingleObject(fPimpl->fEvent, 1000); // 1 sec
    ::ResetEvent(fPimpl->fEvent);
+
+   if (res==WAIT_TIMEOUT) { // server thread is blocked
+      GlobalLock();
+      fListOfCallBacks->Add(new TGWin32CallBackObject(fCallBack, fParam));
+      return kTRUE;    
+   }
 
    fListOfCallBacks->Delete();
    return kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.4 2003/08/23 14:51:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.5 2003/11/24 10:51:55 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -29,16 +29,22 @@ protected:
    TList             *fListOfCallBacks;   // list of callbacks (used for batch processing)
    TGWin32CallBack   fCallBack;           // callback function (executed by "main" thread)
    void              *fParam;             // arguments passed to/from callback function
-   ULong_t           fId;                 // thread id. There is one proxy per thread
+   ULong_t           fId;                 // thread id. There is one proxy per client thread
    static ULong_t    fgMainThreadId;      // main thread ID
+   static Long_t     fgLock;              // fgLock=1 - all client threads locked
 
    virtual Bool_t ForwardCallBack(Bool_t sync);
    virtual void   SendExitMessage();
 
-public:
-   static ULong_t fgPostMessageId;     // post message ID
+public: // private:
+   static ULong_t    fgPostMessageId;     // post message ID
+   static ULong_t    fgPingMessageId;     // ping message ID
    static void    Lock();
    static void    Unlock();
+   static void    GlobalLock();
+   static void    GlobalUnlock();
+   static Bool_t  IsGloballyLocked() { return fgLock; }
+   static Bool_t  Ping();
 
 public:
    TGWin32ProxyBase();
