@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.5 2000/10/02 11:10:51 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.6 2000/12/01 14:22:26 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -40,7 +40,9 @@
 
 #include "rootdp.h"
 
-#if defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#if defined(__AIX) || (defined(__FreeBSD__) && !defined(__alpha__))
+#   define USE_SIZE_T
+#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
 #   define USE_SOCKLEN_T
 #endif
 
@@ -182,7 +184,7 @@ int NetOpen(int inetdflag)
       gSockFd = 0;
 
       if (gDebug > 0) {
-#ifdef _AIX
+#if defined(USE_SIZE_T)
          size_t clilen = sizeof(tcp_cli_addr);
 #elif defined(USE_SOCKLEN_T)
          socklen_t clilen = sizeof(tcp_cli_addr);
@@ -216,7 +218,7 @@ int NetOpen(int inetdflag)
    // (for which we caught the SIGCLD signal).
 
 again:
-#ifdef _AIX
+#if defined(USE_SIZE_T)
    size_t clilen = sizeof(tcp_cli_addr);
 #elif defined(USE_SOCKLEN_T)
    socklen_t clilen = sizeof(tcp_cli_addr);
