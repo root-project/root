@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.2 2000/07/12 18:51:05 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.3 2000/10/31 12:23:57 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -718,7 +718,7 @@ TString TTabCom::DetermineClass( const char varName[] )
      // non-class type ==> failure
      if (type == "const")
        file1 >> type;
-     
+
      if( type != "class" && type != "struct" ) {
           type = ""; // empty return string indicates failure.
           goto cleanup; //* RETURN *//
@@ -1526,7 +1526,6 @@ Int_t TTabCom::Hook( char* buf, int* pLoc )
                }
 
                delete pList;
-               delete pClass;
 
                if( context != original_context) pos = -2;
           }
@@ -1620,7 +1619,6 @@ Int_t TTabCom::Hook( char* buf, int* pLoc )
 
                // cleanup
                delete pList;
-               delete pClass;
 
                if( context!=original_context ) pos = -2;
           }
@@ -1779,7 +1777,7 @@ TClass* TTabCom::MakeClassFromClassName( const char className[] ) const
      // the TClass constructor will print a Warning message for classes that don't exist
      // so, ignore warnings temporarily.
      NoMsg(kWarning);
-     TClass* pClass = new TClass( className, 0 );
+     TClass* pClass = gROOT->GetClass( className );
      NoMsg(-1);
 
      // make sure "className" exists
@@ -1928,7 +1926,7 @@ TClass* TTabCom::MakeClassFromVarName( const char varName[], EContext_t& context
           }
      }
 
-     return new TClass( className, 0 );
+     return gROOT->GetClass( className );
 }
 void TTabCom::SetPattern( EContext_t handle, const char regexp[] )
 {
