@@ -1,0 +1,78 @@
+# Makefile of ROOT for Linux with glibc and egcs (RH5.1)
+
+PLATFORM      = win32
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -Z7
+LDOPT         = -debug -pdb:none
+F77OPT        = -debug -nopdbfile
+NOOPT         =
+else
+OPT           = -O2
+LDOPT         = -pdb:none
+#LDOPT         = -opt:ref -pdb:none
+F77OPT        = -optimize:0 -nopdbfile
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = build/win/cxx.sh
+CC            = build/win/cc.sh
+CXXFLAGS      = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
+                -nologo -Dtry=__try -Dexcept=__except -Dleave=__leave \
+                -Dfinally=__finally -DCRTAPI1=_cdelc -DCRTAPI2=_cdecl \
+                -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CXXFLAGS)
+CFLAGS        = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
+                -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -nologo -Dtry=__try -Dexcept=__except \
+                -Dleave=__leave -Dfinally=__finally -DCRTAPI1=_cdelc \
+                -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
+                -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -nologo -Dtry=__try -Dexcept=__except \
+                -Dleave=__leave -Dfinally=__finally -DCRTAPI1=_cdelc \
+                -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
+                -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
+
+# Linker:
+LD            = build/win/ld.sh
+LDFLAGS       = -nologo -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
+LDNODEF       = -nodefaultlib:libc.lib -nodefaultlib:dfor.lib
+SOFLAGS       = -DLL
+SOEXT         = dll
+EXEEXT        = .exe
+
+# System libraries:
+SYSLIBS       =
+XLIBS         =
+CILIBS        =
+CRYPTLIBS     =
+THREAD        =
+
+# Fortran:
+F77           = build/win/f77.sh
+F77FLAGS      = -nologo -4Nportlib -G5 -MD
+F77LD         = $(F77)
+F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
+F77LIBS       =
+
+# Extras
+EXPLICITLINK        = YES
+GRAFLIBEXTRA        = lib/libHist.lib
+GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
+G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
+WIN32LIBEXTRA       = lib/libGraf.lib lib/libGpad.lib
+GUILIBEXTRA         = lib/libGraf.lib lib/libGpad.lib
+HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
+PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
+TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib lib/libGraf.lib \
+                      lib/libGraf3d.lib lib/libHist.lib
+TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGraf.lib lib/libHist.lib \
+                      lib/libGpad.lib
+EGLIBEXTRA          = lib/libGraf.lib lib/libGraf3d.lib
+PYTHIALIBEXTRA      = lib/libEG.lib
+PYTHIA6LIBEXTRA     = lib/libEG.lib
+VENUSLIBEXTRA       = lib/libEG.lib
+GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
+

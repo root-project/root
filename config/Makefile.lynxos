@@ -1,0 +1,37 @@
+# Makefile of ROOT for LynxOS  with gcc
+
+PLATFORM      = lynxos
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           =
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = g++
+CC            = gcc
+CXXFLAGS      = -Wall -fsigned-char \
+                -I/usr/X11/include/ $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fsigned-char \
+                -I/usr/X11/include/ $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fsigned-char $(EXTRA_CXXFLAGS) \
+                -DG__UNIX -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -Wall -fsigned-char -DG__UNIX \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+SOFLAGS       =
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl
+XLIBS         = -L/usr/X11R6/lib -lX11 -lXpm
+CILIBS        = -lm -ltermcap -lbsd
+CRYPTLIBS     = -lcrypt
+
+# Fortran:

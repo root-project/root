@@ -1,0 +1,41 @@
+# Makefile definitions included by the top Makefile
+
+ARCH           := @architecture@
+EXTRA_CFLAGS   := -Iinclude @cflags
+EXTRA_CXXFLAGS := -Iinclude @cflags
+EXTRA_LDFLAGS  := @ldflags@
+
+BINDIR         := @bindir@
+LIBDIR         := @libdir@
+INCDIR         := @incdir@
+ETCDIR         := @etcdir@
+DATADIR        := @datadir@
+MACRODIR       := @macrodir@
+SRCDIR         := @srcdir@
+ICONPATH       := @iconpath@
+CINTINCDIR     := @cintincdir@
+DOCDIR         := @docdir@
+TESTDIR        := @testdir@
+TUTDIR         := @tutdir@
+
+XPMLIB         := @xpmlib@
+
+TTFLIBDIR      := @ttflibdir@
+TTFFONTDIR     := @ttffontdir@
+TTFINCDIR      := @ttfincdir@
+
+OPENGLLIBDIR   := @opengllibdir@
+OPENGLINCDIR   := @openglincdir@
+
+MYSQLINCDIR    := @mysqlincdir@
+MYSQLLIBDIR    := @mysqllibdir@
+
+CERNLIBDIR     := @cernlibdir@
+THREAD         := @thread@
+RFIO           := @rfio@
+SRPDIR         := @srpdir@
+AFSDIR         := @afsdir@
+
+INSTALL        := cp -dpR
+INSTALLDATA    := cp -dpR
+INSTALLDIR     := mkdir -p

@@ -1,0 +1,315 @@
+#!/bin/sh
+
+# This script returns the machine dependent compile options needed
+# to compile and link applications using the ROOT libraries.
+#
+# Author: Fons Rademakers, 06/06/99
+
+arch=@architecture@
+
+### ROOT libraries ###
+
+if [ "$arch" = "win32" ]; then
+   newlib="%prefix%/libNew.lib"
+   rootlibs="%prefix%/libCore.lib %prefix%/libCint.lib %prefix%/libHist.lib \
+             %prefix%/libGraf.lib %prefix%/libGraf3d.lib %prefix%/libGpad.lib \
+             %prefix%/libTree.lib %prefix%/libRint.lib \
+             %prefix%/libPostscript.lib %prefix%/libMatrix.lib \
+             %prefix%/libPhysics.lib"
+   rootglibs="%prefix%/libGui.lib"
+else
+   newlib="-lNew"
+   rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
+             -lPostscript -lMatrix -lPhysics"
+   rootglibs="-lGui"
+fi
+
+### machine dependent settings ###
+
+case $arch in
+hpux)
+   #HP-UX with CC
+   auxcflags="+a1 +Z"
+   auxlibs="-lm -ldld"
+   auxglibs=${auxlibs}
+   ;;
+hpuxacc)
+   # HP-UX 10.x with aCC
+   auxcflags="+W823"
+   auxlibs="-lm -ldld"
+   auxglibs=${auxlibs}
+   ;;
+hpuxegcs)
+   # HP-UX 10.x with g++
+   auxcflags=
+   auxlibs="-lm -ldld"
+   auxglibs=${auxlibs}
+   ;;
+aix)
+   # IBM AIX
+   auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
+   auxlibs=
+   auxglibs=${auxlibs}
+   ;;
+aixegcs)
+   # IBM AIX with g++
+   auxcflags="-fsigned-char"
+   auxlibs=
+   auxglibs=${auxlibs}
+   ;;
+solaris)
+   # Solaris
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl -lsunmath"
+   auxglibs=${auxlibs}
+   ;;
+solarisegcs)
+   # Solaris g++
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lg++ -lm -lsocket -lgen -ldl"
+   auxglibs=${auxlibs}
+   ;;
+solarisCC5)
+   # Solaris CC 5.0
+   auxcflags="-D__SunOS_5_6 -library=iostream,no%Cstd"
+   auxlibs="-library=iostream,no%Cstd -lm -ldl -lnsl -lsocket"
+   auxglibs=${auxlibs}
+   ;;
+solarisx86)
+   # Solaris CC on Intel
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
+   auxglibs=${auxlibs}
+   ;;
+sgicc)
+   # SGI
+   auxcflags=
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+sgiegcs)
+   # SGI 6.x with EGCS
+   auxcflags="-fsigned-char"
+   auxlibs="-lstdc++ -lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+sgin32egcs)
+   # SGI 6.x with EGCS with n32 ABI
+   auxcflags="-fsigned-char"
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+sgigcc)
+   # SGI with GCC
+   auxcflags="-fsigned-char"
+   auxlibs="-lg++ -lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+sgikcc)
+   # SGI with KCC
+   auxcflags="--signed_chars --display_error_number \
+              --diag_suppress 68 --diag_suppress 191 --diag_suppress 837"
+   auxlibs="-lm -ldl"
+   auxglibs=${auxlibs}
+   ;;
+alphagcc)
+   # Alpha/OSF with g++
+   auxcflags=
+   auxlibs="-lg++ -lm"
+   auxglibs=${auxlibs}
+   ;;
+alphaegcs)
+   # Alpha/OSF with egcs
+   auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
+   auxlibs="-ltermcap -lm"
+   auxglibs=${auxlibs}
+   ;;
+alphakcc)
+   # Alpha/OSF with kai compiler (not yet valid)
+   auxcflags="-mcpu=ev5 -D__osf__ -D__alpha"
+   auxlibs="-ltermcap -lm"
+   auxglibs=${auxlibs}
+   ;;
+alphacxx6)
+   # Alpha/OSF with cxx6
+   auxcflags="-nostdnew -D__osf__ -D__alpha"
+   auxlibs="-lm"
+   auxglibs=${auxlibs}
+   ;;
+alphacxx)
+   # Alpha/OSF with cxx5
+   auxcflags="-oldcxx -D__osf__ -D__alpha"
+   auxlibs="-lm"
+   auxglibs=${auxlibs}
+   ;;
+linux|linuxrh42)
+   # Linux with gcc 2.7.2.x
+   auxcflags=
+   auxlibs="-lg++ -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxegcs)
+   # Linux with egcs
+   auxcflags=
+   auxlibs="-lm -ldl -lpthread -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxdeb|linuxsuse6)
+   # Linux with egcs on Debian and SuSE
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxdeb2)
+   # Linux with egcs (Debian 2)
+   auxcflags=
+   auxlibs="-lnsl -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxkcc)
+   # Linux with the KAI compiler
+   auxcflags="--signed_chars -D_EXTERN_INLINE=inline --diag_suppress 191"
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxppcegcs)
+   # MkLinux with egcs/glibc
+   auxcflags="-fsigned-char -I/usr/X11/include"
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+mklinux)
+   # MkLinux with libc5
+   auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
+   auxlibs="-lg++ -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+hiux)
+   # Hitachi HIUX
+   auxcflags=
+   auxlibs="-lm -ldld"
+   auxglibs=${auxlibs}
+   ;;
+win32)
+   # Win32
+   auxcflags="-MD"
+   auxlibs=
+   auxglibs=${auxlibs}
+   ;;
+*)
+   echo "root-config: \"$arch\" invalid architecture"
+   echo "Please report to rootdev@root.cern.ch"
+   exit 1
+   ;;
+esac
+
+### end of machine dependent settings ###
+
+
+prefix=@prefix@
+if [ "$arch" = "win32" ]; then
+   prefix=`cygpath -u ${prefix}`
+fi
+exec_prefix=${prefix}
+exec_prefix_set=no
+nonew_set=no
+
+usage="\
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--nonew] [--libs] [--glibs] [--cflags]"
+
+if test $# -eq 0; then
+      echo "${usage}" 1>&2
+      exit 1
+fi
+
+while test $# -gt 0; do
+  case "$1" in
+  -*=*) optarg=`echo "$1" | sed 's/[-_a-zA-Z0-9]*=//'` ;;
+  *) optarg= ;;
+  esac
+
+  case $1 in
+    --prefix=*)
+      if [ "$arch" = "win32" ]; then
+         optarg=`cygpath -u $optarg`
+      fi
+      prefix=$optarg
+      if test $exec_prefix_set = no ; then
+        exec_prefix=$optarg
+      fi
+      ;;
+    --prefix)
+      echo $prefix
+      ;;
+    --exec-prefix=*)
+      if [ "$arch" = "win32" ]; then
+         optarg=`cygpath -u $optarg`
+      fi
+      exec_prefix=$optarg
+      exec_prefix_set=yes
+      ;;
+    --exec-prefix)
+      echo $exec_prefix
+      ;;
+    --nonew)
+      nonew_set=yes
+      ;;
+    --version)
+      if test -r ${prefix}/include/RVersion.h ; then
+         echo `cat ${prefix}/include/RVersion.h | sed -e "s/.*ROOT_RELEASE //" \
+               -e "s/.*#.*$//" -e "s/.*\*.*$//" -e "s/\"//g" -e "/^$/d"`
+      else
+         echo "cannot read ${prefix}/include/RVersion.h"
+      fi
+      ;;
+    --cflags)
+      if test ${prefix}/include != /usr/include ; then
+         if [ "$arch" = "win32" ]; then
+            includes=-I\'`cygpath -w ${prefix}/include`\'
+         else
+            includes=-I${prefix}/include
+         fi
+      fi
+      echo ${auxcflags} $includes
+      ;;
+    --libs)
+      if test $nonew_set = no ; then
+        libs="${newlib} ${rootlibs}"
+      else
+        libs=${rootlibs}
+      fi
+      if [ "$arch" = "win32" ]; then
+         nlibs=`echo $libs | sed "s@%prefix%@${exec_prefix}/lib@g"`
+         libs=
+         for i in $nlibs; do
+            libs="$libs '`cygpath -w $i`'"
+         done
+         echo $libs ${auxlibs}
+      else
+         echo -L${exec_prefix}/lib $libs ${auxlibs}
+      fi
+      ;;
+    --glibs)
+      if test $nonew_set = no ; then
+        glibs="${newlib} ${rootlibs} ${rootglibs}"
+      else
+        glibs="${rootlibs} ${rootglibs}"
+      fi
+      if [ "$arch" = "win32" ]; then
+         nlibs=`echo $glibs | sed "s@%prefix%@${exec_prefix}/lib@g"`
+         glibs=
+         for i in $nlibs; do
+            glibs="$glibs '`cygpath -w $i`'"
+         done
+         echo $glibs ${auxglibs}
+      else
+         echo -L${exec_prefix}/lib $glibs ${auxglibs}
+      fi
+      ;;
+    *)
+      echo "${usage}" 1>&2
+      exit 1
+      ;;
+  esac
+  shift
+done

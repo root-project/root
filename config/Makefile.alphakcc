@@ -1,0 +1,71 @@
+# Makefile of ROOT for DEC OSF1 with KCC compiler
+
+PLATFORM      = alpha
+
+# When changing OPT to -O you can also change +K0 to +K1
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+CXXOPT        = +K0 -O0
+NOOPT         =
+else
+OPT           = -O4
+CXXOPT        = +K3
+NOOPT         =
+endif
+
+ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+EXCEPTION     = --exceptions -DG__EXCEPTIONWRAPPER
+else
+EXCEPTION     = --no_exceptions
+endif
+
+ifeq (thread,$(findstring thread,$(ROOTBUILD)))
+THREAD        += "USE"
+CXXOPT        += --thread_safe -g3
+OPT           += -g
+endif
+
+# Compiler:
+CXX           = KCC
+CC            = cc
+CXXFLAGS      = $(EXCEPTION) --signed_chars --display_error_number --diag_suppress 68 \
+                --diag_suppress 191 --diag_suppress 830 \
+                $(CXXOPT) -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
+CFLAGS        = -signed $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = $(EXCEPTION) --signed_chars --display_error_number \
+                --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__SIGNEDCHAR -DG__DECCXX -DG__ROOT \
+                -DG__REDIRECTIO -DG__64BIT \
+                $(CXXOPT) $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -signed -w -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__SIGNEDCHAR -DG__DECCXX -DG__ROOT \
+                -DG__REDIRECTIO -DG__64BIT -D__KCC $(EXTRA_CFLAGS)
+
+ifeq (exception,$(findstring exception,$(ROOTBUILD)))
+CINTCFLAGS   += -DG__EXCEPTIONWRAPPER
+endif
+
+# Linker:
+LD            = KCC
+LDFLAGS       = -v $(CXXOPT) $(EXCEPTION) $(EXTRA_LDFLAGS)
+AR            = KCC
+ARFLAGS       = -v $(CXXOPT) $(EXCEPTION)
+SOFLAGS       =
+# we should pass this to the linker but KCC
+# dont let us
+# -Wl,-expect_unresolved,*
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm
+SYSXLIBS      = -lX11 -lm -lPW
+XLIBS         = -lXpm -lX11
+CILIBS        = -lm -ltermcap -lbsd
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+F77           = f77
+F77FLAGS      = -O0 -recursive -nofor_main
+F77LIBS       = /usr/lib/libfor.a -lUfor -lFutil

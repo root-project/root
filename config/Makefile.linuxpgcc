@@ -1,0 +1,41 @@
+# Makefile of ROOT for Linux ( RH5.2 i386 ) with glibc and PGCC
+# ( PGCC i586/i686 RPMs can be found at http://www.foyer.se/PGCC.html )
+
+PLATFORM      = linux
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -g
+NOOPT         =
+else
+OPT           = -O6 -mpentiumpro -mstack-align-double -funroll-all-loops
+NOOPT         =
+endif
+
+# Compiler:
+PGCC          = /opt/pgcc
+CXX           = g++
+CC            = pgcc
+CXXFLAGS      = -Wall -fPIC -DR__GLIBC $(EXTRA_CXXFLAGS)
+CFLAGS        = -Wall -fPIC -DR__GLIBC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -Wall -fPIC -DG__REGEXP $(EXTRA_CXXFLAGS) \
+                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
+CINTCFLAGS    = -Wall -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+
+# Linker:
+LD            = g++
+LDFLAGS       = $(OPT) -Wl,-rpath,$(PGCC)/lib:$(ROOTSYS)/lib $(EXTRA_LDFLAGS)
+SOFLAGS       = -shared -Wl,-soname,
+SOEXT         = so
+
+# System libraries:
+SYSLIBS       = -lm -ldl -rdynamic
+XLIBS         = ../lib/libXpm.a -L/usr/X11R6/lib -lX11
+CILIBS        = -lm -ltermcap -lbsd -ldl -rdynamic
+CRYPTLIBS     = -lcrypt
+
+# Fortran:
+F77           = g77
+F77FLAGS      = $(OPT)
+F77LIBS       = -lg2c
+

@@ -1,0 +1,87 @@
+// @(#)root/base:$Name$:$Id$
+// Author: Rene Brun   12/12/94
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TAttAxis
+#define ROOT_TAttAxis
+
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TAttAxis                                                             //
+//                                                                      //
+// Axis attributes.                                                     //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef ROOT_Gtypes
+#include "Gtypes.h"
+#endif
+
+#if defined(R__ANSISTREAM)
+#include <iosfwd>
+using namespace std;
+#elif R__MWERKS
+template <class charT> class ios_traits;
+template <class charT, class traits> class basic_ofstream;
+typedef basic_ofstream<char, ios_traits<char> > ofstream;
+#else
+class ofstream;
+#endif
+
+
+class TAttAxis {
+protected:
+        Int_t        fNdivisions;   //Number of divisions(10000*n3 + 100*n2 + n1)
+        Color_t      fAxisColor;    //color of the line axis
+        Color_t      fLabelColor;   //color of labels
+        Style_t      fLabelFont;    //font for labels
+        Float_t      fLabelOffset;  //offset of labels
+        Float_t      fLabelSize;    //size of labels
+        Float_t      fTickLength;   //length of tick marks
+        Float_t      fTitleOffset;  //offset of axis title
+        Float_t      fTitleSize;    //size of axis title
+        Color_t      fTitleColor;   //color of axis title
+        Style_t      fTitleFont;    //font for axis title
+
+public:
+        TAttAxis();
+        virtual          ~TAttAxis();
+                void     Copy(TAttAxis &attaxis);
+        virtual Int_t    GetNdivisions()  {return fNdivisions;}
+        virtual Color_t  GetAxisColor()   {return fAxisColor;}
+        virtual Color_t  GetLabelColor()  {return fLabelColor;}
+        virtual Style_t  GetLabelFont()   {return fLabelFont;}
+        virtual Float_t  GetLabelOffset() {return fLabelOffset;}
+        virtual Float_t  GetLabelSize()   {return fLabelSize;}
+        virtual Float_t  GetTitleOffset() {return fTitleOffset;}
+        virtual Float_t  GetTitleSize()   {return fTitleSize;}
+        virtual Float_t  GetTickLength()  {return fTickLength;}
+        virtual Color_t  GetTitleColor()  {return fTitleColor;}
+        virtual Style_t  GetTitleFont()   {return fTitleFont;}
+        virtual void     ResetAttAxis(Option_t *option="");
+        virtual void     SaveAttributes(ofstream &out, const char *name, const char *subname);
+        virtual void     SetNdivisions(Int_t n=510);           // *MENU*
+        virtual void     SetAxisColor(Color_t color=1);        // *MENU*
+        virtual void     SetLabelColor(Color_t color=1);       // *MENU*
+        virtual void     SetLabelFont(Style_t font=62);        // *MENU*
+        virtual void     SetLabelOffset(Float_t offset=0.005); // *MENU*
+        virtual void     SetLabelSize(Float_t size=0.04);      // *MENU*
+        virtual void     SetTickLength(Float_t length=0.03);   // *MENU*
+        virtual void     SetTitleOffset(Float_t offset=1);     // *MENU*
+        virtual void     SetTitleSize(Float_t size=.005);      // *MENU*
+        virtual void     SetTitleColor(Color_t color=1);       // *MENU*
+        virtual void     SetTitleFont(Style_t font=62);        // *MENU*
+
+        ClassDef(TAttAxis,3)  //Axis attributes
+};
+
+#endif
+

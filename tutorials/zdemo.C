@@ -1,0 +1,351 @@
+// This macro is an example of graphs in log scales
+// with annotations.
+//
+//  The  begin_html <a href="gif/zdemo.gif" >presented results</a> end_html
+//  are predictions of invariant cross-section of Direct Photons produced
+//  at RHIC energies, based on the universality of scaling function H(z).
+//
+//    Authors: Michael Tokarev and Elena Potrebenikova (JINR Dubna)
+//
+//  These Figures were published in JINR preprint E2-98-64, Dubna,
+//  1998 and submitted to CPC.
+//
+// Note that the way greek symbols, super/subscripts are obtained
+// illustrate the current limitations of Root in this area.
+//
+  const Int_t NMAX = 20;
+  Int_t NLOOP;
+  Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];
+
+//______________________________________________________________________________
+void zdemo()
+{
+
+  Float_t energ;
+  Float_t dens;
+  Float_t tgrad;
+  Float_t ptmin;
+  Float_t ptmax;
+  Float_t delp;
+
+  char text[12];
+  char *symbol[];
+
+  // Create a new canvas.
+   c1 = new TCanvas("zdemo","Monte Carlo Study of Z scaling",10,40,800,600);
+   c1->Range(0,0,25,18);
+   c1->SetFillColor(40);
+
+   TPaveLabel *pl = new TPaveLabel(1,16.3,24,17.5,"Z-scaling of Direct Photon Productions in pp Collisions at RHIC Energies","br");
+   pl->SetFillColor(18);
+   pl->SetTextFont(32);
+   pl->SetTextColor(49);
+   pl->Draw();
+
+   TText *t = new TText();
+   t->SetTextFont(32);
+   t->SetTextColor(1);
+   t->SetTextSize(0.03);
+   t->SetTextAlign(12);
+   t->DrawText(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
+   t->DrawText(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
+
+   pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
+   pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
+
+   pad1->Draw();
+   pad2->Draw();
+
+//
+// Cross-section of direct photon production in pp collisions at 500 GeV vs Pt
+//
+   energ = 63;
+   dens  = 1.766;
+   tgrad = 90.;
+   ptmin = 4.;
+   ptmax = 24.;
+   delp  = 2.;
+   hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
+   pad1->cd();
+   pad1->Range(-0.255174,-19.25,2.29657,-6.75);
+   pad1->SetLogx();
+   pad1->SetLogy();
+
+
+   // create a 2-d histogram to define the range
+   pad1->DrawFrame(1,1e-18,110,1e-8);
+   pad1->GetFrame()->SetFillColor(19);
+   TText *t = new TText();
+   t->SetTextFont(62);
+   t->SetTextColor(36);
+   t->SetTextSize(0.08);
+   t->SetTextAlign(12);
+   t->DrawText(1.24,-8.8,"p - p");
+
+   t->SetTextSize(0.05);
+   t->DrawText(1.21,-9.55,"Direct");
+   t->DrawText(1.35,-10.12,"= 90");
+
+   t->DrawText(0.24,-13.3,"Ed");
+   t->DrawText(0.57,-13.3,"/dq");
+   t->DrawText(0.24,-14.,"(barn/Gev  )");
+
+   t->SetTextSize(0.025);
+   t->DrawText(1.6,-10.,"o");
+   t->SetTextSize(0.03);
+   t->DrawText(0.425,-13.16,"3");
+   t->DrawText(0.81,-13.16,"3");
+   t->DrawText(0.82,-13.86,"2");
+
+   t->SetTextSize(0.045);
+   t->SetTextColor(kBlue);
+   t->DrawText(0.45,-16.01,"s = 63(GeV)");
+   t->SetTextColor(kRed);
+   t->DrawText(0.45,-16.73,"s = 200(GeV)");
+   t->SetTextColor(6);
+   t->DrawText(0.45,-17.39,"s = 500(GeV)");
+
+   t->SetTextSize(0.05);
+   t->SetTextColor(1);
+   t->DrawText(1.3,-18.5,"q  (Gev/c)");
+   t->SetTextSize(0.03);
+   t->DrawText(1.37,-18.65,"T");
+
+   // Greek Symbols for First pad
+
+   t = new TText();
+   t->SetTextFont(122);
+   t->SetTextSize(0.05);
+   t->SetTextColor(36);
+   t->SetTextAlign(12);
+   t->DrawText(1.61,-9.54,"g");
+   t->DrawText(1.27,-10.14,"q");
+   t->DrawText(0.45,-13.3,"s");
+
+   t->SetTextSize(0.07);
+   t->SetTextColor(kBlue);
+   t->DrawText(0.35,-16.01,"\326");
+   t->SetTextColor(kRed);
+   t->DrawText(0.35,-16.73,"\326");
+   t->SetTextColor(6);
+   t->DrawText(0.35,-17.39,"\326");
+
+   gr1 = new TGraph(NLOOP,PT,INVSIG);
+
+   gr1->SetLineColor(38);
+   gr1->SetMarkerColor(kBlue);
+   gr1->SetMarkerStyle(21);
+   gr1->SetMarkerSize(1.1);
+   gr1->Draw("LP");
+
+//
+// Cross-section of direct photon production in pp collisions at 200 GeV vs Pt
+//
+
+   energ = 200;
+   dens  = 2.25;
+   tgrad = 90.;
+   ptmin = 4.;
+   ptmax = 64.;
+   delp  = 6.;
+   hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
+
+   gr2 = new TGraph(NLOOP,PT,INVSIG);
+   gr2->SetLineColor(38);
+   gr2->SetMarkerColor(kRed);
+   gr2->SetMarkerStyle(29);
+   gr2->SetMarkerSize(1.5);
+   gr2->Draw("LP");
+
+//
+// Cross-section of direct photon production in pp collisions at 500 GeV vs Pt
+//
+   energ = 500;
+   dens  = 2.73;
+   tgrad = 90.;
+   ptmin = 4.;
+   ptmax = 104.;
+   delp  = 10.;
+   hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
+
+
+   gr3 = new TGraph(NLOOP,PT,INVSIG);
+
+   gr3->SetLineColor(38);
+   gr3->SetMarkerColor(6);
+   gr3->SetMarkerStyle(8);
+   gr3->SetMarkerSize(1.1);
+   gr3->Draw("LP");
+
+   Float_t *dum = 0;
+   TGraph *graph = new TGraph(1,dum,dum);
+   graph->SetMarkerColor(kBlue);
+   graph->SetMarkerStyle(21);
+   graph->SetMarkerSize(1.1);
+   graph->SetPoint(0,1.7,1.e-16.);
+   graph->Draw("LP");
+
+   TGraph *graph = new TGraph(1,dum,dum);
+   graph->SetMarkerColor(kRed);
+   graph->SetMarkerStyle(29);
+   graph->SetMarkerSize(1.5);
+   graph->SetPoint(0,1.7,2.e-17.);
+   graph->Draw("LP");
+
+   TGraph *graph = new TGraph(1,dum,dum);
+   graph->SetMarkerColor(6);
+   graph->SetMarkerStyle(8);
+   graph->SetMarkerSize(1.1);
+   graph->SetPoint(0,1.7,4.e-18.);
+   graph->Draw("LP");
+
+   pad2->cd();
+   pad2->Range(-0.43642,-23.75,3.92778,-6.25);
+   pad2->SetLogx();
+   pad2->SetLogy();
+
+
+   pad2->DrawFrame(1,1e-22,3100,1e-8);
+   pad2->GetFrame()->SetFillColor(19);
+
+   gr = new TGraph(NLOOP,Z,HZ);
+   gr->SetTitle("HZ vs Z");
+   gr->SetFillColor(19);
+   gr->SetLineColor(9);
+   gr->SetMarkerColor(50);
+   gr->SetMarkerStyle(29);
+   gr->SetMarkerSize(1.5);
+   gr->Draw("LP");
+
+   TText *t = new TText();
+   t->SetTextFont(62);
+   t->SetTextColor(36);
+   t->SetTextSize(0.08);
+   t->SetTextAlign(12);
+   t->DrawText(1.63,-9.48,"p - p");
+
+   t->SetTextSize(0.05);
+   t->DrawText(1.6,-10.55,"Direct");
+   t->DrawText(1.87,-11.35,"= 90");
+
+   t->DrawText(2.52,-13.35,"H(z)");
+   t->DrawText(2.45,-14.05,"(barn)");
+
+   t->SetTextSize(0.025);
+   t->DrawText(2.3,-11.2,"o");
+
+   t->SetTextSize(0.045);
+   t->SetTextColor(46);
+   t->DrawText(0.65,-18.34,"s, GeV");
+   t->DrawText(0.65,-19.04,"63");
+   t->DrawText(0.6,-19.84,"200");
+   t->DrawText(0.6,-20.64,"500");
+
+   t->SetTextSize(0.05);
+   t->SetTextColor(1);
+   t->DrawText(3.2,-22.5,"z");
+
+   // Greek Symbols for Second pad
+
+   t = new TText();
+   t->SetTextFont(122);
+   t->SetTextSize(0.05);
+   t->SetTextColor(36);
+   t->SetTextAlign(12);
+   t->DrawText(2.32,-10.525,"g");
+   t->DrawText(1.725,-11.4,"q");
+
+   t->SetTextSize(0.07);
+   t->SetTextColor(46);
+   t->DrawText(0.5,-18.34,"\326");
+
+   //   c1->Print("zdemo.ps");
+  c1->Modified();
+  c1->Update();
+}
+
+void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t PTMAX, Float_t DELP)
+{
+  Int_t I;
+
+  Float_t CSEFT= 1.;
+  Float_t GM1  = 0.00001;
+  Float_t GM2  = 0.00001;
+  Float_t A1   = 1.;
+  Float_t A2   = 1.;
+  Float_t ALX  = 2.;
+  Float_t BETA = 1.;
+  Float_t KF1  = 8.E-7;
+  Float_t KF2  = 5.215;
+
+  Float_t MN = 0.9383;
+  Float_t DEGRAD=0.01745329;
+
+  Float_t EB1, EB2, PB1, PB2, MB1, MB2, M1, M2;
+  Float_t DNDETA;
+
+  Float_t P1P2, P1P3, P2P3;
+  Float_t Y1, Y2, S, SMIN,  SX1,  SX2, SX1X2, DELM;
+  Float_t Y1X1,  Y1X2,   Y2X1,   Y2X2,   Y2X1X2,   Y1X1X2;
+  Float_t KX1, KX2,  ZX1, ZX2, KX1X2, ZX1X2;
+  Float_t H1, H2;
+
+  Float_t PTOT, THET, ETOT, X1, X2, ZZX1X2, ZX1ZX2;
+
+  //   printf("ENR=  %f DENS= %f PTMIN= %f PTMAX= %f DELP= %f \n",ENERG,DENS,PTMIN,PTMAX, DELP);
+
+  DNDETA= DENS;
+  MB1   = MN*A1;
+  MB2   = MN*A2;
+  EB1   = ENERG/2.*A1;
+  EB2   = ENERG/2.*A2;
+  M1    = GM1;
+  M2    = GM2;
+  THET  = TGRAD*DEGRAD;
+  NLOOP = (PTMAX-PTMIN)/DELP;
+
+  for (I=0; I<NLOOP;I++) {
+     PT[I]=PTMIN+I*DELP;
+     PTOT = PT[I]/sin(THET);
+
+     ETOT = sqrt(M1**2 + PTOT**2);
+     PB1  = sqrt(EB1**2 - MB1**2);
+     PB2  = sqrt(EB2**2 - MB2**2);
+     P2P3 = EB2*ETOT+PB2*PTOT*cos(THET);
+     P1P2 = EB2*EB1+PB2*PB1;
+     P1P3 = EB1*ETOT-PB1*PTOT*cos(THET);
+
+     X1 = P2P3/P1P2;
+     X2 = P1P3/P1P2;
+     Y1 = X1+sqrt(X1*X2*(1.-X1)/(1.-X2));
+     Y2 = X2+sqrt(X1*X2*(1.-X2)/(1.-X1));
+
+     S    = (MB1**2)+2.*P1P2+(MB2**2);
+     SMIN = 4.*((MB1**2)*(X1**2) +2.*X1*X2*P1P2+(MB2**2)*(X2**2));
+     SX1  = 4.*( 2*(MB1**2)*X1+2*X2*P1P2);
+     SX2  = 4.*( 2*(MB2**2)*X2+2*X1*P1P2);
+     SX1X2= 4.*(2*P1P2);
+     DELM = ( (1.-Y1)*(1.-Y2) )**ALX;
+
+     Z[I] = sqrt(SMIN)/DELM/(DNDETA**BETA);
+
+     Y1X1  = 1. +X2*(1-2.*X1)/(2.*(Y1-X1)*(1.-X2));
+     Y1X2  =     X1*(1-X1)/(2.*(Y1-X1)*(1.-X2)**2);
+     Y2X1  =     X2*(1-X2)/(2.*(Y2-X2)*(1.-X1)**2);
+     Y2X2  = 1. +X1*(1-2.*X2)/(2.*(Y2-X2)*(1.-X1));
+     Y2X1X2= Y2X1*( (1.-2.*X2)/(X2*(1-X2)) -( Y2X2-1.)/(Y2-X2));
+     Y1X1X2= Y1X2*( (1.-2.*X1)/(X1*(1-X1)) -( Y1X1-1.)/(Y1-X1));
+
+     KX1=-DELM*(Y1X1*ALX/(1.-Y1) + Y2X1*ALX/(1.-Y2));
+     KX2=-DELM*(Y2X2*ALX/(1.-Y2) + Y1X2*ALX/(1.-Y1));
+     ZX1=Z[I]*(SX1/(2.*SMIN)-KX1/DELM);
+     ZX2=Z[I]*(SX2/(2.*SMIN)-KX2/DELM);
+
+     H1=ZX1*ZX2;
+
+     HZ[I]=KF1/(Z[I]**KF2);
+     INVSIG[I]=(HZ[I]*H1*16.)/S;
+
+  }
+}
+
