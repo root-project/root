@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.16 2004/09/08 09:54:47 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.1 2004/09/13 09:56:33 brun Exp $
 // Author:  Timur Pocheptsov  13/09/2004
    
 #include <TVirtualGL.h>
@@ -193,7 +193,7 @@ Bool_t TGLEditor::HandleContainerNotify(Event_t *event)
    return kTRUE;
 }
 
-Bool_t TGLEditor::HandleContainerExpose(Event_t *event)
+Bool_t TGLEditor::HandleContainerExpose(Event_t * /*event*/)
 {
    DrawSphere();
    return kTRUE;
