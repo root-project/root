@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.49 2001/07/31 14:55:13 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.50 2001/08/10 12:08:35 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1503,6 +1503,28 @@ char *StrDup(const char *str)
 }
 
 //______________________________________________________________________________
+char *Compress(const char *str)
+{
+   // Remove all blanks from the string str. The returned string has to be
+   // deleted by the user.
+
+   if (!str) return 0;
+
+   const char *p = str;
+   char *s, *s1 = new char[strlen(str)+1];
+   s = s1;
+
+   while (*p) {
+      if (*p != ' ')
+         *s++ = *p;
+      p++;
+   }
+   *s = '\0';
+
+   return s1;
+}
+
+//______________________________________________________________________________
 void StrcpyWithEsc(char *escaped, const char *original)
 {
    // Copy original into escaped BUT make sure that the \ characters
@@ -1947,13 +1969,15 @@ int main(int argc, char **argv)
          // just in case remove trailing space and tab
          while (*request == ' ') request++;
          int len = strlen(request)-1;
-         while( request[len]==' '||request[len]=='\t' ) request[len--] ='\0';
+         while (request[len]==' ' || request[len]=='\t') request[len--] = '\0';
+         request = Compress(request); //no space between tmpl arguments allowed
          G__ClassInfo cl(request);
          if (cl.IsValid())
             clProcessed[ncls] = StrDup(cl.Fullname());
          else
             clProcessed[ncls] = StrDup(request);
          ncls++;
+         delete [] request;
          if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
 
             if (cl.HasMethod("Streamer")) {
@@ -2012,6 +2036,7 @@ int main(int argc, char **argv)
       if (nxt) continue;
 
       if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
+
          if (cl.HasMethod("Streamer")) {
             if (!(cl.RootFlag() & G__NOSTREAMER)) {
                if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/))
