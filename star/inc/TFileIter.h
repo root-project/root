@@ -1,4 +1,4 @@
-// $Id: TFileIter.h,v 1.5 2001/05/07 22:16:45 fine Exp $
+// $Id: TFileIter.h,v 1.4 2001/05/14 06:44:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 //
@@ -71,7 +71,7 @@ class TFileIter : public TListIter {
               const char *ftitle = "", Int_t compress = 1,
               Int_t netopt = 0);
     TFileIter(TFile *file=0);
-    TFileIter(const TFileIter &) {;}
+    TFileIter(const TFileIter &) : TListIter() {;}
     virtual ~TFileIter();
 // --- draft !!!     virtual Int_t Copy(TFile *destFile);
     Int_t   CurrentCursorPosition() const;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.16 2001/05/29 19:08:08 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.17 2001/05/29 19:10:04 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,23 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.17  2001/05/29 19:10:04  brun
+// // New methods:
+// // ------------
+// // class TCL
+// // New method trsequ to solve
+// //           Ax=B
+// // from Victor Perevoztchikov
+// // where A is a symmetric unpacked matrix
+//
+// // class TTable:
+// // meta-variables i$ and n$ introduced
+// // where "i$" stands for the current row index
+// //       "n$" stands for the total number of rows
+// // meta-variable can be used along the normal
+// // table column names in the C++ (Cint) expressions
+// // (see for example method TTable::Draw
+//
 // Revision 1.16  2001/05/29 19:08:08  brun
 // New version of some STAR classes from Valery.
 //
@@ -753,7 +770,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
   const Char_t *funcName = "SelectionQWERTY";
 #define BYTECODE
 #ifdef BYTECODE
-  const Char_t *argtypes = "Float_t *,float **, int &, int &";
+  const Char_t *argtypes = "Float_t *,float **, int&, int& ";
   long offset;
   G__ClassInfo globals;
   G__MethodInfo func = globals.GetMethod(funcName,argtypes,&offset);
