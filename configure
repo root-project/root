@@ -130,7 +130,7 @@ if [ $# -gt 0 ]; then
       # With options to specifiy third part software
       #
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
-      --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_tread="yes"   ;;
+      --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
       --with-ttf-incdir=*)     ttfincdir=$optarg     ; enable_ttf="yes"     ;;
       --with-ttf-libdir=*)     ttflibdir=$optarg     ; enable_ttf="yes"     ;;
       --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
@@ -291,10 +291,10 @@ if [ "x$enable_thread" = "xyes" -a "$arch" != "win32" ]; then
     else
         libdirs="$THREAD $THREAD/lib /usr/lib /usr/local/lib \
                     /usr/lib/X11 /usr/local/lib/X11 /usr/X11R6/lib \
-                    /use/local/X11R6/lib /usr/X11/lib"
+                    /usr/local/X11R6/lib /usr/X11/lib /usr/shlib"
     fi
     threadlib=no
-    threaddir=no
+    threadlibdir=no
     if [ "x$enable_shared" != "xno" ]; then
         libs="libpthread.so libpthread.sl libpthread.a"
     else
