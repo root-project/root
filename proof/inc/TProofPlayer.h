@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.15 2003/11/26 21:48:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.16 2004/03/11 11:02:55 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -46,6 +46,7 @@ class TMessage;
 class TSlave;
 class TEventIter;
 
+#include "TSystem.h"
 
 //------------------------------------------------------------------------
 

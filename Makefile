@@ -166,7 +166,7 @@ CINTLIBS     := -lCint
 NEWLIBS      := -lNew
 ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
 RINTLIBS     := -lRint
-PROOFLIBS    := -lProof
+PROOFLIBS    := -lProof -lTreePlayer
 else
 CINTLIBS     := $(LPATH)/libCint.lib
 NEWLIBS      := $(LPATH)/libNew.lib
@@ -175,7 +175,7 @@ ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib \
                 $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
-PROOFLIBS    := $(LPATH)/libProof.lib
+PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
 endif
 
 ##### gcc version #####
