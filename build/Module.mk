@@ -13,7 +13,7 @@ RMKDEPH      := $(wildcard $(RMKDEPDIR)/*.h)
 RMKDEPS      := $(wildcard $(RMKDEPDIR)/*.c)
 RMKDEPO      := $(RMKDEPS:.c=.o)
 RMKDEP       := bin/rmkdepend$(EXEEXT)
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 #RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".obj\"
 RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
 else
@@ -21,7 +21,7 @@ RMKDEPCFLAGS := -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\"
 endif
 
 ##### bindexplib #####
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 BINDEXPS     := $(wildcard $(BINDEXPDIR)/*.cxx)
 BINDEXPO     := $(BINDEXPS:.cxx=.o)
 BINDEXP      := bin/bindexplib$(EXEEXT)
@@ -31,7 +31,7 @@ endif
 $(RMKDEP):      $(RMKDEPO)
 		$(LD) $(LDFLAGS) -o $@ $(RMKDEPO)
 
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 $(BINDEXP):     $(BINDEXPO)
 		$(LD) $(LDFLAGS) -o $@ $(BINDEXPO)
 
