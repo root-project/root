@@ -11,7 +11,7 @@ void Run() {
   //gROOT->ProcessLine(library+dllsuf);
    gSystem->Load("./namespace");
    gSystem->Load("./template");
-   gSystem->Load("./inheritMulti");
+   gSystem->Load("./InheritMulti");
 
   namespace_driver();
   template_driver();
