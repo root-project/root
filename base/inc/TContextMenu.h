@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TContextMenu.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Nenad Buncic   08/02/96
 
 /*************************************************************************
@@ -44,7 +44,7 @@ class TContextMenu : public TNamed {
 friend class  TContextMenuImp;
 
 protected:
-   TContextMenuImp *fContextMenuImp;      //Context menu system specific implementation
+   TContextMenuImp *fContextMenuImp;      //!Context menu system specific implementation
    TMethod         *fSelectedMethod;      //selected method
    TObject         *fSelectedObject;      //selected object
    TVirtualPad     *fSelectedCanvas;      //selected canvas (if exist)
