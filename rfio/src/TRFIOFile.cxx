@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.24 2003/05/05 09:36:27 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.25 2003/07/03 12:59:35 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRFIOFile.h"
-#include "TSystem.h"
 #include "TROOT.h"
 #include <sys/stat.h>
 #include <sys/types.h>
