@@ -1549,14 +1549,19 @@ fi
 #
 if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
+    myruby=`which ruby 2> /dev/null`
+    if test ! "x$myruby" = "x" ; then
+       rubysysincdir=`ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
+       rubysyslibdir=`ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
+    fi
     check_header "ruby.h" "$rubyincdir" $RUBYDIR $RUBYDIR/include \
-        `ruby -rrbconfig -e 'puts Config::CONFIG["archdir"]'`
+        $rubysysincdir
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
     check_library "libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib" \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
-        `ruby -rrbconfig -e 'puts Config::CONFIG["libdir"]'`
+        $rubysyslibdir
     rubylib=$found_lib
     rubylibdir=$found_dir
 
