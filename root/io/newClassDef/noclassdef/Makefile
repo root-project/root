@@ -1,4 +1,5 @@
-local_all: main
+
+local_all: test
 .PHONY: main
 
 include $(ROOTSYS)/test/Makefile.arch
@@ -6,6 +7,10 @@ include $(ROOTSYS)/test/Makefile.arch
 #arch := $(shell grep arch `which root-config` | head -1 | cut -d'=' -f2-)
 arch := $(shell root-config --arch)
 CXXFLAGS :=  $(patsubst -O,-g,$(CXXFLAGS))
+
+ifeq ($(findstring linuxicc,$(arch)),linuxicc)
+CXXFLAGS += -wd191
+endif
 
 ifeq ("X","Y")
 CXXFLAGS := $(shell root-config --cflags)
@@ -95,9 +100,9 @@ endif
 
 
 local_clean:
-	rm -rf *.o *.so ti_files ii_files 
-	rm -rf mydict.* driver$(ExeSuf) *~
-	rm -rf *.obj .def *.root *.mode
+	@rm -rf *.o *.so ti_files ii_files 
+	@rm -rf mydict.* driver$(ExeSuf) *~
+	@rm -rf *.obj .def *.root *.mode
 
 clean: local_clean
 
@@ -106,7 +111,7 @@ clean: local_clean
 
 
 driver$(ExeSuf): main.cc mydict.cc 
-	$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
+	@$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
 
 stuff:
 ifeq ($(ARCH),aix)
@@ -132,7 +137,7 @@ else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
+		@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
 endif
 endif
@@ -142,22 +147,23 @@ endif
 #	$(CXX) -g -o driver $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 
 infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
+	@$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint 
-	rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h
+	@rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
+	@test `cat mydict.log | wc -l` == "1"; # mydict.log should only have one line!
 
 ifeq ($(PLATFORM),win32)
 libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
-	bindexplib $* $^ > libIotest.def
-	lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
+	@bindexplib $* $^ > libIotest.def
+	@lib -nologo -MACHINE:IX86 $^ -def:libIotest.def \
                   $(OutPutOpt)libIotest.lib
-	$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
+	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ libIotest.exp $(LIBS) \
                    $(OutPutOpt)$@
 else
 libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
+	@$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 endif
 
 .cc.$(ObjSuf):
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $<
+	@$(CXX) $(CFLAGS) $(CXXFLAGS) -c $<

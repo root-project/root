@@ -25,7 +25,7 @@ public:
   }   
   virtual ~RootPCellID() {};
 
-  virtual void Print() {
+  virtual void Print() const {
     std::cout << "base \t";
     for(int j=0;j<4;j++) std::cout << base[j] << " ";
     std::cout  << std::endl<< "id \t" << id << std::endl;
@@ -57,7 +57,7 @@ public:
    RootPCfix() : RootPCellID("none",0),fix(0) {}
    RootPCfix(int i) : RootPCellID("fix1",i),fix(33) {}
    int fix;
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "fix \t" << fix << std::endl;
    }
@@ -86,7 +86,7 @@ public:
    Stuff stuff;
 #endif
    virtual ~RootPCvirt() {};
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "virt \t" << virt << std::endl;
    }
@@ -98,7 +98,7 @@ public:
    RootPCnodict() : RootPCellID("none",0),nodict(0) {}
    RootPCnodict(int n) :  RootPCellID("nodict",n),nodict(55) {}
    int nodict;
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "nodict \t" << nodict << std::endl;
    }
@@ -110,7 +110,7 @@ public:
    RootPCtemp(T n) :  RootPCellID("template",n),temp(66) {}
    T temp;
    vector<RootPCtemp<T>*> list;//!
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "templated \t" << temp << std::endl;
    }
@@ -119,14 +119,14 @@ public:
 template <class T> class RootPCtempObj : public RootPCellID {
 public:
    RootPCtempObj() : RootPCellID("none",0),temp(0),temp2(0)  {}
-   RootPCtempObj(T n) :  RootPCellID("template",-11),temp(0),temp2(0) {}
+   RootPCtempObj(T n) :  RootPCellID("template",+55),temp(0),temp2(0) {}
    RootPCtempObj(const RootPCtempObj &) : RootPCellID("none",0),temp(),temp2()  {}
 
    T *temp; //!
    typedef T *value;
    value temp2; //!
    vector<RootPCtempObj<T>*> list;//!
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      //std::cout  << "templated \t" << temp << std::endl;
    }
@@ -154,7 +154,8 @@ public:
    RootPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
    virtual ~RootPCobject() {};
    int obj;
-   void Print() {
+   void Print(Option_t*) const { Print(); }
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -168,7 +169,8 @@ public:
    RootPCobject2(int n) :  RootPCellID("obj2",n),obj(102) {}
    virtual ~RootPCobject2() {};
    int obj;
-   void Print() {
+   void Print(Option_t*) const { Print(); }
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -182,7 +184,8 @@ class RootPCmisClDef : public RootPCellID, public TObject  {
    RootPCmisClDef(int n) :  RootPCellID("miss",n),obj(103) {}
    virtual ~RootPCmisClDef() {};
    int obj;
-   void Print() {
+   void Print(Option_t*) const { Print(); }
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -197,7 +200,8 @@ public:
    RootPrivPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
    virtual ~RootPrivPCobject() {};
    int obj;
-   void Print() {
+   void Print(Option_t*) const { Print(); }
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -211,7 +215,8 @@ public:
    RootPrivPCobject2(int n) :  RootPCellID("obj1",n),obj(101) {}
    virtual ~RootPrivPCobject2() {};
    int obj;
-   void Print() {
+   void Print(Option_t*) const { Print(); }
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -225,7 +230,7 @@ public:
    RootPrivPC(int n) :  RootPCellID("obj1",n),obj(101) {}
    virtual ~RootPrivPC() {};
    int obj;
-   void Print() {
+   void Print() const {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();

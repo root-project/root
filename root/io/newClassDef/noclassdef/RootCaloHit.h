@@ -41,8 +41,8 @@ public:
              mynocellp = new RootPCnodict(8);
              int i = 0;
              for(i=0; i<3; i++) {
-                RootPCellID id(s,id+1+i);
-                myArr[i] = id;
+                RootPCellID cell(s,id+1+i);
+                myArr[i] = cell;
              }
              for(i=0; i<4; i++) {
                 myArrFix[i] = new RootPCtemp<int>(i);
