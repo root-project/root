@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.41 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.1 2004/09/03 00:25:47 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -656,11 +656,6 @@ Bool_t TGMdiTitleIcon::HandleButton(Event_t *event)
    SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), kMDI_CURRENT, 0);
 
    if (event->fType == kButtonPress) {
-      Int_t bx, by;
-
-      bx = event->fXRoot;
-      by = event->fYRoot;
-
       fPopup->PlaceMenu(event->fXRoot - event->fX,
                         event->fYRoot + (fHeight - event->fY),
                         kTRUE, kTRUE);
