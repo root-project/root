@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.1 2000/10/21 09:16:18 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.2 2000/10/26 15:33:16 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -103,5 +103,7 @@
 #pragma link C++ enum EInitialState;
 #pragma link C++ enum EKeySym;
 #pragma link C++ enum EEventType;
+
+#pragma link C++ struct Event_t;
 
 #endif
