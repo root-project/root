@@ -19,7 +19,6 @@
 #include "TVirtualMCDecayer.h"
 #include "TRandom.h"
 #include "TString.h"
-#include "TError.h"
 
 class TLorentzVector;
 class TArrayI;
@@ -123,11 +122,6 @@ class TVirtualMC : public TNamed {
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
     virtual Int_t NofVolumes() const = 0;
-    virtual Int_t NofVolDaughters(const char* volName) const;
-    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
-    virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const;
-            // New functions
-	    // Make them = 0 with the next release
     virtual Int_t VolId2Mate(Int_t id) const = 0;
 
     //
@@ -169,17 +163,15 @@ class TVirtualMC : public TNamed {
     // set methods
     virtual void SetMaxStep(Double_t) = 0;
     virtual void SetMaxNStep(Int_t) = 0;
-    virtual void SetUserDecay(Int_t) =0;  
-
+    virtual void SetUserDecay(Int_t) = 0;  
+    virtual void ForceDecayTime(Float_t) {;}
+    
     // get methods
          // tracking volume(s) 
     virtual Int_t    CurrentVolID(Int_t& copyNo) const =0;
     virtual Int_t    CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
     virtual const char* CurrentVolName() const =0;
     virtual const char* CurrentVolOffName(Int_t off) const =0;
-    virtual const char* CurrentVolPath();
-            // New function
-	    // Make it = 0 with the next release
     virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z, 
                        Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
     virtual Int_t    CurrentEvent() const =0; 
@@ -286,31 +278,6 @@ class TVirtualMC : public TNamed {
 
   ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
-
-// inline fuctions
-
-// Temporary implementation of new functions
-// To be removed with the next release
-
-inline Int_t TVirtualMC::NofVolDaughters(const char* /*volName*/) const {  
-  Warning("NofVolDaughters", "New function - not yet implemented.");
-  return 0;
-}    
-
-inline const char*  TVirtualMC::VolDaughterName(const char* /*volName*/, Int_t /*i*/) const {
-  Warning("VolDaughterName", "New function - not yet implemented.");
-  return "";
-}    
-
-inline Int_t  TVirtualMC::VolDaughterCopyNo(const char* /*volName*/, Int_t /*i*/) const {
-  Warning("VolDaughterCopyNo", "New function - not yet implemented.");
-  return 0;
-}    
-
-inline const char* TVirtualMC::CurrentVolPath() {
-  Warning("CurrentVolPath", "New function - not yet implemented.");
-  return "";
-}    
 
 R__EXTERN TVirtualMC *gMC;
 
