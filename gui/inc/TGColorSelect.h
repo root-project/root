@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.3 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.h,v 1.4 2004/06/11 14:39:18 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -56,7 +56,7 @@ protected:
    Pixel_t         fColor;
 
 public:
-   TGColorFrame(const TGWindow *p, Pixel_t c, Int_t n);
+   TGColorFrame(const TGWindow *p = 0, Pixel_t c = 0, Int_t n = 1);
    virtual ~TGColorFrame() { }
 
    virtual Bool_t  HandleButton(Event_t *event);
@@ -78,7 +78,7 @@ protected:
    TGColorFrame    *fCe[16];
 
 public:
-   TG16ColorSelector(const TGWindow *p);
+   TG16ColorSelector(const TGWindow *p = 0);
    virtual ~TG16ColorSelector();
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
@@ -100,7 +100,7 @@ protected:
    Pixel_t          fCurrentColor;
 
 public:
-   TGColorPopup(const TGWindow *p, const TGWindow *m, Pixel_t color);
+   TGColorPopup(const TGWindow *p = 0, const TGWindow *m = 0, Pixel_t color = 0);
    virtual ~TGColorPopup();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -126,7 +126,7 @@ protected:
    void DrawTriangle(GContext_t gc, Int_t x, Int_t y);
 
 public:
-   TGColorSelect(const TGWindow *p, Pixel_t color, Int_t id);
+   TGColorSelect(const TGWindow *p = 0, Pixel_t color = 0, Int_t id = -1);
    virtual ~TGColorSelect();
 
    virtual Bool_t HandleButton(Event_t *event);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.13 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.14 2004/06/14 10:28:51 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -102,7 +102,7 @@ public:
                UInt_t option = kSunkenFrame | kDoubleBorder,
                Pixel_t back = GetWhitePixel());
 
-   TGTextEntry(const TGWindow *parent, const char *text,  Int_t id = -1);
+   TGTextEntry(const TGWindow *parent = 0, const char *text =  0, Int_t id = -1);
    TGTextEntry(const TString &contents, const TGWindow *parent,  Int_t id = -1);
 
    virtual ~TGTextEntry();

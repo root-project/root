@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.12 2004/07/07 10:17:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.h,v 1.13 2004/07/07 15:02:25 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -43,7 +43,7 @@ class TGTextEntry;
 class TGComboBoxPopup : public TGCompositeFrame {
 
 public:
-   TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
+   TGComboBoxPopup(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetWhitePixel());
 
@@ -72,7 +72,7 @@ protected:
    virtual void Init();
 
 public:
-   TGComboBox(const TGWindow *p, Int_t id,
+   TGComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
    TGComboBox(const TGWindow *p, const char *text, Int_t id = -1,
@@ -139,7 +139,7 @@ public:
 class TGLineStyleComboBox : public TGComboBox {
 
 public:
-   TGLineStyleComboBox(const TGWindow *p, Int_t id,
+   TGLineStyleComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
       
@@ -159,7 +159,7 @@ public:
 class TGLineWidthComboBox : public TGComboBox {
 
 public:
-   TGLineWidthComboBox(const TGWindow *p, Int_t id,
+   TGLineWidthComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
    
@@ -184,7 +184,7 @@ protected:
    FontStruct_t fFonts[kMaxFonts];      
 
 public:
-   TGFontTypeComboBox(const TGWindow*p, Int_t id, 
+   TGFontTypeComboBox(const TGWindow *p = 0, Int_t id = -1, 
             UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
             Pixel_t bask = GetWhitePixel());
    virtual ~TGFontTypeComboBox();

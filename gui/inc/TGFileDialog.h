@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.3 2001/06/27 16:43:55 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -103,8 +103,8 @@ protected:
    TGFileInfo        *fFileInfo;
 
 public:
-   TGFileDialog(const TGWindow *p, const TGWindow *main,
-                EFileDialogMode dlg_type, TGFileInfo *file_info);
+   TGFileDialog(const TGWindow *p = 0, const TGWindow *main = 0,
+                EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = 0);
    virtual ~TGFileDialog();
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

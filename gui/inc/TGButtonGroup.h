@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.8 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -45,7 +45,7 @@ protected:
    void Init();
 
 public:
-   TGButtonGroup(TGWindow *parent,
+   TGButtonGroup(TGWindow *parent = 0,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
                  GContext_t norm = GetDefaultGC()(),

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.3 2001/11/08 20:33:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.4 2004/07/08 10:02:30 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -123,7 +123,7 @@ protected:
    TList      *fTrash;           // collect all objects that need to be cleaned up
 
 public:
-   TGImageMap(const TGWindow *p, const TGPicture *pic);
+   TGImageMap(const TGWindow *p = 0, const TGPicture *pic = 0);
    TGImageMap(const TGWindow *p, const TString &pic);
    virtual ~TGImageMap();
 

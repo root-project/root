@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.14 2004/06/11 13:35:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.15 2004/08/02 11:43:12 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -50,8 +50,8 @@ protected:
    virtual void DoRedraw() { }
 
 public:
-   TGWindow(const TGWindow *p, Int_t x, Int_t y,
-            UInt_t w, UInt_t h, UInt_t border = 0,
+   TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
+            UInt_t w = 0, UInt_t h = 0, UInt_t border = 0,
             Int_t depth = 0,
             UInt_t clss = 0,
             void *visual = 0,

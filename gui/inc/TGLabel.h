@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.12 2004/08/20 22:15:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.13 2004/08/24 10:42:14 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
-   TGLabel(const TGWindow *p, const char *text,
+   TGLabel(const TGWindow *p = 0, const char *text = 0,
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,

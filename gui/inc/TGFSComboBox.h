@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.5 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.6 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -54,8 +54,8 @@ public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTreeLBEntry(const TGWindow *p, TGString *text, const TGPicture *pic,
-                 Int_t id, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
+   TGTreeLBEntry(const TGWindow *p = 0, TGString *text = 0, const TGPicture *pic = 0,
+                 Int_t id = -1, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame, Pixel_t back = GetWhitePixel());
    virtual ~TGTreeLBEntry();
@@ -76,7 +76,7 @@ public:
 class TGFSComboBox : public TGComboBox {
 
 public:
-   TGFSComboBox(const TGWindow *p, Int_t id,
+   TGFSComboBox(const TGWindow *p = 0, Int_t id = -1,
                 UInt_t options = kHorizontalFrame | kSunkenFrame |
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 

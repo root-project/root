@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.0 2003/04/23 16:38:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.1 2004/04/13 09:52:07 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -81,8 +81,8 @@ protected:
    virtual Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
 public:
-   TGFontDialog(const TGWindow *parent, const TGWindow *t,
-                FontProp_t *fontProp, const TString &sample = "",
+   TGFontDialog(const TGWindow *parent = 0, const TGWindow *t = 0,
+                FontProp_t *fontProp = 0, const TString &sample = "",
                 const char **fontList = 0);
    virtual ~TGFontDialog();
 

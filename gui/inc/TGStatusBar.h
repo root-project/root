@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.8 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -51,7 +51,7 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGStatusBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGStatusBar(const TGWindow *p = 0, UInt_t w = 40, UInt_t h = 5,
                UInt_t options = kSunkenFrame | kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGStatusBar();

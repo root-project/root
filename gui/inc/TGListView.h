@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.20 2003/08/11 14:23:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.21 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -82,9 +82,10 @@ protected:
    static const TGGC   &GetDefaultGC();
 
 public:
-   TGLVEntry(const TGWindow *p,
-             const TGPicture *bigpic, const TGPicture *smallpic,
-             TGString *name, TGString **subnames, EListViewMode ViewMode,
+   TGLVEntry(const TGWindow *p = 0,
+             const TGPicture *bigpic = 0, const TGPicture *smallpic = 0,
+             TGString *name = 0, TGString **subnames = 0, 
+             EListViewMode ViewMode = kLVDetails,
              UInt_t options = kChildFrame,
              Pixel_t back = GetWhitePixel());
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.13 2004/05/04 14:41:52 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.14 2004/05/10 12:09:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -96,7 +96,7 @@ private:
    Bool_t   HandleContainerCrossing(Event_t *ev);
 
 public:
-   TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height);
+   TRootCanvas(TCanvas *c = 0, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootCanvas();
 

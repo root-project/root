@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.36 2004/09/01 14:35:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.37 2004/09/06 17:57:55 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -336,6 +336,8 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, Int_t id,
    fFontStruct = font;
 
    Init();
+
+   if (!p && !s) fLabel->SetString(GetName());
 }
 
 //______________________________________________________________________________

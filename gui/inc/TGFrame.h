@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.44 2004/09/06 09:17:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.45 2004/09/06 11:58:04 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -178,7 +178,7 @@ public:
    static const TGGC &GetShadowGC();
    static const TGGC &GetBckgndGC();
 
-   TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
+   TGFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame();
@@ -297,7 +297,7 @@ protected:
    virtual void SavePrimitiveSubframes(ofstream &out, Option_t *option);
 
 public:
-   TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
+   TGCompositeFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
@@ -355,7 +355,7 @@ public:
 
 class TGVerticalFrame : public TGCompositeFrame {
 public:
-   TGVerticalFrame(const TGWindow *p, UInt_t w, UInt_t h,
+   TGVerticalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { }
@@ -366,7 +366,7 @@ public:
 
 class TGHorizontalFrame : public TGCompositeFrame {
 public:
-   TGHorizontalFrame(const TGWindow *p, UInt_t w, UInt_t h,
+   TGHorizontalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                      UInt_t options = kChildFrame,
                      Pixel_t back = GetDefaultFrameBackground()) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { }
@@ -424,7 +424,7 @@ protected:
    TString GetMWMinpString() const;    //used in SaveSource()
 
 public:
-   TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
+   TGMainFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
    virtual ~TGMainFrame();
 
@@ -486,7 +486,7 @@ protected:
    const TGWindow   *fMain;  // window over which to popup dialog
 
 public:
-   TGTransientFrame(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
+   TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
@@ -531,7 +531,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
-   TGGroupFrame(const TGWindow *p, const char *title,
+   TGGroupFrame(const TGWindow *p = 0, const char *title = 0,
                 UInt_t options = kVerticalFrame,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootDialog.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   20/02/98
 
 /*************************************************************************
@@ -42,8 +42,9 @@ private:
    Bool_t            fApply;   // if true show Apply button
 
 public:
-   TRootDialog(TRootContextMenu *cmenu, const TGWindow *main, const char *title,
-               Bool_t okB = kTRUE, Bool_t cancelB = kTRUE, Bool_t applyB = kFALSE);
+   TRootDialog(TRootContextMenu *cmenu = 0, const TGWindow *main = 0, 
+               const char *title = "ROOT Dialog", Bool_t okB = kTRUE, 
+               Bool_t cancelB = kTRUE, Bool_t applyB = kFALSE);
    virtual ~TRootDialog();
 
    virtual void Add(const char *argname, const char *value, const char *type);

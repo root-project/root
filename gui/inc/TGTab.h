@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.9 2004/07/21 13:53:42 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -37,37 +37,8 @@
 #endif
 
 class TList;
+class TGTabElement;
 class TGTab;
-
-
-class TGTabElement : public TGFrame {
-
-protected:
-   TGString        *fText;            // text on tab
-   GContext_t       fNormGC;          // graphics context for drawing tab
-   FontStruct_t     fFontStruct;      // font used for tab
-   UInt_t           fTWidth;          // width of tab text
-   UInt_t           fTHeight;         // height of tab text
-   Bool_t           fEnabled;         // enabled or disabled
-
-public:
-   TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
-                GContext_t norm, FontStruct_t font,
-                UInt_t options = kRaisedFrame,
-                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGTabElement();
-
-   virtual void        DrawBorder();
-   virtual TGDimension GetDefaultSize() const;
-   const TGString     *GetText() const { return fText; }
-   const char         *GetString() const { return fText->GetString(); }
-   void                SetText(TGString *text);
-   virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
-   Bool_t              IsEnabled() const { return fEnabled; }
-
-   ClassDef(TGTabElement,0)  // Little tab on tab widget
-};
-
 
 class TGTabLayout : public TGLayoutManager {
 
@@ -106,7 +77,7 @@ public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTab(const TGWindow *p, UInt_t w, UInt_t h,
+   TGTab(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
          GContext_t norm = GetDefaultGC()(),
          FontStruct_t font = GetDefaultFontStruct(),
          UInt_t options = kChildFrame,
@@ -137,5 +108,37 @@ public:
 
    ClassDef(TGTab,0)  // Tab widget
 };
+
+
+
+class TGTabElement : public TGFrame {
+
+protected:
+   TGString        *fText;            // text on tab
+   GContext_t       fNormGC;          // graphics context for drawing tab
+   FontStruct_t     fFontStruct;      // font used for tab
+   UInt_t           fTWidth;          // width of tab text
+   UInt_t           fTHeight;         // height of tab text
+   Bool_t           fEnabled;         // enabled or disabled
+
+public:
+   TGTabElement(const TGWindow *p = 0, TGString *text = 0, UInt_t w = 1, UInt_t h = 1,
+                GContext_t norm = TGTab::GetDefaultGC()(), 
+                FontStruct_t font = TGTab::GetDefaultFontStruct(),
+                UInt_t options = kRaisedFrame,
+                Pixel_t back = GetDefaultFrameBackground());
+   virtual ~TGTabElement();
+
+   virtual void        DrawBorder();
+   virtual TGDimension GetDefaultSize() const;
+   const TGString     *GetText() const { return fText; }
+   const char         *GetString() const { return fText->GetString(); }
+   void                SetText(TGString *text);
+   virtual void        SetEnabled(Bool_t on = kTRUE) { fEnabled = on; }
+   Bool_t              IsEnabled() const { return fEnabled; }
+
+   ClassDef(TGTabElement,0)  // Little tab on tab widget
+};
+
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.13 2004/06/11 15:59:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.14 2004/08/22 01:45:05 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -52,24 +52,28 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
 
    UInt_t type = wtype;
 
-   if (!p)
+   if (!p && gClient) {
       p = gClient->GetRoot();
+   }
 
-   fClient = p->fClient;
-   if (fClient->IsEditable()) type = wtype & ~1;
+   if (p) {
+      fClient = p->fClient;
+      if (fClient->IsEditable()) type = wtype & ~1;
 
-   fParent = p;
-   fId = gVirtualX->CreateWindow(fParent->fId, x, y,
-                                 TMath::Max(w, (UInt_t) 1),
-                                 TMath::Max(h, (UInt_t) 1), border,
-                                 depth, clss, visual, attr, type);
-   fClient->RegisterWindow(this);
-   fNeedRedraw = kFALSE;
+      fParent = p;
+      fId = gVirtualX->CreateWindow(fParent->fId, x, y,
+                                    TMath::Max(w, (UInt_t) 1),
+                                    TMath::Max(h, (UInt_t) 1), border,
+                                    depth, clss, visual, attr, type);
+      fClient->RegisterWindow(this);
+      fNeedRedraw = kFALSE;
 
-   // name will be used in SavePrimitive methods
-   fgCounter++;
-   fName = "frame";
-   fName += fgCounter;
+      // name will be used in SavePrimitive methods
+      fgCounter++;
+      fName = "frame";
+      fName += fgCounter;
+   }
+   SetWindowName();
 }
 
 //______________________________________________________________________________

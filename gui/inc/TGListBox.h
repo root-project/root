@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.17 2004/03/04 11:47:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.18 2004/07/07 15:02:25 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
    virtual void DoRedraw() { }
 
 public:
-   TGLBEntry(const TGWindow *p, Int_t id, UInt_t options = kHorizontalFrame,
+   TGLBEntry(const TGWindow *p = 0, Int_t id = -1, UInt_t options = kHorizontalFrame,
              Pixel_t back = GetWhitePixel()) :
       TGFrame(p, 10, 10, options | kOwnBackground, back)
       { fActive = kFALSE; fEntryId = id; fBkcolor = back; }
@@ -109,7 +109,7 @@ public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
+   TGTextLBEntry(const TGWindow *p = 0, TGString *s = 0, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame,
@@ -147,7 +147,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGLineLBEntry(const TGWindow *p, Int_t id, const char *str = 0,
+   TGLineLBEntry(const TGWindow *p = 0, Int_t id = -1, const char *str = 0,
                      UInt_t w = 0, Style_t s = 0,
                      UInt_t options = kHorizontalFrame,
                      Pixel_t back = GetWhitePixel());
@@ -185,7 +185,7 @@ protected:
                                    // moves over a multi selectable list box
 
 public:
-   TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
+   TGLBContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kSunkenFrame,
                  Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGLBContainer();
@@ -237,7 +237,7 @@ protected:
    virtual void InitListBox();
 
 public:
-   TGListBox(const TGWindow *p, Int_t id = -1,
+   TGListBox(const TGWindow *p = 0, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetWhitePixel());
    virtual ~TGListBox();

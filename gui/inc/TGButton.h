@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.23 2004/06/10 14:25:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.24 2004/09/06 17:57:55 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -95,7 +95,7 @@ public:
    static const TGGC   &GetDefaultGC();
    static const TGGC   &GetHibckgndGC();
 
-   TGButton(const TGWindow *p, Int_t id, GContext_t norm = GetDefaultGC()(),
+   TGButton(const TGWindow *p = 0, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
    virtual ~TGButton();
 
@@ -149,7 +149,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGTextButton(const TGWindow *p, const char *s, Int_t id = -1,
+   TGTextButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
@@ -193,7 +193,7 @@ public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, const char *cmd,
                    Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
-   TGPictureButton(const TGWindow *p, const char* pic=0, Int_t id = -1,
+   TGPictureButton(const TGWindow *p = 0, const char* pic = 0, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
@@ -225,7 +225,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   TGCheckButton(const TGWindow *p, const char *s, Int_t id = -1,
+   TGCheckButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
@@ -271,7 +271,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   TGRadioButton(const TGWindow *p, const char *s, Int_t id = -1,
+   TGRadioButton(const TGWindow *p = 0, const char *s = 0, Int_t id = -1,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);

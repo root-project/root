@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.5 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.6 2004/05/05 12:19:05 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -82,7 +82,7 @@ protected:
    TString GetTypeString() const;   // used in SavePrimitive
 
 public:
-   TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id = -1,
+   TGSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t type = 0, Int_t id = -1,
             UInt_t options = kChildFrame,
             Pixel_t back = GetDefaultFrameBackground());
 
@@ -113,7 +113,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id = -1,
+   TGVSlider(const TGWindow *p = 0, UInt_t h = 40, UInt_t type = 0, Int_t id = -1,
              UInt_t options = kVerticalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSlider();
@@ -138,7 +138,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id = -1,
+   TGHSlider(const TGWindow *p = 0, UInt_t w = 40, UInt_t type = 0, Int_t id = -1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSlider();

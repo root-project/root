@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.13 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.14 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -66,8 +66,8 @@ private:
    void            *fUserData;     // pointer to user data structure
 
 public:
-   TGListTreeItem(TGClient *fClient, const char *name,
-                  const TGPicture *opened, const TGPicture *closed);
+   TGListTreeItem(TGClient *fClient = gClient, const char *name = 0,
+                  const TGPicture *opened = 0, const TGPicture *closed = 0);
    virtual ~TGListTreeItem();
 
    void Rename(const char *new_name);
@@ -171,8 +171,8 @@ protected:
    void KeyPressed(TGFrame *, UInt_t /*keysym*/, UInt_t /*mask*/) { }
 
 public:
-   TGListTree(TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, Pixel_t back = GetWhitePixel());
+   TGListTree(TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
+              UInt_t options = 0, Pixel_t back = GetWhitePixel());
    TGListTree(TGCanvas *p, UInt_t options, Pixel_t back = GetWhitePixel());
 
    virtual ~TGListTree();

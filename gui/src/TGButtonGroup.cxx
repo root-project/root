@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.15 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.16 2003/12/15 18:04:27 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -143,6 +143,7 @@ void TGButtonGroup::Init()
    fExclGroup    = kFALSE;
    fRadioExcl    = kFALSE;
    fDrawBorder   = kTRUE;
+   SetWindowName();
 }
 
 //______________________________________________________________________________

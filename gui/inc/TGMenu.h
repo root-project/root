@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.25 2004/07/08 10:19:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.26 2004/07/15 23:46:40 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -249,7 +249,7 @@ public:
    static const TGGC   &GetDefaultSelectedGC();
    static const TGGC   &GetDefaultGC();
 
-   TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
+   TGMenuTitle(const TGWindow *p = 0, TGHotString *s = 0, TGPopupMenu *menu = 0,
                GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t options = 0);
@@ -294,7 +294,7 @@ protected:
    virtual void BindHotKey(Int_t keycode, Bool_t on = kTRUE);
 
 public:
-   TGMenuBar(const TGWindow *p, UInt_t w = 60, UInt_t h = 20,
+   TGMenuBar(const TGWindow *p = 0, UInt_t w = 60, UInt_t h = 20,
              UInt_t options = kHorizontalFrame | kRaisedFrame);
    virtual ~TGMenuBar();
 

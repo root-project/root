@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.8 2002/02/23 18:41:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.h,v 1.9 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -75,7 +75,7 @@ protected:
                                     // generates GraphicsExposure events
 
 public:
-   TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id = -1,
+   TGView(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
           UInt_t xMargin = 0, UInt_t yMargin = 0,
           UInt_t options = kSunkenFrame | kDoubleBorder,
           UInt_t sboptions = 0,

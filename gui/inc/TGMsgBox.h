@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMsgBox.h,v 1.2 2001/04/03 10:36:21 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -80,8 +80,8 @@ protected:
                 Int_t buttons, Int_t *ret_code);
 
 public:
-   TGMsgBox(const TGWindow *p, const TGWindow *main,
-            const char *title, const char *msg, const TGPicture *icon,
+   TGMsgBox(const TGWindow *p = 0, const TGWindow *main = 0,
+            const char *title = 0, const char *msg = 0, const TGPicture *icon = 0,
             Int_t buttons = kMBDismiss, Int_t *ret_code = 0,
             UInt_t options = kVerticalFrame);
    TGMsgBox(const TGWindow *p, const TGWindow *main,

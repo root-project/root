@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.8 2003/10/14 15:08:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -47,7 +47,7 @@ private:
    TList   *fTrash;       // list of buttons and layout hints to be deleted
 
 public:
-   TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGToolBar();

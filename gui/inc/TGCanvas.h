@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.19 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.20 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -93,7 +93,7 @@ protected:
                           Bool_t caseSensitive = kTRUE,
                           Bool_t beginWith = kFALSE);
 public:
-   TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
+   TGContainer(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kSunkenFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
@@ -159,7 +159,7 @@ protected:
    TGFrame    *fContainer;   // container frame
 
 public:
-   TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
+   TGViewPort(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
 
@@ -197,7 +197,7 @@ public:
           kCanvasScrollBoth       = (kCanvasScrollHorizontal | kCanvasScrollVertical)
    };
 
-   TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
+   TGCanvas(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
             UInt_t options = kSunkenFrame | kDoubleBorder,
             Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGCanvas();

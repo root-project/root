@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.h,v 1.2 2002/04/04 17:32:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.h,v 1.3 2004/07/08 10:02:30 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -42,7 +42,7 @@ private:
    void CreateMenu(TObject *object);
 
 public:
-   TRootContextMenu(TContextMenu *c, const char *name);
+   TRootContextMenu(TContextMenu *c = 0, const char *name = "ROOT Context Menu");
    virtual ~TRootContextMenu();
 
    virtual void DisplayPopup(Int_t x, Int_t y);

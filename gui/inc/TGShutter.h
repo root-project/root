@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.4 2003/10/16 15:21:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.5 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -53,7 +53,7 @@ protected:
    TGLayoutHints *fL1, *fL2;   // positioning hints
 
 public:
-   TGShutterItem(const TGWindow *p, TGHotString *s = 0, Int_t id = -1,
+   TGShutterItem(const TGWindow *p = 0, TGHotString *s = 0, Int_t id = -1,
                  UInt_t options = 0);
    virtual ~TGShutterItem();
 
@@ -80,7 +80,7 @@ protected:
    Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
 
 public:
-   TGShutter(const TGWindow *p, UInt_t options = kSunkenFrame);
+   TGShutter(const TGWindow *p = 0, UInt_t options = kSunkenFrame);
    virtual ~TGShutter();
 
    virtual void   AddItem(TGShutterItem *item);

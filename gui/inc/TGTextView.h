@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.11 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.12 2004/09/01 12:56:14 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -65,7 +65,7 @@ protected:
    static const TGGC   &GetDefaultSelectedBackgroundGC();
 
 public:
-   TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id = -1,
+   TGTextView(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());

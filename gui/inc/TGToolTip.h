@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.3 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.4 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -46,7 +46,7 @@ private:
    Int_t              fY;       // Y position in fWindow where to popup
 
 public:
-   TGToolTip(const TGWindow *p, const TGFrame *f, const char *text, Long_t delayms);
+   TGToolTip(const TGWindow *p = 0, const TGFrame *f = 0, const char *text = 0, Long_t delayms = 350);
    TGToolTip(const TGWindow *p, const TBox *b, const char *text, Long_t delayms);
    TGToolTip(const TBox *b, const char *text, Long_t delayms);
    virtual ~TGToolTip();

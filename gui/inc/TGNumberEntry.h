@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.3 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.h,v 1.4 2004/04/22 16:28:29 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -93,7 +93,7 @@ public:
                       FontStruct_t font = GetDefaultFontStruct(),
                       UInt_t option = kSunkenFrame | kDoubleBorder,
                       Pixel_t back = GetWhitePixel());
-   TGNumberEntryField(const TGWindow *parent,
+   TGNumberEntryField(const TGWindow *parent = 0,
                       Int_t id = -1, Double_t val = 0,
                       EStyle style = kNESReal,
                       EAttribute attr = kNEAAnyNumber,
@@ -168,7 +168,7 @@ protected:
    Bool_t              fButtonToNum;   // Send button messages to parent rather than number entry field
 
 public:
-   TGNumberEntry(const TGWindow *parent, Double_t val = 0,
+   TGNumberEntry(const TGWindow *parent = 0, Double_t val = 0,
                  Int_t digitwidth = 5, Int_t id = -1,
                  EStyle style = kNESReal,
                  EAttribute attr = kNEAAnyNumber,

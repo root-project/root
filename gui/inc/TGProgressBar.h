@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.8 2003/11/12 19:34:59 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -98,7 +98,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGHProgressBar(const TGWindow *p,
+   TGHProgressBar(const TGWindow *p = 0,
                   UInt_t w = 4, UInt_t h = kProgressBarTextWidth,
                   Pixel_t back = GetWhitePixel(),
                   Pixel_t barcolor = GetDefaultSelectedBackground(),
@@ -126,7 +126,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGVProgressBar(const TGWindow *p,
+   TGVProgressBar(const TGWindow *p = 0,
                   UInt_t w = kProgressBarTextWidth, UInt_t h = 4,
                   Pixel_t back = GetWhitePixel(),
                   Pixel_t barcolor = GetDefaultSelectedBackground(),

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.2 2004/07/09 00:36:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.h,v 1.3 2004/07/30 15:42:20 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -58,7 +58,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDockButton(const TGCompositeFrame *p, Int_t id = 1);
+   TGDockButton(const TGCompositeFrame *p = 0, Int_t id = 1);
    virtual ~TGDockButton();
 
    virtual Bool_t HandleCrossing(Event_t *event);
@@ -74,7 +74,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDockHideButton(const TGCompositeFrame *p);
+   TGDockHideButton(const TGCompositeFrame *p = 0);
 
    void SetAspectRatio(Int_t a) { fAspectRatio = a; DoRedraw(); }
 
@@ -87,7 +87,7 @@ protected:
    TGDockableFrame    *fDockable;   // orignal dockable frame
 
 public:
-   TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable);
+   TGUndockedFrame(const TGWindow *p = 0, TGDockableFrame *dockable = 0);
    virtual ~TGUndockedFrame();
 
    void FixSize();
@@ -111,7 +111,7 @@ protected:
    TGLayoutHints    *fCl, *fHints;   // layout hints
 
 public:
-   TGDockableFrame(const TGWindow *p, Int_t id = -1,
+   TGDockableFrame(const TGWindow *p = 0, Int_t id = -1,
                    UInt_t options = kHorizontalFrame);
    virtual ~TGDockableFrame();
 

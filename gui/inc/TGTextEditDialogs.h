@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.2 2000/07/13 15:09:39 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.3 2001/04/03 10:36:21 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -65,8 +65,8 @@ protected:
    Int_t              *fRetCode;               // return code
 
 public:
-   TGSearchDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                  TGSearchType *sstruct, Int_t *ret_code,
+   TGSearchDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+                  TGSearchType *sstruct = 0, Int_t *ret_code = 0,
                   UInt_t options = kVerticalFrame);
    virtual ~TGSearchDialog();
 
@@ -95,8 +95,8 @@ protected:
    Int_t             *fRetCode;                    // return code
 
 public:
-   TGPrintDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                 char **printerName, char **printProg, Int_t *ret_code,
+   TGPrintDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+                 char **printerName = 0, char **printProg = 0, Int_t *ret_code = 0,
                  UInt_t options = kVerticalFrame);
    virtual ~TGPrintDialog();
 
@@ -120,8 +120,8 @@ protected:
    Long_t           *fRetCode;                 // return code
 
 public:
-   TGGotoDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                Long_t *ret_code, UInt_t options = kVerticalFrame);
+   TGGotoDialog(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
+                Long_t *ret_code = 0, UInt_t options = kVerticalFrame);
    virtual ~TGGotoDialog();
 
    virtual void   CloseWindow();

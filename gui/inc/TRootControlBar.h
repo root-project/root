@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.4 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.5 2003/07/21 12:42:36 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -41,7 +41,8 @@ private:
    TGLayoutHints  *fL1;      // button layout hints
 
 public:
-   TRootControlBar(TControlBar *c, const char *title, Int_t x = -999, Int_t y = -999);
+   TRootControlBar(TControlBar *c = 0, const char *title = "ROOT Control Bar", 
+                   Int_t x = -999, Int_t y = -999);
    virtual ~TRootControlBar();
 
    void Create();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.3 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.h,v 1.4 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -39,7 +39,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
+   TGIcon(const TGWindow *p = 0, const TGPicture *pic = 0, UInt_t w = 1, UInt_t h = 1,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options, back) { fPic = pic; }
    ~TGIcon();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.7 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -35,7 +35,7 @@ protected:
    Bool_t      fDragging;         // true if in dragging mode
 
 public:
-   TGSplitter(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
+   TGSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGSplitter() { }
@@ -60,7 +60,7 @@ protected:
    Bool_t      fLeft;           // true if frame is on the left of splitter
 
 public:
-   TGVSplitter(const TGWindow *p, UInt_t w = 2, UInt_t h = 4,
+   TGVSplitter(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 40,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSplitter() { }
@@ -91,7 +91,7 @@ protected:
    Bool_t      fAbove;          // true if frame is above the splitter
 
 public:
-   TGHSplitter(const TGWindow *p, UInt_t w = 4, UInt_t h = 2,
+   TGHSplitter(const TGWindow *p = 0, UInt_t w = 40, UInt_t h = 2,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSplitter() { }

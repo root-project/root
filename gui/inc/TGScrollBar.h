@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.6 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.7 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
    static Pixmap_t  GetBckgndPixmap();
    static Int_t     GetScrollBarWidth();
 
-   TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGScrollBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
@@ -126,7 +126,7 @@ public:
 class TGHScrollBar : public TGScrollBar {
 
 public:
-   TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGHScrollBar(const TGWindow *p = 0, UInt_t w = 40, UInt_t h = 5,
                 UInt_t options = kHorizontalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHScrollBar() { }
@@ -148,7 +148,7 @@ public:
 class TGVScrollBar : public TGScrollBar {
 
 public:
-   TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
+   TGVScrollBar(const TGWindow *p = 0, UInt_t w = 5, UInt_t h = 40,
                 UInt_t options = kVerticalFrame,
                 Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVScrollBar() { }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.12 2004/07/06 10:55:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.13 2004/07/07 15:02:25 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -104,7 +104,7 @@ protected:
    Int_t                fSortMode;          // current IconBox sort mode
 
 public:
-   TRootBrowser(TBrowser *b, const char *title, UInt_t width, UInt_t height);
+   TRootBrowser(TBrowser *b = 0, const char *title = "ROOT Browser", UInt_t width = 500, UInt_t height = 300);
    TRootBrowser(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TRootBrowser();
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.8 2004/08/19 11:11:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.h,v 1.9 2004/08/25 13:31:16 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -99,7 +99,7 @@ protected:
    static void   FixBounds(Float_t &min, Float_t &max);
 
 public:
-   TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id = -1,
+   TGDoubleSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground(),
                   Bool_t reversed = kFALSE,
@@ -154,7 +154,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id = -1,
+   TGDoubleVSlider(const TGWindow *p = 0, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
                    UInt_t options = kVerticalFrame,
                    Pixel_t back = GetDefaultFrameBackground(),
                    Bool_t reversed = kFALSE,
@@ -180,7 +180,7 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id = -1,
+   TGDoubleHSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t type = 1, Int_t id = -1,
                    UInt_t options = kHorizontalFrame,
                    Pixel_t back = GetDefaultFrameBackground(),
                    Bool_t reversed = kFALSE,

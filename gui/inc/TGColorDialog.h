@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.2 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.h,v 1.3 2004/06/21 12:42:07 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
    void DrawFocusHilite(Int_t onoff);
 
 public:
-   TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t id = -1);
+   TGColorPalette(const TGWindow *p = 0, Int_t cols = 8, Int_t rows = 8, Int_t id = -1);
    virtual ~TGColorPalette();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -130,7 +130,7 @@ protected:
    void    CreateDitheredImage(Pixmap_t image, Int_t which);
 
 public:
-   TGColorPick(const TGWindow *p, Int_t w, Int_t h, Int_t id = -1);
+   TGColorPick(const TGWindow *p = 0, Int_t w = 1, Int_t h = 1, Int_t id = -1);
    virtual ~TGColorPick();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -165,7 +165,7 @@ protected:
    void    UpdateHLSentries(Pixel_t *c);
 
 public:
-   TGColorDialog(const TGWindow *p, const TGWindow *m, Int_t *retc = 0,
+   TGColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
                  Pixel_t *color = 0);
    virtual ~TGColorDialog();
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootHelpDialog.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   24/02/98
 
 /*************************************************************************
@@ -39,7 +39,8 @@ private:
    TGLayoutHints    *fL2;     // layout of OK button
 
 public:
-   TRootHelpDialog(const TGWindow *main, const char *title, UInt_t w, UInt_t h);
+   TRootHelpDialog(const TGWindow *main = 0, const char *title = "ROOT Help Dialog",
+                   UInt_t w = 1, UInt_t h = 1);
    virtual ~TRootHelpDialog();
 
    void   SetText(const char *helpText);
