@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.26 2001/11/28 02:09:06 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.27 2001/11/29 07:24:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -410,19 +410,21 @@ void RooTreeData::loadValues(const TTree *t, RooFormulaVar* select)
     // Copy from source to destination
      _iterator->Reset() ;
      sourceIter->Reset() ;
+     Bool_t allOK(kTRUE) ;
      while (destArg = (RooAbsArg*)_iterator->Next()) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        if (!sourceArg->isValid()) {
 	 cout << "RooTreeData::loadValues(" << GetName() << ") row " << i 
 	      << ": TTree branch " << sourceArg->GetName() 
 	      << " has an invalid value, value not copied" << endl ;
-	 continue ;
+	 allOK=kFALSE ;
+	 break ;
        }       
        destArg->copyCache(sourceArg) ;
      }   
 
      // Does this event pass the cuts?
-     if (select && select->getVal()==0) {
+     if (!allOK || (select && select->getVal()==0)) {
        continue ; 
      }
 
