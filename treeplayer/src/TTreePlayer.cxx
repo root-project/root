@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.181 2005/02/08 14:34:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.182 2005/03/04 17:46:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1245,8 +1245,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (branch->GetListOfBranches()->GetEntriesFast()) {leafStatus[l] = 1;}
          }
          if (bre->GetStreamerType() < 0) {
-            fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
-            mustInit.Add(bre);
+            if (branch->GetListOfBranches()->GetEntriesFast()) {
+               fprintf(fp,"%s%-15s *%s;\n",headcom,bre->GetClassName(), bre->GetName());
+            } else {
+               fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), bre->GetName());
+               mustInit.Add(bre);
+            }
             continue;
          }
          if (bre->GetStreamerType() == 0) {
@@ -1558,7 +1562,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          strcpy(branchname,branch->GetName());
          if (branch->IsA() == TBranchElement::Class()) {
             bre = (TBranchElement*)branch;
-               if (bre->GetType() == 3) strcat(branchname,"_");
+               if (bre->GetType() == 3 || bre->GetType()==4) strcat(branchname,"_");
          }
       }
       bname = branchname;
