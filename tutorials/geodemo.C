@@ -62,7 +62,7 @@ void rgeom()
    if (is_raytracing != raytracing) {
       gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
       gPad->Modified();
-      gPad->Update()
+      gPad->Update();
    }   
 }   
 
@@ -1414,7 +1414,7 @@ void MakePicture()
    if (is_raytracing != raytracing) {
       gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
       gPad->Modified();
-      gPad->Update()
+      gPad->Update();
    }   
 }
       
