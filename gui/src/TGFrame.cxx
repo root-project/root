@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.13 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.14 2001/06/27 16:13:22 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -542,7 +542,9 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // If no hints are specified default hints TGLayoutHints(kLHintsNormal,0,0,0,0)
    // will be used. Most of the time, however, you will want to provide
    // specific hints. User specified hints can be reused many times
-   // and need to be destoyed by the user.
+   // and need to be destoyed by the user. The added frames cannot not be
+   // added to different composite frames but still need to be deleted by
+   // the user.
 
    TGFrameElement *nw;
 
