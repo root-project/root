@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.39 2001/02/15 21:18:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.40 2001/02/16 08:42:13 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3238,6 +3238,7 @@ Stat_t TH1::GetMean(Int_t axis) const
 
   if (axis <1 || axis > 3) return 0;
   Stat_t stats[10];
+  for (Int_t i=4;i<10;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
@@ -3252,6 +3253,7 @@ Stat_t TH1::GetRMS(Int_t axis) const
 
   if (axis <1 || axis > 3) return 0;
   Stat_t x, rms2, stats[10];
+  for (Int_t i=4;i<10;i++) stats[i] = 0;
   GetStats(stats);
   if (stats[0] == 0) return 0;
   Int_t ax[3] = {2,4,7};
