@@ -22,7 +22,7 @@ CXXFLAGS      = -qpic -qchar=signed -D_xlc_ \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -qpic -qchar=signed -D_xlc_ \
 		-qflttrap=overflow:zerodivide:invalid:enable \
-                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS) 
+                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -qpic -qchar=signed -D_xlc_ \
 		-qflttrap=overflow:zerodivide:enable \
                 -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
@@ -41,11 +41,11 @@ MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 LD            = xlC
 LDFLAGS       = $(OPT) -Wl,-bind_at_load -Wl,-flat_namespace
 ifeq ($(MACOSX_MINOR),3)
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined dynamic_lookup \
-                -single_module -install_name $(LIBDIR)/
+SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined dynamic_lookup \
+                -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 else
-SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
-                -single_module -install_name $(LIBDIR)/
+SOFLAGS       = $(OPT) qmkshrobj -flat_namespace -undefined suppress \
+                -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 endif
 SOEXT         = dylib
 
@@ -56,7 +56,9 @@ CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
 F77           = xlf
-F77LIBS       = -lg2c
+F77FLAGS      = -qextname
+F77LIBS       = -lg2c -L/opt/ibmcmp/xlf/8.1/lib \
+                -lxlf90 -lxlomp_ser -lxlfmath
 
 # Override default in Makefile.config
 INSTALL      := cp -pPR

@@ -76,10 +76,6 @@ elif [ $PLATFORM = "fbsd" ]; then
     $LD $SOFLAGS$SONAME.$MAJOR.$MINOR $LDFLAGS -o $LIB.$MAJOR.$MINOR `lorder $OBJS | tsort -q` $EXTRA $EXPLLNKCORE
 elif [ $PLATFORM = "macosx" ]; then
    macosx_minor=`sw_vers -productVersion | cut -d'.' -f2`
-   if [ $LD = "xlC" ]; then
-      # if we are using xlc, then the linker for shared libs is still g++
-      LD=g++
-   fi
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    if [ $macosx_minor -ge 3 ]; then
