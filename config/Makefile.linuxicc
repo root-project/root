@@ -13,12 +13,12 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -KPIC $(EXTRA_CXXFLAGS)
-CFLAGS        = -KPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -KPIC $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = $(EXTRA_CXXFLAGS)
+CFLAGS        = $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
 
@@ -38,6 +38,9 @@ CRYPTLIBS     = -lcrypt
 F77           = ifc
 F77FLAGS      =
 F77LIBS       =
+# check path for g2c
+#F77LIBS       = -L/usr/lib/gcc-lib/i386-redhat-linux/2.96 -lg2c \
+#                -lF90 -lCEPCF90 -lintrins
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
