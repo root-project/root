@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMinuit.cc,v 1.1 2002/08/21 23:06:19 verkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.2 2002/08/27 00:53:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -76,13 +76,13 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   if (_floatParamList->getSize()>1) {
     _floatParamList->sort() ;
   }
-  _floatParamList->SetName("floatParamList") ;
+  _floatParamList->setName("floatParamList") ;
 
   _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE) ;
   if (_constParamList->getSize()>1) {
     _constParamList->sort() ;
   }
-  _constParamList->SetName("constParamList") ;
+  _constParamList->setName("constParamList") ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
   TIterator* pIter = _floatParamList->createIterator() ;
