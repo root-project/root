@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.2 2002/02/20 16:57:31 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.cxx,v 1.3 2002/04/30 07:26:47 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -56,6 +56,7 @@ Int_t THbookBranch::GetEntry(Int_t entry, Int_t getall)
 void THbookBranch::SetAddress(void *add)
 {
 // Set address of this branch
+// See important remark in the header of THbookTree
 
    TBranch::SetAddress(add);
    
