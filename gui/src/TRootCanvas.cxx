@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.6 2001/02/14 15:39:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.7 2001/04/04 13:36:12 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -368,6 +368,14 @@ TRootCanvas::~TRootCanvas()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
    delete fCanvasLayout;
+}
+
+//______________________________________________________________________________
+void TRootCanvas::Close()
+{
+   // Called via TCanvasImp interface by TCanvas.
+
+   gVirtualX->CloseWindow();
 }
 
 //______________________________________________________________________________

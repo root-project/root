@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.20 2001/02/21 07:31:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.21 2001/03/14 11:10:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -236,8 +236,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       fWindowHeight = gStyle->GetCanvasDefH()-28;
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
-      fCanvasImp  = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
-      fBatch      = kTRUE;
+      fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+      fBatch        = kTRUE;
    } else {                  //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       if (form < 1 || form > 5) form = 1;
@@ -597,9 +597,7 @@ void TCanvas::Close(Option_t *option)
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-#ifndef WIN32
-      gVirtualX->CloseWindow();
-#endif
+      fCanvasImp->Close();
    }
    fCanvasID = -1;
    fBatch    = kTRUE;

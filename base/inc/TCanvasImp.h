@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@ public:
    virtual ~TCanvasImp() { }
 
    TCanvas       *Canvas() const { return fCanvas; }
+   virtual void   Close() { }
    virtual void   ForceUpdate() { }
    virtual void   GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual void   Iconify() { }
