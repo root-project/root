@@ -13,9 +13,9 @@ endif
 # Compiler:
 CXX           = gcc
 CC            = cc
-CXXFLAGS      = -fsigned-chars -Wall -fPIC -fno-exceptions $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -ansi -fsigned-chars -Wall -fPIC -fno-exceptions $(EXTRA_CXXFLAGS)
 CFLAGS        = $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -fsigned-chars -Wall -fPIC -fno-exceptions -DG__REGEXP1 \
+CINTCXXFLAGS  = -ansi -fsigned-chars -Wall -fPIC -fno-exceptions -DG__REGEXP1 \
                 -DG__UNIX -DG__SIGNEDCHAR -DG__SHAREDLIB -DG__OSFDLL \
                 -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -signed -DG__REGEXP1 -DG__SIGNEDCHAR -DG__UNIX -DG__SHAREDLIB \
