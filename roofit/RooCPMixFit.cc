@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.6 2002/02/26 03:39:44 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.7 2002/02/28 16:50:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -490,13 +490,13 @@ void RooCPMixFit::buildPdfPrototypes()
   buildSelectionPdfs() ;
 
   // build BMixing DeltaT x EvtSel PDF  
-  BMixingSig  = new RooProdPdf ("BMixingSig","gaussPdf X sigSum",*mbSig,*dtSigBMix,1e-15) ;
-  BMixingBkg  = new RooProdPdf ("BMixingBkg","argusPdf X bkgSum",*mbBkg,*dtBkgBMix,1e-15) ;
+  BMixingSig  = new RooProdPdf ("BMixingSig","gaussPdf X sigSum",*mbSig,*dtSigBMix ,1e-5) ;
+  BMixingBkg  = new RooProdPdf ("BMixingBkg","argusPdf X bkgSum",*mbBkg,*dtBkgBMix ,1e-5) ;
   BMixing     = new RooAddPdf  ("BMixing"   ,"BMixing PDF" ,*BMixingSig,*BMixingBkg,*mbSigFrac) ;  
 
   // build CPGold DeltaT x EvtSel PDF  
-  CPGoldSig  = new RooProdPdf ("CPGoldSig","gaussPdf X sigSum",*mbSig,*dtSigGold,1e-15) ;
-  CPGoldBkg  = new RooProdPdf ("CPGoldBkg","argusPdf X bkgSum",*mbBkg,*dtBkgGold,1e-15) ;
+  CPGoldSig  = new RooProdPdf ("CPGoldSig","gaussPdf X sigSum",*mbSig,*dtSigGold ,1e-5) ;
+  CPGoldBkg  = new RooProdPdf ("CPGoldBkg","argusPdf X bkgSum",*mbBkg,*dtBkgGold ,1e-5) ;
   CPGold     = new RooAddPdf  ("CPGold"   ,"CPGold PDF"  ,*CPGoldSig,*CPGoldBkg,*mbSigFrac) ;  
 
   // build KLong DeltaT x EvtSel PDF  

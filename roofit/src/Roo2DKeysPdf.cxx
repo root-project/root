@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.9 2002/01/30 09:08:50 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -481,7 +481,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
-  Double_t theX, theY, hx, hy;
+  Double_t theX, theY, hx/*, hy*/;
   TString label = name;
   label += " the source data for 2D Keys PDF";
   TTree * _theTree =  new TTree(name, label);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.5 2002/02/25 20:47:20 croat Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.6 2002/02/26 03:39:44 verkerke Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -95,7 +95,8 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   Double_t x1(0);
   Double_t x2(0);
 
-  for (Int_t i=0; i<_nEvents; i++) {
+  Int_t i;
+  for (i=0; i<_nEvents; i++) {
     const RooArgSet *values= data.get(i);
     RooRealVar real= (RooRealVar&)(values->operator[](_varName));
     _dataPts[i]= real.getVal();
@@ -114,7 +115,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     if (_weights[j]<hmin) _weights[j]=hmin;
   }
   
-  for (Int_t i=0;i<_nPoints+1;++i) 
+  for (i=0;i<_nPoints+1;++i) 
     _lookupTable[i]=evaluateFull( _lo+Double_t(i)*_binWidth );
 
   
