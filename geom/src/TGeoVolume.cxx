@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.7 2002/10/03 13:19:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.8 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -94,6 +94,7 @@
 #include "TString.h"
 #include "TBrowser.h"
 #include "TStyle.h"
+#include "TH2F.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -428,6 +429,18 @@ void TGeoVolume::PrintNodes() const
       cd(i);
       GetNode(i)->GetMatrix()->Print();
    }   
+}
+//______________________________________________________________________________
+TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
+                            Int_t nphi,   Double_t phimin, Double_t phimax,
+                            Double_t rmin, Double_t rmax, Option_t *option)
+{
+// Generate a lego plot fot the top volume, according to option.
+   TVirtualGeoPainter *p = gGeoManager->GetGeomPainter();
+   if (!p) return 0;
+   TH2F *hist = p->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
+   hist->Draw("lego1cyl");
+   return hist;
 }
 //-----------------------------------------------------------------------------
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)

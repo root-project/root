@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.3 2002/07/17 14:22:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 
 #include "TVirtualPad.h"
 #include "TNtuple.h"
+#include "TH2.h"
 #include "TRandom3.h"
 #include "TPolyMarker3D.h"
 #include "TPolyLine3D.h"
@@ -115,6 +116,72 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
    gPad->Modified();
    gPad->Update();
 }  
+//-----------------------------------------------------------------------------
+TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
+                            Int_t nphi,   Double_t phimin, Double_t phimax,
+                            Double_t rmin, Double_t rmax, Option_t *option)
+{
+// Generate a lego plot fot the top volume, according to option.
+   TH2F *hist = new TH2F("lego", option, nphi, phimin, phimax, ntheta, themin, themax);
+   
+   Double_t degrad = TMath::Pi()/180.;
+   Double_t theta, phi, step, matprop, x;
+   Double_t start[3];
+   Double_t dir[3];
+   TGeoNode *startnode, *endnode;
+   Bool_t is_entering, is_null;
+   Int_t i;  // loop index for phi
+   Int_t j;  // loop index for theta
+   for (i=1; i<=nphi; i++) {
+      for (j=1; j<=ntheta; j++) {
+         x = 0;
+         theta = hist->GetYaxis()->GetBinCenter(j);
+         phi   = hist->GetXaxis()->GetBinCenter(i);
+         memset(&start[0], 0, 3*sizeof(Double_t));
+         dir[0]=TMath::Sin(theta*degrad)*TMath::Cos(phi*degrad);
+         dir[1]=TMath::Sin(theta*degrad)*TMath::Sin(phi*degrad);
+         dir[2]=TMath::Cos(theta*degrad);
+         fGeom->InitTrack(&start[0], &dir[0]);
+         startnode = fGeom->GetCurrentNode();
+         if (fGeom->IsOutside()) startnode=0;
+         if (startnode) {
+            matprop = startnode->GetVolume()->GetMaterial()->GetRadLen();
+         } else {
+            matprop = 0.;
+         }      
+         fGeom->FindNextBoundary();
+//         fGeom->IsStepEntering();
+         // find where we end-up
+         endnode = fGeom->Step();
+         if (fGeom->IsOutside()) endnode=0;
+         step = fGeom->GetStep();
+         is_entering = fGeom->IsEntering();
+         is_null = fGeom->IsNullStep();
+         while (step<1E10) {
+            // now see if we can make an other step
+            if (is_entering && !is_null && matprop > 0) x += step/matprop;
+            if (endnode==0 || is_null) break;
+         //printf("x=%f, step==%g, matprop=%g\n", x,step,matprop);
+            // generate an extra step to cross boundary
+            startnode = endnode;    
+            if (startnode) {
+               matprop = startnode->GetVolume()->GetMaterial()->GetRadLen();
+            } else {
+               matprop = 0.;
+            }      
+            
+            fGeom->FindNextBoundary();
+            endnode = fGeom->Step();
+            if (fGeom->IsOutside()) endnode=0;
+            step = fGeom->GetStep();
+            is_entering = fGeom->IsEntering();
+            is_null = fGeom->IsNullStep();
+         }
+         hist->Fill(phi, theta, x); 
+      }
+   }
+   return hist;           
+}
 //______________________________________________________________________________
 void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
 {
@@ -275,7 +342,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             pm->Add(line);
          } // else printf("   entering=%i vis2=%i - no segment\n", (Int_t)is_entering, (Int_t)vis2);
          // now see if we can make an other step
-         if (endnode==0) {
+         if (endnode==0 || is_null) {
 //            printf("NULL. End track.\n");
             break;
          }   

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.2 2002/07/17 13:27:59 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.3 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -19,6 +19,7 @@ class TGeoVolume;
 class TGeoVoxelFinder;
 class TGeoNode;
 class TGeoManager;
+class TH2F;
 
 /*************************************************************************
  * TGeoChecker - A simple checker generating random points inside a 
@@ -47,6 +48,9 @@ public:
    Double_t         CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    void             CreateTree(const char *treename, const char *filename);
    void             Generate(UInt_t npoints=1000000);      // compute safety and fill the tree
+   TH2F            *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
+                            Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
+                            Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    void             Raytrace(Double_t *startpoint, UInt_t npoints=1000000);
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -45,14 +45,12 @@ class TGeoMaterial : public TNamed,
 
 protected:
    Int_t                    fId;         // unique Id
-private :
-// data members
-   TObject                 *fShader;     // shader with optical properties
    Double_t                 fA;          // A of material
    Double_t                 fZ;          // Z of material
    Double_t                 fDensity;    // density of material
    Double_t                 fRadLen;     // radiation length
    Double_t                 fIntLen;     // interaction length
+   TObject                 *fShader;     // shader with optical properties
 // methods
 
 public:
@@ -64,6 +62,7 @@ public:
    // destructor
    virtual ~TGeoMaterial();
    // methods
+   static  Double_t         Coulomb(Double_t z);
    Int_t                    GetMedia()     {return fId;}
    virtual Int_t            GetByteCount() {return 32;}
    virtual Double_t         GetA()       {return fA;}
@@ -74,6 +73,7 @@ public:
    virtual Double_t         GetIntLen()  {return fIntLen;}
    virtual Bool_t           IsEq(TGeoMaterial *other);
    virtual void             Print(const Option_t *option="") const;
+   static  Double_t         ScreenFactor(Double_t z);
    void                     SetMedia(Int_t id) {fId = id;}
 
 

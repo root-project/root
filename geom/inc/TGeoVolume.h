@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.6 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.7 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #endif
 
 // forward declarations
+class TH2F;
 class TGeoNode;
 class TGeoShape;
 class TGeoMatrix;
@@ -111,6 +112,9 @@ public:
    virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
    virtual void    Draw(Option_t *option=""); // *MENU*
    virtual void    DrawOnly(Option_t *option=""); // *MENU*
+   TH2F           *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
+                            Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
+                            Double_t rmin=0., Double_t rmax=9999999, Option_t *option=""); // *MENU*
    virtual void    Paint(Option_t *option="");
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*

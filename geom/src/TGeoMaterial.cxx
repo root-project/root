@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TStyle.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
+#include "TMath.h"
 
 // statics and globals
 
@@ -70,6 +71,13 @@ TGeoMaterial::TGeoMaterial(const char *name, const char *title, Double_t a, Doub
    fZ       = z;
    fDensity = rho;
    fRadLen  = radlen;
+   if (a > 0 && fRadLen <= 0) {
+      //taken grom Geant3 routine GSMATE
+      const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
+      fRadLen = a/(ALR2AV*rho*z*(z +TGeoMaterial::ScreenFactor(z))*
+             (AL183-TMath::Log(z)/3-TGeoMaterial::Coulomb(z)));
+   }
+   
    fIntLen  = intlen;       
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
@@ -81,6 +89,26 @@ TGeoMaterial::~TGeoMaterial()
 {
 // Destructor
 }
+
+//-----------------------------------------------------------------------------
+Double_t TGeoMaterial::Coulomb(Double_t z)
+{
+   // static function
+   //  Compute Coulomb correction for pair production and Brem 
+   //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
+   //                        FORMULA 2.7.17
+   
+   const Double_t ALPHA = 7.29927E-03;
+
+   Double_t AZ    = ALPHA*z;
+   Double_t AZ2   = AZ*AZ;
+   Double_t AZ4   =   AZ2 * AZ2;
+   Double_t FP    = ( 0.0083*AZ4 + 0.20206 + 1./(1.+AZ2) ) * AZ2;
+   Double_t FM    = ( 0.0020*AZ4 + 0.0369  ) * AZ4;
+   return FP - FM;
+}
+
+
 //-----------------------------------------------------------------------------
 Bool_t TGeoMaterial::IsEq(TGeoMaterial *other)
 {
@@ -135,6 +163,12 @@ TGeoMixture::TGeoMixture(const char *name, const char *title, Int_t nel)
       fWeights  = new Double_t[nel];
    }
    fNelements  = nel;
+   for (Int_t j=0;j<fNelements;j++) {
+      fZmixture[j] = 0;
+      fAmixture[j] = 0;
+      fWeights[j]  = 0;
+   }
+   fDensity = 0.001; //TO BE CORRECTED
 }
 //-----------------------------------------------------------------------------
 TGeoMixture::~TGeoMixture()
@@ -155,7 +189,23 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
    fZmixture[i] = z;
    fAmixture[i] = a;
    fWeights[i]  = weight;
+   
+   //compute equivalent radiation length (taken from Geant3/GSMIXT)
+   const Double_t ALR2AV = 1.39621E-03 , AL183 =5.20948;
+   Double_t radinv = 0, aeff = 0, zeff = 0;
+   for (Int_t j=0;j<fNelements;j++) {
+      aeff += fWeights[j]*fAmixture[j];
+      zeff += fWeights[j]*fZmixture[j];
+      Double_t zc = fZmixture[j];
+      Double_t alz = TMath::Log(zc)/3.;
+      Double_t xinv = zc*(zc+TGeoMaterial::ScreenFactor(zc))*
+         (AL183-alz-TGeoMaterial::Coulomb(zc))/fAmixture[j];
+      radinv += xinv*fWeights[j];
+   }
+   radinv *= ALR2AV*fDensity;
+   if (radinv > 0) fRadLen = 1/radinv;
 }
+
 //-----------------------------------------------------------------------------
 Bool_t TGeoMixture::IsEq(TGeoMaterial *other)
 {
@@ -183,5 +233,19 @@ void TGeoMixture::Print(const Option_t *option) const
    }
 }
 
+
+//-----------------------------------------------------------------------------
+Double_t TGeoMaterial::ScreenFactor(Double_t z)
+{
+   // static function
+   //  Compute screening factor for pair production and Bremstrahlung
+   //  REFERENCE : EGS MANUAL SLAC 210 - UC32 - JUNE 78
+   //                        FORMULA 2.7.22
+   
+   const Double_t AL183= 5.20948 , AL1440 = 7.27239;
+   Double_t ALZ  = TMath::Log(z)/3.;
+   Double_t factor = (AL1440 - 2*ALZ) / (AL183 - ALZ - TGeoMaterial::Coulomb(z));
+   return factor;
+}
 
 

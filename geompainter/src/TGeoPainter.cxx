@@ -12,6 +12,8 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TPad.h"
+#include "TH2F.h"
+
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
 
@@ -358,6 +360,14 @@ Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
    }
    return kFALSE;      
 }   
+//______________________________________________________________________________
+TH2F *TGeoPainter::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
+                            Int_t nphi,   Double_t phimin, Double_t phimax,
+                            Double_t rmin, Double_t rmax, Option_t *option)
+{
+// Generate a lego plot fot the top volume, according to option.
+   return fChecker->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);   
+}
 //______________________________________________________________________________
 void TGeoPainter::ModifiedPad() const
 {

@@ -31,6 +31,7 @@
 
 class TGeoHMatrix;
 class TGeoChecker;
+class TH2F;
 
 class TGeoPainter : public TVirtualGeoPainter {
 private:
@@ -74,6 +75,9 @@ public:
    Int_t              GetNsegments() const     {return fNsegments;}
    virtual Bool_t     IsExplodedView() const {return ((fExplodedView==kGeoVisDefault)?kFALSE:kTRUE);}
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const;
+   TH2F              *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
+                            Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
+                            Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    virtual void       ModifiedPad() const;
    virtual void       Paint(Option_t *option="");
    void               PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.6 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.7 2002/09/30 20:44:35 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -31,6 +31,7 @@ class TGeoShape;
 class TGeoHMatrix;
 class TGeoManager;
 class TObjArray;
+class TH2F;
 
 class TVirtualGeoPainter : public TObject {
 
@@ -80,6 +81,9 @@ public:
    virtual char      *GetVolumeInfo(TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual Bool_t     IsExplodedView() const = 0;
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const = 0;
+   virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
+                            Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
+                            Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.15 2002/10/03 13:19:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.16 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -454,9 +454,15 @@ TGeoManager::TGeoManager(const char *name, const char *title)
 //-----------------------------------------------------------------------------
 void TGeoManager::Init()
 {
-// Initialize manager class.   
+// Initialize manager class. 
+     
+   if (gGeoManager) {
+      Warning("Init","Deleting previous geometry: %s/%s",gGeoManager->GetName(),gGeoManager->GetTitle());
+      delete gGeoManager;
+   }
+   
    gGeoManager = this;
-   fStreamVoxels = kFALSE;
+   fStreamVoxels = kTRUE;
    fIsGeomReading = kFALSE;
    fSearchOverlaps = kFALSE;
    fLoopVolumes = kFALSE;
@@ -2186,21 +2192,19 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
 {
    // Export this geometry on filename with a key=name
    // By default the geometry is saved without the voxelisation info.
-   // Use option 'v" to save the voxelisation info.
+   // Use option 'v" to NOT save the voxelisation info.
    
    TFile f(filename,"recreate");
    if (f.IsZombie()) return 0;
    char keyname[256];
    if (name) strcpy(keyname,name);
    if (strlen(keyname) == 0) strcpy(keyname,GetName());
-   if (strlen(option)) {
-      TString opt(option);
-      opt.ToLower();
-      if (opt=="v") fStreamVoxels = kTRUE;
-      else fStreamVoxels = kFALSE;
-   }   
+   TString opt = option;
+   opt.ToLower();
+   Bool_t voxels = fStreamVoxels;
+   if (opt.Contains("v")) fStreamVoxels = kFALSE;
    Int_t nbytes = Write(keyname);
-   fStreamVoxels = kFALSE;
+   fStreamVoxels = voxels;
    return nbytes;
 }
 
