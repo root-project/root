@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.118 2003/06/21 10:47:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.119 2003/06/21 13:27:19 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -622,7 +622,7 @@ class TFormLeafInfoDirect : public TFormLeafInfo {
 public:
    TFormLeafInfoDirect(TBranchElement * from) :
      TFormLeafInfo(from->GetInfo()->GetClass(),0,
-                   (TStreamerElement*)from->GetInfo()->GetElements()->At(from->GetID())) {
+                   (TStreamerElement*)from->GetInfo()->GetElems()[from->GetID()]) {
    };
    TFormLeafInfoDirect(const TFormLeafInfoDirect& orig) : TFormLeafInfo(orig) {
    }
@@ -2113,7 +2113,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kAnyp:
             case TStreamerInfo::kObjectp:
             case TStreamerInfo::kObjectP: {
-              element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+              element = (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
               if (element) cl = element->GetClassPointer();
             }
             break;
@@ -2123,7 +2123,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
-              element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+              element = (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
               if (element){
                  cl = element->GetClassPointer();
               }
@@ -2626,7 +2626,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                // sub branch of a TClonesArray
                TStreamerInfo *info = br->GetInfo();
                TClass* cl = info->GetClass();
-               TStreamerElement *element = (TStreamerElement *)info->GetElements()->At(br->GetID());
+               TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
                TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
                Int_t offset;
                info->GetStreamerElement(element->GetName(),offset);
@@ -2745,7 +2745,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
                cl =  BranchEl->GetInfo()->GetClass();
                TStreamerElement* element = (TStreamerElement*)
-                 cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+                 cl->GetStreamerInfo()->GetElems()[BranchEl->GetID()];
                cl = element->GetClassPointer();
             }
          }
@@ -2785,7 +2785,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                      TStreamerInfo *info = BranchEl->GetInfo();
                      TClass * mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
                      TStreamerElement *element =
-                        (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+                        (TStreamerElement *)info->GetElems()[BranchEl->GetID()];
                      leafinfo = new TFormLeafInfoClones(mother_cl, 0, element, kTRUE);
                   }
 
@@ -2857,7 +2857,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur,
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
          cl =  BranchEl->GetInfo()->GetClass();
          TStreamerElement* element = (TStreamerElement*)
-            cl->GetStreamerInfo()->GetElements()->At(BranchEl->GetID());
+            cl->GetStreamerInfo()->GetElems()[BranchEl->GetID()];
          cl = element->GetClassPointer();
       }
    }
@@ -3091,7 +3091,7 @@ TClass* TTreeFormula::EvalClass() const
             TStreamerInfo * info = branch->GetInfo();
             Int_t id = branch->GetID();
             if (id>=0) {
-               TStreamerElement* elem = (TStreamerElement*)info->GetElements()->At(id);
+               TStreamerElement* elem = (TStreamerElement*)info->GetElems()[id];
                return gROOT->GetClass( elem->GetTypeName() );
             } else return gROOT->GetClass( branch->GetClassName() );
          } else {
@@ -3634,7 +3634,7 @@ Bool_t TTreeFormula::IsString(Int_t code) const
         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
         Int_t bid = br->GetID();
         if (bid < 0) return kFALSE;
-        TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElements()->At(bid);
+        TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
         if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
            // Check whether a specific element of the string is specified!
            if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.113 2003/06/21 06:07:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.114 2003/06/23 20:23:44 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1455,7 +1455,7 @@ void TBranchElement::SetAddress(void *add)
    }
 
    const char *ename = 0;
-   if (fID>=0) ename = ((TStreamerElement*)fInfo->GetElements()->At(fID))->GetName();
+   if (fID>=0) ename = ((TStreamerElement*)fInfo->GetElems()[fID])->GetName();
    TClass *clparent = gROOT->GetClass(GetParentName()); 
    TClass *clm = gROOT->GetClass(GetClassName());
    Int_t lOffset; // offset in the local streamerInfo.
@@ -1524,7 +1524,7 @@ void TBranchElement::SetAddress(void *add)
             TStreamerInfo *parentInfo = parent->GetInfo();
             assert(parentInfo != 0);
             
-            TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElements()->At(parentID);
+            TStreamerElement *parentElem = (TStreamerElement*)parentInfo->GetElems()[parentID];
             TClass *parentBranchClass = parentElem->GetClassPointer();
 
             if ( parentBranchClass != clm ) {
