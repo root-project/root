@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.16 2002/05/18 10:45:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.17 2002/07/13 21:57:58 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -303,7 +303,7 @@ void TObjArray::Streamer(TBuffer &b)
          fName.Streamer(b);
 
       if (GetEntriesFast() > 0) Clear();
-      
+
       b >> nobjects;
       b >> fLowerBound;
       if (nobjects >= fSize) Expand(nobjects);
@@ -399,7 +399,7 @@ Int_t TObjArray::GetLast() const
 }
 
 //______________________________________________________________________________
-TObject **TObjArray::GetObjectRef(TObject *obj) const
+TObject **TObjArray::GetObjectRef(const TObject *obj) const
 {
    // Return address of pointer obj.
 

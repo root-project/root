@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.10 2002/07/24 13:23:17 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -57,8 +57,8 @@ public:
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
    TObject          *FindObject(const TObject *key) const;
-   TObject         **GetObjectRef(TObject *obj) const {return fTable->GetObjectRef(obj);}
-   TObject          *GetValue(TObject *key) const;
+   TObject         **GetObjectRef(const TObject *obj) const { return fTable->GetObjectRef(obj); }
+   TObject          *GetValue(const TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Print(Option_t *option="") const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);

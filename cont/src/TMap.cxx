@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.6 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.cxx,v 1.7 2002/07/24 13:23:17 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -186,7 +186,7 @@ TObject *TMap::FindObject(const TObject *key) const
 }
 
 //______________________________________________________________________________
-TObject *TMap::GetValue(TObject *key) const
+TObject *TMap::GetValue(const TObject *key) const
 {
    // Returns a pointer to the value associated with key.
 

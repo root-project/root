@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.13 2002/06/16 09:10:19 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.14 2002/07/09 21:00:37 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -335,7 +335,7 @@ void TRefArray::Streamer(TBuffer &R__b)
           if (gDebug > 1) {
              printf(" %d",fUIDs[i]);
              if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
-          }      
+          }
       }
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
@@ -349,13 +349,13 @@ void TRefArray::Streamer(TBuffer &R__b)
       pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
       if (gDebug > 1) printf("Writing TRefArray, pidf=%d, fPID=%lx, nobjects=%d\n",pidf,(Long_t)fPID,nobjects);
-      
+
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];
           if (gDebug > 1) {
              printf(" %d",fUIDs[i]);
              if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
-          }      
+          }
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
@@ -427,7 +427,7 @@ Int_t TRefArray::GetLast() const
 }
 
 //______________________________________________________________________________
-TObject **TRefArray::GetObjectRef(TObject *obj) const
+TObject **TRefArray::GetObjectRef(const TObject *obj) const
 {
    // Return address of pointer obj.
 
