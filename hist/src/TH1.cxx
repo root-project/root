@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.93 2002/05/07 19:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.94 2002/05/14 14:00:41 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3999,29 +3999,81 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
-   //Note the following restrictions in the code generated:
-   // - variable bin size not implemented
-   // - Objects in list of functions not saved (fits)
-
+   Bool_t nonEqiX = kFALSE;
+   Bool_t nonEqiY = kFALSE;
+   Bool_t nonEqiZ = kFALSE;
+   Int_t i;
+   
+   // Check if the histogram has equidistant X bins or not.  If not, we
+   // create an array holding the bins. 
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
+      nonEqiX = kTRUE;
+      out << "   Double_t xAxis[" << GetXaxis()->GetXbins()->fN 
+ 	 << "] = {";
+      for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetXaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+   // If the histogram is 2 or 3 dimensional, check if the histogram
+   // has equidistant Y bins or not.  If not, we create an array
+   // holding the bins.  
+   if (fDimension > 1 && GetYaxis()->GetXbins()->fN && 
+       GetYaxis()->GetXbins()->fArray) {
+      nonEqiY = kTRUE;
+      out << "   Double_t yAxis[" << GetYaxis()->GetXbins()->fN 
+ 	  << "] = {";
+      for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetYaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+   // IF the histogram is 3 dimensional, check if the histogram
+   // has equidistant Z bins or not.  If not, we create an array
+   // holding the bins.  
+   if (fDimension > 2 && GetZaxis()->GetXbins()->fN && 
+       GetZaxis()->GetXbins()->fArray) {
+      nonEqiZ = kTRUE;
+      out << "   Double_t zAxis[" << GetZaxis()->GetXbins()->fN 
+ 	 << "] = {";
+      for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
+         if (i != 0) out << ", ";
+         out << GetZaxis()->GetXbins()->fArray[i];
+      }
+      out << "}; " << endl;
+   }
+     
    char quote = '"';
-   out<<"   "<<endl;
-   out<<"   "<<"TH1"<<" *";
+   out <<"   "<<endl;
+   out <<"   "<<"TH1"<<" *";
 
-   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-                 <<","<<GetXaxis()->GetNbins()
-                 <<","<<GetXaxis()->GetXmin()
-                 <<","<<GetXaxis()->GetXmax();
+   out << GetName() << " = new " << ClassName() << "(" << quote 
+       << GetName() << quote << "," << quote<< GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
+   if (nonEqiX)
+      out << ", xAxis";
+   else 
+      out << "," << GetXaxis()->GetXmin()
+	  << "," << GetXaxis()->GetXmax();
    if (fDimension > 1) {
-              out<<","<<GetYaxis()->GetNbins()
-                 <<","<<GetYaxis()->GetXmin()
-                 <<","<<GetYaxis()->GetXmax();
+      out << "," << GetYaxis()->GetNbins();
+      if (nonEqiY) 
+         out << ", yAxis";
+      else 
+         out << "," << GetYaxis()->GetXmin()
+	     << "," << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
-              out<<","<<GetZaxis()->GetNbins()
-                 <<","<<GetZaxis()->GetXmin()
-                 <<","<<GetZaxis()->GetXmax();
+      out << "," << GetZaxis()->GetNbins();
+      if (nonEqiZ) 
+         out << ", zAxis";
+      else
+         out << "," << GetZaxis()->GetXmin()
+	     << "," << GetZaxis()->GetXmax();
    }
-              out<<");"<<endl;
+   out << ");" << endl;
    if (TMath::Abs(GetBarOffset()) > 1e-5) {
       out<<"   "<<GetName()<<"->SetBarOffset("<<GetBarOffset()<<");"<<endl;
    }
@@ -4049,6 +4101,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    if (fOption.Length() != 0) {
       out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<endl;
    }
+   
+   // save bin contents
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = GetBinContent(bin);
@@ -4056,6 +4110,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
+   
+   // save bin errors
    if (fSumw2.fN) {
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = GetBinError(bin);
@@ -4064,6 +4120,8 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
+   
+   // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
       out<<"   "<<GetName()<<"->SetContour("<<ncontours<<");"<<endl;
@@ -4080,6 +4138,7 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
    }
 
+   // save attributes
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveMarkerAttributes(out,GetName(),1,1,1);
