@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.50 2001/10/09 01:41:19 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.51 2001/10/11 01:28:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1051,8 +1051,7 @@ RooAbsArg *RooAbsReal::createFundamental() const {
 
   RooRealVar *fund= new RooRealVar(GetName(),GetTitle(),_value,getUnit());
   fund->removeFitRange();
-  fund->setPlotMin(getPlotMin());
-  fund->setPlotMax(getPlotMax());
+  fund->setPlotRange(getPlotMin(),getPlotMax());
   fund->setPlotLabel(getPlotLabel());
   fund->setPlotBins(getPlotBins());
   fund->setAttribute("fundamentalCopy");
