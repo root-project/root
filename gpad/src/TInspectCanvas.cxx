@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.16 2005/01/17 19:37:40 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.17 2005/01/18 11:06:11 rdm Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -95,6 +95,8 @@ TInspectCanvas::~TInspectCanvas()
 
  //  delete fBackward;
  //  delete fForward;
+
+   fObjects->Clear("nodelete");
    delete fObjects;
 }
 
@@ -381,7 +383,7 @@ void TInspectCanvas::Inspector(TObject *obj)
 
   inspect->InspectObject(obj);
   inspect->GetObjects()->Add(obj);
-  obj->SetBit(kMustCleanup);
+  //obj->SetBit(kMustCleanup);
 
   if (padsav) padsav->cd();
 }
