@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.69 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.70 2004/08/03 14:50:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -81,6 +81,7 @@ class TPrincipal;
 class TFriendElement;
 class TCut;
 class TVirtualIndex;
+class TBranchRef;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -121,6 +122,7 @@ protected:
     TList         *fUserInfo;          //  pointer to a list of user objects associated to this Tree
     TVirtualTreePlayer *fPlayer;       //! Pointer to current Tree player
     TList         *fClones;            //! List of cloned trees which share our addresses
+    TBranchRef    *fBranchRef;         //  Branch supporting the TRefTable (if any)
   static Int_t     fgBranchStyle;      //  Old/New branch style
   static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
 
@@ -155,6 +157,7 @@ public:
     virtual TBranch     *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch     *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
+    virtual TBranch     *BranchRef();
     virtual void         Browse(TBrowser *b);
     virtual Int_t        BuildIndex(const char *majorname, const char *minorname="0");
     TStreamerInfo       *BuildStreamerInfo(TClass *cl, void *pointer=0);
@@ -179,6 +182,7 @@ public:
 
     virtual const char  *GetAlias(const char *aliasName) const;
     virtual TBranch     *GetBranch(const char *name);
+    virtual TBranchRef  *GetBranchRef() const {return fBranchRef;};
     virtual Bool_t       GetBranchStatus(const char *branchname) const;
     static  Int_t        GetBranchStyle();
     virtual Long64_t     GetChainEntryNumber(Long64_t entry) const {return entry;}
@@ -308,7 +312,7 @@ public:
                           ,Long64_t nentries=1000000000, Long64_t firstentry=0);
     void                 UseCurrentStyle();
 
-    ClassDef(TTree,14)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,15)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////

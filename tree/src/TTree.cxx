@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.203 2004/08/03 14:50:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.204 2004/08/04 06:15:38 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -266,6 +266,7 @@
 #include "TEventList.h"
 #include "TBranchElement.h"
 #include "TBranchObject.h"
+#include "TBranchRef.h"
 #include "TClassEdit.h"
 #include "TLeafObject.h"
 #include "TLeaf.h"
@@ -347,6 +348,7 @@ TTree::TTree(): TNamed()
    fClones         = 0;
    fUserInfo       = 0;
    fTreeIndex      = 0;
+   fBranchRef      = 0;
 }
 
 //______________________________________________________________________________
@@ -394,6 +396,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fClones         = 0;
    fUserInfo       = 0;
    fTreeIndex      = 0;
+   fBranchRef      = 0;
    
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
@@ -979,6 +982,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       return BranchOld(name,classname,addobj,bufsize,splitlevel);
    }
 }
+
 //______________________________________________________________________________
 TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1197,6 +1201,24 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
    }
    if (delobj) delete obj;
    return branch;
+}
+
+//______________________________________________________________________________
+TBranch *TTree::BranchRef()
+{
+    // Build the optional branch supporting the TRefTable
+    // This branch will keep all the information to find the branches
+    // containing referenced objects
+    //
+    // at each Tree::Fill, the branch numbers containing the 
+    // referenced objects are saved to the TBranchRef basket
+    // When the Tree header is saved (via TTree::Write), the branch
+    // is saved keeping the information with the pointers to the branches
+    // having referenced objects.
+   
+   if (fBranchRef) return 0;
+   fBranchRef = new TBranchRef(this);
+   return fBranchRef;
 }
 
 //______________________________________________________________________________
@@ -2244,12 +2266,15 @@ Int_t TTree::Fill()
       branch = (TBranch*)fBranches.UncheckedAt(0);
       branch->UpdateAddress();
    }
-
+   if (fBranchRef) fBranchRef->Clear();
+   
    for (i=0;i<nb;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       if (branch->TestBit(kDoNotProcess)) continue;
       nbytes += branch->Fill();
    }
+   if (fBranchRef) fBranchRef->Fill();
+   
    fEntries++;
 
    if (fEntries > fMaxEntries) KeepCircular();
@@ -3478,6 +3503,9 @@ void TTree::Print(Option_t *option) const
      }
   }
 
+  //print TRefTable (if one)
+  if (fBranchRef) fBranchRef->Print(option);
+  
   //print friends if option "all"
   if (!fFriends || !strstr(option,"all")) return;
   TIter nextf(fFriends);
@@ -4199,6 +4227,7 @@ void TTree::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
+      if (fBranchRef) fBranchRef->Clear();
       TTree::Class()->WriteBuffer(b,this);
    }
 }

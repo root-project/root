@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.138 2004/06/22 15:36:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.139 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TFile.h"
 #include "TBranchElement.h"
 #include "TBranchObject.h"
+#include "TBranchRef.h"
 #include "TClonesArray.h"
 #include "TTree.h"
 #include "TBasket.h"
@@ -912,6 +913,13 @@ Int_t TBranchElement::Fill()
       }
 
    }
+   
+   //if the tree has a TRefTable, set the current branch if branch is not a basic type
+   if (fType > 0 && fType < 10) {
+      TBranchRef *bref = fTree->GetBranchRef();
+      if (bref) bref->SetParent(this);
+   }
+   
    if (nbranches) {
       if (fType == 3 || fType == 4)  nbytes += TBranch::Fill();  //TClonesArray counter
       else             fEntries++;
