@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.12 2004/03/19 14:45:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.13 2004/07/01 16:27:26 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2194,14 +2194,14 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 //*-*-              stack if necessary.
 
     vv[1] = Hparam.zmin;
-    vv[2] = gCurrentHist->GetCellContent(ixt, iyt);
+    vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
     TList *stack = gCurrentHist->GetPainter()->GetStack();
     Int_t nids = 0; //not yet implemented
     if (stack) nids = stack->GetSize();
     if (nids) {
 	for (i = 2; i <= nids + 1; ++i) {
             TH1 *hid = (TH1*)stack->At(i-2);
-            vv[i + 1] = hid->GetCellContent(ixt, iyt) + vv[i];
+            vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
 	    vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
 	    //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
 	}
@@ -3700,7 +3700,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 
 	icx = ixt + ixa;
 	if (icx > Hparam.xlast) icx = 1;
-        f[i*3+3] = gCurrentHist->GetCellContent(icx, iyt + iya);
+        f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
         if (Hoption.Logz) {
            if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
            else              f[i*3+3] = Hparam.zmin;

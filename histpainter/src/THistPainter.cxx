@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.180 2004/07/19 12:36:32 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.181 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1919,7 +1919,7 @@ void THistPainter::PaintBoxes(Option_t *)
          xstep = fXaxis->GetBinWidth(i);
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          xcent = 0.5*xstep;
-         z     = fH->GetBinContent(bin);
+         z     = Hparam.factor*fH->GetBinContent(bin);
          if (Hoption.Logz) {
             if (z != 0) z = TMath::Log10(z);
             else        z = zmin;
