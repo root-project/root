@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.176 2004/12/04 19:47:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.177 2005/01/05 15:03:22 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2343,6 +2343,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
+   // The function returns the number of entries passing the selection.
    //
    // By default 50 rows are shown and you are asked for <CR>
    // to see the next 50 rows.
