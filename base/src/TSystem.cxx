@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.4 2000/08/18 14:58:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.5 2000/10/02 11:10:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -57,7 +57,7 @@ ClassImp(TProcessEventTimer)
 //______________________________________________________________________________
 TProcessEventTimer::TProcessEventTimer(Long_t delay) : TTimer(delay, kFALSE)
 {
-   // Create async event processor timer.
+   // Create async event processor timer. Delay is in milliseconds.
 
    gROOT->SetInterrupt(kFALSE);
    gSystem->AddTimer(this);
