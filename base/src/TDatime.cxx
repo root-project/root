@@ -1,4 +1,4 @@
-// @(#)root/base:$Name: v3-03-05 $:$Id: TDatime.cxx,v 1.4 2001/12/10 14:46:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.5 2002/05/30 10:50:20 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -103,7 +103,7 @@ const char *TDatime::AsSQLString() const
 {
    // Return the date & time in SQL compatible string format, like:
    // 1997-01-15 20:16:28. The returned string buffer is static and
-   // will bew reused.
+   // will be reused.
 
    static char sqldate[20];
 

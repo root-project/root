@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.3 2001/05/29 16:21:34 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.h,v 1.4 2001/12/10 14:46:06 rdm Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -49,6 +49,12 @@ public:
    UInt_t       Get() const { return fDatime; }
    Int_t        GetDate() const;
    Int_t        GetTime() const;
+   Int_t        GetYear() const { return (fDatime>>26) + 1995; }
+   Int_t        GetMonth() const { return (fDatime<<6)>>28; }
+   Int_t        GetDay() const { return (fDatime<<10)>>27; }
+   Int_t        GetHour() const { return (fDatime<<15)>>27; }
+   Int_t        GetMinute() const { return (fDatime<<20)>>26; }
+   Int_t        GetSecond() const { return (fDatime<<26)>>26; }
    void         FillBuffer(char *&buffer);
    void         Print(Option_t *option="") const;
    void         ReadBuffer(char *&buffer);
