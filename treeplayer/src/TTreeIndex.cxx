@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.6 2004/07/19 19:48:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.7 2004/12/08 10:15:30 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -135,8 +135,9 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 
    Long64_t *w = new Long64_t[fN];
    Long64_t i;
+   Long64_t oldEntry = fTree->GetReadEntry();
    for (i=0;i<fN;i++) {
-      GetEntry(i);
+      fTree->LoadTree(i);
       Double_t majord = fMajorFormula->EvalInstance();
       Double_t minord = fMinorFormula->EvalInstance();
       Long64_t majorv = (Long64_t)majord;
@@ -152,6 +153,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    }
 
    delete [] w;
+   fTree->LoadTree(oldEntry);
 }
 
 //______________________________________________________________________________
@@ -326,15 +328,15 @@ void TTreeIndex::Print(Option_t * option) const
    if (opt.Contains("100"))  n = 100;
    if (opt.Contains("1000")) n = 1000;
 
-   printf("\n**********************************************\n");
-   printf("*    Index of Tree: %s/%s\n",fTree->GetName(),fTree->GetTitle());
-   printf("**********************************************\n");
-   printf("%8s : %16s : %16s\n","serial",fMajorName.Data(),fMinorName.Data());
-   printf("**********************************************\n");
+   Printf("\n**********************************************");
+   Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
+   Printf("**********************************************");
+   Printf("%8s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data());
+   Printf("**********************************************");
    for (Long64_t i=0;i<n;i++) {
       Long64_t minor = fIndexValues[i] & 0xffff;
       Long64_t major = fIndexValues[i]>>31;
-      printf("%8lld :         %8lld :         %8lld\n",i,major,minor);
+      Printf("%8lld :         %8lld :         %8lld",i,major,minor);
    }
 }
 

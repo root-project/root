@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.160 2005/01/13 20:07:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.161 2005/01/19 07:52:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -231,7 +231,16 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       }
    }
 
-
+   // Create a list of uniques branches to load.
+   for(k=0; k<fNcodes; k++) {
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(k);
+      TBranch *branch = 0;
+      if (leaf) {
+         branch = leaf->GetBranch();
+         if (fBranches.FindObject(branch)) branch = 0;
+      }
+      fBranches.AddAtAndExpand(branch,k);
+   }
 }
 
 //______________________________________________________________________________
@@ -2646,8 +2655,15 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());    \
-   else {                                                                                       \
+   if (!instance) {                                                                             \
+        TBranch *branch = (TBranch*)fBranches.UncheckedAt(code);                                \
+        if (branch) branch->GetEntry(branch->GetTree()->GetReadEntry());                        \
+        else if (fDidBooleanOptimization) {                                                     \
+           branch = leaf->GetBranch();                                                          \
+           Long64_t treeEntry = branch->GetTree()->GetReadEntry();                              \
+           if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );              \
+        }                                                                                       \
+   } else {                                                                                     \
       /* In the cases where we are behind (i.e. right of) a potential boolean optimization      \
          this tree variable reading may have not been executed with instance==0 which would     \
          result in the branch being potentially not read in. */                                 \
@@ -3490,6 +3506,7 @@ void TTreeFormula::UpdateFormulaLeaves()
       sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
+      if (fBranches[i]) fBranches[i]=leaf->GetBranch();
    }
    for (Int_t j=0; j<kMAXCODES; j++) {
       for (Int_t k = 0; k<kMAXFORMDIM; k++) {

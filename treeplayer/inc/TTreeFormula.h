@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.38 2004/08/12 04:33:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.39 2004/10/05 13:21:10 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -75,6 +75,7 @@ protected:
    TObjArray   fMethods;          //!  List of leaf method calls
    TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
+   TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
 
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
