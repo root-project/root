@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.14 2003/12/19 09:31:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TSelector.cxx,v 1.15 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
