@@ -577,7 +577,7 @@ linux|linuxdeb|linuxicc|linuxecc)
 esac
 if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
     check_library "libpthread" "$enable_shared" "$threadlibdir" \
-	$THREAD $THREAD/lib /usr/lib /usr/local/lib /usr/lib/X11 \
+	$THREAD $THREAD/lib /usr/lib32 /usr/lib /usr/local/lib /usr/lib/X11 \
 	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
 	/usr/X11/lib /usr/shlib
     threadlib=$found_lib
