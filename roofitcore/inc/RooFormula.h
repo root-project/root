@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.5 2001/03/19 15:57:31 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.6 2001/03/21 15:14:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -49,6 +49,8 @@ protected:
   Bool_t _isOK ;
   RooArgSet* _origList ; // Original list of dependents
   TObjArray _useList ;   // List of actual dependents 
+  TObjArray _labelList ;  // List of label names for category objects  
+
   ClassDef(RooFormula,1) 
 };
 

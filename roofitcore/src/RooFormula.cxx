@@ -14,6 +14,7 @@
 #include <iostream.h>
 #include "TROOT.h"
 #include "TClass.h"
+#include "TObjString.h"
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooAbsCategory.hh"
@@ -131,10 +132,16 @@ RooFormula::DefinedValue(Int_t code) {
   // Return current value for parameter indicated by internal reference code
   if (code>=_useList.GetEntries()) return 0 ;
   RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
-  if (arg->IsA()->InheritsFrom("RooAbsReal")) {
+  TString& label=((TObjString*)_labelList.At(code))->String() ;
+
+  if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
     return ((RooAbsReal*)arg)->getVal() ;
-  } else if (arg->IsA()->InheritsFrom("RooAbsCategory")) {
-    return ((RooAbsCategory*)_useList.At(code))->getIndex() ;
+  } else if (arg->IsA()->InheritsFrom(RooAbsCategory::Class())) {
+    if (label.IsNull()) {
+      return ((RooAbsCategory*)_useList.At(code))->getIndex() ;
+    } else {
+      return ((RooAbsCategory*)_useList.At(code))->lookupType(label)->getVal() ;
+    }
   }
 }
 
@@ -142,11 +149,28 @@ RooFormula::DefinedValue(Int_t code) {
 Int_t 
 RooFormula::DefinedVariable(TString &name)
 {
+  char argName[1024];
+  strcpy(argName,name.Data()) ;
+
+  // Find :: operator and split string if found
+  char *labelName = strstr(argName,"::") ;
+  if (labelName) {
+    *labelName = 0 ;
+    labelName+= 2 ;
+  }
+
   // Defined internal reference code for given named variable 
-  RooAbsReal* rrv= (RooAbsReal*) _origList->find(name) ;
+  RooAbsReal* rrv= (RooAbsReal*) _origList->find(argName) ;
   if (!rrv) return -1 ;
   _useList.Add(rrv) ;
-  return _useList.GetEntries()-1 ;
+
+  if (labelName) {
+    _labelList.Add(new TObjString(labelName)) ;
+  } else {
+    _labelList.Add(new TObjString("")) ;
+  }
+
+  return (_useList.GetEntries()-1) ;
 }
 
 

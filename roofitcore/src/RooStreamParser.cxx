@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.1 2001/03/19 15:57:32 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.2 2001/03/21 15:14:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,8 +42,12 @@ TString RooStreamParser::readToken()
   char buffer[1024], c, cnext, cprev=' ' ;
   Int_t bufptr=0 ;
 
+  //Ignore leading newline
+  if (_is.peek()=='\n') _is.get(c) ;
+
   while(1) {
     _is.get(c) ;
+
     if (!_is.good() || c=='\n') break ;
     if (isspace(c)) {
       if (first) 
@@ -87,6 +91,17 @@ TString RooStreamParser::readToken()
     cprev=c ;
   }  
 
+  // Absorb trailing white space
+  if (c=='\n') {
+    _is.putback(c) ;
+  } else {
+    c = _is.peek() ;
+    while (isspace(c) && c != '\n') {
+      _is.get(c) ;
+      c = _is.peek() ;
+    }
+  }
+
   // Zero terminate buffer and convert to TString
   buffer[bufptr]=0 ;
   return TString(buffer) ;
@@ -95,7 +110,9 @@ TString RooStreamParser::readToken()
 
 TString RooStreamParser::readLine() 
 {
-  char buffer[1024] ;
+  char c,buffer[1024] ;
+  
+  if (_is.peek()=='\n') _is.get(c) ;
 
   // Read till end of line
   _is.getline(buffer,1024,'\n') ;
@@ -118,12 +135,29 @@ TString RooStreamParser::readLine()
 }
 
 
-
-
 void RooStreamParser::zapToEnd() 
 {
-  _is.ignore(1000,'\n') ;
+  if (!_is.peek()!='\n') {
+    _is.ignore(1000,'\n') ;
+    _is.putback('\n') ;
+  }
 }
+
+
+void RooStreamParser::putBackToken(TString& token) 
+{
+  const char* buf=token.Data() ;
+  int len=token.Length() ;
+  for (int i=len-1 ; i>=0 ; i--)
+    _is.putback(buf[i]) ;
+  
+  // Add a space to keep the token separate
+  if (buf[0]=='\n') {
+  } else {
+  _is.putback(' ') ;  
+  }
+}
+
 
 Bool_t RooStreamParser::expectToken(TString expected, Bool_t zapOnError) 
 {

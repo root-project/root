@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.4 2001/03/16 21:31:20 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.5 2001/03/22 02:13:47 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -354,7 +354,7 @@ Bool_t RooAbsArg::isValid()
 
 
 
-void RooAbsArg::printToStream(ostream& str, PrintOption opt) const
+void RooAbsArg::printToStream(ostream& str, PrintOption opt) 
 {
   // Print the state of this object to the specified output stream.
   // With PrintOption=Verbose, print out lists of attributes, clients,

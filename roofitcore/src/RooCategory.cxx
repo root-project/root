@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.3 2001/03/19 15:57:31 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.4 2001/03/21 15:14:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 #include "TH1.h"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooStreamParser.hh"
 
 ClassImp(RooCategory) 
 ;
@@ -94,8 +95,8 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   // Read object contents from given stream
 
   // Read single token
-  TString token ;
-  is >> token ;
+  RooStreamParser parser(is) ;
+  TString token = parser.readToken() ;
   return setLabel(token,verbose) ;
 }
 

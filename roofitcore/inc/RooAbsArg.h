@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.5 2001/03/17 03:47:38 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.6 2001/03/22 02:13:47 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,9 +46,9 @@ public:
 
   // Printing interface (human readable)
   enum PrintOption { OneLine=0, Standard=1, Shape=2, Verbose=3 } ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
   //inline void print(PrintOption opt=Standard) const { printToStream(cout,opt) ; }
-  inline void Print(Option_t * = 0) const;
+  inline void Print(Option_t * = 0) const ;
 
   // Accessors to attributes
   void setAttribute(Text_t* name, Bool_t value=kTRUE) ;
