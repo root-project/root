@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.121 2003/02/21 11:33:41 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.122 2003/02/21 15:08:44 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -620,6 +620,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strncpy(l,"    ",4); Hoption.Hist = 0; }
    l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strncpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; strncpy(l,"    ",4); }
+   l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; strncpy(l,"    ",4); }
    l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; strncpy(l,"    ",4); }
    l = strstr(chopt,"TEXT"); if (l) { Hoption.Text   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
    l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
@@ -1304,13 +1305,20 @@ void THistPainter::Paint(Option_t *option)
    PaintFrame();
 //    -----
 //          Paint histogram axis only
-   if (Hoption.Axis > 0) {
-      PaintAxis(kFALSE);
-      delete [] fXbuf; delete [] fYbuf;
-      return;
-   }
    Bool_t gridx = gPad->GetGridx();
    Bool_t gridy = gPad->GetGridy();
+   if (Hoption.Axis > 0) {
+      if (Hoption.Axis > 1) PaintAxis(kTRUE);  //axis with grid
+      else {
+         if (gridx) gPad->SetGridx(0);
+         if (gridy) gPad->SetGridy(0);
+         PaintAxis(kFALSE);
+         if (gridx) gPad->SetGridx(1);
+         if (gridy) gPad->SetGridy(1);
+       }
+       delete [] fXbuf; delete [] fYbuf;
+      return;
+   }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
 //    -----

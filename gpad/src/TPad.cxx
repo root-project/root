@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.95 2002/12/04 08:18:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.96 2003/02/21 15:08:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3874,7 +3874,7 @@ void TPad::RecursiveRemove(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TPad::RedrawAxis(Option_t *)
+void TPad::RedrawAxis(Option_t *option)
 {
 //  Redraw the frame axis
 //  Redrawing axis may be necessary in case of superimposed histograms
@@ -3883,13 +3883,21 @@ void TPad::RedrawAxis(Option_t *)
 //  to call directly h1->Draw("sameaxis") where h1 is the pointer
 //  to the first histogram drawn in the pad.
 //
+//  By default, if the pad has the options gridx or/and gridy activated,
+//  the grid is not drawn by this function.
+//  if option="g" is specified, this will force the drawing of the grid
+//  on top of the picture
+//
    // get first histogram in the list of primitives
+   TString opt = option;
+   opt.ToLower();
    TIter next(fPrimitives);
    TObject *obj;
    while ((obj = next())) {
       if (obj->InheritsFrom("TH1")) {
          TH1 *hobj = (TH1*)obj;
-         hobj->Draw("sameaxis");
+         if (opt.Contains("g")) hobj->Draw("sameaxig");
+         else                   hobj->Draw("sameaxis");
          return;
       }
    }
