@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.2 2000/06/19 23:37:47 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -741,7 +741,7 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
-Bool_t TClass::InheritsFrom(const char *classname)
+Bool_t TClass::InheritsFrom(const char *classname) const
 {
    // Return kTRUE if this class inherits from a class with name "classname".
 
@@ -749,12 +749,13 @@ Bool_t TClass::InheritsFrom(const char *classname)
 
    if (!fClassInfo) return kFALSE;
 
-   if (GetBaseClass(classname)) return kTRUE;
+   // cast const away (only for member fBase which can be set in GetListOfBases())
+   if (((TClass *)this)->GetBaseClass(classname)) return kTRUE;
    return kFALSE;
 }
 
 //______________________________________________________________________________
-Bool_t TClass::InheritsFrom(const TClass *cl)
+Bool_t TClass::InheritsFrom(const TClass *cl) const
 {
    // Return kTRUE if this class inherits from class cl.
 
@@ -762,7 +763,8 @@ Bool_t TClass::InheritsFrom(const TClass *cl)
 
    if (!fClassInfo) return kFALSE;
 
-   if (GetBaseClass(cl)) return kTRUE;
+   // cast const away (only for member fBase which can be set in GetListOfBases())
+   if (((TClass *)this)->GetBaseClass(cl)) return kTRUE;
    return kFALSE;
 }
 
