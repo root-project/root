@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TPaveText::TPaveText(): TPave(), TAttText()
 }
 
 //______________________________________________________________________________
-TPaveText::TPaveText(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Option_t *option)
+TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPave(x1,y1,x2,y2,4,option), TAttText(22,0,1,62,0)
 {
 //*-*-*-*-*-*-*-*-*-*-*pavetext normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -84,7 +84,7 @@ TPaveText::TPaveText(const TPaveText &pavetext)
 }
 
 //______________________________________________________________________________
-TBox *TPaveText::AddBox(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*Add a new graphics box to this pavetext*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -98,7 +98,7 @@ TBox *TPaveText::AddBox(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
 }
 
 //______________________________________________________________________________
-TLine *TPaveText::AddLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
+TLine *TPaveText::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*Add a new graphics line to this pavetext*-*-*-*-*-*-*-*-*-*
 //*-*              ========================================
@@ -112,7 +112,7 @@ TLine *TPaveText::AddLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2)
 }
 
 //______________________________________________________________________________
-TText *TPaveText::AddText(Float_t x1, Float_t y1, const char *text)
+TText *TPaveText::AddText(Double_t x1, Double_t y1, const char *text)
 {
 //*-*-*-*-*Add a new Text line to this pavetext at given coordinates*-*-*-*-*
 //*-*      =========================================================
@@ -173,7 +173,7 @@ void TPaveText::DeleteText()
 
    if (!gPad->IsEditable()) return;
    if (!fLines) return;
-   Float_t ymouse, yobj;
+   Double_t ymouse, yobj;
    TObject *obj = GetObject(ymouse, yobj);             //get object pointed by the mouse
    if (!obj) return;
    if (!obj->InheritsFrom(TText::Class())) return;
@@ -212,7 +212,7 @@ void TPaveText::EditText()
 
 
    if (!gPad->IsEditable()) return;
-   Float_t ymouse, yobj;
+   Double_t ymouse, yobj;
    TObject *obj = GetObject(ymouse, yobj);             //get object pointed by the mouse
    if (!obj) return;
    if (!obj->InheritsFrom(TText::Class())) return;
@@ -253,7 +253,7 @@ TText *TPaveText::GetLineWith(const char *text)
 }
 
 //______________________________________________________________________________
-TObject *TPaveText::GetObject(Float_t &ymouse, Float_t &yobj)
+TObject *TPaveText::GetObject(Double_t &ymouse, Double_t &yobj)
 {
 //*-*-*-*-*Get object pointed by the mouse in this pavetext*-*-*-*
 //*-*      ================================================
@@ -265,13 +265,13 @@ TObject *TPaveText::GetObject(Float_t &ymouse, Float_t &yobj)
 //*-*- Evaluate text size as a function of the number of lines
 
    ymouse   = gPad->AbsPixeltoY(gPad->GetEventY());
-   Float_t yspace   = (fY2 - fY1)/Float_t(nlines);
-   Float_t textsize = GetTextSize();
-   Float_t y1,y,dy;
+   Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
+   Double_t textsize = GetTextSize();
+   Double_t y1,y,dy;
    if (textsize == 0)  {
       y1       = gPad->GetY1();
    }
-   Float_t ytext = fY2 + 0.5*yspace;
+   Double_t ytext = fY2 + 0.5*yspace;
    Int_t valign;
 
 //*-*- Iterate over all lines
@@ -301,7 +301,7 @@ TObject *TPaveText::GetObject(Float_t &ymouse, Float_t &yobj)
       if (line->InheritsFrom(TText::Class())) {
          linet = (TText*)line;
          ytext -= yspace;
-         Float_t yl     = linet->GetY();
+         Double_t yl     = linet->GetY();
          Short_t talign = linet->GetTextAlign();
          if (talign == 0) talign = GetTextAlign();
          if (yl > 0 && yl <1) {
@@ -340,9 +340,9 @@ void TPaveText::InsertLine()
 
 
    if (!gPad->IsEditable()) return;
-   Float_t ymouse, yobj;
+   Double_t ymouse, yobj;
    TObject *obj = GetObject(ymouse, yobj); //get object pointed by the mouse
-   Float_t yline = (ymouse-fY1)/(fY2-fY1);
+   Double_t yline = (ymouse-fY1)/(fY2-fY1);
    TLine *newline = AddLine(0,yline,0,yline);
    if (obj) {
       fLines->Remove(newline);        //remove line from last position
@@ -359,7 +359,7 @@ void TPaveText::InsertText(const char *text)
 
 
    if (!gPad->IsEditable()) return;
-   Float_t ymouse, yobj;
+   Double_t ymouse, yobj;
    TObject *obj = GetObject(ymouse, yobj); //get object pointed by the mouse
    TText *newtext = AddText(0,0,text);     //create new text object
    if (obj) {
@@ -388,26 +388,26 @@ void TPaveText::PaintPrimitives(Int_t mode)
 //*-*-*-*-*-*-*-*Paint list of primitives in this pavetext*-*-*-*-*-*-*-*
 //*-*            =========================================
    if (!fLines) return;
-   Float_t dx = fX2 - fX1;
-   Float_t dy = fY2 - fY1;
-   Float_t textsize = GetTextSize();
+   Double_t dx = fX2 - fX1;
+   Double_t dy = fY2 - fY1;
+   Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
 
 //*-*- Evaluate text size as a function of the number of lines
 
-   Float_t x1,y1,x2,y2,y;
+   Double_t x1,y1,x2,y2,y;
    y1       = gPad->GetY1();
    y2       = gPad->GetY2();
-   Float_t margin   = fMargin*(fX2-fX1);
-   Float_t yspace   = (fY2 - fY1)/Float_t(nlines);
-   Float_t textsave = textsize;
+   Float_t margin    = fMargin*(fX2-fX1);
+   Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
+   Double_t textsave = textsize;
    TObject *line;
    TText *linet;
    TLatex *latex;
    TIter next(fLines);
-   Float_t longest = 0;
-   Float_t w;
+   Double_t longest = 0;
+   Double_t w;
    if (textsize == 0)  {
       textsize = 0.85*yspace/(y2 - y1);
       while ((line = (TObject*) next())) {
@@ -424,9 +424,9 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (mode == kDiamond) textsize *= 0.66;
       SetTextSize(textsize);
    }
-   Float_t yfont = textsize*dy;
-   Float_t ytext = fY2 + 0.5*yspace;
-   Float_t xtext = 0;
+   Double_t yfont = textsize*dy;
+   Double_t ytext = fY2 + 0.5*yspace;
+   Double_t xtext = 0;
    Int_t halign, valign;
 
 //*-*- Iterate over all lines
@@ -463,8 +463,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (line->IsA() == TText::Class()) {
          linet = (TText*)line;
          ytext -= yspace;
-         Float_t xl     = linet->GetX();
-         Float_t yl     = linet->GetY();
+         Double_t xl     = linet->GetX();
+         Double_t yl     = linet->GetY();
          Short_t talign = linet->GetTextAlign();
          Color_t tcolor = linet->GetTextColor();
          Style_t tfont  = linet->GetTextFont();
@@ -499,8 +499,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (line->IsA() == TLatex::Class()) {
          latex = (TLatex*)line;
          ytext -= yspace;
-         Float_t xl     = latex->GetX();
-         Float_t yl     = latex->GetY();
+         Double_t xl     = latex->GetX();
+         Double_t yl     = latex->GetY();
          Short_t talign = latex->GetTextAlign();
          Color_t tcolor = latex->GetTextColor();
          Style_t tfont  = latex->GetTextFont();
@@ -815,7 +815,7 @@ void TPaveText::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPaveText::SetAllWith(const char *text, Option_t *option, Float_t value)
+void TPaveText::SetAllWith(const char *text, Option_t *option, Double_t value)
 {
 //*-*-*-*-*-*Set attribute option for all lines containing string text*-*-*-*-*
 //*-*        ================= =======================================
