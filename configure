@@ -268,12 +268,12 @@ if [ "$arch" != "win32" ]; then
     unset libs
     unset libdirs
 
-    if [ "x$xpmlib" = "xno" ]  ; then
+    if [ "x$xpmlib" = "xno" ]; then
         echo "libXpm must be on the system - Aborting"
         exit 1
     fi
 
-    if [ "x$enable_shared" = "xno" ]; then
+    if [ "x$enable_shared" = "xno" -o "x$xpmlib" = "xlibXpm.a" ]; then
         xpmlib=${xpmlibdir}/${xpmlib}
         unset xpmlibdir
     else
@@ -325,7 +325,8 @@ if [ "x$enable_thread" = "xyes" -a "$arch" != "win32" ]; then
         unset threadlibdir
         enable_thread="no"
     else
-        if [ "x$enable_shared" = "xno" ]; then
+        if [ "x$enable_shared" = "xno" -o \
+             "x$threadlib" = "xlibthread.a" ]; then
             threadlib=${threadlibdir}/${threadlib}
             unset threadlibdir
         else
@@ -437,7 +438,7 @@ if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
         unset ttfincdir
         unset ttffontdir
     else
-        if [ "x$enable_shared" = "xno" ]; then
+        if [ "x$enable_shared" = "xno" -o "x$ttflib" = "xlibttf.a" ]; then
             ttflib=${ttflibdir}/${ttflib}
             unset ttflibdir
         else
@@ -653,7 +654,8 @@ if [ "x$enable_mysql" != "xno" ]; then
         if [ "$arch" = "win32" ];then
             mysqllib=${mysqllibdir}/${mysqllib}
             unset mysqllibdir
-        elif [ "x$enable_shared" = "xno" ]; then
+        elif [ "x$enable_shared" = "xno" -o \
+               "x$mysqllib" = "xlibmysqlclient.a" ]; then
             mysqllib=${mysqllibdir}/${mysqllib}
             unset mysqllibdir
         else
@@ -746,7 +748,8 @@ if [ "x$enable_pgsql" != "xno" ]; then
         if [ "$arch" = "win32" ];then
             pgsqllib=${pgsqllibdir}/${pgsqllib}
             unset pgsqllibdir
-        elif [ "x$enable_shared" = "xno" ]; then
+        elif [ "x$enable_shared" = "xno" -o \
+               "x$pgsqllib" = "xlibpq.a" ]; then
             pgsqllib=${pgsqllibdir}/${pgsqllib}
             unset pgsqllibdir
         else
