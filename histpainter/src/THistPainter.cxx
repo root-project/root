@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.9 2000/07/04 09:15:30 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.10 2000/08/07 12:33:41 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom.h"
+#include "TObjArray.h"
 #include "Hoption.h"
 #include "Hparam.h"
 
@@ -416,6 +417,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
 
 //*-* special 2-D options
+   Hoption.List        = 0;
    Hoption.Zscale      = 0;
    Hoption.FrontBox    = 1;
    Hoption.BackBox     = 1;
@@ -460,6 +462,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
+   
+   l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
+   
    l = strstr(chopt,"CONT");
    if (l) {
       Hoption.Scat = 0;
@@ -467,6 +472,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
+      if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
    }
    l = strstr(chopt,"+-");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
    l = strstr(chopt,"-+");   if (l) { Hoption.Plus = 2; strncpy(l,"  ",2); }
@@ -1061,11 +1067,26 @@ void THistPainter::PaintContour()
 //*-*-*-*-*-*-*-*Control function to draw a table as a contour plot*-*-*-*-*-*
 //*-*            =================================================
 //*-*  Hoption.Contour may have the following values:
-//*-*     1  The contour is drawn with filled colour levels.
-//*-*        The levels are equidistant.
-//*-*    11  Use colour to distinguish contours.
-//*-*    12  Use line style to distinguish contours.
-//*-*    13  Line style and colour are the same for all contours.
+//*-*     1  The contour is drawn with filled colour levels. ("cont")
+//*-*    11  Use colour to distinguish contours. ("cont1")
+//*-*    12  Use line style to distinguish contours. ("cont2")
+//*-*    13  Line style and colour are the same for all contours. ("cont3")
+//*-*    14  same as 1 but uses the "SURF" algorithm ("cont4")
+//*-*
+//*-*  When option "List" is specified together with option "cont",
+//*-*  the points used to draw the contours are saved in the TGraph format
+//*-*  and are accessible in the following way:
+//*-* TObjArray *contours = 
+//*-*           gROOT->GetListOfSpecials()->FindObject("contours")
+//*-* Int_t ncontours = contours->GetSize();
+//*-* TList *list = (TList*)contours->At(i); //where i is a contour number   
+//*-* list contains a list of TGraph objects. For one given contour, more than 
+//*-* one disjoint polyline may be generated. The number of TGraphs per 
+//*-* countour is given by list->GetSize(). 
+//*-* Here we show only the case to access the first graph in the list.
+//*-*    TGraph *gr1 = (TGraph*)list->First();
+//*-* 
+//*-*   
 //Begin_Html
 /*
 <img src="gif/PaintContour1.gif">
@@ -1074,11 +1095,11 @@ void THistPainter::PaintContour()
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   Int_t i, j, count, ncontour, icol, iend, icont, n, lj, m, ix, jx, ljfill;
+   Int_t i, j, count, ncontour, icol, n, lj, m, ix, jx, ljfill;
    Int_t itars, mode, ir[4];
    Double_t xsave, ysave, thesave,phisave,x[4], y[4], zc[4];
 
-   if (Hoption.Contour == 1) {
+   if (Hoption.Contour == 14) {
       Hoption.Surf = 12;
       thesave = gPad->GetTheta();
       phisave = gPad->GetPhi();
@@ -1096,6 +1117,8 @@ void THistPainter::PaintContour()
    Double_t *xarr    = new Double_t[kMAXCONTOUR];
    Double_t *yarr    = new Double_t[kMAXCONTOUR];
    Int_t  *itarr     = new Int_t[kMAXCONTOUR];
+   
+   Int_t npmax = 0;
    for (i=0;i<kMAXCONTOUR;i++) itarr[i] = 0;
 
    ncontour  = fH->GetContour();
@@ -1115,98 +1138,234 @@ void THistPainter::PaintContour()
    if (Hoption.Contour == 13) {
       fH->TAttLine::Modify();
    }
-
-   iend = 1;
-   Int_t k;
-   for (icont=1; icont<=iend; icont++) {
-      for (j=Hparam.yfirst; j<=Hparam.ylast-1; j++) {
-         y[0] = fYaxis->GetBinCenter(j);
-         y[1] = y[0];
-         y[2] = fYaxis->GetBinCenter(j+1);
-         y[3] = y[2];
-         if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
-         if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
-         for (i=Hparam.xfirst; i<=Hparam.xlast-1; i++) {
-            zc[0] = fH->GetCellContent(i, j);
-            zc[1] = fH->GetCellContent(i+1, j);
-            zc[2] = fH->GetCellContent(i+1, j+1);
-            zc[3] = fH->GetCellContent(i, j+1);
-            for (k=0;k<4;k++) {
-               ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
-               if (zc[k] > levels[ncontour-1]) ir[k] = ncontour-1;
+   
+   TPolyLine **polys = 0;
+   TPolyLine *poly=0, *polynew=0;
+   TObjArray *contours = 0;
+   TList *list = 0;
+   TGraph *graph = 0;
+   Int_t *np = 0;
+   if (Hoption.Contour == 1) {
+      np = new Int_t[ncontour];
+      for (i=0;i<ncontour;i++) np[i] = 0;
+      polys = new TPolyLine*[ncontour];
+      for (i=0;i<ncontour;i++) {
+         polys[i] = new TPolyLine(100);
+      }
+      if (Hoption.List == 1) {
+         contours = (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
+         if (contours) {
+            gROOT->GetListOfSpecials()->Remove(contours);
+            count = contours->GetSize();
+            for (i=0;i<count;i++) {
+               list = (TList*)contours->At(i);
+               if (list) list->Delete();
             }
-            if (ir[0] != ir[1] || ir[1] != ir[2] || ir[2] != ir[3] || ir[3] != ir[0]) {
-               x[0] = fXaxis->GetBinCenter(i);
-               x[3] = x[0];
-               x[1] = fXaxis->GetBinCenter(i+1);
-               x[2] = x[1];
-               if (x[0] < gPad->GetUxmin() || x[0] > gPad->GetUxmax()) continue;
-               if (x[2] < gPad->GetUxmin() || x[2] > gPad->GetUxmax()) continue;
-               if (zc[0] < zc[1]) n = 0; else n = 1;
-               if (zc[2] < zc[3]) m = 2; else m = 3;
-               if (zc[n] > zc[m]) n = m;
-               n++;
-               lj=1;
-               for (ix=1;ix<=4;ix++) {
-                  m = n%4 + 1;
-                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                        ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
-                  lj += 2*ljfill;
-                  n = m;
-               }
-               if (zc[0] < zc[1]) n = 0; else n = 1;
-               if (zc[2] < zc[3]) m = 2; else m = 3;
-               if (zc[n] > zc[m]) n = m;
-               n++;
-               lj=2;
-               for (ix=1;ix<=4;ix++) {
-                  if (n == 1) m = 4;
-                  else        m = n-1;
-                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                        ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
-                  lj += 2*ljfill;
-                  n = m;
-               }
-//*-*- Re-order endpoints
-
-               count = 0;
-               for (ix=1; ix<=lj-5; ix +=2) {
-                  count = 0;
-                  while (itarr[ix-1] != itarr[ix]) {
-                     xsave = xarr[ix];
-                     ysave = yarr[ix];
-                     itars = itarr[ix];
-                     for (jx=ix; jx<=lj-5; jx +=2) {
-                        xarr[jx]  = xarr[jx+2];
-                        yarr[jx]  = yarr[jx+2];
-                        itarr[jx] = itarr[jx+2];
-                     }
-                     xarr[lj-3]  = xsave;
-                     yarr[lj-3]  = ysave;
-                     itarr[lj-3] = itars;
-                     if (count > 100) break;
-                     count++;
-                  }
-               }
-               if (count > 100) continue;
-
-               for (ix=1; ix<=lj-2; ix +=2) {
-                  icol = (4*itarr[ix])/ncontour+1;
-                  if (Hoption.Contour == 11) {
-                      fH->SetLineColor(icol);
-                  }
-                  if (Hoption.Contour == 12) {
-                      mode = icol%5;
-                      if (mode == 0) mode = 5;
-                      fH->SetLineStyle(mode);
-                  }
-                  fH->TAttLine::Modify();
-                  gPad->PaintPolyLine(2,&xarr[ix-1],&yarr[ix-1]);
-               }
-            }
+         }
+         contours = new TObjArray(ncontour);
+         contours->SetName("contours");
+         gROOT->GetListOfSpecials()->Add(contours);
+         for (i=0;i<ncontour;i++) {
+            list = new TList();
+            contours->Add(list);
          }
       }
    }
+   Int_t theColor;
+   Int_t ncolors = gStyle->GetNumberOfColors();
+   Int_t ndivz   = TMath::Abs(ncontour);
+   
+   Int_t k,ipoly;
+   for (j=Hparam.yfirst; j<=Hparam.ylast-1; j++) {
+      y[0] = fYaxis->GetBinCenter(j);
+      y[1] = y[0];
+      y[2] = fYaxis->GetBinCenter(j+1);
+      y[3] = y[2];
+      if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
+      if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
+      for (i=Hparam.xfirst; i<=Hparam.xlast-1; i++) {
+         zc[0] = fH->GetCellContent(i, j);
+         zc[1] = fH->GetCellContent(i+1, j);
+         zc[2] = fH->GetCellContent(i+1, j+1);
+         zc[3] = fH->GetCellContent(i, j+1);
+         for (k=0;k<4;k++) {
+            ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
+            if (zc[k] > levels[ncontour-1]) ir[k] = ncontour-1;
+         }
+         if (ir[0] != ir[1] || ir[1] != ir[2] || ir[2] != ir[3] || ir[3] != ir[0]) {
+            x[0] = fXaxis->GetBinCenter(i);
+            x[3] = x[0];
+            x[1] = fXaxis->GetBinCenter(i+1);
+            x[2] = x[1];
+            if (x[0] < gPad->GetUxmin() || x[0] > gPad->GetUxmax()) continue;
+            if (x[2] < gPad->GetUxmin() || x[2] > gPad->GetUxmax()) continue;
+            if (zc[0] < zc[1]) n = 0; else n = 1;
+            if (zc[2] < zc[3]) m = 2; else m = 3;
+            if (zc[n] > zc[m]) n = m;
+            n++;
+            lj=1;
+            for (ix=1;ix<=4;ix++) {
+               m = n%4 + 1;
+               ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
+                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
+               lj += 2*ljfill;
+               n = m;
+            }
+            if (zc[0] < zc[1]) n = 0; else n = 1;
+            if (zc[2] < zc[3]) m = 2; else m = 3;
+            if (zc[n] > zc[m]) n = m;
+            n++;
+            lj=2;
+            for (ix=1;ix<=4;ix++) {
+               if (n == 1) m = 4;
+               else        m = n-1;
+               ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
+                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
+               lj += 2*ljfill;
+               n = m;
+            }
+//*-*- Re-order endpoints
+
+            count = 0;
+            for (ix=1; ix<=lj-5; ix +=2) {
+               count = 0;
+               while (itarr[ix-1] != itarr[ix]) {
+                  xsave = xarr[ix];
+                  ysave = yarr[ix];
+                  itars = itarr[ix];
+                  for (jx=ix; jx<=lj-5; jx +=2) {
+                     xarr[jx]  = xarr[jx+2];
+                     yarr[jx]  = yarr[jx+2];
+                     itarr[jx] = itarr[jx+2];
+                  }
+                  xarr[lj-3]  = xsave;
+                  yarr[lj-3]  = ysave;
+                  itarr[lj-3] = itars;
+                  if (count > 100) break;
+                  count++;
+               }
+            }
+            if (count > 100) continue;
+
+            for (ix=1; ix<=lj-2; ix +=2) {
+//               icol = (4*itarr[ix])/ncontour+1;
+               theColor = Int_t((itarr[ix])*Float_t(ncolors)/Float_t(ndivz));
+               icol = gStyle->GetColorPalette(theColor);
+               if (Hoption.Contour == 11) {
+                   fH->SetLineColor(icol);
+               }
+               if (Hoption.Contour == 12) {
+                   mode = icol%5;
+                   if (mode == 0) mode = 5;
+                   fH->SetLineStyle(mode);
+               }
+               if (Hoption.Contour != 1) {
+                  fH->TAttLine::Modify();
+                  gPad->PaintPolyLine(2,&xarr[ix-1],&yarr[ix-1]);
+                  continue;
+               }
+
+               ipoly = itarr[ix]-1;
+               if (ipoly >=0 && ipoly <ncontour) {
+                  poly = polys[ipoly];
+                  if (np[ipoly] > poly->GetN()-2) { // extend polyline
+                     polynew = new TPolyLine(np[ipoly] + 100);
+                     for (k=0;k<np[ipoly];k++) {
+                        polynew->SetPoint(k,poly->GetX()[k],poly->GetY()[k]);
+                     }
+                     delete poly;
+                     polys[ipoly] = polynew;
+                     poly = polynew;
+                  }
+                  poly->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
+                  poly->SetPoint(np[ipoly]+1,xarr[ix],  yarr[ix]);
+                  np[ipoly] += 2;
+                  if (npmax < np[ipoly]) npmax = np[ipoly];
+               }
+            }
+         } // end of if (ir[0]
+      } //end of for (i
+   } //end of for (j
+
+   Double_t xmin,ymin;
+   Double_t *xp, *yp;
+   Int_t nadd,iminus,iplus;
+   Double_t *xx, *yy;
+   Int_t istart;
+   if (Hoption.Contour != 1) goto theEND;
+   
+   //The 2 points line generated above are not sorted/merged to generate
+   //a list of consecutive points.
+   // If the option "List" has been specified, the list of points is saved
+   // in the form of TGraph objects in the ROOT list of special objects.
+   xmin = gPad->GetUxmin();
+   ymin = gPad->GetUymin();
+   xp = new Double_t[2*npmax];
+   yp = new Double_t[2*npmax];
+   for (ipoly=0;ipoly<ncontour;ipoly++) {
+      if (np[ipoly] == 0) continue;
+      if (Hoption.List) list = (TList*)contours->At(ipoly);
+      poly = polys[ipoly];
+      xx = poly->GetX();
+      yy = poly->GetY();
+      istart = 0;
+      while (1) {
+         iminus = npmax;
+         iplus  = iminus+1;
+         xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
+         xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
+         xx[istart]   = xmin; yy[istart]   = ymin;
+         xx[istart+1] = xmin; yy[istart+1] = ymin;
+         while (1) {
+            nadd = 0;
+            for (i=2;i<np[ipoly];i+=2) {
+               if (xx[i] == xp[iplus] && yy[i] == yp[iplus]) {
+                  iplus++;
+                  xp[iplus] = xx[i+1]; yp[iplus]  = yy[i+1];
+                  xx[i]   = xmin; yy[i]   = ymin;
+                  xx[i+1] = xmin; yy[i+1] = ymin;
+                  nadd++;
+               }
+               if (xx[i+1] == xp[iminus] && yy[i+1] == yp[iminus]) {
+                  iminus--;
+                  xp[iminus] = xx[i];   yp[iminus]  = yy[i];
+                  xx[i]   = xmin; yy[i]   = ymin;
+                  xx[i+1] = xmin; yy[i+1] = ymin;
+                  nadd++;
+               }
+            }
+            if (nadd == 0) break;
+         }
+         theColor = Int_t((ipoly+2)*Float_t(ncolors)/Float_t(ndivz));
+         icol = gStyle->GetColorPalette(theColor);
+         fH->SetFillColor(icol);
+         fH->TAttFill::Modify();
+         gPad->PaintFillArea(iplus-iminus+1,&xp[iminus],&yp[iminus]);
+         if (Hoption.List) {
+            graph = new TGraph(iplus-iminus+1,&xp[iminus],&yp[iminus]);
+            graph->SetFillColor(icol);
+            graph->SetLineWidth(fH->GetLineWidth());
+            list->Add(graph);
+         }
+         //check if more points are left
+         istart = 0;
+         for (i=2;i<np[ipoly];i+=2) {
+            if (xx[i] != xmin && yy[i] != ymin) {
+               istart = i;
+               break;
+            }
+         }
+         if (istart == 0) break;              
+      }
+   }
+   if (Hoption.Zscale) PaintPalette();
+
+   for (i=0;i<ncontour;i++) delete polys[i];
+   delete [] polys;
+   delete [] xp;
+   delete [] yp;
+
+theEND:
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
    delete [] xarr;
@@ -1284,7 +1443,7 @@ void THistPainter::PaintErrors()
 //End_Html
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   const Int_t BASEMARKER=10;
+   const Int_t BASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
    Double_t delta;
    Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror;
@@ -1529,7 +1688,7 @@ void THistPainter::PaintFrame()
 
    RecalculateRange();
 
-   if (Hoption.Lego || Hoption.Surf || Hoption.Contour == 1) {
+   if (Hoption.Lego || Hoption.Surf || Hoption.Contour == 14) {
       TObject *frame = gPad->GetPrimitive("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
