@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.182 2004/05/24 15:39:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.183 2004/05/26 11:30:28 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -938,6 +938,7 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
 // The buffer is deleted if deleteBuffer is true.
 
    // do we need to compute the bin size?
+   if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
    if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
@@ -976,6 +977,7 @@ Int_t TH1::BufferFill(Axis_t x, Stat_t w)
 // fBuffer[1] = w of first entry
 // fBuffer[2] = x of first entry
 
+   if (!fBuffer) return -2;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (2*nbentries+2 >= fBufferSize) {
       BufferEmpty(kTRUE);
