@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.9 2004/02/19 08:55:17 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.10 2004/03/17 17:52:23 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -352,6 +352,10 @@ Int_t TPSocket::Send(const TMessage &mess)
    if (!fSockets || fSize <= 1)
       return TSocket::Send(mess);  // only the case when called via Init()
 
+   if (!IsValid()) {
+      return -1;
+   }
+
    if (mess.IsReading()) {
       Error("Send", "cannot send a message used for reading");
       return -1;
@@ -437,6 +441,10 @@ again:
                      goto again;
                   }
                   fWriteMonitor->DeActivateAll();
+                  if (nsent == -5) {
+                     // connection reset by peer or broken ...
+                     Close();
+                  }
                   return -1;
                }
                if (opt == kDontBlock) {
@@ -466,7 +474,7 @@ Int_t TPSocket::Recv(TMessage *&mess)
    if (fSize <= 1)
       return TSocket::Recv(mess);
 
-   if (!fSockets) {
+   if (!IsValid()) {
       mess = 0;
       return -1;
    }
@@ -553,6 +561,10 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
                                                   fReadBytesLeft[is],
                                                   recvopt)) <= 0) {
                   fReadMonitor->DeActivateAll();
+                  if (nrecv == -5) {
+                     // connection reset by peer or broken ...
+                     Close();
+                  }
                   return -1;
                }
                if (opt == kDontBlock) {

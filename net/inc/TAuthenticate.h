@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.19 2004/02/20 18:22:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.20 2004/03/17 17:52:23 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -102,6 +102,7 @@ private:
    static TDatime        fgExpDate;      // Expiring date for new security contexts
    static GlobusAuth_t   fgGlobusAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
+   static TString        fgKrb5Principal; // Principal for Krb5 ticket
    static TDatime        fgLastAuthrc;    // Time of last reading of fgRootAuthrc
    static TString        fgPasswd;
    static Bool_t         fgPromptUser;   // kTRUE if user prompt required
@@ -161,6 +162,7 @@ public:
    static GlobusAuth_t GetGlobusAuthHook();
    static THostAuth  *GetHostAuth(const char *host, const char *user="",
                                   Option_t *opt = "R", Int_t *Exact = 0);
+   static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
    static TList      *GetProofAuthInfo();
    static Int_t       GetRSAInit();
@@ -175,7 +177,7 @@ public:
    static void        RemoveHostAuth(THostAuth *ha, Option_t *opt = "");
    static Int_t       SecureRecv(TSocket *Socket, Int_t KeyType, char **Out);
    static Int_t       SecureSend(TSocket *Socket, Int_t KeyType, const char *In);
-   static void        SendRSAPublicKey(TSocket *Socket);
+   static Int_t       SendRSAPublicKey(TSocket *Socket);
    static void        SetAuthReUse(Bool_t authreuse);
    static void        SetDefaultUser(const char *defaultuser);
    static void        SetGlobalExpDate(TDatime expdate);

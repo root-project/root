@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.77 2004/03/04 09:04:10 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.78 2004/04/16 17:03:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -211,6 +211,7 @@ static int WinNTRecv(int socket, void *buffer, int length, int flag)
    // received. Returns -1 in case of error, -2 in case of MSG_OOB
    // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
    // and -4 in case of kNonBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    if (socket == -1) return -1;
    SOCKET sock = socket;
@@ -239,8 +240,13 @@ static int WinNTRecv(int socket, void *buffer, int length, int flag)
          if (::WSAGetLastError() == WSAEWOULDBLOCK) {
             return -4;
          } else {
-            ::SysError("TWinNTSystem::WinNTRecv", "recv");
-            return -1;
+            if (::WSAGetLastError() != WSAEINTR)
+               ::SysError("TWinNTSystem::WinNTRecv", "recv");
+            if (::WSAGetLastError() == WSAEPIPE ||
+                ::WSAGetLastError() == WSAECONNRESET)
+               return -5;
+            else
+               return -1;
          }
       }
       if (once) {
@@ -255,7 +261,8 @@ static int WinNTSend(int socket, const void *buffer, int length, int flag)
 {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
    // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+   // (EPIPE || ECONNRESET).
 
    if (socket < 0) return -1;
    SOCKET sock = socket;
@@ -277,8 +284,13 @@ static int WinNTSend(int socket, const void *buffer, int length, int flag)
          if (::WSAGetLastError() == WSAEWOULDBLOCK) {
             return -4;
          } else {
-            ::SysError("TWinNTSystem::WinNTSend", "send");
-            return -1;
+            if (::WSAGetLastError() != WSAEINTR)
+               ::SysError("TWinNTSystem::WinNTSend", "send");
+            if (::WSAGetLastError() == WSAEPIPE ||
+                ::WSAGetLastError() == WSAECONNRESET)
+               return -5;
+            else
+               return -1;
          }
       }
       if (once) {
@@ -3208,7 +3220,8 @@ int TWinNTSystem::RecvRaw(int sock, void *buf, int length, int opt)
    // bytes received (can be 0 if other side of connection was closed) or -1
    // in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
    // in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+   // (EPIPE || ECONNRESET).
 
    int flag;
 
@@ -3246,6 +3259,7 @@ int TWinNTSystem::SendRaw(int sock, const void *buf, int length, int opt)
    // Send exactly length bytes from buffer. Use opt to send out-of-band
    // data (see TSocket). Returns the number of bytes sent or -1 in case of
    // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    int flag;
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.12 2004/02/19 09:00:01 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.13 2004/03/17 17:52:23 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -144,7 +144,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-      if (fSocket != -1) 
+      if (fSocket != -1)
          gROOT->GetListOfSockets()->Add(this);
 
    } else
@@ -208,7 +208,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fService = (char *)kSOCKD;
    fBytesSent = 0;
    fBytesRecv = 0;
- 
+
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
@@ -304,7 +304,12 @@ Int_t TSocket::Send(Int_t kind)
    // received an acknowledgement, making the sending process synchronous.
 
    TMessage mess(kind);
-   return Send(mess);
+
+   Int_t nsent;
+   if ((nsent = Send(mess)) < 0)
+      return -1;
+
+   return nsent;
 }
 
 //______________________________________________________________________________
@@ -318,7 +323,12 @@ Int_t TSocket::Send(Int_t status, Int_t kind)
 
    TMessage mess(kind);
    mess << status;
-   return Send(mess);
+
+   Int_t nsent;
+   if ((nsent = Send(mess)) < 0)
+      return -1;
+
+   return nsent;
 }
 
 //______________________________________________________________________________
@@ -348,6 +358,7 @@ Int_t TSocket::Send(const TMessage &mess)
    // has been or'ed with kMESS_ACK, the call will only return after having
    // received an acknowledgement, making the sending process synchronous.
    // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    TSystem::ResetErrno();
 
@@ -359,8 +370,13 @@ Int_t TSocket::Send(const TMessage &mess)
 
    Int_t nsent;
    mess.SetLength();   //write length in first word of buffer
-   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(), 0)) <= 0)
+   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(),0)) <= 0) {
+      if (nsent == -5) {
+         // Connection reset by peer or broken
+         Close();
+      }
       return nsent;
+   }
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
@@ -369,8 +385,15 @@ Int_t TSocket::Send(const TMessage &mess)
    if (mess.What() & kMESS_ACK) {
       TSystem::ResetErrno();
       char buf[2];
-      if (gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0) < 0)
-         return -1;
+      Int_t n = 0;
+      if ((n = gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0)) < 0) {
+         if (n == -5) {
+            // Connection reset by peer or broken
+            Close();
+         } else
+            n = -1;
+         return n;
+      }
       if (strncmp(buf, "ok", 2)) {
          Error("Send", "bad acknowledgement");
          return -1;
@@ -391,9 +414,13 @@ Int_t TSocket::SendObject(const TObject *obj, Int_t kind)
    // synchronous.
 
    TMessage mess(kind);
-
    mess.WriteObject(obj);
-   return Send(mess);
+
+   Int_t nsent;
+   if ((nsent = Send(mess)) < 0)
+      return -1;
+
+   return nsent;
 }
 
 //______________________________________________________________________________
@@ -402,6 +429,7 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
    // Send a raw buffer of specified length. Using option kOob one can send
    // OOB data. Returns the number of bytes sent or -1 in case of error.
    // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    TSystem::ResetErrno();
 
@@ -409,8 +437,13 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 
    Int_t nsent;
 
-   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0)
+   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0) {
+      if (nsent == -5) {
+         // Connection reset or broken: close
+         Close();
+      }
       return nsent;
+   }
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
@@ -429,8 +462,11 @@ Int_t TSocket::Recv(char *str, Int_t max)
 
    Int_t n, kind;
 
-   if ((n = Recv(str, max, kind)) <= 0)
+   if ((n = Recv(str, max, kind)) <= 0) {
+      if (n == -5)
+         n = -1;
       return n;
+   }
 
    if (kind != kMESS_STRING) {
       Error("Recv", "got message of wrong kind (expected %d, got %d)",
@@ -452,8 +488,11 @@ Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
    Int_t     n;
    TMessage *mess;
 
-   if ((n = Recv(mess)) <= 0)
+   if ((n = Recv(mess)) <= 0) {
+      if (n == -5)
+         n = -1;
       return n;
+   }
 
    kind = mess->What();
    if (str) {
@@ -478,8 +517,11 @@ Int_t TSocket::Recv(Int_t &status, Int_t &kind)
    Int_t     n;
    TMessage *mess;
 
-   if ((n = Recv(mess)) <= 0)
+   if ((n = Recv(mess)) <= 0) {
+      if (n == -5)
+         n = -1;
       return n;
+   }
 
    kind = mess->What();
    (*mess) >> status;
@@ -495,7 +537,8 @@ Int_t TSocket::Recv(TMessage *&mess)
    // Receive a TMessage object. The user must delete the TMessage object.
    // Returns length of message in bytes (can be 0 if other side of connection
    // is closed) or -1 in case of error or -4 in case a non-blocking socket
-   // would block (i.e. there is nothing to be read). In those case mess == 0.
+   // would block (i.e. there is nothing to be read) or -5 if pipe broken
+   // or reset by peer (EPIPE || ECONNRESET). In those case mess == 0.
 
    TSystem::ResetErrno();
 
@@ -507,6 +550,10 @@ Int_t TSocket::Recv(TMessage *&mess)
    Int_t  n;
    UInt_t len;
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
+      if (n == -5) {
+        // Connection reset or broken
+        Close();
+      }
       mess = 0;
       return n;
    }
@@ -514,6 +561,10 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    char *buf = new char[len+sizeof(UInt_t)];
    if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
+      if (n == -5) {
+        // Connection reset or broken
+        Close();
+      }
       delete [] buf;
       mess = 0;
       return n;
@@ -526,10 +577,15 @@ Int_t TSocket::Recv(TMessage *&mess)
 
    if (mess->What() & kMESS_ACK) {
       char ok[2] = { 'o', 'k' };
-      if (gSystem->SendRaw(fSocket, ok, sizeof(ok), 0) < 0) {
+      Int_t n = 0;
+      if ((n = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
+         if (n == -5) {
+           // Connection reset or broken
+           Close();
+         }
          delete mess;
          mess = 0;
-         return -1;
+         return n;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);
 
@@ -546,7 +602,8 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    // Receive a raw buffer of specified length bytes. Using option kPeek
    // one can peek at incoming data. Returns -1 in case of error. In case
    // of opt == kOob: -2 means EWOULDBLOCK and -3 EINVAL. In case of non-blocking
-   // mode (kNoBlock) -4 means EWOULDBLOCK.
+   // mode (kNoBlock) -4 means EWOULDBLOCK. Returns -5 if pipe broken or
+   // reset by peer (EPIPE || ECONNRESET).
 
    TSystem::ResetErrno();
 
@@ -554,8 +611,13 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 
    Int_t n;
 
-   if ((n = gSystem->RecvRaw(fSocket, buffer, length, (int) opt)) <= 0)
+   if ((n = gSystem->RecvRaw(fSocket, buffer, length, (int) opt)) <= 0) {
+      if (n == -5) {
+         // Connection reset or broken
+         Close();
+      }
       return n;
+   }
 
    fBytesRecv  += n;
    fgBytesRecv += n;
@@ -651,8 +713,8 @@ Bool_t TSocket::Authenticate(const char *user)
    TAuthenticate *auth = new TAuthenticate(this,Host,
                   Form("%s:%d",SProtocol.Data(),fRemoteProtocol), user);
 
-   // If PROOF client and trasmission of the SRP password is 
-   // requested make sure that ReUse is switched on to get and 
+   // If PROOF client and trasmission of the SRP password is
+   // requested make sure that ReUse is switched on to get and
    // send also the Public Key
    // Masters do this automatically upon reception of valid info
    // (see TSlave.cxx)
@@ -677,10 +739,10 @@ Bool_t TSocket::Authenticate(const char *user)
    // Attempt authentication
    if (!auth->Authenticate()) {
       // Close the socket if unsuccessful
-      Error("Authenticate", 
+      Error("Authenticate",
             "authentication failed for %s@%s",auth->GetUser(),Host.Data());
       // This is to terminate properly remote proofd in case of failure
-      if (fServType == kPROOFD) 
+      if (fServType == kPROOFD)
          Send(Form("%d %s", gSystem->GetPid(), Host.Data()), kROOTD_CLEANUP);
   } else {
       // Set return flag;
@@ -698,24 +760,24 @@ Bool_t TSocket::Authenticate(const char *user)
 TSocket *TSocket::CreateAuthSocket(const char *url,
                                    Int_t size, Int_t tcpwindowsize)
 {
-   // Creates a socket or a parallel sockets and authenticates to the 
+   // Creates a socket or a parallel sockets and authenticates to the
    // remote server.
    //
    // url: [proto[p][auth]://][user@]host[:port][/service][?options]
    //
    // where  proto = "sockd", "rootd", "proofd"
-   //                indicates the type of remote server 
+   //                indicates the type of remote server
    //                ("sockd" not operational yet)
    //          [p] = for parallel sockets (forced internally for
    //                rootd)
-   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
+   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //       [port] = is the remote port number
-   //    [service] = service name used to determine the port 
-   //                (for backward compatibility, specification of 
+   //    [service] = service name used to determine the port
+   //                (for backward compatibility, specification of
    //                 port as priority)
    //     options  = "m" or "s", when proto=proofd indicates whether
-   //                we are master or slave (used internally by 
+   //                we are master or slave (used internally by
    //                TSlave)
    //
    // Example:
@@ -724,11 +786,11 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    //
    //   creates an authenticated socket to a rootd server running
    //   on remote machine machine.fq.dn on port 5051; "parallel" sockets
-   //   are forced internally because rootd expects 
-   //   parallel sockets; however a simple socket will be created 
-   //   in this case because the size is 0 (the default). 
+   //   are forced internally because rootd expects
+   //   parallel sockets; however a simple socket will be created
+   //   in this case because the size is 0 (the default).
    //
-   // Returns pointer to an authenticated socket or 0 if creation or 
+   // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful
 
    // Url to be passed to choosen constructor
@@ -755,12 +817,12 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    if (RootdSrv) {
       // Open simple parallel socket
       TSocket *sock = new TPSocket(eurl.Data(),TUrl(url).GetPort(),1);
-      // Inquire remote protocol (sending our) 
+      // Inquire remote protocol (sending our)
       sock->Send(Form("%d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
       // Receive remote protocol
       Int_t kind;
       sock->Recv(RemoteProtocol, kind);
-      // Close connection     
+      // Close connection
       sock->Send(kROOTD_BYE);
       delete sock;
    }
@@ -798,8 +860,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
       if (sock && !sock->IsAuthenticated()) {
          // Nothing to do except setting sock to NULL
          if (sock->IsValid())
-            // And except when the sock is valid; this typically 
-            // happens when talking to a old server, because the 
+            // And except when the sock is valid; this typically
+            // happens when talking to a old server, because the
             // the parallel socket system is open before authentication
             delete sock;
          sock = 0;
@@ -813,17 +875,17 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
 TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
                                    Int_t port, Int_t size, Int_t tcpwindowsize)
 {
-   // Creates a socket or a parallel sockets and authenticates to the 
-   // remote server specified in 'url' on remote 'port' as 'user' 
+   // Creates a socket or a parallel sockets and authenticates to the
+   // remote server specified in 'url' on remote 'port' as 'user'
    //
    // url: [proto[p][auth]://]host[/?options]
    //
    // where  proto = "sockd", "rootd", "proofd"
-   //                indicates the type of remote server 
+   //                indicates the type of remote server
    //                ("sockd" not operational yet)
    //          [p] = for parallel sockets (forced internally for
    //                rootd)
-   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
+   //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd,
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //    [options] = "m" or "s", when proto=proofd indicates whether
    //                we are master or slave (used internally by TSlave)
@@ -833,12 +895,12 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //   TSocket::CreateAuthSocket("qwerty","rootdps://machine.fq.dn",5051)
    //
    //   creates an authenticated socket to a rootd server running
-   //   on remote machine machine.fq.dn on port 5051, authenticating 
+   //   on remote machine machine.fq.dn on port 5051, authenticating
    //   as 'qwerty'; "parallel" sockets are forced internally because
    //   rootd expects parallel sockets; however a simple socket will
-   //   be created in this case because the size is 0 (the default). 
+   //   be created in this case because the size is 0 (the default).
    //
-   // Returns pointer to an authenticated socket or 0 if creation or 
+   // Returns pointer to an authenticated socket or 0 if creation or
    // authentication is unsuccessful
    //
 
@@ -873,9 +935,9 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
 //______________________________________________________________________________
 Int_t TSocket::SecureSend(const char *In, Int_t ktyp)
 {
-   // If authenticated and related SecContext is active  
+   // If authenticated and related SecContext is active
    // secure-sends In to host using RSA ktyp stores in TAuthenticate
-   // Returns # bytes send or -1 in case of error 
+   // Returns # bytes send or -1 in case of error
 
    if (IsAuthenticated() && fSecContext->IsActive() )
       return TAuthenticate::SecureSend(this, ktyp, In);
@@ -909,7 +971,7 @@ Int_t TSocket::SendHostAuth()
    }
 
    // End of transmission ...
-   if ((ns = Send("END", kPROOF_SENDHOSTAUTH)) < 1) 
+   if ((ns = Send("END", kPROOF_SENDHOSTAUTH)) < 1)
       retval = -2;
    if (gDebug > 2)
       Info("SendHostAuth","sent %d bytes for closing",ns);
@@ -962,7 +1024,7 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
          haex = TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"P",&kExact);
          // If nothing found, look also in the standard list
          if (!haex) {
-            haex = 
+            haex =
                 TAuthenticate::GetHostAuth(ha->GetHost(),ha->GetUser(),"R",&kExact);
          } else
             FromProofAI = kTRUE;
@@ -977,7 +1039,7 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
             // Update info in AuthInfo if Slave or in ProofAuthInfo
             // if Master and the entry was already in ProofAuthInfo
             if (!Master || FromProofAI) {
-               // update this existing one with the information found in 
+               // update this existing one with the information found in
                // in the new one, if needed
                haex->Update(ha);
                // Delete temporary THostAuth
@@ -987,7 +1049,7 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
                // Add it to the list
                TAuthenticate::GetProofAuthInfo()->Add(ha);
          } else {
-            // update this new one with the information found in 
+            // update this new one with the information found in
             // in the existing one (if needed) and ...
             Int_t i = 0;
             for (; i < haex->NumMethods(); i++) {
@@ -1003,7 +1065,7 @@ Int_t TSocket::RecvHostAuth(Option_t *Opt, const char *proofconf)
                TAuthenticate::GetAuthInfo()->Add(ha);
          }
       } else {
-         if (Master) 
+         if (Master)
             // We add this one to the list for forwarding
             TAuthenticate::GetProofAuthInfo()->Add(ha);
          else

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.93 2004/04/16 17:03:04 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.94 2004/04/20 09:27:03 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2403,7 +2403,8 @@ int TUnixSystem::RecvRaw(int sock, void *buf, int length, int opt)
    // bytes received (can be 0 if other side of connection was closed) or -1
    // in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
    // in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+   // (EPIPE || ECONNRESET).
 
    int flag;
 
@@ -2440,6 +2441,7 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
    // Send exactly length bytes from buffer. Use opt to send out-of-band
    // data (see TSocket). Returns the number of bytes sent or -1 in case of
    // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    int flag;
 
@@ -3260,6 +3262,7 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
    // received. Returns -1 in case of error, -2 in case of MSG_OOB
    // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
    // and -4 in case of kNoBlock and errno == EWOULDBLOCK.
+   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
 
    ResetErrno();
 
@@ -3289,7 +3292,10 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
          else {
             if (GetErrno() != EINTR)
                ::SysError("TUnixSystem::UnixRecv", "recv");
-            return -1;
+            if (GetErrno() == EPIPE || GetErrno() == ECONNRESET)
+               return -5;
+            else
+               return -1;
          }
       }
       if (once)
@@ -3303,7 +3309,8 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 {
    // Send exactly length bytes from buffer. Returns -1 in case of error,
    // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK.
+   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+   // (EPIPE || ECONNRESET).
 
    if (sock < 0) return -1;
 
@@ -3325,7 +3332,10 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
          else {
             if (GetErrno() != EINTR)
                ::SysError("TUnixSystem::UnixSend", "send");
-            return -1;
+            if (GetErrno() == EPIPE || GetErrno() == ECONNRESET)
+               return -5;
+            else
+               return -1;
          }
       }
       if (once)
