@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.53 2004/03/17 12:37:40 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.54 2004/03/18 14:22:03 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -360,9 +360,6 @@ static char p25_bits[] = {
 
 static bool gdk_initialized = false;
 
-
-// Key masks. Used as modifiers to GrabButton and GrabKey, results of QueryPointer,
-// state in various key-, mouse-, and button-related events.
 
 //---- MWM Hints stuff
 
@@ -881,7 +878,6 @@ TGWin32MainThread::~TGWin32MainThread()
       ::PostThreadMessage(fId, WM_QUIT, 0, 0);
       ::CloseHandle(fHandle);
    }
-
    fHandle = 0;
 }
 
@@ -5511,7 +5507,6 @@ void TGWin32::NextEvent(Event_t & event)
    if (xev == NULL) {
       return;
    }
-
    MapEvent(event, *xev, kFALSE);
    gdk_event_free (xev);
    TGWin32MainThread::UnlockMSG();
@@ -5523,56 +5518,14 @@ void TGWin32::MapModifierState(UInt_t & state, UInt_t & xstate, Bool_t tox)
    // Map modifier key state to or from X.
 
    if (tox) {
-      xstate = 0;
-      if ((state & kKeyShiftMask)) {
-         xstate |= GDK_SHIFT_MASK;
-      }
-      if ((state & kKeyLockMask)) {
-         xstate |= GDK_LOCK_MASK;
-      }
-      if ((state & kKeyControlMask)) {
-         xstate |= GDK_CONTROL_MASK;
-      }
-      if ((state & kKeyMod1Mask)) {
-         xstate |= GDK_MOD1_MASK;
-      }
-      if ((state & kButton1Mask)) {
-         xstate |= GDK_BUTTON1_MASK;
-      }
-      if ((state & kButton2Mask)) {
-         xstate |= GDK_BUTTON2_MASK;
-      }
-      if ((state & kButton3Mask)) {
-         xstate |= GDK_BUTTON3_MASK;
-      }
+      xstate = state;
       if ((state & kAnyModifier)) {
-         xstate |= GDK_MODIFIER_MASK;	// or should it be = instead of |= ?
+         xstate |= GDK_MODIFIER_MASK;
       }
    } else {
-      state = 0;
-      if ((xstate & GDK_SHIFT_MASK)) {
-         state |= kKeyShiftMask;
-      }
-      if ((xstate & GDK_LOCK_MASK)) {
-         state |= kKeyLockMask;
-      }
-      if ((xstate & GDK_CONTROL_MASK)) {
-         state |= kKeyControlMask;
-      }
-      if ((xstate & GDK_MOD1_MASK)) {
-         state |= kKeyMod1Mask;
-      }
-      if ((xstate & GDK_BUTTON1_MASK)) {
-         state |= kButton1Mask;
-      }
-      if ((xstate & GDK_BUTTON2_MASK)) {
-         state |= kButton2Mask;
-      }
-      if ((xstate & GDK_BUTTON3_MASK)) {
-         state |= kButton3Mask;
-      }
+      state = xstate;
       if ((xstate & GDK_MODIFIER_MASK)) {
-         state |= kAnyModifier; // idem
+         state |= kAnyModifier;
       }
    }
 }
@@ -5855,14 +5808,14 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       if (ev.fType == kGKeyPress || ev.fType == kKeyRelease) {
          ev.fWindow = (Window_t) xev.key.window;
          MapModifierState(ev.fState, xev.key.state, kFALSE);   // key mask
-         ev.fCode = (xev.key.keyval);  // key code
+         ev.fCode = xev.key.keyval;  // key code
          ev.fUser[1] = xev.key.length;
          if (xev.key.length > 0) ev.fUser[2] = xev.key.string[0];
          if (xev.key.length > 1) ev.fUser[3] = xev.key.string[1];
          if (xev.key.length > 2) ev.fUser[4] = xev.key.string[2];
          HWND tmpwin = (HWND) GetWindow((HWND) GDK_DRAWABLE_XID((GdkWindow *)xev.key.window), GW_CHILD);
          if (tmpwin) {
-             ev.fUser[0] = (ULong_t) gdk_xid_table_lookup((HANDLE)tmpwin);
+            ev.fUser[0] = (ULong_t) gdk_xid_table_lookup((HANDLE)tmpwin);
          } else {
             ev.fUser[0] = (ULong_t) xev.key.window;
          }
@@ -6121,20 +6074,13 @@ void TGWin32::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
    // When grab is false, ungrab the keyboard for this key and modifier.
 
    UInt_t xmod;
-   GdkEventMask masque;
 
    MapModifierState(modifier, xmod);
 
    if (grab) {
-      masque = gdk_window_get_events((GdkWindow *) id);
-      masque = (GdkEventMask) (masque | (GdkEventMask) xmod);
-      gdk_window_set_events((GdkWindow *) id, masque);
-      gdk_keyboard_grab((GdkWindow *) id, 1, GDK_CURRENT_TIME);
+      gdk_key_grab(keycode, (GdkEventMask)xmod, (GdkWindow *)id);
    } else {
-      masque = gdk_window_get_events((GdkWindow *) id);
-      masque = (GdkEventMask) (masque & (GdkEventMask) xmod);
-      gdk_window_set_events((GdkWindow *) id, masque);
-      gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+      gdk_key_ungrab(keycode, (GdkEventMask)xmod, (GdkWindow *)id);
    }
 }
 

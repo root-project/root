@@ -216,6 +216,8 @@ EXPORTS
 	gdk_pointer_ungrab
     gdk_button_grab
     gdk_button_ungrab
+    gdk_key_grab
+    gdk_key_ungrab
 	gdk_progclass
 	gdk_property_change
 	gdk_property_delete

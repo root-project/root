@@ -338,6 +338,11 @@ extern "C" {
       gint grab_owner_events;    //vo
       gint grab_modifiers;       //vo
       guint32 grab_time;         //vo
+      GdkWindow *grab_confine;   //vo
+      GdkCursor *grab_cursor;    //vo
+      gint grab_keycode;         //vo
+      gint grab_key_mod;         //vo
+      gint grab_key_owner_events;//vo
    };
 
    struct _GdkCursorPrivate {

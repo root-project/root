@@ -587,12 +587,6 @@ gint gdk_button_grab(gint button, gint mod, GdkWindow * window,
                      GdkWindow * confine_to,
                      GdkCursor * cursor)
 {
-   //vo
-
-   HWND xwindow;
-   HWND xconfine_to;
-   HCURSOR xcursor;
-   GdkCursorPrivate *cursor_private;
    gint return_val;
 
    g_return_val_if_fail(window != NULL, 0);
@@ -600,34 +594,21 @@ gint gdk_button_grab(gint button, gint mod, GdkWindow * window,
    g_return_val_if_fail(confine_to == NULL
                         || GDK_IS_WINDOW(confine_to), 0);
 
-   cursor_private = (GdkCursorPrivate *) cursor;
-
-   xwindow = GDK_DRAWABLE_XID(window);
-
-   if (!confine_to || GDK_DRAWABLE_DESTROYED(confine_to))
-      xconfine_to = NULL;
-   else
-      xconfine_to = GDK_DRAWABLE_XID(confine_to);
-
-   if (!cursor)
-      xcursor = NULL;
-   else
-      xcursor = cursor_private->xcursor;
-
-   return_val = Success;
+   return_val = GrabSuccess;
 
    GDK_WINDOW_WIN32DATA(window)->grab_event_mask = event_mask;
    GDK_WINDOW_WIN32DATA(window)->grab_button = button < 0 ? 0 : button;
    GDK_WINDOW_WIN32DATA(window)->grab_owner_events = owner_events;
-   GDK_WINDOW_WIN32DATA(window)->grab_modifiers = mod;
+   GDK_WINDOW_WIN32DATA(window)->grab_modifiers |= mod;
+   GDK_WINDOW_WIN32DATA(window)->grab_confine = confine_to;
+   GDK_WINDOW_WIN32DATA(window)->grab_cursor = cursor;
 
    return return_val;
 }
 
 //vo
 void gdk_button_ungrab(gint button, gint mod, GdkWindow * window)
-{
-  
+{ 
    if (window == NULL) return;
    if (!GDK_IS_WINDOW(window)) return;
 
@@ -635,6 +616,30 @@ void gdk_button_ungrab(gint button, gint mod, GdkWindow * window)
    GDK_WINDOW_WIN32DATA(window)->grab_event_mask = 0;
 }
 
+//vo
+gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window)
+{
+   gint return_val;
+
+   g_return_val_if_fail(window != NULL, 0);
+   g_return_val_if_fail(GDK_IS_WINDOW(window), 0);
+
+   return_val = GrabSuccess;
+   GDK_WINDOW_WIN32DATA(window)->grab_keycode = keycode < 0 ? 0 : keycode;
+   GDK_WINDOW_WIN32DATA(window)->grab_key_mod |= mod;
+
+   return return_val;
+}
+
+//vo
+void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window)
+{
+   if (window == NULL) return;
+   if (!GDK_IS_WINDOW(window)) return;
+
+   GDK_WINDOW_WIN32DATA(window)->grab_keycode = -1;
+   GDK_WINDOW_WIN32DATA(window)->grab_key_mod = 0;
+}
 
 /*
  *--------------------------------------------------------------
@@ -3963,8 +3968,9 @@ static void build_key_event_state(GdkEvent * event)
          event->key.keyval += '@';
       }
 #endif
-      if (GetKeyState(VK_MENU) < 0)
+      if (GetKeyState(VK_MENU) < 0) {
          event->key.state |= GDK_MOD1_MASK;
+      }
    }
 }
 
@@ -3989,6 +3995,22 @@ static gint build_pointer_event_state(MSG * xevent)
       state |= GDK_LOCK_MASK;
 
    return state;
+}
+//vo
+static gint get_key_value( MSG * xevent)
+{
+   gint ret = GDK_VoidSymbol;
+
+   if (xevent->wParam < ' ') {
+      ret = xevent->wParam + '@';
+   } else {
+      if (xevent->wParam & 0xFF00) {
+         ret = ((xevent->wParam >> 8) & 0xFF);
+      } else {
+         ret = (xevent->wParam & 0xFF);
+      }
+   }
+   return ret;
 }
 
 static void
@@ -4439,20 +4461,46 @@ translate_mouse_coords(GdkWindow * window1,
    GDK_NOTE(EVENTS, g_print("...new coords are (%d,%d)\n", pt.x, pt.y));
 }
 
+//vo
 static gboolean
 is_grabbed_button(GdkWindow **window, gint button, gint mod, guint32 time)
 {
    GdkWindow *found = NULL;
    GdkWindow *sav = *window;
 
-   while (((GdkWindowPrivate *) *window)->parent != gdk_parent_root) {
+   while (1) {
       if (((GDK_WINDOW_WIN32DATA(*window)->grab_button == 0) ||
-           (GDK_WINDOW_WIN32DATA(*window)->grab_button == button)) &&
-          ((GDK_WINDOW_WIN32DATA(*window)->grab_event_mask & GDK_BUTTON_PRESS_MASK))) {
-//         && ((GDK_WINDOW_WIN32DATA(*window)->grab_modifiers == 0) ||
-//           (GDK_WINDOW_WIN32DATA(*window)->grab_modifiers & mod))) {
+           (GDK_WINDOW_WIN32DATA(*window)->grab_button == button))
+         && ((GDK_WINDOW_WIN32DATA(*window)->grab_event_mask & GDK_BUTTON_PRESS_MASK)) //) {
+         && (GDK_WINDOW_WIN32DATA(*window)->grab_modifiers & mod)) {
          found = *window;
       }
+      if (((GdkWindowPrivate *) *window)->parent == gdk_parent_root) break;
+      *window = ((GdkWindowPrivate *) *window)->parent;
+   }
+
+   if (found) {
+      *window = found;
+      gdk_window_ref(*window);
+      return TRUE;
+   } else {
+      *window = sav;
+      return FALSE;  
+   }
+}
+
+//vo
+static gboolean
+is_grabbed_key(GdkWindow **window, gint keycode, gint mod)
+{
+   GdkWindow *found = NULL;
+   GdkWindow *sav = *window;
+
+   while (1) {
+      if (GDK_WINDOW_WIN32DATA(*window)->grab_key_mod & mod) {
+         found = *window;
+      }
+      if (((GdkWindowPrivate *) *window)->parent == gdk_parent_root) break;
       *window = ((GdkWindowPrivate *) *window)->parent;
    }
 
@@ -4819,6 +4867,7 @@ gdk_event_translate(GdkEvent * event,
       break;
 
    case WM_SYSKEYUP:
+      k_grab_window = 0;   //vo terminate active grab
    case WM_SYSKEYDOWN:
       GDK_NOTE(EVENTS,
                g_print("WM_SYSKEY%s: %#x  %s %#x %s\n",
@@ -4836,7 +4885,7 @@ gdk_event_translate(GdkEvent * event,
       /* If posted without us having keyboard focus, ignore */
       if (!(xevent->lParam & 0x20000000))
          break;
-#if 0
+#if 1
       /* don't generate events for just the Alt key */
       if (xevent->wParam == VK_MENU)
          break;
@@ -4845,6 +4894,7 @@ gdk_event_translate(GdkEvent * event,
       goto keyup_or_down;
 
    case WM_KEYUP:
+      k_grab_window = 0;   //vo terminate active grab
    case WM_KEYDOWN:
       GDK_NOTE(EVENTS,
                g_print("WM_KEY%s: %#x  %s %#x %s\n",
@@ -4857,7 +4907,7 @@ gdk_event_translate(GdkEvent * event,
 
       ignore_WM_CHAR = TRUE;
 
-    keyup_or_down:
+   keyup_or_down:
 
       event->key.window = window;
       switch (xevent->wParam) {
@@ -4907,9 +4957,9 @@ gdk_event_translate(GdkEvent * event,
       case VK_MENU:
          /* And not Alt */
          if (xevent->message == WM_KEYDOWN
-             && (HIWORD(xevent->lParam) & KF_REPEAT))
+             && (HIWORD(xevent->lParam) & KF_REPEAT)) {
             ignore_WM_CHAR = FALSE;
-         else if (HIWORD(xevent->lParam) & KF_EXTENDED) {
+         } else if (HIWORD(xevent->lParam) & KF_EXTENDED) {
             /* AltGr key comes in as Control+Right Alt */
             if (GetKeyState(VK_CONTROL) < 0) {
                ignore_WM_CHAR = FALSE;
@@ -5139,17 +5189,6 @@ gdk_event_translate(GdkEvent * event,
       if (!ignore_WM_CHAR)
          break;
 
-      if (!propagate(&window, xevent,
-                     k_grab_window, k_grab_owner_events,
-                     GDK_ALL_EVENTS_MASK, doesnt_want_key))
-         break;
-
-      is_AltGr_key = FALSE;
-      event->key.type = ((xevent->message == WM_KEYDOWN
-                          || xevent->message == WM_SYSKEYDOWN) ?
-                         GDK_KEY_PRESS : GDK_KEY_RELEASE);
-      event->type = event->key.type;
-      event->key.time = xevent->time;
       event->key.state = 0;
       if (GetKeyState(VK_SHIFT) < 0)
          event->key.state |= GDK_SHIFT_MASK;
@@ -5159,6 +5198,23 @@ gdk_event_translate(GdkEvent * event,
          event->key.state |= GDK_CONTROL_MASK;
       if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
          event->key.state |= GDK_MOD1_MASK;
+
+      //vo check if key is grabbed 
+      if (!k_grab_window &&
+          is_grabbed_key(&window, event->key.keyval, event->key.state)) {
+         gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
+      } else if (!propagate(&window, xevent, k_grab_window, k_grab_owner_events,
+                  GDK_ALL_EVENTS_MASK, doesnt_want_key)) {
+         event->key.state = 0;
+         break;
+      }
+
+      is_AltGr_key = FALSE;
+      event->key.type = ((xevent->message == WM_KEYDOWN
+                          || xevent->message == WM_SYSKEYDOWN) ?
+                         GDK_KEY_PRESS : GDK_KEY_RELEASE);
+      event->type = event->key.type;
+      event->key.time = xevent->time;
       event->key.string = NULL;
       event->key.length = 0;
       return_val = !GDK_DRAWABLE_DESTROYED(window);
@@ -5193,43 +5249,59 @@ gdk_event_translate(GdkEvent * event,
          break;
       }
 
-    wm_char:
-      if (!propagate(&window, xevent,
-                     k_grab_window, k_grab_owner_events,
-                     GDK_ALL_EVENTS_MASK, doesnt_want_char))
+   wm_char:
+      event->key.state = 0;
+      if (GetKeyState(VK_SHIFT) < 0)
+         event->key.state |= GDK_SHIFT_MASK;
+      if (GetKeyState(VK_CAPITAL) & 0x1)
+         event->key.state |= GDK_LOCK_MASK;
+      if (GetKeyState(VK_CONTROL) < 0)
+         event->key.state |= GDK_CONTROL_MASK;
+      if (xevent->wParam != VK_MENU && GetKeyState(VK_MENU) < 0)
+         event->key.state |= GDK_MOD1_MASK;
+
+      //vo check if key is grabbed 
+      if (!k_grab_window &&
+          is_grabbed_key(&window, get_key_value(xevent), event->key.state)) {
+         gdk_keyboard_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_key_owner_events, 0);
+      } else if (!propagate(&window, xevent, 
+                  k_grab_window, k_grab_owner_events,
+                  GDK_ALL_EVENTS_MASK, doesnt_want_char)) {
          break;
+      }
 
       event->key.window = window;
       return_val = !GDK_DRAWABLE_DESTROYED(window);
+
       if (return_val && (event->key.window == k_grab_window
-                         || (GDK_WINDOW_WIN32DATA(window)->
-                             event_mask & GDK_KEY_RELEASE_MASK))) {
+         || (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_RELEASE_MASK))) {
          if (window == k_grab_window
-             || (GDK_WINDOW_WIN32DATA(window)->
-                 event_mask & GDK_KEY_PRESS_MASK)) {
+             || (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_PRESS_MASK)) {
             /* Append a GDK_KEY_PRESS event to the pushback list
              * (from which it will be fetched before the release
              * event).
              */
+
             GdkEvent *event2 = gdk_event_new();
-            build_keypress_event(GDK_WINDOW_WIN32DATA(window), event2,
-                                 xevent);
+            build_keypress_event(GDK_WINDOW_WIN32DATA(window), event2, xevent);
             event2->key.window = window;
             gdk_window_ref(window);
             gdk_event_queue_append(event2);
             GDK_NOTE(EVENTS, print_event(event2));
          }
          /* Return the key release event.  */
-         build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event,
-                                xevent);
+         build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
+      } else if (window == k_grab_window
+             || (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_RELEASE_MASK)) {
+         /* Return just the key press event. */
+         build_keyrelease_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
       } else if (return_val
-                 && (GDK_WINDOW_WIN32DATA(window)->
-                     event_mask & GDK_KEY_PRESS_MASK)) {
+                 && (GDK_WINDOW_WIN32DATA(window)->event_mask & GDK_KEY_PRESS_MASK)) {
          /* Return just the key press event. */
          build_keypress_event(GDK_WINDOW_WIN32DATA(window), event, xevent);
-      } else
+      } else {
          return_val = FALSE;
-
+      }
 #if 0                           /* Don't reset is_AltGr_key here. Othewise we can't type several
                                  * AltGr-accessed chars while keeping the AltGr pressed down
                                  * all the time.
@@ -5273,7 +5345,8 @@ gdk_event_translate(GdkEvent * event,
           is_grabbed_button(&window, button, build_pointer_event_state(xevent), xevent->time)) {
          gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
                           GDK_WINDOW_WIN32DATA(window)->grab_event_mask,
-                          NULL, NULL, 0);
+                          GDK_WINDOW_WIN32DATA(window)->grab_confine,
+                          GDK_WINDOW_WIN32DATA(window)->grab_cursor, 0);
          p_grab_automatic = TRUE;
       } else if (!propagate(&window, xevent, p_grab_window, p_grab_owner_events,  p_grab_mask,
                      doesnt_want_button_press)) {
@@ -5504,10 +5577,11 @@ gdk_event_translate(GdkEvent * event,
 
       //vo check if button is grabbed 
       if (!p_grab_window && 
-          is_grabbed_button(&window, 0, 0, xevent->time)) {
+          is_grabbed_button(&window, 0, GDK_ALL_EVENTS_MASK, xevent->time)) {
          gdk_pointer_grab(window, GDK_WINDOW_WIN32DATA(window)->grab_owner_events,
                           GDK_WINDOW_WIN32DATA(window)->grab_event_mask,
-                          NULL, NULL, 0);
+                          GDK_WINDOW_WIN32DATA(window)->grab_confine,
+                          GDK_WINDOW_WIN32DATA(window)->grab_cursor, 0);
          p_grab_automatic = TRUE;
       } else if (!propagate(&window, xevent,
                      p_grab_window, p_grab_owner_events, p_grab_mask,

@@ -98,7 +98,8 @@ extern "C" {
                         GdkWindow * confine_to,
                         GdkCursor * cursor);
    void gdk_button_ungrab(gint button, gint mod, GdkWindow * window);
-
+   gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window);
+   void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window);
 
    gint gdk_screen_width(void);
    gint gdk_screen_height(void);
