@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.14 2001/11/17 01:44:51 david Exp $
+ *    File: $Id: RooHist.cc,v 1.15 2001/11/28 02:09:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,10 +26,10 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.14 2001/11/17 01:44:51 david Exp $";
+"$Id: RooHist.cc,v 1.15 2001/11/28 02:09:06 verkerke Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
+  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create an empty histogram that can be filled with the addBin()
   // and addAsymmetryBin() methods. Use the optional parameter to
@@ -42,7 +42,7 @@ RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
 }
 
 RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
+  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the contents of the specified TH1 object
   // which may have fixed or variable bin widths. Error bars are
@@ -77,7 +77,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
 }
 
 RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma) :
-  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
+  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the asymmetry between the specified TH1 objects
   // which may have fixed or variable bin widths, but which must both have
@@ -128,7 +128,7 @@ void RooHist::initialize() {
 }
 
 Double_t RooHist::getFitRangeNEvt() const {
-  return _entries ;
+  return _rawEntries==-1 ? _entries : _rawEntries ;
 }
 
 Double_t RooHist::getFitRangeBinW() const {

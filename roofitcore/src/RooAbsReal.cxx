@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.65 2001/11/19 23:09:52 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.66 2001/11/21 19:36:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -589,7 +589,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   }
 
   RooArgSet* projDataNeededVars(0) ;
-  // Take out data-projected dependens from projectedVars
+  // Take out data-projected dependents from projectedVars
   if (projData) {
     projDataNeededVars = (RooArgSet*) projectedVars.selectCommon(*projData->get()) ;
     projectedVars.remove(*projData->get(),kTRUE,kTRUE) ;
@@ -612,9 +612,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Create projection integral
   RooArgSet* projectionCompList ;
-  RooArgSet deps(*plotVar) ;
-  //if (projDataNeededVars) deps.add(*projDataNeededVars) ;
-  const RooAbsReal *projection = createProjection(deps, &projectedVars, projectionCompList) ;
+
+  RooArgSet* deps = getDependents(frame->getNormVars()) ;
+  deps->remove(projectedVars,kTRUE,kTRUE) ;
+  deps->remove(*plotVar,kTRUE,kTRUE) ;
+  deps->add(*plotVar) ;
+
+  const RooAbsReal *projection = createProjection(*deps, &projectedVars, projectionCompList) ;
+  delete deps ;
 
   // Reset name of projection to name of PDF to get appropriate curve name
   //((RooAbsArg*)projection)->SetName(GetName()) ;

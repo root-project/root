@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.25 2001/11/28 01:20:45 david Exp $
+ *    File: $Id: RooTreeData.cc,v 1.26 2001/11/28 02:09:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -712,6 +712,9 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     delete hist;
     return 0;
   }
+
+  // Store the number of entries before the cut, if any was made
+  if (cuts) graph->setRawEntries(numEntries()) ;
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
