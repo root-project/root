@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.2 2004/08/10 09:02:12 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -54,7 +54,7 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
          fVisInfo = glXChooseVisual(fDpy, DefaultScreen(fDpy), snglBuf);
 
       if(!fVisInfo){
-         ::Error("TX11GL::CreateGLWindow", "No good visual\n");
+         ::Error("TX11GL::CreateGLWindow", "no good visual found");
          return 0;
       }
    }

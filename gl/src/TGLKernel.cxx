@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.23 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.24 2004/10/25 15:41:09 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -16,13 +16,13 @@
 // The TGLKernel implementation of TVirtualGL class.                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 #include "TError.h"
 #include "TGLKernel.h"
 #include "TView.h"
 #include "TGeometry.h"
 #include "TROOT.h"
 #include "TColor.h"
-#include "TError.h"
 #include "TPoints3DABC.h"
 #include "TGLRender.h"
 
@@ -561,7 +561,7 @@ void TGLKernel::AddRotation(Double_t *rotmatrix, Double_t *angles)
       printf(" texture \n");
       break;
    default:
-      Error("TGLKernel::AddRotation", "unknown matrix !");
+      Error("TGLKernel::AddRotation", "unknown matrix!");
       return;
    }
 
@@ -1509,7 +1509,7 @@ void TGLKernel::DrawSphere(const Float_t *rgba)
    const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
    if (rgba[16] < 0.f) {
       glLightfv(GL_LIGHT0, GL_DIFFUSE, rgba);
-      
+
       glLightfv(GL_LIGHT0, GL_AMBIENT, rgba + 4);
       glLightfv(GL_LIGHT0, GL_SPECULAR, rgba + 8);
       glMaterialfv(GL_FRONT, GL_DIFFUSE, whiteColor);
