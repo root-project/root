@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TRealData.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -45,6 +45,7 @@ TRealData::TRealData(const char *name, Int_t offset, TDataMember *datamember)
    fDataMember = datamember;
    fThisOffset = offset;
    fName = name;
+   fStreamer = 0;
 }
 
 //______________________________________________________________________________
