@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.6 2001/02/13 07:26:19 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.7 2001/04/23 16:08:28 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -7030,7 +7030,7 @@ L1060:
     Printf("                           %s",cprlev[2].Data());
     Printf("                           %s",cprlev[3].Data());
     Printf("                           %s",cprlev[4].Data());
-    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]].Data());
+    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]+1].Data());
     return;
 //*-*-                                       . . . . . . . show nograd, grad
 L1070:
