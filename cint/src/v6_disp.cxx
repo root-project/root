@@ -138,11 +138,16 @@ FILE* fp;
 char* msg;
 {
 #ifndef G__OLDIMPLEMENTATION1485
-  if(fp==G__serr) G__fprinterr(G__serr,msg);
+#ifndef G__OLDIMPLEMENTATION1759
+  if(fp==G__serr) G__fprinterr(G__serr,"%s",msg);
   else fprintf(fp,"%s",msg);
+#else
+  if(fp==G__serr) G__fprinterr(G__serr,msg);
+  else fprintf(fp,msg);
+#endif
     
 #else
-  fprintf(fp,"%s",msg);
+  fprintf(fp,msg);
 #endif
   if(strchr(msg,'\n')) {
     return(G__more_pause(fp,strlen(msg)));

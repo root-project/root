@@ -2673,7 +2673,11 @@ int func_now;
       if('('==paraname[0]) {
 	int paranamelen = strlen(paraname);
 	if(paranamelen>5 && strcmp(")()",paraname+paranamelen-3)==0 &&
-	   strchr(paraname,'<')) {
+	   strchr(paraname,'<')
+#ifndef G__OLDIMPLEMENTATION1758
+	   && '*'!=paraname[paranamelen-4]
+#endif
+	   ) {
 	  int ix;
 #ifndef G__OLDIMPLEMENTATION1465
 	  for(ix=1;ix<paranamelen-3;ix++) paraname[ix-1] = paraname[ix];
