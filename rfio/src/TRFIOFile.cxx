@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.23 2003/04/28 10:18:38 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.24 2003/05/05 09:36:27 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -543,7 +543,9 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
    // Mode is the same as for the Unix access(2) function.
    // Attention, bizarre convention of return value!!
 
-   if (::rfio_access(path, mode) == 0)
+   TUrl url(path);
+
+   if (::rfio_access(url.GetFile(), mode) == 0)
       return kFALSE;
    gSystem->SetErrorStr(::rfio_serror());
    return kTRUE;
