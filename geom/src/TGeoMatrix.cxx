@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.32 2005/01/13 12:07:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.33 2005/01/14 12:13:03 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1622,8 +1622,8 @@ TGeoHMatrix::TGeoHMatrix(const char* name)
 {
 // ctor
    memset(&fTranslation[0], 0, kN3);
-   SetRotation(&kIdentityMatrix[0]);
-   SetScale(&kUnitScale[0]);
+   memcpy(fRotationMatrix,kIdentityMatrix,kN9);
+   memcpy(fScale,kUnitScale,kN3);
 }
 
 //_____________________________________________________________________________
