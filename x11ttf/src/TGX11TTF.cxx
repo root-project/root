@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.5 2001/05/11 17:20:14 rdm Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.6 2002/02/21 11:30:17 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -855,6 +855,7 @@ void TGX11TTF::SetTextSize(Float_t textsize)
 
    if (fCurFontIdx < 0 || fFontCount <= fCurFontIdx) {
       Error("SetTextSize", "current font index out of bounds");
+      fCurFontIdx = 0;    // use font 0 (default font, set in ctor)
       return;
    }
 
