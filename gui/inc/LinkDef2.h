@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.11 2002/06/12 16:46:11 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef2.h,v 1.12 2002/08/08 16:54:11 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -22,6 +22,8 @@
 #pragma link C++ enum EDoubleSliderScale;
 
 #pragma link C++ global gCurrentRegion;
+
+#pragma link C++ struct ToolBarData_t;
 
 #pragma link C++ class TGScrollBarElement;
 #pragma link C++ class TGScrollBar;
