@@ -67,7 +67,7 @@ ifeq ($(PLATFORM),win32)
 		fi; \
 		cd $(ASTEPVERS); \
 		unset MAKEFLAGS; \
-		nmake FREETYPEDIRI=../../../$(FREETYPEDIRI) -nologo -f libAfterImage.mak \
+		nmake FREETYPEDIRI=-I../../../$(FREETYPEDIRI) -nologo -f libAfterImage.mak \
 		CFG="libAfterImage - Win32 Release")
 else
 		@(if [ -d $(ASTEPDIRS) ]; then \
