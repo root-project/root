@@ -11,12 +11,20 @@ std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i)
 std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
 	{return(std::WS(istr));}
 
+
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_HEX& i) {
+  ostr.unsetf(ios::dec);
+  ostr.unsetf(ios::oct);
+  ostr.setf(ios::hex);
+  return(ostr);
+}
 std::istream& operator>>(std::istream& istr,std::G__CINT_HEX& i) {
   istr.unsetf(ios::dec);
   istr.unsetf(ios::oct);
   istr.setf(ios::hex);
   return(istr);
 }
+
 std::ostream& operator<<(std::ostream& ostr,std::G__CINT_DEC& i) {
   ostr.unsetf(ios::hex);
   ostr.unsetf(ios::oct);

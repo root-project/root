@@ -1924,6 +1924,9 @@ void G__platformMacro()
 #ifdef __GLIBC__
   sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__getexpr(temp);
 #endif
+#ifdef __GLIBC_MINOR__
+  sprintf(temp,"G__GLIBC_MINOR=%ld",(long)__GLIBC_MINOR__); G__getexpr(temp);
+#endif
 #ifdef __hpux
   sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__getexpr(temp);
 #endif

@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION 5014053
-#define G__CINTVERSIONSTR  "5.14.53, Sep 27 2000"
+#define G__CINTVERSION 5014055
+#define G__CINTVERSIONSTR  "5.14.54, Oct 14 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -169,7 +169,8 @@
 #define G__WIN32
 #endif
 #endif
-
+  
+/* added by Fons Radamakers in 2000 Oct 2 */
 #if defined(__linux)
 #   include <features.h>
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2

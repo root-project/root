@@ -3706,7 +3706,11 @@ struct G__funclist *pmatch;
     formal_tagnum = p_ifunc->para_p_tagtable[ifn][i];
     param = &libp->para[i];
     formal_reftype = p_ifunc->para_reftype[ifn][i];
+#ifndef G__OLDIMPLEMENTATION
+    rewind_arg = libp->paran-i-1;
+#else
     rewind_arg = p_ifunc->para_nu[ifn]-i-1;
+#endif
     formal_isconst = p_ifunc->para_isconst[ifn][i];
 
     if(rate&G__USRCONVMATCH) {
