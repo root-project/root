@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,10 +13,7 @@
 //                                                                      //
 // TXSocket                                                             //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
-// Extension of TSocket to handle read/write and connection timeouts    //
+// Extension of TSocket to handle read/write and connection timeouts.   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +21,6 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TROOT.h"
-
 #include "TException.h"
 
 #include <stdio.h>
@@ -42,7 +39,7 @@ extern "C" void *SocketConnecterThread(void *);
 
 
 //_____________________________________________________________________________
-TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize) 
+TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize)
          : TSocket()
 {
    // Create a TXSocket object (that doesn't actually connect to any server.
@@ -60,7 +57,7 @@ TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize)
    fMonMutex = new TMutex(kTRUE);
 
    if (!fMonMutex)
-      Error("TXPhyConnection", 
+      Error("TXPhyConnection",
             "can't create mutex for TMonitor protection: out of system resources");
 
    fWriteMonitor = 0;
@@ -73,7 +70,7 @@ TXSocket::TXSocket(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize)
 //_____________________________________________________________________________
 TXSocket::~TXSocket()
 {
-   // Destructor 
+   // Destructor
    if (fWriteMonitor)
       fWriteMonitor->DeActivateAll();
 
@@ -108,7 +105,7 @@ void TXSocket::ReadMonitorDeactivate() {
    if (fReadMonitorActCnt > 0) {
       fReadMonitorActCnt--;
 
-  
+
       if (!fReadMonitorActCnt)
 	 fReadMonitor->DeActivateAll();
    }
@@ -161,7 +158,7 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
    TSocket *s = (TSocket *)-1;
 
       // We cycle on the poll, ignoring the possible interruptions
-      do { 
+      do {
          // If too much time has elapsed, then we return an error
          if ((time(0) - starttime) > fRequestTimeout) {
 
@@ -170,7 +167,7 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
 
             if (!fASYNC || (DebugLevel() >= TXDebug::kDUMPDEBUG))
                Error("RecvRaw","Request timed out %d seconds reading %d bytes"
-                     " from socket %d (server[%s:%d])", 
+                     " from socket %d (server[%s:%d])",
                      fRequestTimeout, length, fSocket,
                      GetInetAddress().GetHostName(), GetPort());
 
@@ -179,16 +176,16 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
 
          // Wait for a socket ready for receiving
          s = fReadMonitor->Select(1000);
-      
+
       } while (s == (TSocket *)-1);
-      
+
       if (!s->IsValid()) {
          if (!fASYNC)
 	    ReadMonitorDeactivate();
 
          return TXSOCK_ERR;
       }
-      
+
       n = TSocket::RecvRaw((char *)buffer + bytesread, length - bytesread, opt);
       if (!n) {
          if (!fASYNC)
@@ -209,7 +206,7 @@ Int_t TXSocket::RecvRaw(void* buffer, Int_t length, ESendRecvOptions opt)
 Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
 {
    // Override of TSocket::SendRaw. Before calling TSocket::SendRaw we poll
-   // for a while on the socket descriptor waiting for a POLLOUT event 
+   // for a while on the socket descriptor waiting for a POLLOUT event
    // (writes will not hang)
 
    time_t starttime;
@@ -239,7 +236,7 @@ Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
 
 	    return TXSOCK_ERR_TIMEOUT;
          }
-      
+
          // Wait for a socket ready for sending
          s = fWriteMonitor->Select(1000);
 
@@ -257,7 +254,7 @@ Int_t TXSocket::SendRaw(const void* buffer, Int_t length, ESendRecvOptions opt)
 	 //WriteMonitorDeactivate();
          return (0);
       }
-    
+
       byteswritten += n;
 
    } // while
@@ -286,7 +283,7 @@ extern "C" void *SocketConnecterThread(void * arg)
    thisObj->Create(thisObj->fHost2contact.TcpAddress,
                    thisObj->fHost2contact.TcpPort,
                    thisObj->fHost2contact.TcpWindowSize);
-  
+
    pthread_testcancel();
 
    // Something happened since we are here. So we signal the
@@ -314,10 +311,10 @@ void TXSocket::TryConnect()
 //_____________________________________________________________________________
 void TXSocket::CatchTimeOut()
 {
-   // Called in connection with a timer timeout 
+   // Called in connection with a timer timeout
 
-   ::Error("TXSocket::CatchTimeOut", 
-           "Timeout elapsed after %d seconds for connection to server", 
+   ::Error("TXSocket::CatchTimeOut",
+           "Timeout elapsed after %d seconds for connection to server",
            gEnv->GetValue("XNet.ConnectTimeout", DFLT_CONNECTTIMEOUT));
    return;
 }

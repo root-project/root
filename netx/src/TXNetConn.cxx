@@ -1,3 +1,4 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -12,11 +13,8 @@
 //                                                                      //
 // TXNetConn                                                            //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
 // High level handler of connections to xrootd.                         //
-// Instantiated by TXNetFile.                                           // 
+// Instantiated by TXNetFile.                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +47,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+
 
 extern TEnv *gEnv;
 
@@ -67,7 +65,7 @@ TXPhyConnLocker::TXPhyConnLocker(TXPhyConnection *phyc)
 //_____________________________________________________________________________
 TXPhyConnLocker::~TXPhyConnLocker()
 {
-   // Destructor. 
+   // Destructor.
    phyconn->UnlockChannel();
 }
 
@@ -99,7 +97,7 @@ void ParseRedir(TXMessage* xmsg, Int_t &port, TString &host, TString &token)
 }
 
 //_____________________________________________________________________________
-TXNetConn::TXNetConn(): fOpenError((XErrorCode)0), fConnected(kFALSE), 
+TXNetConn::TXNetConn(): fOpenError((XErrorCode)0), fConnected(kFALSE),
                         fLastNetopt(0), fLBSUrl(0), fUrl("")
 {
    // Constructor
@@ -109,7 +107,7 @@ TXNetConn::TXNetConn(): fOpenError((XErrorCode)0), fConnected(kFALSE),
    if (strlen(fClientHostDomain.Data()) == 0)
       Warning("TXNetConn", "Error resolving this host's (%s) domain name.",
                            gSystem->HostName());
-  
+
    fRedirHandler = 0;
 
    // Init the redirection counter parameters
@@ -128,8 +126,8 @@ TXNetConn::~TXNetConn()
 //_____________________________________________________________________________
 Short_t TXNetConn::Connect(TString Host, const Int_t Port, Int_t netopt)
 {
-   // Connect method (called the first time when TXNetFile is first created, 
-   // and used for each redirection). The global static connection manager 
+   // Connect method (called the first time when TXNetFile is first created,
+   // and used for each redirection). The global static connection manager
    // object is firstly created here. If another TXNetFile object is created
    // inside the same application this connection manager will be used and
    // no new one will be created.
@@ -148,7 +146,7 @@ Short_t TXNetConn::Connect(TString Host, const Int_t Port, Int_t netopt)
                       Host.Data(), Port, netopt, logid );
 
    if (logid < 0) {
-      Error("TXNetFile", "Error creating logical connection with [%s:%d]", 
+      Error("TXNetFile", "Error creating logical connection with [%s:%d]",
                          Host.Data(), Port );
       SetLogConnID(logid);
       fConnected = kFALSE;
@@ -173,26 +171,26 @@ void TXNetConn::Disconnect(Bool_t ForcePhysicalDisc)
 //_____________________________________________________________________________
 TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreData,
                                       void **answMoreDataAllocated,
-                                      void *answMoreData, Bool_t HasToAlloc) 
+                                      void *answMoreData, Bool_t HasToAlloc)
 {
    // ClientServerCmd tries to send a command to the server and to get a response.
    // Here the kXR_redirect is handled, as well as other things.
    //
-   // If the calling function requests the memory allocation (HasToAlloc is true) 
-   // then:  
+   // If the calling function requests the memory allocation (HasToAlloc is true)
+   // then:
    //  o answMoreDataAllocated is filled with a pointer to the new block.
-   //  o The caller MUST free it when it's no longer used if 
-   //    answMoreDataAllocated is 0 
+   //  o The caller MUST free it when it's no longer used if
+   //    answMoreDataAllocated is 0
    //    then the caller is not interested in getting the data.
    //  o We must anyway read it from the stream and throw it away.
    //
-   // If the calling function does NOT request the memory allocation 
-   // (HasToAlloc is false) then: 
+   // If the calling function does NOT request the memory allocation
+   // (HasToAlloc is false) then:
    //  o answMoreData is filled with the data read
    //  o the caller MUST be sure that the arriving data will fit into the
    //  o passed memory block
    //
-   // We need to do this here because the calling func *may* not know the size 
+   // We need to do this here because the calling func *may* not know the size
    // to allocate for the request to be submitted. For instance, for the kXR_read
    // cmd the size is known, while for the kXR_getfile cmd is not.
 
@@ -217,20 +215,20 @@ TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreDat
       len = sizeof(ClientRequest);
 
       // We have to unconditionally set the streamid inside the
-      // header, because, in case of 'rebouncing here', the Logical Connection 
-      // ID might have changed, while in the header to write it remained the 
+      // header, because, in case of 'rebouncing here', the Logical Connection
+      // ID might have changed, while in the header to write it remained the
       // same as before, not valid anymore
       SetSID(req->header.streamid);
 
       reqtmp = *req;
 
-      if (DebugLevel() >= TXDebug::kDUMPDEBUG) 
+      if (DebugLevel() >= TXDebug::kDUMPDEBUG)
          ROOT::smartPrintClientHeader(&reqtmp);
 
       ROOT::clientMarshall(&reqtmp);
 
       errorType = WriteToServer(&reqtmp, req, reqMoreData, fLogConnID);
-      
+
       // Read from server the answer
       // Note that the answer can be composed by many reads, in the case that
       // the status field of the responses is kXR_oksofar
@@ -241,7 +239,7 @@ TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreDat
       tmpMoreData = 0;
       if ((answMoreData != 0) && !HasToAlloc)
          tmpMoreData = answMoreData;
-      
+
       // Cycle for the kXR_oksofar i.e. partial answers to be collected
       do {
 
@@ -253,15 +251,15 @@ TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreDat
             return 0;
          if (whatToDo == kTSRHReturnMex)
             return xmsg;
-	
-         if (xmsg && (xmsg->HeaderStatus() == kXR_oksofar) && 
+
+         if (xmsg && (xmsg->HeaderStatus() == kXR_oksofar) &&
                      (xmsg->DataLen() == 0))
             return xmsg;
-	
+
       } while (xmsg && (xmsg->HeaderStatus() == kXR_oksofar));
 
    } while ((fGlobalRedirCnt < fMaxGlobalRedirCnt) &&
-            xmsg && (xmsg->HeaderStatus() == kXR_redirect)); 
+            xmsg && (xmsg->HeaderStatus() == kXR_redirect));
 
    // We collected all the partial responses into a single memory block.
    // If the block has been allocated here then we must pass its address
@@ -278,17 +276,17 @@ TXMessage *TXNetConn::ClientServerCmd(ClientRequest *req, const void *reqMoreDat
 
 //_____________________________________________________________________________
 Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
-				 void **answMoreDataAllocated, 
+				 void **answMoreDataAllocated,
                                  void *answMoreData, Bool_t HasToAlloc,
                                  char *CmdName,
                                  struct ServerResponseHeader *srh)
 {
-   // SendGenCommand tries to send a single command for a number of times 
+   // SendGenCommand tries to send a single command for a number of times
 
    Short_t retry = 0;
    Bool_t resp = kFALSE, abortcmd = kFALSE;
 
-   // if we're going to open a file for the 2nd time we should reset fOpenError, 
+   // if we're going to open a file for the 2nd time we should reset fOpenError,
    // just in case...
    if (req->header.requestid == kXR_open)
       fOpenError = (XErrorCode)0;
@@ -298,11 +296,11 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 
       // Send the cmd, dealing automatically with redirections and
       // redirections on error
-      if (DebugLevel() >= TXDebug::kHIDEBUG) 
+      if (DebugLevel() >= TXDebug::kHIDEBUG)
          Info("SendGenCommand","Calling ClientServerCmd...");
 
       TXMessage *cmdrespMex = ClientServerCmd(req, reqMoreData,
-                                              answMoreDataAllocated, 
+                                              answMoreDataAllocated,
                                               answMoreData, HasToAlloc);
 
       // Save server response header if requested
@@ -312,7 +310,7 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
       // Check for the redir count limit
       if (fGlobalRedirCnt >= fMaxGlobalRedirCnt) {
          Error("SendGenCommand",
-               "Too many redirections for request [%s]. Aborting command.", 
+               "Too many redirections for request [%s]. Aborting command.",
                ROOT::convertRequestIdToChar(req->header.requestid));
          abortcmd = kTRUE;
       }
@@ -322,18 +320,18 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
          // waiting for the server to come back
          if (!cmdrespMex || cmdrespMex->IsError()) {
             if (DebugLevel() >= TXDebug::kHIDEBUG)
-               Info("SendGenCommand", "Communication error detected with [%s:%d].", 
+               Info("SendGenCommand", "Communication error detected with [%s:%d].",
                      fUrl.GetHost(), fUrl.GetPort());
 
             // For the kxr_open request we don't rely on the count limit of other
             // reqs. The open request is bounded only by the redir count limit
-            if (req->header.requestid != kXR_open) 
+            if (req->header.requestid != kXR_open)
                retry++;
 
             if (retry > kXR_maxReqRetry) {
                Error("SendGenCommand",
                      "Too many errors communication errors with server"
-                     " [%s:%d] for request [%s]. Aborting command.", 
+                     " [%s:%d] for request [%s]. Aborting command.",
                      fUrl.GetHost(), fUrl.GetPort(), CmdName);
                abortcmd = kTRUE;
             } else
@@ -344,16 +342,16 @@ Bool_t TXNetConn::SendGenCommand(ClientRequest *req, const void *reqMoreData,
 	    // the server (original or redirected) is alive
 	    resp = CheckResp(&cmdrespMex->fHdr, CmdName);
 	    retry++;
-	    
-	    // If the answer was not (or not totally) positive, we must 
+
+	    // If the answer was not (or not totally) positive, we must
             // investigate on the result
 	    if (!resp)
                abortcmd = CheckErrorStatus(cmdrespMex, retry, CmdName);
-	    
+
 	    if (retry > kXR_maxReqRetry) {
                Error("SendGenCommand",
                      "Too many errors messages from server [%s:%d] for"
-                     " request [%s]. Aborting command.", 
+                     " request [%s]. Aborting command.",
                      fUrl.GetHost(), fUrl.GetPort(), CmdName);
                abortcmd = kTRUE;
 	    }
@@ -389,7 +387,7 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
       return kFALSE;
    }
 
-   // Given a list of |-separated regexps for the hosts to DENY, 
+   // Given a list of |-separated regexps for the hosts to DENY,
    // match every entry with domain. If any match is found, deny access.
    Short_t pos;
 
@@ -414,7 +412,7 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
       }
    }
 
-   // Given a list of |-separated regexps for the hosts to ALLOW, 
+   // Given a list of |-separated regexps for the hosts to ALLOW,
    // match every entry with domain. If any match is found, grant access.
 
    allow += "|";
@@ -450,7 +448,7 @@ Bool_t TXNetConn::CheckHostDomain(TString hostToCheck, TString allow, TString de
 Bool_t TXNetConn::CheckResp(struct ServerResponseHeader *resp, const char *method)
 {
    // Checks if the server's response is the ours.
-   // If the response's status is "OK" returns kTRUE; if the status is "redirect", it 
+   // If the response's status is "OK" returns kTRUE; if the status is "redirect", it
    // means that the max number of redirections has been achieved, so returns kFALSE.
 
    if (MatchStreamid(resp)) {
@@ -501,7 +499,7 @@ void TXNetConn::SetSID(kXR_char *sid) {
 void TXNetConn::Streamer(TBuffer &R__b)
 {
    // Dummy Streamer; rootcint chokes trying to generate one, but ROOT wants
-   // one to load the shared library. 
+   // one to load the shared library.
    // Stream an object of class TXNetFile.
 
    UInt_t R__s, R__c;
@@ -515,14 +513,14 @@ void TXNetConn::Streamer(TBuffer &R__b)
 }
 
 //_____________________________________________________________________________
-XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req, 
-				       const void* reqMoreData, Short_t LogConnID) 
+XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req,
+				       const void* reqMoreData, Short_t LogConnID)
 {
    // Send message to server
 
    // Strong mutual exclusion over the physical channel
    // Note that we consider this the beginning of an atomic transaction
-   // Also note that the lock is removed at the end of the block (Stroustroup 
+   // Also note that the lock is removed at the end of the block (Stroustroup
    // page 365)
    {
       TXPhyConnLocker pcl(ConnectionManager->GetConnection(fLogConnID)
@@ -536,12 +534,12 @@ XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req
       Int_t writeCount = ConnectionManager->WriteRaw(LogConnID, reqtmp, len,
                                                      kDefault);
       fLastDataBytesSent = req->header.dlen;
-  
+
       // A complete communication failure has to be handled later, but we
       // don't have to abort what we are doing
       if ((writeCount < 0) || (writeCount < len)) {
          Error("WriteToServer","Error sending %d bytes in the header part"
-               " to server [%s:%d]. writeCount=%d.", 
+               " to server [%s:%d]. writeCount=%d.",
                len, fUrl.GetHost(), fUrl.GetPort(), writeCount);
          return kWRITE;
       }
@@ -552,19 +550,19 @@ XReqErrorType TXNetConn::WriteToServer(ClientRequest *reqtmp, ClientRequest *req
 
          if (DebugLevel() >= TXDebug::kHIDEBUG)
             Info("WriteToServer",
-                 "Sending %d bytes of DATA to the server [%s:%d].", 
+                 "Sending %d bytes of DATA to the server [%s:%d].",
                  req->header.dlen, fUrl.GetHost(), fUrl.GetPort());
-    
+
          // Now we write the data associated to the request. Through the
          //  connection manager
          writeCount = ConnectionManager->WriteRaw(LogConnID, reqMoreData,
                                                   req->header.dlen, kDefault);
-    
+
          // A complete communication failure has to be handled later, but we
          //  don't have to abort what we are doing
          if ((writeCount < 0) || (writeCount != req->header.dlen)) {
             Error("WriteToServer", "Error sending %d bytes in the data part"
-                                   " to server [%s:%d]. writeCount=%d.", 
+                                   " to server [%s:%d]. writeCount=%d.",
                   req->header.dlen, fUrl.GetHost(), fUrl.GetPort(), writeCount);
             return kWRITE;
          }
@@ -585,9 +583,9 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
                              " [%s]. Aborting command.", CmdName);
       return kTRUE;
    }
-  
+
    if (mex->HeaderStatus() == kXR_error) {
-      // The server declared an error. 
+      // The server declared an error.
       // In this case it's better to exit, unhandled error
 
       struct ServerResponseBody_Error *body_err;
@@ -596,13 +594,13 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
 
       if (body_err) {
          // Print out the error information, as received by the server
-         Error("SendGenCommand", "Server declared error %d: '%s'", 
+         Error("SendGenCommand", "Server declared error %d: '%s'",
                net2host(body_err->errnum), (const char*)body_err->errmsg);
          fOpenError = (XErrorCode)net2host(body_err->errnum);
       }
       return kTRUE;
    }
-    
+
    if (mex->HeaderStatus() == kXR_wait) {
       // We have to wait for a specified number of seconds and then
       // retry the same cmd
@@ -610,17 +608,17 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
       struct ServerResponseBody_Wait *body_wait;
 
       body_wait = (struct ServerResponseBody_Wait *)mex->GetData();
-    
+
       if (body_wait) {
          if (DebugLevel() >= TXDebug::kUSERDEBUG) {
-            if (mex->DataLen() > 4) 
+            if (mex->DataLen() > 4)
                Info("SendGenCommand", "Server [%s:%d] requested %d seconds"
-                    " of wait. Server message is %s", 
+                    " of wait. Server message is %s",
                     fUrl.GetHost(), fUrl.GetPort(), net2host(body_wait->seconds),
                     (const char*)body_wait->infomsg);
             else
                Info("SendGenCommand", "Server [%s:%d] requested %d seconds"
-                    " of wait.", 
+                    " of wait.",
                     fUrl.GetHost(), fUrl.GetPort(), net2host(body_wait->seconds));
          }
          gSystem->Sleep(1000 * net2host(body_wait->seconds));
@@ -630,10 +628,10 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
       Retry--;
       return kFALSE;
    }
-    
+
    // We don't understand what the server said. Better investigate on it...
-   Warning("SendGenCommand", 
-           "Answer from server [%s:%d] not recognized after executing %s.", 
+   Warning("SendGenCommand",
+           "Answer from server [%s:%d] not recognized after executing %s.",
            fUrl.GetHost(), fUrl.GetPort(), CmdName);
 
    return kTRUE;
@@ -641,8 +639,8 @@ Bool_t TXNetConn::CheckErrorStatus(TXMessage *mex, Short_t &Retry, char *CmdName
 
 //_____________________________________________________________________________
 TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
-                                        size_t &TotalBlkSize, 
-                                        ClientRequest *req,  
+                                        size_t &TotalBlkSize,
+                                        ClientRequest *req,
                                         Bool_t HasToAlloc, void** tmpMoreData,
                                         EThreeStateReadHandler &what_to_do)
 {
@@ -654,23 +652,23 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
 
    // No need to actually read if we are in error...
    if (errorType == kOK) {
-    
+
       len = sizeof(ServerResponseHeader);
       if(DebugLevel() >= TXDebug::kHIDEBUG)
          Info("ReadPartialAnswer",
               "Reading a TXMessage from the server [%s:%d]...",
               fUrl.GetHost(), fUrl.GetPort());
-    
+
       // A complete communication failure has to be handled later, but we
       //  don't have to abort what we are doing
-    
+
       // Beware! Now Xmsg contains ALSO the information about the esit of
       // the communication at low level.
       Xmsg = ConnectionManager->ReadMsg(fLogConnID, kDefault);
 
       if(Xmsg)
          fLastDataBytesRecv = Xmsg->DataLen();
-      else 
+      else
          fLastDataBytesRecv = 0;
 
       if ( !Xmsg || (Xmsg->IsError()) ) {
@@ -685,7 +683,7 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
       }
       else
          // is not necessary because the Connection Manager unmarshall the mex
-         Xmsg->Unmarshall(); 
+         Xmsg->Unmarshall();
    }
 
    if (DebugLevel() >= TXDebug::kDUMPDEBUG)
@@ -695,26 +693,26 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
    // Now we have all the data. We must copy it back to the buffer where
    // they are needed, only if we are not in troubles with errorType
    if ((errorType == kOK) && (Xmsg->DataLen() > 0)) {
-    
-      // If this is a redirection answer, its data MUST NOT overwrite 
+
+      // If this is a redirection answer, its data MUST NOT overwrite
       // the given buffer
       if ( (Xmsg->HeaderStatus() == kXR_ok) ||
            (Xmsg->HeaderStatus() == kXR_oksofar) ||
-           (Xmsg->HeaderStatus() == kXR_authmore) ) 
+           (Xmsg->HeaderStatus() == kXR_authmore) )
       {
          // Now we allocate a sufficient memory block, if needed
-         // If the calling function passed a null pointer, then we 
+         // If the calling function passed a null pointer, then we
          // fill it with the new pointer, otherwise the func knew
          // about the size of the expected answer, and we use
          // the given pointer.
-         // We need to do this here because the calling func *may* not 
+         // We need to do this here because the calling func *may* not
          // know the size to allocate
-         // For instance, for the ReadBuffer cmd the size is known, while 
+         // For instance, for the ReadBuffer cmd the size is known, while
          // for the ReadFile cmd is not
          if (HasToAlloc) {
             tmp2MoreData = realloc(*tmpMoreData, TotalBlkSize + Xmsg->DataLen());
             if (!tmp2MoreData) {
-               Error("ReadPartialAnswer", "Error reallocating %d bytes", 
+               Error("ReadPartialAnswer", "Error reallocating %d bytes",
                      TotalBlkSize);
                free(*tmpMoreData);
                *tmpMoreData = 0;
@@ -723,13 +721,13 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
             }
             *tmpMoreData = tmp2MoreData;
          }
-	
+
          // Now we copy the content of the Xmsg to the buffer where
          // the data are needed
          if (*tmpMoreData)
             memcpy(((kXR_char *)(*tmpMoreData)) + TotalBlkSize,
                      Xmsg->GetData(), Xmsg->DataLen());
-	
+
          // Dump the buffer tmpMoreData
          if (DebugLevel() >= TXDebug::kDUMPDEBUG) {
             Info ("ReadPartialAnswer","Dumping read data...");
@@ -739,17 +737,17 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
             }
          }
          TotalBlkSize += Xmsg->DataLen();
-	
+
       } else {
          if (DebugLevel() >= TXDebug::kHIDEBUG) {
-             Info("ReadPartialAnswer", 
-                 "Server [%s:%d] did not answer OK. Resp status is [%s]", 
+             Info("ReadPartialAnswer",
+                 "Server [%s:%d] did not answer OK. Resp status is [%s]",
                  fUrl.GetHost(), fUrl.GetPort(),
                  ROOT::convertRespStatusToChar(Xmsg->fHdr.status));
          }
       }
    } // End of DATA reading
-  
+
    // Now answhdr contains the server response. We pass it as is to the
    // calling function.
    // The only exception is that we must deal here with redirections.
@@ -759,51 +757,51 @@ TXMessage *TXNetConn::ReadPartialAnswer(XReqErrorType &errorType,
    //   try to connect to the new destination.
    //   login/auth to the new destination (this can generate other calls
    //       to this method if it has been invoked by DoLogin!)
-   //   Reopen the file if the current fhandle value is not null (this 
-   //     can generate other calls to this method, not for the dologin 
+   //   Reopen the file if the current fhandle value is not null (this
+   //     can generate other calls to this method, not for the dologin
    //     phase)
    //   resend the command
    //
    // Also a READ/WRITE error requires a redirection
-   // 
-   if ( (errorType == kREAD) || 
-        (errorType == kWRITE) || 
-        ROOT::isRedir(&Xmsg->fHdr) ) 
+   //
+   if ( (errorType == kREAD) ||
+        (errorType == kWRITE) ||
+        ROOT::isRedir(&Xmsg->fHdr) )
    {
       // this procedure can decide if return to caller or
       // continue with processing
-      
+
       ESrvErrorHandlerRetval Return = HandleServerError(errorType, Xmsg, req);
-      
+
       if (Return == kSEHRReturnMsgToCaller) {
          // The caller is allowed to continue its processing
          //  with the current Xmsg
          // Note that this can be a way to stop retrying
          //  e.g. if the resp in Xmsg is kxr_redirect, it means
          //  that the redir limit has been reached
-         if (HasToAlloc) { 
+         if (HasToAlloc) {
             free(*tmpMoreData);
             *tmpMoreData = 0;
          }
-	
+
          // Return the message to the client (SendGenCommand)
          what_to_do = kTSRHReturnMex;
          return Xmsg;
       }
-      
+
       if (Return == kSEHRReturnNoMsgToCaller) {
          // There was no Xmsg to return, or the previous one
          //  has no meaning anymore
-	
+
          // The caller will retry the cmd for some times,
          // If we are connected the attempt will go OK,
          //  otherwise the next retry will fail, causing a
          //  redir to the lb or a rebounce.
-         if (HasToAlloc) { 
+         if (HasToAlloc) {
             free(*tmpMoreData);
             *tmpMoreData = 0;
          }
-	
+
          SafeDelete(Xmsg);
          Xmsg = 0;
 
@@ -876,13 +874,13 @@ Bool_t TXNetConn::GetAccessToSrv()
       ConnectionManager->Disconnect(fLogConnID, kTRUE);
       return kFALSE;
 
-   case TXNetConn::kSTNone: 
-      Info("GetAccessToSrv", "The server on [%s:%d] is unknown", 
+   case TXNetConn::kSTNone:
+      Info("GetAccessToSrv", "The server on [%s:%d] is unknown",
                              fUrl.GetHost(), fUrl.GetPort());
       ConnectionManager->Disconnect(fLogConnID, kTRUE);
       return kFALSE;
 
-   case TXNetConn::kSTRootd: 
+   case TXNetConn::kSTRootd:
       if (DebugLevel() >= TXDebug::kHIDEBUG) {
          Info("GetAccessToSrv","Ok: the server on [%s:%d] is an old rootd."
                                " Turning ON back compatibility mode.",
@@ -890,9 +888,9 @@ Bool_t TXNetConn::GetAccessToSrv()
       }
       break;
 
-   case TXNetConn::kSTBaseXrootd: 
+   case TXNetConn::kSTBaseXrootd:
       if (DebugLevel() >= TXDebug::kHIDEBUG)
-         Info("GetAccessToSrv", 
+         Info("GetAccessToSrv",
               "Ok: the server on [%s:%d] is a xrootd load balancer.",
               fUrl.GetHost(), fUrl.GetPort());
 
@@ -901,9 +899,9 @@ Bool_t TXNetConn::GetAccessToSrv()
       logconn->GetPhyConnection()->fServer = kBase;
       break;
 
-   case TXNetConn::kSTDataXrootd: 
+   case TXNetConn::kSTDataXrootd:
       if (DebugLevel() >= TXDebug::kHIDEBUG)
-         Info("GetAccessToSrv", 
+         Info("GetAccessToSrv",
               "Ok, the server on [%s:%d] is a xrootd data server.",
               fUrl.GetHost(), fUrl.GetPort());
       logconn = ConnectionManager->GetConnection(fLogConnID);
@@ -912,7 +910,7 @@ Bool_t TXNetConn::GetAccessToSrv()
       break;
    }
 
-   // Execute a login if connected to a xrootd server. For an old rootd, 
+   // Execute a login if connected to a xrootd server. For an old rootd,
    // TNetFile takes care of the login phase
    if (GetServerType() != TXNetConn::kSTRootd) {
       if (logconn->GetPhyConnection()->IsLogged() == kNo)
@@ -932,15 +930,15 @@ Bool_t TXNetConn::GetAccessToSrv()
 //_____________________________________________________________________________
 TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
 {
-   // Performs initial hand-shake with the server in order to understand which 
-   // kind of server is there at the other side and to make the server know who 
+   // Performs initial hand-shake with the server in order to understand which
+   // kind of server is there at the other side and to make the server know who
    // we are (TXNetFile instead of an old TNetFile)
    struct ClientInitHandShake initHS;
    struct ServerInitHandShake xbody;
    ServerResponseType type;
 
    Int_t writeCount, readCount, len;
-  
+
    // Set field in network byte order
    memset(&initHS, 0, sizeof(initHS));
    initHS.fourth = (kXR_int32)host2net((UInt_t)4);
@@ -979,7 +977,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       return kSTDataXrootd;
    }
 
-   // Send to the server the initial hand-shaking message asking for the 
+   // Send to the server the initial hand-shaking message asking for the
    // kind of server
    len = sizeof(initHS);
 
@@ -991,7 +989,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    writeCount = ConnectionManager->WriteRaw(log, &initHS, len, kDefault);
 
    if (writeCount != len) {
-      Error("DoHandShake", "Error sending %d bytes to the server [%s:%d]", 
+      Error("DoHandShake", "Error sending %d bytes to the server [%s:%d]",
 	    len, fUrl.GetHost(), fUrl.GetPort());
       return kSTError;
    }
@@ -1003,16 +1001,16 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       Info("DoHandShake",
            "HandShake step 2: Reading %d bytes from the server [%s:%d]." ,
            len, fUrl.GetHost(), fUrl.GetPort());
- 
+
    //
-   // Read returns the return value of TSocket->RecvRaw... that returns the 
+   // Read returns the return value of TSocket->RecvRaw... that returns the
    // return value of recv (unix low level syscall)
    //
-   readCount = ConnectionManager->ReadRaw(log, &type, 
+   readCount = ConnectionManager->ReadRaw(log, &type,
                                           len, kDefault); // Reads 4(2+2) bytes
-               
+
    if (readCount != len) {
-      Error("DoHandShake", "Error reading %d bytes from the server [%s:%d].", 
+      Error("DoHandShake", "Error reading %d bytes from the server [%s:%d].",
 	    len, fUrl.GetHost(), fUrl.GetPort());
       return kSTError;
    }
@@ -1020,7 +1018,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
    // to host byte order
    type = net2host(type);
 
-   // Check if the server is the eXtended rootd or not, checking the value 
+   // Check if the server is the eXtended rootd or not, checking the value
    // of type
    if (type == 0) { // ok, eXtended!
       len = sizeof(xbody);
@@ -1029,10 +1027,10 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
          Info("DoHandShake", "HandShake step 3: Reading %d bytes from"
               " XRootd on server [%s:%d].", len, fUrl.GetHost(), fUrl.GetPort());
 
-      readCount = ConnectionManager->ReadRaw(log, &xbody, 
+      readCount = ConnectionManager->ReadRaw(log, &xbody,
                                              len, kDefault); // Read 12(4+4+4) bytes
       if (readCount != len) {
-         Error("DoHandShake", "Error reading %d bytes from server [%s:%d]", 
+         Error("DoHandShake", "Error reading %d bytes from server [%s:%d]",
                len, fUrl.GetHost(), fUrl.GetPort());
          return kSTError;
       }
@@ -1040,7 +1038,7 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       ROOT::ServerInitHandShake2HostFmt(&xbody);
 
       fServerProto = xbody.msgtype;
-    
+
       // check if the eXtended rootd is a data server
       switch (xbody.msgval) {
       case kXR_DataServer:
@@ -1080,21 +1078,21 @@ TXNetConn::ServerType TXNetConn::DoHandShake(short int log)
       // and we need to complete the reading
       if (type == 8)
          return kSTRootd;
-      else 
+      else
          // We dunno the server type
          return kSTNone;
    }
 }
 
 //_____________________________________________________________________________
-Bool_t TXNetConn::DoLogin() 
+Bool_t TXNetConn::DoLogin()
 {
    // This method perform the loggin-in into the server just after the
    // hand-shake. It also calls the DoAuthentication() method
 
    ClientRequest reqhdr;
    Bool_t resp;
-  
+
    // We fill the header struct containing the request for login
    memset( &reqhdr, 0, sizeof(reqhdr));
 
@@ -1116,11 +1114,11 @@ Bool_t TXNetConn::DoLogin()
    else
       strcpy( (char *)reqhdr.login.username, "????" );
 
-   // set the token with the value provided by a previous 
+   // set the token with the value provided by a previous
    // redirection (if any)
-   reqhdr.header.dlen = fRedirInternalToken.Length(); 
-  
-   // We call SendGenCommand, the function devoted to sending commands. 
+   reqhdr.header.dlen = fRedirInternalToken.Length();
+
+   // We call SendGenCommand, the function devoted to sending commands.
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("DoLogin", "Logging into the server [%s:%d]. pid=%d uid=%s",
             fUrl.GetHost(), fUrl.GetPort(),
@@ -1132,11 +1130,11 @@ Bool_t TXNetConn::DoLogin()
    // server response header
    struct ServerResponseHeader reshdr;
    char *plist = 0;
-   resp = SendGenCommand(&reqhdr, fRedirInternalToken.Data(), 
-                         (void **)&plist, 0, 
+   resp = SendGenCommand(&reqhdr, fRedirInternalToken.Data(),
+                         (void **)&plist, 0,
                          kTRUE, (char *)"XTNetconn::doLogin",&reshdr);
 
-   // Check if we need to authenticate 
+   // Check if we need to authenticate
    if (reshdr.dlen && plist) {
 
       // Terminate server reply
@@ -1148,7 +1146,7 @@ Bool_t TXNetConn::DoLogin()
    }
 
    // Flag success if everything went ok
-   if (resp) 
+   if (resp)
       ConnectionManager->GetConnection(fLogConnID)->GetPhyConnection()
          ->SetLogged(kYes);
    if (plist)
@@ -1162,7 +1160,7 @@ Bool_t TXNetConn::DoLogin()
 Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 {
   // Negotiate authentication with the remote server. Tries in turn
-  // all available protocols proposed by the server (in plist), 
+  // all available protocols proposed by the server (in plist),
   // starting from the first.
 
   if (!plist || !strlen(plist))
@@ -1172,7 +1170,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
      Info("DoAuthentication", "remote host: %s,"
           " list of available protocols: %s (%d)",
           fUrl.GetHost(), plist, strlen(plist));
- 
+
   // Prepare host/IP information of the remote xrootd. This is required
   // for the authentication.
   //
@@ -1184,7 +1182,7 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
   UInt_t addr = htonl(gSystem->GetHostByName(fUrl.GetHost()).GetAddress());
   memcpy((void *)&netaddr.sin_addr.s_addr, &addr,
 	   sizeof(netaddr.sin_addr.s_addr));
-      
+
   // Variables for negotiation
   XrdSecParameters   secToken;
   XrdSecProtocol    *protocol;
@@ -1193,11 +1191,11 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
   // Prepare tokenization
   //
   TString inPString((const char *)plist);
-  TObjArray *inPList = inPString.Tokenize(" "); 
+  TObjArray *inPList = inPString.Tokenize(" ");
 
   // Make sure that we got at least one token
   //
-  if (inPList->GetEntries() < 1) { 
+  if (inPList->GetEntries() < 1) {
      if (DebugLevel() >= TXDebug::kHIDEBUG)
         Warning("DoAuthentication", "Protocol list empty");
      return kFALSE;
@@ -1214,15 +1212,15 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
 
      // Assign the security token that we have received at the login request
      //
-     secToken.buffer = (char *)(token.Data());   
+     secToken.buffer = (char *)(token.Data());
      secToken.size   = token.Length();
-     
+
      // Retrieve the security protocol context from the xrootd server
      //
      protocol = XrdSecGetProtocol((const struct sockaddr &)netaddr,secToken, 0);
-     if (!protocol) { 
+     if (!protocol) {
         if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthentication", 
+           Info("DoAuthentication",
                 "Unable to get protocol object (token: %s)",token.Data());
         continue;
      }
@@ -1238,22 +1236,22 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
         protname.ReplaceAll("&P=","");
         protname.Resize(protname.Index(","));
      }
-     
+
      // Now we add the username and the hostname to the token, because
      // they may be needed to get the credentials
      secToken.size   = token.Length()+strlen(username)+strlen(fUrl.GetHost())+2;
      char *etoken    = new char[secToken.size+5];
      snprintf(etoken,secToken.size+5,"%s,%s,%s",token.Data(),username,fUrl.GetHost());
      secToken.buffer = etoken;
-     
+
      // Once we have the protocol, get the credentials
      //
      credentials = protocol->getCredentials(&secToken);
      if (!credentials) {
         if (DebugLevel() >= TXDebug::kHIDEBUG)
-           Info("DoAuthentication", 
+           Info("DoAuthentication",
                 "Cannot obtain credentials (token: %s)",etoken);
-        if (etoken) 
+        if (etoken)
            delete[] etoken;
         continue;
      } else
@@ -1262,45 +1260,45 @@ Bool_t TXNetConn::DoAuthentication(const char *username, char *plist)
                                     credentials->buffer, credentials->size);
      if (etoken)
         delete[] etoken;
-     
+
      // We fill the header struct containing the request for login
      ClientRequest reqhdr;
      SetSID(reqhdr.header.streamid);
      reqhdr.header.requestid = kXR_auth;
      memset(reqhdr.auth.reserved, 0, 12);
      memcpy(reqhdr.auth.credtype, protname.Data(), protname.Length());
-     
+
      struct ServerResponseHeader reshdr;
      reshdr.status = kXR_authmore;
      char *srvans = 0;
-     
+
      resp = kFALSE;
      while (reshdr.status == kXR_authmore) {
-        
+
         // Length of the credentials buffer
         reqhdr.header.dlen = credentials->size;
-        
-        resp = SendGenCommand(&reqhdr, credentials->buffer, 
-                              (void **)&srvans, 0, kTRUE, 
+
+        resp = SendGenCommand(&reqhdr, credentials->buffer,
+                              (void **)&srvans, 0, kTRUE,
                               (char *)"XTNetconn::DoAuthentication",&reshdr);
         if (DebugLevel() >= TXDebug::kHIDEBUG)
            Info("DoAuthenticate", "Server reply: status: %d dlen: %d",
                                   reshdr.status,reshdr.dlen);
-     
+
         if (reshdr.status == kXR_authmore) {
            // We are required to send additional information
            // First assign the security token that we have received
            // at the login request
            //
-           secToken.buffer = srvans;   
+           secToken.buffer = srvans;
            secToken.size   = strlen(srvans);
-     
+
            // then get next part of the credentials
            //
            credentials = protocol->getCredentials(&secToken);
            if (!credentials) {
               if (DebugLevel() >= TXDebug::kUSERDEBUG)
-                 Info("DoAuthentication", 
+                 Info("DoAuthentication",
                       "Cannot obtain credentials (token: %s)", srvans);
               break;
            } else {
@@ -1327,10 +1325,10 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 {
    // Handle errors from server
 
-   Int_t newport; 	
-   TString newhost; 	
+   Int_t newport;
+   TString newhost;
    TString token;
-  
+
    // Close the log connection at this point the fLogConnID is no longer valid.
    // On read/write error the physical channel may be not OK, so it's a good
    // idea to shutdown it.
@@ -1340,10 +1338,10 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
       ConnectionManager->Disconnect(fLogConnID, kTRUE);
    else
       ConnectionManager->Disconnect(fLogConnID, kFALSE);
-  
+
    // We cycle repeatedly trying to ask the dlb for a working redir destination
    do {
-    
+
       // Consider the timeout for the count of the redirections
       // this instance got in the last period of time
       if ( (time(0) - fGlobalRedirLastUpdateTimestamp) >  REDIRCNTTIMEOUT) {
@@ -1357,15 +1355,15 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
       if (DebugLevel() >= TXDebug::kHIDEBUG)
          Info("HandleServerError","Redir count=%d", fGlobalRedirCnt);
 
-      if ( fGlobalRedirCnt >= fMaxGlobalRedirCnt ) 
+      if ( fGlobalRedirCnt >= fMaxGlobalRedirCnt )
          return kSEHRContinue;
-    
+
       newhost = "";
       newport = 0;
       token = "";
-    
-      if ((errorType == kREAD) || 
-          (errorType == kWRITE) || 
+
+      if ((errorType == kREAD) ||
+          (errorType == kWRITE) ||
           (errorType == kREDIRCONNECT)) {
          // We got some errors in the communication phase
          // the physical connection has been closed;
@@ -1383,14 +1381,14 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
             newhost = fUrl.GetHost();
             newport = fUrl.GetPort();
          }
-      
+
       } else if (ROOT::isRedir(&xmsg->fHdr)) {
-         // No comm errors, but we got an explicit redir message      
+         // No comm errors, but we got an explicit redir message
          // If we did not meet a dlb before, we consider this as a dlb
          // to return to after an error
          if ((0 == fLBSUrl) || (0 == strlen(fLBSUrl->GetUrl()))) {
             if (DebugLevel() >= TXDebug::kHIDEBUG)
-               Info("HandleServerError", 
+               Info("HandleServerError",
                     "Setting Load Balancer Server Url = \"%s\".", fUrl.GetUrl() );
 
             // Save the url of load balancer server for future uses...
@@ -1402,16 +1400,16 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
                gSystem->Abort();
             }
          }
-      
+
          // Extract the info (new host:port) from the response
          newhost = "";
          token   = "";
          newport = 0;
          ParseRedir(xmsg, newport, newhost, token);
       }
-    
+
       // Now we should have the parameters needed for the redir
-      // a member class 'internalToken' is needed because the host that 
+      // a member class 'internalToken' is needed because the host that
       // answers with a kXR_redirect
       // message also provides a token that must be passed to the new host...
       fRedirInternalToken = token;
@@ -1422,13 +1420,13 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 
          if (DebugLevel() >= TXDebug::kUSERDEBUG)
             Info("HandleServerError",
-                 "Received redirection to [%s:%d]. Token=[%s].", 
+                 "Received redirection to [%s:%d]. Token=[%s].",
                  newhost.Data(), newport, fRedirInternalToken.Data());
 
          errorType = kOK;
-      
+
 	 TString quotedDomain = fClientHostDomain.Data();
-	 
+
 	 if ( !CheckHostDomain( newhost,
                                 gEnv->GetValue("XNet.RedirDomainAllowRE",
                                                fClientHostDomain.Data()),
@@ -1438,17 +1436,17 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 		  "Redirection to a server out-of-domain disallowed. Abort.");
 	    gSystem->Abort();
 	 }
-         
+
          errorType = GoToAnotherServer(newhost, newport, fLastNetopt);
       }
       else {
          // Host or port are not valid or empty
-         Error("HandleServerError", 
+         Error("HandleServerError",
                "Received redirection to [%s:%d]. Token=[%s]. No server to go...",
                newhost.Data(), newport, fRedirInternalToken.Data());
          errorType = kREDIRCONNECT;
       }
-    
+
       // We don't want to flood servers...
       if (errorType == kREDIRCONNECT)
          gSystem->Sleep(1000 * gEnv->GetValue("XNet.ReconnectTimeout",
@@ -1463,7 +1461,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 
    // We are here if correctly connected and handshaked and logged
    if (!IsConnected()) {
-      Error("HandleServerError", 
+      Error("HandleServerError",
             "Not connected. Internal error. Abort.");
       gSystem->Abort();
    }
@@ -1491,7 +1489,7 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
       // a different server. Then we must correct the filehandle in
       // the msg we were sending and that we must repeat...
       ROOT::PutFilehandleInRequest(req, localfhandle);
-    
+
       // Everything should be ok here.
       // If we have been redirected,then we are connected, logged and reopened
       // the file. If we had a r/w error (xmsg==0 or xmsg->IsError) we are
@@ -1519,25 +1517,25 @@ TXNetConn::HandleServerError(XReqErrorType &errorType, TXMessage *xmsg,
 }
 
 //_____________________________________________________________________________
-XReqErrorType TXNetConn::GoToAnotherServer(TString Newhost, 
+XReqErrorType TXNetConn::GoToAnotherServer(TString Newhost,
                                            Int_t Newport, Int_t opt)
 {
    // Re-directs to another server
 
 
    if ((fLogConnID = Connect( Newhost, Newport, opt)) == -1) {
-    
+
       // Note: if Connect is unable to work then we are in trouble.
       // It seems that we have been redirected to a non working server
-      Error("GoToAnotherServer", "Error connecting to [%s:%d]", 
+      Error("GoToAnotherServer", "Error connecting to [%s:%d]",
             Newhost.Data(), Newport);
-    
+
       // If no conn is possible then we return to the load balancer
       return kREDIRCONNECT;
    }
-  
+
    //
-   // Set fUrl to the new data/lb server if the 
+   // Set fUrl to the new data/lb server if the
    // connection has been succesfull
    //
    TString hostForNewUrl = "root://";
@@ -1548,7 +1546,7 @@ XReqErrorType TXNetConn::GoToAnotherServer(TString Newhost,
    fUrl = TUrl(hostForNewUrl.Data());
 
    if (IsConnected() && !GetAccessToSrv()) {
-      Error("GoToAnotherServer", "Error handshaking to [%s:%d]", 
+      Error("GoToAnotherServer", "Error handshaking to [%s:%d]",
             Newhost.Data(), Newport);
       return kREDIRCONNECT;
    }
@@ -1568,11 +1566,11 @@ TString TXNetConn::GetDomainToMatch(TString hostname) {
    // Let's look up the hostname
    // It may also be a w.x.y.z type address.
    addr = gSystem->GetHostByName(hostname.Data());
-   
+
    if (addr.IsValid()) {
       // The looked up address is valid
       // The hostname domain can still be unknown
-     
+
       if (DebugLevel() >= TXDebug::kHIDEBUG)
 	 Info("GetDomainToMatch", "GetHostByName(%s) returned name='%s' addr='%s'"
 	      " port=%d.", hostname.Data(), addr.GetHostName(),
@@ -1624,7 +1622,7 @@ void TXNetConn::CheckPort(Int_t &port) {
    if(port <= 0) {
 
       if(DebugLevel() >= TXDebug::kHIDEBUG)
-	 Warning("checkPort", 
+	 Warning("checkPort",
 		 "TCP port not specified. Trying to get it from /etc/services...");
 
       struct servent *S = getservbyname("rootd", "tcp");

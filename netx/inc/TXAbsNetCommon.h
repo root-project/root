@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,7 +29,7 @@
 class TXAbsNetCommon: public TXAbsUnsolicitedMsgHandler {
 public:
 
-  virtual Bool_t OpenFileWhenRedirected(char *newfhandle, 
+  virtual Bool_t OpenFileWhenRedirected(char *newfhandle,
                                         Bool_t &wasopen) = 0;
   void SetParm(const char *parm, int val);
   void SetParm(const char *parm, double val);

@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -34,8 +35,8 @@ int gErrorAbortLevel  = kSysError+1;
 void TXNErrorHandler(int level, Bool_t abort, const char *location, const char *msg)
 {
    // A modified error handler function. As in the DefaultErrorHandler
-   // it prints the message on stderr and if abort is set it aborts the 
-   // application, however this one also prints time stamps before the 
+   // it prints the message on stderr and if abort is set it aborts the
+   // application, however this one also prints time stamps before the
    // messages.
 
    if (level < gErrorIgnoreLevel)

@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -181,23 +182,23 @@ void TXConnectionMgr::GarbageCollect()
       TXMutexLocker mtx(fMutex);
 
       // We cycle all the physical connections
-      for (unsigned short int i = 0; i < fPhyVec.size(); i++) { 
-   
+      for (unsigned short int i = 0; i < fPhyVec.size(); i++) {
+
 	 // If a single physical connection has no linked logical connections,
 	 // then we kill it if its TTL has expired
-	 if ( fPhyVec[i] && (GetPhyConnectionRefCount(fPhyVec[i]) <= 0) && 
+	 if ( fPhyVec[i] && (GetPhyConnectionRefCount(fPhyVec[i]) <= 0) &&
 	      fPhyVec[i]->ExpiredTTL() ) {
-      
+
 	    if (DebugLevel() >= TXDebug::kDUMPDEBUG)
 	       Info("GarbageCollect", "Purging physical connection %d", i);
 
-	    // Wait until the physical connection is unlocked (it may be in use by 
+	    // Wait until the physical connection is unlocked (it may be in use by
 	    // slow processes)
 
 	    fPhyVec[i]->Disconnect();
 	    SafeDelete(fPhyVec[i]);
 	    fPhyVec[i] = 0;
-      
+
 	    if (DebugLevel() >= TXDebug::kHIDEBUG)
 	       Info("GarbageCollect", "Purged physical connection %d", i);
 
@@ -210,15 +211,15 @@ void TXConnectionMgr::GarbageCollect()
 }
 
 //_____________________________________________________________________________
-short int TXConnectionMgr::Connect(TString RemoteAddress, 
+short int TXConnectionMgr::Connect(TString RemoteAddress,
                                    Int_t TcpPort, Int_t TcpWindowSize)
 {
    // Connects to the remote server:
-   //  - Looks for an existing physical connection already bound to 
+   //  - Looks for an existing physical connection already bound to
    //    RemoteAddress:TcpPort;
    //  - If needed, creates a TCP channel to RemoteAddress:TcpPort
    //    (this is a physical connection);
-   //  - Creates a logical connection and binds it to the previous 
+   //  - Creates a logical connection and binds it to the previous
    //    created physical connection;
    //  - Returns the logical connection ID. Every client will use this
    //    ID to deal with the server.
@@ -238,19 +239,19 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
                       " Probable system resources exhausted.");
       gSystem->Abort();
    }
-  
+
    if(DebugLevel() >= TXDebug::kDUMPDEBUG)
       Info("Connect", "Getting lock...");
 
    {
       TXMutexLocker mtx(fMutex);
 
-      // If we already have a physical connection to that host:port, 
+      // If we already have a physical connection to that host:port,
       // then we use that
       phyfound = kFALSE;
       if (DebugLevel() >= TXDebug::kHIDEBUG)
 	 Info("Connect",
-	      "Looking for an available physical connection for address [%s:%d]", 
+	      "Looking for an available physical connection for address [%s:%d]",
 	      RemoteAddress.Data(), TcpPort);
 
       for (unsigned short int i=0; i < fPhyVec.size(); i++) {
@@ -272,10 +273,10 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
          Info("Connect",
               "Physical connection not found. Creating a new one...");
 
-      // If not already present, then we must build a new physical connection, 
+      // If not already present, then we must build a new physical connection,
       // and try to connect it
       // While we are trying to connect, the mutex must be unlocked
-      // Note that at this point logconn is a pure local instance, so it 
+      // Note that at this point logconn is a pure local instance, so it
       // does not need to be protected by mutex
       phyconn = new TXPhyConnection(this);
 
@@ -291,8 +292,8 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
          if (DebugLevel() >= TXDebug::kHIDEBUG)
             Info("Connect", "New physical connection to server [%s:%d]"
                             " succesfully created.",
-                 RemoteAddress.Data(), TcpPort); 
-      } else 
+                 RemoteAddress.Data(), TcpPort);
+      } else
          return -1;
    }
 
@@ -308,7 +309,7 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
 
       // Then we push the logical connection into its vector
       fLogVec.push_back(logconn);
- 
+
       // Its ID is its position inside the vector, we must return it later
       newid = fLogVec.size()-1;
 
@@ -329,13 +330,13 @@ short int TXConnectionMgr::Connect(TString RemoteAddress,
       }
 
    }
-  
+
 
    return newid;
 }
 
 //_____________________________________________________________________________
-void TXConnectionMgr::Disconnect(short int LogConnectionID, 
+void TXConnectionMgr::Disconnect(short int LogConnectionID,
                                  Bool_t ForcePhysicalDisc)
 {
    // Deletes a logical connection.
@@ -356,13 +357,13 @@ void TXConnectionMgr::Disconnect(short int LogConnectionID,
       if (ForcePhysicalDisc) {
 	 // We disconnect the phyconn
 	 // But it will be removed by the garbagecollector as soon as possible
-	 // Note that here we cannot destroy the phyconn, since there can be other 
-	 // logconns pointing to it the phyconn will be removed when there are no 
+	 // Note that here we cannot destroy the phyconn, since there can be other
+	 // logconns pointing to it the phyconn will be removed when there are no
 	 // more logconns pointing to it
 	 fLogVec[LogConnectionID]->GetPhyConnection()->SetTTL(0);
 	 fLogVec[LogConnectionID]->GetPhyConnection()->Disconnect();
       }
-    
+
       fLogVec[LogConnectionID]->GetPhyConnection()->Touch();
       SafeDelete(fLogVec[LogConnectionID]);
       fLogVec[LogConnectionID] = 0;
@@ -375,7 +376,7 @@ void TXConnectionMgr::Disconnect(short int LogConnectionID,
 }
 
 //_____________________________________________________________________________
-Int_t TXConnectionMgr::ReadRaw(short int LogConnectionID, void *buffer, 
+Int_t TXConnectionMgr::ReadRaw(short int LogConnectionID, void *buffer,
                                Int_t BufferLength, ESendRecvOptions opt)
 {
    // Read BufferLength bytes from the logical connection LogConnectionID
@@ -435,7 +436,7 @@ TXMessage *TXConnectionMgr::ReadMsg(short int LogConnectionID, ESendRecvOptions 
 }
 
 //_____________________________________________________________________________
-Int_t TXConnectionMgr::WriteRaw(short int LogConnectionID, const void *buffer, 
+Int_t TXConnectionMgr::WriteRaw(short int LogConnectionID, const void *buffer,
                                 Int_t BufferLength, ESendRecvOptions opt)
 {
    // Write BufferLength bytes into the logical connection LogConnectionID
@@ -467,10 +468,10 @@ TXLogConnection *TXConnectionMgr::GetConnection(short int LogConnectionID)
 
    {
       TXMutexLocker mtx(fMutex);
- 
+
       res = fLogVec[LogConnectionID];
    }
-  
+
    return res;
 }
 
@@ -487,7 +488,7 @@ short int TXConnectionMgr::GetPhyConnectionRefCount(TXPhyConnection *PhyConn)
 	 if ( fLogVec[i] && (fLogVec[i]->GetPhyConnection() == PhyConn) ) cnt++;
 
    }
-  
+
    return cnt;
 }
 

@@ -1,20 +1,28 @@
-/**********************************************************************/
-/*                          T X U r l . r d l                         */
-/*                                2003                                */
-/*  Produced by Alvise Dorigo & Fabrizio Furano for INFN padova       */
-/**********************************************************************/
-//
-//   $Id: TXUrl.rdl,v 1.2 2004/06/16 09:50:15 furano Exp $
-//
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
-#ifndef __TXURL_H__
-#define __TXURL_H__
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TXUrl
+#define ROOT_TXUrl
 
 #include <vector>
+
+#ifndef ROOT_TUrl
 #include "TUrl.h"
+#endif
+#ifndef ROOT_TRandom
 #include "TRandom.h"
+#endif
+#ifndef ROOT_TString
 #include "TString.h"
+#endif
 
 #define PROTO "root"
 
@@ -22,11 +30,13 @@ using namespace std;
 
 typedef vector<TUrl*> UrlArray;
 
+
 class TXUrl : public TObject {
- private:
+
+private:
    UrlArray fUrlArray, fTmpUrlArray;
    TString fPathName;
-   
+
    Bool_t fIsValid;
 
    TRandom fRndgen;

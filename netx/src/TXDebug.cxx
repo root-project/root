@@ -1,13 +1,19 @@
-/***********************************************************/
-/*                T X D e b u g . c c                      */
-/*                        2003                             */
-/*             Produced by Alvise Dorigo                   */
-/*         & Fabrizio Furano for INFN padova               */
-/***********************************************************/
-//
-//   $Id: TXDebug.cc,v 1.1 2004/05/10 13:58:56 dorigoa Exp $
-//
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TXDebug                                                              //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #include "TXDebug.h"
 #include "TError.h"

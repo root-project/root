@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -29,7 +30,7 @@
 #include "TXPhyConnection.h"
 #endif
 
-class TXLogConnection: public TXAbsUnsolicitedMsgHandler, 
+class TXLogConnection: public TXAbsUnsolicitedMsgHandler,
    TXUnsolicitedMsgSender /*, public TObject*/ {
 private:
    TXPhyConnection *fPhyConnection;
@@ -52,11 +53,11 @@ public:
    Int_t         LastBytesSent(void) { return fLogLastBytesSent; }
    Bool_t        ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                        TXMessage *unsolmsg);
-   Int_t         ReadRaw(void *buffer, Int_t BufferLength, 
+   Int_t         ReadRaw(void *buffer, Int_t BufferLength,
                          ESendRecvOptions opt = kDefault);
-   inline void   SetPhyConnection(TXPhyConnection *PhyConn) 
+   inline void   SetPhyConnection(TXPhyConnection *PhyConn)
                  { fPhyConnection = PhyConn; }
-   Int_t         WriteRaw(const void *buffer, Int_t BufferLength, 
+   Int_t         WriteRaw(const void *buffer, Int_t BufferLength,
                           ESendRecvOptions opt = kDefault);
 
    ClassDef(TXLogConnection, 1); // The logical connection of the client

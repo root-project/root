@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,9 +12,6 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TXNetFile                                                            //
-//                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
 //                                                                      //
 // TXNetFile is an extension of TNetFile able to deal with new xrootd   //
 // server. Its new features are:                                        //
@@ -48,9 +46,10 @@
 #include "TXUrl.h"
 #include "TXNetConn.h"
 
-#include <strings.h> 
+#include <strings.h>
 #include <string.h>
 #include <unistd.h>
+
 
 ClassImp(TXNetFile);
 
@@ -59,32 +58,32 @@ void (*evtFunc)();
 Bool_t TXNetFile::fgTagAlreadyPrinted = kFALSE;
 
 //_____________________________________________________________________________
-TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle, 
-		     Int_t compress, Int_t netopt) : 
+TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
+		     Int_t compress, Int_t netopt) :
               TNetFile(url, ftitle, compress, kFALSE)
 {
-  // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile 
-  // (from which the former derives) except that the protocol is extended to 
-  // support dealing with new xrootd data server or xrootd load balancer 
+  // Create a TXNetFile object. A TXNetFile object is the same as a TNetFile
+  // (from which the former derives) except that the protocol is extended to
+  // support dealing with new xrootd data server or xrootd load balancer
   // server.
   //
-  // The "url" argument must be of the form 
+  // The "url" argument must be of the form
   //
   //   root://server1:port1[,server2:port2,...,serverN:portN]/pathfile,
   //
-  // Note that this means that multiple servers (>= 1) can be specified in 
+  // Note that this means that multiple servers (>= 1) can be specified in
   // the url. The connection will try to connect to the first server:port
   // and if that does not succeed, it will try the second one, and so on
   // until it finds a server that will respond.
   //
   // See the TNetFile documentation for the description of the other arguments.
   //
-  // The creation consists of internal variable settings (most important is 
-  // the client's domain), creation of a TXUrl array containing all specified 
-  // urls (a single url is serverX:portX/pathfile), trying to connect to the 
-  // servers calling Connect() method, getting a valid access to the remote 
-  // server the client is connected to using GetAccessToSrv() method, 
-  // recognizing the remote server (if an old rootd the TNetFile's Create 
+  // The creation consists of internal variable settings (most important is
+  // the client's domain), creation of a TXUrl array containing all specified
+  // urls (a single url is serverX:portX/pathfile), trying to connect to the
+  // servers calling Connect() method, getting a valid access to the remote
+  // server the client is connected to using GetAccessToSrv() method,
+  // recognizing the remote server (if an old rootd the TNetFile's Create
   // method will be called)
 
   CreateTXNf(url, option, ftitle, compress, netopt);
@@ -100,7 +99,7 @@ TXNetFile::~TXNetFile()
 }
 
 //_____________________________________________________________________________
-void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle, 
+void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle,
 		       Int_t compress, Int_t netopt) {
 
 
@@ -134,17 +133,17 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
   fOpenPars.option = "";
   if (option)
     fOpenPars.option = option;
-  
+
   fOpenPars.fTitle = "";
   if (ftitle)
     fOpenPars.fTitle = ftitle;
-  
+
   fOpenPars.compress = compress;
   fOpenPars.netopt = netopt;
-  
+
   // Now we try to set up the first connection
   // We cycle through the list of urls given as a single TUrl parameter
-  
+
   fConnModule = new TXNetConn();
   if (!fConnModule) {
      Error("CreateTXNf","Fatal ERROR *** Object creation with new failed !"
@@ -188,14 +187,14 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
   urlArray.Rewind();
   locallogid = -1;
   for (Int_t connectTry = 0;
-      (connectTry < connectMaxTry) && (!fConnModule->IsConnected()); 
+      (connectTry < connectMaxTry) && (!fConnModule->IsConnected());
        connectTry++) {
 
      TUrl *thisUrl;
-     
+
      // Get an url from the available set
      thisUrl = urlArray.GetARandomUrl();
-     
+
      if (thisUrl) {
         fUrl = *thisUrl;
         if (fConnModule->CheckHostDomain(fUrl.GetHost(), allowRE, denyRE)) {
@@ -205,41 +204,41 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
            locallogid = fConnModule->Connect(fUrl.GetHost(), fUrl.GetPort(), netopt);
         }
      }
-     
+
      // We are connected to a host. Let's handshake with it.
      if (fConnModule->IsConnected()) {
 
-        // Now the have the logical Connection ID, that we can use as streamid for 
+        // Now the have the logical Connection ID, that we can use as streamid for
         // communications with the server
         if (DebugLevel() >= TXDebug::kHIDEBUG)
            Info("CreateTXNf", "The logical connection id is %d. This will be the"
                         " streamid for this client",fConnModule->GetLogConnID());
         fConnModule->SetUrl(fUrl);
-        
+
         if (DebugLevel() >= TXDebug::kHIDEBUG)
            Info("CreateTXNf", "Working url is [%s]", fUrl.GetUrl());
-        
+
         // after connection deal with server
         if (!fConnModule->GetAccessToSrv())
-           Error("CreateTXNf", "Access to server failed"); 
+           Error("CreateTXNf", "Access to server failed");
         else {
 	   if (DebugLevel() >= TXDebug::kUSERDEBUG)
 	      Info("CreateTXNf", "Access to server granted.");
            break;
 	}
      }
-     
+
      // We force a physical disconnection in this special case
      if (DebugLevel() >= TXDebug::kHIDEBUG)
         Info("CreateTXNf", "Disconnecting.");
-     
+
      fConnModule->Disconnect(kTRUE);
-     
+
      if (DebugLevel() >= TXDebug::kUSERDEBUG)
         Info("CreateTXNf", "Connection attempt cycle failed. Sleeping %d seconds.",
                      gEnv->GetValue("XNet.ReconnectTimeout",
                                     DFLT_RECONNECTTIMEOUT));
-     
+
      gSystem->Sleep(1000 * gEnv->GetValue("XNet.ReconnectTimeout",
                                          DFLT_RECONNECTTIMEOUT) );
 
@@ -259,25 +258,25 @@ void TXNetFile::CreateTXNf(const char *url, Option_t *option, const char* ftitle
      goto zombie;
   }
 
-  
+
   //
   // Variable initialization
   // If the server is a new xrootd ( load balancer or data server)
   //
-  if ((fConnModule->GetServerType() != TXNetConn::kSTRootd) && 
+  if ((fConnModule->GetServerType() != TXNetConn::kSTRootd) &&
       (fConnModule->GetServerType() != TXNetConn::kSTNone)) {
-     // Now we are connected to a server that didn't redirect us after the 
+     // Now we are connected to a server that didn't redirect us after the
      // login/auth phase
      // let's continue with the openfile sequence
-     // We try to recycle the TNetFile procedure as much as possible, traslating 
+     // We try to recycle the TNetFile procedure as much as possible, traslating
      // the TNetFile's open modes into the kXR_xxx modes...
      if (DebugLevel() >= TXDebug::kUSERDEBUG)
-	Info("CreateTXNf", "Opening the remote file %s", fUrl.GetFile()); 
+	Info("CreateTXNf", "Opening the remote file %s", fUrl.GetFile());
 
      // url is not needed because already stored in fUrl
      // Here we have to init our TFile ancestor
      if (!Open(option, fTitle, compress, netopt, kTRUE)) {
-	Error("CreateTXNf", "Error opening the file %s on host %s:%d", 
+	Error("CreateTXNf", "Error opening the file %s on host %s:%d",
                         fUrl.GetFile(), fUrl.GetHost(), fUrl.GetPort());
 	  goto zombie;
      } else {
@@ -354,12 +353,12 @@ Bool_t TXNetFile::ReadBuffer(char *buffer, Int_t BufferLength)
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("ReadBuffer", "Calling TXNetConn::SendGenCommand to read %d"
            " bytes of data at offset %Ld.",
-           readFileRequest.read.rlen, 
+           readFileRequest.read.rlen,
            readFileRequest.read.offset);
 
    // Original version, without caching
    result = !fConnModule->SendGenCommand(&readFileRequest, 0, 0, buffer,
-                                         kFALSE, (char *)"TXNetFile::ReadBuffer");  
+                                         kFALSE, (char *)"TXNetFile::ReadBuffer");
    if (!result) {
       fOffset += BufferLength;
       fBytesRead += BufferLength;
@@ -391,7 +390,7 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
          Info("WriteBuffer","Calling TNetFile::WriteBuffer");
       return TNetFile::WriteBuffer(buffer, BufferLength );
    }
-  
+
    if (!IsOpen()) {
       Error("WriteBuffer","The remote file %s is not open", fUrl.GetFile());
       return kTRUE;
@@ -422,7 +421,7 @@ Bool_t TXNetFile::WriteBuffer(const char *buffer, Int_t BufferLength)
    memcpy( writeFileRequest.write.fhandle, fHandle, sizeof(fHandle) );
    writeFileRequest.write.offset = fOffset;
    writeFileRequest.write.dlen = BufferLength;
-  
+
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("WriteBuffer", "Calling TXNetConn::SendGenCommand...");
 
@@ -457,7 +456,7 @@ Bool_t TXNetFile::IsOpen() const
 //_____________________________________________________________________________
 Int_t TXNetFile::ReOpen(const Option_t *Mode)
 {
-  // Re-open the file (see TNetFile::ReOpen() or TFile::ReOpen() 
+  // Re-open the file (see TNetFile::ReOpen() or TFile::ReOpen()
   // for more details)
 
   if (fConnModule->GetServerType() == TXNetConn::kSTRootd) {
@@ -465,10 +464,10 @@ Int_t TXNetFile::ReOpen(const Option_t *Mode)
         Info("ReOpen","Calling TNetFile::ReOpen");
      return TNetFile::ReOpen(Mode);
   }
-  
+
   fAlreadyStated = kFALSE;
   fSize = 0;
-  
+
   return TFile::ReOpen(Mode);
 }
 
@@ -484,7 +483,7 @@ void TXNetFile::Close(const Option_t *opt)
      TNetFile::Close(opt);
      return;
   }
-  
+
   TFile::Close(opt);
 
   fSize = 0;
@@ -498,7 +497,7 @@ void TXNetFile::Flush()
 {
    // Flushes un-written data
 
- 
+
    if (IsZombie()) {
       Error("Flush", "Flush is not possible because object is"
                      " in 'zombie' state");
@@ -526,10 +525,10 @@ void TXNetFile::Flush()
    flushFileRequest.sync.dlen = 0;
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("Flush", "Calling TXNetConn::SendGenCommand...");
-  
-   Bool_t cmdres = fConnModule->SendGenCommand(&flushFileRequest, 0, 0, 0, 
+
+   Bool_t cmdres = fConnModule->SendGenCommand(&flushFileRequest, 0, 0, 0,
                                        kFALSE, (char *)"TXNetFile::Flush");
-  
+
    if (!cmdres)
       Error("Flush","SendGenCommand returned false. Command failed.");
 }
@@ -538,7 +537,7 @@ void TXNetFile::Flush()
 Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
 		       Int_t netopt, Bool_t DoInit)
 {
-  // High level open routine; if the remote server is an old rootd the file 
+  // High level open routine; if the remote server is an old rootd the file
   // has been already opened by the TNetFile's Create() method
 
   fAlreadyStated = kFALSE;
@@ -546,11 +545,11 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
 
   if (fConnModule->GetServerType() == TXNetConn::kSTRootd) {
     // Do nothing because the file is already open
-    // In fact when TNetFile is first instantiated it immediately open the 
+    // In fact when TNetFile is first instantiated it immediately open the
     // remote file
     return kTRUE;
   }
-  
+
   // First attempt to open a remote file without the kXR_refresh option ON
   Bool_t lowopenRes = LowOpen(fUrl.GetFile(), option, ftitle, compress,
                               netopt, DoInit);
@@ -560,7 +559,7 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
      return kTRUE;
   }
 
-  // If the open request failed for the error "file not found" proceed, 
+  // If the open request failed for the error "file not found" proceed,
   // otherwise return kFALSE
   if (fConnModule->GetOpenError() != kXR_NotFound)
      return kFALSE;
@@ -571,10 +570,10 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
       (!fOpenWithRefresh)) {
      Info("Open", "Trying to re-open the file with REFRESH option...");
 
-     if (!LowOpen(fUrl.GetFile(), option, ftitle, compress, 
+     if (!LowOpen(fUrl.GetFile(), option, ftitle, compress,
                   netopt, DoInit, kTRUE)) {
 	// Even if after a "resfresh-ed open" the file has not been found
-	// goto in zombie state and return; and let's remember that we used 
+	// goto in zombie state and return; and let's remember that we used
         // the refresh option
 	//	if(DebugLevel() >= TXDebug::kUSERDEBUG)
 	Error("Open", "Error opening the remote file even after a refresh"
@@ -582,19 +581,19 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
 	fOpenWithRefresh = kTRUE;
 	return kFALSE;
      } else {
-	// Open succeded after the refresh; 
+	// Open succeded after the refresh;
 	// Remember that we used the refresh option in order to not use it again
 	fOpenWithRefresh = kTRUE;
 	return kTRUE;
      }
   }
 
-  // If we're here who reported an open error was a data server (rootd or 
+  // If we're here who reported an open error was a data server (rootd or
   // xrootd), then we've to check if we already tried a refresh-ed open
   // request or not...
   if (!fOpenWithRefresh) {
 
-    // if did not use refresh in the last open, and we do not come from a 
+    // if did not use refresh in the last open, and we do not come from a
     // load balancer then goto into zombie state and return
     if (fConnModule->GetLBSUrl() == 0) {
        Error("Open","The remote data server declared 'File Not Found'"
@@ -629,8 +628,8 @@ Bool_t TXNetFile::Open(Option_t *option, const char* ftitle, Int_t compress,
 }
 
 //_____________________________________________________________________________
-Bool_t TXNetFile::LowOpen(const char* file, Option_t *option, 
-                          const char* title, Int_t compress, 
+Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
+                          const char* title, Int_t compress,
 			  Int_t netopt, Bool_t DoInit, Bool_t refresh_open)
 {
   // Low level Open method; deals with xrootd server
@@ -638,7 +637,7 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
   kXR_int16 openOpt; // = 0;
 
   memset(&openOpt, 0, sizeof(openOpt));
-  
+
   fOption = option;
   Bool_t forceOpen = kFALSE;
   if (option[0] == '-') {
@@ -681,7 +680,7 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
     read    = kTRUE;
     fOption = "READ";
   }
-  
+
   Bool_t __recreate = kFALSE;;
   if (recreate) {
     recreate = kFALSE;
@@ -694,10 +693,10 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
     openOpt |= kXR_open_updt;
   if (read)
     openOpt |= kXR_open_read;
-  
+
   fCreateMode = create;
 
-  if (create && (!__recreate)) 
+  if (create && (!__recreate))
     openOpt |= kXR_new;
 
   // Send a kXR_open request in order to open the remote file...
@@ -705,10 +704,10 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
   ClientRequest openFileRequest;
 
   struct ServerResponseBody_Open openresp;
-  
+
   memset(&openFileRequest, 0, sizeof(openFileRequest));
   fConnModule->SetSID(openFileRequest.header.streamid);
-  
+
   openFileRequest.header.requestid = kXR_open;
 
   // Now set the options field basing on user's requests
@@ -719,10 +718,10 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
     openFileRequest.open.options |= kXR_refresh;
 
   // Set the open mode field
-  openFileRequest.open.mode = 
+  openFileRequest.open.mode =
            kXR_or | kXR_gr | kXR_ur | kXR_uw; // open in rw-r-r mode
 
-  // Set the length of the data (in this case data describes the path and 
+  // Set the length of the data (in this case data describes the path and
   // file name)
   openFileRequest.open.dlen = strlen( file );
 
@@ -732,24 +731,24 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
 
   if (resp) {
     // Get the file handle to use for future read/write...
-    // Note that in case of heavy load the file could have been opened by an 
+    // Note that in case of heavy load the file could have been opened by an
     // internal retry of the kxr_open
     if (!fOpenPars.FileOpened)
       memcpy( fHandle, openresp.fhandle, sizeof(fHandle) );
 
     fOpenPars.FileOpened = kTRUE;
-    
+
     // The call seems successful. We copy the parameters for later use
     if (option)
       fOpenPars.option = option;
-    
+
     if (title)
       fOpenPars.fTitle = title;
-    
+
     fOpenPars.compress = compress;
     fOpenPars.netopt = netopt;
-    
-    if (DoInit) 
+
+    if (DoInit)
       Init(create);
   }
 
@@ -757,61 +756,61 @@ Bool_t TXNetFile::LowOpen(const char* file, Option_t *option,
 }
 
 //_____________________________________________________________________________
-Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, 
+Int_t TXNetFile::SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                          Long_t *modtime)
 {
    // Override TNetFile::SysStat (see parent's method for more details)
-   
+
    if (IsZombie()) {
       Error("SysStat", "SysStat is not possible because object is"
                        " in 'zombie' state");
       *size = 0;
       return 0;
    }
-   
+
    if (fConnModule->GetServerType() == TXNetConn::kSTRootd) {
       if (DebugLevel() >= TXDebug::kHIDEBUG)
          Info("SysStat","Calling TNetFile::SysStat");
       return TNetFile::SysStat(fd, id, size, flags, modtime);
    }
-   
+
    if (!IsOpen()) {
       Error("SysStat","The remote file %s is not open",fUrl.GetFile());
       *size = 0;
       return 0;
    }
-   
+
    // Return file stat information. The interface and return value is
    // identical to TSystem::GetPathInfo().
-   
+
    // asks the server for stat file informations
    ClientRequest statFileRequest;
-   
+
    memset(&statFileRequest, 0, sizeof(ClientRequest));
-   
+
    fConnModule->SetSID(statFileRequest.header.streamid);
-   
+
    statFileRequest.stat.requestid = kXR_stat;
-   memset(statFileRequest.stat.reserved, 0, 
+   memset(statFileRequest.stat.reserved, 0,
           sizeof(statFileRequest.stat.reserved));
    statFileRequest.stat.dlen = strlen(fUrl.GetFile());
-   
+
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("SysStat", "Calling TXNetConn::SendGenCommand...");
-   
+
    char fStats[2048];
-   
+
    fConnModule->SendGenCommand(&statFileRequest, (const char*)fUrl.GetFile(),
                                0, fStats , kFALSE, (char *)"SysStat");
-   
+
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("SysStat", "Returned stats=[%s]",fStats);
-   
+
    sscanf(fStats, "%ld %lld %ld %ld", id, size, flags, modtime);
-   
+
    if (*id == -1)
       return 1;
-   
+
    return 0;
 }
 
@@ -831,9 +830,9 @@ Int_t TXNetFile::SysClose(Int_t fd)
          Info("SysClose","Calling TNetFile::SysClose");
       return TNetFile::SysClose(fd);
    }
-  
+
    ClientRequest closeFileRequest;
-  
+
    memset(&closeFileRequest, 0, sizeof(closeFileRequest) );
 
    fConnModule->SetSID(closeFileRequest.header.streamid);
@@ -841,13 +840,13 @@ Int_t TXNetFile::SysClose(Int_t fd)
    closeFileRequest.close.requestid = kXR_close;
    memcpy(closeFileRequest.close.fhandle, fHandle, sizeof(fHandle) );
    closeFileRequest.close.dlen = 0;
-  
+
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("SysClose", "Calling TXNetConn::SendGenCommand...");
-  
+
    fConnModule->SendGenCommand(&closeFileRequest, 0,
 			       0, 0, kFALSE, (char *)"Close");
-  
+
    // No file is opened for now
    fOpenPars.FileOpened = kFALSE;
 
@@ -864,12 +863,12 @@ Int_t TXNetFile::SysOpen(const char* pathname, Int_t flags, UInt_t mode)
         Info("SysOpen", "Calling TNetFile::SysOpen");
      return TNetFile::SysOpen(pathname, flags, mode);
   }
-  
+
   // url is not needed because already stored in fUrl
   // Here we have to init our TFile ancestor
-  if( !Open(fOpenPars.option.Data(), fOpenPars.fTitle.Data(), 
+  if( !Open(fOpenPars.option.Data(), fOpenPars.fTitle.Data(),
             fOpenPars.compress, fOpenPars.netopt, kTRUE) ) {
-      Error("SysOpen", "Error opening the file %s on host %s:%d", 
+      Error("SysOpen", "Error opening the file %s on host %s:%d",
                        fUrl.GetFile(),fUrl.GetHost(), fUrl.GetPort());
       return -1;
   }
@@ -881,7 +880,7 @@ void TXNetFile::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TXNetFile.
    // Dummy Streamer: rootcint chokes trying to generate one, but ROOT wants
-   // one to load the shared library. 
+   // one to load the shared library.
 
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
@@ -923,7 +922,7 @@ Bool_t TXNetFile::OpenFileWhenRedirected(char *newfhandle, Bool_t &wasopen)
 
       return kTRUE;
    } else {
-      Error("OpenFileWhenRedirected", 
+      Error("OpenFileWhenRedirected",
 	    "New redir destination server refuses to open the file.");
       MakeZombie();
       return kFALSE;
@@ -969,7 +968,7 @@ Long_t TXNetFile::GetRemoteFile(void **bufFile)
    readFileRequest.read.rlen = size; // we want to read all the file and put it
                                      // in memory
    readFileRequest.read.dlen = 0;
- 
+
    // We assume the buffer has been pre-allocated to contain BufferLength
    // bytes by the caller of this function
    if (DebugLevel() >= TXDebug::kHIDEBUG)
@@ -977,8 +976,8 @@ Long_t TXNetFile::GetRemoteFile(void **bufFile)
 	   "Calling TXNetConn::SendGenCommand to read %d bytes of data at"
            " offset %Ld.", readFileRequest.read.rlen, readFileRequest.read.offset);
 
-   Bool_t fail = fConnModule->SendGenCommand(&readFileRequest, 0, bufFile, 
-				     0, kTRUE, (char *)"TXNetFile::GetRemoteFile");  
+   Bool_t fail = fConnModule->SendGenCommand(&readFileRequest, 0, bufFile,
+				     0, kTRUE, (char *)"TXNetFile::GetRemoteFile");
 
    if (!fail) {
       Error("GetRemoteFile", "SendGenCommand returned error");
@@ -994,7 +993,7 @@ Bool_t TXNetFile::ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *,
    // We are here if an unsolicited response comes from a logical conn
    // The response comes in the form of an TXMessage *, that must NOT be
    // destroyed after processing. It is destroyed by the first sender.
-   // Remember that we are in a separate thread, since unsolicited 
+   // Remember that we are in a separate thread, since unsolicited
    // responses are asynchronous by nature.
 
    Info("ProcessUnsolicitedMsg", "Processing unsolicited response");
@@ -1011,7 +1010,7 @@ Int_t TXNetFile::LastBytesSent(void)
 
    if (fConnModule)
       return fConnModule->LastBytesSent();
-   else 
+   else
       return 0;
 }
 
@@ -1022,7 +1021,7 @@ Int_t TXNetFile::LastBytesRecv(void)
 
    if (fConnModule)
       return fConnModule->LastBytesRecv();
-   else 
+   else
       return 0;
 }
 
@@ -1039,7 +1038,7 @@ Int_t TXNetFile::LastDataBytesSent(void)
 
 //_____________________________________________________________________________
 Int_t TXNetFile::LastDataBytesRecv(void)
-{ 
+{
    // Return number of data bytes last received
 
    if (fConnModule)

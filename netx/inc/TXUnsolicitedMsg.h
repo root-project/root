@@ -1,13 +1,13 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 #ifndef ROOT_TXUnsolicitedMsg
 #define ROOT_TXUnsolicitedMsg
@@ -23,7 +23,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TXMessage
 #include "TXMessage.h"
+#endif
+
 
 class TXUnsolicitedMsgSender;
 
@@ -31,9 +34,9 @@ class TXUnsolicitedMsgSender;
 
 class TXAbsUnsolicitedMsgHandler {
 public:
-  
+
   // To be called when an unsolicited response arrives from the lower layers
-  virtual Bool_t ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender, 
+  virtual Bool_t ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                        TXMessage *unsolmsg) = 0;
 
 };

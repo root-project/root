@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -27,17 +28,17 @@
 #include "TEnv.h"
 
 //_____________________________________________________________________________
-void TXAbsNetCommon::SetParm(const char *parm, int val) 
+void TXAbsNetCommon::SetParm(const char *parm, int val)
 {
-   // This method configure TXNetFile's behaviour settings through the 
+   // This method configure TXNetFile's behaviour settings through the
    // setting of special ROOT env vars via the TEnv facility.
-   // A ROOT env var is not a environment variable (that you can get using 
+   // A ROOT env var is not a environment variable (that you can get using
    // getenv() syscall). It's an internal ROOT one (see TEnv documentation
    // for more details).
    // At the moment the following env vars are handled by TXNetFile
-   // XNet.ConnectTimeout   - maximum time to wait before server's 
+   // XNet.ConnectTimeout   - maximum time to wait before server's
    //                                  response on a connect
-   // XNet.RequestTimeout   - maximum time to wait before considering 
+   // XNet.RequestTimeout   - maximum time to wait before considering
    //                                  a read/write failure
    // XNet.ConnectDomainAllowRE
    //                                - sequence of TRegexp regular expressions
@@ -77,35 +78,35 @@ void TXAbsNetCommon::SetParm(const char *parm, int val)
    // XNet.Debug            - log verbosity level
    //                                  (0=nothing,
    //                                   1=messages of interest to the user,
-   //                                   2=messages of interest to the developers 
+   //                                   2=messages of interest to the developers
    //                                     (includes also user messages),
    //                                   3=dump of all sent/received data buffers
-   //                                     (includes also user and developers 
+   //                                     (includes also user and developers
    //                                      messages).
-   // XNet.ReconnectTimeout - sleep-time before going back to the 
+   // XNet.ReconnectTimeout - sleep-time before going back to the
    //                                  load balancer (or rebouncing to the same
    //                                  failing host) after a read/write error
    // XNet.StartGarbageCollectorThread -
-   //                                  for test/development purposes. Normally 
-   //                                  nonzero (True), but as workaround for 
+   //                                  for test/development purposes. Normally
+   //                                  nonzero (True), but as workaround for
    //                                  external causes someone could be
-   //                                  interested in not having the garbage 
+   //                                  interested in not having the garbage
    //                                  collector thread around.
-   // XNet.GoAsynchronous   - Default is 0. When activated, TXNetFile 
-   //                                  works in async mode, allowing input 
+   // XNet.GoAsynchronous   - Default is 0. When activated, TXNetFile
+   //                                  works in async mode, allowing input
    //                                  buffering and unsolicited responses
-   // XNet.TryConnect       - Number of tries connect to a single 
+   // XNet.TryConnect       - Number of tries connect to a single
    //                                  server before giving up
    // XNet.TryConnectServersList
-   //                                - Number of connect retries to the whole 
+   //                                - Number of connect retries to the whole
    //                                  server list given
-   // XNet.PrintTAG         - Print a particular string the developers 
-   //                                  can choose to quickly recognize the 
+   // XNet.PrintTAG         - Print a particular string the developers
+   //                                  can choose to quickly recognize the
    //                                  version at run time
    // XNet.ReadCacheSize    - The size of the cache. One cache per instance!
    //                                  0 for no cache. The cache gets all the
    //                                  kxr_read positive responses received
-   // XNet.ReadAheadSize    - The size of the read-ahead blocks. 
+   // XNet.ReadAheadSize    - The size of the read-ahead blocks.
    //                                  0 for no read-ahead.
 
    TString parmName;
@@ -119,7 +120,7 @@ void TXAbsNetCommon::SetParm(const char *parm, int val)
 }
 
 //_____________________________________________________________________________
-void TXAbsNetCommon::SetParm(const char *parm, double val) 
+void TXAbsNetCommon::SetParm(const char *parm, double val)
 {
    // Setting TXNetFile specific ROOT-env variables (see previous method
    // for details

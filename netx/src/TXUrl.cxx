@@ -1,12 +1,13 @@
-/**********************************************************************/
-/*                          T X U r l . c c                           */
-/*                                  2003                              */
-/*   Produced by Alvise Dorigo & Fabrizio Furano for INFN padova      */
-/**********************************************************************/
-//
-//   $Id: TXUrl.cc,v 1.7 2004/06/30 15:48:45 furano Exp $
-//
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
+
+/*************************************************************************
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "TXUrl.h"
 #include "TXDebug.h"
@@ -56,14 +57,14 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
    UrlArray urlArray;
    TString listOfMachines;
    TString protoToMatch(PROTO);
-  
+
    protoToMatch += "://";
-  
+
    // Init of the random number generator with the internal clock as a seed
    fRndgen.SetSeed(gSystem->GetPid());
 
    //
-   // We assume the protol is "root://", because this 
+   // We assume the protol is "root://", because this
    // must be the protocol for TXNetFile
    //
 
@@ -75,7 +76,7 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
       // remove leading 'root://' from the string
       // Now sUrls will contain [user1@]machine1[:port1],...,
       //                        [userN]machineN[:portN]/pathfile
-      Urls.Remove( 0, protoToMatch.Length() ); 
+      Urls.Remove( 0, protoToMatch.Length() );
 
    //
    // Save the list of comma separated servers:ports, assuming they are
@@ -118,7 +119,7 @@ TXUrl::TXUrl(TString Urls) : fIsValid(kTRUE)
 
    if(DebugLevel() >= TXDebug::kHIDEBUG)
       Info("TXUrl", "Remote file to open is [%s]", fPathName.Data());
- 
+
    if (fIsValid) {
       ConvertDNSAliases(fUrlArray, listOfMachines, fPathName);
 
@@ -200,7 +201,7 @@ void TXUrl::ShowUrls()
    Info("ShowUrls", "The converted URLs count is %d.", fUrlArray.size());
 
    for(UInt_t i=0; i < fUrlArray.size(); i++)
-      Info("ShowUrls", "URL n.%d: %s .", i+1, fUrlArray[i]->GetUrl()); 
+      Info("ShowUrls", "URL n.%d: %s .", i+1, fUrlArray[i]->GetUrl());
 
 }
 
@@ -215,7 +216,7 @@ void TXUrl::CheckPort(TString &machine)
       // Port not specified
 
       if(DebugLevel() >= TXDebug::kHIDEBUG)
-	 Warning("checkPort", 
+	 Warning("checkPort",
 		 "TCP port not specified for host %s. Trying to get it from /etc/services...", machine.Data());
 
       Int_t prt = gSystem->GetServiceByName("rootd");
@@ -227,7 +228,7 @@ void TXUrl::CheckPort(TString &machine)
       } else {
          if (DebugLevel() >= TXDebug::kHIDEBUG)
      	    Info("checkPort", "Found tcp port %d in /etc/service", prt);
-	 
+
 	 machine += ":";
 	 machine += prt;
       }
@@ -252,7 +253,7 @@ void TXUrl::CheckPort(TString &machine)
 }
 
 //_____________________________________________________________________________
-Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname, 
+Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
                                                     TString fname)
 {
    // Converts a single host[:port] into an array of TUrl
@@ -264,9 +265,9 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
 
 
    TString tmpaddr;
-  
+
    specifiedPort = ( hostname.First(':') != kNPOS );
-  
+
    hostname.Append("/fakefile");
    TUrl tmp(hostname.Data());
 
@@ -287,7 +288,7 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
    }
 
    // Let's get the list of the addresses for the host
-   TInetAddress::AddressList_t::const_iterator j = 
+   TInetAddress::AddressList_t::const_iterator j =
                                     iaddr.GetAddresses().begin();
    for ( ; j != iaddr.GetAddresses().end(); j++) {
 
@@ -305,7 +306,7 @@ Bool_t TXUrl::ConvertSingleDNSAlias(UrlArray& urls, TString hostname,
 	 tmpaddr += addr;
       else
 	 tmpaddr += c.GetHostName();
-      
+
       if(DebugLevel() >= TXDebug::kHIDEBUG)
 	 Info("ConvertSingleDNSAlias","Found host %s", tmpaddr.Data() );
 
@@ -351,11 +352,11 @@ void TXUrl::ConvertDNSAliases(UrlArray& urls, TString list, TString fname)
    }
 
 
-      
+
 }
 
 //_____________________________________________________________________________
-const char *TXUrl::ConvertIP_to_Name(const char* IP) 
+const char *TXUrl::ConvertIP_to_Name(const char* IP)
 {
    struct in_addr A;
    struct hostent *H;

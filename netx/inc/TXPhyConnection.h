@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -46,23 +47,23 @@
 
 enum ELoginState {
    kNo      = 0,
-   kYes     = 1, 
+   kYes     = 1,
    kPending = 2
 };
 enum ERemoteServer {
-   kBase    = 100, 
-   kData    = 101, 
+   kBase    = 100,
+   kData    = 101,
    kUnknown = 102
 };
 
 class TXPhyConnection: public TXUnsolicitedMsgSender, public TObject {
 private:
    time_t              fLastUseTimestamp;
-   enum ELoginState    fLogged;       // only 1 login/auth is needed for physical  
+   enum ELoginState    fLogged;       // only 1 login/auth is needed for physical
    TXInputBuffer       fMsgQ;         // The queue used to hold incoming messages
    Int_t               fRequestTimeout;
-  
-   TMutex              *fRwMutex;     // Lock before using the physical channel 
+
+   TMutex              *fRwMutex;     // Lock before using the physical channel
                                       // (for reading and/or writing)
 
    TThread             *fReaderthreadhandler; // The thread which is going to pump
@@ -105,7 +106,7 @@ public:
    Bool_t         IsPort(Int_t port) const { return (fRemotePort == port); };
    Bool_t         IsValid() const { return (fSocket && fSocket->IsValid());}
    void           LockChannel();
-   Int_t          ReadRaw(void *buffer, Int_t BufferLength, 
+   Int_t          ReadRaw(void *buffer, Int_t BufferLength,
                           ESendRecvOptions opt = kDefault);
    TXMessage     *ReadXMessage(Int_t streamid);
    Bool_t         ReConnect(TString TcpAddress, Int_t TcpPort, Int_t TcpWindowSize);
@@ -114,7 +115,7 @@ public:
    void           StartReader();
    void           Touch();
    void           UnlockChannel();
-   Int_t          WriteRaw(const void *buffer, Int_t BufferLength, 
+   Int_t          WriteRaw(const void *buffer, Int_t BufferLength,
                            ESendRecvOptions opt = kDefault);
 
    ClassDef(TXPhyConnection, 1);

@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -42,22 +43,22 @@ TXLogConnection::~TXLogConnection()
 
 //_____________________________________________________________________________
 UInt_t TXLogConnection::GetPhyBytesSent()
-{ 
+{
    // Return number of bytes sent
 
-   return fPhyConnection->GetBytesSent(); 
+   return fPhyConnection->GetBytesSent();
 }
 
 //_____________________________________________________________________________
-UInt_t TXLogConnection::GetPhyBytesRecv() 
-{ 
+UInt_t TXLogConnection::GetPhyBytesRecv()
+{
    // Return number of bytes received
 
    return fPhyConnection->GetBytesRecv();
 }
 
 //_____________________________________________________________________________
-Int_t TXLogConnection::WriteRaw(const void *buffer, Int_t bufferlength, 
+Int_t TXLogConnection::WriteRaw(const void *buffer, Int_t bufferlength,
                                 ESendRecvOptions opt)
 {
    // Send over the open physical connection 'bufferlength' bytes located
@@ -67,7 +68,7 @@ Int_t TXLogConnection::WriteRaw(const void *buffer, Int_t bufferlength,
    if (DebugLevel() >= TXDebug::kDUMPDEBUG)
       Info("WriteRaw", "Writing %d bytes to physical connection",
            bufferlength);
-  
+
    Int_t nwrite = fPhyConnection->WriteRaw(buffer, bufferlength, opt);
    fLogLastBytesSent = nwrite;
 
@@ -78,10 +79,10 @@ Int_t TXLogConnection::WriteRaw(const void *buffer, Int_t bufferlength,
 }
 
 //_____________________________________________________________________________
-Int_t TXLogConnection::ReadRaw(void *buffer, Int_t bufferlength, 
+Int_t TXLogConnection::ReadRaw(void *buffer, Int_t bufferlength,
                                ESendRecvOptions opt)
 {
-   // Receive from the open physical connection 'bufferlength' bytes and 
+   // Receive from the open physical connection 'bufferlength' bytes and
    // save in buffer.
    // Return number of bytes received.
 
@@ -90,11 +91,11 @@ Int_t TXLogConnection::ReadRaw(void *buffer, Int_t bufferlength,
            bufferlength);
 
    Int_t nread = fPhyConnection->ReadRaw(buffer, bufferlength, opt);
-  
+
    fLogLastBytesRecv = nread;
    if (fLogLastBytesRecv > 0)
       fLogBytesRecv += fLogLastBytesRecv;
-  
+
    return fLogLastBytesRecv;
 }
 

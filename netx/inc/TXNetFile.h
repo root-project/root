@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -45,7 +46,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TNetFile
-#include "TNetFile.h" 
+#include "TNetFile.h"
 #endif
 #ifndef ROOT_TXAbsNetCommon
 #include "TXAbsNetCommon.h"
@@ -99,10 +100,10 @@ private:
 
 public:
 
-   TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "", 
+   TXNetFile(const char *url, Option_t *option = "", const char* fTitle = "",
              Int_t compress = 1, Int_t netopt = -1);
    virtual ~TXNetFile();
-  
+
    Bool_t         OpenFileWhenRedirected(char *newfhandle, Bool_t &wasopen);
    Bool_t         ProcessUnsolicitedMsg(TXUnsolicitedMsgSender *sender,
                                         TXMessage *unsolmsg);
@@ -114,14 +115,14 @@ public:
    Int_t          LastBytesSent(void);
    Int_t          LastDataBytesRecv(void);
    Int_t          LastDataBytesSent(void);
-   Bool_t         Open(Option_t *option, const char* fTitle, Int_t compress, 
+   Bool_t         Open(Option_t *option, const char* fTitle, Int_t compress,
                        Int_t netopt, Bool_t DoInit);
    virtual Bool_t ReadBuffer(char *buf, Int_t len);
    virtual Int_t  ReOpen(const Option_t *mode);
    Long64_t       Size(void);
    virtual Bool_t WriteBuffer(const char *buffer, Int_t BufferLength);
 
-   ClassDef(TXNetFile, 1) //A TNetFile extension able to deal with new xrootd server.	
+   ClassDef(TXNetFile, 1) //A TNetFile extension able to deal with new xrootd server.
 };
 
 #endif

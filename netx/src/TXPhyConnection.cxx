@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,10 +13,7 @@
 //                                                                      //
 // TXPhyConnection                                                      //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
-// Class handling physical connections to xrootd servers                //
+// Class handling physical connections to xrootd servers.               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,11 +28,9 @@
 #include <sys/socket.h>
 #include "TEnv.h"
 #include "TSystem.h"
-
-
-#include <TThread.h>
-#include <TApplication.h>
-#include <Riostream.h>
+#include "TThread.h"
+#include "TApplication.h"
+#include "Riostream.h"
 
 ClassImp(TXPhyConnection);
 
@@ -86,7 +82,7 @@ TXPhyConnection::TXPhyConnection(TXAbsUnsolicitedMsgHandler *h)
    fRwMutex = new TMutex(kTRUE);
 
    if (!fRwMutex)
-      Error("TXPhyConnection", 
+      Error("TXPhyConnection",
             "can't create mutex for read/write: out of system resources");
 
    Touch();
@@ -112,14 +108,14 @@ TXPhyConnection::~TXPhyConnection()
 }
 
 //____________________________________________________________________________
-Bool_t TXPhyConnection::Connect(TString TcpAddress, Int_t TcpPort, 
+Bool_t TXPhyConnection::Connect(TString TcpAddress, Int_t TcpPort,
                                 Int_t TcpWindowSize)
 {
    // Connect to remote server
 
    if (DebugLevel() >= TXDebug::kHIDEBUG)
       Info("Connect", "Connecting to [%s:%d]", TcpAddress.Data(), TcpPort);
-  
+
    fSocket = new TXSocket(TcpAddress, TcpPort, TcpWindowSize);
 
    if(!fSocket) {
@@ -131,7 +127,7 @@ Bool_t TXPhyConnection::Connect(TString TcpAddress, Int_t TcpPort,
    fSocket->TryConnect();
 
    if (!fSocket->IsValid()) {
-      Error("Connect", 
+      Error("Connect",
             "can't open connection to xrootd/rootd on host [%s:%d]",
             TcpAddress.Data(), TcpPort);
       Disconnect();
@@ -162,7 +158,7 @@ void TXPhyConnection::StartReader()
    // Parametric asynchronous stuff.
    // If we are going Sync, then nothing has to be done,
    // otherwise the reader thread must be started
-   if ( (!fReaderthreadrunning) && 
+   if ( (!fReaderthreadrunning) &&
          gEnv->GetValue("XNet.GoAsynchronous", DFLT_GOASYNC) ) {
 
       if (DebugLevel() >= TXDebug::kHIDEBUG)
@@ -187,7 +183,7 @@ void TXPhyConnection::StartReader()
 }
 
 //____________________________________________________________________________
-Bool_t TXPhyConnection::ReConnect(TString TcpAddress, Int_t TcpPort, 
+Bool_t TXPhyConnection::ReConnect(TString TcpAddress, Int_t TcpPort,
                                   Int_t TcpWindowSize)
 {
    // Re-connection attempt
@@ -251,7 +247,7 @@ void TXPhyConnection::Touch()
 Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
 {
    // Receive 'len' bytes from the connected server and store them in 'buf'.
-   // Return number of bytes received. 
+   // Return number of bytes received.
 
    Int_t res;
 
@@ -277,7 +273,7 @@ Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
           (!fSocket->IsValid())) {
 
          if (DebugLevel() >= TXDebug::kHIDEBUG)
-            Info("ReadRaw", 
+            Info("ReadRaw",
                  "Socket reported a disconnection (server[%s:%d]). Closing.",
                  fRemoteAddress.Data(), fRemotePort);
          Disconnect();
@@ -308,7 +304,7 @@ TXMessage *TXPhyConnection::ReadXMessage(Int_t streamid)
 }
 
 //____________________________________________________________________________
-TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt, 
+TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt,
                                           Bool_t IgnoreTimeouts, Bool_t Enqueue)
 {
    // Builds an TXMessage, and makes it read its header/data from the socket
@@ -347,7 +343,7 @@ TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt,
             m = 0;
          }
       }
-  
+
    return m;
 }
 
@@ -364,7 +360,7 @@ void TXPhyConnection::HandleUnsolicited(TXMessage *m)
    // Local processing of the unsolicited TXMessage
    attnbody = (struct ServerResponseBody_Attn *)m->GetData();
    if (attnbody) {
-    
+
       switch (attnbody->actnum) {
       case kXR_asyncms:
          // A message arrived from the server. Let's print it.
@@ -387,7 +383,7 @@ void TXPhyConnection::HandleUnsolicited(TXMessage *m)
 Int_t TXPhyConnection::WriteRaw(const void *buf, Int_t len, ESendRecvOptions opt)
 {
    // Send 'len' bytes located at 'buf' to the connected server.
-   // Return number of bytes sent. 
+   // Return number of bytes sent.
 
    Int_t res;
 
@@ -398,7 +394,7 @@ Int_t TXPhyConnection::WriteRaw(const void *buf, Int_t len, ESendRecvOptions opt
       if (DebugLevel() >= TXDebug::kDUMPDEBUG)
          Info("WriteRaw", "Writing to socket %d[%s:%d]",
               fSocket->GetDescriptor(), fRemoteAddress.Data(), fRemotePort);
-    
+
       res = fSocket->SendRaw(buf, len, opt);
 
       if ((res <= 0)  && (res != TXSOCK_ERR_TIMEOUT) &&
@@ -430,11 +426,11 @@ Int_t TXPhyConnection::WriteRaw(const void *buf, Int_t len, ESendRecvOptions opt
 
 //____________________________________________________________________________
 UInt_t TXPhyConnection::GetBytesSent()
-{ 
+{
    // Return number of bytes sent
 
    if (IsValid())
-      return fSocket->GetBytesSent(); 
+      return fSocket->GetBytesSent();
    else {
       // Socket already destroyed or disconnected
       if (DebugLevel() >= TXDebug::kDUMPDEBUG)
@@ -446,8 +442,8 @@ UInt_t TXPhyConnection::GetBytesSent()
 }
 
 //____________________________________________________________________________
-UInt_t TXPhyConnection::GetBytesRecv() 
-{ 
+UInt_t TXPhyConnection::GetBytesRecv()
+{
    // Return number of bytes received
 
    if (IsValid())
@@ -464,8 +460,8 @@ UInt_t TXPhyConnection::GetBytesRecv()
 
 //____________________________________________________________________________
 UInt_t TXPhyConnection::GetSocketBytesSent()
-{ 
-   // Return number of bytes sent 
+{
+   // Return number of bytes sent
 
    if (IsValid())
       return fSocket->GetSocketBytesSent();
@@ -480,8 +476,8 @@ UInt_t TXPhyConnection::GetSocketBytesSent()
 }
 
 //____________________________________________________________________________
-UInt_t TXPhyConnection::GetSocketBytesRecv() 
-{ 
+UInt_t TXPhyConnection::GetSocketBytesRecv()
+{
    // Return number of bytes received
 
    if (IsValid())
@@ -506,7 +502,7 @@ Bool_t TXPhyConnection::ExpiredTTL()
 //____________________________________________________________________________
 void TXPhyConnection::LockChannel()
 {
-   // Lock 
+   // Lock
    fRwMutex->Lock();
 }
 

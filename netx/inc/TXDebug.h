@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,12 +16,11 @@
 //                                                                      //
 // TXDebug                                                              //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TEnv
 #include "TEnv.h"
+#endif
 
 #define DebugLevel() TXDebug::Instance()->GetDebugLevel()
 

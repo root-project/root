@@ -1,3 +1,4 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -63,7 +64,7 @@ class TXConnectionMgr;
 // Ugly prototype to avoid warnings under solaris
 extern "C" void * GarbageCollectorThread(void * arg);
 
-class TXConnectionMgr: public TXAbsUnsolicitedMsgHandler, 
+class TXConnectionMgr: public TXAbsUnsolicitedMsgHandler,
                        TXUnsolicitedMsgSender, public TObject {
 private:
    vector <TXLogConnection*> fLogVec;
@@ -87,15 +88,15 @@ protected:
 public:
    virtual ~TXConnectionMgr();
 
-   Short_t       Connect(TString RemoteAddress, Int_t TcpPort, 
+   Short_t       Connect(TString RemoteAddress, Int_t TcpPort,
                          Int_t TcpWindowSize);
    void          Disconnect(Short_t LogConnectionID, Bool_t ForcePhysicalDisc);
    TXLogConnection *GetConnection(Short_t LogConnectionID);
    short int     GetPhyConnectionRefCount(TXPhyConnection *PhyConn);
    TXMessage*    ReadMsg(Short_t LogConnectionID, ESendRecvOptions opt = kDefault);
-   Int_t         ReadRaw(Short_t LogConnectionID, void *buffer, Int_t BufferLength, 
+   Int_t         ReadRaw(Short_t LogConnectionID, void *buffer, Int_t BufferLength,
                          ESendRecvOptions opt = kDefault);
-   Int_t         WriteRaw(Short_t LogConnectionID, const void *buffer, 
+   Int_t         WriteRaw(Short_t LogConnectionID, const void *buffer,
                           Int_t BufferLength, ESendRecvOptions opt = kDefault);
 
    static TXConnectionMgr* Instance();

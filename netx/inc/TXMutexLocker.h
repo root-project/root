@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,8 +29,8 @@ private:
    TMutex *fMtx;
 
 public:
- 
-   inline TXMutexLocker(TMutex *mutex) { 
+
+   inline TXMutexLocker(TMutex *mutex) {
       fMtx = mutex;
       fMtx->Lock();
    }

@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,9 +12,6 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TXInputBuffer                                                        //
-//                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -97,15 +95,15 @@ Int_t TXInputBuffer::PutMsg(TXMessage* m)
 
    {
       TXMutexLocker mtx(fMutex);
-    
+
       fMsgQue.push_back(m);
-    
+
       // Is anybody sleeping ?
       cnd = GetSyncObjOrMakeOne( m->HeaderSID() );
    }
 
    cnd->Signal();
- 
+
    return MexSize();
 }
 
@@ -122,7 +120,7 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
    Int_t cond_ret;
 
    res = 0;
- 
+
    {
       TXMutexLocker mtx(fMutex);
 
@@ -137,7 +135,7 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
 	       break;
             }
          }
-      } 
+      }
    }
 
    if (!res) {

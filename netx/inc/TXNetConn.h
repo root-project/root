@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,7 +20,7 @@
 //          INFN Padova, 2003                                           //
 //                                                                      //
 // High level handler of connections to xrootd.                         //
-// Instantiated by TXNetFile.                                           // 
+// Instantiated by TXNetFile.                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,12 +48,12 @@ class TXNetConn : public TObject {
 
 public:
    enum ServerType {
-      kSTError      = -1,  // Some error occurred: server type undetermined 
+      kSTError      = -1,  // Some error occurred: server type undetermined
       kSTNone       = 0,   // Remote server type un-recognized
       kSTRootd      = 1,   // Remote server type: old rootd server
       kSTBaseXrootd = 2,   // Remote server type: xrootd dynamic load balancer
       kSTDataXrootd = 3    // Remote server type: xrootd data server
-   }; 
+   };
    enum ESrvErrorHandlerRetval {
       kSEHRReturnMsgToCaller   = 0,
       kSEHRBreakLoop           = 1,
@@ -68,13 +69,13 @@ public:
 
    Int_t             fLastDataBytesRecv;
    Int_t             fLastDataBytesSent;
-   XErrorCode        fOpenError;	
+   XErrorCode        fOpenError;
 
-  
+
    TXNetConn();
    ~TXNetConn();
 
-   Bool_t           CheckHostDomain(TString hostToCheck, TString allow, 
+   Bool_t           CheckHostDomain(TString hostToCheck, TString allow,
                                                          TString deny);
    Short_t          Connect(TString newHost, Int_t newPort, Int_t netopt);
    void             Disconnect(Bool_t ForcePhysicalDisc);
@@ -89,14 +90,14 @@ public:
    Int_t            LastBytesSent();
    Int_t            LastDataBytesRecv();
    Int_t            LastDataBytesSent();
-   Bool_t           SendGenCommand(ClientRequest *req, 
-                                   const void *reqMoreData,       
+   Bool_t           SendGenCommand(ClientRequest *req,
+                                   const void *reqMoreData,
                                    void **answMoreDataAllocated,
                                    void *answMoreData, Bool_t HasToAlloc,
                                    char *CmdName,
                                    struct ServerResponseHeader *srh = 0);
    ServerType       GetServerType() const { return fServerType; }
-   void             SetClientHostDomain(const char *src) 
+   void             SetClientHostDomain(const char *src)
                                                 { fClientHostDomain = src; }
    void             SetConnected(Bool_t conn) { fConnected = conn; }
    void             SetLogConnID(Short_t logconnid) { fLogConnID = logconnid;}
@@ -123,7 +124,7 @@ private:
    TString             fRedirInternalToken; // Token returned by the server when
                                            // redirecting
    Long_t              fServerProto;      // The server protocol
-   ServerType          fServerType;       // Server type as returned by doHandShake() 
+   ServerType          fServerType;       // Server type as returned by doHandShake()
                                          // (see enum ServerType)
    TUrl                fUrl;
 
@@ -146,12 +147,12 @@ private:
 
    TString             ParseDomainFromHostname(TString hostname);
 
-   TXMessage          *ReadPartialAnswer(XReqErrorType &, size_t &, 
+   TXMessage          *ReadPartialAnswer(XReqErrorType &, size_t &,
                                          ClientRequest *, Bool_t, void**,
                                          EThreeStateReadHandler &);
-   XReqErrorType       WriteToServer(ClientRequest *, ClientRequest *, 
+   XReqErrorType       WriteToServer(ClientRequest *, ClientRequest *,
                                          const void*, Short_t);
-  
+
    ClassDef(TXNetConn, 1); //A high level connection class for TXNetAdmin.
 };
 

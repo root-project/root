@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,10 +13,7 @@
 //                                                                      //
 // TXMessage                                                            //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
-// Class to handle messages to/from xrootd                              //
+// Class to handle messages to/from xrootd.                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -40,10 +38,10 @@ TXMessage::TXMessage(struct ServerResponseHeader header)
    fData = 0;
    fMarshalled = false;
    if (!CreateData()) {
-      Error("TXMessage", 
+      Error("TXMessage",
             "Error allocating %d bytes for this TXMessage", fHdr.dlen);
       fAllocated = false;
-   } else 
+   } else
       fAllocated = true;
 }
 
@@ -76,7 +74,7 @@ void *TXMessage::DonateData()
    void *res = fData;
    fData = 0;
    fAllocated = false;
-  
+
    return (res);
 }
 
@@ -138,7 +136,7 @@ Int_t TXMessage::ReadRaw(TXPhyConnection *phy, ESendRecvOptions opt)
    if (DebugLevel() >= TXDebug::kDUMPDEBUG)
       Info("TXMessage::ReadRaw", "Reading header (%d bytes) from socket.",
  	   readLen);
-  
+
    bytesread = phy->ReadRaw((void *)&fHdr, readLen, opt);
    if (bytesread < readLen) {
       if (bytesread == TXSOCK_ERR_TIMEOUT)

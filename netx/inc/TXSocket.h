@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -68,7 +69,7 @@ class TXSocket : public TSocket {
 
 private:
    Bool_t               fASYNC;
-   TSemaphore          *fConnectSem; 
+   TSemaphore          *fConnectSem;
    TXSocketConnectParms fHost2contact;  // status connection thread
    Int_t                fRequestTimeout;
 
@@ -93,7 +94,7 @@ public:
    static void    CatchTimeOut();
 
    void           Create(TString, Int_t, Int_t);
-   virtual Int_t  RecvRaw(void* buffer, Int_t length, 
+   virtual Int_t  RecvRaw(void* buffer, Int_t length,
                                         ESendRecvOptions opt = kDefault);
    virtual Int_t  SendRaw(const void* buffer, Int_t length,
                                         ESendRecvOptions opt = kDefault);

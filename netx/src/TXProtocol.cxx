@@ -1,7 +1,8 @@
+// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,16 +13,11 @@
 //                                                                      //
 // TXProtocol.cxx                                                       //
 //                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-//                                                                      //
-// Utility functions for client-to-server                               //
+// Utility functions for client-to-server.                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TXProtocol
 #include "TXProtocol.h"
-#endif
 #include "Bytes.h"
 #include <netinet/in.h> // needed to use htonl/htons byte swap functions
 #include <string.h> // proto for memcpy (wanted by Solaris compiler)
@@ -41,7 +37,7 @@ static kXR_int64 _htonll(kXR_int64 n)
 void clientMarshall(ClientRequest* str)
 {
    // This function applies the network byte order on those
-   // parts of the 16-bytes buffer, only if it is composed 
+   // parts of the 16-bytes buffer, only if it is composed
    // by some binary part
 
    kXR_int64 tmpl;
@@ -238,7 +234,7 @@ void PutFilehandleInRequest(ClientRequest* str, char *fHandle)
 {
    // this function inserts a filehandle in a generic request header
    // already composed
-  
+
    switch(str->header.requestid) {
    case kXR_close:
       memcpy( str->close.fhandle, fHandle, sizeof(str->close.fhandle) );
@@ -295,26 +291,26 @@ void smartPrintClientHeader(ClientRequest* hdr)
    printf("\n\n================= DUMPING CLIENT REQUEST HEADER =================\n");
 
    printf("%40s0x%.2x 0x%.2x\n", "ClientHeader.streamid = ",
-          hdr->header.streamid[0], 
+          hdr->header.streamid[0],
           hdr->header.streamid[1]);
 
-   printf("%40s%s (%d)\n", 
+   printf("%40s%s (%d)\n",
           "ClientHeader.requestid = ",
           convertRequestIdToChar(hdr->header.requestid), hdr->header.requestid);
 
    switch(hdr->header.requestid) {
    case kXR_admin:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.admin.reserved = ",
              (kXR_int32)sizeof(hdr->admin.reserved));
       break;
-    
+
    case kXR_auth:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.auth.reserved = ",
              (kXR_int32)sizeof(hdr->auth.reserved));
 
-      printf("  ClientHeader.auth.credtype= 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", 
+      printf("  ClientHeader.auth.credtype= 0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",
              hdr->auth.credtype[0],
              hdr->auth.credtype[1],
              hdr->auth.credtype[2],
@@ -322,55 +318,55 @@ void smartPrintClientHeader(ClientRequest* hdr)
       break;
 
    case kXR_chmod:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.chmod.reserved = ",
              (kXR_int32)sizeof(hdr->chmod.reserved));
 
-      printf("  ClientHeader.chmod.mode= 0x%.2x 0x%.2x \n", 
+      printf("  ClientHeader.chmod.mode= 0x%.2x 0x%.2x \n",
              *((kXR_char *)&hdr->chmod.mode),
              *(((kXR_char *)&hdr->chmod.mode)+1)
          );
       break;
 
    case kXR_close:
-      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", 
+      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",
              "ClientHeader.close.fhandle = ",
              hdr->close.fhandle[0],
              hdr->close.fhandle[1],
              hdr->close.fhandle[2],
              hdr->close.fhandle[3]);
 
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.close.reserved = ",
              (kXR_int32)sizeof(hdr->close.reserved));
       break;
 
    case kXR_dirlist:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.dirlist.reserved = ",
              (kXR_int32)sizeof(hdr->dirlist.reserved));
       break;
 
    case kXR_login:
-      printf("%40s%d \n", 
+      printf("%40s%d \n",
              "ClientHeader.login.pid = ",
              hdr->login.pid);
 
-      printf("%40s%s\n", 
+      printf("%40s%s\n",
              "ClientHeader.login_body.username = ",
              hdr->login.username);
 
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.login.reserved = ",
              (kXR_int32)sizeof(hdr->login.reserved));
 
-      printf("%40s%d\n", 
+      printf("%40s%d\n",
              "ClientHeader.login.role = ",
              (kXR_int32)hdr->login.role);
       break;
 
    case kXR_mkdir:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.mkdir.reserved = ",
              (kXR_int32)sizeof(hdr->mkdir.reserved));
 
@@ -382,7 +378,7 @@ void smartPrintClientHeader(ClientRequest* hdr)
       break;
 
    case kXR_mv:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.mv.reserved = ",
              (kXR_int32)sizeof(hdr->mv.reserved));
       break;
@@ -399,19 +395,19 @@ void smartPrintClientHeader(ClientRequest* hdr)
              *((kXR_char*)&hdr->open.options),
              *(((kXR_char*)&hdr->open.options)+1));
 
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.open.reserved = ",
              (kXR_int32)sizeof(hdr->open.reserved));
       break;
 
    case kXR_ping:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.ping.reserved = ",
              (kXR_int32)sizeof(hdr->ping.reserved));
       break;
 
    case kXR_protocol:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.protocol.reserved = ",
              (kXR_int32)sizeof(hdr->protocol.reserved));
       break;
@@ -423,13 +419,13 @@ void smartPrintClientHeader(ClientRequest* hdr)
       printf("%40s0x%c\n",
              "ClientHeader.prepare.prty = ",
              hdr->prepare.prty);
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.prepare.reserved = ",
              (kXR_int32)sizeof(hdr->prepare.reserved));
       break;
 
    case kXR_read:
-      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", 
+      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",
              "ClientHeader.read.fhandle = ",
              hdr->read.fhandle[0],
              hdr->read.fhandle[1],
@@ -438,55 +434,55 @@ void smartPrintClientHeader(ClientRequest* hdr)
 
       memcpy(&tmpl, &hdr->read.offset, sizeof(kXR_int64) );
 
-      printf("%40s%lld\n", 
+      printf("%40s%lld\n",
              "ClientHeader.read.offset = ",
              tmpl);
 
-      printf("%40s%d\n", 
+      printf("%40s%d\n",
              "ClientHeader.read.rlen = ",
              hdr->read.rlen);
       break;
 
    case kXR_rm:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.rm.reserved = ",
              (kXR_int32)sizeof(hdr->rm.reserved));
 
       break;
 
    case kXR_rmdir:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.rmdir.reserved = ",
              (kXR_int32)sizeof(hdr->rmdir.reserved));
       break;
 
    case kXR_set:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.set.reserved = ",
              (kXR_int32)sizeof(hdr->set.reserved));
       break;
 
    case kXR_stat:
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.stat.reserved = ",
              (kXR_int32)sizeof(hdr->stat.reserved));
       break;
 
    case kXR_sync:
-      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", 
+      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",
              "ClientHeader.sync.fhandle = ",
              hdr->sync.fhandle[0],
              hdr->sync.fhandle[1],
              hdr->sync.fhandle[2],
              hdr->sync.fhandle[3]);
 
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.sync.reserved = ",
              (kXR_int32)sizeof(hdr->sync.reserved));
       break;
 
    case kXR_write:
-      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n", 
+      printf("%40s0x%.2x 0x%.2x 0x%.2x 0x%.2x \n",
              "ClientHeader.write.fhandle = ",
              hdr->write.fhandle[0],
              hdr->write.fhandle[1],
@@ -495,17 +491,17 @@ void smartPrintClientHeader(ClientRequest* hdr)
 
       memcpy(&tmpl, &hdr->write.offset, sizeof(kXR_int64) );
 
-      printf("%40s%lld\n", 
+      printf("%40s%lld\n",
              "ClientHeader.write.offset = ",
              tmpl);
 
-      printf("%40s0 repeated %d times\n", 
+      printf("%40s0 repeated %d times\n",
              "ClientHeader.write.reserved = ",
              (kXR_int32)sizeof(hdr->write.reserved));
       break;
    }
 
-   printf("%40s%d", 
+   printf("%40s%d",
           "ClientHeader.header.dlen = ",
           hdr->header.dlen);
    printf("\n=================== END CLIENT HEADER DUMPING ===================\n\n");
@@ -545,12 +541,12 @@ void smartPrintServerHeader(struct ServerResponseHeader* hdr)
              "ServerHeader.status = ");
       break;
    case kXR_wait:
-      printf("%30skXR_wait", 
+      printf("%30skXR_wait",
              "ServerHeader.status = ");
       break;
    }
    printf(" (%d)\n", hdr->status);
-   printf("%30s%d", 
+   printf("%30s%d",
           "ServerHeader.dlen = ", hdr->dlen);
    printf("\n========== END DUMPING SERVER HEADER ===========\n\n");
 }
