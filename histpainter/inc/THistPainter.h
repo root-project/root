@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.8 2002/02/07 09:10:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.9 2002/02/23 15:45:56 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -69,32 +69,32 @@ public:
     virtual Int_t      MakeChopt(Option_t *option);
     virtual Int_t      MakeCuts(char *cutsopt);
     virtual void       Paint(Option_t *option="");
-    virtual void       PaintArrows();
+    virtual void       PaintArrows(Option_t *option);
     virtual void       PaintAxis();
-    virtual void       PaintBar();
-    virtual void       PaintBarH();
-    virtual void       PaintBoxes();
-    virtual void       PaintColorLevels();
-    virtual void       PaintContour();
+    virtual void       PaintBar(Option_t *option);
+    virtual void       PaintBarH(Option_t *option);
+    virtual void       PaintBoxes(Option_t *option);
+    virtual void       PaintColorLevels(Option_t *option);
+    virtual void       PaintContour(Option_t *option);
     virtual Int_t      PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                            Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
                            Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
-    virtual void       PaintErrors();
+    virtual void       PaintErrors(Option_t *option);
     virtual void       PaintFrame();
-    virtual void       PaintFunction();
-    virtual void       PaintHist();
+    virtual void       PaintFunction(Option_t *option);
+    virtual void       PaintHist(Option_t *option);
     virtual void       PaintH3(Option_t *option="");
     virtual Int_t      PaintInit();
     virtual Int_t      PaintInitH();
-    virtual void       PaintLego();
+    virtual void       PaintLego(Option_t *option);
     virtual void       PaintLegoAxis(TGaxis *axis, Double_t ang);
     virtual void       PaintPalette();
-    virtual void       PaintScatterPlot();
+    virtual void       PaintScatterPlot(Option_t *option);
     virtual void       PaintStat(Int_t dostat, TF1 *fit);
     virtual void       PaintStat2(Int_t dostat, TF1 *fit);
-    virtual void       PaintSurface();
-    virtual void       PaintTable();
-    virtual void       PaintText();
+    virtual void       PaintSurface(Option_t *option);
+    virtual void       PaintTable(Option_t *option);
+    virtual void       PaintText(Option_t *option);
     virtual void       PaintTitle();
     virtual void       RecalculateRange();
     virtual void       RecursiveRemove(TObject *);

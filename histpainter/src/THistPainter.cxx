@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.72 2002/02/25 23:10:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.73 2002/03/08 18:44:17 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1237,7 +1237,7 @@ void THistPainter::Paint(Option_t *option)
       if (Hoption.Func) {
          Hoption_t hoptsave = Hoption;
          Hparam_t  hparsave = Hparam;
-         PaintFunction();
+         PaintFunction(option);
          SetHistogram(hsave);
          Hoption = hoptsave;
          Hparam  = hparsave;
@@ -1253,12 +1253,12 @@ void THistPainter::Paint(Option_t *option)
       }
    }
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf ) {
-      PaintTable();
+      PaintTable(option);
       fH->SetMinimum(minsav);
       if (Hoption.Func) {
          Hoption_t hoptsave = Hoption;
          Hparam_t  hparsave = Hparam;
-         PaintFunction();
+         PaintFunction(option);
          SetHistogram(hsave);
          Hoption = hoptsave;
          Hparam  = hparsave;
@@ -1267,7 +1267,7 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-   if (Hoption.Bar >= 20) {PaintBarH(); return;}
+   if (Hoption.Bar >= 20) {PaintBarH(option); return;}
 
    if (!PaintInit()) return;  //fill Hparam structure with histo parameters
 
@@ -1285,26 +1285,26 @@ void THistPainter::Paint(Option_t *option)
 //    -----
 //          test for options BAR or HBAR
    if (Hoption.Bar >= 10) {
-      PaintBar();
+      PaintBar(option);
    }
 //    -----
 //          do not draw histogram if error bars required
    if (!Hoption.Error) {
-      if (Hoption.Hist) PaintHist();
+      if (Hoption.Hist) PaintHist(option);
    }
 //    -----
 
 //         test for error bars or option E
    if (Hoption.Error) {
-      PaintErrors();
-      if (Hoption.Hist == 2) PaintHist();
+      PaintErrors(option);
+      if (Hoption.Hist == 2) PaintHist(option);
    }
 
 //         test for associated function
    if (Hoption.Func) {
       Hoption_t hoptsave = Hoption;
       Hparam_t  hparsave = Hparam;
-      PaintFunction();
+      PaintFunction(option);
       SetHistogram(hsave);
       Hoption = hoptsave;
       Hparam  = hparsave;
@@ -1330,7 +1330,7 @@ void THistPainter::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintArrows()
+void THistPainter::PaintArrows(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as an arrow plot*-*-*-*-*-*
 //               =================================================
@@ -1559,7 +1559,7 @@ void THistPainter::PaintAxis()
 
 
 //______________________________________________________________________________
-void THistPainter::PaintBar()
+void THistPainter::PaintBar(Option_t *)
 {
 //  Draw a bar chart in a normal pad.
 //     (see PaintBarH to draw a bar chart in a rotated pad)
@@ -1621,7 +1621,7 @@ void THistPainter::PaintBar()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintBarH()
+void THistPainter::PaintBarH(Option_t *)
 {
 // Draw a bar char in a rotated pad (X vertical, Y horizontal)
 //     (see PaintBar to draw a bar chart in a normal pad)
@@ -1711,7 +1711,7 @@ void THistPainter::PaintBarH()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintBoxes()
+void THistPainter::PaintBoxes(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a box plot*-*-*-*-*-*
 //               ==============================================
@@ -1786,7 +1786,7 @@ void THistPainter::PaintBoxes()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintColorLevels()
+void THistPainter::PaintColorLevels(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a color plot*-*-*-*-*-*
 //               ================================================
@@ -1875,7 +1875,7 @@ void THistPainter::PaintColorLevels()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintContour()
+void THistPainter::PaintContour(Option_t *option)
 {
 //    *-*-*-*-*-*Control function to draw a table as a contour plot*-*-*-*-*-*
 //               =================================================
@@ -1918,7 +1918,7 @@ void THistPainter::PaintContour()
       phisave = gPad->GetPhi();
       gPad->SetPhi(0.0001);
       gPad->SetTheta(89.99);
-      PaintSurface();
+      PaintSurface(option);
       gPad->SetPhi(phisave);
       gPad->SetTheta(thesave);
       gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
@@ -2240,7 +2240,7 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintErrors()
+void THistPainter::PaintErrors(Option_t *)
 {
 //    *-*-*-*-*-*-*-*-*Draw histogram error bars*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //
@@ -2528,7 +2528,7 @@ void THistPainter::PaintFrame()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintFunction()
+void THistPainter::PaintFunction(Option_t *)
 {
 //    *-*-*-*-*-*-*-*-*Paint functions associated to an histogram*-*-*-*-*-*-*
 //                     ==========================================
@@ -2559,7 +2559,7 @@ void THistPainter::PaintFunction()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintHist()
+void THistPainter::PaintHist(Option_t *)
 {
 //    *-*-*-*-*-*-*-*Control routine to draw an histogram*-*-*-*-*-*-*-*-*-*-*
 //                   ====================================
@@ -3176,7 +3176,7 @@ Int_t THistPainter::PaintInitH()
 
 
 //______________________________________________________________________________
-void THistPainter::PaintLego()
+void THistPainter::PaintLego(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a lego plot*-*-*-*-*-*
 //               ===============================================
@@ -3660,15 +3660,18 @@ void THistPainter::PaintPalette()
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintScatterPlot()
+void THistPainter::PaintScatterPlot(Option_t *option)
 {
 //    *-*-*-*-*-*Control function to draw a table as a scatter plot*-*-*-*-*
 //               ==================================================
 //
 //       For each cell (i,j) a number of points proportional to the cell
 //       content is drawn.
-//       A maximum of 500 points per cell is drawn. If the maximum is above 500
-//       contents are normalized to 500.
+//       A maximum of kNMAX points per cell is drawn. If the maximum is above kNMAX
+//       contents are normalized to kNMAX. (kNMAX=2000)/
+//       if option is of the form "scat=ff", (eg scat=1.8, scat=1e-3), then 
+//       ff is used as a scale factor to compute the number of dots.
+//       "scat=1" is the default.
 //Begin_Html
 /*
 <img src="gif/PaintScatterPlot.gif">
@@ -3708,6 +3711,15 @@ void THistPainter::PaintScatterPlot()
          ltest = kTRUE;
       }
    }
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("scat=")) {
+      char optscat[100];
+      strcpy(optscat,opt.Data());
+      char *oscat = strstr(optscat,"scat=");
+      char *blank = strstr(oscat," "); if (blank) *blank = 0;
+      sscanf(oscat+5,"%lg",&scale);
+   }
    UInt_t seedsave = gRandom->GetSeed();
    gRandom->SetSeed();
    marker=0;
@@ -3731,11 +3743,11 @@ void THistPainter::PaintScatterPlot()
          k = Int_t(z*scale);
          if (ltest) k++;
          if (k > 0) {
-            if (k+marker >= kNMAX) {
-               gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
-               marker=0;
-            }
             for (Int_t loop=0; loop<k; loop++) {
+               if (k+marker >= kNMAX) {
+                  gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
+                  marker=0;
+               }
                fXbuf[marker] = (gRandom->Rndm(loop)*xstep) + xk;
                fYbuf[marker] = (gRandom->Rndm(loop)*ystep) + yk;
                if (Hoption.Logx){
@@ -4067,7 +4079,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
 }
 
 //______________________________________________________________________________
-void THistPainter::PaintSurface()
+void THistPainter::PaintSurface(Option_t *)
 {
 //    *-*-*-*-*-*Control function to draw a table as a surface plot*-*-*-*-*-*
 //               ==================================================
@@ -4340,7 +4352,7 @@ void THistPainter::PaintSurface()
 
 
 //______________________________________________________________________________
-void THistPainter::PaintTable()
+void THistPainter::PaintTable(Option_t *option)
 {
 //    *-*-*-*-*-*-*-*Control function to draw 2-D/3-D tables*-*-*-*-*-*-*-*
 //                   =======================================
@@ -4350,15 +4362,15 @@ void THistPainter::PaintTable()
    PaintFrame();
 
    if (fH->GetEntries() >= 0) {
-      if (Hoption.Scat)    PaintScatterPlot();
-      if (Hoption.Arrow)   PaintArrows();
-      if (Hoption.Box)     PaintBoxes();
-      if (Hoption.Color)   PaintColorLevels();
-      if (Hoption.Contour) PaintContour();
-      if (Hoption.Text)    PaintText();
+      if (Hoption.Scat)    PaintScatterPlot(option);
+      if (Hoption.Arrow)   PaintArrows(option);
+      if (Hoption.Box)     PaintBoxes(option);
+      if (Hoption.Color)   PaintColorLevels(option);
+      if (Hoption.Contour) PaintContour(option);
+      if (Hoption.Text)    PaintText(option);
    }
-   if (Hoption.Lego)    PaintLego();
-   if (Hoption.Surf && !Hoption.Contour)    PaintSurface();
+   if (Hoption.Lego)    PaintLego(option);
+   if (Hoption.Surf && !Hoption.Contour)    PaintSurface(option);
 
    if (!Hoption.Lego && !Hoption.Surf) PaintAxis();     //    Draw the axes
 
@@ -4376,7 +4388,7 @@ void THistPainter::PaintTable()
 
 
 //______________________________________________________________________________
-void THistPainter::PaintText()
+void THistPainter::PaintText(Option_t *)
 {
 //    *-*-*-*Control function to draw a table with the bin values*-*-*-*-*-*
 //           ====================================================
