@@ -25,12 +25,16 @@ D: contribution to GUI classes
 
 N: Bertrand Bellenot
 E: Bertrand.Bellenot@alcan.com
-D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB.
+D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB
 
 N: Adrian Bevan
 E: bevan@slac.stanford.edu
 D: class TFeldmanCousins
 D: TMath::BubbleHigh, TMath::BubbleLow
+
+N: Dan Bradley
+E: dan@hep.wisc.edu
+D: Chirp plugin which allows remote file access via the Condor Chirp protocol
 
 N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
