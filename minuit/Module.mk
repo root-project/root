@@ -43,7 +43,7 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(MAINLIBS)
 
 $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
+		$(ROOTCINTTMP) -f $@ -c $(MINUITH) $(MINUITL)
 
 $(MINUITDO):    $(MINUITDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

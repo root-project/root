@@ -45,7 +45,7 @@ $(X11LIB):      $(X11O) $(X11DO) $(MAINLIBS)
 
 $(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
+		$(ROOTCINTTMP) -f $@ -c $(X11H1) $(X11L)
 
 $(X11DO):       $(X11DS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

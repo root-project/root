@@ -43,7 +43,7 @@ $(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(MAINLIBS)
 
 $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(MATRIXH) $(MATRIXL)
+		$(ROOTCINTTMP) -f $@ -c $(MATRIXH) $(MATRIXL)
 
 $(MATRIXDO):    $(MATRIXDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

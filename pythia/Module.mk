@@ -45,7 +45,7 @@ $(PYTHIALIB):   $(PYTHIAO) $(PYTHIADO) $(MAINLIBS) $(PYTHIALIBDEP)
 
 $(PYTHIADS):    $(PYTHIAH1) $(PYTHIAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(PYTHIAH1) $(PYTHIAL)
+		$(ROOTCINTTMP) -f $@ -c $(PYTHIAH1) $(PYTHIAL)
 
 $(PYTHIADO):    $(PYTHIADS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

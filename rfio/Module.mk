@@ -43,7 +43,7 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(MAINLIBS)
 
 $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
+		$(ROOTCINTTMP) -f $@ -c $(RFIOH) $(RFIOL)
 
 $(RFIODO):      $(RFIODS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

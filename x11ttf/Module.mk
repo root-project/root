@@ -44,7 +44,7 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(MAINLIBS) $(X11TTFLIBDEP)
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
+		$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
 
 $(X11TTFDO):    $(X11TTFDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(TTFINCDIR) -I. -o $@ -c $<

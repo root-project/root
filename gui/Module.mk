@@ -69,13 +69,13 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(MAINLIBS) $(GUILIBDEP)
 
 $(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
+		$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
 $(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(GUIH2) $(GUIL2)
+		$(ROOTCINTTMP) -f $@ -c $(GUIH2) $(GUIL2)
 $(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
+		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
 
 $(GUIDO1):      $(GUIDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -44,7 +44,7 @@ $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(MAINLIBS) $(PYTHIA6LIBDEP)
 
 $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(PYTHIA6H) $(PYTHIA6L)
+		$(ROOTCINTTMP) -f $@ -c $(PYTHIA6H) $(PYTHIA6L)
 
 $(PYTHIA6DO):   $(PYTHIA6DS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

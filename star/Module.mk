@@ -43,7 +43,7 @@ $(STARLIB):     $(STARO) $(STARDO) $(MAINLIBS)
 
 $(STARDS):      $(STARH) $(STARL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(STARH) $(STARL)
+		$(ROOTCINTTMP) -f $@ -c $(STARH) $(STARL)
 
 $(STARDO):      $(STARDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -46,7 +46,7 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(MAINLIBS) $(X3DLIBDEP)
 
 $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
+		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
 
 $(X3DDO):       $(X3DDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

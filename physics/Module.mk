@@ -43,7 +43,7 @@ $(PHYSICSLIB):  $(PHYSICSO) $(PHYSICSDO) $(MAINLIBS)
 
 $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(PHYSICSH) $(PHYSICSL)
+		$(ROOTCINTTMP) -f $@ -c $(PHYSICSH) $(PHYSICSL)
 
 $(PHYSICSDO):   $(PHYSICSDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

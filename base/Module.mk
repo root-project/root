@@ -41,10 +41,10 @@ include/%.h:    $(BASEDIRI)/%.h
 
 $(BASEDS1):     $(BASEH1) $(BASEL1) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL1)
+		$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL1)
 $(BASEDS2):     $(BASEH1) $(BASEL2) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL2)
+		$(ROOTCINTTMP) -f $@ -c $(BASEH1) $(BASEL2)
 
 $(BASEDO1):     $(BASEDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -35,7 +35,7 @@ include/%.h:    $(UNIXDIRI)/%.h
 
 $(UNIXDS):      $(UNIXH) $(UNIXL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(UNIXH) $(UNIXL)
+		$(ROOTCINTTMP) -f $@ -c $(UNIXH) $(UNIXL)
 
 $(UNIXDO):      $(UNIXDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

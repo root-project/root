@@ -35,7 +35,7 @@ include/%.h:    $(NETDIRI)/%.h
 
 $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
+		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
 $(NETDO):       $(NETDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

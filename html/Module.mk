@@ -43,7 +43,7 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(MAINLIBS)
 
 $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
+		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
 
 $(HTMLDO):      $(HTMLDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

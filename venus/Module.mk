@@ -44,7 +44,7 @@ $(VENUSLIB):    $(VENUSO) $(VENUSDO) $(MAINLIBS) $(VENUSLIBDEP)
 
 $(VENUSDS):     $(VENUSH1) $(VENUSL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(VENUSH1) $(VENUSL)
+		$(ROOTCINTTMP) -f $@ -c $(VENUSH1) $(VENUSL)
 
 $(VENUSDO):     $(VENUSDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

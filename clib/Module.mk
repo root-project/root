@@ -35,7 +35,7 @@ include/%.h:    $(CLIBDIRI)/%.h
 
 $(CLIBDS):      $(CLIBDIRI)/Getline.h $(CLIBL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(CLIBDIRI)/Getline.h $(CLIBL)
+		$(ROOTCINTTMP) -f $@ -c $(CLIBDIRI)/Getline.h $(CLIBL)
 
 $(CLIBDO):      $(CLIBDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

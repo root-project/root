@@ -35,7 +35,7 @@ include/%.h:    $(CONTDIRI)/%.h
 
 $(CONTDS):      $(CONTH) $(CONTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(CONTH) $(CONTL)
+		$(ROOTCINTTMP) -f $@ -c $(CONTH) $(CONTL)
 
 $(CONTDO):      $(CONTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -43,7 +43,7 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(MAINLIBS) $(HISTLIBDEP)
 
 $(HISTDS):      $(HISTH) $(HISTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTL)
+		$(ROOTCINTTMP) -f $@ -c $(HISTH) $(HISTL)
 
 $(HISTDO):      $(HISTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

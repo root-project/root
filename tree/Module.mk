@@ -43,7 +43,7 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(MAINLIBS)
 
 $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
+		$(ROOTCINTTMP) -f $@ -c $(TREEH) $(TREEL)
 
 $(TREEDO):      $(TREEDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

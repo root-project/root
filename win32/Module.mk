@@ -44,7 +44,7 @@ $(WIN32LIB):    $(WIN32O) $(WIN32DO) $(MAINLIBS) $(WIN32LIBDEP)
 
 $(WIN32DS):     $(WIN32H1) $(WIN32L) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(WIN32H1) $(WIN32L)
+		$(ROOTCINTTMP) -f $@ -c $(WIN32H1) $(WIN32L)
 
 $(WIN32DO):     $(WIN32DS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

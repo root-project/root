@@ -35,7 +35,7 @@ include/%.h:    $(METADIRI)/%.h
 
 $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
+		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAH) $(METAL)
 
 $(METADO):      $(METADS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $(METADO) -c $(METADS)

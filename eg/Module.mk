@@ -44,7 +44,7 @@ $(EGLIB):       $(EGO) $(EGDO) $(MAINLIBS) $(EGLIBDEP)
 
 $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
+		$(ROOTCINTTMP) -f $@ -c $(EGH1) $(EGL)
 
 $(EGDO):        $(EGDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

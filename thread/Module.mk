@@ -45,7 +45,7 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(MAINLIBS)
 
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
+		$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
 
 $(THREADDO):    $(THREADDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

@@ -47,7 +47,7 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(MAINLIBS) $(G3DLIBDEP)
 
 $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
+		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
 
 $(G3DDO):       $(G3DDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

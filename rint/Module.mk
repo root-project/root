@@ -43,7 +43,7 @@ $(RINTLIB):     $(RINTO) $(RINTDO) $(MAINLIBS)
 
 $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
+		$(ROOTCINTTMP) -f $@ -c $(RINTH) $(RINTL)
 
 $(RINTDO):      $(RINTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

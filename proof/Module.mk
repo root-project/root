@@ -43,7 +43,7 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(MAINLIBS) $(PROOFLIBDEP)
 
 $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
+		$(ROOTCINTTMP) -f $@ -c $(PROOFH) $(PROOFL)
 
 $(PROOFDO):     $(PROOFDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<

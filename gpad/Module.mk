@@ -43,7 +43,7 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(MAINLIBS) $(GPADLIBDEP)
 
 $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		@$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
+		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
 
 $(GPADDO):      $(GPADDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
