@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.85 2003/02/26 10:11:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.86 2003/02/26 15:09:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1158,10 +1158,10 @@ Int_t TFile::Recover()
             fNbytesInfo = nbytes;
          } else {
             AppendKey(key);
+            nrecov++;
+            SetBit(kRecovered);
+            Info("Recover", "%s, recovered key %s:%s at address %d",GetName(),key->GetClassName(),key->GetName(),idcur);
          }
-         nrecov++;
-         SetBit(kRecovered);
-         Info("Recover", "recovered key %s:%s at address %d",key->GetClassName(),key->GetName(),idcur);
       }
       delete [] classname;
       idcur += nbytes;
