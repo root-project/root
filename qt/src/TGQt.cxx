@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.8 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.9 2005/02/09 06:19:40 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -570,7 +571,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.79 2005/02/09 00:57:21 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.80 2005/02/10 01:31:01 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -659,15 +660,15 @@ Bool_t TGQt::Init(void* /*display*/)
     QStringList families = fdb.families();
     Bool_t symbolFontFound = kFALSE;
     for ( QStringList::Iterator f = families.begin(); f != families.end(); ++f ) {
-        if ( *f == fSymbolFontFamily) { symbolFontFound = kTRUE; break; }
         // fprintf(stderr," TGQt::TGQt %s \n", (const char *)*f);
+        if ( *f == fSymbolFontFamily) { symbolFontFound = kTRUE; break; }
     }
     if (!symbolFontFound) {
         fprintf(stderr, "The font \"symbol.ttf\" was not installed yet\n");
          //  provide the replacement and the codec
         fSymbolFontFamily = "Arial";
         fprintf(stderr, " Substitute it with \"%s\"\n",fSymbolFontFamily);
-        fprintf(stderr, " You are advised to install \"symbol.ttf\" to get the proper support for ROOT TLatex class\n");
+        fprintf(stderr, " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \"$ROOOTSYS/fonts\" directory to get the proper support for ROOT TLatex class\n");
         // create a custom codec
         new QSymbolCodec();
     }
@@ -1376,7 +1377,8 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    if (fQFont) {
       QFontMetrics metrics(*fQFont);
       w = metrics.width( GetTextDecoder()->toUnicode(mess) );
-      h = metrics.height();
+      h = (unsigned int)(metrics.height()*CalibrateFont());
+      // fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d\n", w,h,fTextFont);
    }
    qApp->unlock();
 }
@@ -2147,8 +2149,19 @@ void  TGQt::SetTextColor(Color_t cindex)
 }
 
 //______________________________________________________________________________
-Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/){
-  return 1;
+Int_t  TGQt::SetTextFont(char* /*fontname*/, TVirtualX::ETextSetMode /*mode*/)
+{
+   // Set text font to specified name.
+   // mode       : loading flag
+   // mode=kCheck = 0     : search if the font exist (kCheck)
+   // mode= kLoad = 1     : search the font and load it if it exists (kLoad)
+   // font       : font name
+   //
+   // Set text font to specified name. This function returns 0 if
+   // the specified font is found, 1 if not.
+   
+   // Qt takes care to make sure the proper font is loaded and scaled.
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -2167,7 +2180,7 @@ void  TGQt::SetTextFont(const char *fontname, int italic, int bold)
    fQFont->setItalic((Bool_t)italic);
    fQFont->setFamily(fontname);
    fTextFontModified = 1;
-   // fprintf(stderr, "font: %s bold=%d italic=%d\n",fontname,bold,italic);
+   // fprintf(stderr, "TGQt::SetTextFont font: <%s> bold=%d italic=%d\n",fontname,bold,italic);
 }
 
 //______________________________________________________________________________
