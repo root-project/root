@@ -10663,7 +10663,7 @@ G__value *buf;
   if('g'==buf->type && buf->ref) 
     return((int*)buf->ref);
   else if('d'==buf->type || 'f'==buf->type) 
-    buf->obj.i = (i)buf->obj.d;
+    buf->obj.i = (int)buf->obj.d;
   else 
     buf->obj.i = (int)buf->obj.i; 
   return(&buf->obj.i);
