@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.34 2002/08/23 14:51:44 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.35 2002/11/28 23:26:05 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -93,16 +93,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    if (!gROOT)
       ::Fatal("TClonesArray::TClonesArray", "ROOT system not initialized");
 
-   fKeep  = 0;
    fClass = gROOT->GetClass(classname);
-   if (!fClass) {
-      Error("TClonesArray", "%s is not a valid class name", classname);
-      return;
-   }
-   if (!fClass->InheritsFrom(TObject::Class())) {
-      Error("TClonesArray", "%s does not inherit from TObject", classname);
-      return;
-   }
    char *name = new char[strlen(classname)+2];
    sprintf(name, "%ss", classname);
    SetName(name);
@@ -111,6 +102,17 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    fKeep = new TObjArray(s);
 
    BypassStreamer(kTRUE);
+   
+   if (!fClass) {
+      MakeZombie();
+      Error("TClonesArray", "%s is not a valid class name", classname);
+      return;
+   }
+   if (!fClass->InheritsFrom(TObject::Class())) {
+      MakeZombie();
+      Error("TClonesArray", "%s does not inherit from TObject", classname);
+      return;
+   }
 }
 
 //______________________________________________________________________________
