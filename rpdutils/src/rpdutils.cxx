@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.52 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.53 2004/06/28 08:59:56 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -337,7 +337,7 @@ static int reads(int fd, char *buf, int len)
    //  reads in at most one less than len characters from open
    //  descriptor fd and stores them into the buffer pointed to by buf.
    //  Reading stops after an EOF or a newline. If a newline is
-   //  read, it  is stored into the buffer. 
+   //  read, it  is stored into the buffer.
    //  A '\0' is stored after the last character in the buffer.
    //  The number of characters read is returned (newline included).
    //  Returns < 0 in case of error.
@@ -557,7 +557,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
             itab = open(gRpdAuthTab.c_str(), O_RDWR | O_CREAT, 0666);
             if (itab == -1) {
                ErrorInfo("RpdUpdateAuthTab: opt=%d: error opening %s"
-                         "(errno: %d)", 
+                         "(errno: %d)",
                          opt, gRpdAuthTab.c_str(), GetErrno());
                return retval;
             }
@@ -644,7 +644,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          ofs += slen;
       }
       close(ibak);
-         
+
       // Truncate file to new length
       if (ftruncate(itab, 0) == -1)
          ErrorInfo("RpdUpdateAuthTab: opt=%d: ftruncate error (%s)"
@@ -669,7 +669,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 
          bool ok = 1;
          // Check file corruption: length and number of items
-         int slen = bytesread; 
+         int slen = bytesread;
          if (slen < 1) {
             ErrorInfo("RpdUpdateAuthTab: opt=%d: file %s seems corrupted"
                       " (slen: %d)", opt, gRpdAuthTab.c_str(), slen);
@@ -730,8 +730,8 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
    } else if (opt == 1) {
 
       //
-      // Add 'line' at the end 
-      // (check size and cleanup/truncate if needed) 
+      // Add 'line' at the end
+      // (check size and cleanup/truncate if needed)
 
       // Check size ...
       if ((int)(fsize+strlen(line)) > kMAXTABSIZE) {
@@ -743,7 +743,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          if ((int)(fsize+strlen(line)) > kMAXTABSIZE)
             fsize = RpdUpdateAuthTab(-1,(const char *)0,0,itab);
       }
-      // We are going to write at the end 
+      // We are going to write at the end
       retval = lseek(itab, 0, SEEK_END);
 
       // Generate token
@@ -759,7 +759,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 
       // Save RSA public key into file for later use by other rootd/proofd
       RpdSavePubKey(gPubKey, retval, gUser);
-      
+
    } else {
 
       //
@@ -775,7 +775,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
          ErrorInfo("RpdUpdateAuthTab: error unlocking %s",
                    gRpdAuthTab.c_str());
       }
-      
+
       // closing file ...
       close(itab);
    }
@@ -1186,7 +1186,7 @@ int RpdRenameKeyFile(int oldofs, int newofs)
 {
    // Rename public file with new offset
    // Returns: 0 if OK
-   //          1 if problems renaming 
+   //          1 if problems renaming
    int retval = 0;
 
    // Old name
@@ -1432,8 +1432,6 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
       retval = 0;
 
    } else {
-      // This is the first call ... check for host specific directives
-      gMethInit = 1;
 
       // First check if file exists and can be read
       if (access(theDaemonRc.c_str(), R_OK)) {
@@ -1683,6 +1681,9 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
 
       // closing file ...
       fclose(ftab);
+
+      // Host specific directives have been checked for ...
+      gMethInit = 1;
 
       // Use defaults if nothing found
       if (!found) {
@@ -2126,7 +2127,7 @@ void RpdSshAuth(const char *sstr)
          }
       }
 
-      if ((unsigned int)st0.st_uid != pw->pw_uid || 
+      if ((unsigned int)st0.st_uid != pw->pw_uid ||
           (unsigned int)st0.st_gid != pw->pw_gid) {
          if (chown(AuthFile, pw->pw_uid, pw->pw_gid)) {
             if (gDebug > 0) {
@@ -2146,7 +2147,7 @@ void RpdSshAuth(const char *sstr)
       // Send Back the name of the file
       CmdInfo = std::string(AuthFile);
    }
-      
+
    // Add non-standard port, if so
    if (gSshdPort != 22) {
       char sshp[10];
@@ -2235,7 +2236,7 @@ void RpdSshAuth(const char *sstr)
             if (!strncmp(line,"k:",2)) {
                // The file contains some meaningful info ...
                gAuth = 1;
-               // Get the key, if there 
+               // Get the key, if there
                char key[4], val[10];
                int nw = sscanf(line,"%s %s",key,val);
                if (nw >= 2 && strncmp(val,"-1",2)) {
@@ -2309,7 +2310,7 @@ void RpdSshAuth(const char *sstr)
 
          // Ask for the RSA key
          NetSend(gRSAKey, kROOTD_RSAKEY);
-    
+
          // Receive the key securely
          if (RpdRecvClientRSAKey()) {
             ErrorInfo("RpdSshAuth: could not import a valid key"
@@ -3090,7 +3091,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
          if (GetErrno() != ENOENT)
             ErrorInfo("RpdCheckHostsEquiv: cannot stat $HOME/.rhosts"
                    " (errno: %d)",GetErrno());
-         sprintf(rhossv, "%s/.rhosts", pw->pw_dir);
+         sprintf(rhossv, "%s/.rhosts.sv", pw->pw_dir);
          rename(rhosts,rhossv);
          irhsv = 1;
       }
@@ -4484,13 +4485,13 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
             if (gDebug > 2)
                ErrorInfo("RpdGetRSAKeys: got %d bytes for RSA_d_exp",
                          strlen(RSA_d_exp));
-         
+
             rsa_num_sget(&gRSA_n, RSA_n_exp);
             rsa_num_sget(&gRSA_d, RSA_d_exp);
-         
+
             if (RSA_n_exp) delete[] RSA_n_exp;
             if (RSA_d_exp) delete[] RSA_d_exp;
-         
+
          } else
             return 0;
       } else {
@@ -4515,7 +4516,6 @@ int RpdGetRSAKeys(const char *PubKey, int Opt)
       fclose(fKey);
 
    return KeyType;
-
 }
 
 //______________________________________________________________________________
@@ -4579,13 +4579,13 @@ int RpdSecureSend(char *str)
       strncpy(buftmp, str, slen);
       buftmp[slen] = 0;
       ttmp = rsa_encode(buftmp, slen, gRSA_n, gRSA_d);
-   } else if (gRSAKey == 2) {  
+   } else if (gRSAKey == 2) {
 #ifdef R__SSL
       ttmp = strlen(str);
       if ((ttmp % 8) > 0)            // It should be a multiple of 8!
          ttmp = ((ttmp + 8)/8) * 8;
       unsigned char iv[8];
-      memset((void *)&iv[0],0,8); 
+      memset((void *)&iv[0],0,8);
       BF_cbc_encrypt((const unsigned char *)str, (unsigned char *)buftmp,
                      strlen(str), &gBFKey, iv, BF_ENCRYPT);
 #else
@@ -4645,10 +4645,10 @@ int RpdSecureRecv(char **str)
       // Prepare output
       *str = new char[strlen(buftmp) + 1];
       strcpy(*str, buftmp);
-   } else if (gRSAKey == 2) {  
+   } else if (gRSAKey == 2) {
 #ifdef R__SSL
       unsigned char iv[8];
-      memset((void *)&iv[0],0,8); 
+      memset((void *)&iv[0],0,8);
       *str = new char[nrec + 1];
       BF_cbc_encrypt((const unsigned char *)buftmp, (unsigned char *)(*str),
                       nrec, &gBFKey, iv, BF_DECRYPT);
@@ -4684,7 +4684,7 @@ int RpdGenRSAKeys(int setrndinit)
 
 #ifdef R__SSL
    // Generate also the SSL key
-   if (gDebug > 2) 
+   if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: Generate RSA SSL keys");
 
    // Number of bits for key
@@ -4692,31 +4692,31 @@ int RpdGenRSAKeys(int setrndinit)
 
    // Public exponent
    Int_t pubex = 17;
-   
+
    // Init random engine
    char *rbuf = RpdGetRandString(0,40);
    RAND_seed(rbuf,strlen(rbuf));
 
-   // Generate Key   
+   // Generate Key
    gRSASSLKey = RSA_generate_key(nbits,pubex,0,0);
-   
+
    // Bio for exporting the pub key
    BIO *bkey = BIO_new(BIO_s_mem());
-   
+
    // Write public key to BIO
    PEM_write_bio_RSAPublicKey(bkey,gRSASSLKey);
-   
+
    // Read key from BIO to buf
    Int_t sbuf = 2*RSA_size(gRSASSLKey);
    char *kbuf = new char[sbuf];
    BIO_read(bkey,(void *)kbuf,sbuf);
-   
+
    // Prepare export
    gRSAPubExport[1].len = sbuf;
    gRSAPubExport[1].keys = new char[gRSAPubExport[1].len + 2];
    strncpy(gRSAPubExport[1].keys,kbuf,gRSAPubExport[1].len);
    gRSAPubExport[1].keys[gRSAPubExport[1].len-1] = '\0';
-   if (kbuf) 
+   if (kbuf)
       delete[] kbuf;
    if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: SSL: export pub:\n%.*s",
@@ -4885,7 +4885,7 @@ int RpdGenRSAKeys(int setrndinit)
                 gRSAPubExport[0].keys);
 #else
    if (gDebug > 2)
-      ErrorInfo("RpdGenRSAKeys: local: export pub length: %d bytes", 
+      ErrorInfo("RpdGenRSAKeys: local: export pub length: %d bytes",
                 gRSAPubExport[0].len);
 #endif
 
@@ -4939,7 +4939,7 @@ int RpdRecvClientRSAKey()
       int ndec = 0;
       int lcmax = RSA_size(gRSASSLKey);
       char btmp[kMAXSECBUF];
-      int nr = gPubKeyLen; 
+      int nr = gPubKeyLen;
       int kd = 0;
       while (nr > 0) {
          // Receive and decode encoded public key

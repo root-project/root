@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.7 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.8 2004/04/20 15:21:50 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -65,7 +65,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    // Returns number of potentially valid dir/cert/key triplets found.
 
    int retval = 1;
-   std::string HostCertConf = "/hostcert.conf"; 
+   std::string HostCertConf = "/hostcert.conf";
    char *certdir_default  = "/etc/grid-security/certificates";
    char *hostcert_default = "/etc/grid-security/hostcert.pem";
    char *hostkey_default  = "/etc/grid-security/hostkey.pem";
@@ -92,6 +92,10 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    }
 
    if (HostCertConf.length()) {
+      // string::insert is buggy on some compilers (eg gcc 2.96):
+      // new length correct but data not always null terminated
+      HostCertConf[HostCertConf.length()] = 0;
+
       // The user/administrator provided a file ... check if it exists
       // and can be read
       FILE *fconf = 0;
@@ -487,7 +491,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
        (void *) ((char *) databuf + sizeof(size_t) + sizeof(void *));
    memmove(databuf->value, SecContExp->value, SecContExp->length);
 
-   // Now we can detach from the shared memory segment ... 
+   // Now we can detach from the shared memory segment ...
    // and release memory we don't anylonger
    int rc = 0;
    if ((rc = shmdt((const void *) databuf)) != 0) {
@@ -617,7 +621,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    // user specifications
    // Called when running as non-root
 
-   std::string HostCertConf = "/hostcert.conf"; 
+   std::string HostCertConf = "/hostcert.conf";
    char *certdir_default  = "/etc/grid-security/certificates";
    char *gridmap_default  = "/etc/grid-security/grid-mapfile";
    char dir_def[kMAXPATHLEN] = {0}, map_def[kMAXPATHLEN] = {0},
@@ -637,6 +641,10 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    }
 
    if (HostCertConf.length()) {
+      // string::insert is buggy on some compilers (eg gcc 2.96):
+      // new length correct but data not always null terminated
+      HostCertConf[HostCertConf.length()] = 0;
+
       // The user/administrator provided a file ... check if it
       // exists and can be read
       FILE *fconf = 0;
@@ -732,7 +740,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    // if yes, check that their owner matches and determine its name
    // and user-id, to be used later for the proxy file name
    if (getuid() == 0) {
- 
+
       char *cer_tmp  = 0;
       if (strlen(cer_def) && cer_def[0] != '*')
          cer_tmp = GlbsToolExpand(cer_def);
@@ -744,11 +752,11 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 
          struct stat stc, stk;
          if (stat(cer_tmp,&stc) == -1) {
-            ErrorInfo("GlbsToolCheckProxy: stat error:" 
+            ErrorInfo("GlbsToolCheckProxy: stat error:"
                       " file %s (errno: %d) ",cer_tmp,errno);
          } else {
             if (stat(key_tmp,&stk) == -1) {
-               ErrorInfo("GlbsToolCheckProxy: stat error:" 
+               ErrorInfo("GlbsToolCheckProxy: stat error:"
                          " file %s (errno: %d) ",key_tmp,errno);
             } else {
                if (stc.st_uid == stk.st_uid) {
@@ -910,7 +918,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 #endif
 
    } else {
-      // Proxy file not existing or not readable 
+      // Proxy file not existing or not readable
       ErrorInfo("GlbsToolCheckProxy: Proxy file not existing or"
                      "not readable");
       return 1;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.92 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.93 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -627,7 +627,7 @@ Bool_t TSystem::ConsistentWith(const char *path, void *dirptr)
    if (path) {
       if (!GetDirPtr()) {
          TUrl url(path, kTRUE);
-         if (!strcmp(url.GetProtocol(), GetName()))
+         if (!strncmp(url.GetProtocol(), GetName(), strlen(GetName())))
             checkproto = kTRUE;
       }
    }

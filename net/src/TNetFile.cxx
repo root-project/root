@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.49 2004/06/14 22:58:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.50 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -833,13 +833,16 @@ Bool_t TNetSystem::AccessPathName(const char *path, EAccessMode mode)
 Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
 {
    // Check consistency of this helper with the one required
-   // by 'path' or 'dirptr'
+   // by 'path' or 'dirptr'.
 
+   // Standard check: only the protocol part of 'path' is required
+   // to match
    Bool_t checkstd = TSystem::ConsistentWith(path,dirptr);
 
+   // Require match of 'user' and 'host'
    Bool_t checknet = kFALSE;
-
    if (path && strlen(path)) {
+
       TUrl url(path);
       TString user = url.GetUser();
       if (!user.Length()) {
@@ -849,7 +852,6 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
          delete u;
       }
 
-      // Check and save the host FQDN ...
       TString host = url.GetHost();
       TInetAddress addr = gSystem->GetHostByName(host);
       if (addr.IsValid()) {
@@ -861,6 +863,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
       if (user == fUser && host == fHost )
          checknet = kTRUE;
    }
-   return (checkstd || checknet);
+
+   return (checkstd && checknet);
 }
 
