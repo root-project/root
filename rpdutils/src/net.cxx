@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.7 2005/02/22 16:03:46 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.8 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -35,7 +35,7 @@
     defined(R__OBSD) || (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-     (defined(R__SUNGCC3) && defined(__arch64__)) || MACOSX_VERS>=4
+     (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4
 #   define USE_SOCKLEN_T
 #endif
 
