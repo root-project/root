@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.24 2004/04/20 15:23:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.25 2004/05/06 16:57:39 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -128,10 +128,9 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          Bool_t  sndsrp = kFALSE;
 
          TPwdCtx *pwdctx = 0;
-         if (fSecContext->IsA("UsrPwd") || fSecContext->IsA("SRP")) {
+         if (RemoteOffSet > -1 &&
+            (fSecContext->IsA("UsrPwd") || fSecContext->IsA("SRP")))
             pwdctx = (TPwdCtx *)(fSecContext->GetContext());
-         }
-
 
          if (!fProof->IsMaster()) {
             if (gEnv->GetValue("Proofd.SendSRPPwd",0))
@@ -144,8 +143,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             }
          }
 
-         if (fSocket->GetSecContext()->IsA("UsrPwd") ||
-            (fSocket->GetSecContext()->IsA("SRP") && sndsrp)) {
+         if ((fSocket->GetSecContext()->IsA("UsrPwd") && pwdctx) ||
+             (fSocket->GetSecContext()->IsA("SRP")    && sndsrp)) {
 
             // Send offset to identify remotely the public part of RSA key
             fSocket->Send(RemoteOffSet,kROOTD_RSAKEY);
