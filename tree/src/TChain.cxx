@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.49 2002/05/23 20:06:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.50 2002/06/12 20:29:47 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -680,6 +680,7 @@ Int_t TChain::LoadTree(Int_t entry)
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
       fEntries = fTreeOffset[fNtrees];
+      element->SetNumberEntries(nentries);
       if (entry > fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
          if (fTreeNumber < fNtrees && entry < fTreeOffset[fTreeNumber+2]) return LoadTree(entry);
