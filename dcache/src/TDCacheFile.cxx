@@ -1,5 +1,6 @@
 // @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.10 2003/07/19 00:14:15 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
+// Modified: William Tanenbaum 01/12/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -28,10 +29,22 @@
 
 #include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <sys/types.h>
 
 #include <dcap.h>
+#ifndef R__WIN32
+#include <unistd.h>
+#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
+    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
+            defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
+	                defined(R__MACOSX) || defined(R__HURD)
+#define HAS_DIRENT
+#endif
+#endif
 
+#ifdef HAS_DIRENT
+#include <dirent.h>
+#endif
 
 static const char* const DCACHE_PREFIX = "dcache:";
 static const size_t DCACHE_PREFIX_LEN = strlen(DCACHE_PREFIX);
@@ -46,9 +59,8 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
                          const char *ftitle, Int_t compress):
    TFile(path, "NET", ftitle, compress)
 {
-   // get rid of the optional URI
-   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
-      path += 7;
+   TString pathString = GetDcapPath(path);
+   path = pathString.Data();
 
    fOffset = 0;
    fOption = option;
@@ -70,11 +82,6 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    const char *fname;
 
    if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
-      // Ugh, no PNFS support
-      if (create || recreate || update) {
-         Error("TDCacheFile", "without PNFS support only reading access is allowed.");
-         goto zombie;
-      }
       fname = path;
    } else {
       // Metadata provided by PNFS
@@ -87,37 +94,37 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
          Error("TDCacheFile", "error expanding path %s", path);
          goto zombie;
       }
+   }
 
-      if (recreate) {
-         if (!gSystem->AccessPathName(fname, kFileExists))
-            gSystem->Unlink(fname);
-         recreate = kFALSE;
-         create   = kTRUE;
-         fOption  = "CREATE";
+   if (recreate) {
+      if (!gSystem->AccessPathName(fname, kFileExists))
+         gSystem->Unlink(fname);
+      recreate = kFALSE;
+      create   = kTRUE;
+      fOption  = "CREATE";
+   }
+   if (create && !gSystem->AccessPathName(fname, kFileExists)) {
+      Error("TDCacheFile", "file %s already exists", fname);
+      goto zombie;
+   }
+   if (update) {
+      if (gSystem->AccessPathName(fname, kFileExists)) {
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (create && !gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TDCacheFile", "file %s already exists", fname);
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
+         Error("TDCacheFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }
-      if (update) {
-         if (gSystem->AccessPathName(fname, kFileExists)) {
-            update = kFALSE;
-            create = kTRUE;
-         }
-         if (update && gSystem->AccessPathName(fname, kWritePermission)) {
-            Error("TDCacheFile", "no write permission, could not open file %s", fname);
-            goto zombie;
-         }
+   }
+   if (read) {
+      if (gSystem->AccessPathName(fname, kFileExists)) {
+         Error("TDCacheFile", "file %s does not exist", fname);
+         goto zombie;
       }
-      if (read) {
-         if (gSystem->AccessPathName(fname, kFileExists)) {
-            Error("TDCacheFile", "file %s does not exist", fname);
-            goto zombie;
-         }
-         if (gSystem->AccessPathName(fname, kReadPermission)) {
-            Error("TDCacheFile", "no read permission, could not open file %s", fname);
-            goto zombie;
-         }
+      if (gSystem->AccessPathName(fname, kReadPermission)) {
+         Error("TDCacheFile", "no read permission, could not open file %s", fname);
+         goto zombie;
       }
    }
 
@@ -225,8 +232,8 @@ Bool_t TDCacheFile::Stage(const char *path, UInt_t after, const char *location)
 {
    // Stage() returns kTRUE on success and kFALSE on failure.
 
-   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
-      path += 7;
+   TString pathString = GetDcapPath(path);
+   path = pathString.Data();
 
    dc_errno = 0;
 
@@ -250,8 +257,8 @@ Bool_t TDCacheFile::CheckFile(const char *path, const char *location)
    // case the file exists but is not cached, CheckFile() returns
    // kFALSE and errno is set to EAGAIN.
 
-   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN))
-      path += 7;
+   TString pathString = GetDcapPath(path);
+   path = pathString.Data();
 
    dc_errno = 0;
 
@@ -394,7 +401,7 @@ Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TDCacheFile::SysSync(Int_t /*fd*/)
+Int_t TDCacheFile::SysSync(Int_t)
 {
    // dCache always keep it's files sync'ed, so there's no need to
    // sync() them manually.
@@ -403,33 +410,14 @@ Int_t TDCacheFile::SysSync(Int_t /*fd*/)
 }
 
 //______________________________________________________________________________
-Int_t TDCacheFile::SysStat(Int_t fd, Long_t *id, Long_t *size,
+Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long_t *size,
                            Long_t *flags, Long_t *modtime)
 {
-   // FIXME: dcap library doesn't (yet) provide any stat()
-   // capabilities, relying on PNFS to provide all meta-level data. In
-   // spite of this, it is possible to open a file which is not
-   // accessible via PNFS. In such case we do some dirty tricks to
-   // provide as much information as possible, but not everything can
-   // really be done correctly.
+   // Return file stat information. The interface and return value is
+   // identical to TDCacheSystem::GetPathInfo(). The function returns 0 in
+   // case of success and 1 if the file could not be stat'ed.
 
-   if (!strncmp(fRealName, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
-      // Ugh, no PNFS support.
-
-      // Try to provide a unique id
-      *id = ::Hash(fRealName);
-
-      // Funny way of checking the file size, isn't it?
-      Seek_t offset = fOffset;
-      *size = SysSeek(fd, 0, SEEK_END);
-      SysSeek(fd, offset, SEEK_SET);
-
-      *flags = 0;          // This one is easy, only ordinary files are allowed here
-      *modtime = 0;        // FIXME: no way to get it right without dc_stat()
-      return 0;
-   } else {
-      return TFile::SysStat(fd, id, size, flags, modtime);
-   }
+   return gSystem->GetPathInfo(GetName(), id, size, flags, modtime);
 }
 
 //______________________________________________________________________________
@@ -439,4 +427,190 @@ void TDCacheFile::ResetErrno() const
 
    dc_errno = 0;
    TSystem::ResetErrno();
+}
+
+//______________________________________________________________________________
+TString TDCacheFile::GetDcapPath(const char *path)
+{
+   // Transform the input path into a path usuable by 
+   // the dcap C library.
+   // i.e either dcap://nodename.org/where/filename.root
+   // either //pnfs/where/filename.root
+
+   if (!strncmp(path, DCACHE_PREFIX, DCACHE_PREFIX_LEN)) {
+      path += DCACHE_PREFIX_LEN;
+   }
+   if (!strncmp(path, DCAP_PREFIX, DCAP_PREFIX_LEN)) {
+      path += DCAP_PREFIX_LEN;
+   }
+   TString pathString(path);
+   if (!strncmp(path, "//", 2)) {
+      pathString  = DCAP_PREFIX + pathString;
+   }
+   return pathString;
+}
+
+//______________________________________________________________________________
+TDCacheSystem::TDCacheSystem() : TSystem("-DCache", "DCache Helper System")
+{
+   // Create helper class that allows directory access .
+
+   // name must start with '-' to bypass the TSystem singleton check
+   SetName("DCache");
+
+   fDirp = 0;
+}
+
+
+//---- Directories -------------------------------------------------------------
+
+//______________________________________________________________________________
+int TDCacheSystem::MakeDirectory(const char *name)
+{
+   // The DCache Library does not yet have a mkdir function. 
+   // For now, just invoke the standard UNIX functionality.
+
+   return ::mkdir(name, 0755);
+}
+
+//______________________________________________________________________________
+void *TDCacheSystem::OpenDirectory(const char *name)
+{
+   // The DCache Library does not yet have a opendir function. 
+   // For now, just invoke the standard UNIX functionality.
+
+   struct stat finfo;
+
+   if (stat(name, &finfo) < 0)
+     return 0;
+
+   if (!S_ISDIR(finfo.st_mode))
+     return 0;
+
+   return (void*) opendir(name);
+
+}
+
+//______________________________________________________________________________
+void TDCacheSystem::FreeDirectory(void *dirp)
+{
+   // The DCache Library does not yet have a closedir function. 
+   // For now, just invoke the standard UNIX functionality.
+
+   if (dirp)
+      ::closedir((DIR*)dirp);
+}
+
+#if defined(_POSIX_SOURCE)
+// Posix does not require that the d_ino field be present, and some
+// systems do not provide it.
+#   define REAL_DIR_ENTRY(dp) 1
+#else
+#   define REAL_DIR_ENTRY(dp) (dp->d_ino != 0)
+#endif
+
+//______________________________________________________________________________
+const char *TDCacheSystem::GetDirEntry(void *dirp1)
+{
+   // The DCache Library does not yet have a readdir function. 
+   // For now, just invoke the standard UNIX functionality.
+
+   DIR *dirp = (DIR*)dirp1;
+#ifdef HAS_DIRENT
+   struct dirent *dp;
+#else
+   struct direct *dp;
+#endif
+
+   if (dirp) {
+      for (;;) {
+         dp = readdir(dirp);
+         if (dp == 0)
+            return 0;
+         if (REAL_DIR_ENTRY(dp))
+            return dp->d_name;
+      }
+   }
+   return 0;
+}
+
+//---- Paths & Files -----------------------------------------------------------
+
+//______________________________________________________________________________
+Bool_t TDCacheSystem::AccessPathName(const char *path, EAccessMode mode)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // Mode is the same as for the Unix access(2) function.
+   // Attention, bizarre convention of return value!!
+
+   // The DCache Library does not yet have an access function.  Use dc_stat()
+
+   TString pathString = TDCacheFile::GetDcapPath(path);
+   path = pathString.Data();
+
+   struct stat statbuf;
+
+   if (path != 0 && dc_stat(path, &statbuf) >= 0) {
+     switch (mode) {
+       case kReadPermission:
+         if (statbuf.st_mode | S_IRUSR) return kFALSE;
+         break;
+       case kWritePermission:
+         if (statbuf.st_mode | S_IWUSR) return kFALSE;
+         break;
+       case kExecutePermission:
+         if (statbuf.st_mode | S_IXUSR) return kFALSE;
+	 break;
+       default:
+         return kFALSE;
+     }
+   }
+
+   fLastErrorString = GetError();
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+int TDCacheSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                               Long_t *flags, Long_t *modtime)
+{
+   // Get info about a file: id, size, flags, modification time.
+   // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   TString pathString = TDCacheFile::GetDcapPath(path);
+   path = pathString.Data();
+
+   struct stat statbuf;
+
+   if (path != 0 && dc_stat(path, &statbuf) >= 0) {
+      if (id)
+#if defined(R__KCC) && defined(R__LINUX)
+         *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
+#else
+         *id = (statbuf.st_dev << 24) + statbuf.st_ino;
+#endif
+      if (size)
+         *size = statbuf.st_size;
+      if (modtime)
+         *modtime = statbuf.st_mtime;
+      if (flags) {
+         *flags = 0;
+         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+            *flags |= 1;
+         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+            *flags |= 2;
+         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+             (statbuf.st_mode & S_IFMT) != S_IFDIR)
+            *flags |= 4;
+      }
+      return 0;
+   }
+   return 1;
 }

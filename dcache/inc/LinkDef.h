@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class TDCacheFile;
+#pragma link C++ class TDCacheSystem;
 
 #endif

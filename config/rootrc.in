@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.58 2003/11/13 15:15:11 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.59 2003/11/20 23:00:46 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -198,9 +198,12 @@ Globus.ProxyKeyBits:     1024
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^castor:  TCastorFile   RFIO    "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
++Plugin.TFile:       ^dcap:    TDCacheFile   DCache  "TDCacheFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^chirp:   TChirpFile    Chirp   "TChirpFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^alien:   TAlienFile    RAliEn  "TAlienFile(const char*,Option_t*,const char*,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
++Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
++Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"

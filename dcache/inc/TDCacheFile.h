@@ -1,5 +1,6 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.1 2002/01/27 17:21:22 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.h,v 1.2 2002/03/25 16:43:16 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
+// Updated: William Tanenbaum 21/11/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -25,6 +26,12 @@
 
 #ifndef ROOT_TFile
 #include "TFile.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
+#endif
+#ifndef ROOT_TString
+#include "TString.h"
 #endif
 
 class TDCacheFile : public TFile {
@@ -70,10 +77,33 @@ public:
 
    static void SetReplyHostName(const char *host_name);
    static const char *GetDcapVersion();
+   static TString GetDcapPath(const char *path);
 
    static Bool_t EnableSSL();
 
    ClassDef(TDCacheFile,1)  //A ROOT file that reads/writes via a dCache server
+};
+
+class TDCacheSystem : public TSystem {
+
+private:
+   void    *fDirp;   // directory handler
+
+   void    *GetDirPtr() const { return fDirp; }
+
+public:
+   TDCacheSystem();
+   virtual ~TDCacheSystem() { }
+
+   Int_t       MakeDirectory(const char *name);
+   void       *OpenDirectory(const char *name);
+   void        FreeDirectory(void *dirp);
+   const char *GetDirEntry(void *dirp);
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                           Long_t *flags, Long_t *modtime);
+   Bool_t      AccessPathName(const char *path, EAccessMode mode);
+
+   ClassDef(TDCacheSystem,0)  // Directory handler for DCache
 };
 
 #endif
