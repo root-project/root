@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.cxx,v 1.2 2001/05/14 16:27:39 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootOIViewer.cxx,v 1.3 2003/08/29 10:42:18 rdm Exp $
 // Author: Valery Fine & Fons Rademakers   5/10/2000 and 28/4/2001
 
 /*************************************************************************
@@ -77,9 +77,12 @@ void InventorCallback(void *d, SoAction *action)
          Float_t maxBound[3]={ 1000, 1000, 1000};
 
          // pick the "real" range provided by TPad object
-         currentViewer->GetGLView()->GetPad()->GetView()->GetRange(minBound,maxBound);
-         if (minBound[0] == maxBound[0])
-              SoCacheElement::invalidate(action->getState());
+         TView *view = currentViewer->GetGLView()->GetPad()->GetView();
+         if (view) {
+            view->GetRange(minBound,maxBound);
+            if (minBound[0] == maxBound[0])
+            SoCacheElement::invalidate(action->getState());
+         }
 
          ((SoGetBoundingBoxAction *)action)->
             extendBy(SbBox3f(minBound[0],minBound[1],minBound[2]
