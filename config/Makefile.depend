@@ -25,6 +25,7 @@ GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libGui.lib
 GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
 GEDOLDLIBEXTRA      = lib/libGpad.lib lib/libGraf.lib
+POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = lib/libGraf.lib
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
@@ -102,6 +103,7 @@ GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB)
 GEDLIBEXTRA         = -Llib -lHist -lGpad -lGraf -lGui
 GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
 GEDOLDLIBEXTRA      = -Llib -lGpad -lGraf
+POSTSCRIPTLIBDEP    = $(GRAFLIB)
 POSTSCRIPTLIBEXTRA  = -Llib -lGraf
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA        := -Llib -lGpad -lGraf $(GUILIBEXTRA)
