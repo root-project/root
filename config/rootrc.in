@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.85 2004/11/19 06:46:19 brun Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.86 2004/11/19 14:28:17 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -263,7 +263,7 @@ RSA.KeyType:  1
 
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified
 # in the Url.
-# By default, for local files TFile::Open() invokes directly TFile 
+# By default, for local files TFile::Open() invokes directly TFile
 # TFile.ForceRemote 1
 
 # Special cases for the TUrl parser, where the special cases are parsed
@@ -396,6 +396,8 @@ Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
 +Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
 Plugin.TVirtualDragManager: GuiBld TGuiBldDragManager    GuiBld    "TGuiBldDragManager()"
 Plugin.TGuiBuilder:         GuiBld TRootGuiBuilder       GuiBld    "TRootGuiBuilder()"
+Unix.*.Plugin.TVirtualGLImp: *  TX11GL        RGL   "TX11GL()"
+WinNT.*.Plugin.TVirtualGLImp: * TGWin32GL     RGL   "TGWin32GL()"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

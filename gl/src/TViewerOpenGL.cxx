@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.32 2004/11/02 16:55:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.34 2004/11/18 14:37:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,6 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#include "TPluginManager.h"
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
 #include "TVirtualPad.h"
@@ -132,6 +134,8 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
                    fCamera(), fViewVolume(), fZoom(),
                    fActiveViewport()
 {
+   // Create OpenGL viewer.
+
    //good compiler (not VC 6.0) will initialize our
    //arrays in ctor-init-list with zeroes (default initialization)
    fMainFrame = 0;
@@ -156,16 +160,17 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fSelectedObj = 0;
    fAction = kNoAction;
 
-   static struct Init {
-      Init()
-      {
-#ifdef GDK_WIN32
-         new TGLKernel((TVirtualGLImp *)gROOT->ProcessLineFast("new TGWin32GL"));
-#else
-         new TGLKernel((TVirtualGLImp *)gROOT->ProcessLineFast("new TX11GL"));
-#endif
+   static Bool_t init = kFALSE;
+   if (!init) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGLImp"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         TVirtualGLImp *imp = (TVirtualGLImp *) h->ExecPlugin(0);
+         new TGLKernel(imp);
       }
-   }initGL;
+      init = kTRUE;
+   }
 
    CreateViewer();
    fArcBall = new TArcBall(fgInitH, fgInitH);
@@ -238,6 +243,7 @@ void TViewerOpenGL::CreateViewer()
 
    fCanvasWindow = new TGCanvas(fV2, 10, 10, kSunkenFrame | kDoubleBorder);
    fCanvasContainer = new TGLRenderArea(fCanvasWindow->GetViewPort()->GetId(), fCanvasWindow->GetViewPort());
+   fRender = new TGLRender;
 
    TGLWindow * glWin = fCanvasContainer->GetGLWindow();
    glWin->Connect("HandleButton(Event_t*)", "TViewerOpenGL", this, "HandleContainerButton(Event_t*)");
@@ -272,6 +278,7 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fMenuBarHelpLayout;
    delete fMenuBarItemLayout;
    delete fArcBall;
+   delete fRender;
    delete fCanvasContainer;
    delete fCanvasWindow;
    delete fCanvasLayout;
@@ -344,7 +351,7 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
    } else if (event->fType == kButtonRelease) {
       if (event->fCode == kButton2) {
          MakeCurrent();
-         gVirtualGL->EndMovement(&fRender);
+         gVirtualGL->EndMovement(fRender);
          DrawObjects();
          if (fSelectedObj)fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
          fAction = kNoAction;
@@ -438,13 +445,13 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
             MakeCurrent();
             switch (fConf) {
             case kXOY:
-               gVirtualGL->MoveSelected(&fRender, xshift, yshift, 0.);
+               gVirtualGL->MoveSelected(fRender, xshift, yshift, 0.);
                break;
             case kXOZ:
-               gVirtualGL->MoveSelected(&fRender, xshift, 0., -yshift);
+               gVirtualGL->MoveSelected(fRender, xshift, 0., -yshift);
                break;
             case kYOZ:
-               gVirtualGL->MoveSelected(&fRender, 0., -xshift, -yshift);
+               gVirtualGL->MoveSelected(fRender, 0., -xshift, -yshift);
                break;
 	         default:
 	            break;
@@ -454,11 +461,11 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
             Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], xshift},
                                      {rotM[1], -rotM[9], rotM[5], -yshift},
                                      {rotM[2], -rotM[10], rotM[6], 0.}};
-                                     
+
             TToySolver tr(*matrix);
             Double_t shift[3] = {0.};
             tr.GetSolution(shift);
-            gVirtualGL->MoveSelected(&fRender, shift[0], shift[1], shift[2]);
+            gVirtualGL->MoveSelected(fRender, shift[0], shift[1], shift[2]);
          }
 
          DrawObjects();
@@ -490,8 +497,8 @@ void TViewerOpenGL::CreateScene(Option_t *)
    TGLSelection *box1 = light1->GetBox();
    TGLSimpleLight *light2 = new TGLSimpleLight(++fNbShapes, 3, col2, pos);
    TGLSelection *box2 = light2->GetBox();
-   fRender.AddNewObject(light1);
-   fRender.AddNewObject(light2);
+   fRender->AddNewObject(light1);
+   fRender->AddNewObject(light2);
 
    buff->fOption = TBuffer3D::kOGL;
    while (lnk) {
@@ -500,7 +507,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
          obj->Paint("ogl");
       lnk = lnk->Next();
    }
-   
+
    buff->fOption = TBuffer3D::kPAD;
    CalculateViewvolumes();
    //Calculate light sources positions and "bulb" radius
@@ -514,20 +521,20 @@ void TViewerOpenGL::CreateScene(Option_t *)
    fXc = fRangeX.first + xdiff / 2;
    fYc = fRangeY.first + ydiff / 2;
    fZc = fRangeZ.first + zdiff / 2;
-   
+
    light1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
    light1->SetBulbRad(newRad);
-   box1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+   box1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad),
                 std::make_pair(-newRad, newRad));
    box1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
    light2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-   light2->SetBulbRad(newRad);   
-   box2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+   light2->SetBulbRad(newRad);
+   box2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad),
                 std::make_pair(-newRad, newRad));
    box2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-   
-   fRender.SetAxes(fRangeX, fRangeY, fRangeZ);
-   
+
+   fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
+
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
    gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
@@ -546,7 +553,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    SetWMPosition(fgInitX, fgInitY);
    CreateCameras();
-   fRender.SetActive(kPERSP);
+   fRender->SetActive(kPERSP);
 
    DrawObjects();
 }
@@ -586,9 +593,9 @@ void TViewerOpenGL::UpdateScene(Option_t *)
          addObj = new TGLFaceSet(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       }
-      
+
       UpdateRange(addObj->GetBox());
-      fRender.AddNewObject(addObj);
+      fRender->AddNewObject(addObj);
    }
 }
 
@@ -620,7 +627,7 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
    gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
    gVirtualGL->PopGLMatrix();
-   gVirtualGL->TraverseGraph(const_cast<TGLRender *>(&fRender));
+   gVirtualGL->TraverseGraph(const_cast<TGLRender *>(fRender));
    SwapBuffers();
 }
 
@@ -631,7 +638,7 @@ void TViewerOpenGL::UpdateRange(const TGLSelection *box)
    const PDD_t &Y = box->GetRangeY();
    const PDD_t &Z = box->GetRangeZ();
 
-   if (!fRender.GetSize()) {
+   if (!fRender->GetSize()) {
       fRangeX.first = X.first, fRangeX.second = X.second;
       fRangeY.first = Y.first, fRangeY.second = Y.second;
       fRangeZ.first = Z.first, fRangeZ.second = Z.second;
@@ -679,7 +686,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             if (fConf != kXOY) {
             //set active camera
                fConf = kXOY;
-               fRender.SetActive(fConf);
+               fRender->SetActive(fConf);
                DrawObjects();
             }
             break;
@@ -687,7 +694,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             if (fConf != kXOZ) {
             //set active camera
                fConf = kXOZ;
-               fRender.SetActive(fConf);
+               fRender->SetActive(fConf);
                DrawObjects();
             }
             break;
@@ -695,7 +702,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             if (fConf != kYOZ) {
             //set active camera
                fConf = kYOZ;
-               fRender.SetActive(fConf);
+               fRender->SetActive(fConf);
                DrawObjects();
             }
             break;
@@ -703,7 +710,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             if (fConf != kPERSP) {
             //set active camera
                fConf = kPERSP;
-               fRender.SetActive(fConf);
+               fRender->SetActive(fConf);
                DrawObjects();
             }
             break;
@@ -727,7 +734,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 TGLSceneObject *TViewerOpenGL::TestSelection(Event_t *event)
 {
    MakeCurrent();
-   TGLSceneObject *obj = gVirtualGL->SelectObject(&fRender, event->fX, event->fY, fConf);
+   TGLSceneObject *obj = gVirtualGL->SelectObject(fRender, event->fX, event->fY, fConf);
    SwapBuffers();
 
    return obj;
@@ -745,7 +752,7 @@ void TViewerOpenGL::CalculateViewports()
 //______________________________________________________________________________
 void TViewerOpenGL::CalculateViewvolumes()
 {
-   if (fRender.GetSize()) {
+   if (fRender->GetSize()) {
       Double_t xdiff = fRangeX.second - fRangeX.first;
       Double_t ydiff = fRangeY.second - fRangeY.first;
       Double_t zdiff = fRangeZ.second - fRangeZ.first;
@@ -771,7 +778,7 @@ void TViewerOpenGL::CalculateViewvolumes()
 //______________________________________________________________________________
 void TViewerOpenGL::CreateCameras()
 {
-   if (!fRender.GetSize())
+   if (!fRender->GetSize())
       return;
 
    TGLSimpleTransform trXOY(gRotMatrixXOY, fRad, &fXc, &fYc, &fZc);
@@ -784,10 +791,10 @@ void TViewerOpenGL::CreateCameras()
    fCamera[kYOZ]   = new TGLOrthoCamera(fViewVolume, fActiveViewport, trYOZ);
    fCamera[kPERSP] = new TGLPerspectiveCamera(fViewVolume, fActiveViewport, trPersp);
 
-   fRender.AddNewCamera(fCamera[kXOY]);
-   fRender.AddNewCamera(fCamera[kXOZ]);
-   fRender.AddNewCamera(fCamera[kYOZ]);
-   fRender.AddNewCamera(fCamera[kPERSP]);
+   fRender->AddNewCamera(fCamera[kXOY]);
+   fRender->AddNewCamera(fCamera[kXOZ]);
+   fRender->AddNewCamera(fCamera[kYOZ]);
+   fRender->AddNewCamera(fCamera[kPERSP]);
 }
 
 //______________________________________________________________________________
@@ -799,7 +806,7 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       fSelectedObj->SetColor(fColorEditor->GetRGBA());
       break;
    case kTBaf:
-      fRender.SetFamilyColor(fColorEditor->GetRGBA());
+      fRender->SetFamilyColor(fColorEditor->GetRGBA());
       break;
    case kTBa1:
       {
@@ -812,23 +819,23 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       }
       break;
    case kTBda:
-      fRender.ResetAxes();
+      fRender->ResetAxes();
       break;
    case kTBcp:
-      if (fRender.ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
+      if (fRender->ResetPlane()) gVirtualGL->EnableGL(kCLIP_PLANE0);
       else gVirtualGL->DisableGL(kCLIP_PLANE0);
    case kTBcpm:
       {
          Double_t eqn[4] = {0.};
          fSceneEditor->GetPlaneEqn(eqn);
-         fRender.SetPlane(eqn);
+         fRender->SetPlane(eqn);
       }
    }
-   
+
    if (wid == kTBa || wid == kTBa1 || wid == kTBaf) {
-      gVirtualGL->Invalidate(&fRender);
+      gVirtualGL->Invalidate(fRender);
    }
-   
+
    DrawObjects();
 }
 
@@ -857,7 +864,7 @@ void TViewerOpenGL::MoveCenter(Int_t key)
    Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], shift[0]},
                             {rotM[1], -rotM[9], rotM[5], shift[1]},
                             {rotM[2], -rotM[10], rotM[6], 0.}};
-                                     
+
    TToySolver tr(*matrix);
    tr.GetSolution(shift);
    fXc += shift[0];

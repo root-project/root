@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.18 2004/10/19 13:04:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.19 2004/11/15 14:59:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -57,6 +57,7 @@ private:
    TGLSceneEditor    *fSceneEditor;
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fCanvasContainer;
+   TGLRender         *fRender;
    TGShutter         *fShutter;
    TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3;
 
@@ -84,7 +85,6 @@ private:
    TArcBall          *fArcBall;
 
    UInt_t            fNbShapes;
-   TGLRender         fRender;
    TPoint            fLastPos;
 
    enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
