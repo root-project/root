@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.9 2004/08/17 17:09:00 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.10 2004/09/30 11:58:06 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 09/30/04
@@ -24,20 +24,6 @@ except:
 
 ## PyROOT C++ extension module
 from libPyROOT import * 
-
-## load libraries that are already linked in, but not explicitly known
-ll = string.split( gInterpreter.GetSharedLibs() )
-for lib in string.split( gSystem.GetLibraries() ):
-   if 0 <= string.find( lib, 'Core' ) or 0 <= string.find( lib, 'Cint' ):
-      continue
-
-   dpos = string.find( lib, '-l' )
-   if 0 <= dpos:
-      lib = gSystem.DynamicPathName( 'lib'+lib[dpos+2:] )
-      if not lib in ll:
-         gInterpreter.Load( lib )
-
-del ll, lib, dpos
 
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same

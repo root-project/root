@@ -50,12 +50,13 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS) $(ROOTPY) $(ROOTPYC) \
+$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTLIBSDEP) $(ROOTPY) $(ROOTPYC) \
                 $(ROOTPYO)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		"$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
-		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
-                "$(PYTHONLIBFLAGS)"
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(ROOTULIBS)" \
+		  "$(SOFLAGS)" $(ROOTULIBS) libPyROOT.$(SOEXT) $@ \
+		  "$(PYROOTO) $(PYROOTDO)" \
+		  "$(ROOTLIBS) $(PYTHONLIBDIR) $(PYTHONLIB)" \
+		  "$(PYTHONLIBFLAGS)"
 
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
