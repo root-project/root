@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.51 2004/09/13 12:47:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.52 2004/09/15 14:56:35 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -450,7 +450,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create toolbar
    fToolBarSep = new TGHorizontal3DLine(this);
    fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame);
-   fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX , 0, 0, 2, 0);
+   fToolBarLayout = new TGLayoutHints(kLHintsTop |  kLHintsExpandX);
 
    int spacing = 6;
    for (i = 0; gToolBarData[i].fPixmap; i++) {
@@ -479,7 +479,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    }
 
    fHorizontal1 = new TGHorizontal3DLine(this);
-   fHorizontal1Layout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
+   fHorizontal1Layout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
 
    AddFrame(fToolBarSep, fToolBarLayout);
    AddFrame(fToolBar, fToolBarLayout);
@@ -491,7 +491,7 @@ void TRootCanvas::CreateCanvas(const char *name)
 
    // Create editor frame that will host the pad editor
    fEditorFrame = new TGCompositeFrame(fMainFrame, 145, fMainFrame->GetHeight(), kFixedWidth);
-   fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 2, 2);
+   fEditorLayout = new TGLayoutHints(kLHintsExpandY | kLHintsLeft, 0, 2, 0, 0);
    fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
 
    // Create canvas and canvas container that will host the ROOT graphics
@@ -829,11 +829,9 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kViewToolbar:
                      fCanvas->ToggleToolBar();
-                     ShowToolBar(fCanvas->GetShowToolBar());
                      break;
                   case kViewEventStatus:
                      fCanvas->ToggleEventStatus();
-                     ShowStatusBar(fCanvas->GetShowEventStatus());
                      break;
                   case kViewColors:
                      {
@@ -1078,7 +1076,7 @@ Int_t TRootCanvas::InitWindow()
 //______________________________________________________________________________
 void TRootCanvas::SetCanvasSize(UInt_t w, UInt_t h)
 {
-   // Set size of canvas container. Unix in pixels.
+   // Set size of canvas container. Units in pixels.
 
    // turn off autofit, we want to stay at the given size
    fAutoFit = kFALSE;
@@ -1149,13 +1147,19 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 {
    // Show or hide statusbar.
 
+   UInt_t h = GetHeight();
+   UInt_t sh = fStatusBar->GetHeight();
+
    if (show) {
       ShowFrame(fStatusBar);
       fViewMenu->CheckEntry(kViewEventStatus);
+      h = h + sh;
    } else {
       HideFrame(fStatusBar);
       fViewMenu->UnCheckEntry(kViewEventStatus);
+      h = h - sh;
    }
+   Resize(GetWidth(), h);
 }
 
 //______________________________________________________________________________
@@ -1165,6 +1169,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
 
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
+   UInt_t h = GetHeight();
+   UInt_t s = fHorizontal1->GetHeight();
 
    if (show) {
       if (!fEditor) CreateEditor();
@@ -1172,13 +1178,15 @@ void TRootCanvas::ShowEditor(Bool_t show)
       fMainFrame->ShowFrame(fEditorFrame);
       fViewMenu->CheckEntry(kViewEditor);
       w = w + e;
+      h = h + s;
    } else {
       HideFrame(fHorizontal1);
       fMainFrame->HideFrame(fEditorFrame);
       fViewMenu->UnCheckEntry(kViewEditor);
       w = w - e;
+      h = h - s;
    }
-   Resize(w, GetHeight());
+   Resize(w, h);
 }
 
 //______________________________________________________________________________
@@ -1188,10 +1196,12 @@ void TRootCanvas::CreateEditor()
 
    fEditorFrame->SetEditable();
    gPad = Canvas();
+   // next two lines are related to the old editor
    TString show = gEnv->GetValue("Canvas.ShowEditor","false");   
    gEnv->SetValue("Canvas.ShowEditor","true");
    fEditor = TVirtualPadEditor::LoadEditor();
    fEditorFrame->SetEditable(0);
+   // next line is related to the old editor
    if (show == "false") gEnv->SetValue("Canvas.ShowEditor","false");
 }
 
@@ -1200,15 +1210,21 @@ void TRootCanvas::ShowToolBar(Bool_t show)
 {
    // Show or hide toolbar.
 
+   UInt_t h = GetHeight();
+   UInt_t th = fToolBar->GetHeight() + fToolBarSep->GetHeight();
+
    if (show) {
       ShowFrame(fToolBar);
       ShowFrame(fToolBarSep);
       fViewMenu->CheckEntry(kViewToolbar);
+      h = h + th;
    } else {
       HideFrame(fToolBar);
       HideFrame(fToolBarSep);
       fViewMenu->UnCheckEntry(kViewToolbar);
+      h = h - th;
    }
+   Resize(GetWidth(), h);
 }
 
 //______________________________________________________________________________
