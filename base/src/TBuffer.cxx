@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.4 2000/09/12 06:43:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.5 2000/11/21 16:28:02 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1441,7 +1441,7 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
    }
 
    if (cl && clReq && !cl->InheritsFrom(clReq)) {
-      Error("ReadClass", "got wrong class");
+      Error("ReadClass", "got wrong class: %s",cl->GetName());
       // exception
    }
 
