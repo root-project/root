@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.73 2002/01/08 14:44:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.75 2002/01/09 16:28:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -859,21 +859,21 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	 int size_not_ok;      // set to 1 if size was not large enough
 	   
 
-	 pstart=index(hname,'(');
-	 pend=  index(hname,')');
+	 pstart= strchr(hname,'(');
+	 pend =  strchr(hname,')');
 	 if (pstart != NULL ){  // found the bracket
 
 	   mustdelete=1;
 
 	   // check that there is only one open and close bracket
-	   if (pstart == rindex(hname,'(')  &&  pend == rindex(hname,')')) { 
+	   if (pstart == strrchr(hname,'(')  &&  pend == strrchr(hname,')')) { 
 
 	     // count number of ',' between '(' and ')'
 	     ncomma=0;
 	     cdummy = pstart;
-	     cdummy = index(&cdummy[1],',');
+	     cdummy = strchr(&cdummy[1],',');
 	     while (cdummy != NULL) {
-	       cdummy = index(&cdummy[1],',');
+	       cdummy = strchr(&cdummy[1],',');
 	       ncomma++;
 	     }
 
@@ -906,7 +906,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 	     for (int j=0;j<ncomma;j++) {
 	       cdummy++;  // skip '(' or ','
 	       if (sscanf(cdummy," %lf ",&value) == 1) {
-		 cdummy=index(&cdummy[1],',');
+		 cdummy=strchr(&cdummy[1],',');
 
 		 do {
 		   isize=0;
