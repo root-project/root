@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.62 2001/12/17 08:06:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.63 2002/01/07 18:06:17 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3586,8 +3586,9 @@ void TPad::Print(const char *filename, Option_t *option)
       Update();
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
-      gVirtualX->WriteGIF(psname);
-      Info("TPad::Print", "GIF file %s has been created", psname);
+      if (gVirtualX->WriteGIF(psname)) {
+         Info("TPad::Print", "GIF file %s has been created", psname);
+      }
       return;
    }
 
