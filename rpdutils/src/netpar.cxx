@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.4 2004/04/21 09:28:05 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.5 2004/12/02 11:52:28 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -48,7 +48,7 @@
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-     (defined(R__SUNGCC3) && defined(__arch64__))
+     (defined(R__SUNGCC3) && defined(__arch64__)) || MACOSX_VERS>=4
 #   define USE_SOCKLEN_T
 #endif
 

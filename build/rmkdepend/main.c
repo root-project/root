@@ -50,9 +50,7 @@ in this Software without prior written authorization from the X Consortium.
 #ifndef WIN32
 #include <unistd.h>
 #endif
-#ifdef __hpux
-#include <sys/stat.h>
-#else
+#if defined(R__MACOSX_VERS) && R__MACOSX_VERS < 4
 extern int fchmod();
 #endif
 
