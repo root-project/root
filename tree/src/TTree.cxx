@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.89 2001/08/17 14:40:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.90 2001/09/07 02:54:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -346,7 +346,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
 // If the first character of title is a "/", the function assumes a folder name.
 // In this case, it creates automatically branches following the folder hierarchy.
 // splitlevel may be used in this case to control the split level.
-         
+
    fScanField      = 25;
    fMaxEntryLoop   = 1000000000;
    fMaxVirtualSize = 0;
@@ -415,7 +415,7 @@ TTree::~TTree()
 //______________________________________________________________________________
 TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 {
-// Add a TFriendElement to the list of friends
+// Add a TFriendElement to the list of friends.
 // A TFriendElement TF describes a TTree object TF in a file.
 // When a TFriendElement TF is added to the the list of friends of an
 // existing TTree T, any variable from TF can be referenced in a query
@@ -499,6 +499,33 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
       }
    } else {
       Warning("AddFriend","Cannot add FriendElement %s in file %s",treename,filename);
+   }
+   return fe;
+}
+
+//______________________________________________________________________________
+TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
+{
+// Add a TFriendElement to the list of friends. The TFile is managed by
+// the user (e.g. the user must delete the file).
+// For complete description see AddFriend(const char *, const char *).
+
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,treename,file);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+                     treename,file->GetName(),t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","unknown tree %s in file %s",treename,file->GetName());
+      }
+   } else {
+      Warning("AddFriend","cannot add FriendElement %s in file %s",treename,
+              file?file->GetName():"");
    }
    return fe;
 }
@@ -699,13 +726,13 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
   // branches (TBranchElement). To get the old behaviour, you can:
   //   - call BranchOld or
   //   - call TTree::SetBranchStyle(0)
-  // 
+  //
   // Note that with the new style, classname does not need to derive from TObject.
   // It must derived from TObject if the branch style has been set to 0 (old)
   //
   // Use splitlevel < 0 instead of splitlevel=0 when the class
   // has a custom Streamer
-      
+
    if (fgBranchStyle == 1) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
    } else {
@@ -995,13 +1022,13 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    Bool_t hasCustomStreamer = kFALSE;
    if (cl == TClonesArray::Class())         hasCustomStreamer = kTRUE;
    if (cl->GetClassInfo()->RootFlag() & 1)  hasCustomStreamer = kTRUE;
-   
+
    if (splitlevel < 0 || (splitlevel == 0 && hasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
       fBranches.Add(branch);
       return branch;
    }
-   
+
    //hopefully normal case
    Bool_t delobj = kFALSE;
    char **ppointer = (char**)add;
@@ -1204,7 +1231,7 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *option)
       // this block should be implemented
    }
 
-  // copy branch addresses 
+  // copy branch addresses
    CopyAddresses(tree);
 
   // may be copy some entries
@@ -1650,7 +1677,7 @@ Int_t TTree::Fill()
    Int_t nbytes = 0;
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
-   
+
    if (fDirectory) TStreamerInfo::SetCurrentFile(fDirectory->GetFile());
    else            TStreamerInfo::SetCurrentFile(0);
 
@@ -2044,7 +2071,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 }
 
 //______________________________________________________________________________
-TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir) 
+TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 {
 // Creates a new iterator that will go through all the leaves on the tree
 // itself and its friend.
@@ -2060,7 +2087,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
 // or any branch in the list of friend trees.
 //
 //  aname may be of the form branchname/leafname
-   
+
    char *slash = (char*)strchr(aname,'/');
    char *name;
    Int_t nbch = 0;
@@ -2445,7 +2472,7 @@ void TTree::Print(Option_t *option) const
      if (s.Index(re) == kNPOS) continue;
      br->Print(option);
   }
-  
+
   //print friends if option "all"
   if (!fFriends || !strstr(option,"all")) return;
   TIter nextf(fFriends);
@@ -2969,7 +2996,7 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter) 
+TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter)
 {
   // Copy constructor
 
@@ -2979,7 +3006,7 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter)
 }
 
 //______________________________________________________________________________
-TIterator &TTreeFriendLeafIter::operator=(const TIterator &rhs) 
+TIterator &TTreeFriendLeafIter::operator=(const TIterator &rhs)
 {
    // Overridden assignment operator.
 
@@ -2991,7 +3018,7 @@ TIterator &TTreeFriendLeafIter::operator=(const TIterator &rhs)
 }
 
 //______________________________________________________________________________
-TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &rhs) 
+TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &rhs)
 {
    // Overridden assignment operator.
 
@@ -3000,7 +3027,7 @@ TTreeFriendLeafIter &TTreeFriendLeafIter::operator=(const TTreeFriendLeafIter &r
    }
    return *this;
 }
- 
+
 //______________________________________________________________________________
 TObject *TTreeFriendLeafIter::Next()
 {

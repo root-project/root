@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.31 2001/06/02 20:28:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.32 2001/07/03 16:46:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -115,8 +115,8 @@ protected:
     TArrayI       fIndex;             //  Index of sorted values
     TList        *fFriends;           //  pointer to list of friend elements
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
-  static Int_t    fgBranchStyle;      //  Old/New branch style   
-   
+  static Int_t    fgBranchStyle;      //  Old/New branch style
+
 protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
     virtual void     MakeIndex(TString &varexp, Int_t *index);
@@ -132,6 +132,7 @@ public:
     virtual ~TTree();
 
     virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
+    virtual TFriendElement *AddFriend(const char *treename, TFile *file);
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
     virtual void      AutoSave();
@@ -258,10 +259,10 @@ public:
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(); // *MENU*
-    virtual Int_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" 
+    virtual Int_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
-    
+
     ClassDef(TTree,6)  //Tree descriptor (the main ROOT I/O class)
 };
 
@@ -280,8 +281,8 @@ protected:
    TIterator         *fLeafIter;     //current leaf sub-iterator.
    TIterator         *fTreeIter;     //current tree sub-iterator.
    Bool_t             fDirection;    //iteration direction
- 
-   TTreeFriendLeafIter() : fTree(0), fLeafIter(0), fTreeIter(0), 
+
+   TTreeFriendLeafIter() : fTree(0), fLeafIter(0), fTreeIter(0),
        fDirection(0) {}
 
 public:
