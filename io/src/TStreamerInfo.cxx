@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.72 2001/05/20 13:50:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.73 2001/05/24 16:29:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
-
+ 
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgOptimize = kTRUE;
 
@@ -1029,6 +1029,8 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
    Int_t nc = clones->GetEntriesFast();
    if (j >= nc) return 0;
 
+   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
+   if (bOffset > 0) eoffset += bOffset;
    char *pointer = (char*)clones->UncheckedAt(j);
    char *ladd    = pointer + eoffset + fOffset[i];
    switch (fType[i]) {
@@ -1327,7 +1329,9 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    const Int_t kMaxPrint = 10;
    if (nc > kMaxPrint) nc = kMaxPrint;
 
+   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    Int_t offset = eoffset + fOffset[i];
+   if (bOffset) offset += bOffset;
    Int_t j;
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
@@ -2003,6 +2007,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       BuildOld();
    }
    //loop on all active members
+   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
+   if (bOffset > 0) eoffset += bOffset;
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
@@ -2624,7 +2630,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 //==========
 
    //loop on all active members
+   Int_t bOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    Int_t baseOffset = eoffset;
+   if (bOffset > 0) baseOffset += bOffset;
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
