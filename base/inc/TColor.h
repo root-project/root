@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.3 2001/05/07 00:22:45 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -52,8 +52,8 @@ private:
    Float_t      fLight;         //Light
    Float_t      fSaturation;    //Saturation
 
-   void         Allocate();
-   Float_t      HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
+   void           Allocate();
+   static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
 
 public:
    TColor();
@@ -70,11 +70,15 @@ public:
    Float_t       GetHue() const {return fHue;}
    Float_t       GetLight() const {return fLight;}
    Float_t       GetSaturation() const {return fSaturation;}
-   virtual void  HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    virtual void  ls(Option_t *option="") const;
    virtual void  Print(Option_t *option="") const;
-   virtual void  RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
+
+   static void   HLStoRGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
+   static void   RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &h, Float_t &l, Float_t &s);
+   static Int_t  GetColor(const char *hexcolor);
+   static Int_t  GetColor(Float_t r, Float_t g, Float_t b);
+   static Int_t  GetColor(Int_t r, Int_t g, Int_t b);
 
    ClassDef(TColor,1)  //Color defined by RGB or HLS
 };
