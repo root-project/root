@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.37 2003/08/20 07:00:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.38 2003/09/30 21:20:01 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -108,6 +108,7 @@ public:
    virtual Int_t    GetNDF() const;
    virtual Int_t    GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
+   virtual Int_t    GetNumberFreeParameters() const;
    virtual Int_t    GetNumberFitPoints() const {return fNpfits;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}

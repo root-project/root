@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.71 2003/09/23 14:56:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.72 2003/09/30 21:20:02 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1051,6 +1051,20 @@ Int_t TF1::GetNDF() const
 
    if (fNDF == 0) return fNpfits-fNpar;
    return fNDF;
+}
+
+//______________________________________________________________________________
+Int_t TF1::GetNumberFreeParameters() const
+{
+// return the number of free parameters
+   
+   Int_t nfree = fNpar;
+   Double_t al,bl;
+   for (Int_t i=0;i<fNpar;i++) {
+      ((TF1*)this)->GetParLimits(i,al,bl);
+      if (al*bl != 0 && al >= bl) nfree--;
+   }
+   return nfree;
 }
 
 //______________________________________________________________________________
