@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.7 2002/08/02 18:54:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.8 2002/08/04 22:01:50 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -73,7 +73,7 @@ protected:
    void  StreamerV1(TBuffer &b);
    void         FillBuffer(char *&buffer);
    void         ReadBuffer(char *&buffer);
-   Int_t        Sizeof() const { return 16; }
+   Int_t        Sizeof() const { return 18; }
 
 public:
    TUUID();
