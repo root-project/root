@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.0 2003/04/23 16:38:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.1 2004/04/13 09:52:07 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -506,7 +506,6 @@ Bool_t TGFontDialog::GetFontProperties(const char *fontFamily)
 //________________________________________________________________________________
 void TGFontDialog::GetFontName()
 {
-   UInt_t  width = 0, height = 0;
    TGTextLBEntry *e;
    const char *size, *name;
    char st1[12];
