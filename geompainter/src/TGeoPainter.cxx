@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.25 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.26 2003/08/22 13:08:48 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -674,11 +674,11 @@ void TGeoPainter::GrabFocus(Int_t nfr, Double_t dlong, Double_t dlat, Double_t d
 Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
 {
 // check if this node is drawn. Assumes that this node is current
-   TObject *obj = (TObject*)node->GetVolume();
-   for (Int_t i=0; i<fVisVolumes->GetEntriesFast(); i++) {
-      if (fVisVolumes->At(i)==obj) return kTRUE;
-   }
-   return kFALSE;      
+   
+   //the following algorithm loops on all visible volumes: not very efficient
+   //the solution is to build a sorted table of pointers and do a binary search
+   if (fVisVolumes->IndexOf(node->GetVolume()) < 0) return kFALSE;
+   return kTRUE;      
 }   
 //______________________________________________________________________________
 TH2F *TGeoPainter::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
