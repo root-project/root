@@ -1526,6 +1526,7 @@ Int_t TTabCom::Hook( char* buf, int* pLoc )
                }
 
                delete pList;
+               delete pClass;
 
                if( context != original_context) pos = -2;
           }
@@ -1619,6 +1620,7 @@ Int_t TTabCom::Hook( char* buf, int* pLoc )
 
                // cleanup
                delete pList;
+               delete pClass;
 
                if( context!=original_context ) pos = -2;
           }
@@ -1777,7 +1779,7 @@ TClass* TTabCom::MakeClassFromClassName( const char className[] ) const
      // the TClass constructor will print a Warning message for classes that don't exist
      // so, ignore warnings temporarily.
      NoMsg(kWarning);
-     TClass* pClass = gROOT->GetClass( className );
+     TClass* pClass = new TClass( className );
      NoMsg(-1);
 
      // make sure "className" exists
@@ -1926,7 +1928,7 @@ TClass* TTabCom::MakeClassFromVarName( const char varName[], EContext_t& context
           }
      }
 
-     return gROOT->GetClass( className );
+     return new TClass( className );
 }
 void TTabCom::SetPattern( EContext_t handle, const char regexp[] )
 {
