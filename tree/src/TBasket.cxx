@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.2 2000/07/12 16:32:53 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -131,7 +131,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 }
 
 //_______________________________________________________________________
-void TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
+Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
 {
 //*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
 //*-*              =========================================
@@ -140,6 +140,7 @@ void TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
 //       should not be dropped. Remember, we keep buffers
 //       in memory up to fMaxVirtualSize.
 
+   Int_t badread= 0;
    TDirectory *cursav = gDirectory;
    gBranch->GetDirectory()->cd();
 
@@ -157,7 +158,10 @@ void TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
       Int_t nin = fNbytes-fKeylen;
       Int_t nout;
       R__unzip(&nin, &buffer[fKeylen], &fObjlen, objbuf, &nout);
-      if (nout != fObjlen) Error("Read", "fObjlen = %d, nout = %d", fObjlen, nout);
+      if (nout != fObjlen) {
+         Error("Read", "fObjlen = %d, nout = %d", fObjlen, nout);
+         badread = 1;
+      }
       delete [] buffer;
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
    } else {
@@ -168,7 +172,7 @@ void TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
 //        read offsets table
-   if (!fBranch->GetEntryOffsetLen()) return;
+   if (!fBranch->GetEntryOffsetLen()) return badread;
    delete [] fEntryOffset;
    fEntryOffset = 0;
    fBufferRef->SetBufferOffset(fLast);
@@ -180,6 +184,7 @@ void TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
      // array.
      fBufferRef->ReadArray(fDisplacement);
    }
+   return badread;
 }
 
 //_______________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.9 2000/11/21 20:49:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.10 2000/12/13 15:13:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -459,12 +459,11 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
-//printf("branch:%s, basketnumber=%d, seek=%d\n",GetName(),basketnumber,fBasketSeek[basketnumber]);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
-   basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
-   if (basket->GetSeekKey() != fBasketSeek[basketnumber]) {
+   Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
+   if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
       cursav->cd();
       nerrors++;
       if (nerrors > 10) return 0;
