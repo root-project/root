@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.20 2000/08/21 06:10:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.21 2000/08/27 20:03:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3240,6 +3240,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
 //         "O" include Overflows     (also valid for 2-dim)
 //         "N" include comparison of normalizations
 //         "D" Put out a line of "Debug" printout
+//         "M" Return the Maximum Kolmogorov distance instead of prob
 //
 //   The returned function value is the probability of test
 //       (much less than one means NOT compatible)
@@ -3385,7 +3386,8 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
-   return prb;
+   if(opt.Contains("M"))  return dfmax;
+   else                   return prb;
 }  
 
 //______________________________________________________________________________
