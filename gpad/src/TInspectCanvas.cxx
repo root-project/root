@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.8 2002/09/10 13:36:32 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.9 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -269,7 +269,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
 
          if (member->IsaPointer()) {
             char **p3pointer = (char**)(*ppointer);
-            if (! clm->IsStartingWithTObject() ) {
+            if (clm && !clm->IsStartingWithTObject() ) {
                //NOTE: memory leak!
                p3pointer = (char**)new TInspectorObject(p3pointer,clm);
             }
