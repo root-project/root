@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.6 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.7 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -427,7 +427,7 @@ void TGLFaceSet::CalculateNormals()
          j = polEnd;
          continue;
       }
-      while (j < polEnd) {
+      while (j < (UInt_t)polEnd) {
          norm[ngood++] = fPolyDesc[j++];
          if (ngood == 3) {
             ngood = CheckPoints(norm, norm);
