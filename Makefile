@@ -413,7 +413,7 @@ cintdlls: $(CINTTMP)
 
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
-	   "$(XLIBS)" "$(SYSLIBS)"
+	   "$(XLIBS)" "$(AUTHLIBS) $(CRYPTLIBS) $(SYSLIBS)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)

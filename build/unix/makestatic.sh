@@ -15,8 +15,9 @@ SYSLIBS=$7
 
 ROOTALIB=lib/libRoot.a
 ROOTAEXE=bin/roota
+PROOFAEXE=bin/proofserva
 
-rm -f $ROOTALIB $ROOTAEXE
+rm -f $ROOTALIB $ROOTAEXE $PROOFAEXE
 
 excl="main proofd rootd rootx pythia pythia6 venus mysql pgsql rfio sapdb \
       hbook newdelete table utils srputils krb5auth dcache x11ttf \
@@ -52,6 +53,15 @@ fi
 
 echo "Making $ROOTAEXE..."
 $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
+   $XLIBS $SYSLIBS
+
+linkstat=$?
+if [ $linkstat -ne 0 ]; then
+   exit $linkstat
+fi
+
+echo "Making $PROOFAEXE..."
+$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS
 
 linkstat=$?
