@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.147 2004/10/08 15:19:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.148 2004/10/17 11:55:47 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1046,11 +1046,27 @@ TList *TBranchElement::GetBrowsableMethods() {
 // (non-void) return value.
 
    if (fBrowsableMethods) return fBrowsableMethods;
-   TClass* cl=gROOT->GetClass(GetClassName());
-   if (!cl) return 0;
 
-   if (cl==TClonesArray::Class())
+   TClass* cl=0;
+   if (strlen(GetClonesName()))
+      // this works both for top level branches and for sub-branches,
+      // as GetClonesName() is properly updated for sub-branches
       cl=gROOT->GetClass(GetClonesName());
+   else {
+      cl=gROOT->GetClass(GetClassName());
+
+      // check if we're in a sub-branch of this class
+      // we can only find out asking the streamer given our ID
+      ULong_t *elems=0;
+      TStreamerElement *element=0;
+      TClass* clsub=0;
+      if (fID>=0 && GetInfo() 
+          && ((elems=GetInfo()->GetElems()))
+          && ((element=(TStreamerElement *)elems[fID]))
+          && ((clsub=element->GetClassPointer())))
+         cl=clsub;
+   }
+
    if (!cl) return 0;
    fBrowsableMethods=TMethodBrowsable::GetMethodBrowsables(this, cl);
    return fBrowsableMethods;

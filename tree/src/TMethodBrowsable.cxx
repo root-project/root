@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.142 2004/08/24 10:41:58 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TMethodBrowsable.cxx,v 1.1 2004/10/17 11:55:47 brun Exp $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -31,7 +31,6 @@ ClassImp(TMethodBrowsable);
 //______________________________________________________________________________
 TMethodBrowsable::TMethodBrowsable(TBranchElement* be, TMethod* m,
                                    TMethodBrowsable* parent /* =0 */):
-      TNamed("", m->GetPrototype()), 
       fBranchElement(be), fParent(parent), fMethod(m), 
       fReturnClass(0), fReturnLeafs(0), fReturnIsPointer(kFALSE) {
 // standard constructor.
@@ -41,9 +40,14 @@ TMethodBrowsable::TMethodBrowsable(TBranchElement* be, TMethod* m,
 // The c'tor sets the name for a method "Class::Method(params) const"
 // to "Method(params)", title to TMethod::GetPrototype
    TString name(m->GetName());
-   name+=m->GetSignature();
+   name+="()";
    if (name.EndsWith(" const")) name.Remove(name.Length()-6);
    SetName(name);
+
+   name=m->GetPrototype();
+   if (m->GetCommentString() && strlen(m->GetCommentString()))
+      name.Append(" // ").Append(m->GetCommentString());
+   SetTitle(name);
 
    TString plainReturnType(m->GetReturnTypeName());
    if (plainReturnType.EndsWith("*")) {
@@ -131,6 +135,9 @@ void TMethodBrowsable::GetScope(TString & scope) {
    else {
       scope=fBranchElement->GetName();
       scope+=".";
+      TBranch* mother=fBranchElement;
+      while (mother != mother->GetMother() && (mother=mother->GetMother()))
+         scope.Prepend(".").Prepend(mother->GetName());
    }
    scope+=GetName();
    if (fReturnClass) // otherwise we're a leaf, and we are the one drawn
