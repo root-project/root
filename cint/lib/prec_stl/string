@@ -37,6 +37,9 @@ class string {
                   reference, pointer, reference> iterator;
   typedef _Ptrit<value_type, difference_type, const_pointer,
                   const_reference, pointer, reference> const_iterator;
+#elif defined(G__INTEL_COMPILER)
+  typedef char* iterator;
+  typedef const char* const_iterator;
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
   class iterator {
    public:

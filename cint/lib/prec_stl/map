@@ -107,7 +107,7 @@ class map {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC)
+#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const map::iterator& x ,const map::iterator& y) const;
   friend bool operator!=(const map::iterator& x ,const map::iterator& y) const;
 #endif

@@ -157,7 +157,7 @@ class vector {
 	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__VISUAL)
+#elif (!defined(G__INTEL_COMPILER) && (G__GNUC>=3 && G__GNUC_MINOR>=1)) || defined(G__VISUAL)
 
 #ifndef G__OLDIMPLEMENTATION1703
   class iterator {
@@ -216,7 +216,7 @@ class vector {
   // already done above
 #elif defined(G__BORLANDCC5)
   typedef reverse_iterator<iterator> reverse_iterator;
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__AIX)
+#elif (!defined (G__INTEL_COMPILER) && (G__GNUC>=3 && G__GNUC_MINOR>=1)) || defined(G__AIX)
   typedef reverse_iterator<const_iterator> const_reverse_iterator;
   typedef reverse_iterator<iterator> reverse_iterator;
 #else // G__BORLANDCC5
@@ -264,8 +264,8 @@ class vector {
 #if !(G__GNUC>=3 && G__GNUC_MINOR>=1) 
   typedef const reverse_iterator const_reverse_iterator;
 #endif
-
-#if (G__GNUC>=3) && !defined(G__KCC)
+   
+#if (G__GNUC>=3) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
   friend bool operator==(vector::const_iterator& x
                         ,vector::const_iterator& y) const;
   friend bool operator!=(vector::const_iterator& x

@@ -95,7 +95,7 @@ class deque {
 #if defined(G__HPUX)
   friend bool operator!=(const deque::iterator& x
                         ,const deque::iterator& y) const;
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const deque::iterator& x
                         ,const deque::iterator& y) const;
   friend bool operator!=(const deque::iterator& x

@@ -621,7 +621,7 @@ template<class _Category,
 #endif
 
 
-#if (G__GNUC>=3) && !defined(G__KCC)
+#if (G__GNUC>=3) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
 
 #if (G__GNUC_MINOR<1) 
 // for g++ 3.00
