@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.12 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.13 2002/12/10 02:20:49 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -52,7 +52,7 @@ friend class TPacketizer2;
 private:
    TFileNode     *fNode;         // my FileNode
    TDSetElement  *fElement;      // location of the file and its range
-   Int_t          fNextEntry;    // cursor in the range, -1 when done
+   Long64_t       fNextEntry;    // cursor in the range, -1 when done
 
 public:
    TFileStat(TFileNode *node, TDSetElement *elem)
@@ -79,7 +79,7 @@ public:
       fFiles->SetOwner();
       fActive->SetOwner(kFALSE);
    }
-  ~TFileNode() { delete fFiles; delete fFileIter; delete fActive; }
+   ~TFileNode() { delete fFiles; delete fFileIter; delete fActive; }
 
    const char *GetName() const { return fNodeName.Data(); }
    void Add(TDSetElement *elem)
@@ -88,7 +88,6 @@ public:
       fFiles->Add(f);
       fActive->Add(f);
    }
-
 };
 
 
@@ -323,7 +322,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
          } else if ( e->GetFirst() + e->GetNum() > entries ) {
             Error("TPacketizer2",
                   "Num (%d) + First (%d) larger then number of keys/entries (%d) in %s",
-               e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
+                  e->GetNum(), e->GetFirst(), entries, e->GetFileName() );
             e->SetNum( entries - e->GetFirst() );
          }
 
@@ -549,9 +548,9 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
    // get a packet
 
    TDSetElement *base = file->fElement;
-   Int_t last = base->GetFirst() + base->GetNum();
-   Int_t first;
-   Int_t num = Int_t(fPacketSize*(Float_t)slstat->fSlave->GetPerfIdx()/fMaxPerfIdx);
+   Long64_t last = base->GetFirst() + base->GetNum();
+   Long64_t first;
+   Long64_t num = Long64_t(fPacketSize*(Float_t)slstat->fSlave->GetPerfIdx()/fMaxPerfIdx);
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;
@@ -560,10 +559,10 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
       TFileNode *node = file->fNode;
       if ( node->fActiveNext == file )
-            node->fActiveNext = node->fActive->After(file);
+         node->fActiveNext = node->fActive->After(file);
       node->fActive->Remove(file);
       if ( node->fActiveNext == 0 )
-            node->fActive->First();
+         node->fActive->First();
 
    } else {
       first = file->fNextEntry;
