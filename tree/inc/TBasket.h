@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.5 2001/02/12 07:36:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.6 2002/01/16 18:10:23 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
             Int_t   ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
             Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
 
+            void    SetBranch(TBranch *branch) {fBranch = branch;}
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}
     virtual void    SetReadMode();
     virtual void    SetWriteMode();

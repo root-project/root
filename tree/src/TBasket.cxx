@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.10 2002/01/16 18:10:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.11 2002/02/02 11:54:34 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -157,9 +157,9 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
 
    Int_t badread= 0;
    TDirectory *cursav = gDirectory;
-   gBranch->GetDirectory()->cd();
+   fBranch->GetDirectory()->cd();
 
-   if (gBranch->GetTree()->MemoryFull(fBufferSize)) gBranch->DropBaskets();
+   if (fBranch->GetTree()->MemoryFull(fBufferSize)) fBranch->DropBaskets();
 
    fBufferRef = new TBuffer(TBuffer::kRead, len);
    fBufferRef->SetParent(file);
@@ -195,7 +195,7 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != fBufferRef->BufferSize()) {
-     // There is more data in the buffer!  It is the diplacement
+     // There is more data in the buffer!  It is the displacement
      // array.
      fBufferRef->ReadArray(fDisplacement);
    }
@@ -271,7 +271,7 @@ void TBasket::Streamer(TBuffer &b)
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
-         fBufferRef->SetParent(b.GetParent());
+         fBufferRef->SetParent(gDirectory->GetFile());
          char *buf  = fBufferRef->Buffer();
          if (v > 1) b.ReadFastArray(buf,fLast);
          else       b.ReadArray(buf);
@@ -354,7 +354,7 @@ Int_t TBasket::WriteBuffer()
    if (!file) return 0;
 
    fBranch->GetDirectory()->cd();
-   if (gFile ? !gFile->IsWritable() : 1) { cursav->cd(); return 0;}
+   if (!file->IsWritable()) { cursav->cd(); return 0;}
 //*-*- Transfer fEntryOffset table at the end of fBuffer. Offsets to fBuffer
 //     are transformed in entry length to optimize compression algorithm.
    fLast      = fBufferRef->Length();
