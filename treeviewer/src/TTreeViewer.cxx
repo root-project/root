@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.41 2004/01/13 21:02:14 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.42 2004/04/30 10:31:34 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -2101,7 +2101,6 @@ void TTreeViewer::CloseWindow()
    // Close the viewer.
 
    DeleteWindow();
-   cout << "Tree Viewer deleted\n";
 }
 
 //______________________________________________________________________________
