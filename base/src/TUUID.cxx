@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.16 2003/04/03 13:46:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.17 2003/04/11 11:48:10 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -450,7 +450,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    QueryPerformanceCounter(&r.pc);
    // milliseconds since last boot
    r.tc = GetTickCount();
-   r.l = MAX_COMPUTERNAME_LENGTH;
+   r.l = MAX_COMPUTERNAME_LENGTH + 1;
    GetComputerName(r.hostname, &r.l);
 #else
    struct randomness {
