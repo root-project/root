@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.3 2004/02/18 07:28:02 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.4 2004/03/11 06:17:43 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TStreamerInfo.h"
 
 namespace std {} using namespace std;
 
@@ -456,8 +457,13 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
             DOLOOP {
                TString **ptr = (TString**)arr;
                if (*ptr) delete *ptr;
-               *ptr = new TString;
-               (**ptr).Streamer(R__b);
+
+               if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {
+                  *ptr = new TString;
+                  (**ptr).Streamer(R__b);
+               } else {
+                  *ptr = (TString*)R__b.ReadObjectAny(fValueClass);
+               }  
             }  break;
 
          default: Assert(0);
@@ -507,24 +513,32 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
             // so let's break
             break;
             
+         case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:;
          case G__BIT_ISPOINTER|G__BIT_ISCLASS:;
-            DOLOOP {R__b.WriteObjectAny(*((void**)arr),fValueClass);}   break;
+            DOLOOP {
+               R__b.WriteObjectAny(*((void**)arr),fValueClass);
+            }
+            break;
             
          case G__BIT_ISCLASS:;
-            DOLOOP {R__b.StreamObject((void*)arr,fValueClass);}  break;
+            DOLOOP {
+               R__b.StreamObject((void*)arr,fValueClass);
+            }
+            break;
             
          case R__BIT_ISSTRING:;
-            DOLOOP {TString R__str(((string*)arr)->c_str());
-            R__str.Streamer(R__b);}     break;
+            DOLOOP {
+               TString R__str(((string*)arr)->c_str());
+               R__str.Streamer(R__b);
+            }
+            break;
             
          case R__BIT_ISSTRING|G__BIT_ISPOINTER:;
-            DOLOOP {TString R__str((*((string**)arr))->c_str());
-            R__str.Streamer(R__b);}     break;
-            
-         case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:;
-            DOLOOP {TString *R__str = *((TString**)arr);
-            R__str->Streamer(R__b);
-            }  break;
+            DOLOOP {
+               TString R__str((*((string**)arr))->c_str());
+               R__str.Streamer(R__b);
+            }
+            break;
             
          default: {
             Assert(0);
