@@ -52,7 +52,7 @@ in this Software without prior written authorization from the X Consortium.
 #endif
 #if !defined(__hpux)
 #if defined(R__MACOSX_VERS)
-#if R__MACOSX_VERS < 4)
+#if R__MACOSX_VERS < 4
 extern int fchmod();
 #endif
 #else
