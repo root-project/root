@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.2 2000/06/13 12:16:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.3 2000/12/13 15:13:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -42,7 +42,7 @@ private:
 public:
         TAttCanvas();
         virtual ~TAttCanvas();
-        virtual void     Copy(TAttCanvas &attcanvas);
+        virtual void     Copy(TAttCanvas &attcanvas) const;
         Float_t          GetAdate() const { return fAdate;}
         Float_t          GetTitleFromTop() const { return fTitleFromTop;}
         Float_t          GetXBetween() const { return fXBetween;}
