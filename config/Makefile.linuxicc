@@ -46,7 +46,9 @@ CRYPTLIBS     = -lcrypt
 F77           = ifc
 F77FLAGS      =
 # check path for g2c
-F77LIBS       = `gcc -print-file-name=libg2c.a` -lF90 -lCEPCF90 -lintrins
+F77LIBS       = `gcc -print-file-name=libg2c.a` \
+                -L$(shell which ifc | sed -e 's|bin/ifc|lib|') \
+                -lF90 -lCEPCF90 -lintrins
 
 # Extras
 
