@@ -1,16 +1,10 @@
 
 Processing testBoolOpt.C...
-regular C++: left() || right()
-running left side
                   for : left()||right() Ndim= 1, Npar= 0, Noper= 4
  fExpr[0] = bool left()  fOper = 200000
  fExpr[1] = || opt  fOper = 120022
  fExpr[2] = bool right()  fOper = 201000
  fExpr[3] = ||  fOper = 61
-TFormula: left() || right()
-running left side
-regular C++: !left() && !right()
-running left side
                  fand : !left()&&!right() Ndim= 1, Npar= 0, Noper= 6
  fExpr[0] = bool left()  fOper = 200000
  fExpr[1] = !  fOper = 68
@@ -18,23 +12,30 @@ running left side
  fExpr[3] = bool right()  fOper = 201000
  fExpr[4] = !  fOper = 68
  fExpr[5] = &&  fOper = 60
+regular C++: left() || right()
+running left side
+TFormula: left() || right()
+running left side
+regular C++: !left() && !right()
+running left side
 TFormula: !left() && !right()
 running left side
+regular C++: !left() || right()
+running left side
+running right side
+TFormula: !left() || right()
+running left side
+running right side
+regular C++: left() && !right()
+running left side
+running right side
+TFormula: left() && !right()
+running left side
+running right side
 regular C++: left()+ (!left() && !right()) + right()
 running left side
 running left side
 running right side
-                fcomp : left()+(!left()&&!right())+right() Ndim= 1, Npar= 0, Noper= 10
- fExpr[0] = bool left()  fOper = 200000
- fExpr[1] = bool left()  fOper = 201000
- fExpr[2] = !  fOper = 68
- fExpr[3] = && opt  fOper = 120031
- fExpr[4] = bool right()  fOper = 202000
- fExpr[5] = !  fOper = 68
- fExpr[6] = &&  fOper = 60
- fExpr[7] = +  fOper = 1
- fExpr[8] = bool right()  fOper = 203000
- fExpr[9] = +  fOper = 1
 TFormula: left()+ (!left() && !right()) + right()
 running left side
 running left side
