@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooConvolutedPdf.cc,v 1.1 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -68,7 +68,7 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
   // Instantiate basis function
   RooArgSet basisArgs(*_convVar) ;
   basisArgs.add(params) ;
-  RooAbsReal* basisFunc = new RooFormulaVar(expression,expression,basisArgs) ;
+  RooFormulaVar* basisFunc = new RooFormulaVar(expression,expression,basisArgs) ;
 
   // Instantiate resModel x basisFunc convolution
   RooAbsReal* conv = _model->convolution(basisFunc) ;
@@ -90,8 +90,10 @@ Double_t RooConvolutedPdf::evaluate(const RooDataSet* dset) const
   Int_t index(0) ;
   while(conv=(RooAbsPdf*)iter->Next()) {
     Double_t coef = coefficient(index++) ;
-    result += conv->getVal(0)*coef ;
-    norm   += conv->getNorm(dset)*coef ;
+    if (coef!=0) {
+      result += conv->getVal(0)*coef ;
+      norm   += conv->getNorm(dset)*coef ;
+    }
   }
   
   delete iter ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.32 2001/06/06 00:06:38 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.33 2001/06/08 05:51:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -509,8 +509,8 @@ Bool_t RooAbsArg::redirectServers(const RooArgSet& newSet, Bool_t mustReplaceAll
     newServer = newSet.find(oldServer->GetName()) ;
     if (!newServer) {
       if (mustReplaceAll) {
-	cout << "RooAbsArg::redirectServers: server " << oldServer->GetName() 
-	     << " not redirected" << endl ;
+	cout << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName() 
+	     << " (" << (void*)oldServer << ") not redirected" << endl ;
 	ret = kTRUE ;
       }
       continue ;
@@ -577,7 +577,9 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
     return ;
   }
 
-  //cout << "registering proxy " << (void*)&proxy << " with name " << proxy.name() << endl ;
+  cout << (void*)this << " " << GetName() << ": registering proxy " 
+       << (void*)&proxy << " with name " << proxy.name() << " in mode " 
+       << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << endl ;
 
   // Register proxied object as server
   addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;

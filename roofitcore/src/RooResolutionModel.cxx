@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooResolutionModel.cc,v 1.1 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -20,18 +20,25 @@ ClassImp(RooResolutionModel)
 ;
 
 
-RooResolutionModel::RooResolutionModel(const char *name, const char *title) : 
-  RooAbsPdf(name,title), _basis(0)
+RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
+  RooAbsPdf(name,title), _basis(0), _basisCode(0), x("x","Dependent or convolution variable",this,_x)
 {
   
 }
 
 
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
-  RooAbsPdf(other,name),  _basis(other._basis)
+  RooAbsPdf(other,name),  _basis(other._basis), _basisCode(other._basisCode), x("x",this,other.x)
 {
   // Copy constructor
-  if (_basis) addServer(*_basis,kTRUE,kFALSE) ;
+  if (_basis) {
+    TIterator* bsIter = _basis->serverIterator() ;
+    RooAbsArg* basisServer ;
+    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+      addServer(*basisServer,kTRUE,kFALSE) ;
+    }
+    delete bsIter ;
+  }
 }
 
 
@@ -43,12 +50,23 @@ RooResolutionModel::~RooResolutionModel()
 
 
 
-RooResolutionModel* RooResolutionModel::convolution(RooAbsReal* basis) const
+RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis) const
 {
-  RooResolutionModel* conv = (RooResolutionModel*) clone() ;  
+  // Check that primary variable of basis functions is our convolution variable  
+  if (basis->findServer(0) != x.absArg()) {
+    cout << "RooResolutionModel::convolution(" << GetName() 
+	 << " convolution parameter of basis function and PDF don't match" << endl ;
+    return 0 ;
+  }
 
-  conv->SetName(TString(conv->GetName()).Append("_conv_").Append(basis->GetName())) ;
+  TString newName(GetName()) ;
+  newName.Append("_conv_") ;
+  newName.Append(basis->GetName()) ;
+
+  RooResolutionModel* conv = (RooResolutionModel*) clone(newName) ;
+  
   conv->SetTitle(TString(conv->GetTitle()).Append(" convoluted with basis function ").Append(basis->GetName())) ;
+  cout << "RRM:convolution of " << GetName() << " chaning basis to " << basis->GetName() << endl ;
   conv->changeBasis(basis) ;
 
   return conv ;
@@ -56,23 +74,36 @@ RooResolutionModel* RooResolutionModel::convolution(RooAbsReal* basis) const
 
 
 
-void RooResolutionModel::changeBasis(RooAbsReal* basis) 
+void RooResolutionModel::changeBasis(RooFormulaVar* basis) 
 {
   // Remove client-server link to old basis
   if (_basis) {
-    removeServer(*_basis) ;
+    TIterator* bsIter = _basis->serverIterator() ;
+    RooAbsArg* basisServer ;
+    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+      removeServer(*basisServer) ;
+    }
+    delete bsIter ;
   }
 
   // Change basis pointer and update client-server link
   _basis = basis ;
   if (_basis) {
-    addServer(*_basis,kTRUE,kFALSE) ;
+    TIterator* bsIter = _basis->serverIterator() ;
+    RooAbsArg* basisServer ;
+    while(basisServer = (RooAbsArg*)bsIter->Next()) {
+      addServer(*basisServer,kTRUE,kFALSE) ;
+    }
+    delete bsIter ;
   }
+
+  _basisCode = basis?basisCode(basis->GetName()):0 ;
 }
 
 
-const RooAbsReal& RooResolutionModel::basis() const {
-  static RooRealVar identity("identity","Identity basis function",1) ;
+const RooFormulaVar& RooResolutionModel::basis() const {
+  static RooRealVar one("one","one",1) ;
+  static RooFormulaVar identity("identity","1*one",RooArgSet(one)) ;
   return _basis?*_basis:identity ;
 }
 
@@ -112,7 +143,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooArgSet& newServerList, B
 {
   if (!_basis) return kFALSE ;
 
-  RooAbsReal* newBasis = (RooAbsReal*) newServerList.find(_basis->GetName()) ;
+  RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
   if (newBasis) _basis = newBasis ;
 
   return (mustReplaceAll && !newBasis) ;

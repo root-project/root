@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.13 2001/05/31 21:21:35 david Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.14 2001/06/08 05:51:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -110,8 +110,12 @@ protected:
   Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
 		   const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
   Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
-		   const RooArgProxy& a, const RooArgProxy& b, 
+		   const RooArgProxy& a, const RooArgProxy& b, 		   
 		   const RooArgProxy& c, const RooArgProxy& d) const ;
+
+  Bool_t matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		   const RooArgSet& set) const ;
+
 private:
 
   Bool_t matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs, const TList &nameList) const;

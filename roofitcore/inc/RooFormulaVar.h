@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.rdl,v 1.2 2001/05/14 22:54:20 verkerke Exp $
+ *    File: $Id: RooFormulaVar.rdl,v 1.3 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,9 @@ public:
 
   // Formula editing interface
   Bool_t setFormula(const char* formula) ;
+
+  inline RooAbsArg* getParameter(const char* name) const { return _formula.getParameter(name) ; }
+  inline RooAbsArg* getParameter(Int_t index) const { return _formula.getParameter(index) ; }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

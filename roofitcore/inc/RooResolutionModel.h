@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooResolutionModel.rdl,v 1.1 2001/06/08 05:51:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,31 +15,36 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooFormulaVar.hh"
 
 class RooResolutionModel : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
   inline RooResolutionModel() { }
-  RooResolutionModel(const char *name, const char *title) ; 
+  RooResolutionModel(const char *name, const char *title, RooRealVar& x) ; 
   RooResolutionModel(const RooResolutionModel& other, const char* name=0);
+  virtual TObject* clone(const char* newname) const = 0 ;
   virtual ~RooResolutionModel();
 
-  Double_t getVal(const RooDataSet* dset) const ;
-  RooResolutionModel* convolution(RooAbsReal* basis) const ;
-  const RooAbsReal& basis() const ;
+  Double_t getVal(const RooDataSet* dset=0) const ;
+  RooResolutionModel* convolution(RooFormulaVar* basis) const ;
+  const RooFormulaVar& basis() const ;
   const RooRealVar& convVar() const ;
 
-  virtual Bool_t isBasisSupported(const char* name) const = 0 ;
+  inline Bool_t isBasisSupported(const char* name) const { return basisCode(name)?kTRUE:kFALSE ; }
+  virtual Int_t basisCode(const char* name) const = 0 ;
 
 protected:
 
+  RooRealProxy x ; // Dependent/convolution variable
+
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll) ;
-  void changeBasis(RooAbsReal* basis) ;
+  virtual void changeBasis(RooFormulaVar* basis) ;
 
-private:
+  Int_t _basisCode ;
+  RooFormulaVar* _basis ;
 
-  RooAbsReal* _basis ;
   ClassDef(RooResolutionModel,1) // Abstract Resolution Model
 };
 
