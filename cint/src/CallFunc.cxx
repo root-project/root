@@ -283,6 +283,9 @@ void G__CallFunc::Exec(void *pobject)
   if(0==ret) {
     /* error */
   }
+#ifndef G__OLDIMPLEMENTATION1591
+  else SetFuncType();
+#endif
 #ifndef G__OLDIMPLEMENTATION1035
   G__UnlockCriticalSection();
 #endif
@@ -309,6 +312,9 @@ long G__CallFunc::ExecInt(void *pobject)
   if(0==ret) {
     /* error */
   }
+#ifndef G__OLDIMPLEMENTATION1591
+  else SetFuncType();
+#endif
   return(G__int(result));
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -333,6 +339,9 @@ double G__CallFunc::ExecDouble(void *pobject)
   if(0==ret) {
     /* error */
   }
+#ifndef G__OLDIMPLEMENTATION1591
+  else SetFuncType();
+#endif
   return(G__double(result));
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -355,5 +364,21 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
   }
   return(ret);
 }
+///////////////////////////////////////////////////////////////////////////
+#ifndef G__OLDIMPLEMENTATION1591
+void G__CallFunc::SetFuncType() {
+  if(method.IsValid()) {
+    struct G__ifunc_table *ifunc = method.ifunc();
+    int ifn = method.Index();
+    result.type = ifunc->type[ifn];
+    result.tagnum = ifunc->p_tagtable[ifn];
+    result.typenum = ifunc->p_typetable[ifn];
+    result.isconst = ifunc->isconst[ifn];
+    if('d'!=result.type&&'f'!=result.type) {
+      result.obj.reftype.reftype = ifunc->reftype[ifn];
+    }
+  }
+}
+#endif
 ///////////////////////////////////////////////////////////////////////////
 

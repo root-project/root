@@ -64,6 +64,9 @@ class G__CallFunc {
 #endif
 
  private:
+#ifndef G__OLDIMPLEMENTATION1591
+  void SetFuncType();
+#endif
 #ifndef __MAKECINT__
   G__InterfaceMethod pfunc;
   G__value result;
