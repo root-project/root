@@ -2,7 +2,7 @@
    gROOT->ProcessLine(".L header.C+");
    TClass *cl = gROOT->GetClass("Hard2Stream");
 // cl->SetStreamer(new TStreamer(hard2StreamStreamer));
-   setStreamer();
+//setStreamer();
 
    cout << "Hard2Stream version #" << cl->GetClassVersion() << endl;
    TBuffer buf(TBuffer::kWrite);

@@ -5,7 +5,6 @@ new TFile("Event2.root");
 tree2 = T2;
 new TFile("Event3.root");
 tree3 = T3;
-
 tree1->Process("sel.C","T1");
 tree2->Process("sel.C","T2");
 tree3->Process("sel.C","T3");

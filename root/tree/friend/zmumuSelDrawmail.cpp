@@ -100,15 +100,12 @@ void zmumuSelDraw(TTree* t0){
 //    t0->Scan("nneu:neumomcm[0]:neumomcm[1]:neumomcm[2]:neumomcm[3]:neumomcmtot");
 }
 
-
-
-
-TChain* zmumuSelDrawmail(){
+void zmumuSelDrawmail(){
    TChain* zch=new TChain("TauMicroFilter/ntp1");
    zch->Add("data12_Feb2000_h1900_off-3-100.root");
    zch->Add("data12_Apr2001_h1930_on-84-100.root");
    // zch->Add("musp5_02_02-16.root");
    zmumuSelDraw(zch);
-   return zch;
+   return; // zch;
    
 }

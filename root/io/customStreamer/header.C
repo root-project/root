@@ -15,3 +15,6 @@ void Hard2Stream::print() {
    std::cout << "Hard2Stream: " /* << (void*)this */ << std::endl;
    std::cout << "val : " << getVal() << std::endl;
 }
+
+
+RootStreamer(Hard2Stream,hard2StreamStreamer);

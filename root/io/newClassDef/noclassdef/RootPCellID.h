@@ -70,8 +70,8 @@ public:
    RootPCvirt() : RootPCellID("none",0),virt(0) {}
    RootPCvirt(int v) :  RootPCellID("virt",v),virt(44) {}
    int virt;
-   vector<int> list;
-   vector<RootPCfix*> list2;
+   vector<int> list; 
+   vector<RootPCfix*> list2; 
    vector<helper<float>* > list3; //!
    vector<helper<float*> > list4; //!
    vector<vector<float*> > list5; //!

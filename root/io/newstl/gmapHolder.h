@@ -85,7 +85,7 @@ public:
 #if defined(R__NO_NESTED_CONST_STRING)
    std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //!  this version of ROOT does not support nested const string
 #else
-   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //! CINT still croaks on the const string inside the pair!
+   std::TEST_MAP<const std::string*, float, PtrCmp<const std::string> >  fPtrConstString; //
 #endif
 
    std::TEST_MAP<TString, std::string>  fTString;

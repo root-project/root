@@ -14,7 +14,7 @@ Event.root:
 	./Event 20 1 9 1
 
 Simple_cxx.$(DllSuf) : Simple.h Simple.cxx
-	$(CMDECHO) root.exe -l -b buildSimple.C 
+	$(CMDECHO) root.exe -l -b -q ../../build.C\(\"Simple.cxx\"\)
 
 Simple: Simple_cxx.$(DllSuf)
 	$(CMDECHO) root.exe -l -b -q Run.C

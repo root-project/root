@@ -8,20 +8,23 @@
 class RootCaloHit : public TObject { 
 public:
 	RootCaloHit() {
-          mycellfix=0;
-          mycellvirt=0;
-          mycellnull=0;
-          for(int i=0;i<4;i++) myArrFix[i]=0;
-          myArrVar=0;
-          myobjp = myobj2p = 0;
-          myobjdp = 0;
-          myobj2dp = 0;
-          myobjSt = new RootPCobject(0);
-          myobj2St = new RootPCobject2(0);
-          mytobjp = mytobj2p = 0;
-          mytobjSt = new RootPCobject(0);
-          mytobj2St = new RootPCobject2(0);
-        }
+      for(int i=0;i<4;i++) myArrFix[i]=0;
+      myArrVar=0;
+
+      mycellnull=0;
+      mycellfix=0;
+      mycellvirt=0;
+      mynocellp=0;
+
+      myobjp = myobj2p = 0;
+      myobjdp = 0;
+      myobj2dp = 0;
+      myobjSt = new RootPCobject(0);
+      myobj2St = new RootPCobject2(0);
+      mytobjp = mytobj2p = 0;
+      mytobjSt = new RootPCobject(0);
+      mytobj2St = new RootPCobject2(0);
+   }
 	RootCaloHit(float e, float t, int val, 
                     const std::string& s, unsigned int id) : 
            energy (e), time (t), itra (val), 
@@ -136,11 +139,11 @@ protected:
 	int itra; 
 public:
 	RootPCellID      mycell;
-        RootPCellID      myArr[3];
-        RootPCtemp<int> *myArrFix[4]; 
-        int index;
-        RootPCellID    **myArrVar;    //! WAITING on Vicktor's implementation [index]
-        RootPCnodict     mynocell;
+   RootPCellID      myArr[3];
+   RootPCtemp<int> *myArrFix[4]; 
+   int index;
+   RootPCellID    **myArrVar;    //! WAITING on Vicktor's implementation [index]
+   RootPCnodict     mynocell;
 	RootPCellID     *mycellnull; 
 	RootPCellID     *mycellfix; //
 	RootPCellID     *mycellvirt; //
@@ -153,16 +156,16 @@ public:
 	RootPCellID     *myobj2p;
 	RootPCobject    *myobjSt;  //->
 	RootPCobject2   *myobj2St; //->
-        TObject         *mytobjp;
-        TObject         *mytobj2p;
-        TObject         *mytobjSt; //->
-        TObject         *mytobj2St;//->
-
+   TObject         *mytobjp;
+   TObject         *mytobj2p;
+   TObject         *mytobjSt; //->
+   TObject         *mytobj2St;//->
+   
 	RootPCobject    *myobjdp;  //
 	RootPCobject2   *myobj2dp; //
-
-        RootPCobject     myobjarr[2]; 
-        RootPCobject2    myobjarr2[2]; 
+   
+   RootPCobject     myobjarr[2];  // Does not work with Victor's code
+   RootPCobject2    myobjarr2[2];  // Does not work with Victor's code
 #else
 	RootPCobject     myobj;    //!
 	RootPCobject2    myobj2;         //!     
@@ -170,16 +173,16 @@ public:
 	RootPCellID     *myobj2p;        //!
 	RootPCobject    *myobjSt;  //!->
 	RootPCobject2   *myobj2St;       //!->
-        TObject         *mytobjp;  //!
-        TObject         *mytobj2p;       //!
-        TObject         *mytobjSt;       //!->
-        TObject         *mytobj2St;      //!->
+   TObject         *mytobjp;  //!
+   TObject         *mytobj2p;       //!
+   TObject         *mytobjSt;       //!->
+   TObject         *mytobj2St;      //!->
 
 	RootPCobject    *myobjdp;  //!
 	RootPCobject2   *myobj2dp;        //!
 
-        RootPCobject     myobjarr[2]; //!
-        RootPCobject2    myobjarr2[2];    //!
+   RootPCobject     myobjarr[2]; //!
+   RootPCobject2    myobjarr2[2];    //!
 #endif
 
 	ClassDef(RootCaloHit,1)
