@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.6 2000/11/27 10:39:02 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.7 2001/02/03 15:41:18 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,6 +39,9 @@
 #pragma link C++ global gVirtualGL;
 #pragma link C++ global gVirtualX;
 #pragma link C++ global gVirtualPS;
+#pragma link C++ global gRootDir;
+#pragma link C++ global gProgName;
+#pragma link C++ global gProgPath;
 
 #pragma link C++ function Form;
 #pragma link C++ function Printf;
