@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.5 2000/11/21 16:28:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.6 2000/11/24 10:22:19 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -373,8 +373,8 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
          if (Long_t(fBufCur) > endpos)
             Error("CheckByteCount", "object of class %s read too many bytes",
                   clss->GetName());
-         Printf("*** %s::Streamer() not in sync with data on file, fix Streamer()",
-                clss->GetName());
+            Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
+                    clss->GetName());
       }
       offset = Int_t(Long_t(fBufCur) - endpos);
       //gROOT->Message(1005, this);
