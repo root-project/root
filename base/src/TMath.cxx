@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.86 2004/09/24 18:14:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.87 2004/10/21 13:58:46 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1166,6 +1166,7 @@ done:
 Short_t TMath::MinElement(Long64_t n, const Short_t *a)
 {
    // Return minimum of array a of length n.
+
    return *min_element(a,a+n);
 }
 
@@ -1173,6 +1174,7 @@ Short_t TMath::MinElement(Long64_t n, const Short_t *a)
 Int_t TMath::MinElement(Long64_t n, const Int_t *a)
 {
    // Return minimum of array a of length n.
+
    return *min_element(a,a+n);
 }
 
@@ -1180,14 +1182,15 @@ Int_t TMath::MinElement(Long64_t n, const Int_t *a)
 Float_t TMath::MinElement(Long64_t n, const Float_t *a)
 {
    // Return minimum of array a of length n.
-   return *min_element(a,a+n);
 
-   }
+   return *min_element(a,a+n);
+}
 
 //______________________________________________________________________________
 Double_t TMath::MinElement(Long64_t n, const Double_t *a)
 {
    // Return minimum of array a of length n.
+
    return *min_element(a,a+n);
 }
 
@@ -1195,6 +1198,7 @@ Double_t TMath::MinElement(Long64_t n, const Double_t *a)
 Long_t TMath::MinElement(Long64_t n, const Long_t *a)
 {
    // Return minimum of array a of length n.
+
    return *min_element(a,a+n);
 }
 
@@ -1202,6 +1206,7 @@ Long_t TMath::MinElement(Long64_t n, const Long_t *a)
 Long64_t TMath::MinElement(Long64_t n, const Long64_t *a)
 {
    // Return minimum of array a of length n.
+
    return *min_element(a,a+n);
 }
 
@@ -1209,6 +1214,7 @@ Long64_t TMath::MinElement(Long64_t n, const Long64_t *a)
 Short_t TMath::MaxElement(Long64_t n, const Short_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1216,6 +1222,7 @@ Short_t TMath::MaxElement(Long64_t n, const Short_t *a)
 Int_t TMath::MaxElement(Long64_t n, const Int_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1223,6 +1230,7 @@ Int_t TMath::MaxElement(Long64_t n, const Int_t *a)
 Float_t TMath::MaxElement(Long64_t n, const Float_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1230,6 +1238,7 @@ Float_t TMath::MaxElement(Long64_t n, const Float_t *a)
 Double_t TMath::MaxElement(Long64_t n, const Double_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1237,6 +1246,7 @@ Double_t TMath::MaxElement(Long64_t n, const Double_t *a)
 Long_t TMath::MaxElement(Long64_t n, const Long_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1244,6 +1254,7 @@ Long_t TMath::MaxElement(Long64_t n, const Long_t *a)
 Long64_t TMath::MaxElement(Long64_t n, const Long64_t *a)
 {
    // Return maximum of array a of length n.
+
    return *max_element(a,a+n);
 }
 
@@ -1997,7 +2008,6 @@ Double_t TMath::Median(Long64_t n, const Long64_t *a, const Double_t *w, Long64_
    return MedianImp(n, a, w, work);
 }
 
-
 //______________________________________________________________________________
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 template <class Element, class Index, class Size>
@@ -2049,9 +2059,10 @@ Element TMath::KOrdStatImp(Size n, const Element *a, Size k, Index *work)
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
 	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         Element tmp = a[ind[rk]];
          if (isAllocated)
             delete [] ind;
-         return a[ind[rk]];
+         return tmp;
       } else {
          mid = (l+ir) >> 1; //choose median of left, center and right
          {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.7 2004/10/19 17:06:13 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.8 2004/10/21 14:30:53 rdm Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -1268,9 +1268,10 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
       if (ir<=l+1) { //active partition contains 1 or 2 elements
          if (ir == l+1 && a[ind[ir]]<a[ind[l]])
 	    {temp = ind[l]; ind[l]=ind[ir]; ind[ir]=temp;}
+         Double_t tmp = a[ind[rk]];
          if (isAllocated)
             delete [] ind;
-         return a[ind[rk]];
+         return tmp;
       } else {
          mid = (l+ir) >> 1; //choose median of left, center and right
          {temp = ind[mid]; ind[mid]=ind[l+1]; ind[l+1]=temp;}//elements as partitioning element arr.
@@ -1299,4 +1300,3 @@ Double_t TRobustEstimator::KOrdStat(Int_t ntotal, Double_t *a, Int_t k, Int_t *w
       }
    }
 }
-
