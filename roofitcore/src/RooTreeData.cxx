@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.53 2002/11/27 07:27:52 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.54 2003/04/09 01:33:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -963,7 +963,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 
   if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
     cout << ClassName() << "::" << GetName()
-	 << ":plotOn: createHistogram() failed" << endl;
+	 << ":plotOn: fillHistogram() failed" << endl;
     return 0;
   }
 
@@ -1201,7 +1201,9 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
       break;
     }
     Double_t error2 = pow(hist->GetBinError(bin),2) ;
-    error2 += pow(weightError(RooAbsData::SumW2),2) ;
+    Double_t we = weightError(RooAbsData::SumW2) ;
+    if (we==0) we = 1 ;
+    error2 += pow(we,2) ;
     hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;
   }
