@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.15 2004/10/13 21:55:41 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.16 2004/10/14 07:38:03 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -293,13 +293,13 @@ void TGeoMixture:: DefineElement(Int_t iel, Int_t z, Int_t natoms)
    fZmixture[iel] = elem->Z();
    fAmixture[iel] = elem->A();
    fWeights[iel]  = natoms;
-   Double_t wtot = 0.;
+   Double_t amol = 0.;
    for (i=0; i<fNelements; i++) {
-      wtot += fWeights[i];
-      if (fWeights[i]==0) return;
+      if (fWeights[i]<=0) return;
+      amol += fAmixture[i]*fWeights[i];
    }   
    for (i=0; i<fNelements; i++) {
-      fWeights[i] /= wtot;
+      fWeights[i] *= fAmixture[i]/amol;
       DefineElement(i, fAmixture[i], fZmixture[i], fWeights[i]);
    }
 }          

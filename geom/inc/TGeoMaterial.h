@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.14 2004/09/07 08:15:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.15 2004/10/13 17:14:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -112,7 +112,7 @@ protected :
    Int_t                    fNelements;  // number of elements
    Double_t                *fZmixture;   // [fNelements] array of Z of the elements
    Double_t                *fAmixture;   // [fNelements] array of A of the elements
-   Double_t                *fWeights;    // [fNelements] array of relative weights
+   Double_t                *fWeights;    // [fNelements] array of relative proportions by mass
 // methods
 
 public:

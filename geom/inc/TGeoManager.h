@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.53 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.54 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TGeoManager : public TNamed
 private :
    Double_t              fStep;             //! step to be done from current point and direction
    Double_t              fSafety;           //! safety radius from current point
+   Double_t              fLastSafety;       //! last computed safety radius
    Double_t              fPhimin;           //! lowest range for phi cut
    Double_t              fPhimax;           //! highest range for phi cut
    Double_t              fTmin;             //! lower time limit for tracks drawing
@@ -122,7 +123,7 @@ private :
    Int_t                *fIntBuffer;        //! transient int buffer
    Int_t                *fOverlapClusters;  //! internal array for overlaps
    Double_t             *fDblBuffer;        //! transient dbl buffer
-   Double_t              fLastPoint[3];     //! last located point
+   Double_t              fLastPoint[3];     //! last point for which safety was computed
    TGeoVolume           *fPaintVolume;      //! volume currently painted
 //--- private methods
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);

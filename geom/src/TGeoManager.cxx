@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.95 2004/10/15 15:30:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.96 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -492,6 +492,7 @@ void TGeoManager::Init()
    fLoopVolumes = kFALSE;
    fStartSafe = kTRUE;
    fSafety = 0;
+   fLastSafety = 0.;
    fStep = 0;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
    fMaterials = new THashList(200,3);
@@ -2668,7 +2669,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          stepmax = - stepmax;
          computeGlobal = kTRUE;
       }
-      fSafety = Safety();
+      if (IsSamePoint(fPoint[0], fPoint[1], fPoint[2])) fSafety = fLastSafety;
+      else fSafety = Safety();
+      memcpy(fLastPoint, fPoint, kN3);
+      fLastSafety = fSafety;
       fStep = stepmax;
       if (stepmax<fSafety) {
          fStep = stepmax;
@@ -2877,7 +2881,6 @@ TGeoNode *TGeoManager::FindNode(Bool_t safe_start)
 {
 // Returns deepest node containing current point.
    fSafety = 0;
-   memcpy(fLastPoint, fPoint, kN3);
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fIsEntering = fIsExiting = kFALSE;
@@ -2898,7 +2901,6 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
    fPoint[1] = y;
    fPoint[2] = z;
    fSafety = 0;
-   memcpy(fLastPoint, fPoint, kN3);
    fSearchOverlaps = kFALSE;
    fIsOutside = kFALSE;
    fIsEntering = fIsExiting = kFALSE;
@@ -3051,12 +3053,12 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 // Checks if point (x,y,z) is still in the current node.
    // check if this is an overlapping node
    Double_t oldpt[3];
-   if (fSafety>0) {
+   if (fLastSafety>0) {
       Double_t dx = (x-fLastPoint[0]);
       Double_t dy = (y-fLastPoint[1]);
       Double_t dz = (z-fLastPoint[2]);
       Double_t dsq = dx*dx+dy*dy+dz*dz;
-      if (dsq<fSafety*fSafety) return kTRUE;
+      if (dsq<fLastSafety*fLastSafety) return kTRUE;
    }
    if (fCurrentOverlapping) {
 //      TGeoNode *current = fCurrentNode;
