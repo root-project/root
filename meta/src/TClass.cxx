@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.138 2004/01/31 08:59:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.139 2004/02/13 07:12:57 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2718,7 +2718,7 @@ void TClass::Streamer(void *object, TBuffer &b)
             Property();
             Streamer(object,b);
          } else {
-            Fatal("Streamer", "fStreamerType not properly initialiazed (%d)", fStreamerType);
+            Fatal("Streamer", "fStreamerType not properly initialized (%d)", fStreamerType);
          }
       }
    }
