@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.29 2003/06/23 15:36:10 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.30 2003/06/24 08:29:25 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -860,6 +860,7 @@ void TMinuit::SetFCN(void *fcn)
       fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
     }
    fFCN = InteractiveFCNm;
+   gMinuit = this; //required by InteractiveFCNm
 }
 
 //______________________________________________________________________________
