@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.134 2003/04/14 16:54:31 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.135 2003/04/17 07:59:52 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2182,7 +2182,7 @@ void THistPainter::PaintContour(Option_t *option)
                   continue;
                }
 
-               ipoly = itarr[ix-1]-1;
+               ipoly = itarr[ix-1];
                if (ipoly >=0 && ipoly <ncontour) {
                   poly = polys[ipoly];
                   poly->SetPoint(np[ipoly]  ,xarr[ix-1],yarr[ix-1]);
