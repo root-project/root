@@ -33,6 +33,6 @@ sgiegcs              for SGI IRIX 6.x egcs 1.1.x
 sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
 aix                  for AIX 4.x xlC
 aixegcs              for AIX 4.x egcs 1.1.x
-lynxos               for lynxos with gcc
+lynxos               for LynxOS with gcc
 win32                for Win32 with VC++
 win32egcs            for Win32 with egcs (Cygwin)
