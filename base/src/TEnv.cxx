@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.16 2004/06/02 08:42:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.17 2004/06/02 14:06:42 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -120,6 +120,8 @@ void TEnvParser::Parse()
    int c, state = 0;
 
    while ((c = fgetc(fIfp)) != EOF) {
+      if (c == 13)        // ignore CR
+         continue;
       if (c == '\n') {
          state = 0;
          if (name.Length() > 0) {
