@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.14 2003/11/19 11:29:00 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.15 2003/12/21 14:49:55 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -103,7 +103,7 @@ functional argument.
 #include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
-#include "TGraph.h"
+#include "TGraphAsymmErrors.h"
 
 #include "Riostream.h"
 
@@ -1867,18 +1867,20 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 //*-*        =========================================================
 //
 // In case of a TGraphErrors object, ex, the error along x,  is projected
-// along the y-direction by calculating the function at the points x-ex and
-// x+ex.
+// along the y-direction by calculating the function at the points x-exlow and
+// x+exhigh.
 //
 // The chisquare is computed as the sum of the quantity below at each point:
 //
 //                     (y - f(x))**2
 //         -----------------------------------
-//         ey**2 + ((f(x+ex) - f(x-ex))/2)**2
+//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
 //
-// where x and y are the point coordinates
+// where x and y are the point coordinates.
+//
+// In case the function lies below (above) the data point, ey is ey_low (ey_high).
 
-   Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
+   Double_t cu,eu,exl,exh,ey,eux,fu,fsum,fm,fp;
    Double_t x[1], xx[1];
    Double_t xm,xp;
    Int_t i, bin, npfits=0;
@@ -1887,6 +1889,8 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t Foption = grFitter->GetFitOption();
+   TGraphAsymmErrors *gra = 0;
+   if (gr->InheritsFrom(TGraphAsymmErrors::Class())) gra = (TGraphAsymmErrors*)gr;
    
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
@@ -1920,13 +1924,22 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 	//         continue;
 	eu = 1.;
       } else {
-	ex  = gr->GetErrorX(bin);
-	ey  = gr->GetErrorY(bin);
-	if (ex < 0) ex = 0;
-	if (ey < 0) ey = 0;
-	if (ex >= 0) {
-	  xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-	  xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+        if (gra) {
+           exh  = gra->GetEXhigh()[bin];
+           exl  = gra->GetEXlow()[bin];
+           if (cu < fu) ey = gra->GetEYhigh()[bin];
+           else         ey = gra->GetEYlow()[bin];
+        } else {
+           exh = gr->GetErrorX(bin);
+           exl = exh;
+           ey  = gr->GetErrorY(bin);
+        }
+        if (exl < 0) exl = 0;
+        if (exh < 0) exh = 0;
+	if (ey < 0)  ey  = 0;
+        if (exh > 0 && exl > 0) {
+	  xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+	  xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
 	  xx[0] = xm; fm = f1->EvalPar(xx,u);
 	  xx[0] = xp; fp = f1->EvalPar(xx,u);
 	  eux = 0.5*(fp-fm);

@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.13 2003/11/05 17:34:38 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.14 2003/11/26 16:21:47 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,7 +13,7 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TF2.h"
-#include "TGraph.h"
+#include "TGraphAsymmErrors.h"
 #include "TGraph2D.h"
 
 extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
@@ -422,18 +422,24 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //*-*        =========================================================
 //
 // In case of a TGraphErrors object, ex, the error along x,  is projected
-// along the y-direction by calculating the function at the points x-ex and
-// x+ex.
+// along the y-direction by calculating the function at the points x-exlow and
+// x+exhigh.
 //
 // The chisquare is computed as the sum of the quantity below at each point:
 //
 //                     (y - f(x))**2
 //         -----------------------------------
-//         ey**2 + ((f(x+ex) - f(x-ex))/2)**2
+//         ey**2 + ((f(x+exhigh) - f(x-exlow))/2)**2
 //
-// where x and y are the point coordinates
+// where x and y are the point coordinates.
+//
+// In case the function lies below (above) the data point, ey is ey_low (ey_high).
+//
+//  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
+//            University of Washington
+//            February 3, 2004
 
-   Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
+   Double_t cu,eu,exh,exl,ey,eux,fu,fsum,fm,fp;
    Double_t x[1];
    Double_t xm,xp;
    Int_t bin, npfits=0;
@@ -442,6 +448,9 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t Foption = grFitter->GetFitOption();
+   TGraphAsymmErrors *gra = 0;
+   if (gr->InheritsFrom(TGraphAsymmErrors::Class())) gra = (TGraphAsymmErrors*)gr;
+   
    
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
@@ -465,13 +474,22 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
          f += fsum*fsum;
          continue;
       }
-      ex  = gr->GetErrorX(bin);
-      ey  = gr->GetErrorY(bin);
-      if (ex < 0) ex = 0;
-      if (ey < 0) ey = 0;
-      if (ex > 0) {
-        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+      if (gra) {
+         exh  = gra->GetEXhigh()[bin];
+         exl  = gra->GetEXlow()[bin];
+         if (fsum<0) ey = gra->GetEYhigh()[bin];
+         else        ey = gra->GetEYlow()[bin];
+      } else {
+         exh = gr->GetErrorX(bin);
+         exl = exh;
+         ey  = gr->GetErrorY(bin);
+      }
+      if (exl < 0) exl = 0;
+      if (exh < 0) exh = 0;
+      if (ey < 0)  ey  = 0;
+      if (exh > 0 && exl > 0) {
+        xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+        xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
         x[0] = xm; fm = f1->EvalPar(x,u);
         x[0] = xp; fp = f1->EvalPar(x,u);
         eux = 0.5*(fp-fm);
