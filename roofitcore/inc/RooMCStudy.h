@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.3 2001/11/07 01:56:06 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.4 2002/01/23 02:47:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -47,7 +47,7 @@ public:
   RooPlot* plotParamOn(RooPlot* frame) ;
   RooPlot* plotParam(const RooRealVar& param) ;
   RooPlot* plotError(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100) ;
-  RooPlot* plotPull(const RooRealVar& param, Double_t lo, Double_t hi, Int_t nbins=100, Bool_t fitGauss=kFALSE) ;
+  RooPlot* plotPull(const RooRealVar& param, Double_t lo=-3.0, Double_t hi=3.0, Int_t nbins=25, Bool_t fitGauss=kFALSE) ;
     
 protected:
 
@@ -70,6 +70,7 @@ protected:
   TList       _fitResList ;     // List of RooFitResult fit output objects
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
   TString     _fitOptions ;     // Fit options string
+  Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
 
 private:
   RooMCStudy(const RooMCStudy&) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.4 2001/12/01 08:12:47 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.5 2002/01/23 02:47:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -39,6 +39,7 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooGenericPdf.hh"
+#include "RooFitCore/RooRandom.hh"
 
 
 ClassImp(RooMCStudy)
@@ -60,6 +61,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   //
   // Available generator options
   //  v  - Verbose
+  //  e  - Extended: use Poisson distribution for Nevts generated
   //
   // Available fit options
   //  See RooAbsPdf::fitTo()
@@ -69,6 +71,12 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   TString genOpt(genOptions) ;
   genOpt.ToLower() ;
   Bool_t verboseGen = genOpt.Contains("v") ;
+  _extendedGen = genOpt.Contains("e") ;
+  if (_extendedGen && genProtoData) {
+    cout << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << endl
+	 << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
+	 << "                        Generated datasets will not faithfully reproduce prototype data" << endl ;
+  }
 
   _genContext = genModel.genContext(dependents,genProtoData,verboseGen) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
@@ -136,7 +144,10 @@ Bool_t RooMCStudy::run(Bool_t generate, Bool_t fit, Int_t nSamples, Int_t nEvtPe
     RooDataSet* genSample(0) ;
     if (generate) {
       // Generate sample
-      genSample = _genContext->generate(nEvtPerSample) ;
+      Int_t nEvt(nEvtPerSample) ;
+      if (_extendedGen) nEvt = RooRandom::randomGenerator()->Poisson(nEvtPerSample) ;
+
+      genSample = _genContext->generate(nEvt) ;
     } else if (asciiFilePat && &asciiFilePat) {
       // Load sample from ASCII file
       char asciiFile[1024] ;
@@ -380,7 +391,7 @@ const RooDataSet* RooMCStudy::genData(Int_t sampleNum) const
 
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_genDataList.GetSize()) {
-    cout << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;    
+    cout << "RooMCStudy::genData: ERROR, invalid sample number: " << sampleNum << endl ;    
     return 0 ;
   }
 
