@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.2 2001/02/22 13:32:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.3 2001/02/22 13:38:40 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -357,49 +357,49 @@ Int_t TFTP::GetFile(const char *file, const char *localName)
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ChangeDirectory(const char *dir)
+Int_t TFTP::ChangeDirectory(const char *dir) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::MakeDirectory(const char *dir)
+Int_t TFTP::MakeDirectory(const char *dir) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::DeleteDirectory(const char *dir)
+Int_t TFTP::DeleteDirectory(const char *dir) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ListDirectory(Option_t *)
+Int_t TFTP::ListDirectory(Option_t *) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::PrintDirectory()
+Int_t TFTP::PrintDirectory() const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::Rename(const char *file1, const char *file2)
+Int_t TFTP::Rename(const char *file1, const char *file2) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::DeleteFile(const char *file)
+Int_t TFTP::DeleteFile(const char *file) const
 {
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ChangeProtection(const char *file, Int_t mode)
+Int_t TFTP::ChangeProtection(const char *file, Int_t mode) const
 {
    return 0;
 }
