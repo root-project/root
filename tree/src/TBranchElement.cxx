@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.136 2004/06/09 06:10:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.137 2004/06/09 21:51:36 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -827,7 +827,7 @@ void TBranchElement::Browse(TBrowser *b)
          }
       }
       name.ReplaceAll(slash, escapedSlash);
-      GetTree()->Draw(name);
+      GetTree()->Draw(name, "", b ? b->GetDrawOption() : "");
       if (gPad) gPad->Update();
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.51 2004/02/05 12:49:24 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.52 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TGFSContainer.h"
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"
+#include "TGTextEntry.h"
 
 #include "TROOT.h"
 #include "TEnv.h"
@@ -810,6 +811,10 @@ void TRootBrowser::CreateBrowser(const char *name)
       fToolBar->AddButton(this, &gToolBarData[i], spacing);
       spacing = 0;
    }
+   fDrawOption = new TGTextEntry(fToolBar, new TGTextBuffer(4));
+   fToolBar->AddFrame(fDrawOption, new TGLayoutHints(kLHintsTop | kLHintsRight,2,2,0,0));
+   fToolBar->AddFrame(new TGLabel(fToolBar,"Option"), 
+                      new TGLayoutHints(kLHintsTop | kLHintsRight, 2,2,0,0));
 
    fBarLayout = new TGLayoutHints(kLHintsTop | kLHintsExpandX);
    AddFrame(fToolBarSep, fBarLayout);
@@ -976,8 +981,10 @@ void TRootBrowser::BrowseObj(TObject *obj)
    // TRootBrowser::Add() which will fill the IconBox and the tree.
    // Emits signal "BrowseObj(TObject*)".
 
+   fBrowser->SetDrawOption(GetDrawOption());
    Emit("BrowseObj(TObject*)", (Long_t)obj);
    fIconBox->RemoveAll();
+
    obj->Browse(fBrowser);
    fIconBox->Refresh();
    if (fBrowser)
@@ -1058,6 +1065,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
    // Emits signal "ExecuteDefaultAction(TObject*)".
 
    char action[512];
+   fBrowser->SetDrawOption(GetDrawOption());
 
    // Special case for file system objects...
    if (obj->IsA() == TSystemFile::Class()) {
@@ -1553,6 +1561,21 @@ void TRootBrowser::ToUpSystemDirectory()
    return;
 }
 
+//______________________________________________________________________________
+void TRootBrowser::SetDrawOption(Option_t *option)
+{
+   // sets drawing option
+ 
+   fDrawOption->SetText(option);
+}
+
+//______________________________________________________________________________
+Option_t *TRootBrowser::GetDrawOption() const
+{
+   // returns drawing option
+ 
+   return fDrawOption->GetText();
+}
 //______________________________________________________________________________
 void TRootBrowser::DoubleClicked(TObject *obj)
 {

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.79 2004/03/06 21:31:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.80 2004/06/16 09:51:28 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "Api.h"
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
+#include "TBrowser.h"
 
 Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
@@ -557,9 +558,9 @@ void TF1::AbsValue(Bool_t flag)
 }
 
 //______________________________________________________________________________
-void TF1::Browse(TBrowser *)
+void TF1::Browse(TBrowser *b)
 {
-    Draw();
+    Draw(b ? b->GetDrawOption() : "");
     gPad->Update();
 }
 

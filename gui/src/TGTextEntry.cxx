@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.21 2004/04/15 10:13:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.22 2004/06/14 10:28:52 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -324,6 +324,11 @@ void TGTextEntry::Init()
 
    int tw, max_ascent, max_descent;
    tw = gVirtualX->TextWidth(fFontStruct, GetText(), fText->GetTextLength());
+
+   if (tw < 1) {
+      TString dummy('w', fText->GetBufferLength());
+      tw = gVirtualX->TextWidth(fFontStruct, dummy.Data(), dummy.Length());
+   }
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    Resize(tw + 8, max_ascent + max_descent + 7);
 

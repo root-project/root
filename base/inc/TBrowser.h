@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.9 2003/01/20 15:33:35 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.10 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -93,6 +93,8 @@ public:
    void          Refresh();
    void          SetSelected(TObject *clickedObject);
    void          Show()                        { fImp->Show(); }
+   void          SetDrawOption(Option_t *option="") { fImp->SetDrawOption(option); }
+   Option_t     *GetDrawOption() const { return  fImp->GetDrawOption(); }
 
    ClassDef(TBrowser,0)  //ROOT Object Browser
 };

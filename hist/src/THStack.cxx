@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.28 2004/06/18 10:20:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.29 2004/06/18 10:28:29 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "TH3.h"
 #include "TList.h"
 #include "Riostream.h"
+#include "TBrowser.h"
 
 ClassImp(THStack)
 
@@ -302,9 +303,9 @@ void THStack::Add(TH1 *h1, Option_t *option)
 }
 
 //______________________________________________________________________________
-void THStack::Browse(TBrowser *)
+void THStack::Browse(TBrowser *b)
 {
-    Draw();
+    Draw(b ? b->GetDrawOption() : "");
     gPad->Update();
 }
 

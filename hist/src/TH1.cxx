@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.185 2004/06/14 08:26:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.186 2004/06/19 15:57:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include "TStyle.h"
 #include "TVectorF.h"
 #include "TVectorD.h"
+#include "TBrowser.h"
 
 //______________________________________________________________________________
 //                     The H I S T O G R A M   Classes
@@ -591,9 +592,9 @@ Bool_t TH1::AddDirectoryStatus()
 }
 
 //______________________________________________________________________________
-void TH1::Browse(TBrowser *)
+void TH1::Browse(TBrowser *b)
 {
-    Draw();
+    Draw(b ? b->GetDrawOption() : "");
     gPad->Update();
 }
 
