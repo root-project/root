@@ -1575,7 +1575,7 @@ if test ! "x$enable_python" = "xno" ; then
         enable_python="no"
     else
         # Python support requires the explicitlink option
-        enable_explicitlink="yes"
+        # enable_explicitlink="yes"
         pythonlibflags=
         case $platform in
             win32) pythonlibflags="-nodefaultlib:python23" ;;
