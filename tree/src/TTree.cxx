@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.9 2000/06/16 10:48:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.10 2000/07/03 10:11:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -254,7 +254,6 @@ TTree *gTree;
 TVirtualFitter *tFitter=0;
 
 extern void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-
 
 ClassImp(TTree)
 
@@ -1557,7 +1556,7 @@ void TTree::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTree::Process(const char *filename,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
 //*-*              ================================================
@@ -1592,9 +1591,34 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //   in case of an error.
 
    GetPlayer();
-   if (fPlayer) return fPlayer->Process(filename,option,nentries,firstentry);
+   if (fPlayer) return fPlayer->Process(filename,nentries,firstentry);
    else         return -1;
 }
+
+//______________________________________________________________________________
+Int_t TTree::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
+//*-*              ================================================
+//
+//   The TSelector class has the following member functions:
+//     void TSelector::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TSelector::Select(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//     void TSelector::Analyze(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//     void TSelector::Finish(). This function is called at the end of
+//          the loop on all events. 
+
+   GetPlayer();
+   if (fPlayer) return fPlayer->Process(selector,nentries,firstentry);
+   else         return -1;
+}   
 
 //______________________________________________________________________________
 Int_t TTree::Project(const char *hname, const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.7 2000/07/03 10:11:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.9 2000/07/06 17:20:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1992,7 +1992,7 @@ void TTreePlayer::MakeIndex(TString &varexp, Int_t *index)
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TTreePlayer::Process(const char *filename, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
 //*-*              ================================================
@@ -2024,40 +2024,79 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option,Int_t nentries,
 //      file.so is loaded.
 
 
-   //Interpret/compile filename via CINT
-   char localname[256];
-   sprintf(localname,".L %s",filename);
-   gROOT->ProcessLine(localname);
+   //Get a pointer to the TSelector object
+   TSelector *selector = TSelector::GetSelector(filename);
+   if (!selector) return -1;
    
-   //loop on all classes known to CINT to find the class on filename
-   //that derives from TSelector
-   strcpy(localname,filename);
-   char *dot = strchr(localname,'.');
-   if (dot) dot[0] = 0;
-
-   G__ClassInfo cl;
-   Bool_t OK = kFALSE;
-   while (cl.Next()) {
-      if (strcmp(cl.Name(),localname)) continue;
-      if (cl.IsBase("TSelector")) OK = kTRUE;
-      break;
-   }
-   if (!OK) {
-      Error("Process","file:%s does not have a valid class deriving from TSelector",filename);
-      return -1;
-   } 
-   printf("Fullname=%s\n",cl.Fullname());
-   printf("FileName=%s\n",cl.FileName());
-   printf("DefFile=%s\n",cl.DefFile());
-   printf("ImpFile=%s\n",cl.ImpFile());
-   
-   // we can now create an instance of the class
-   printf("Creating an instance of :%s\n",cl.Name());
-   TObject *selector = (TObject*)cl.New();
+   Int_t nsel = Process(selector,nentries,firstentry);
    delete selector;
+   return nsel;
+}
+
+//______________________________________________________________________________
+Int_t TTreePlayer::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
+//*-*              ================================================
+//
+//   The TSelector class has the following member functions:
+//     void TSelector::Begin(). This function is called before looping on the
+//          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TSelector::Select(Int_t entry). This function is called
+//          before processing entry. It is the user's responsability to read
+//          the corresponding entry in memory (may be just a partial read).
+//          The function returns kTRUE if the entry must be processed,
+//          kFALSE otherwise.
+//     void TSelector::Analyze(Int_t entry). This function is called for
+//          all selected events. User fills histograms in this function.
+//     void TSelector::Finish(). This function is called at the end of
+//          the loop on all events. 
+//
+//  If the Tree (Chain) has an associated EventList, the loop is on all
+//  entries of the EventList, otherwise the loop is on the specified Tree entries.   
+   Long_t i, entry, entryNumber;
+   fSelectedRows = 0;
+   Int_t lastentry = firstentry + nentries -1;
+   if (lastentry > fTree->GetEntries()-1) {
+      lastentry  = (Int_t)fTree->GetEntries() -1;
+      nentries   = lastentry - firstentry + 1;
+   }
+
+   selector->ExecuteBegin(); //<===call user initialisation function
+
+   //Create a timer to get control in the entry loop(s)
+   TProcessEventTimer *timer = 0;
+   Int_t interval = fTree->GetTimerInterval();
+   if (!gROOT->IsBatch() && !gProofServ && interval)
+      timer = new TProcessEventTimer(interval);
+   
+   //loop case A: loop on event list
+   TEventList *elist = fTree->GetEventList();
+   if (elist) {
+      Int_t nelist = elist->GetN();
+      for (i=0; i<nelist;i++) {
+         entryNumber = fTree->LoadTree(elist->GetEntry(i));    //entryNumber is the entry number in the current Tree
+         if (timer && timer->ProcessEvents()) break;
+         if (gROOT->IsInterrupted()) break;
+         if (!selector->ExecuteSelect(entryNumber)) continue; //<==call user selection function
+         selector->ExecuteAnalyze(entryNumber); //<==call user analysis function
+      }
+   //loop case B: loop on all entries
+   } else {
+      for (entry=firstentry;entry<firstentry+nentries;entry++) {
+         entryNumber = fTree->GetEntryNumber(entry);
+         if (entryNumber < 0) break;
+         if (timer && timer->ProcessEvents()) break;
+         if (gROOT->IsInterrupted()) break;
+         fTree->LoadTree(entryNumber);
+         if (!selector->ExecuteSelect(entryNumber)) continue; //<==call user selection function
+         selector->ExecuteAnalyze(entryNumber); //<==call user analysis function
+      }
+   }
+   selector->ExecuteFinish();  //<==call user termination function
       
-   printf("NOT YET IMPLEMENTED\n");
-   return -1;
+   return fSelectedRows;
 }
 
 //______________________________________________________________________________
