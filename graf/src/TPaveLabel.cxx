@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.3 2000/06/13 11:10:48 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -93,11 +93,11 @@ void TPaveLabel::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *)
+void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new Doubleinates*-*-*-*-*-*-*-*
 //*-*                  ========================================
-   TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label);
+   TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label,option);
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
 }
