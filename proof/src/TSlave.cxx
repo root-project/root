@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.22 2003/11/26 17:11:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.23 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -51,15 +51,21 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
    // it is 'proofd' or alike  
    TString hurl(proof->GetUrlProt());
    hurl.Insert(5,'d');
-   // Server expects additional message before protocol
-   // We include it in the protocol
+   // Add host, port (and user) information
+   if (proof->GetUser() && strlen(proof->GetUser())) {
+      hurl += TString(Form("://%s@%s:%d",proof->GetUser(),host,port));
+   } else {
+      hurl += TString(Form("://%s:%d",host,port));
+   }
+
+   // Add information about our status (Client or Master)
    TString Iam;
    if (proof->IsMaster()) {
       Iam = "Master";  
-      hurl += TString(Form("://%s:%d/?M",host,port));
+      hurl += TString("/?M");
    } else {
       Iam = "Local Client";  
-      hurl += TString(Form("://%s:%d/?C",host,port));
+      hurl += TString("/?C");
    }
 
    // Open authenticated connection to remote PROOF slave server.

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.61 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.62 2004/04/13 17:42:06 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -161,6 +161,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    else
       u = new TUrl(Form("proof://%s", masterurl));
 
+   fUser           = u->GetUser();
    fMaster         = u->GetHost();
    fPort           = u->GetPort();
    fConfDir        = confdir;
