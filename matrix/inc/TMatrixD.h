@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.39 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.40 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -41,10 +41,15 @@ class TMatrixD : public TMatrixDBase {
 
 protected:
 
-  Double_t *fElements;  //[fNelems] elements themselves
+  Double_t  fDataStack[kSizeMax]; //! data container
+  Double_t *fElements;            //[fNelems] elements themselves
 
-  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                          Int_t nr_nonzeros = -1);
+          Double_t *New_m   (Int_t size);
+          void      Delete_m(Int_t size,Double_t*&);
+          Int_t     Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
+                              Int_t newSize,Int_t oldSize);
+  virtual void      Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                             Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixD    &a,const TMatrixD    &b,Int_t constr=1);
@@ -56,6 +61,11 @@ protected:
   void AtMultB(const TMatrixD    &a,const TMatrixDSym &b,Int_t constr=1);
   void AtMultB(const TMatrixDSym &a,const TMatrixD    &b,Int_t constr=1) { AMultB(a,b,constr); }
   void AtMultB(const TMatrixDSym &a,const TMatrixDSym &b,Int_t constr=1) { AMultB(a,b,constr); }
+
+  void AMultBt(const TMatrixD    &a,const TMatrixD    &b,Int_t constr=1);
+  void AMultBt(const TMatrixD    &a,const TMatrixDSym &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AMultBt(const TMatrixDSym &a,const TMatrixD    &b,Int_t constr=1);
+  void AMultBt(const TMatrixDSym &a,const TMatrixDSym &b,Int_t constr=1) { AMultB(a,b,constr); }
 
 public:
 
@@ -91,14 +101,20 @@ public:
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                     else fElements = 0;  fNelems = 0; }
 
-          TMatrixD     &Use   (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Double_t *data);
-          TMatrixD     &Use   (Int_t nrows,Int_t ncols,Double_t *data);
-          TMatrixD     &Use   (TMatrixD &a);
+          TMatrixD     &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Double_t *data);
+          TMatrixD     &Use     (Int_t nrows,Int_t ncols,Double_t *data);
+          TMatrixD     &Use     (TMatrixD &a);
 
-  virtual TMatrixDBase &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                               TMatrixDBase &target,Option_t *option="S") const;
-          TMatrixD      GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-  virtual TMatrixDBase &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+  virtual TMatrixDBase &GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                 TMatrixDBase &target,Option_t *option="S") const;
+          TMatrixD      GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
+  virtual TMatrixDBase &SetSub  (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+
+  virtual TMatrixDBase &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual TMatrixDBase &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  TMatrixDBase &ResizeTo(const TMatrixD &m) {
+                                  return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+                                }
 
   virtual Double_t Determinant  () const;
   virtual void     Determinant  (Double_t &d1,Double_t &d2) const;
@@ -152,7 +168,7 @@ public:
 
   const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
-  ClassDef(TMatrixD,3) // Matrix class (double precision)
+  ClassDef(TMatrixD,4) // Matrix class (double precision)
 };
 
 inline const Double_t *TMatrixD::GetMatrixArray() const { return fElements; }

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.16 2004/09/07 19:36:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.17 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -164,6 +164,61 @@ TMatrixFSym::TMatrixFSym(const TMatrixFSymLazy &lazy_constructor)
     Error("TMatrixFSym(TMatrixFSymLazy)","matrix not symmetric");
     Invalidate();
   }
+}
+
+//______________________________________________________________________________
+void TMatrixFSym::Delete_m(Int_t size,Float_t *&m)
+{ 
+  // delete data pointer m, if it was assigned on the heap
+  
+  if (m) {
+    if (size > kSizeMax)
+      delete [] m;
+    m = 0;
+  }       
+}     
+             
+//______________________________________________________________________________
+Float_t* TMatrixFSym::New_m(Int_t size)
+{
+  // return data pointer . if requested size <= kSizeMax, assign pointer
+  // to the stack space
+
+  if (size == 0) return 0;
+  else {
+    if ( size <= kSizeMax )
+      return fDataStack;
+    else {
+      Float_t *heap = new Float_t[size];
+      return heap;
+    }
+  }
+}
+
+//______________________________________________________________________________
+Int_t TMatrixFSym::Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
+                            Int_t newSize,Int_t oldSize)
+{
+  // copy copySize doubles from *oldp to *newp . However take care of the
+  // situation where both pointers are assigned to the same stack space
+
+  if (copySize == 0 || oldp == newp)
+    return 0;
+  else {
+    if ( newSize <= kSizeMax && oldSize <= kSizeMax ) {
+      // both pointers are inside fDataStack, be careful with copy direction !
+      if (newp > oldp) {
+        for (Int_t i = copySize-1; i >= 0; i--)
+          newp[i] = oldp[i];
+      } else {
+        for (Int_t i = 0; i < copySize; i++)
+          newp[i] = oldp[i];
+      }
+    }
+    else
+      memcpy(newp,oldp,copySize*sizeof(Float_t));
+  }
+  return 0;
 }
 
 //______________________________________________________________________________
@@ -577,18 +632,86 @@ TMatrixFBase &TMatrixFSym::Shift(Int_t row_shift,Int_t col_shift)
 //______________________________________________________________________________
 TMatrixFBase &TMatrixFSym::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
-  if (nrows != ncols) {
-    Error("ResizeTo","nrows != ncols");
+  // Set size of the matrix to nrows x ncols
+  // New dynamic elements are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+  
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
     Invalidate();
     return *this;
   }
-  return TMatrixFBase::ResizeTo(nrows,ncols);
+
+  if (nrows != ncols) {
+    Error("ResizeTo(Int_t,Int_t)","nrows != ncols");
+    Invalidate();
+    return *this;
+  }
+  
+  if (fNelems > 0) {
+    if (fNrows == nrows && fNcols == ncols)
+      return *this;
+    else if (nrows == 0 || ncols == 0) {
+      fNrows = nrows; fNcols = ncols;
+      Clear();
+      return *this;
+    }
+    
+    Float_t     *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols;
+    
+    Allocate(nrows,ncols); 
+    Assert(IsValid());
+      
+    Float_t  *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storage was on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Float_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Float_t));
+
+    // Copy overlap
+    const Int_t ncols_copy = TMath::Min(fNcols,ncols_old);
+    const Int_t nrows_copy = TMath::Min(fNrows,nrows_old);
+
+    const Int_t nelems_new = fNelems;
+    if (ncols_old < fNcols) {
+      for (Int_t i = nrows_copy-1; i >= 0; i--)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    } else {
+      for (Int_t i = 0; i < nrows_copy; i++)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(nrows,ncols,0,0,1);
+  }
+
+  return *this;
 }
 
 //______________________________________________________________________________
 TMatrixFBase &TMatrixFSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                     Int_t /*nr_nonzeros*/)
 {
+  // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
+  // New dynamic elemenst are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
+    Invalidate();
+    return *this;
+  }
+
   if (row_lwb != col_lwb) {
     Error("ResizeTo","row_lwb != col_lwb");
     Invalidate();
@@ -599,7 +722,75 @@ TMatrixFBase &TMatrixFSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,In
     Invalidate();
     return *this;
   }
-  return TMatrixFBase::ResizeTo(row_lwb,row_upb,col_lwb,col_upb);
+
+  const Int_t new_nrows = row_upb-row_lwb+1;
+  const Int_t new_ncols = col_upb-col_lwb+1;
+    
+  if (fNelems > 0) {
+    
+    if (fNrows  == new_nrows  && fNcols  == new_ncols &&
+        fRowLwb == row_lwb    && fColLwb == col_lwb)
+       return *this;
+    else if (new_nrows == 0 || new_ncols == 0) {
+      fNrows = new_nrows; fNcols = new_ncols;
+      fRowLwb = row_lwb; fColLwb = col_lwb;
+      Clear();
+      return *this;
+    }
+    
+    Float_t     *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols; 
+    const Int_t  rowLwb_old   = fRowLwb;
+    const Int_t  colLwb_old   = fColLwb;
+    
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
+    Assert(IsValid());
+                 
+    Float_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storag ewas on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Float_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Float_t));
+  
+    // Copy overlap
+    const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old);
+    const Int_t colLwb_copy = TMath::Max(fColLwb,colLwb_old);
+    const Int_t rowUpb_copy = TMath::Min(fRowLwb+fNrows-1,rowLwb_old+nrows_old-1);
+    const Int_t colUpb_copy = TMath::Min(fColLwb+fNcols-1,colLwb_old+ncols_old-1);
+
+    const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
+    const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
+
+    if (nrows_copy > 0 && ncols_copy > 0) {
+      const Int_t colOldOff = colLwb_copy-colLwb_old;
+      const Int_t colNewOff = colLwb_copy-fColLwb;
+      if (ncols_old < fNcols) {
+        for (Int_t i = nrows_copy-1; i >= 0; i--) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      } else {
+        for (Int_t i = 0; i < nrows_copy; i++) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      }
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1);
+  }
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -740,6 +931,72 @@ TMatrixFSym &TMatrixFSym::Rank1Update(const TVectorF &v,Float_t alpha)
   }
 
   return *this;
+}
+
+//______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::Similarity(const TMatrixF &b)
+{
+  // Calculate BAB^T , final matrix will be (nrowsb x nrowsb)
+
+  const TMatrixF ba(b,TMatrixF::kMult,*this);
+
+  const Int_t nba     = ba.GetNoElements();
+  const Int_t nb      = b.GetNoElements();
+  const Int_t ncolsba = ba.GetNcols();
+  const Int_t nrowsb  = b.GetNrows();
+  const Int_t ncolsb  = b.GetNcols();
+  const Float_t * const bap = ba.GetMatrixArray();
+  const Float_t * const bp  = b.GetMatrixArray();
+  const Float_t *bi1p  = bp;
+
+  if (nrowsb != fNrows)
+    this->ResizeTo(nrowsb,nrowsb);
+   
+  Float_t *cp = this->GetMatrixArray();
+  Float_t * const cp0 = cp;
+
+  Int_t ishift = 0;
+  const Float_t *barp0 = bap;
+  while (barp0 < bap+nba) {
+    const Float_t *brp0 = bi1p;
+    while (brp0 < bp+nb) {
+      const Float_t *barp = barp0;
+      const Float_t *brp  = brp0;
+      Float_t cij = 0;
+      while (brp < brp0+ncolsb)
+        cij += *barp++ * *brp++;
+      *cp++ = cij;
+      brp0 += ncolsb;
+    }
+    barp0 += ncolsba;
+    bi1p += ncolsb;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && barp0 == bap+nba);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::Similarity(const TMatrixFSym &)
+{
+   return *this; //temporary
+}
+
+//______________________________________________________________________________
+TMatrixFSym &TMatrixFSym::SimilarityT(const TMatrixF &)
+{
+   return *this; //temporary
 }
 
 //______________________________________________________________________________

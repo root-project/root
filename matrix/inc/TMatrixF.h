@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.13 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.14 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -40,10 +40,15 @@ class TMatrixF : public TMatrixFBase {
 
 protected:
 
-  Float_t *fElements;  //[fNelems] elements themselves
+  Float_t  fDataStack[kSizeMax]; //! data container
+  Float_t *fElements;            //[fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                        Int_t nr_nonzeros = -1);
+          Float_t *New_m   (Int_t size);
+          void     Delete_m(Int_t size,Float_t*&);
+          Int_t    Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
+                             Int_t newSize,Int_t oldSize);
+  virtual void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                             Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AMultB (const TMatrixF     &a,const TMatrixF    &b,Int_t constr=1);
@@ -55,6 +60,11 @@ protected:
   void AtMultB(const TMatrixF     &a,const TMatrixFSym &b,Int_t constr=1);
   void AtMultB(const TMatrixFSym  &a,const TMatrixF    &b,Int_t constr=1) { AMultB(a,b,constr); }
   void AtMultB(const TMatrixFSym  &a,const TMatrixFSym &b,Int_t constr=1) { AMultB(a,b,constr); }
+
+  void AMultBt(const TMatrixF    &a,const TMatrixF    &b,Int_t constr=1);
+  void AMultBt(const TMatrixF    &a,const TMatrixFSym &b,Int_t constr=1) { AMultB(a,b,constr); }
+  void AMultBt(const TMatrixFSym &a,const TMatrixF    &b,Int_t constr=1);
+  void AMultBt(const TMatrixFSym &a,const TMatrixFSym &b,Int_t constr=1) { AMultB(a,b,constr); }
 
 public:
 
@@ -98,8 +108,14 @@ public:
           TMatrixF      GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
   virtual TMatrixFBase &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
 
-  virtual Double_t Determinant() const;
-  virtual void     Determinant(Double_t &d1,Double_t &d2) const;
+  virtual TMatrixFBase &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual TMatrixFBase &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  TMatrixFBase &ResizeTo(const TMatrixF &m) {
+                                  return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+                                }
+
+  virtual Double_t Determinant  () const;
+  virtual void     Determinant  (Double_t &d1,Double_t &d2) const;
 
           TMatrixF &Invert      (Double_t *det=0);
           TMatrixF &InvertFast  (Double_t *det=0);
@@ -149,7 +165,7 @@ public:
 
   const TMatrixF EigenVectors(TVectorF &eigenValues) const;
 
-  ClassDef(TMatrixF,3) // Matrix class (single precision)
+  ClassDef(TMatrixF,4) // Matrix class (single precision)
 };
 
 class TMatrix : public TMatrixF {

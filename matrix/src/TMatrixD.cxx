@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.73 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.74 2004/10/22 07:12:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -168,6 +168,10 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       AtMultB(a,b);
       break;
 
+    case kMultTranspose:
+      AMultBt(a,b);
+      break;
+
     case kInvMult:
     {
       Allocate(a.GetNrows(),a.GetNcols(),
@@ -200,6 +204,10 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b)
 
     case kTransposeMult:
       AtMultB(a,b);
+      break;
+
+    case kMultTranspose:
+      AMultBt(a,b);
       break;
 
     case kInvMult:
@@ -236,6 +244,10 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       AtMultB(a,b);
       break;
 
+    case kMultTranspose:
+      AMultBt(a,b);
+      break;
+
     case kInvMult:
     {
       Allocate(a.GetNrows(),a.GetNcols(),
@@ -270,6 +282,10 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym 
       AtMultB(a,b);
       break;
 
+    case kMultTranspose:
+      AMultBt(a,b);
+      break;
+
     case kInvMult:
     {
       Allocate(a.GetNrows(),a.GetNcols(),
@@ -294,6 +310,61 @@ TMatrixD::TMatrixD(const TMatrixDLazy &lazy_constructor)
            lazy_constructor.GetColUpb()-lazy_constructor.GetColLwb()+1,
            lazy_constructor.GetRowLwb(),lazy_constructor.GetColLwb(),1);
   lazy_constructor.FillIn(*this);
+}
+
+//______________________________________________________________________________
+void TMatrixD::Delete_m(Int_t size,Double_t *&m)
+{ 
+  // delete data pointer m, if it was assigned on the heap
+
+  if (m) {
+    if (size > kSizeMax)
+      delete [] m;
+    m = 0;
+  }       
+}
+
+//______________________________________________________________________________
+Double_t* TMatrixD::New_m(Int_t size)
+{
+  // return data pointer . if requested size <= kSizeMax, assign pointer
+  // to the stack space
+
+  if (size == 0) return 0;
+  else {
+    if ( size <= kSizeMax )
+      return fDataStack;
+    else {
+      Double_t *heap = new Double_t[size];
+      return heap;
+    }
+  }
+}
+
+//______________________________________________________________________________
+Int_t TMatrixD::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
+                         Int_t newSize,Int_t oldSize)
+{
+  // copy copySize doubles from *oldp to *newp . However take care of the
+  // situation where both pointers are assigned to the same stack space
+
+  if (copySize == 0 || oldp == newp)
+    return 0;
+  else {
+    if ( newSize <= kSizeMax && oldSize <= kSizeMax ) {
+      // both pointers are inside fDataStack, be careful with copy direction !
+      if (newp > oldp) {
+        for (Int_t i = copySize-1; i >= 0; i--)
+          newp[i] = oldp[i];
+      } else {
+        for (Int_t i = 0; i < copySize; i++)
+          newp[i] = oldp[i];
+      }
+    }
+    else
+      memcpy(newp,oldp,copySize*sizeof(Double_t));
+  }
+  return 0;
 }
 
 //______________________________________________________________________________
@@ -700,6 +771,135 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
 }
 
 //______________________________________________________________________________
+void TMatrixD::AMultBt(const TMatrixD &a,const TMatrixD &b,Int_t constr)
+{
+  // General matrix multiplication. Create a matrix C such that C = A * B^T.
+  // Note, matrix C is allocated for constr=1.
+
+  Assert(a.IsValid());
+  Assert(b.IsValid());
+
+  if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
+    Error("AMultBt","A rows and B columns incompatible");
+    Invalidate();
+    return;
+  }
+
+  if (this == &a) {
+    Error("AMultBt","this = &a");
+    Invalidate();
+    return;
+  }
+
+  if (this == &b) {
+    Error("AMultBt","this = &b");
+    Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+
+#ifdef CBLAS
+  const Double_t *ap = a.GetMatrixArray();
+  const Double_t *bp = b.GetMatrixArray();
+        Double_t *cp = this->GetMatrixArray();
+  cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,a.GetNcols(),
+               1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
+  const Int_t na     = a.GetNoElements();
+  const Int_t nb     = b.GetNoElements();
+  const Int_t ncolsa = a.GetNcols();
+  const Int_t ncolsb = b.GetNcols();
+  const Double_t * const ap = a.GetMatrixArray();
+  const Double_t * const bp = b.GetMatrixArray();
+        Double_t *       cp = this->GetMatrixArray();
+
+  const Double_t *arp0 = ap;                    // Pointer to  A[i,0];
+  while (arp0 < ap+na) {
+    const Double_t *brp0 = bp;                  // Pointer to  B[j,0];
+    while (brp0 < bp+nb) {
+      const Double_t *arp = arp0;               // Pointer to the i-th row of A, reset to A[i,0]
+      const Double_t *brp = brp0;               // Pointer to the j-th row of B, reset to B[j,0]
+      Double_t cij = 0;
+      while (brp < brp0+ncolsb)                 // Scan the i-th row of A and
+        cij += *arp++ * *brp++;                 // the j-th row of B
+      *cp++ = cij;
+      brp0 += ncolsb;                           // Set brp0 to the (j+1)-th row
+    }
+    arp0 += ncolsa;                             // Set arp0 to the (i+1)-th row
+  }
+
+  Assert(cp == this->GetMatrixArray()+fNelems && arp0 == ap+na);
+#endif
+}
+
+//______________________________________________________________________________
+void TMatrixD::AMultBt(const TMatrixDSym &a,const TMatrixD &b,Int_t constr)
+{
+  // Matrix multiplication, with A symmetric and B general.
+  // Create a matrix C such that C = A * B^T.
+  // Note, matrix C is allocated for constr=1.
+
+  Assert(a.IsValid());
+  Assert(b.IsValid());
+  if (a.GetNcols() != b.GetNcols() || a.GetColLwb() != b.GetColLwb()) {
+    Error("AMultBt","A rows and B columns incompatible");
+    Invalidate();
+    return;
+  }
+
+  if (this == dynamic_cast<const TMatrixD *>(&a)) {
+    Error("AMultBt","this = &a");
+    Invalidate();
+    return;
+  }
+
+  if (this == &b) {
+    Error("AMultBt","this = &b");
+    Invalidate();
+    return;
+  }
+
+  if (constr)
+    Allocate(a.GetNrows(),b.GetNrows(),a.GetRowLwb(),b.GetRowLwb(),1);
+
+  const Double_t *ap1 = a.GetMatrixArray();
+  const Double_t *bp1 = b.GetMatrixArray();
+        Double_t *cp1 = this->GetMatrixArray();
+
+#ifdef CBLAS
+  cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,a.GetNcols(),
+               1.0,ap,a.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
+  const Int_t nb     = b.GetNoElements();
+  const Int_t ncolsb = b.GetNcols();
+        Double_t *cp2 = this->GetMatrixArray();
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    for (Int_t j = 0; j < fNcols; j++) {
+      const Double_t b_ji = *bp1;
+      *cp1 += b_ji*(*ap1);
+      Double_t tmp = 0.0;
+      const Double_t *ap2 = ap1+1;
+      const Double_t *bp2 = bp1+1;
+      for (Int_t k = i+1; k < fNrows; k++) {
+        const Int_t index_kj = k*fNcols+j;
+        const Double_t a_ik = *ap2++;
+        const Double_t b_jk = *bp2++;
+        cp2[index_kj] += a_ik*b_ji;
+        tmp += a_ik*b_jk;
+      }
+      *cp1++ += tmp;
+      bp1 += ncolsb;
+    }
+    ap1 += fNrows+1;
+    bp1 -= nb-1;
+  }
+#endif
+}
+
+//______________________________________________________________________________
 TMatrixD &TMatrixD::Use(Int_t row_lwb,Int_t row_upb,
                         Int_t col_lwb,Int_t col_upb,Double_t *data)
 {
@@ -846,6 +1046,153 @@ TMatrixDBase &TMatrixD::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &s
       }
       ap += fNcols;
     }
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixD::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
+{
+  // Set size of the matrix to nrows x ncols
+  // New dynamic elements are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
+    Invalidate();
+    return *this;
+  }
+
+  if (fNelems > 0) {
+    if (fNrows == nrows && fNcols == ncols)
+      return *this;
+    else if (nrows == 0 || ncols == 0) {
+      fNrows = nrows; fNcols = ncols;
+      Clear();
+      return *this;
+    }
+
+    Double_t    *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols;
+
+    Allocate(nrows,ncols);
+    Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storage was on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
+
+    // Copy overlap
+    const Int_t ncols_copy = TMath::Min(fNcols,ncols_old); 
+    const Int_t nrows_copy = TMath::Min(fNrows,nrows_old); 
+
+    const Int_t nelems_new = fNelems;
+    if (ncols_old < fNcols) {
+      for (Int_t i = nrows_copy-1; i >= 0; i--)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    } else {
+      for (Int_t i = 0; i < nrows_copy; i++)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(nrows,ncols,0,0,1);
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDBase &TMatrixD::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                 Int_t /*nr_nonzeros*/)
+{
+  // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
+  // New dynamic elemenst are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t new_nrows = row_upb-row_lwb+1;
+  const Int_t new_ncols = col_upb-col_lwb+1;
+
+  if (fNelems > 0) {
+
+    if (fNrows  == new_nrows  && fNcols  == new_ncols &&
+        fRowLwb == row_lwb    && fColLwb == col_lwb)
+       return *this;
+    else if (new_nrows == 0 || new_ncols == 0) {
+      fNrows = new_nrows; fNcols = new_ncols;
+      fRowLwb = row_lwb; fColLwb = col_lwb;
+      Clear();
+      return *this;
+    }
+
+    Double_t    *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols;
+    const Int_t  rowLwb_old   = fRowLwb;
+    const Int_t  colLwb_old   = fColLwb;
+
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
+    Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storag ewas on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
+
+    // Copy overlap
+    const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old); 
+    const Int_t colLwb_copy = TMath::Max(fColLwb,colLwb_old); 
+    const Int_t rowUpb_copy = TMath::Min(fRowLwb+fNrows-1,rowLwb_old+nrows_old-1); 
+    const Int_t colUpb_copy = TMath::Min(fColLwb+fNcols-1,colLwb_old+ncols_old-1); 
+
+    const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
+    const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
+
+    if (nrows_copy > 0 && ncols_copy > 0) {
+      const Int_t colOldOff = colLwb_copy-colLwb_old;
+      const Int_t colNewOff = colLwb_copy-fColLwb;
+      if (ncols_old < fNcols) {
+        for (Int_t i = nrows_copy-1; i >= 0; i--) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      } else {
+        for (Int_t i = 0; i < nrows_copy; i++) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      }
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1);
   }
 
   return *this;

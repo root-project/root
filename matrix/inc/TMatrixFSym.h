@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.14 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.15 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -40,10 +40,15 @@ class TMatrixFSym : public TMatrixFBase {
 
 protected:
 
-  Float_t *fElements;  //![fNelems] elements themselves
+  Float_t  fDataStack[kSizeMax]; //! data container
+  Float_t *fElements;            //[fNelems] elements themselves
 
-  virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                        Int_t nr_nonzeros = -1);
+          Float_t *New_m   (Int_t size);
+          void     Delete_m(Int_t size,Float_t*&);
+          Int_t    Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
+                             Int_t newSize,Int_t oldSize);
+  virtual void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                            Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AtMultA(const TMatrixF    &a,Int_t constr=1);
@@ -108,6 +113,9 @@ public:
           TMatrixFSym  &Transpose     (const TMatrixFSym &source);
   inline  TMatrixFSym  &T             () { return this->Transpose(*this); }
           TMatrixFSym  &Rank1Update   (const TVectorF &v,Float_t alpha=1.0);
+          TMatrixFSym  &Similarity    (const TMatrixF    &n);
+          TMatrixFSym  &Similarity    (const TMatrixFSym &n);
+          TMatrixFSym  &SimilarityT   (const TMatrixF    &n);
 
   // Either access a_ij as a(i,j)
   inline Float_t            operator()(Int_t rown,Int_t coln) const;
@@ -136,7 +144,7 @@ public:
 
   const TMatrixF EigenVectors(TVectorF &eigenValues) const;
 
-  ClassDef(TMatrixFSym,1) // Symmetric Matrix class (single precision)
+  ClassDef(TMatrixFSym,2) // Symmetric Matrix class (single precision)
 };
 
 inline const Float_t     *TMatrixFSym::GetMatrixArray() const { return fElements; }

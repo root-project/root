@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.19 2004/09/07 19:36:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.20 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -175,6 +175,61 @@ TMatrixDSym::TMatrixDSym(const TMatrixDSymLazy &lazy_constructor)
     Error("TMatrixDSym(TMatrixDSymLazy)","matrix not symmetric");
     Invalidate();
   }
+}
+
+//______________________________________________________________________________
+void TMatrixDSym::Delete_m(Int_t size,Double_t *&m)
+{ 
+  // delete data pointer m, if it was assigned on the heap
+
+  if (m) {
+    if (size > kSizeMax)
+      delete [] m;
+    m = 0;
+  }       
+}
+
+//______________________________________________________________________________
+Double_t* TMatrixDSym::New_m(Int_t size)
+{
+  // return data pointer . if requested size <= kSizeMax, assign pointer
+  // to the stack space
+
+  if (size == 0) return 0;
+  else {
+    if ( size <= kSizeMax )
+      return fDataStack;
+    else {
+      Double_t *heap = new Double_t[size];
+      return heap;
+    }
+  }
+}
+
+//______________________________________________________________________________
+Int_t TMatrixDSym::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
+                            Int_t newSize,Int_t oldSize)
+{
+  // copy copySize doubles from *oldp to *newp . However take care of the
+  // situation where both pointers are assigned to the same stack space
+
+  if (copySize == 0 || oldp == newp)
+    return 0;
+  else {
+    if ( newSize <= kSizeMax && oldSize <= kSizeMax ) {
+      // both pointers are inside fDataStack, be careful with copy direction !
+      if (newp > oldp) {
+        for (Int_t i = copySize-1; i >= 0; i--)
+          newp[i] = oldp[i];
+      } else {
+        for (Int_t i = 0; i < copySize; i++)
+          newp[i] = oldp[i];
+      }
+    }
+    else
+      memcpy(newp,oldp,copySize*sizeof(Double_t));
+  }
+  return 0;
 }
 
 //______________________________________________________________________________
@@ -589,29 +644,165 @@ TMatrixDBase &TMatrixDSym::Shift(Int_t row_shift,Int_t col_shift)
 //______________________________________________________________________________
 TMatrixDBase &TMatrixDSym::ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/)
 {
+  // Set size of the matrix to nrows x ncols
+  // New dynamic elements are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t)","Not owner of data array,cannot resize");
+    Invalidate();
+    return *this;
+  }
+
   if (nrows != ncols) {
-    Error("ResizeTo","nrows != ncols");
+    Error("ResizeTo(Int_t,Int_t)","nrows != ncols");
     Invalidate(); 
     return *this;
   }
-  return TMatrixDBase::ResizeTo(nrows,ncols);
+
+  if (fNelems > 0) {
+    if (fNrows == nrows && fNcols == ncols)
+      return *this;
+    else if (nrows == 0 || ncols == 0) {
+      fNrows = nrows; fNcols = ncols;
+      Clear();
+      return *this;
+    }
+
+    Double_t    *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols;
+
+    Allocate(nrows,ncols);
+    Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storage was on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
+
+    // Copy overlap
+    const Int_t ncols_copy = TMath::Min(fNcols,ncols_old); 
+    const Int_t nrows_copy = TMath::Min(fNrows,nrows_old); 
+
+    const Int_t nelems_new = fNelems;
+    if (ncols_old < fNcols) {
+      for (Int_t i = nrows_copy-1; i >= 0; i--)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    } else {
+      for (Int_t i = 0; i < nrows_copy; i++)
+        Memcpy_m(elements_new+i*fNcols,elements_old+i*ncols_old,ncols_copy,
+                 nelems_new,nelems_old);
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(nrows,ncols,0,0,1);
+  }
+
+  return *this;
 }
 
 //______________________________________________________________________________
 TMatrixDBase &TMatrixDSym::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                           Int_t /*nr_nonzeros*/)
+                                    Int_t /*nr_nonzeros*/)
 {
+  // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
+  // New dynamic elemenst are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleted.
+
+  Assert(IsValid());
+  if (!fIsOwner) {
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
+    Invalidate();
+    return *this;
+  }
+
   if (row_lwb != col_lwb) {
-    Error("ResizeTo","row_lwb != col_lwb");
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","row_lwb != col_lwb");
     Invalidate(); 
     return *this;
   }
   if (row_upb != col_upb) {
-    Error("ResizeTo","row_upb != col_upb");
+    Error("ResizeTo(Int_t,Int_t,Int_t,Int_t)","row_upb != col_upb");
     Invalidate(); 
     return *this;
   }
-  return TMatrixDBase::ResizeTo(row_lwb,row_upb,col_lwb,col_upb);
+
+  const Int_t new_nrows = row_upb-row_lwb+1;
+  const Int_t new_ncols = col_upb-col_lwb+1;
+
+  if (fNelems > 0) {
+
+    if (fNrows  == new_nrows  && fNcols  == new_ncols &&
+        fRowLwb == row_lwb    && fColLwb == col_lwb)
+       return *this;
+    else if (new_nrows == 0 || new_ncols == 0) {
+      fNrows = new_nrows; fNcols = new_ncols;
+      fRowLwb = row_lwb; fColLwb = col_lwb;
+      Clear();
+      return *this;
+    }
+
+    Double_t    *elements_old = GetMatrixArray();
+    const Int_t  nelems_old   = fNelems;
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  ncols_old    = fNcols;
+    const Int_t  rowLwb_old   = fRowLwb;
+    const Int_t  colLwb_old   = fColLwb;
+
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb);
+    Assert(IsValid());
+
+    Double_t *elements_new = GetMatrixArray();
+    // new memory should be initialized but be careful ot to wipe out the stack
+    // storage. Initialize all when old or new storag ewas on the heap
+    if (fNelems > kSizeMax || nelems_old > kSizeMax)
+      memset(elements_new,0,fNelems*sizeof(Double_t));
+    else if (fNelems > nelems_old)
+      memset(elements_new+nelems_old,0,(fNelems-nelems_old)*sizeof(Double_t));
+
+    // Copy overlap
+    const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old); 
+    const Int_t colLwb_copy = TMath::Max(fColLwb,colLwb_old); 
+    const Int_t rowUpb_copy = TMath::Min(fRowLwb+fNrows-1,rowLwb_old+nrows_old-1); 
+    const Int_t colUpb_copy = TMath::Min(fColLwb+fNcols-1,colLwb_old+ncols_old-1); 
+
+    const Int_t nrows_copy = rowUpb_copy-rowLwb_copy+1;
+    const Int_t ncols_copy = colUpb_copy-colLwb_copy+1;
+
+    if (nrows_copy > 0 && ncols_copy > 0) {
+      const Int_t colOldOff = colLwb_copy-colLwb_old;
+      const Int_t colNewOff = colLwb_copy-fColLwb;
+      if (ncols_old < fNcols) {
+        for (Int_t i = nrows_copy-1; i >= 0; i--) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      } else {
+        for (Int_t i = 0; i < nrows_copy; i++) {
+          const Int_t iRowOld = rowLwb_copy+i-rowLwb_old;
+          const Int_t iRowNew = rowLwb_copy+i-fRowLwb;
+          Memcpy_m(elements_new+iRowNew*fNcols+colNewOff,
+                   elements_old+iRowOld*ncols_old+colOldOff,ncols_copy,fNelems,nelems_old);
+        }
+      }
+    }
+
+    Delete_m(nelems_old,elements_old);
+  } else {
+    Allocate(new_nrows,new_ncols,row_lwb,col_lwb,1);
+  }
+
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -745,6 +936,194 @@ TMatrixDSym &TMatrixDSym::Rank1Update(const TVectorD &v,Double_t alpha)
     }
     tcp -= fNelems-1; // point to [0,i]
   }
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::Similarity(const TMatrixD &b)
+{
+// Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
+// This is a similarity transform when B is orthogonal . It is more
+// efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric . 
+
+  const TMatrixD ba(b,TMatrixD::kMult,*this);
+
+  const Int_t nrowsb  = b.GetNrows();
+  if (nrowsb != fNrows)
+    this->ResizeTo(nrowsb,nrowsb);
+
+#ifdef CBLAS
+  const Double_t *bap = ba.GetMatrixArray();
+  const Double_t *bp  = b.GetMatrixArray();
+        Double_t *cp  = this->GetMatrixArray();
+  cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasTrans,fNrows,fNcols,ba.GetNcols(),
+               1.0,bap,ba.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
+  const Int_t nba     = ba.GetNoElements();
+  const Int_t nb      = b.GetNoElements();
+  const Int_t ncolsba = ba.GetNcols();
+  const Int_t ncolsb  = b.GetNcols();
+  const Double_t * const bap  = ba.GetMatrixArray();
+  const Double_t * const bp   = b.GetMatrixArray();
+  const Double_t *       bi1p = bp;
+        Double_t *       cp   = this->GetMatrixArray();
+        Double_t * const cp0  = cp;
+
+  Int_t ishift = 0;
+  const Double_t *barp0 = bap;
+  while (barp0 < bap+nba) {
+    const Double_t *brp0 = bi1p;
+    while (brp0 < bp+nb) {
+      const Double_t *barp = barp0;
+      const Double_t *brp  = brp0;
+      Double_t cij = 0;
+      while (brp < brp0+ncolsb)
+        cij += *barp++ * *brp++;
+      *cp++ = cij;
+      brp0 += ncolsb;
+    }
+    barp0 += ncolsba;
+    bi1p += ncolsb;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && barp0 == bap+nba);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+#endif
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::Similarity(const TMatrixDSym &b)
+{
+// Calculate B * (*this) * B^T , final matrix will be (nrowsb x nrowsb)
+// This is a similarity transform when B is orthogonal . It is more
+// efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric .
+
+#ifdef CBLAS
+  const TMatrixD abt(*this,TMatrixD::kMultTranspose,b);
+
+  const Double_t *abtp = abt.GetMatrixArray();
+  const Double_t *bp   = b.GetMatrixArray();
+        Double_t *cp   = this->GetMatrixArray();
+  cblas_dsymm (CblasRowMajor,CblasLeft,CblasUpper,fNrows,fNcols,1.0,
+               bp,b.GetNcols(),abtp,abt.GetNcols(),0.0,cp,fNcols);
+#else
+  const TMatrixD ba(b,TMatrixD::kMult,*this);
+
+  const Int_t nba     = ba.GetNoElements();
+  const Int_t nb      = b.GetNoElements();
+  const Int_t ncolsba = ba.GetNcols();
+  const Int_t ncolsb  = b.GetNcols();
+  const Double_t * const bap  = ba.GetMatrixArray();
+  const Double_t * const bp   = b.GetMatrixArray();
+  const Double_t *       bi1p = bp;
+        Double_t *       cp   = this->GetMatrixArray();
+        Double_t * const cp0  = cp;
+
+  Int_t ishift = 0;
+  const Double_t *barp0 = bap;
+  while (barp0 < bap+nba) {
+    const Double_t *brp0 = bi1p;
+    while (brp0 < bp+nb) {
+      const Double_t *barp = barp0;
+      const Double_t *brp  = brp0;
+      Double_t cij = 0;
+      while (brp < brp0+ncolsb)
+        cij += *barp++ * *brp++;
+      *cp++ = cij;
+      brp0 += ncolsb;
+    }
+    barp0 += ncolsba;
+    bi1p += ncolsb;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && barp0 == bap+nba);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+#endif
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TMatrixDSym &TMatrixDSym::SimilarityT(const TMatrixD &b)
+{
+// Calculate B^T * (*this) * B , final matrix will be (ncolsb x ncolsb)
+// It is more efficient than applying the actual multiplication because this
+// routine realizes that  the final matrix is symmetric .
+
+  const TMatrixD bta(b,TMatrixD::kTransposeMult,*this);
+
+  const Int_t ncolsb = b.GetNcols();
+  if (ncolsb != fNcols)
+    this->ResizeTo(ncolsb,ncolsb);
+
+#ifdef CBLAS
+  const Double_t *btap = bta.GetMatrixArray();
+  const Double_t *bp   = b.GetMatrixArray();
+        Double_t *cp   = this->GetMatrixArray();
+  cblas_dgemm (CblasRowMajor,CblasNoTrans,CblasNoTrans,fNrows,fNcols,bta.GetNcols(),
+               1.0,btap,bta.GetNcols(),bp,b.GetNcols(),1.0,cp,fNcols);
+#else
+  const Int_t nbta     = bta.GetNoElements();
+  const Int_t nb       = b.GetNoElements();
+  const Int_t ncolsbta = bta.GetNcols();
+  const Double_t * const btap = bta.GetMatrixArray();
+  const Double_t * const bp   = b.GetMatrixArray();
+        Double_t *       cp   = this->GetMatrixArray();
+        Double_t * const cp0  = cp;
+
+  Int_t ishift = 0;
+  const Double_t *btarp0 = btap;                     // Pointer to  A[i,0];
+  const Double_t *bcp0   = bp;
+  while (btarp0 < btap+nbta) {
+    for (const Double_t *bcp = bcp0; bcp < bp+ncolsb; ) { // Pointer to the j-th column of B, Start bcp = B[0,0]
+      const Double_t *btarp = btarp0;                   // Pointer to the i-th row of A, reset to A[i,0]
+      Double_t cij = 0;
+      while (bcp < bp+nb) {                         // Scan the i-th row of A and
+        cij += *btarp++ * *bcp;                     // the j-th col of B
+        bcp += ncolsb;
+      }
+      *cp++ = cij;
+      bcp -= nb-1;                                  // Set bcp to the (j+1)-th col
+    }
+    btarp0 += ncolsbta;                             // Set ap to the (i+1)-th row
+    bcp0++;
+    cp += ++ishift;
+  }
+
+  Assert(cp == cp0+fNelems+ishift && btarp0 == btap+nbta);
+
+  cp = cp0;
+  for (Int_t irow = 0; irow < fNrows; irow++) {
+    const Int_t rowOff1 = irow*fNrows;
+    for (Int_t icol = 0; icol < irow; icol++) {
+      const Int_t rowOff2 = icol*fNrows;
+      cp[rowOff1+icol] = cp[rowOff2+irow];
+    }
+  }
+#endif
 
   return *this;
 }

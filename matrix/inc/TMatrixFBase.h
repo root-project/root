@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.16 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.17 2004/09/07 22:02:50 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -64,13 +64,7 @@ protected:
   enum {kSizeMax = 25};           // size data container on stack, see New_m(),Delete_m()
   enum {kWorkMax = 100};          // size of work array's in several routines
 
-  Float_t   fDataStack[kSizeMax]; //! data container
   Bool_t    fIsOwner;             //!default kTRUE, when Use array kFALSE
-
-  Float_t*  New_m   (Int_t size);
-  void      Delete_m(Int_t size,Float_t*&);
-  Int_t     Memcpy_m(Float_t *newp,const Float_t *oldp,Int_t copySize,
-                     Int_t newSize,Int_t oldSize);
 
   virtual void Allocate (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,
                          Int_t col_lwb = 0,Int_t init = 0,Int_t nr_nonzero = -1) = 0;
@@ -125,11 +119,8 @@ public:
   virtual void          ExtractRow     (Int_t row,Int_t col,      Float_t *v,Int_t n = -1) const;
 
   virtual TMatrixFBase &Shift          (Int_t row_shift,Int_t col_shift);
-  virtual TMatrixFBase &ResizeTo       (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-  virtual TMatrixFBase &ResizeTo       (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
-  inline  TMatrixFBase &ResizeTo       (const TMatrixFBase &m) {
-                                         return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
-                                       }
+  virtual TMatrixFBase &ResizeTo       (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1) = 0;
+  virtual TMatrixFBase &ResizeTo       (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1) = 0;
 
   virtual Double_t Determinant() const                          { AbstractMethod("Determinant()"); return 0.; }
   virtual void     Determinant(Double_t &d1,Double_t &d2) const { AbstractMethod("Determinant()"); d1 = 0.; d2 = 0.; }
@@ -170,7 +161,7 @@ public:
 
   virtual TMatrixFBase &Randomize(Float_t alpha,Float_t beta,Double_t &seed);
 
-  ClassDef(TMatrixFBase,4) // Dense Matrix base class (single precision)
+  ClassDef(TMatrixFBase,5) // Dense Matrix base class (single precision)
 };
 
 Float_t TMatrixFBase::SetTol(Float_t newTol)

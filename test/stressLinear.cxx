@@ -1607,6 +1607,20 @@ void mstress_sym_mm_multiplications(Int_t msize)
 
     {
       if (gVerbose)
+        cout << "\n  Test m * m_sym^T == m_sym * m^T == m_sym * m_sym^T  multiplications" << endl;
+      TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
+      TMatrixD mmt      = TMatrixD(m    ,TMatrixD::kMultTranspose,m);
+      TMatrixD mmt_sym1 = TMatrixD(m_sym,TMatrixD::kMultTranspose,m_sym);
+      TMatrixD mmt_sym2 = TMatrixD(m    ,TMatrixD::kMultTranspose,m_sym);
+      TMatrixD mmt_sym3 = TMatrixD(m_sym,TMatrixD::kMultTranspose,m);
+      ok &= VerifyMatrixIdentity(mmt,mmt_sym1,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mmt,mmt_sym2,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mmt,mmt_sym3,gVerbose,epsilon);
+    }
+
+    {
+      if (gVerbose)
         cout << "\n  Test n * m_sym == n * m multiplications" << endl;
       TMatrixD n = THilbertMatrixD(-1,msize,-1,msize);
       TMatrixD m = n;
@@ -1706,6 +1720,29 @@ void mstress_sym_mm_multiplications(Int_t msize)
       ok &= VerifyMatrixIdentity(unit,hths,gVerbose,epsilon);
       ok &= VerifyMatrixIdentity(unit,hht,gVerbose,epsilon);
       ok &= VerifyMatrixIdentity(unit,hht1,gVerbose,epsilon);
+    }
+  }
+
+  if (ok)
+  {
+    if (gVerbose)
+      cout << "Check to see A.Similarity(Haar) = Haar * A * Haar^T" <<
+              " and A.SimilarityT(Haar) = Haar^T * A * Haar" << endl;
+    {
+      TMatrixD    h  = THaarMatrixD(5);
+      TMatrixDSym ms = THilbertMatrixDSym(1<<5);
+      TMatrixD    hmht = h*TMatrixD(ms,TMatrixD::kMultTranspose,h);
+      ok &= VerifyMatrixIdentity(ms.Similarity(h),hmht,gVerbose,epsilon);
+      TMatrixD    htmh = TMatrixD(h,TMatrixD::kTransposeMult,ms)*h;
+      ok &= VerifyMatrixIdentity(ms.SimilarityT(h),htmh,gVerbose,epsilon);
+    }
+    if (gVerbose)
+      cout << "Check to see A.Similarity(B_sym) = A.Similarity(B)" << endl;
+    {
+      TMatrixDSym nsym = THilbertMatrixDSym(5);
+      TMatrixD    n    = THilbertMatrixD(5,5);
+      TMatrixDSym ms   = THilbertMatrixDSym(5);
+      ok &= VerifyMatrixIdentity(ms.Similarity(nsym),ms.Similarity(n),gVerbose,epsilon);
     }
   }
 

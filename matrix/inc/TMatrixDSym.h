@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.15 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.16 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -40,10 +40,15 @@ class TMatrixDSym : public TMatrixDBase {
 
 protected:
 
-  Double_t *fElements;  //![fNelems] elements themselves
+  Double_t  fDataStack[kSizeMax]; //! data container
+  Double_t *fElements;            //[fNelems] elements themselves
 
-  virtual void Allocate  (Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
-                          Int_t nr_nonzeros = -1);
+          Double_t *New_m   (Int_t size);
+          void      Delete_m(Int_t size,Double_t*&);
+          Int_t     Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
+                              Int_t newSize,Int_t oldSize);
+  virtual void      Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
+                             Int_t nr_nonzeros = -1);
 
   // Elementary constructors
   void AtMultA(const TMatrixD    &a,Int_t constr=1);
@@ -109,6 +114,9 @@ public:
           TMatrixDSym  &Transpose     (const TMatrixDSym &source);
   inline  TMatrixDSym  &T             () { return this->Transpose(*this); }
           TMatrixDSym  &Rank1Update   (const TVectorD &v,Double_t alpha=1.0);
+          TMatrixDSym  &Similarity    (const TMatrixD    &n);
+          TMatrixDSym  &Similarity    (const TMatrixDSym &n);
+          TMatrixDSym  &SimilarityT   (const TMatrixD    &n);
 
   // Either access a_ij as a(i,j)
   inline       Double_t           operator()(Int_t rown,Int_t coln) const;
@@ -137,7 +145,7 @@ public:
 
   const TMatrixD EigenVectors(TVectorD &eigenValues) const;
 
-  ClassDef(TMatrixDSym,1) // Symmetric Matrix class (double precision)
+  ClassDef(TMatrixDSym,2) // Symmetric Matrix class (double precision)
 };
 
 inline const Double_t    *TMatrixDSym::GetMatrixArray() const { return fElements; }
