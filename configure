@@ -578,7 +578,7 @@ enable/disable options, prefix with either --enable- or --disable-
    pgsql           PostgreSQL support, requires libpq
    pythia          Pythia5 EG support, requires libPythia
    pythia6         Pythia6 EG support, requires libPythia6
-   rfio            SHIFT support, requires libshift from CERN
+   rfio            CASTOR support, requires libshift from CASTOR
    rpath           Set run-time library load path on executables
    sapdb           SapDB support, requires libsqlod and libsqlrte
    shadowpw        Shadow password support
@@ -620,8 +620,8 @@ with options, prefix with --with-, enables corresponding support
    pythia6-libdir  PYHTIA6 support, location of libPythia6
    sapdb-incdir    SapDB support, location of sql.h
    sapdb-libdir    SapDB support, location of libsqlod
-   shift-incdir    RFIO support, location of rfio_api.h
-   shift-libdir    RFIO support, location of libshift
+   shift-incdir    CASTOR support, location of rfio_api.h
+   shift-libdir    CASTOR support, location of libshift
    srp             Secure Remote Passwd support, location of SRP distribution
    srp-incdir      SRP support, location header of t_server.h
    srp-libdir      SRP support, location header of libsrp.a
@@ -1198,9 +1198,9 @@ fi
 
 ######################################################################
 #
-### echo %%% SHIFT Support - Third party libraries
+### echo %%% CASTOR Support - Third party libraries
 #
-# (See http://www.cern.ch)
+# (See http://castor.web.cern.ch/castor/)
 #
 # Check for rfio_api.h and libshift.a
 #
