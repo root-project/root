@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.4 2000/12/20 15:45:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.5 2001/02/12 07:36:02 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
     virtual ~TBasket();
 
     virtual void    AdjustSize(Int_t newsize);
+    virtual void    DeleteEntryOffset();
     virtual Int_t   DropBuffers();
     TBranch        *GetBranch() const {return fBranch;}
             Int_t   GetBufferSize() const {return fBufferSize;}

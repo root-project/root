@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.8 2001/08/28 10:47:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.9 2001/11/16 02:44:33 rdm Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -97,6 +97,17 @@ void TBasket::AdjustSize(Int_t newsize)
    char *newbuf = TStorage::ReAllocChar(fBuffer,newsize,fBufferSize);
    fBufferSize  = newsize;
    fBuffer      = newbuf;
+}
+
+
+//_______________________________________________________________________
+void TBasket::DeleteEntryOffset()
+{
+//  delete fEntryOffset array
+
+   if (fEntryOffset) delete [] fEntryOffset;
+   fEntryOffset = 0;
+   fNevBufSize  = 0;
 }
 
 
