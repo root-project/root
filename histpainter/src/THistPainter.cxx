@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.189 2004/09/13 10:03:09 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.190 2004/09/14 07:33:43 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2844,12 +2844,28 @@ void THistPainter::Paint2DErrors(Option_t *)
       ey = fYaxis->GetBinWidth(j)*xyerror;
       y1 = y-ey;
       y2 = y+ey;
+      if (Hoption.Logy) {
+         if (y > 0)  y = TMath::Log10(y);
+         else        continue;
+         if (y1 > 0) y1 = TMath::Log10(y1);
+         else        y1 = Hparam.ymin;
+         if (y2 > 0) y2 = TMath::Log10(y2);
+         else        y2 = Hparam.ymin;
+      }
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          Int_t bin = fH->GetBin(i,j);
          x  = fH->GetBinCenter(i);
          ex = fXaxis->GetBinWidth(i)*xyerror;
          x1 = x-ex;
          x2 = x+ex;
+         if (Hoption.Logx) {
+            if (x > 0)  x = TMath::Log10(x);
+            else        continue;
+            if (x1 > 0) x1 = TMath::Log10(x1);
+            else        x1 = Hparam.xmin;
+            if (x2 > 0) x2 = TMath::Log10(x2);
+            else        x2 = Hparam.xmin;
+         }
          z  = fH->GetBinContent(bin);
          ez = fH->GetBinError(bin);
          z1 = z-ez;
@@ -2865,24 +2881,6 @@ void THistPainter::Paint2DErrors(Option_t *)
          }
          if (z <= Hparam.zmin) continue;
          if (z >  Hparam.zmax) z = Hparam.zmax;
-
-         if (Hoption.Logx) {
-            if (x > 0)   x = TMath::Log10(x);
-            else         x = Hparam.xmin;
-            if (x1 > 0) x1 = TMath::Log10(z1);
-            else        x1 = Hparam.xmin;
-            if (x2 > 0) x2 = TMath::Log10(x2);
-            else        x2 = Hparam.xmin;
-         }
-
-         if (Hoption.Logy) {
-            if (y > 0)   y = TMath::Log10(y);
-            else         y = Hparam.ymin;
-            if (y1 > 0) y1 = TMath::Log10(y1);
-            else        y1 = Hparam.ymin;
-            if (y2 > 0) y2 = TMath::Log10(y2);
-            else        y2 = Hparam.ymin;
-         }
 
          temp1[0] = x1;
          temp1[1] = y;
@@ -2912,7 +2910,6 @@ void THistPainter::Paint2DErrors(Option_t *)
          gPad->PaintPolyMarker(1, &temp2[0], &temp2[1]);
       }
    }
-
 
    // Paint the Front Box if needed
    if (Hoption.FrontBox) {
