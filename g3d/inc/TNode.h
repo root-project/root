@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -101,7 +101,7 @@ protected:
                               Double_t x, Double_t y, Double_t z, Double_t *matrix,
                               Double_t *dxnew, Double_t *rmatnew);
 
-   ClassDef(TNode,2)  //Description of parameters to position a 3-D geometry object
+   ClassDef(TNode,3)  //Description of parameters to position a 3-D geometry object
 };
 
 #endif
