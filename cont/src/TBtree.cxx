@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -467,8 +467,9 @@ void TBtree::Streamer(TBuffer &b)
 {
    // Stream all objects in the btree to or from the I/O buffer.
 
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      b.ReadVersion(&R__s, &R__c);   //Version_t v = b.ReadVersion();
       b >> fOrder;
       b >> fOrder2;
       b >> fInnerLowWaterMark;
@@ -476,8 +477,9 @@ void TBtree::Streamer(TBuffer &b)
       b >> fInnerMaxIndex;
       b >> fLeafMaxIndex;
       TSeqCollection::Streamer(b);
+      b.CheckByteCount(R__s, R__c,TBtree::IsA());
    } else {
-      b.WriteVersion(TBtree::IsA());
+      R__c = b.WriteVersion(TBtree::IsA(), kTRUE);
       b << fOrder;
       b << fOrder2;
       b << fInnerLowWaterMark;
@@ -485,6 +487,7 @@ void TBtree::Streamer(TBuffer &b)
       b << fInnerMaxIndex;
       b << fLeafMaxIndex;
       TSeqCollection::Streamer(b);
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
