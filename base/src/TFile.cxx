@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.90 2003/04/03 14:52:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.91 2003/04/28 10:18:38 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1902,9 +1902,13 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
       TUrl url(name);
       TInetAddress a(gSystem->GetHostByName(url.GetHost()));
       TInetAddress b(gSystem->GetHostByName(gSystem->HostName()));
-      if (strcmp(a.GetHostName(), b.GetHostName()))
-         f = new TNetFile(name, option, ftitle, compress, netopt);
-      else {
+      if (strcmp(a.GetHostName(), b.GetHostName())) {
+         if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+             h->LoadPlugin() == 0)
+            f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
+         else
+            f = new TNetFile(name, option, ftitle, compress, netopt);
+      } else {
          const char *fname = url.GetFile();
          if (fname[1] == '/' || fname[1] == '~' || fname[1] == '$')
             f = new TFile(&fname[1], option, ftitle, compress);
@@ -1912,16 +1916,29 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
             f = new TFile(Form("%s%s", gSystem->HomeDirectory(), fname),
                           option, ftitle, compress);
       }
-   } else if (!strncmp(name, "http:", 5))
-      f = new TWebFile(name);
-   else if (!strncmp(name, "file:", 5))
-      f = new TFile(name+5, option, ftitle, compress);
-   else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
+   } else if (!strncmp(name, "http:", 5)) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+          h->LoadPlugin() == 0)
+         f = (TFile*) h->ExecPlugin(1, name);
+      else
+         f = new TWebFile(name);
+   } else if (!strncmp(name, "file:", 5)) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
+          h->LoadPlugin() == 0)
+         f = (TFile*) h->ExecPlugin(4, name+5, option, ftitle, compress);
+      else
+         f = new TFile(name+5, option, ftitle, compress);
+   } else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
       if (h->LoadPlugin() == -1)
          return 0;
       f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
    } else
       f = new TFile(name, option, ftitle, compress);
+
+   if (f->IsZombie()) {
+      delete f;
+      f = 0;
+   }
 
    return f;
 }
