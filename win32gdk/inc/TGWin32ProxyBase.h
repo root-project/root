@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id:$
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.h,v 1.2 2003/08/06 21:24:25 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -35,6 +35,8 @@ protected:
    virtual Bool_t ForwardCallBack(Bool_t sync);
    virtual void   SendExitMessage();
    virtual void   SetMainThreadId(ULong_t id);
+   virtual void   Lock() const;
+   virtual void   Unlock() const;
 
 public:
    static ULong_t  fgPostMessageId;       // post message ID

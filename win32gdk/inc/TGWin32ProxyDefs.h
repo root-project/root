@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.2 2003/08/06 21:24:25 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.3 2003/08/07 12:36:51 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -111,6 +111,28 @@ void _NAME2_(klass,Proxy)::method(type1 par1)\
    Bool_t batch = ForwardCallBack(sync);\
    par1 = ((tmp*)fParam)->par1;\
    if (!batch) delete fParam;\
+   DEBUG_PROFILE_PROXY_STOP(method)\
+}
+
+//______________________________________________________________________________
+#define VOID_METHOD_ARG0_LOCK(klass,method,sync)\
+void _NAME2_(klass,Proxy)::method()\
+{\
+   DEBUG_PROFILE_PROXY_START(method)\
+   Lock();\
+   klass::Instance()->method();\
+   Unlock();\
+   DEBUG_PROFILE_PROXY_STOP(method)\
+}
+
+//______________________________________________________________________________
+#define VOID_METHOD_ARG1_LOCK(klass,method,type1,par1,sync)\
+void _NAME2_(klass,Proxy)::method(type1 par1)\
+{\
+   DEBUG_PROFILE_PROXY_START(method)\
+   Lock();\
+   klass::Instance()->method(par1);\
+   Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
 
@@ -433,7 +455,11 @@ type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
 #define RETURN_METHOD_ARG0_CONST(klass,type,method)\
 type _NAME2_(klass,Proxy)::method() const\
 {\
-   return klass::Instance()->method();\
+   type ret;\
+   Lock();\
+   ret = klass::Instance()->method();\
+   Unlock();\
+   return ret;\
 }
 
 //______________________________________________________________________________

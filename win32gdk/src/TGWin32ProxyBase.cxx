@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.2 2003/08/06 21:24:25 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.3 2003/08/11 11:45:43 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -94,6 +94,22 @@ TGWin32ProxyBase::~TGWin32ProxyBase()
    fListOfCallBacks = 0;
 
    delete fPimpl;
+}
+
+//______________________________________________________________________________
+void TGWin32ProxyBase::Lock() const
+{
+   // enter critical section
+
+   ::EnterCriticalSection(fPimpl->fCritSec);
+}
+
+//______________________________________________________________________________
+void TGWin32ProxyBase::Unlock() const
+{
+   // leave critical section
+
+   ::LeaveCriticalSection(fPimpl->fCritSec);
 }
 
 //______________________________________________________________________________
