@@ -498,10 +498,10 @@ FILE *fp;
   fprintf(fp,"class G__cpp_setup_init%s {\n",G__DLLID);
   fprintf(fp,"  public:\n");
   if (G__DLLID && G__DLLID[0]) {
-    fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",&G__cpp_setup%s); }\n",G__DLLID,G__DLLID,G__DLLID);
+    fprintf(fp,"    G__cpp_setup_init%s() { G__add_setup_func(\"%s\",(G__incsetup)&G__cpp_setup%s); }\n",G__DLLID,G__DLLID,G__DLLID);
     fprintf(fp,"   ~G__cpp_setup_init%s() { G__remove_setup_func(\"%s\"); }\n",G__DLLID,G__DLLID);
   } else {
-    fprintf(fp,"    G__cpp_setup_init() { G__add_setup_func(\"G__Default\",&G__cpp_setup); }\n");
+    fprintf(fp,"    G__cpp_setup_init() { G__add_setup_func(\"G__Default\",(G__incsetup)&G__cpp_setup); }\n");
     fprintf(fp,"   ~G__cpp_setup_init() { G__remove_setup_func(\"G__Default\"); }\n");
   }
   fprintf(fp,"};\n");
