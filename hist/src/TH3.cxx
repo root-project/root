@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.38 2003/08/11 08:27:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.40 2003/08/23 00:08:12 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1374,6 +1374,9 @@ TH1 *TH3::Project3D(Option_t *option) const
            cont = GetBinContent(bin);
            switch (pcase) {
            case 1:
+              // "x"
+              if (iybin < iymin || iybin > iymax) continue;
+              if (izbin < izmin || izbin > izmax) continue;
               e1       = h1->GetBinError(ix);
               if (cont) h1->Fill(fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
@@ -1384,6 +1387,9 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 2:
+              // "y"
+              if (ixbin < ixmin || ixbin > ixmax) continue;
+              if (izbin < izmin || izbin > izmax) continue;
               e1       = h1->GetBinError(iy);
               if (cont) h1->Fill(fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
@@ -1394,6 +1400,9 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 3:
+              // "z"
+              if (ixbin < ixmin || ixbin > ixmax) continue;
+              if (iybin < iymin || iybin > iymax) continue;
               e1       = h1->GetBinError(iz);
               if (cont) h1->Fill(fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
@@ -1404,6 +1413,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 4:
+              // "xy"
+              if (izbin < izmin || izbin > izmax) continue;
               e1       = h2->GetCellError(iy,ix);
               if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
@@ -1414,6 +1425,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 5:
+              // "yx"
+              if (izbin < izmin || izbin > izmax) continue;
               e1       = h2->GetCellError(ix,iy);
               if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
@@ -1424,6 +1437,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 6:
+              // "xz"
+              if (iybin < iymin || iybin > iymax) continue;
               e1       = h2->GetCellError(iz,ix);
               if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fXaxis.GetBinCenter(ixbin), cont);
               if (computeErrors) {
@@ -1434,6 +1449,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 7:
+              // "zx"
+              if (iybin < iymin || iybin > iymax) continue;
               e1       = h2->GetCellError(ix,iz);
               if (cont) h2->Fill(fXaxis.GetBinCenter(ixbin),fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
@@ -1444,6 +1461,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 8:
+              // "yz"
+              if (ixbin < ixmin || ixbin > ixmax) continue;
               e1       = h2->GetCellError(iz,iy);
               if (cont) h2->Fill(fZaxis.GetBinCenter(izbin),fYaxis.GetBinCenter(iybin), cont);
               if (computeErrors) {
@@ -1454,6 +1473,8 @@ TH1 *TH3::Project3D(Option_t *option) const
               break;
 
            case 9:
+              // "zy"
+              if (ixbin < ixmin || ixbin > ixmax) continue;
               e1       = h2->GetCellError(iy,iz);
               if (cont) h2->Fill(fYaxis.GetBinCenter(iybin),fZaxis.GetBinCenter(izbin), cont);
               if (computeErrors) {
