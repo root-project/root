@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rootd.h,v 1.2 2001/02/22 09:43:25 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -198,8 +198,8 @@ namespace ROOT {
 
 // Ssh Utility Function prototypes ...
 int   SshToolAllocateSocket(unsigned int, unsigned int, char **);
-void  SshToolDiscardSocket(char *, int);
-int   SshToolNotifyFailure(char *);
+void  SshToolDiscardSocket(const char *, int);
+int   SshToolNotifyFailure(const char *);
 int   SshToolGetAuth(int);
 
 } // namespace ROOT

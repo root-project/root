@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: mmalloc.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: rsadef.h,v 1.1 2003/08/29 10:38:18 rdm Exp $ */
 /* Author: */
 
 /*******************************************************************************
@@ -100,20 +100,20 @@ typedef	unsigned long rsa_LONG;		/* muss (MAXINT+1)^2 -1 fassen	*/
 #endif
 
 typedef struct {
-	int	n_len;			/* Hoechster benutzter Index	*/
+	int	n_len;			/* Hoechster benutzter Index */
 	rsa_INT	n_part[rsa_MAXLEN];
 } rsa_NUMBER;
 
-#define	rsa_NUM0P	((rsa_NUMBER *)0)		/* Abkuerzung			*/
+#define	rsa_NUM0P	((rsa_NUMBER *)0)		/* Abkuerzung */
 
-// Key structures
+/* Key structures */
 typedef struct {
-        rsa_NUMBER n;   // modulus
-        rsa_NUMBER e;   // private or public exponent
+        rsa_NUMBER n;   /* modulus */
+        rsa_NUMBER e;   /* private or public exponent */
 } rsa_KEY;
 typedef struct {
-        int   len;    //  length of 'data' in bytes
-        char *keys;   // 'HEX[n]#HEX[d]\0'
+        int   len;      /*  length of 'data' in bytes */
+        char *keys;     /* 'HEX[n]#HEX[d]\0' */
 } rsa_KEY_export;
 
 

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.33 2003/08/07 00:21:47 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.34 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -272,8 +272,6 @@ extern krb5_context gKcontext;
 
 //--- Globals ------------------------------------------------------------------
 
-const char  kRootdPass[]     = ".rootdpass";
-const char  kSRootdPass[]    = ".srootdpass";
 const int   kMaxSlaves       = 32;
 const char *gAuthMeth[kMAXSEC]= {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
 
@@ -737,7 +735,7 @@ void Authenticate()
       }
 
       // Guess the client procotol
-      gClientProtocol = RpdGuessClientProt(recvbuf,kind);
+      gClientProtocol = RpdGuessClientProt(recvbuf, kind);
 
       // If authentication required, check if we accept the method proposed; if not
       // send back the list of accepted methods, if any ...
@@ -748,7 +746,7 @@ void Authenticate()
             if (gNumAllow>0) {
                if (gAuthListSent == 0) {
                   if (gDebug > 0) ErrorInfo("Authenticate: %s method not accepted from host: %s", gAuthMeth[Meth], gOpenHost);
-                  NetSend(kErrNotAllowed,kROOTD_ERR);
+                  NetSend(kErrNotAllowed, kROOTD_ERR);
                   RpdSendAuthList();
                   gAuthListSent = 1;
                   goto next;
@@ -756,12 +754,13 @@ void Authenticate()
                   Error(ErrFatal,kErrNotAllowed, "Authenticate: method not in the list sent to the client");
                }
             } else
-               Error(ErrFatal,kErrConnectionRefused, "Authenticate: connection refused from host %s",gOpenHost);
+               Error(ErrFatal,kErrConnectionRefused, "Authenticate: connection refused from host %s", gOpenHost);
          }
 
          // Then check if a previous authentication exists and is valid
          // ReUse does not apply for RFIO
-         if (kind != kROOTD_RFIO && ProofdReUseAuth(recvbuf,kind)) goto recvauth;
+         if (kind != kROOTD_RFIO && ProofdReUseAuth(recvbuf, kind))
+            goto recvauth;
       }
 
       switch (kind) {
@@ -810,9 +809,9 @@ void Authenticate()
                   RpdSendAuthList();
                   gAuthListSent = 1;
                } else
-                  NetSend(-1,kROOTD_NEGOTIA);
+                  NetSend(-1, kROOTD_NEGOTIA);
             } else
-               Error(ErrFatal,-1, "Authenticate: authentication failed");
+               Error(ErrFatal, -1, "Authenticate: authentication failed");
          }
       }
 
@@ -820,12 +819,12 @@ recvauth:
       // If authentication successfull, receive info for later authentications
       if (gAuth == 1 && gClientProtocol > 8) {
 
-         sprintf(gFilePA,"%s/proofauth.%d",gTmpDir,getpid());
-         if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s",gFilePA);
+         sprintf(gFilePA,"%s/proofauth.%ld", gTmpDir, (long)getpid());
+         if (gDebug > 2) ErrorInfo("Authenticate: file with hostauth info is: %s", gFilePA);
 
          FILE *fpa = fopen(gFilePA, "w");
          if (fpa == 0) {
-            ErrorInfo("Authenticate: error creating file: %s",gFilePA);
+            ErrorInfo("Authenticate: error creating file: %s", gFilePA);
             goto next;
          }
 
@@ -833,18 +832,18 @@ recvauth:
          EMessageTypes kindauth;
          int nr = NetRecv(recvbuf, kMaxBuf, kindauth);
          if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
-            ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)",kindauth,nr);
-         if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s",nr,recvbuf);
-         while (strcmp(recvbuf,"END")) {
+            ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
+         if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
+         while (strcmp(recvbuf, "END")) {
             // Clean buffer
-            recvbuf[nr+1]= '\0';
+            recvbuf[nr+1] = '\0';
             // Write it to file
-            fprintf(fpa,"%s\n",recvbuf);
+            fprintf(fpa, "%s\n", recvbuf);
             // Get the next one
             nr = NetRecv(recvbuf, kMaxBuf, kindauth);
             if (nr < 0 || kindauth != kPROOF_SENDHOSTAUTH)
-               ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)",kindauth,nr);
-            if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s",nr,recvbuf);
+               ErrorInfo("Authenticate: SENDHOSTAUTH: received: %d (%d bytes)", kindauth, nr);
+            if (gDebug > 2) ErrorInfo("Authenticate: received: (%d) %s", nr, recvbuf);
          }
          // Close suth file
          fclose(fpa);
@@ -857,7 +856,7 @@ next:
        gClientProtocol > 8) {
       ErrorInfo("Authenticate: WARNING: got non-Globus authentication request");
       ErrorInfo("Authenticate: while later actions MAY need Globus credentials...");
-      ErrorInfo("Authenticate: (source: %s)",gRcFile);
+      ErrorInfo("Authenticate: (source: %s)", gRcFile);
    }
 }
 

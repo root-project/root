@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -162,6 +162,7 @@ extern "C" {
 #include "rsadef.h"
 #include "rsalib.h"
 }
+
 namespace ROOT {//--- Globals ------------------------------------------------------------------
 const char kRootdPass[]  = ".rootdpass";
 const char kSRootdPass[] = ".srootdpass";
@@ -234,7 +235,6 @@ const int kAUTH_KRB_MSK = 0x4;
 const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
-#define SafeDelete(p) { if (p) { delete p; p = 0; } }
 
 namespace ROOT {
 
@@ -1207,7 +1207,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                   struct passwd *pw = getpwnam(usr);
                   if (pw != 0)
                      sprintf(gUserIgnore[mth[jm]], "%s %d",
-                             gUserIgnore[mth[jm]], pw->pw_uid);
+                             gUserIgnore[mth[jm]], (int)pw->pw_uid);
                } else {
                   pd += 1;
                   if (pd[1] == '+')
@@ -1238,7 +1238,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                   struct passwd *pw = getpwnam(usr);
                   if (pw != 0)
                      sprintf(gUserAllow[mth[jm]], "%s %d",
-                             gUserAllow[mth[jm]], pw->pw_uid);
+                             gUserAllow[mth[jm]], (int)pw->pw_uid);
                }
                pd = pd2;
             }
@@ -1514,7 +1514,7 @@ void RpdSshAuth(const char *sstr)
    // Now we create an internal (UNIX) socket to listen to the result of sshd from ssh2rpd
    // Path will be /tmp/rootdSSH_<random_string>
    int UnixFd;
-   char *UniquePipe = new char[20];
+   char *UniquePipe = new char[22];
    if ((UnixFd =
         SshToolAllocateSocket(pw->pw_uid, pw->pw_gid, &UniquePipe)) < 0) {
       ErrorInfo
@@ -1528,11 +1528,11 @@ void RpdSshAuth(const char *sstr)
    // Communicate command to be executed via ssh ...
    char *CmdInfo = new char[kMAXPATHLEN];
    if (gRootLog == 0 && strlen(gFileLog) > 0) {
-      sprintf(CmdInfo, "%s/ssh2rpd %d %s %d %d %s", gExecDir, gDebug,
-              UniquePipe, getpid(), gRemPid, gFileLog);
+      sprintf(CmdInfo, "%s/ssh2rpd %d %s %ld %d %s", gExecDir, gDebug,
+              UniquePipe, (long)getpid(), gRemPid, gFileLog);
    } else {
-      sprintf(CmdInfo, "%s/ssh2rpd %d %s %d %d", gExecDir, gDebug,
-              UniquePipe, getpid(), gRemPid);
+      sprintf(CmdInfo, "%s/ssh2rpd %d %s %ld %d", gExecDir, gDebug,
+              UniquePipe, (long)getpid(), gRemPid);
    }
    if (gSshdPort != 22) {
       sprintf(CmdInfo, "%s port:%d", CmdInfo, gSshdPort);
@@ -1588,7 +1588,7 @@ void RpdSshAuth(const char *sstr)
       int OffSet = -1;
       char *token = 0;
       if (gReUseRequired) {
-         sprintf(line, "%d %d %d %d %d %s %s", 4, 1, gRSAKey, getppid(),
+         sprintf(line, "%d %d %d %ld %d %s %s", 4, 1, gRSAKey, (long)getppid(),
                  gRemPid, gOpenHost, gUser);
          OffSet = RpdUpdateAuthTab(1, line, &token);
       }
@@ -1729,7 +1729,7 @@ void RpdKrb5Auth(const char *sstr)
          int OffSet = -1;
          char *token = 0;
          if (gReUseRequired) {
-            sprintf(line, "%d %d %d %d %d %s %s", 2, 1, gRSAKey, getppid(),
+            sprintf(line, "%d %d %d %ld %d %s %s", 2, 1, gRSAKey, (long)getppid(),
                     gRemPid, gOpenHost, gUser);
             OffSet = RpdUpdateAuthTab(1, line, &token);
             if (gDebug > 2)
@@ -2170,7 +2170,7 @@ void RpdPass(const char *pass)
       char line[kMAXPATHLEN];
       if ((gReUseAllow & kAUTH_CLR_MSK) && gReUseRequired) {
 
-         sprintf(line, "%d %d %d %d %d %s %s", 0, 1, gRSAKey, getppid(),
+         sprintf(line, "%d %d %d %ld %d %s %s", 0, 1, gRSAKey, (long)getppid(),
                  gRemPid, gOpenHost, gUser);
          OffSet = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
@@ -2514,39 +2514,39 @@ void RpdRfioAuth(const char *sstr)
    }
    // Decode subject string
    unsigned int uid, gid;
-   sscanf(sstr, "%d %d", &uid, &gid);
+   sscanf(sstr, "%u %u", &uid, &gid);
 
    // Now inquire passwd ...
    struct passwd *pw;
    if ((pw = getpwuid((uid_t) uid)) == 0) {
       NetSend(kErrBadUser, kROOTD_ERR);
-      ErrorInfo("RpdRfioAuth: uid %d not found", uid);
+      ErrorInfo("RpdRfioAuth: uid %u not found", uid);
       return;
    }
    // Check if authorized
    char cuid[20];
-   sprintf(cuid, "%d", uid);
+   sprintf(cuid, "%u", uid);
    if (gUserIgnLen[5] > 0 && strstr(gUserIgnore[5], cuid) != 0) {
       NetSend(kErrNotAllowed, kROOTD_ERR);
       ErrorInfo
-          ("RpdRfioAuth: user (%d,%s) not authorized to use (uid:gid) method",
+          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
            uid, pw->pw_name);
       return;
    }
    if (gUserAlwLen[5] > 0 && strstr(gUserAllow[5], cuid) == 0) {
       NetSend(kErrNotAllowed, kROOTD_ERR);
       ErrorInfo
-          ("RpdRfioAuth: user (%d,%s) not authorized to use (uid:gid) method",
+          ("RpdRfioAuth: user (%u,%s) not authorized to use (uid:gid) method",
            uid, pw->pw_name);
       return;
    }
 
    // Now check group id ...
-   if (gid != pw->pw_gid) {
+   if (gid != (unsigned int) pw->pw_gid) {
       NetSend(kErrBadUser, kROOTD_ERR);
       ErrorInfo
-          ("RpdRfioAuth: group id does not match (remote:%d,local:%d)",
-           gid, pw->pw_gid);
+          ("RpdRfioAuth: group id does not match (remote:%u,local:%u)",
+           gid, (unsigned int) pw->pw_gid);
       return;
    }
    // Set username ....
@@ -2555,7 +2555,7 @@ void RpdRfioAuth(const char *sstr)
 
    // Notify, if required ...
    if (gDebug > 0)
-      ErrorInfo("RpdRfioAuth: user %s authenticated (uid:%d, gid:%d)",
+      ErrorInfo("RpdRfioAuth: user %s authenticated (uid:%u, gid:%u)",
                 gUser, uid, gid);
 
    // Set Auth flag
@@ -3000,8 +3000,7 @@ void RpdUser(const char *sstr)
 
          int fid = open(rootdpass, O_RDONLY);
          if (fid != -1) {
-            int n;
-            if ((n = read(fid, specpass, sizeof(specpass) - 1)) > 0) {
+            if (read(fid, specpass, sizeof(specpass) - 1) > 0) {
                passw = specpass;
             }
             close(fid);
@@ -3019,7 +3018,7 @@ void RpdUser(const char *sstr)
    }
    // Check if the administrator allows authentication
    char cuid[20];
-   sprintf(cuid, "%d", pw->pw_uid);
+   sprintf(cuid, "%d", (int)pw->pw_uid);
    if (gUserIgnLen[0] > 0 && strstr(gUserIgnore[0], cuid) != 0) {
       NetSend(kErrNotAllowed, kROOTD_ERR);
       ErrorInfo

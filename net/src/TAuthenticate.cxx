@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.9 2002/03/20 18:47:30 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.10 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -62,25 +62,23 @@ GlobusAuth_t TAuthenticate::fgGlobusAuthHook;
 
 TList TAuthenticate::fgAuthInfo;
 
-TString LocalFQDN = "";
-
 
 // For fast name-to-number translation for authentication methods
-const char kMethods[] = "usrpwd srp    krb5   globus ssh    uidgid";
+static const char kMethods[] = "usrpwd srp    krb5   globus ssh    uidgid";
 
 ClassImp(TAuthenticate)
 
 //______________________________________________________________________________
-TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
+TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                              const char *proto, const char *user)
 {
    // Create authentication object.
 
-   fSocket = sock;
-   fRemote = remote;
+   fSocket   = sock;
+   fRemote   = remote;
    fHostAuth = 0;
-   fVersion = 2;                // The latest, by default
-   fRSAKey = 0;
+   fVersion  = 2;                // The latest, by default
+   fRSAKey   = 0;
 
 
    if (gDebug > 2)
@@ -90,7 +88,7 @@ TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
    // Set protocol string.
    // Check if version should be different ...
    char *pdd;
-   if (strlen(proto) > 0) {
+   if (proto && strlen(proto) > 0) {
       char *sproto = StrDup(proto);
       if ((pdd = strstr(sproto, ":")) != 0) {
          int rproto = atoi(pdd + 1);
@@ -115,20 +113,16 @@ TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
          fProtocol = sproto;
       }
       SafeDelete(sproto);
-   } else {
-      fProtocol = proto;
    }
 
-   // Check or got user name
-   int duser = 0;
-   if (strlen(user) <= 0) {
+   // Check or get user name
+   if (user && strlen(user) > 0) {
+      fUser = user;
+   } else {
       UserGroup_t *u = gSystem->GetUserInfo();
       if (u)
-         user = StrDup(u->fUser);
+         fUser = u->fUser;
       delete u;
-      duser = 1;
-   } else {
-      fUser = user;
    }
 
    // Check and save the host FQDN ...
@@ -152,7 +146,7 @@ TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
          ai->Print();
          ai->PrintEstablished();
       }
-      if (fqdn == ai->GetHost() && !strcmp(user, ai->GetUser())) {
+      if (fqdn == ai->GetHost() && fUser == ai->GetUser()) {
          fHostAuth = ai;
          break;
       }
@@ -161,12 +155,12 @@ TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
    // If we did not find a good THostAuth instantiation, create one
    if (fHostAuth == 0) {
       // Determine applicable auth methods from client choices
-      Int_t *nmeth, *security[kMAXSEC];
+      Int_t *nmeth;                //not cleaned up? (rdm)
+      Int_t *security[kMAXSEC];
       char **details[kMAXSEC];
-      char **usr = new char *[1];
-      usr[0] = StrDup(user);
-      GetAuthMeth(fqdn.Data(), fProtocol.Data(), &usr, &nmeth, security,
-                  details);
+      char **usr = new char *[1];  //not cleaned up? (rdm)
+      usr[0] = StrDup(fUser);
+      GetAuthMeth(fqdn, fProtocol, &usr, &nmeth, security, details);
 
       // Translate to Input for THostAuth
       int i, nm = nmeth[0], am[kMAXSEC];
@@ -181,26 +175,24 @@ TAuthenticate::TAuthenticate(TSocket * sock, const char *remote,
          }
       }
       if (gDebug > 4) {
-         Info("TAuthenticate", " Got %d methods", nmeth[0]);
+         Info("TAuthenticate", "got %d methods", nmeth[0]);
          for (i = 0; i < nmeth[0]; i++) {
             Info("TAuthenticate", "got (%d,0) security:%d details:%s", i,
                  security[i][0], details[i][0]);
          }
       }
       // Create THostAuth object
-      fHostAuth = new THostAuth(fqdn.Data(), user, nm, am, det);
+      fHostAuth = new THostAuth(fqdn, fUser, nm, am, det);
       // ... and add it to the list
       fgAuthInfo.Add(fHostAuth);
       if (gDebug > 4)
          fHostAuth->Print();
-      for (i = 0; i < nmeth[0]; i++) {
+      for (i = 0; i < nmeth[0]; i++) {   // what if nu > 0? (rdm)
          SafeDelete(security[i]);
          SafeDelete(details[i][0]);
          SafeDelete(det[i]);
       }
    }
-   if (duser == 1 && user != 0)
-      SafeDelete(user);
 
    // This is what we have in memory
    if (gDebug > 3) {
@@ -523,13 +515,12 @@ void TAuthenticate::SetEnvironment()
    if (fDetails != "") {
       char UsDef[kMAXPATHLEN] = { 0 };
       int lDet = strlen(fDetails.Data()) + 2;
-      char Pt[5] = { 0 }, Ru[5] = {
-      0};
+      char Pt[5] = { 0 }, Ru[5] = { 0 };
       char *Us = 0, *Cd = 0, *Cf = 0, *Kf = 0, *Ad = 0, *Cp = 0;
-      char *ptr;
-      if ((ptr = strstr(fDetails.Data(), "pt:")) != 0)
+      const char *ptr;
+      if ((ptr = strstr(fDetails, "pt:")) != 0)
          sscanf(ptr + 3, "%s %s", Pt, UsDef);
-      if ((ptr = strstr(fDetails.Data(), "ru:")) != 0)
+      if ((ptr = strstr(fDetails, "ru:")) != 0)
          sscanf(ptr + 3, "%s %s", Ru, UsDef);
 
       // Now action depends on method ...
@@ -542,13 +533,13 @@ void TAuthenticate::SetEnvironment()
          Cf[0] = '\0';
          Kf[0] = '\0';
          Ad[0] = '\0';
-         if ((ptr = strstr(fDetails.Data(), "cd:")) != 0)
+         if ((ptr = strstr(fDetails, "cd:")) != 0)
             sscanf(ptr, "%s %s", Cd, UsDef);
-         if ((ptr = strstr(fDetails.Data(), "cf:")) != 0)
+         if ((ptr = strstr(fDetails, "cf:")) != 0)
             sscanf(ptr, "%s %s", Cf, UsDef);
-         if ((ptr = strstr(fDetails.Data(), "kf:")) != 0)
+         if ((ptr = strstr(fDetails, "kf:")) != 0)
             sscanf(ptr, "%s %s", Kf, UsDef);
-         if ((ptr = strstr(fDetails.Data(), "ad:")) != 0)
+         if ((ptr = strstr(fDetails, "ad:")) != 0)
             sscanf(ptr, "%s %s", Ad, UsDef);
          if (gDebug > 2) {
             Info("SetEnvironment",
@@ -560,9 +551,9 @@ void TAuthenticate::SetEnvironment()
          Us[0] = '\0';
          Cp = new char[lDet];
          Cp[0] = '\0';
-         if ((ptr = strstr(fDetails.Data(), "us:")) != 0)
+         if ((ptr = strstr(fDetails, "us:")) != 0)
             sscanf(ptr + 3, "%s %s", Us, UsDef);
-         if ((ptr = strstr(fDetails.Data(), "cp:")) != 0)
+         if ((ptr = strstr(fDetails, "cp:")) != 0)
             sscanf(ptr + 3, "%s %s", Cp, UsDef);
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, Pt:%s, Ru:%s, Us:%s Cp:%s",
@@ -570,7 +561,7 @@ void TAuthenticate::SetEnvironment()
       } else {
          Us = new char[lDet];
          Us[0] = '\0';
-         if ((ptr = strstr(fDetails.Data(), "us:")) != 0)
+         if ((ptr = strstr(fDetails, "us:")) != 0)
             sscanf(ptr + 3, "%s %s", Us, UsDef);
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, Pt:%s, Ru:%s, Us:%s",
@@ -1229,8 +1220,8 @@ const char *TAuthenticate::GetSshUser() const
 
 //______________________________________________________________________________
 Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
-                                 char ***User, Int_t ** NumMeth,
-                                 Int_t ** AuthMeth, char ***Details)
+                                 char ***User, Int_t **NumMeth,
+                                 Int_t **AuthMeth, char ***Details)
 {
    // This method looks for the available methods (as chosen by the user)
    // for authentication vis-a-vis of host 'Host' and depending on protocol
@@ -1254,8 +1245,9 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
 
    // If 'host' is ourselves, then use rfio (to setup things correctly)
    // Check and save the host FQDN ...
-   if (LocalFQDN == "" && strlen(gSystem->Getenv("HOST")) > 0) {
-      TInetAddress addr = gSystem->GetHostByName(gSystem->Getenv("HOST"));
+   static TString LocalFQDN;
+   if (LocalFQDN == "") {
+      TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
       if (addr.IsValid()) {
          LocalFQDN = addr.GetHostName();
          if (LocalFQDN == "UnNamedHost")
@@ -1263,7 +1255,7 @@ Int_t TAuthenticate::GetAuthMeth(const char *Host, const char *Proto,
       }
    }
 
-   if (!strcmp(LocalFQDN.Data(), Host)) {
+   if (LocalFQDN == Host) {
       if (gDebug > 3)
          ::Info("GetAuthMeth", "remote host is the local one (%s)",
                 LocalFQDN.Data());
@@ -1399,8 +1391,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
       net = (char *) gSystem->Getenv("ROOTAUTHRC");
    } else {
-      net =
-          gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
+      net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
    }
    if (gDebug > 2)
       ::Info("CheckRootAuthrc", "enter: host:%s user:%s file:%s", Host,
@@ -1639,7 +1630,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
             int met = -1;
             if (strlen(cmth[i]) > 1) {
                // Method passed as string: translate it to number
-               char *pmet = strstr(kMethods, cmth[i]);
+               const char *pmet = strstr(kMethods, cmth[i]);
                if (pmet != 0) {
                   met = ((int) (pmet - kMethods)) / 7;
                } else {
@@ -1710,7 +1701,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
             meth = -1;
             if (strlen(cmeth) > 1) {
                // Method passed as string: translate it to number
-               char *pmet = strstr(kMethods, cmeth);
+               const char *pmet = strstr(kMethods, cmeth);
                if (pmet != 0) {
                   meth = ((int) (pmet - kMethods)) / 7;
                } else {
@@ -1826,7 +1817,7 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
    SafeDelete(net);
    SafeDelete(UserRq);
    if (expand == 1)
-      unlink(filetmp);
+      gSystem->Unlink(filetmp);
 
    return nu;
 }
@@ -1893,7 +1884,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
       if (namew == 0) {
          if (nd > 0) {
             if (nd > 1 || nnmi > 0) {
-               char *sp = strstr(Host, host);
+               const char *sp = strstr(Host, host);
                if (sp == 0 || sp != Host) {
                   retval = kFALSE;
                   goto exit;
@@ -2722,7 +2713,7 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::FileExpand(char *fexp, FILE * ftmp)
+void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
 {
    // Expands include directives found in fexp files
    // The expanded, temporary file, is pointed to by 'ftmp'
@@ -2976,9 +2967,9 @@ void TAuthenticate::PrintHostAuth()
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::AuthExists(TAuthenticate * Auth, Int_t Sec,
-                                TString & Details, const char *Options,
-                                Int_t * Message, Int_t * Rflag)
+Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
+                                TString &Details, const char *Options,
+                                Int_t *Message, Int_t *Rflag)
 {
    // Check if we have a valid established sec context in memory
    // Retrieves relevant info and negotiates with server.
@@ -3291,7 +3282,7 @@ char *TAuthenticate::GetRandString(Int_t Opt, Int_t Len)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SecureSend(TSocket * Socket, Int_t Key, char *Str)
+Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, char *Str)
 {
    // Encode null terminated Str using the session private key indcated by Key
    // and sends it over the network
@@ -3327,7 +3318,7 @@ Int_t TAuthenticate::SecureSend(TSocket * Socket, Int_t Key, char *Str)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SecureRecv(TSocket * Socket, Int_t Key, char **Str)
+Int_t TAuthenticate::SecureRecv(TSocket *Socket, Int_t Key, char **Str)
 {
    // Receive Len bytes from Socket and decode them in Str using key indicated by Key type
    // Return number of received bytes or -1 in case of error.
@@ -3371,6 +3362,7 @@ Int_t TAuthenticate::ProveId()
    // Answer to server requests to prove ID.
 
 #if 0
+   //crypt not available on windows (rdm)
    char *Question = 0;
    // Send Answer encrypted
 //  if (SecureRecv(fSocket,fRSAKey,&Question) == -1){

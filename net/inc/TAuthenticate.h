@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.5 2002/03/20 18:47:30 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.6 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -98,7 +98,7 @@ private:
                                   Int_t **nmeth, Int_t **authmeth, char ***det);
    static Bool_t  CheckHost(const char *Host, const char *host);
    static Bool_t  CheckHostWild(const char *Host, const char *host);
-   static void    FileExpand(char *fin, FILE *ftmp);
+   static void    FileExpand(const char *fin, FILE *ftmp);
    static void    DecodeDetails(char *details, char *pt, char *ru, char **us);
    static void    DecodeDetailsGlobus(char *details, char *pt, char *ru,
                                       char **cd, char **cf, char **kf, char **ad);

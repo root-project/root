@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.h,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -48,20 +48,22 @@ private:
 public:
 
    THostAuth();
-   THostAuth(const char *host, const char *user, Int_t nmeth, Int_t *authmeth, char **details);
-   THostAuth(const char *host, const char *user, Int_t authmeth, char *details);
+   THostAuth(const char *host, const char *user, Int_t nmeth, Int_t *authmeth,
+             char **details);
+   THostAuth(const char *host, const char *user, Int_t authmeth,
+             const char *details);
    virtual ~THostAuth();
 
    Int_t    NumMethods() const { return fNumMethods; }
    Int_t    GetMethods(Int_t meth) const { return fMethods[meth]; }
-   void     AddMethod(Int_t level, char *details);
+   void     AddMethod(Int_t level, const char *details);
    void     RemoveMethod(Int_t level);
    void     ReOrder(Int_t nmet, Int_t *fmet);
    void     SetFirst(Int_t method);
-   void     SetFirst(Int_t level, char *details);
+   void     SetFirst(Int_t level, const char *details);
 
    const char *GetDetails(Int_t level);
-   void        SetDetails(Int_t level, char *details);
+   void        SetDetails(Int_t level, const char *details);
 
    const char *GetHost() const { return fHost; }
    const char *GetUser() const { return fUser; }

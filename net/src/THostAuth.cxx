@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -74,9 +74,9 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
       for (i = 0; i < nmeth; i++) { fMethods[i] = authmeth[i]; }
    }
    fDetails = new TString[nmeth];
-   if (details != 0) {
+   if (details) {
       for (i = 0; i < nmeth; i++) {
-         if (details[i] != 0) fDetails[i] = details[i];
+         if (details[i]) fDetails[i] = details[i];
       }
    }
    fEstablished = new TList;
@@ -84,7 +84,7 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
 
 //______________________________________________________________________________
 THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
-                     char *details)
+                     const char *details)
 {
    // Create hostauth object with one method only.
 
@@ -109,13 +109,13 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t authmeth,
    fMethods     = new Int_t[1];
    fMethods[0]  = authmeth;
    fDetails     = new TString[1];
-   if (details!=0)
+   if (details)
       fDetails[0] = details;
    fEstablished = new TList;
 }
 
 //______________________________________________________________________________
-void  THostAuth::AddMethod(Int_t meth, char *details)
+void  THostAuth::AddMethod(Int_t meth, const char *details)
 {
    // Add new method to the list.
 
@@ -221,11 +221,11 @@ const char *THostAuth::GetDetails(Int_t level)
 }
 
 //______________________________________________________________________________
-void THostAuth::SetDetails(Int_t level, char *details)
+void THostAuth::SetDetails(Int_t level, const char *details)
 {
    // Set authentication details for specified level.
 
-   int i, jm=-1;
+   int i, jm = -1;
    for (i = 0; i < fNumMethods; i++) {
      if (fMethods[i] == level) { fDetails[i] = details; jm = i; break; }
    }
@@ -356,7 +356,7 @@ void  THostAuth::SetFirst(Int_t method)
 }
 
 //______________________________________________________________________________
-void THostAuth::SetFirst(Int_t level, char *details)
+void THostAuth::SetFirst(Int_t level, const char *details)
 {
    // Set as first method 'level' with authentication 'details'.
    // Faster then AddMethod(method,details)+SetFirst(method).

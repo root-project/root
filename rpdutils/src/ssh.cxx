@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -80,7 +80,7 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
    servAddr.sun_family = AF_UNIX;
 
    // Determine unique pipe path: try with /tmp/rootdSSH_<random_string>
-   char fsun[] = "/tmp/rootdSSH_XXXXXXXX";
+   char fsun[] = "/tmp/rootdSSH_XXXXXX";
    mktemp(fsun);
    if (gDebug > 2)
       ErrorInfo("SshToolAllocateSocket: unique pipe name is %s", fsun);
@@ -137,7 +137,7 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
       }
    }
    // Fill output
-   *pipe = strdup(fsun);
+   strcpy(*pipe, fsun);
 
    // return socket fd
    return sd;
@@ -145,7 +145,7 @@ int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)
 
 
 //______________________________________________________________________________
-void SshToolDiscardSocket(char *pipe, int sockfd)
+void SshToolDiscardSocket(const char *pipe, int sockfd)
 {
    // Discards socket.
 
@@ -166,7 +166,7 @@ void SshToolDiscardSocket(char *pipe, int sockfd)
 }
 
 //______________________________________________________________________________
-int SshToolNotifyFailure(char *Pipe)
+int SshToolNotifyFailure(const char *Pipe)
 {
    // Notifies failure of SSH authentication to relevant rootd/proofd process.
 

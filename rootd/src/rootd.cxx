@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.52 2003/08/20 07:17:38 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.53 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2242,13 +2242,13 @@ int main(int argc, char **argv)
    char *exec;
    exec = RootdExpandPathName(argv[0]);
    if (exec && exec[0] == '/') {
-      char *pstr = rindex(exec, '/');
+      char *pstr = strrchr(exec, '/');
       if (pstr) {
          int plen = (int)(pstr-exec);
          strncpy(gExecDir, exec, plen);
          gExecDir[plen] = 0;
          pstr--;
-         pstr = rindex(pstr, '/');
+         pstr = strrchr(pstr, '/');
          if (pstr) {
             plen = (int)(pstr-exec);
             strncpy(gConfDir, exec, plen);

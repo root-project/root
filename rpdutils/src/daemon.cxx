@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -172,9 +172,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service)
 out:
    // Close any open file descriptors
    for (fd = 0; fd < NOFILE; fd++) {
-      int rc=-10;
-      if ((fd != fdkeep) || (service == kPROOFD)) rc = close(fd);
-      //if (rc==-1) ErrorInfo("DaemonStart: error closing file descriptor (rc=%d) %d: errno: %d ",rc,fd,(int)errno);
+      if ((fd != fdkeep) || (service == kPROOFD)) close(fd);
    }
 
    ResetErrno();   // probably got set to EBADF from a close

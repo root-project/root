@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: rmain.cxx,v 1.6 2002/05/10 08:30:06 brun Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -30,9 +30,8 @@
 #include "Varargs.h"
 
 
-const int  kMAXPATHLEN    = 1024;
-char      *gFileLog       = 0;
-int        gDebug         = 0;
+char *gFileLog       = 0;
+int   gDebug         = 0;
 
 //______________________________________________________________________________
 void Info(const char *va_(fmt), ...)
@@ -46,8 +45,8 @@ void Info(const char *va_(fmt), ...)
    vsprintf(buf, fmt, ap);
    va_end(ap);
 
-   if (gFileLog != 0 && strlen(gFileLog) > 0) {
-      FILE *fl= fopen(gFileLog,"a");
+   if (gFileLog && strlen(gFileLog) > 0) {
+      FILE *fl= fopen(gFileLog, "a");
       fprintf(fl, "%s",buf);
       fclose(fl);
    } else {
@@ -99,8 +98,8 @@ int main(int argc, char **argv)
       Info("ssh2rpd: sending might have been unsuccessful (bytes send: %d)",rc);
    }
 
-   if (Pipe != 0) free(Pipe);
-   if (gFileLog != 0) free(gFileLog);
+   if (Pipe)     free(Pipe);
+   if (gFileLog) free(gFileLog);
 
    exit(0);
 }

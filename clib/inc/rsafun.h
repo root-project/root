@@ -1,5 +1,5 @@
-// @(#)root/clib:$Name:  $:$Id: TSocket.cxx,v 1.10 2002/05/18 08:22:00 brun Exp $
-// Author:
+// @(#)root/clib:$Name:  $:$Id: rsafun.h,v 1.1 2003/08/29 10:38:18 rdm Exp $
+// Author: Gerardo Ganis  07/07/2003
 
 /*******************************************************************************
 *									       *
@@ -18,7 +18,7 @@
 *       (gerardo.ganis@cern.ch)                                                *
 *									       *
 *       Hooks for useful rsa funtions                                          *
-**									       *
+* 									       *
 *******************************************************************************/
 
 #include <stdio.h>
