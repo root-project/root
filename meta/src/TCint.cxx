@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.17 2001/05/20 17:32:41 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.18 2001/05/25 06:25:03 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -53,7 +53,7 @@ R__EXTERN int optind;
 #include "Api.h"
 
 // Those are missing from the cint API files:
-extern int G__const_noerror;
+extern "C" int G__const_whatnoerror();
 extern "C" int G__const_setnoerror();
 extern "C" int G__const_resetnoerror();
 
@@ -797,21 +797,22 @@ const char* TCint::GetSharedLibs()
 //______________________________________________________________________________
 Bool_t TCint::IsErrorMessagesEnabled() 
 {
-	// If error message is disabled, the interpreter should be suppress its
-   // failure and warning messages from stdout.
+   // If error messages are disabled, the interpreter should suppress its
+   // failures and warning messages from stdout.
 
-	return !G__const_noerror;
+	return !G__const_whatnoerror();
 }
 
 //______________________________________________________________________________
 Bool_t TCint::SetErrorMessages(Bool_t enable)
 {
-	// If error message are disabled, the interpreter should be suppress its
-   // failure and warning messages from stdout.
+   // If error messages are disabled, the interpreter should  suppress its
+   // failures and warning messages from stdout.
 
-	if (enable) G__const_resetnoerror();
-   else G__const_setnoerror();
-	return !G__const_noerror;
+  Bool_t r;
+  if (enable) G__const_resetnoerror();
+  else        G__const_setnoerror();
+  return     !G__const_whatnoerror();
 }
 
 //______________________________________________________________________________
