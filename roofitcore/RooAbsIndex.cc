@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIndex.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id: RooAbsIndex.cc,v 1.3 2001/03/16 21:31:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -12,6 +12,7 @@
  *****************************************************************************/
 
 #include <iostream.h>
+#include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
 #include "RooFitCore/RooAbsIndex.hh"
@@ -102,23 +103,13 @@ const char* RooAbsIndex::getLabel()
 
 Bool_t RooAbsIndex::isValidIndex(Int_t index) 
 {
-  TIterator* tIter = typeIterator() ;
-  RooCat* type ;
-  while(type=(RooCat*)tIter->Next()) {
-    if ((Int_t)(*type) == index) return kTRUE ;
-  }
-  return kFALSE ;
+  return lookupType(index)?kTRUE:kFALSE ;
 }
 
 
 Bool_t RooAbsIndex::isValidLabel(char* label)
 {
-  TIterator* tIter = typeIterator() ;
-  RooCat* type ;
-  while(type=(RooCat*)tIter->Next()) {
-    if (!TString(type->GetName()).CompareTo(label)) return kTRUE ;
-  }
-  return kFALSE ;
+  return lookupType(label)?kTRUE:kFALSE ;
 }
 
 
@@ -133,7 +124,6 @@ RooCat RooAbsIndex::traceEval()
 
   //Call optional subclass tracing code
   traceEvalHook(value) ;
-
   return value ;
 }
 
@@ -175,12 +165,55 @@ Bool_t RooAbsIndex::defineType(Int_t index, char* label)
     return kTRUE ;
   }
 
+  
   Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
   _types.Add(new RooCat(label,index)) ;
+
+  if (first) _value = RooCat(label,index) ;
+  setShapeDirty(kTRUE) ;
 
   return kFALSE ;
 }
 
+
+
+const RooCat* RooAbsIndex::lookupType(Int_t index, Bool_t printError) const
+{
+  RooCat* type ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    type = (RooCat*)_types.At(i) ;
+    if (type->getVal()==index) return type ;
+  }  
+
+  if (printError) {
+    cout << "RooAbsIndex::lookupType(" << GetName() 
+	 << "): type " << index << " undefined" << endl ;
+  }
+  return 0 ;
+}
+
+
+
+const RooCat* RooAbsIndex::lookupType(const char* label, Bool_t printError) const 
+{
+  char *endptr(0) ;
+  Int_t val = strtol(label,&endptr,10) ;
+  if (endptr-label==strlen(label)) {
+    return lookupType(val) ;
+  }
+
+  RooCat* type ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    type = (RooCat*)_types.At(i) ;
+    if (!TString(type->GetName()).CompareTo(label)) return type ;
+  }  
+
+  if (printError) {
+    cout << "RooAbsIndex::lookupType(" << GetName() 
+	 << "): type " << label << " undefined" << endl ;
+  }
+  return 0 ;
+}
 
 
 Bool_t RooAbsIndex::isValid()
@@ -213,7 +246,7 @@ void RooAbsIndex::printToStream(ostream& os, PrintOption opt)
   }
 
   //Print object contents
-  if (TString(opt).Contains("t")) {
+  if (opt==Shape) {
     // list all of the types defined by this object
     os << "RooAbsIndex: " << GetName() << ": \"" << GetTitle()
        << "\" defines the following categories:"
@@ -223,7 +256,7 @@ void RooAbsIndex::printToStream(ostream& os, PrintOption opt)
 	 << ((RooCat*)_types.At(i))->getVal() << ")" << endl;      
     }
   } else {
-    os << "RooAbsIndex: " << GetName() << " = " << getLabel() << "(" << getIndex() << ")" ;
+    os << "RooAbsIndex: " << GetName() << " = " << getLabel() << " (" << getIndex() << ")" ;
     os << " : \"" << fTitle << "\"" ;
 
     printAttribList(os) ;
