@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.12 2003/12/02 02:07:44 brun Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.13 2003/12/02 07:49:11 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 // Modified: William Tanenbaum 01/12/2003
 
@@ -509,7 +509,7 @@ void *TDCacheSystem::OpenDirectory(const char *name)
 }
 
 //______________________________________________________________________________
-void TDCacheSystem::FreeDirectory(void *dirp)
+void TDCacheSystem::FreeDirectory(void * /*dirp*/)
 {
    // The dCache Library does not yet have a closedir function.
 
@@ -517,7 +517,7 @@ void TDCacheSystem::FreeDirectory(void *dirp)
 }
 
 //______________________________________________________________________________
-const char *TDCacheSystem::GetDirEntry(void *dirp1)
+const char *TDCacheSystem::GetDirEntry(void * /*dirp1*/)
 {
    // The dCache Library does not yet have a readdir function.
 
