@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.10 2000/10/20 12:20:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.11 2000/11/21 21:06:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1279,8 +1279,13 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    
    //the StreamerInfo should exist at this point
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
-   if (sinfo == 0) return 0;
-   if (!fRealData) {
+   if (sinfo == 0) {
+      BuildRealData(pointer);
+      sinfo = new TStreamerInfo(this,"");      
+      fStreamerInfo->AddAt(sinfo,version);
+      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
+      sinfo->Build();
+   } else if (!fRealData) {
       BuildRealData(pointer);
       sinfo->BuildOld();
    }      
@@ -1306,7 +1311,6 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    
    //the StreamerInfo should exist at this point
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
-   //TStreamerInfo *sinfo = GetStreamerInfo(version);
    if (sinfo == 0) {
       BuildRealData(pointer);
       sinfo = new TStreamerInfo(this,"");      
