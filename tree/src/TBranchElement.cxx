@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.69 2001/11/22 15:08:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.70 2001/11/30 14:15:14 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TBranchElement::TBranchElement(): TBranch()
    fBranchCount2 = 0;
    fObject = 0;
    fMaximum = 0;
+   fBranchPointer = 0;
 }
 
 
@@ -82,6 +83,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchCount  = 0;
    fBranchCount2 = 0;
    fObject       = 0;
+   fBranchPointer= 0;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    fMaximum      = 0;
@@ -148,8 +150,12 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    TBasket *basket = new TBasket(name,fTree->GetName(),this);
    fBaskets.Add(basket);
 
+   // save pointer (if non null). Will be used in Unroll in case we find
+   // a TClonesArray in a derived class.
+   if (pointer) fBranchPointer = pointer;
+   
    // create sub branches if requested by splitlevel
-   //Int_t i, nbranches;
+
    if (splitlevel > 0) {
       TClass *clm;
       if (element->CannotSplit()) {
@@ -285,6 +291,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fBranchCount  = 0;
    fBranchCount2 = 0;
    fObject       = 0;
+   fBranchPointer= 0;
    fMaximum      = 0;
 
    fTree       = gTree;
@@ -1174,9 +1181,15 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                fBranches.Add(branch);
             }
          } else {
-            branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+            if (elem->GetClassPointer() == TClonesArray::Class()) {
+               //process case of a TClonesArray in a derived class
+               char *pointer = fBranchPointer + elem->GetOffset();
+               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
+            } else {
+               branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+               branch->SetType(btype);
+            }
             branch->SetParentName(cltop->GetName());
-            branch->SetType(btype);
             fBranches.Add(branch);
          }
       }
