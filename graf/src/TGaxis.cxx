@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.53 2003/09/08 15:26:53 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.54 2003/09/12 09:18:01 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -542,7 +542,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Bool_t noExponent = TestBit(TAxis::kNoExponent);
 
 //*-*- If MoreLogLabels = kTRUE more Log Intermediate Labels are drawn.
-   Bool_t MoreLogLabels = fAxis->TestBit(TAxis::kMoreLogLabels);
+   Bool_t MoreLogLabels = TestBit(TAxis::kMoreLogLabels);
 
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
