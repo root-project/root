@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.65 2002/01/27 16:49:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.66 2002/01/28 17:33:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -968,6 +968,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       fTypes->Add(new TDataType("float"));
       fTypes->Add(new TDataType("double"));
       fTypes->Add(new TDataType("void"));
+      fTypes->Add(new TDataType("bool"));
    }
 
    if (!fInterpreter)
