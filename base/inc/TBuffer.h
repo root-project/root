@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.34 2004/05/08 14:34:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.35 2004/05/10 12:08:37 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -28,25 +28,26 @@
 #include "Bytes.h"
 #endif
 
-class TClass;
 class TStreamerInfo;
+class TClass;
 class TExMap;
 
 class TBuffer : public TObject {
 
 protected:
-   Bool_t    fMode;          //Read or write mode
-   Int_t     fVersion;       //Buffer format version
-   Int_t     fBufSize;       //Size of buffer
-   char     *fBuffer;        //Buffer used to store objects
-   char     *fBufCur;        //Current position in buffer
-   char     *fBufMax;        //End of buffer
-   Int_t     fMapCount;      //Number of objects or classes in map
-   Int_t     fMapSize;       //Default size of map
-   Int_t     fDisplacement;  //Value to be added to the map offsets
-   TExMap   *fMap;           //Map containing object,offset pairs for reading/writing
-   TExMap   *fClassMap;      //Map containing object,class pairs for reading
-   TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
+   Bool_t          fMode;          //Read or write mode
+   Int_t           fVersion;       //Buffer format version
+   Int_t           fBufSize;       //Size of buffer
+   char           *fBuffer;        //Buffer used to store objects
+   char           *fBufCur;        //Current position in buffer
+   char           *fBufMax;        //End of buffer
+   Int_t           fMapCount;      //Number of objects or classes in map
+   Int_t           fMapSize;       //Default size of map
+   Int_t           fDisplacement;  //Value to be added to the map offsets
+   TExMap         *fMap;           //Map containing object,offset pairs for reading/writing
+   TExMap         *fClassMap;      //Map containing object,class pairs for reading
+   TObject        *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
+   TStreamerInfo  *fInfo;          //pointer to TStreamerInfo object writing/reading the buffer
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
 
@@ -108,9 +109,10 @@ public:
 
    virtual void      *ReadObjectAny(const TClass* cast);
 
-   virtual void       IncrementLevel(TStreamerInfo*) {}
+   virtual void       IncrementLevel(TStreamerInfo* info) {fInfo=info;}
    virtual void       SetStreamerElementNumber(Int_t) {}
    virtual void       DecrementLevel(TStreamerInfo*) {}
+   TStreamerInfo     *GetInfo() {return fInfo;}
 
    Bool_t   IsReading() const { return (fMode & kWrite) == 0; }
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
