@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.52 2004/06/04 05:16:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.53 2004/06/04 16:28:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1605,7 +1605,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
       oname = newName;
    }
 
-   if (opt.Contains("overwite")) {
+   if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
       key = (TKey*)GetKey(oname);
