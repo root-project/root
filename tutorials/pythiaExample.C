@@ -1,0 +1,252 @@
+//____________________________________________________________________ 
+//
+// To make an event sample (of size 100) do 
+//
+//    shell> root
+//    root [0] .L pythiaExample.C
+//    root [1] makeEventSample(1000)
+//
+// To start the tree view on the generated tree, do 
+//
+//    shell> root
+//    root [0] .L pythiaExample.C
+//    root [1] showEventSample()
+//
+//
+// The following session:
+//    shell> root
+//    root [0] .x pythiaExample.C(500)
+// will execute makeEventSample(500) and showEventSample()
+//
+// Alternatively, you can compile this to a program  
+// and then generate 1000 events with 
+//
+//    ./pythiaExample 1000
+//
+// To use the program to start the viewer, do 
+// 
+//    ./pythiaExample -1
+// 
+// NOTE: To run this example, you must have a version of ROOT
+// compiled with the Pythia6 version enabled and have Pythia6 installed.
+// The statement gSystem->Load("libPythia6");  (see below)
+// assumes that the directory containing the Pythia6 library
+// is included in your LD_LIBRARY_PATH.
+
+//____________________________________________________________________ 
+//  
+// $Id$ 
+// Author: Christian Holm Christensen <cholm@hilux15.nbi.dk>
+// Update: 2002-08-16 16:40:27+0200
+// Copyright: 2002 (C) Christian Holm Christensen
+//
+//
+#ifndef __CINT__
+#ifndef ROOT_TApplication
+#include "TApplication.h"
+#endif
+#ifndef ROOT_TPythia6
+#include "TPythia6.h"
+#endif
+#ifndef ROOT_TFile
+#include "TFile.h"
+#endif
+#ifndef ROOT_TError
+#include "TError.h"
+#endif
+#ifndef ROOT_TTree
+#include "TTree.h"
+#endif
+#ifndef ROOT_TClonesArray
+#include "TClonesArray.h"
+#endif
+#ifndef ROOT_TH1
+#include "TH1.h"
+#endif
+#ifndef ROOT_TF1
+#include "TF1.h"
+#endif
+#ifndef ROOT_TStyle
+#include "TStyle.h"
+#endif
+#ifndef ROOT_TLatex
+#include "TLatex.h"
+#endif
+#ifndef ROOT_TCanvas
+#include "TCanvas.h"
+#endif
+#ifndef __CSTDLIB__
+#include <cstdlib>
+#endif
+#ifndef __IOSTREAM__
+#include <iostream>
+#endif
+using namespace std;
+#endif
+
+#define FILENAME   "pythia.root"
+#define TREENAME   "tree"
+#define BRANCHNAME "particles"
+#define HISTNAME   "ptSpectra"
+#define PDGNUMBER  211
+
+// This funtion just load the needed libraries if we're executing from
+// an interactive session. 
+void loadLibraries() 
+{
+#ifdef __CINT__
+  // Load the Event Generator abstraction library, Pythia 6
+  // library, and the Pythia 6 interface library. 
+  gSystem->Load("libEG");
+  gSystem->Load("libPythia6");
+  gSystem->Load("libEGPythia6");
+#endif
+}
+
+// nEvents is how many events we want. 
+int makeEventSample(Int_t nEvents) 
+{ 
+  // Load needed libraries 
+  loadLibraries();
+
+  // Create an instance of the Pythia event generator ... 
+  TPythia6* pythia = new TPythia6; 
+  
+  // ... and initialise it to run p+p at sqrt(200) GeV in CMS 
+  pythia->Initialize("cms", "p", "p", 200);
+
+  // Open an output file 
+  TFile* file = TFile::Open(FILENAME, "RECREATE"); 
+  if (!file || !file->IsOpen()) {
+    Error("makeEventSample", "Couldn;t open file %s", FILENAME);
+    return 1;
+  }
+  
+  // Make a tree in that file ... 
+  TTree* tree = new TTree(TREENAME, "Pythia 6 tree"); 
+   
+  // ... and register a the cache of pythia on a branch (It's a 
+  // TClonesArray of TMCParticle objects. )
+  TClonesArray* particles = (TClonesArray*)pythia->GetListOfParticles();
+  tree->Branch(BRANCHNAME, &particles); 
+
+  // Now we make some events
+  for (Int_t i = 0; i < nEvents; i++) {
+    // Show how far we got every 100'th event. 
+    if (i % 100 == 0) 
+      cout << "Event # " << i << endl;
+
+    // Make one event. 
+    pythia->GenerateEvent();
+
+    // Maybe you want to have another branch with global event
+    // information.  In that case, you should process that here.
+    // You can also filter out particles here if you want.
+
+    // Now we're ready to fill the tree, and the event is over. 
+    tree->Fill();
+  }
+
+  // Show tree structure 
+  tree->Print();
+
+  // After the run is over, we may want to do some summary plots: 
+  TH1D* hist = new TH1D(HISTNAME, "p_{#perp}  spectrum for  #pi^{+}", 
+			100, 0, 3);
+  hist->SetXTitle("p_{#perp}");
+  hist->SetYTitle("dN/dp_{#perp}");
+  tree->Draw(Form("sqrt(pow(%s.fPx,2)+pow(%s.fPy,2))>>%s", 
+		  BRANCHNAME, BRANCHNAME, HISTNAME), 
+	     Form("%s.fKF==%d", BRANCHNAME, PDGNUMBER));
+
+  // Normalise to the number of events, and the bin sizes.
+  hist->Sumw2();
+  hist->Scale(3 / 100. / hist->Integral());
+  hist->Fit("expo", "QO+", "", .25, 1.75);
+  TF1* func = hist->GetFunction("expo");
+  func->SetParNames("A", "- 1 / T");
+  // and now we flush and close the file
+  file->Write();
+  file->Close();
+
+  return 0;
+}
+
+// Show the Pt spectra, and start the tree viewer. 
+int showEventSample() 
+{
+  // Load needed libraries 
+  loadLibraries();
+
+  // Open the file 
+  TFile* file = TFile::Open(FILENAME, "READ"); 
+  if (!file || !file->IsOpen()) {
+    Error("showEventSample", "Couldn;t open file %s", FILENAME);
+    return 1;
+  }
+
+  // Get the tree 
+  TTree* tree = (TTree*)file->Get(TREENAME);
+  if (!tree) {
+    Error("showEventSample", "couldn't get TTree %s", TREENAME);
+    return 2;
+  }
+
+  // Start the viewer. 
+  tree->StartViewer();
+
+  // Get the histogram 
+  TH1D* hist = (TH1D*)file->Get(HISTNAME);
+  if (!hist) {
+    Error("showEventSample", "couldn't get TH1D %s", HISTNAME);
+    return 4;
+  }
+
+  // Draw the histogram in a canvas 
+  gStyle->SetOptStat(1);
+  TCanvas* canvas = new TCanvas("canvas", "canvas");
+  canvas->SetLogy();
+  hist->Draw("e1");
+  TF1* func = hist->GetFunction("expo");
+  
+  TLatex* latex = new TLatex(1.5, -4, 
+			     Form("T #approx %5.1f", 
+				  - 1000 / func->GetParameter(1)));
+  latex->SetTextSize(.1);
+  latex->SetTextColor(4);
+  latex->Draw();
+
+  return 0;
+}
+
+void pythiaExample(Int_t n=1000) {
+   makeEventSample(n);
+   showEventSample();
+}
+
+#ifndef __CINT__
+int main(int argc, char** argv)
+{
+  TApplication app("app", &argc, argv);
+
+  Int_t n = 100;
+  if (argc > 1) 
+    n = strtol(argv[1], NULL, 0);
+
+  int retVal = 0;
+  if (n > 0) 
+    retVal = makeEventSample(n);
+  else {
+    retVal = showEventSample();
+    app.Run();
+  }
+  
+  return retVal;
+}
+#endif
+
+//____________________________________________________________________ 
+//  
+// EOF
+//
+
