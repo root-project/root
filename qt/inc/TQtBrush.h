@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -13,9 +13,18 @@
 #ifndef ROOT_TQtBrush
 #define ROOT_TQtBrush
 
-#include "qbrush.h"
-#include "qcolor.h"
+#ifndef __CINT__
+#  include <qbrush.h>
+#  include <qcolor.h>
+#else
+   class  QColor;
+   class  QBrush;
+#endif
 
+#include "Rtypes.h"
+   //
+   // TQtBrush creates the QBrush Qt object based on the ROOT "fill" attributes 
+   //
 class TQtBrush : public QBrush
 {
 protected:
@@ -30,12 +39,13 @@ public:
       fStyle=src.fStyle;
       fFasi=src.fFasi;
    }
-   ~TQtBrush(){;}
+   virtual ~TQtBrush(){;}
    void SetStyle(int style=1000){  SetStyle(style/1000,style%1000); };
    void SetStyle(int style, int fasi);
    void SetColor(QColor &color);
    const QColor &GetColor() const { return fBackground;}
-   int    GetStyle() const  { return 1000*fStyle + fFasi; }
+   int   GetStyle() const  { return 1000*fStyle + fFasi; }
+   ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 
 };
 
 #endif

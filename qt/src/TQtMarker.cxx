@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtMarker.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -12,6 +12,15 @@
 
 #include "TQtRConfig.h"
 #include "TQtMarker.h"
+
+ClassImp(TQtMarker)
+
+////////////////////////////////////////////////////////////////////////
+//
+// TQtMarker - class-utility to convert the ROOT TMarker object shape 
+//             in to the Qt QPointArray.
+//
+////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
 TQtMarker::TQtMarker(int n, TPoint *xy, int type) : fNumNode(n),

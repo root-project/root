@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -29,6 +29,12 @@
 #include <qtextcodec.h>
 
 #include "KeySymbols.h"
+
+ClassImp(TQtClientFilter)
+
+//
+//  TQtClientFilter  is Qt "eventFilter" to map Qt event to ROOT event
+//
 
 //______________________________________________________________________________________
 static inline UInt_t  MapModifierState(Qt::ButtonState qState)

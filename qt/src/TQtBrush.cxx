@@ -1,6 +1,6 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtBrush.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -10,6 +10,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+// TQtBrush creates the QBrush Qt object based on the ROOT "TAttFill" attributes 
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,7 +24,7 @@
 #include "qbitmap.h"
 
 //
-// Data to create fill area interior style
+//*-*- data to create fill area interior style
 //
 
 static uchar p1_bits[] = {
@@ -128,7 +135,7 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
                               p16_bits, p17_bits, p18_bits, p19_bits, p20_bits,
                               p21_bits, p22_bits, p23_bits, p24_bits, p25_bits};
 
-
+ClassImp(TQtBrush)
 //______________________________________________________________________________
 TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0) {}
 //______________________________________________________________________________

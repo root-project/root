@@ -20,7 +20,11 @@ GQTDS         := $(MODDIRS)/G__GQt.cxx
 GQTDO         := $(GQTDS:.cxx=.o)
 GQTDH         := $(GQTDS:.cxx=.h)
 
-GQTH1         := $(MODDIRI)/TGQt.h $(MODDIRI)/TQtThread.h
+GQTH1          := $(GQTDIRI)/TGQt.h $(GQTDIRI)/TQtThread.h $(GQTDIRI)/TQtApplication.h \
+                  $(GQTDIRI)/TQtBrush.h $(GQTDIRI)/TQMimeTypes.h $(GQTDIRI)/TQtClientFilter.h\
+                  $(GQTDIRI)/TQtClientWidget.h $(GQTDIRI)/TQtWidget.h $(GQTDIRI)/TQtMarker.h \
+                  $(GQTDIRI)/TQtTimer.h
+
 GQTH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 GQTS          := $(filter-out $(MODDIRS)/moc_%,\
                  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))

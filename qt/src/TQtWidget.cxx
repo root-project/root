@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.10 2004/09/12 11:00:22 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.48 2005/02/22 20:29:09 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -35,15 +35,19 @@
 #include "Win32Constants.h"
 #endif
 
+ClassImp(TQtWidget)
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  TQtClientWidget is QWidget with QPixmap double buffer
 //  It designed to back the ROOT TCanvasImp class interface  and it can be used
 //  as a regular Qt Widget to create Qt-based GUI with embedded TCanvas objects
 //
-//  This widget can be used to build a custom GUI interfaces with  Qt Designer
+//           This widget can be used as a Qt "custom widget" 
+//         to build a custom GUI interfaces with  Qt Designer
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
@@ -77,7 +81,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
         // To mimic what TRint::Run(kTRUE) does.
         Getlinem(kInit, rint->GetPrompt());
         TQtTimer::Create()->start(0,TRUE);
-    }         
+    }
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     fCanvas = new TCanvas(name, 4, 4, TGQt::iwid(this));

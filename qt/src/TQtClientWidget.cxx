@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.3 2004/08/13 06:05:17 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 #include "TQtWidget.h"
 #include "TQtClientWidget.h"
@@ -21,10 +22,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtClientWidget is QWidget desiged to back the ROOT GUI TGWindow class objects
+//  TQtClientWidget is QFrame designed to back the ROOT GUI TGWindow class objects
 //
-// Since ROOT has a habit to destroy the widget many times to protect the C++ QWidget
-// against double deleting all QWidget are registered with a special "guard" container
+//
+// TQtClientWidget  is a QFrame implemantation backing  ROOT TGWindow objects
+// It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
+//
+// Since ROOT has a habit to destroy the widget many times, to protect the C++ QWidget
+// against of double deleting all TQtClientWidgets are to be registered with a special
+// "guard" container
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -199,32 +205,32 @@ void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
    int index = 0;
    if (keycode) {
       if (modifier & kAnyModifier)  assert(!(modifier & kAnyModifier));
-   else {
-      if (modifier & kKeyShiftMask)   key[index++] = SHIFT;
-      if (modifier & kKeyLockMask)    key[index++] = META;
-      if (modifier & kKeyControlMask) key[index++] = CTRL;
+      else {
+         if (modifier & kKeyShiftMask)   key[index++] = SHIFT;
+         if (modifier & kKeyLockMask)    key[index++] = META;
+         if (modifier & kKeyControlMask) key[index++] = CTRL;
          if (modifier & kKeyMod1Mask)    key[index++] = ALT;
-   }
-                                      key[index++] = keycode;
+     }
+                                         key[index++] = keycode;
    }
    assert(index<=4);
    if (insert && keycode) {
       if (!fGrabbedKey)  {
          fGrabbedKey = new QAccel(this);
-      connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
+         connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
       }
       QKeySequence keys(key[0],key[1],key[2],key[3]);
-      if (fGrabbedKey->findKey(keys) == -1)  {    
+      if (fGrabbedKey->findKey(keys) == -1)  {
          fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
          // fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,fGrabbedKey->count()+1);
-      }   
+      }
    } else {
       if (fGrabbedKey)  {
          if (keycode) {
            int id = fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3]));
            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,id);
-        if (id != -1) fGrabbedKey->removeItem(id);
-        if (fGrabbedKey->count() ==  0) {  delete fGrabbedKey; fGrabbedKey = 0; }
+           if (id != -1) fGrabbedKey->removeItem(id);
+           if (fGrabbedKey->count() ==  0) {  delete fGrabbedKey; fGrabbedKey = 0; }
         } else {
            // keycode ==0 - means delete all accelerators
            // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' \n", this, modifier, keycode);

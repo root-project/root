@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.7 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.8 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
 #ifndef ROOT_TQtWidget
 #define ROOT_TQtWidget
 
@@ -17,11 +18,35 @@
 // "double-buffered" widget
 
 #include <assert.h>
+#include "Rtypes.h"
 
-#include <qwidget.h>
-#include <qpixmap.h>
+#ifndef __CINT__
+#  include <qwidget.h>
+#  include <qpixmap.h>
+#else
+  // List of the fake classes to the fake RootCint happy.
+  class QWidget;
+  class QPixmap;
+  class QMouseEvent;
+  class QFocusEvent;
+  class QCustomEvent;
+  class QKeyEvent;
+  class QShowEvent;
+  class QPaintEvent;
+  class QResizeEvent;
+  class QSize;  
+  class QString;
+  class QEvent;
+  class QSizePolicy;
+#endif
 
 class TCanvas;
+//
+// TQtWidget is a custom QWidget to back ROOT TCanvas.
+//
+// It can be used within Qt-based program and with Qt Designer as a "regular"
+// Qt QWidget to create the Qt widget wihe builtin TCanvas'
+//
 
 //___________________________________________________________________
 class TQtWidgetBuffer : public QPixmap
@@ -36,14 +61,24 @@ class TQtWidgetBuffer : public QPixmap
 };
 //___________________________________________________________________
 class  TQtWidget : public QWidget {
+#ifndef __CINT__   
  Q_OBJECT
+#endif       
+private:
+      void operator=(const TQtWidget&) const {}
+      void operator=(const TQtWidget&) {}
+      TQtWidget(const TQtWidget&) :QWidget() {}
 public:
    enum {
       kEXITSIZEMOVE,
       kENTERSIZEMOVE,
       kFORCESIZE
    };
+#ifndef __CINT__      
   TQtWidget( QWidget* parent=0, const char* name=0, WFlags f=Qt::WStyle_NoBorder, bool embedded=TRUE);
+#else
+  TQtWidget( QWidget* parent=0, const char* name=0, int f, bool embedded);
+#endif  
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c)                 { fCanvas = c;}
   inline TCanvas  *GetCanvas() const         { return fCanvas;}
@@ -98,7 +133,7 @@ protected:
 public:
    virtual QSize       sizeHint () const;        //  returns the preferred size of the widget.
    virtual QSize       minimumSizeHint () const; // returns the smallest size the widget can have.
-   virtual QSizePolicy sizePolicy () const;      //  returns a QSizePolicy; a value describing the space requirements
+   virtual QSizePolicy sizePolicy () const;      //  returns a QSizePolicy; a value describing the space requirements of the
 protected:
    // -- A special event handler
    virtual void exitSizeEvent ();
@@ -117,7 +152,10 @@ signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
    void CanvasPainted();  // Signal the TCanvas has been oainted ionto the screen
    void Saved(bool ok); // Signal the TCanvas has been saved into the file
-
+    virtual void polish();
+//MOC_SKIP_BEGIN  
+   ClassDef(TQtWidget,0) // QWidget to back ROOT TCanvas (Can be used with Qt designer)
+//MOC_SKIP_END
 };
 
 //______________________________________________________________________________

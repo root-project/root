@@ -1,8 +1,7 @@
-// @(#)root/qt:$Name:  $:$Id: TQtTermInputHandler.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
-// Author: Valeri Fine   25/01/2005
-
+// @(#)root/qt:$Name:  $:$Id: TQtTermInputHandler.cxx,v 1.3 2005/02/24 22:20:20 fine Exp $
+// Author: Valeri Fine   02/03/2005
 /****************************************************************************
-** $Id: TQtTermInputHandler.cxx,v 1.1 2005/02/04 19:47:27 fine Exp $
+** $Id: TQtTermInputHandler.cxx,v 1.3 2005/02/24 22:20:20 fine Exp $
 **
 ** Copyright (C) 2004 by Valeri Fine.  All rights reserved.
 **
@@ -16,9 +15,11 @@
 #include "TApplication.h"
 #include <qsocketnotifier.h> 
 
-// TQtTermInputHandler is process the stdin ROOT event from within Qt event loop
+//
+// TQtTermInputHandler is to process the stdin ROOT events from within Qt event loop
 // It would be nice to derive it from the TTermInputHandler class.
 // Unfortunately this class is defined locally within TRint.cxx file scope
+//
 
 //______________________________________________________________________________
 TQtTermInputHandler::TQtTermInputHandler (Int_t fd) : TFileHandler(fd, 1) 
@@ -40,8 +41,8 @@ void TQtTermInputHandler::Activate(int /*fd*/){
 #if ROOT_VERSION_CODE > ROOT_VERSION(4,00,8)
      SetReadReady();
 #else     
-     fprintf(stderr,"Tour ROTO version is too OLD !!!\n"
-     "You have to update your ROOT version to use to access ROOT prompt"
+     fprintf(stderr,"Your ROOT version is too OLD !!!\n"
+     "You have to update your ROOT version to access ROOT prompt"
      "from the Qt event loop. Sorry !!!\n");
 #endif   
   //else if (sn->Type() == QSocketNotifier::Write)

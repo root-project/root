@@ -1,7 +1,7 @@
-// @(#)root/qt:$Name:  $:$Id: TQtSymbolCodec.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtSymbolCodec.h,v 1.1 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   08/02/2005
 /****************************************************************************
-** $Id: TQtSymbolCodec.h,v 1.1 2005/01/25 21:39:55 fine Exp $
+** $Id: TQtSymbolCodec.h,v 1.1 2005/02/08 07:36:08 brun Exp $
 **
 ** Implementation of QTextCodec class
 **

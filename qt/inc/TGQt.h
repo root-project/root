@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.4 2004/12/06 07:22:55 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.5 2005/02/08 07:36:08 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,6 +9,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
 
 #ifndef ROOT_TGQt
 #define ROOT_TGQt
@@ -55,7 +56,6 @@ class  QPaintDevice;
 class  QTextCodec;
 
 #include "TVirtualX.h"
-#include "TVirtualGL.h"
 
 #include "TQtRConfig.h"
 
@@ -92,11 +92,11 @@ class TGQt  : public TVirtualX  {
    friend class TQtObject;
    friend class TQtWindowsObject;
    friend class TQtPixmapObject;
+   friend class TPadOpenGLView;
    friend class TQtWidget;
    friend class TQtClientWidget;
 protected:
    enum DEFWINDOWID { kDefault=1 };
-   TVirtualGL   *fGLKernel;            // Pointer to OpenGL interface implementation
    QPaintDevice *fSelectedWindow;      // Pointer to the current "paintdevice: PixMap, Widget etc"
    QPaintDevice *fSelectedBuffer;      // Pointer to the current "paintdevice buffer"
    QPaintDevice *fPrevWindow;          // Pointer to the previous "Window"
@@ -144,9 +144,9 @@ protected:
     typedef std::map<ULong_t, QColor * > COLORMAP;
     COLORMAP fColorMap;  // to back the TG widgets
     TQtClientWidget       *fPointerGrabber;
-    QTextCodec            *fCodec;        // The Current text decoder
-    QString                fFontTextCode; // The default code text code page (from the Gui.DefaultFont)
-    const char            *fSymbolFontFamily; // the name of the font to substitute the non-standard "Symbol"
+    QTextCodec            *fCodec;            // The Current text decoder
+    QString                fFontTextCode;     // The default code text code page (from the Gui.DefaultFont)
+    const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
 
 
 //
@@ -199,6 +199,7 @@ public:
    // static methods:
    static Int_t          iwid(QPaintDevice *wid);
    static QPaintDevice  *iwid(Int_t wid);
+   static QPaintDevice  *iwid(Window_t wid);
    static QPixmap       *MakeIcon(Int_t indx);
    static TQtApplication *CreateQtApplicationImp();
    static TVirtualX     *GetVirtualX();

@@ -1,6 +1,5 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.cxx,v 1.8 2005/03/01 00:40:53 fine Exp $
 // Author: Valeri Fine   21/01/2003
-
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2003 by Valeri Fine.                                    *
@@ -34,7 +33,7 @@
 #include <qpixmap.h>
 #include <qfileinfo.h>
 
-// ClassImp(TQMimeTypes)
+ClassImp(TQMimeTypes)
 //______________________________________________________________________________
 TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
 {

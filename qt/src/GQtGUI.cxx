@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.4 2004/11/20 06:50:42 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.5 2005/01/18 11:53:47 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -486,7 +486,7 @@ void  TGQt::SetOpacity(Int_t) { }
 //______________________________________________________________________________
 Window_t TGQt::GetWindowID(Int_t id) {
    // Create a "client" wrapper for the "canvas" widget to make Fons happy
-   TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(wid(id));
+   TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(iwid(id));
    assert(canvasWidget);
    TQtClientWidget  *client = 0;
    // Only one wrapper per "Canvas Qt Widget" is allowed
@@ -904,19 +904,6 @@ void         TGQt::SetIconPixmap(Window_t id, Pixmap_t pix)
    // Set pixmap the WM can use when the window is iconized.
    if (id == kNone || id == kDefault || (pix==0) ) return;
    wid(id)->setIcon(*fQPixmapGuard.Pixmap(pix));
-}
-//______________________________________________________________________________
-void  TGQt::Warp(Int_t ix, Int_t iy, Window_t id) 
-{
-   // Set pointer position.
-   // ix       : New X coordinate of pointer
-   // iy       : New Y coordinate of pointer
-   // Coordinates are relative to the origin of the window id
-   // or to the origin of the current window if id == 0.
-   if (id == kNone) {}
-   else {
-       QCursor::setPos(wid(id)->mapToGlobal(QPoint(ix,iy)));
-   }
 }
 //______________________________________________________________________________
 void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
@@ -1488,8 +1475,9 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 //______________________________________________________________________________
  void         TGQt::WMDeleteNotify(Window_t id)
  {
-   // WMDeleteNotify causes the filter to treat QEventClose event
-   ((TQtClientWidget *)wid(id))->SetDeleteNotify();
+    // WMDeleteNotify causes the filter to treat QEventClose event
+    if (id == kNone || id == kDefault ) return;
+    ((TQtClientWidget *)wid(id))->SetDeleteNotify();
  }
 //______________________________________________________________________________
  void         TGQt::SetKeyAutoRepeat(Bool_t) { }
@@ -1501,8 +1489,8 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
    // are active then the keyboard will be grabed for window id.
    // When grab is false, ungrab the keyboard for this key and modifier.
    // A modifiers argument of AnyModifier is equivalent to issuing the
-   // request for all possible modifier combinations (including the combination of no modifiers). 
-    
+   // request for all possible modifier combinations (including the combination of no modifiers).
+
     if (id == kNone) return;
             // fprintf(stderr,"TQt::GrabKey has no QT-based implementation yet: %p %d %c %x \n",((TQtClientWidget*)wid(id)), keycode,keycode,modifier);
     if (grab ) {
@@ -1612,17 +1600,28 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
  void         TGQt::SetWindowName(Window_t id, char *name)
  {
     // Set window name.
-   if (id == kNone || id == kDefault ) return;
-
+    if (id == kNone || id == kDefault ) return;
     winid(id)->setCaption(name);
  }
  //______________________________________________________________________________
  void         TGQt::SetIconName(Window_t id, char *name)
  {
     // Set window icon name.
-   if (id == kNone || id == kDefault ) return;
+    if (id == kNone || id == kDefault ) return;
     winid(id)->setIconText(name);
  }
+//______________________________________________________________________________
+void  TGQt::Warp(Int_t ix, Int_t iy, Window_t id) {
+   // Set pointer position.
+   // ix       : New X coordinate of pointer
+   // iy       : New Y coordinate of pointer
+   // Coordinates are relative to the origin of the window id
+   // or to the origin of the current window if id == 0.
+   if (id == kNone) {}
+   else {
+       QCursor::setPos(wid(id)->mapToGlobal(QPoint(ix,iy)));
+   }
+}
 //______________________________________________________________________________
  void         TGQt::SetClassHints(Window_t, char *, char *)
  {
@@ -1812,9 +1811,9 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
  {
     // Clear window.
    if (id == kNone || id == kDefault ) return;
-    wid(id)->erase();
+   wid(id)->erase();
  }
- 
+
 //---- Key symbol mapping
 struct KeyQSymbolMap_t {
    Qt::Key fQKeySym;
@@ -1843,7 +1842,7 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_Down,      kKey_Down},
    {Qt::Key_Prior,     kKey_Prior},
    {Qt::Key_Next,      kKey_Next},
-   {Qt::Key_Shift,     kKey_Shift}, 
+   {Qt::Key_Shift,     kKey_Shift},
    {Qt::Key_Control,   kKey_Control},
    {Qt::Key_Meta,      kKey_Meta},
    {Qt::Key_Alt,       kKey_Alt},
@@ -1863,39 +1862,40 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key(0), (EKeySym) 0}
 };
 //______________________________________________________________________________________
-static inline Int_t MapKeySym(int key, bool toQt=true) 
+static inline Int_t MapKeySym(int key, bool toQt=true)
 {
    for (int i = 0; gKeyQMap[i].fKeySym; i++) {	// any other keys
       if (toQt) {
         if (key ==  gKeyQMap[i].fKeySym ) {
            return   UInt_t(gKeyQMap[i].fQKeySym);
-        }         
+        }
       } else {
         if (key ==  gKeyQMap[i].fQKeySym) {
            return   UInt_t(gKeyQMap[i].fKeySym);
         }
       }
    }
-#if 0   
+#if 0
    UInt_t text;
    QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
    qstrncpy((char *)&text, (const char *)r,1);
    return text;
 #else
    return key;
-#endif   
+#endif
 }
 //______________________________________________________________________________
  Int_t        TGQt::KeysymToKeycode(UInt_t keysym) {
     // Convert a keysym to the appropriate keycode. For example keysym is
     // a letter and keycode is the matching keyboard key (which is dependend
     // on the current keyboard mapping).
-    return Int_t(MapKeySym(keysym)); 
+    return Int_t(MapKeySym(keysym));
  }
  //______________________________________________________________________________
  void TGQt::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
     UInt_t w, UInt_t h)
  {
+    if (id == kNone) return;
     // Draw a filled rectangle. Filling is done according to the gc.
     TQtPainter paint(iwid(id),qtcontext(gc));
     if (qtcontext(gc).HasValid(QtGContext::kTileRect) ) {
@@ -1920,6 +1920,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
  void TGQt::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
     UInt_t w, UInt_t h)
  {
+    if (id == kNone) return;
     // Draw a rectangle outline.
     TQtPainter paint(iwid(id),qtcontext(gc));
     paint.setBrush(Qt::NoBrush);
@@ -1929,6 +1930,7 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
  void TGQt::DrawSegments(Drawable_t id, GContext_t gc, Segment_t * seg, Int_t nseg)
  {
     // Draws multiple line segments. Each line is specified by a pair of points.
+    if (id == kNone) return;
     TQtPainter paint(iwid(id),qtcontext(gc));
     QPointArray segments(2*nseg);
     for (int i=0;i<nseg;i++) {

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQMimeTypes.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2003
 
 /*************************************************************************
@@ -28,7 +28,11 @@
 
 #include "TObject.h"
 #include "TString.h"
-#include <qfiledialog.h>
+#ifndef __CINT__
+#  include <qfiledialog.h>
+#else
+  class QFileIconProvider;
+#endif
 
 class TOrdCollection;
 class TRegexp;
@@ -53,6 +57,10 @@ public:
 
 
 class TQMimeTypes : public TObject {
+private:
+      void operator=(const TQMimeTypes&) const {}
+      void operator=(const TQMimeTypes&)  {}
+      TQMimeTypes(const TQMimeTypes&) : TObject()  {}
 
 protected:
    TString          fIconPath;   // the path to the icon directory
@@ -67,7 +75,6 @@ protected:
 public:
    TQMimeTypes(const char *iconPath, const char *file);
    virtual ~TQMimeTypes();
-   static TQMimeTypes *Instantiate(const char *iconPath, const char *file);
    void   SaveMimes();
    Bool_t HasChanged() const { return fChanged; }
    void   AddType(const char *type, const char *pat, const char *icon, const char *sicon, const char *action);
@@ -78,7 +85,9 @@ public:
    const  QIconSet *GetIcon(const TSystemFile *filename);
 
 
-   // ClassDef(TQMimeTypes,0)  // Pool of mime type objects
+//MOC_SKIP_BEGIN 
+   ClassDef(TQMimeTypes,0)  // Pool of mime type objects
+//MOC_SKIP_END 
 };
 
 #endif

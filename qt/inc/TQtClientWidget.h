@@ -1,6 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
-// Author: Valeri Fine   01/03/2003
-
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.h,v 1.35 2005/03/01 00:40:53 fine Exp $
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
@@ -13,19 +11,34 @@
 #ifndef ROOT_TQtClientWidget
 #define ROOT_TQtClientWidget
 
-#include <qframe.h>
-#include <qcursor.h>
+#ifndef __CINT__
+#  include <qframe.h>
+#  include <qcursor.h>
+#else
+  class QFrame;
+  class QCursor;
+#endif
 #include "GuiTypes.h"
 
-
+//
+// TQtClientWidget  is a QFrame implemantation backing  ROOT TGWindow objects
+// It tries to mimic the X11 Widget behaviour, that kind the ROOT Gui relies on heavily.
+//
 class QAccel;
 class QCursor;
 class QCloseEvent;
 class TQtClientGuard;
 class TQtWidget;
 
-class TQtClientWidget : public QFrame {
+class TQtClientWidget: public QFrame {
+#ifndef __CINT__
        Q_OBJECT
+#endif
+private:
+         void  operator=(const TQtClientWidget&)  {}
+         void  operator=(const TQtClientWidget&) const {}
+         TQtClientWidget(const TQtClientWidget&) : QFrame() {}
+
 protected:
 
        UInt_t fGrabButtonMask;
@@ -58,7 +71,6 @@ public:
     TQtWidget *GetCanvasWidget() const;
     void   GrabEvent(Event_t &ev,bool own=TRUE);
     bool   IsClosing();
-    bool   IsKeyGrabbed    (Event_t &ev);
     bool   IsGrabbed       (Event_t &ev);
     bool   IsPointerGrabbed(Event_t &ev);
     UInt_t IsEventSelected (UInt_t evmask);
@@ -79,14 +91,16 @@ public:
     UInt_t ButtonMask  () const;
     EMouseButton Button() const ;
     UInt_t PointerMask () const;
-    UInt_t KeyMask()      const;
-    Int_t  KeyCode()      const;
 protected slots:
       void Disconnect();
 public slots:
     virtual void Accelerate(int id);
     virtual void polish();
+//MOC_SKIP_BEGIN
+    ClassDef(TQtClientWidget,0) // QFrame implementation backing  ROOT TGWindow objects
+//MOC_SKIP_END
 };
+
 //______________________________________________________________________________
 inline  bool TQtClientWidget::IsPointerGrabbed(Event_t &ev)
 {

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.4 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -12,17 +12,16 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TQtApplication                                                       //
+// TQtApplication -  Instantiate the Qt system within ROOT environment  //
 //                                                                      //
-// Interface to low level Qt package. This class gives access to basic  //
-// Qt graphics, pixmap, text and font handling routines.                //
+// Instantiate the Qt package by createing Qapplication object if any   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
 
 #include <assert.h>
 #include "qapplication.h"
 
-#include "TQtRConfig.h"
 #include "TQtApplication.h"
 #include "TSystem.h"
 
@@ -37,7 +36,7 @@
 
 TQtApplication *TQtApplication::fgQtApplication = 0;
 
-// ClassImp(TQtApplication)
+ClassImp(TQtApplication)
 //
 //______________________________________________________________________________
 TQtApplication::TQtApplication(const char * /*appClassName*/, int argc,char **argv)
@@ -73,6 +72,10 @@ void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
       if (gEnv)
          fromConfig = gEnv->GetValue("Gui.Style","native");
       if (fromConfig != "native" ) QApplication::setStyle(fromConfig);
+#ifdef Q_WS_MACX
+      // create a timer to force the event loop with no X-server
+      TTimer *idle = new TTimer(240); idle->TurnOn();
+#endif
    }
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)
    char *qtPluginPath = gSystem->ConcatFileName(gSystem->Getenv("ROOTSYS"),"/Qt/plugins");
@@ -111,4 +114,16 @@ bool TQtApplication::Terminate()
     delete  app;
   }
   return TRUE;
+}
+//______________________________________________________________________________
+bool TQtApplication::IsThisGuiThread()
+{
+   // Check whether the current thread belongs the GUI
+#ifdef R__QTGUITHREAD
+ TQtApplication *app = GetQtApplication();
+   if (!app) return true;
+   if (app->fGUIThread)
+      return app->fGUIThread->IsThisThread();
+#endif
+  return true;
 }

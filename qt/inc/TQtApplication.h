@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -15,19 +15,19 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TQtApplication                                                       //
+// TQtApplication -  Instantiate the Qt system within ROOT environment  //
 //                                                                      //
-// Interface to low level Qt package. This class gives access to basic  //
-// Qt graphics, pixmap, text and font handling routines.                //
+// Instantiate the Qt package by createing Qapplication object if any   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TQtApplicationThread.h"
 #include "TQtRConfig.h"
+#include "Rtypes.h"
 
+class TQtApplicationThread;
 
 class TQtApplication { // : public TApplicationImp
-
+  
 private:
   friend class TQtApplicationThread;
   TQtApplicationThread  *fGUIThread;
@@ -48,20 +48,7 @@ public:
 
    static TQtApplication *GetQtApplication();
    static bool IsThisGuiThread();
-   // ClassDef(TQtApplication,0)
+   ClassDef(TQtApplication,0) // Instantiate the Qt system within ROOT environment
 
 };
-//______________________________________________________________________________
-inline bool TQtApplication::IsThisGuiThread()
-{
-   // Check whether the current thread belongs the GUI
-#ifdef R__QTGUITHREAD
- TQtApplication *app = GetQtApplication();
-   if (!app) return TRUE;
-   if (app->fGUIThread)
-      return app->fGUIThread->IsThisThread();
-#endif
-  return TRUE;
-}
-
 #endif

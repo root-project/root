@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtMarker.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -14,29 +14,39 @@
 #define ROOT_TQtMarker
 
 #include "Gtypes.h"
+#include "Rtypes.h"
 #include "TPoint.h"
-#include "qpoint.h"
-#include "qpointarray.h"
+#ifndef __CINT__
+#  include <qpointarray.h>
+#else
+   class QPointArray;
+#endif
 
+////////////////////////////////////////////////////////////////////////
+//
+// TQtMarker - class-utility to convert the ROOT TMarker object shape 
+//             in to the Qt QPointArray.
+//
+////////////////////////////////////////////////////////////////////////
 
 class TQtMarker {
 
 private:
 
    int     fNumNode;       // Number of chain in the marker shape
-   QPointArray  fChain; // array of the n chains to build a shaped marker
+   QPointArray  fChain;    // array of the n chains to build a shaped marker
    Color_t fCindex;        // Color index of the marker;
    int     fMarkerType;    // Type of the current marker
 
 public:
 
    TQtMarker(int n=0, TPoint *xy=0,int type=0);
-  ~TQtMarker();
+   virtual ~TQtMarker();
    int     GetNumber() const;
    QPointArray &GetNodes();
    int     GetType() const;
    void    SetMarker(int n, TPoint *xy, int type);
-
+   ClassDef(TQtMarker,0) //  Convert  ROOT TMarker objects on to QPointArray
 };
 
 #endif

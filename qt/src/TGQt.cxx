@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.9 2005/02/09 06:19:40 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.10 2005/02/10 07:22:15 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -191,6 +190,19 @@ class TQWidgetCollection {
 };
 TQWidgetCollection *fWidgetArray = 0;
 //______________________________________________________________________________
+QPaintDevice *TGQt::iwid(Window_t wid)
+{
+   QPaintDevice *topDevice = 0;
+   if ( wid != kNone )   {
+       topDevice = (wid == kDefault) ?
+              (QPaintDevice *)QApplication::desktop()
+             :
+              (QPaintDevice*)wid;
+   }
+   return topDevice;
+}
+
+//______________________________________________________________________________
 Int_t         TGQt::iwid(QPaintDevice *wid)
 {
    // method to provide the ROOT "cast" from (QPaintDevice*) to ROOT windows "id"
@@ -231,16 +243,21 @@ QPaintDevice *TGQt::iwid(Int_t wid)
 QWidget      *TGQt::winid(Window_t id)
 {
    // returns the top level QWidget fro the ROOT widget
-   return (id != kNone)?((QWidget *)(TGQt::iwid(id)))->topLevelWidget():0;
+   return (id != kNone)? TGQt::wid(id)->topLevelWidget():0;
 }
 
 //______________________________________________________________________________
 QWidget      *TGQt::wid(Window_t id)
 {
    // method to restore (dynamic cast) the QWidget object pointer (if any) from  ROOT windows "id"
-   if (id == kNone || id == (unsigned int)(-1) ) return 0;
-   QPaintDevice *dev = TGQt::iwid(id);
-    assert(dev->devType() == QInternal::Widget);
+   QPaintDevice *dev = 0;
+   if (id == (Window_t)kNone || id == (unsigned int)(-1) ) return (QWidget *)dev;
+   if ( id <= fWidgetArray->MaxId() )
+      dev = (*fWidgetArray)[id];
+   else
+      dev = (QPaintDevice *)id;
+
+   assert(dev->devType() == QInternal::Widget);
    //if ( dev->devType() != QInternal::Widget) {
    //     printf(" %s %i type=%d name=%s, className=%s QInternal::Widget = %d\n", __FUNCTION__, __LINE__
    //        , dev->devType()
@@ -276,26 +293,35 @@ void TGQt::PrintEvent(Event_t &ev)
    fprintf(stderr,"fX, fY, fXRoot, fYRoot = %d %d  :: %d %d\n", ev.fX, ev.fY,ev.fXRoot, ev.fYRoot);
 }
 
-
 //______________________________________________________________________________
 static float CalibrateFont()
 {
     // Use the ROOT font with ID=1 to calibrate the current font on fly;
-    bool  italic = TRUE;
-    long  bold   = 5;
-    QString fontName = "Times New Roman";
+    // Environment variable ROOTFONTFACTOR allows to set the factor manually
+    static float fontCalibFactor = -1;
+    if (fontCalibFactor  < 0 ) {
+    
+       const char * envFactor = gSystem->Getenv("ROOTFONTFACTOR");
+       bool ok=false;
+       if (envFactor && envFactor[0]) 
+          fontCalibFactor= QString(envFactor).toFloat(&ok);
+       if (!ok) {
+    
+          bool  italic = TRUE;    
+          long  bold   = 5;
+          QString fontName = "Times New Roman";
 
-    QFont pattern;
+          QFont pattern;
 
-    pattern.setWeight(bold*10);
-    pattern.setItalic(italic);
-    pattern.setFamily(fontName);
-    pattern.setPixelSize(12);
+          pattern.setWeight(bold*10);
+          pattern.setItalic(italic);
+          pattern.setFamily(fontName);
+          pattern.setPixelSize(12);
 
-   int w,h;
-   QFontMetrics metrics(pattern);
-   w = metrics.width("This is a PX distribution");
-   h = metrics.height();
+          int w,h;
+          QFontMetrics metrics(pattern);
+          w = metrics.width("This is a PX distribution");
+          h = metrics.height();
 
 // I found 0.94 matches well what Rene thinks it should be
 // for TTF and XFT and it should be 1.1 for X Fonts
@@ -304,15 +330,18 @@ static float CalibrateFont()
 //  XFT returns      h = 14
 // WIN32 TTF returns h = 16
 
-//   printf(" Font metric w = %d , h = %d\n", w,h);
-   float f;
-    switch (h) {
-       case 12: f = 1.13; break;
-       case 14: f = 0.94; break;
-       case 16: f = 0.94; break;
-       default: f = 1.10; break;
+          // printf(" Font metric w = %d , h = %d\n", w,h);
+          float f;
+          switch (h) {
+             case 12: f = 1.10;  break;// it was  f = 1.13 :-(; 
+             case 14: f = 0.915; break;// it was f = 0.94  :-(;
+             case 16: f = 0.94;  break;// to be tested yet
+             default: f = 1.10;  break;
+          }
+          fontCalibFactor = f;
+       }
     }
-    return f;
+    return fontCalibFactor;
 }
 
 //______________________________________________________________________________
@@ -465,7 +494,7 @@ QString TGQt::QtFileFormat(const QString &selector)
 {
    // returns Qt file format
    //
-   // if no suitable format found and ther selector is empty
+   // if no suitable format found and the selector is empty
    // the default PNG format is returned
    //
    // a special treatment of the "gif" format.
@@ -571,7 +600,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.80 2005/02/10 01:31:01 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.85 2005/02/28 04:06:35 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -592,9 +621,6 @@ Bool_t TGQt::Init(void* /*display*/)
    fLineStyle   = -1;
    fMarkerSize  = -1;
    fMarkerStyle = -1;
-
-   fGLKernel = 0;
-   // fGLKernel = new TWin32GLKernel();
 
    //
    // Retrieve the applicaiton instance
@@ -699,8 +725,17 @@ Int_t TGQt::InitWindow(ULong_t window)
    //*-*  Create a new windows
    //*-*
    // window is QWidget
-   TQtWidget *wid = 0;
-   QWidget *parent = (window == kDefault) ? 0 : dynamic_cast<QWidget *>(iwid(window));
+   TQtWidget *wid    = 0;
+   QWidget   *parent = 0;
+   if (window <= fWidgetArray->MaxId() )
+      parent = dynamic_cast<TQtWidget *> (iwid(int     (window)));
+   else {      
+      QPaintDevice *dev = dynamic_cast<QPaintDevice *>(iwid(Window_t(window)));
+      parent = dynamic_cast<QWidget *>(dev);
+   }
+
+ //     QWidget *parent = (window == kDefault) ? 0 : dynamic_cast<QWidget *>(iwid(window));
+ //   QWidget *parent = (window == kDefault) ? 0 : (QWidget *)iwid(window);
    if (parent && gDebug==3) {
       // fprintf(stderr," New Canvas window with the parent %s\n",(const char *)parent->name());
    }
@@ -708,7 +743,6 @@ Int_t TGQt::InitWindow(ULong_t window)
    wid->setCursor(*fCursors[kCross]);
 
    return fWidgetArray->GetFreeId(wid);
-   return iwid(wid);
 }
 
 //______________________________________________________________________________
@@ -1211,7 +1245,8 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
    // fprintf(stderr,"TGQt::DrawText: %s\n", text);
    if (text && text[0]) {
       qApp->lock();
-      if (TMath::Abs(mgn-1) >0.05)  fQFont->setPixelSizeFloat(mgn*FontMagicFactor(fTextSize));
+      Int_t tsize = (Int_t)(fTextSize+0.5); 
+      if (TMath::Abs(mgn-1) >0.05)  fQFont->setPixelSizeFloat(mgn*FontMagicFactor(tsize));
       UpdateFont();
       fQPainter->save();
       fQPainter->setPen(ColorIndex(fTextColor));
@@ -1375,10 +1410,10 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 
    qApp->lock();
    if (fQFont) {
-      QFontMetrics metrics(*fQFont);
-      w = metrics.width( GetTextDecoder()->toUnicode(mess) );
-      h = (unsigned int)(metrics.height()*CalibrateFont());
-      // fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d\n", w,h,fTextFont);
+      QSize textSize = QFontMetrics(*fQFont).size(Qt::SingleLine,GetTextDecoder()->toUnicode(mess)) ;
+      w = textSize.width() ;
+      h = (unsigned int)(textSize.height());
+//      fprintf(stderr,"  TGQt::GetTextExtent  w=%d h=%d font = %d size =%f\n", w,h,fTextFont, fTextSize);
    }
    qApp->unlock();
 }
@@ -1547,7 +1582,7 @@ void  TGQt::ResizeWindow(int wid)
 {
    // Resize the current window if necessary.
 
-   if (wid == -1) return;
+   if ( wid == -1  || wid == (int)kNone ) return;
    QPaintDevice *dev = iwid(wid);
    TQtWidget *widget = dynamic_cast<TQtWidget *>(dev);
    if (widget) {
@@ -1567,14 +1602,18 @@ void  TGQt::SelectWindow(int wid)
    // Select window to which subsequent output is directed.
 
    // Don't select things twice
-   QPaintDevice *dev = iwid(wid);
-   QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(wid);
-   if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
-   fPrevWindow     = fSelectedWindow;
-   if (wid == -1) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
-   else {
-      fSelectedWindow = dev;
-      fSelectedBuffer = offScreenBuffer;
+   if (wid == -1 || wid == (int) kNone) {
+       fSelectedBuffer=0; fSelectedWindow = NoOperation;
+   } else {
+      QPaintDevice *dev = iwid(wid);
+      QPixmap *offScreenBuffer = (QPixmap *)GetDoubleBuffer(wid);
+      if ((dev == fSelectedWindow) && !( (fSelectedBuffer==0) ^ (offScreenBuffer == 0) ) ) return;
+      fPrevWindow     = fSelectedWindow;
+      if (wid == -1 || wid == (int) kNone) { fSelectedBuffer=0; fSelectedWindow = NoOperation; }
+      else {
+         fSelectedWindow = dev;
+        fSelectedBuffer = offScreenBuffer;
+      }
    }
    // fprintf(stderr,"TGQt::SelectWindow fSelecteWindow old = %p; current= %p, buffer =%p\n"
    //            ,fPrevWindow,fSelectedWindow, fSelectedBuffer);
@@ -2306,7 +2345,8 @@ void  TGQt::SetTextSize(Float_t textsize)
    if ( fTextSize != textsize ) {
       fTextSize = textsize;
       if (fTextSize > 0) {	
-         fQFont->setPixelSize(int(FontMagicFactor(fTextSize)));
+         Int_t   tsize =(Int_t)( textsize+0.5);
+         fQFont->setPixelSize(int(FontMagicFactor(tsize)));
          fTextFontModified = 1;
       }
    }

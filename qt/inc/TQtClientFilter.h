@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.h,v 1.23 2005/02/24 22:20:19 fine Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -14,21 +14,38 @@
 #define ROOT_TQClientFilter
 
 #include "GuiTypes.h"
+#include "Rtypes.h"
 
-#include <qobject.h>
-#include <qptrqueue.h>
-#include <qptrlist.h>
-#include <qintdict.h>
-#include <qapplication.h>
+#ifndef __CINT__
+#  include <qobject.h>
+#  include <qptrqueue.h>
+#  include <qptrlist.h>
+#  include <qintdict.h>
+#  include <qapplication.h>
+#else
+  class QObject;
+  class QPtrList<TQtClientWidget>;
+#endif
+
 #include "TQtClientWidget.h"
+
+//
+//  TQtClientFilter  is Qt "eventFilter" to map Qt event to ROOT event
+//
 
 class TQtNextEventMessage;
 class TQtEventQueue;
 // class TQtClientWidget;
 
 class TQtClientFilter : public QObject {
+#ifndef __CINT__
    Q_OBJECT
+#endif
    friend class TGQt;
+private:
+         void operator=(const TQtClientFilter &){}
+         void operator=(const TQtClientFilter &) const {}
+         TQtClientFilter(const TQtClientFilter &) : QObject() {}
 protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;
@@ -49,6 +66,9 @@ public slots:
    void AppendPointerGrab(TQtClientWidget *);
    void RemoveButtonGrab (QObject *);
    void RemovePointerGrab(QObject *);
+//MOC_SKIP_BEGIN
+   ClassDef(TQtClientFilter,0) // Map Qt and ROOT event
+//MOC_SKIP_END
 };
 
 //______________________________________________________________________________
