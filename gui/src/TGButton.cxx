@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.13 2003/07/21 10:39:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.14 2003/08/13 11:38:46 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -358,9 +358,21 @@ void TGTextButton::SetText(TGHotString *new_label)
 {
    // Set new button text.
 
-   if (fLabel) delete fLabel;
-   fLabel = new_label;
+   int hotchar;
+   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
+   
+   if (fLabel) {
+      if (fHKeycode) 
+         main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
+      delete fLabel;
+   }
 
+   fLabel = new_label;
+   if ((hotchar = fLabel->GetHotChar()) != 0) {
+      if ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0) 
+         main->BindKey(this, fHKeycode, kKeyMod1Mask);
+   }
+   
    int max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
