@@ -3,7 +3,7 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-MODDIR       := new
+MODDIR       := newdelete
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
