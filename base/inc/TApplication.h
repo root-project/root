@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.2 2000/11/21 16:00:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.3 2001/04/22 16:00:56 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -41,10 +41,10 @@ class TSignalHandler;
 class TApplication : public TObject {
 
 private:
-   Bool_t             fReturnFromRun;  //When true return from Run()
-   int                fArgc;           //Number of command line arguments
+   Int_t              fArgc;           //Number of command line arguments
    char             **fArgv;           //Command line arguments
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
+   Bool_t             fReturnFromRun;  //When true return from Run()
    Bool_t             fNoLog;          //Do not process logon and logoff macros
    Bool_t             fQuit;           //Exit after having processed input files
    TObjArray         *fFiles;          //Array of input files (TObjString's)
@@ -53,7 +53,7 @@ private:
    TSignalHandler    *fSigHandler;     //Interrupt handler
 
 protected:
-   TApplication() : fArgc(0), fArgv(0), fAppImp(0) { } // used by Dictionary()
+   TApplication();
    virtual void Help(const char *line);
    virtual void InitializeColors();
    virtual void LoadGraphicsLibs();

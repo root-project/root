@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.11 2001/05/09 17:50:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.12 2001/05/21 11:16:49 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -65,6 +65,23 @@ Bool_t TIdleTimer::Notify()
 
 
 ClassImp(TApplication)
+
+//______________________________________________________________________________
+TApplication::TApplication()
+{
+   // Default ctor. Can be used by classes deriving from TApplication.
+
+   fArgc          = 0;
+   fArgv          = 0;
+   fAppImp        = 0;
+   fReturnFromRun = kFALSE;
+   fNoLog         = kFALSE;
+   fQuit          = kFALSE;
+   fFiles         = 0;
+   fIdleCommand   = 0;
+   fIdleTimer     = 0;
+   fSigHandler    = 0;
+}
 
 //______________________________________________________________________________
 TApplication::TApplication(const char *appClassName,
