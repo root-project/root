@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.5 2001/05/31 21:21:35 david Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.6 2001/07/31 05:54:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,8 @@ public:
 
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
   
+  inline virtual Bool_t isLValue() const { return kTRUE; }
+
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;

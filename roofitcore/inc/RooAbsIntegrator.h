@@ -1,43 +1,38 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.rdl,v 1.5 2001/05/16 07:41:07 verkerke Exp $
+ *    File: $Id: RooAbsIntegrator.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   05-Aug-2001 DK Adapted to use RooAbsFunc interface
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 #ifndef ROO_ABS_INTEGRATOR
 #define ROO_ABS_INTEGRATOR
 
-#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsFunc.hh"
 
+class RooAbsFunc;
 
-class RooAbsIntegrator : public TObject {
+class RooAbsIntegrator {
 public:
+  RooAbsIntegrator(const RooAbsFunc& function);
+  inline virtual ~RooAbsIntegrator() { }
+  inline Bool_t isValid() const { return _valid; }
 
-  // Constructors, assignment etc
-  inline RooAbsIntegrator() { }
-  RooAbsIntegrator(const RooAbsReal& function, Int_t mode) ;
-  RooAbsIntegrator(const RooAbsIntegrator& other);
-  virtual ~RooAbsIntegrator();
+  inline Double_t integrand(const Double_t x[]) const { return (*_function)(x); }
+
   virtual Double_t integral()=0 ;
 
 protected:
-  
-  inline Double_t eval() const { return _function->analyticalIntegral(_mode) ; }
+  const RooAbsFunc *_function;
+  Bool_t _valid;
 
-  RooAbsReal* _function ;
-  Int_t           _mode ;
-
-private:
-  RooAbsIntegrator& operator=(const RooAbsIntegrator& other) ; // not allowed
-
-protected:
-  ClassDef(RooAbsIntegrator,1) // Abstract interface for numerical integrators
+  ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.37 2001/08/02 21:39:06 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.38 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -69,6 +69,11 @@ public:
   // created object will have a valid value, but not necessarily the same
   // as our value. The caller is responsible for deleting the returned object.
   virtual RooAbsArg *createFundamental() const = 0;
+
+  // Is this argument an l-value, ie, can it appear on the left-hand side
+  // of an assignment expression? LValues are also special since they can
+  // potentially be analytically integrated and generated.
+  inline virtual Bool_t isLValue() const { return kFALSE; }
 
   // Parameter & dependents interpretation of servers
   RooArgSet* getParameters(const RooDataSet* set) const ;

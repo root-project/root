@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.24 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.25 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,14 +30,17 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
+#include "RooFitCore/RooImproperIntegrator1D.hh"
+#include "RooFitCore/RooRealBinding.hh"
+#include "RooFitCore/RooRealAnalytic.hh"
+#include "RooFitCore/RooInvTransform.hh"
 
 ClassImp(RooRealIntegral) 
 ;
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsReal& function, RooArgSet& depList,
-				 Int_t maxSteps, Double_t eps) : 
+				 const RooAbsReal& function, RooArgSet& depList) :
   RooAbsReal(name,title), _mode(0),
   _function("function","Function to be integrated",this,
 	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
@@ -46,18 +49,24 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _anaList("anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
   _jacList("jacList","Jacobian product term",this,kFALSE,kFALSE), 
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
-  _numIntEngine(0), _operMode(Hybrid)
+  _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
 {
   // Constructor
   RooArgSet intDepList ;
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // * 0) Check for dependents that the PDF doesn't depend on      *
+  // * 0) Check that all dependents are lvalues and filter out any
+  //      dependents that the PDF doesn't explicitly depend on
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   
   TIterator* depIter = depList.MakeIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
+    if(!arg->isLValue()) {
+      cout << ClassName() << "::" << GetName() << ": cannot integrate non-lvalue ";
+      arg->Print("1");
+      _valid= kFALSE;
+    }
     if (!function.dependsOn(*arg)) {
       _facList.add(*arg) ;
       addServer(*arg,kFALSE,kTRUE) ;
@@ -227,8 +236,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
   delete numIter ;
 
-  initNumIntegrator() ;
-
   // Determine operating mode
   if (numIntDepList.GetSize()>0) {
     // Numerical and optional Analytical integration
@@ -243,7 +250,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 }
 
 
-void RooRealIntegral::initNumIntegrator() 
+Bool_t RooRealIntegral::initNumIntegrator() const
 {
   // (Re)Initialize numerical integration engine
 
@@ -251,23 +258,46 @@ void RooRealIntegral::initNumIntegrator()
     delete _numIntEngine ;
     _numIntEngine= 0;
   }
+  if(0 != _numIntegrand) {
+    delete _numIntegrand;
+    _numIntegrand= 0;
+  }
 
-  // Initialize numerical integration part, if necessary 
-  switch(_intList.GetSize()) {
-  case 0: 
-    // No numerical integration required
-    _numIntEngine = 0 ; 
-    break ;    
-  case 1: 
-    // 1-dimensional integration required
-    _numIntEngine = new RooIntegrator1D((RooAbsReal&)_function.arg(),_mode,*((RooRealVar*)_intList.First())) ;
-    break ;
-  default: 
-    // multi-dimensional integration required (not supported currently)
-    cout << "RooRealIntegral::" << GetName() << ": Numerical integrals in >1 dimension not supported" << endl ;
-    _intList.Print() ;
-    assert(0) ;
-  }  
+  // All done if there are no arguments to integrate numerically
+  if(0 == _intList.GetSize()) return kTRUE;
+
+  // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
+  // those of its arguments that will be integrated out numerically.
+  if(_mode != 0) {
+    _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode);
+  }
+  else {
+    _numIntegrand= new RooRealBinding(_function.arg(),_intList);
+  }
+  if(0 == _numIntegrand || !_numIntegrand->isValid()) {
+    cout << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
+    return kFALSE;
+  }
+
+  // Chose a suitable RooAbsIntegrator implementation
+  if(_numIntegrand->getDimension() == 1) {
+    if(RooNumber::isInfinite(_numIntegrand->getMinLimit(0)) ||
+       RooNumber::isInfinite(_numIntegrand->getMaxLimit(0))) {
+      _numIntEngine= new RooImproperIntegrator1D(*_numIntegrand);
+    }
+    else {
+      _numIntEngine= new RooIntegrator1D(*_numIntegrand);
+    }
+  }
+  else {
+    cout << ClassName() << "::" << GetName() << ": numerical integration of >1 dimensions not supported"
+	 << endl;
+  }
+  if(0 == _numIntEngine || !_numIntEngine->isValid()) {
+    cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
+    return kFALSE;
+  }
+  return kTRUE;
 }
 
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
@@ -278,10 +308,9 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
   _facList("facList",this,other._facList),
-  _operMode(other._operMode), _numIntEngine(0)
+  _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid)
 {
   // Copy constructor
-  initNumIntegrator() ;
 }
 
 
@@ -289,6 +318,7 @@ RooRealIntegral::~RooRealIntegral()
   // Destructor
 {
   if (_numIntEngine) delete _numIntEngine ;
+  if (_numIntegrand) delete _numIntegrand ;
 }
 
 
@@ -306,8 +336,9 @@ Double_t RooRealIntegral::evaluate(const RooArgSet* nset) const
     
   case Hybrid: 
     {
-      // Calculate integral
-      
+      // create a new numerical integration engine
+      _valid= initNumIntegrator() ;
+
       // Save current integral dependent values 
       RooArgSet *saveInt = _intList.snapshot() ;
       RooArgSet *saveSum = _sumList.snapshot() ;
@@ -405,15 +436,14 @@ Double_t RooRealIntegral::integrate() const
 {
   // Perform hybrid numerical/analytical integration over all real-valued dependents
 
-  // Trivial case, fully analytical integration
   if (!_numIntEngine) {
-    Double_t ret = ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
-    return ret ;
+    // Trivial case, fully analytical integration
+    return ((RooAbsReal&)_function.arg()).analyticalIntegral(_mode) ;
   }
-
-  // Partial or complete numerical integration
-  Double_t ret = _numIntEngine->integral() ;
-  return ret ;
+  else {
+    // Partial or complete numerical integration
+    return _numIntEngine->integral() ;
+  }
 }
 
 
@@ -428,9 +458,6 @@ Bool_t RooRealIntegral::isValidReal(Double_t value, Bool_t printError) const
 
 Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
-  // Restart numerical integrator engine, which uses _intlist
-  initNumIntegrator() ;
-  
   return kFALSE ;
 }
 

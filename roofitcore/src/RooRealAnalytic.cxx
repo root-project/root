@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $
+ *    File: $Id: RooRealAnalytic.cc,v 1.1 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,9 +25,11 @@ ClassImp(RooRealAnalytic)
 ;
 
 static const char rcsid[] =
-"$Id: RooAbsFunc1D.cc,v 1.1 2001/05/02 18:08:59 david Exp $";
+"$Id: RooRealAnalytic.cc,v 1.1 2001/08/03 21:44:57 david Exp $";
 
 Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
+  // Evaluate our analytic integral at the specified values of the dependents.
+
   assert(isValid());
   loadValues(xvector);
   return _func->analyticalIntegral(_code);

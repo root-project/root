@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.7 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooCurve.cc,v 1.8 2001/08/03 21:44:57 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.7 2001/08/02 23:54:24 david Exp $";
+"$Id: RooCurve.cc,v 1.8 2001/08/03 21:44:57 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -76,6 +76,11 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
     if(found) {
       // calculate our normalization factor over all vars including x
       RooRealIntegral normFunc("normFunc","normFunc",f,vars);
+      if(!normFunc.isValid()) {
+	cout << "RooPlot: cannot normalize ";
+	f.Print("1");
+	return;
+      }
       scaleFactor/= normFunc.getVal();
       // remove x from the set of vars to be projected
       vars.remove(*found);
@@ -85,6 +90,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
       projected= new RooRealIntegral(TString(f.GetName()).Append("Projected"),
 				     TString(f.GetTitle()).Append(" (Projected)"),
 				     f,vars);
+      if(!projected->isValid()) return; // can this happen if normFunc isn't valid??
       funcPtr= projected->bindVars(x);
     }
   }

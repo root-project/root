@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.16 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.17 2001/08/03 02:04:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,21 +29,24 @@ class RooRealIntegral : public RooAbsReal {
 public:
 
   // Constructors, assignment etc
-  inline RooRealIntegral() : _numIntEngine(0) { }
-  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, 
-		  RooArgSet& depList, Int_t maxSteps=20, Double_t eps=1e-6) ;
+  inline RooRealIntegral() : _numIntEngine(0),_numIntegrand(0),_valid(kFALSE) { }
+  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, RooArgSet& depList) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
   virtual ~RooRealIntegral();
+
+  Bool_t isValid() const { return _valid; }
 
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
 protected:
 
+  mutable Bool_t _valid;
+
   enum OperMode { Hybrid, Analytic, PassThrough } ;
   //friend class RooAbsPdf ;
 
-  void initNumIntegrator() ;
+  Bool_t initNumIntegrator() const;
 
   virtual Double_t sum() const ;
   virtual Double_t integrate() const ;
@@ -67,7 +70,9 @@ protected:
   Int_t _mode ;
   OperMode _operMode ;
 
-  mutable RooAbsIntegrator* _numIntEngine ;
+  mutable RooAbsIntegrator* _numIntEngine ;  //! do not persist
+  mutable RooAbsFunc *_numIntegrand;         //! do not persist
+
 
   ClassDef(RooRealIntegral,1) // Real-valued variable representing an integral over a RooAbsReal object
 };

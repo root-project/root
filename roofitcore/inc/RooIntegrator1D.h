@@ -1,12 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.5 2001/05/16 07:41:08 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   05-Aug-2001 DK Adapted to use RooAbsFunc interface
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -14,36 +15,36 @@
 #define ROO_INTEGRATOR_1D
 
 #include "RooFitCore/RooAbsIntegrator.hh"
-class RooRealVar ;
-
 
 class RooIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  inline RooIntegrator1D() { }
-  RooIntegrator1D(const RooAbsReal& function, Int_t mode, RooRealVar& var, Int_t maxSteps=20, Double_t eps=1e-6) ; 
-  RooIntegrator1D(const RooIntegrator1D& other);
+  enum SummationRule { Trapezoid, Midpoint };
+  RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
+		  Int_t maxSteps= 0, Double_t eps= 0) ; 
+  RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
   virtual ~RooIntegrator1D();
 
   virtual Double_t integral() ;
 
 protected:
 
-  void initialize() ;
+  Bool_t initialize(Double_t xmin, Double_t xmax);
 
   // Integrator configuration
+  SummationRule _rule;
   Int_t _maxSteps ;
   Double_t _eps ;
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions
-  Double_t evalAt(Double_t x) const ;
   Double_t addTrapezoids(Int_t n) ;
+  Double_t addMidpoints(Int_t n) ;
   void extrapolate(Int_t n) ;
   
   // Numerical integrator workspace
-  RooRealVar* _var ;                   
   Double_t _xmin;                      //! do not persist
   Double_t _xmax;                      //! do not persist
   Double_t _range;                     //! do not persist
@@ -55,11 +56,7 @@ protected:
   Double_t *_d ;                       //! do not persist
   Double_t _savedResult;               //! do not persist
 
-private:
-  RooIntegrator1D& operator=(const RooIntegrator1D& other) ;
-
-protected:
-  ClassDef(RooIntegrator1D,1) // 1-dimensional numerical integration engine
+  ClassDef(RooIntegrator1D,0) // 1-dimensional numerical integration engine
 };
 
 #endif

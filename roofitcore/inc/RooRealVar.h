@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.23 2001/08/02 21:39:11 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.24 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,9 @@
 #include <math.h>
 #include <float.h>
 #include "TString.h"
+
 #include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooNumber.hh"
 
 class RooArgSet ;
 
@@ -48,10 +50,10 @@ public:
   virtual Double_t getFitMin() const { return _fitMin ; }
   virtual Double_t getFitMax() const { return _fitMax ; }
 
-  // Set/get infinite fit range limits
-  inline void removeFitMin() { _fitMin= -INFINITY; }
-  inline void removeFitMax() { _fitMax= +INFINITY; }
-  inline void removeFitRange() { _fitMin= -INFINITY; _fitMax= +INFINITY; }
+  // Set infinite fit range limits
+  inline void removeFitMin() { _fitMin= -RooNumber::infinity; }
+  inline void removeFitMax() { _fitMax= +RooNumber::infinity; }
+  inline void removeFitRange() { _fitMin= -RooNumber::infinity; _fitMax= +RooNumber::infinity; }
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

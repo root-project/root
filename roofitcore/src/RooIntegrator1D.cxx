@@ -1,12 +1,13 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.6 2001/07/31 20:54:07 david Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.7 2001/08/02 23:54:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
+ *   05-Aug-2001 DK Adapted to use RooAbsFunc interface
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -18,36 +19,72 @@
 
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooNumber.hh"
+
+#include <assert.h>
 
 ClassImp(RooIntegrator1D)
 ;
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsReal& function, Int_t mode, RooRealVar& var,
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function, mode), _var(&var), _maxSteps(maxSteps), _eps(eps) 
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _eps(eps)
 {
-  initialize() ;
+  // Use this form of the constructor to integrate over the function's default range.
+
+  _valid= initialize(function.getMinLimit(0),function.getMaxLimit(0));
 } 
 
-
-
-RooIntegrator1D::RooIntegrator1D(const RooIntegrator1D& other) : 
-  RooAbsIntegrator(other), _var(other._var), _maxSteps(other._maxSteps), _eps(other._eps)
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+				 SummationRule rule, Int_t maxSteps, Double_t eps) : 
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _eps(eps)
 {
-  initialize() ;
-}
+  // Use this form of the constructor to override the function's default range.
 
+  _valid= initialize(xmin,xmax);
+} 
 
-void RooIntegrator1D::initialize()
+Bool_t RooIntegrator1D::initialize(Double_t xmin, Double_t xmax)
 {
+  // apply defaults if necessary
+  if(_maxSteps <= 0) {
+    _maxSteps= (_rule == Trapezoid) ? 20 : 14;
+  }
+  if(_eps <= 0) _eps= 1e-6;
+  // check that the integrand is a valid function
+  if(!isValid()) {
+    cout << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
+    return kFALSE;
+  }
+  // check that the function is one dimensional
+  if(_function->getDimension() != 1) {
+    cout << "RooIntegrator1D::initialize: cannot integrate function of dimension "
+	 << _function->getDimension() << endl;
+    return kFALSE;
+  }
+  // check that the range is finite
+  if(RooNumber::isInfinite(xmin) || RooNumber::isInfinite(xmax)) {
+    cout << "RooIntegrator1D::initialize: cannot integrate unbounded function" << endl;
+    return kFALSE;
+  }
+
   // Allocate workspace for numerical integration engine
-  _h= new Double_t[_maxSteps + 1];
+  _h= new Double_t[_maxSteps + 2];
   _s= new Double_t[_maxSteps + 2];
   _c= new Double_t[_nPoints + 1];
   _d= new Double_t[_nPoints + 1];
+
+  // remember our integration range
+  if(xmin >= xmax) {
+    cout << "RooIntegrator1D::initialize: bad range with min >= max" << endl;
+    return kFALSE;
+  }
+  _xmin= xmin;
+  _xmax= xmax;
+  _range= _xmax - _xmin;
+
+  return kTRUE;
 }
-
-
 
 RooIntegrator1D::~RooIntegrator1D()
 {
@@ -58,23 +95,22 @@ RooIntegrator1D::~RooIntegrator1D()
   if(_d) delete[] _d;
 }
 
-
-
 Double_t RooIntegrator1D::integral() 
 {
-  _xmin= _var->getFitMin() ;
-  _xmax= _var->getFitMax() ;
-  _range= _var->getFitMax() - _var->getFitMin() ;
+  assert(isValid());
 
   Int_t j;
   _h[1]=1.0;
   for(j= 1; j<=_maxSteps; j++) {
-    _s[j]= addTrapezoids(j);
+    // refine our estimate using the appropriate summation rule
+    _s[j]= (_rule == Trapezoid) ? addTrapezoids(j) : addMidpoints(j);
     if(j >= _nPoints) {
+      // extrapolate the results of recent refinements and check for a stable result
       extrapolate(j);
       if(fabs(_extrapError) <= _eps*fabs(_extrapValue)) return _extrapValue;
     }
-    _h[j+1]=0.25*_h[j];
+    // update the step size for the next refinement of the summation
+    _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
   cout << "RooIntegrator1D::integral: did not converge after " 
@@ -85,22 +121,50 @@ Double_t RooIntegrator1D::integral()
   return 0;
 }
 
-
-Double_t RooIntegrator1D::evalAt(Double_t x) const 
+Double_t RooIntegrator1D::addMidpoints(Int_t n)
 {
-  _var->setVal(x) ;
-  return eval() ;
-}
+  // Calculate the n-th stage of refinement of the Second Euler-Maclaurin
+  // summation rule which has the useful property of not evaluating the
+  // integrand at either of its endpoints but requires more function
+  // evaluations than the trapezoidal rule. This rule can be used with
+  // a suitable change of variables to estimate improper integrals.
 
+  Double_t x,tnm,sum,del,ddel;
+  Int_t it,j;
+
+  if(n == 1) {
+    Double_t xmid= 0.5*(_xmin + _xmax);
+    return (_savedResult= _range*integrand(&xmid));
+  }
+  else {
+    for(it=1, j=1; j < n-1; j++) it*= 3;
+    tnm= it;
+    del= _range/(3.*tnm);
+    ddel= del+del;
+    x= _xmin + 0.5*del;
+    for(sum= 0, j= 1; j <= it; j++) {
+      sum+= integrand(&x);
+      x+= ddel;
+      sum+= integrand(&x);
+      x+= del;
+    }      
+    return (_savedResult= (_savedResult + _range*sum/tnm)/3.);
+  }
+}
 
 Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 {
+  // Calculate the n-th stage of refinement of the extended trapezoidal
+  // summation rule. This is the most efficient rule for a well behaved
+  // integrand that can be evaluated over its entire range, including the
+  // endpoints.
+
   Double_t x,tnm,sum,del;
   Int_t it,j;
 
   if (n == 1) {
     // use a single trapezoid to cover the full range
-    return (_savedResult= 0.5*_range*(evalAt(_xmin) + evalAt(_xmax)));
+    return (_savedResult= 0.5*_range*(integrand(&_xmin) + integrand(&_xmax)));
   }
   else {
     // break the range down into several trapezoids using 2**(n-2)
@@ -109,7 +173,7 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
     tnm= it;
     del= _range/tnm;
     x= _xmin + 0.5*del;
-    for(sum=0.0, j=1; j<=it; j++, x+=del) sum += evalAt(x);
+    for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(&x);
     return (_savedResult= 0.5*(_savedResult + _range*sum/tnm));
   }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.5 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.6 2001/08/02 21:39:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,6 +42,7 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooNumber.hh"
 
 ClassImp(RooLinearVar)
 
@@ -117,7 +118,7 @@ Double_t RooLinearVar::getFitMin() const
       return _offset + var.getFitMax() * _slope ;
     }
   } 
-  return -INFINITY ;
+  return -RooNumber::infinity;
 }
 
 
@@ -134,7 +135,7 @@ Double_t RooLinearVar::getFitMax() const
       return _offset + var.getFitMin() * _slope ;
     }
   } 
-  return INFINITY ;
+  return +RooNumber::infinity;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.8 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.9 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,11 +17,9 @@
 #include <math.h>
 #include <float.h>
 #include "TString.h"
-#include "RooFitCore/RooAbsReal.hh"
 
-#ifndef INFINITY
- #define INFINITY FLT_MAX
-#endif
+#include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooNumber.hh"
 
 class RooArgSet ;
 
@@ -42,11 +40,13 @@ public:
   // Get fit range limits
   virtual Double_t getFitMin() const = 0 ;
   virtual Double_t getFitMax() const = 0 ;
-  inline Bool_t hasFitMin() const { return getFitMin() != -INFINITY; }
-  inline Bool_t hasFitMax() const { return getFitMax() != +INFINITY; }
+  inline Bool_t hasFitMin() const { return !RooNumber::isInfinite(getFitMin()); }
+  inline Bool_t hasFitMax() const { return !RooNumber::isInfinite(getFitMax()); }
 
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const { return kTRUE ; }
   virtual Double_t jacobian() const { return 1 ; }
+
+  inline virtual Bool_t isLValue() const { return kTRUE; }
 
   // Test a value against our fit range
   Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;

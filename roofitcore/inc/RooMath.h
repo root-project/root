@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.1 2001/06/23 01:20:33 verkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.2 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,11 +16,14 @@
 
 #include "RooFitCore/RooComplex.hh"
 
+#include <math.h>
+
 typedef RooComplex* pRooComplex ;
 typedef Double_t* pDouble_t ;
 
 class RooMath {
 public:
+
   // CERNLIB complex error function
   static RooComplex ComplexErrFunc(Double_t re, Double_t im= 0);
   static RooComplex ComplexErrFunc(const RooComplex& z);

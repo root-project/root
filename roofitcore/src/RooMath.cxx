@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.cc,v 1.2 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooMath.cc,v 1.3 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,7 +17,7 @@
 #include <iostream.h>
 
 ClassImp(RooMath)
-
+;
 
 RooComplex RooMath::ComplexErrFunc(Double_t re, Double_t im) {
   return ComplexErrFunc(RooComplex(re,im));
