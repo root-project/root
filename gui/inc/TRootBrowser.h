@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.8 2003/10/07 19:02:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.9 2003/10/08 09:50:47 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -119,9 +119,11 @@ public:
    virtual void ShowStatusBar(Bool_t show = kTRUE);
    virtual void Show() { MapRaised(); }
    virtual void SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
-   TGListTree      *GetListTree() const { return fLt; }
-   TGFileContainer *GetIconBox() const;
+   TGListTree      *GetListTree()  const { return fLt; }
+   TGFileContainer *GetIconBox()   const;
    TGStatusBar     *GetStatusBar() const { return fStatusBar; }
+   TGMenuBar       *GetMenuBar()   const { return  fMenuBar; }
+   TGToolBar       *GetToolBar()   const { return fToolBar; }
 
    // overridden from TGMainFrame
    void     CloseWindow();

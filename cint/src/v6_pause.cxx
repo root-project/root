@@ -1344,10 +1344,6 @@ int G__update_stdio()
   return(0);
 }
 
-#ifdef G__WIN32 /*vo*/
-static HANDLE handleout;
-#endif
-
 /******************************************************************
 * G__redirectoutput
 ******************************************************************/
@@ -1473,10 +1469,6 @@ char *pipefile;
 	 *   cint> command > filename
 	 *                ^0          */
 	*redirect='\0';
-
-#ifdef G__WIN32 /*vo*/
-   handleout = GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
 
 	/* open redirect file */
 #ifdef G__REDIRECTIO
@@ -1675,9 +1667,6 @@ char *pipefile;
     G__display_keyword(G__sout,keyword,pipefile);
 #endif
   }
-#ifdef G__WIN32 /*vo*/
-  SetStdHandle(STD_OUTPUT_HANDLE, handleout);
-#endif
 }
 #endif
 
