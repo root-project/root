@@ -131,6 +131,7 @@ int G__TypeInfo::Size()
   buf.tagnum=(int)tagnum;
   buf.typenum=(int)typenum;
   buf.ref=reftype;
+  if (isupper(type)) buf.obj.reftype.reftype=reftype;
   return(G__sizeof(&buf));
 }
 ///////////////////////////////////////////////////////////////////////////
