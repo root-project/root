@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.65 2002/07/09 21:07:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.66 2002/07/16 13:59:19 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -375,7 +375,7 @@ void TFile::Init(Bool_t create)
 
       // make sure this is a root file
       if (strncmp(header, "root", 4)) {
-         Error("TFile", "%s not a ROOT file", fName.Data());
+         Error("Init", "%s not a ROOT file", GetName());
          delete [] header;
          goto zombie;
       }
@@ -400,7 +400,7 @@ void TFile::Init(Bool_t create)
         if (fSeekFree > fBEGIN) {
            ReadFree();
         } else {
-           Warning("TFile","file %s probably not closed, cannot read free segments",GetName());
+           Warning("Init","file %s probably not closed, cannot read free segments",GetName());
         }
       }
 //*-*-------------Read directory info
@@ -431,13 +431,13 @@ void TFile::Init(Bool_t create)
       fTitle.ReadBuffer(buffer);
       delete [] header;
       if (fNbytesName < 10 || fNbytesName > 1000) {
-         Error("Init","Cannot read directory info");
+         Error("Init","cannot read directory info of file %s", GetName());
          goto zombie;
       }
 //*-* -------------Check if file is truncated
       Long_t size;
       if ((size = GetSize()) == -1) {
-         Error("TFile", "cannot stat the file %s", GetName());
+         Error("Init", "cannot stat the file %s", GetName());
          goto zombie;
       }
 //*-* -------------Read keys of the top directory
@@ -447,19 +447,19 @@ void TFile::Init(Bool_t create)
          gDirectory = this;
          if (!GetNkeys()) Recover();
       } else if (fBEGIN+nbytes == fEND) {
-         Warning("TFile","Opening a file with no keys");
+         Warning("Init","file %s has no keys", GetName());
          gDirectory = this;
       } else {
          if (fEND > size) {
-            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
+            Error("Init","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
          } else {
-            Warning("TFile","file %s probably not closed, trying to recover",GetName());
+            Warning("Init","file %s probably not closed, trying to recover",GetName());
          }
          Int_t nrecov = Recover();
          if (nrecov) {
-            Warning("Recover", "successfully recovered %d keys", nrecov);
+            Warning("Init", "successfully recovered %d keys", nrecov);
          } else {
-            Warning("Recover", "no keys recovered: file is a Zombie");
+            Warning("Init", "no keys recovered, file has been made a Zombie");
             goto zombie;
          }
       }
@@ -584,7 +584,7 @@ void TFile::Delete(const char *namecycle)
 //
 
    if (gDebug)
-      Printf("TFile Deleting Name=%s",namecycle);
+      Info("Delete", "deleting name = %s", namecycle);
 
    TDirectory::Delete(namecycle);
 }
@@ -721,7 +721,8 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
    Int_t nread = maxbytes;
    if (first+maxbytes > fEND) nread = fEND-maxbytes;
    if (nread < 4) {
-      Warning("GetRecordHeader","parameter maxbytes=%d must be >= 4",nread);
+      Warning("GetRecordHeader","%s: parameter maxbytes = %d must be >= 4",
+              GetName(), nread);
       return nread;
    }
    ReadBuffer(buf,nread);
@@ -796,7 +797,8 @@ TList *TFile::GetStreamerInfoList()
    }
 
    if (list == 0) {
-      printf("Cannot find the StreamerInfo record in this file\n");
+      Info("GetStreamerInfoList", "cannot find the StreamerInfo record in file %s",
+           GetName());
       return 0;
    }
 
@@ -1095,7 +1097,7 @@ Int_t TFile::Recover()
          key->ReadBuffer(bufread);
          AppendKey(key);
          nrecov++;
-         Printf("Recovering key: %s:%s at address:%d",key->GetClassName(),key->GetName(),idcur);
+         Info("Recover", "recovered key %s:%s at address %d",key->GetClassName(),key->GetName(),idcur);
       }
       delete [] classname;
       idcur += nbytes;
@@ -1237,7 +1239,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 //
 
    if (!IsWritable()) {
-      Warning("Write", "file not opened in write mode");
+      Warning("Write", "file %s not opened in write mode", GetName());
       return 0;
    }
 
@@ -1246,9 +1248,9 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 
    if (gDebug) {
       if (!GetTitle() || strlen(GetTitle()) == 0)
-         Printf("TFile Writing Name=%s", GetName());
+         Info("Write", "writing name = %s", GetName());
       else
-         Printf("TFile Writing Name=%s Title=%s", GetName(), GetTitle());
+         Info("Write", "writing name = s title = %s", GetName(), GetTitle());
    }
 
    Int_t nbytes = TDirectory::Write(0, opt, bufsiz); // Write directory tree
@@ -1436,7 +1438,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
       // new is assumed
       // if directory already exist, print error message and return
       if (dir) {
-         Error("MakeProject","Cannot create directory:%s, already existing",dirname);
+         Error("MakeProject","cannot create directory %s, already existing",dirname);
          delete [] path;
          return;
       }
@@ -1460,7 +1462,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
       list = (TList*)Get("StreamerInfo"); //for versions 2.26 (never released)
    }
    if (list == 0) {
-      Error("MakeProject","File has no StreamerInfo");
+      Error("MakeProject","file %s has no StreamerInfo", GetName());
       delete [] path;
       return;
    }
@@ -1488,7 +1490,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 #endif
    FILE *fpMAKE = fopen(path,"w");
    if (!fpMAKE) {
-      printf("Cannot open file:%s\n",path);
+      Error("MakeProject", "cannot open file %s", path);
       delete [] path;
       return;
    }
@@ -1501,7 +1503,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    sprintf(path,"%s/LinkDef.h",dirname);
    FILE *fp = fopen(path,"w");
    if (!fp) {
-      printf("Cannot open path file:%s\n",path);
+      Error("MakeProject", "cannot open path file %s", path);
       delete [] path;
       return;
    }
@@ -1593,14 +1595,14 @@ void TFile::ReadStreamerInfo()
    }
 
    if (list == 0) return;
-   if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
+   if (gDebug > 0) Info("ReadStreamerInfo", "called for file %s",GetName());
 
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
    TIter next(list);
    while ((info = (TStreamerInfo*)next())) {
       if (info->IsA() != TStreamerInfo::Class()) {
-         Warning("ReadStreamerInfo"," not a TStreamerInfo object");
+         Warning("ReadStreamerInfo","%s: not a TStreamerInfo object", GetName());
          continue;
       }
       info->BuildCheck();
@@ -1639,7 +1641,7 @@ void TFile::WriteStreamerInfo()
    if (!fClassIndex) return;
    //no need to update the index if no new classes added to the file
    if (fClassIndex->fArray[0] == 0) return;
-   if (gDebug > 0) printf("Calling WriteStreamerInfo for file: %s\n",GetName());
+   if (gDebug > 0) Info("WriteStreamerInfo", "called for file %s",GetName());
 
    // build a temporary list with the marked files
    TIter next(gROOT->GetListOfStreamerInfo());
