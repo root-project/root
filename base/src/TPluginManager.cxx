@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.13 2002/09/17 14:38:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.14 2003/04/03 16:55:12 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -32,11 +32,14 @@
 // Where the + in front of Plugin.TSQLServer says that it extends the   //
 // existing definition of TSQLServer, usefull when there is more than   //
 // one plugin that can extend the same base class. The "<constructor>"  //
-// should be the constructor or static method that generates an         //
-// instance of the specified class. The * is a placeholder in case      //
-// there is no need for a URI to differentiate between different        //
-// plugins for the same base class. For the default plugins see         //
-// $ROOTSYS/etc/system.rootrc.                                          //
+// should be the constructor or a static method that generates an       //
+// instance of the specified class. Global methods should start with    //
+// "::" in their name, like "::CreateFitter()".                         //
+// Instead of being a shared library a plugin can also be a CINT        //
+// script, so instead of libDialog.so one can have Dialog.C.            //
+// The * is a placeholder in case there is no need for a URI to         //
+// differentiate between different plugins for the same base class.     //
+// For the default plugins see $ROOTSYS/etc/system.rootrc.              //
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
@@ -67,6 +70,7 @@
 #include "TMethodArg.h"
 #include "TDataType.h"
 #include "TMethodCall.h"
+#include "TVirtualMutex.h"
 
 ClassImp(TPluginHandler)
 ClassImp(TPluginManager)
@@ -79,13 +83,23 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
 {
    // Create a plugin handler. Called by TPluginManager.
 
-   fBase    = base;
-   fRegexp  = regexp;
-   fClass   = className;
-   fPlugin  = pluginName;
-   fCtor    = ctor;
-   fCallEnv = 0;
-   fCanCall = 0;
+   fBase     = base;
+   fRegexp   = regexp;
+   fClass    = className;
+   fPlugin   = pluginName;
+   fCtor     = ctor;
+   fCallEnv  = 0;
+   fCanCall  = 0;
+   fIsMacro  = kFALSE;
+   fIsGlobal = kFALSE;
+
+   if (gROOT->LoadMacro(pluginName, 0, kTRUE) == 0)
+      fIsMacro = kTRUE;
+
+   if (fCtor.Contains("::")) {
+      fIsGlobal = kTRUE;
+      fCtor = fCtor.Strip(TString::kLeading, ':');
+   }
 }
 
 //______________________________________________________________________________
@@ -139,15 +153,27 @@ void TPluginHandler::SetupCallEnv()
    TString method = fCtor(0, fCtor.Index("("));
    TString proto  = fCtor(fCtor.Index("(")+1, fCtor.Index(")")-fCtor.Index("(")-1);
 
-   fMethod = cl->GetMethodWithPrototype(method, proto);
+   if (fIsGlobal) {
+      cl = 0;
+      if (fIsMacro)
+         fMethod = gROOT->GetGlobalFunction(method, 0, kTRUE);  // to be fixed
+      else
+         fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
+   } else {
+      if (fIsMacro)
+         fMethod = cl->GetMethodAny(method);  //to be fixed to use prototype
+      else
+         fMethod = cl->GetMethodWithPrototype(method, proto);
+   }
+
    if (!fMethod) {
       Error("SetupCallEnv", "method %s not found in class %s", method.Data(),
             fClass.Data());
       return;
    }
 
-   if (!(fMethod->Property() & kIsPublic)) {
-      Error("SetupCallEnv", "method %s in not public", method.Data());
+   if (!fIsGlobal && !(fMethod->Property() & kIsPublic)) {
+      Error("SetupCallEnv", "method %s is not public", method.Data());
       return;
    }
 
@@ -162,10 +188,14 @@ void TPluginHandler::SetupCallEnv()
 //______________________________________________________________________________
 Int_t TPluginHandler::CheckPlugin()
 {
-   // Check if the plugin library for this handler exits. Returns 0 on
-   // when it exists and -1 in case the library does not exist.
+   // Check if the plugin library for this handler exits. Returns 0
+   // when it exists and -1 in case the plugin does not exist.
 
-   return gROOT->LoadClass(fClass, fPlugin, kTRUE);
+   if (fIsMacro) {
+      if (gROOT->GetClass(fClass)) return 0;
+      return gROOT->LoadMacro(fPlugin, 0, kTRUE);
+   } else
+      return gROOT->LoadClass(fClass, fPlugin, kTRUE);
 }
 
 //______________________________________________________________________________
@@ -174,7 +204,11 @@ Int_t TPluginHandler::LoadPlugin()
    // Load the plugin library for this handler. Returns 0 on successful loading
    // and -1 in case the library does not exist or in case of error.
 
-   return gROOT->LoadClass(fClass, fPlugin);
+   if (fIsMacro) {
+      if (gROOT->GetClass(fClass)) return 0;
+      return gROOT->LoadMacro(fPlugin);
+   } else
+      return gROOT->LoadClass(fClass, fPlugin);
 }
 
 //______________________________________________________________________________
@@ -253,6 +287,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       fCallEnv->SetParamPtrs(args, nargs);
    }
 
+   R__LOCKGUARD(gCINTMutex);
    Long_t ret;
    fCallEnv->Execute(ret);
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.87 2002/12/10 19:51:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.88 2003/01/13 16:46:29 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -314,13 +314,13 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize Operating System interface
    InitSystem();
 
-   // initialize plugin manager early
-   fPluginManager->LoadHandlersFromEnv(gEnv);
-
    // Initialize interface to CINT C++ interpreter
    fVersionInt  = 0;  // check in TROOT dtor in case TCint fails
    fClasses     = 0;  // might be checked via TCint ctor
    fInterpreter = new TCint("C/C++", "CINT C/C++ Interpreter");
+
+   // initialize plugin manager early
+   fPluginManager->LoadHandlersFromEnv(gEnv);
 
    // Add the root include directory to list searched by default by
    // the interpreter (should this be here or somewhere else?)
@@ -1292,13 +1292,24 @@ void TROOT::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TROOT::LoadMacro(const char *filename, int *error)
+Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
 {
    // Load a macro in the interpreter's memory. Equivalent to the command line
    // command ".L filename". If the filename has "+" or "++" appended
    // the macro will be compiled by ACLiC. The filename must have the format:
    // [path/]macro.C[+|++[g|O]].
    // The possible error codes are defined by TInterpreter::EErrorCode.
+   // If check is true it will only check if filename exists and is
+   // readable.
+   // Returns 0 on successful loading and -1 in case filename does not
+   // exist or in case of error.
+
+   Int_t err = -1;
+   Int_t lerr, *terr;
+   if (error)
+      terr = error;
+   else
+      terr = &lerr;
 
    if (fInterpreter) {
       TString aclicMode;
@@ -1311,17 +1322,25 @@ void TROOT::LoadMacro(const char *filename, int *error)
       }
       char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
       if (!mac) {
-         Error("LoadMacro", "macro %s not found in path %s", fname.Data(), GetMacroPath());
-         if (error)
-            *error = TInterpreter::kFatal;
+         if (!check)
+            Error("LoadMacro", "macro %s not found in path %s", fname.Data(), GetMacroPath());
+         *terr = TInterpreter::kFatal;
       } else {
-         fname = mac;
-         fname += aclicMode;
-         fname += io;
-         fInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)error);
+         err = 0;
+         if (!check) {
+            fname = mac;
+            fname += aclicMode;
+            fname += io;
+            fInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
+            if (*terr)
+               err = -1;
+            //else   // maybe not needed (RDM)
+            //   GetListOfTypes(kTRUE);
+         }
       }
       delete [] mac;
    }
+   return err;
 }
 
 //______________________________________________________________________________
@@ -1351,8 +1370,7 @@ Int_t TROOT::Macro(const char *filename, int *error)
          fname += aclicMode;
          fname += arguments;
          fname += io;
-         result = fInterpreter->ExecuteMacro(fname,
-                                             (TInterpreter::EErrorCode*)error);
+         result = fInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
       }
       delete [] mac;
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.3 2002/07/16 13:57:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.4 2002/07/18 14:12:35 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -36,11 +36,14 @@
 // Where the + in front of Plugin.TSQLServer says that it extends the   //
 // existing definition of TSQLServer, usefull when there is more than   //
 // one plugin that can extend the same base class. The "<constructor>"  //
-// should be the constructor or static method that generates an         //
-// instance of the specified class. The * is a placeholder in case      //
-// there is no need for a URI to differentiate between different        //
-// plugins for the same base class. For the default plugins see         //
-// $ROOTSYS/etc/system.rootrc.                                          //
+// should be the constructor or a static method that generates an       //
+// instance of the specified class. Global methods should start with    //
+// "::" in their name, like "::CreateFitter()".                         //
+// Instead of being a shared library a plugin can also be a CINT        //
+// script, so instead of libDialog.so one can have Dialog.C.            //
+// The * is a placeholder in case there is no need for a URI to         //
+// differentiate between different plugins for the same base class.     //
+// For the default plugins see $ROOTSYS/etc/system.rootrc.              //
 //                                                                      //
 // Plugin handlers can also be registered at run time, e.g.:            //
 //                                                                      //
@@ -68,6 +71,7 @@
 
 class TEnv;
 class TList;
+class TFunction;
 class TMethodCall;
 class TPluginManager;
 
@@ -83,8 +87,10 @@ private:
    TString      fPlugin;    // plugin library which should contain fClass
    TString      fCtor;      // ctor used to instantiate object of fClass
    TMethodCall *fCallEnv;   //!ctor method call environment
-   TMethod     *fMethod;    //!ctor method
+   TFunction   *fMethod;    //!ctor method or global function
    Int_t        fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok
+   Bool_t       fIsMacro;   // plugin is a macro and not a library
+   Bool_t       fIsGlobal;  // plugin ctor is a global function
 
    TPluginHandler() { fCallEnv = 0; fCanCall = 0; }
    TPluginHandler(const char *base, const char *regexp,
@@ -107,7 +113,7 @@ public:
    Int_t       LoadPlugin();
    Long_t      ExecPlugin(Int_t nargs, ...);
 
-   ClassDef(TPluginHandler,1)  // Handler for plugin libraries
+   ClassDef(TPluginHandler,2)  // Handler for plugin libraries
 };
 
 

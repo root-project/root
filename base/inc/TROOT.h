@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.29 2002/07/27 13:41:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.30 2002/09/16 00:01:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -195,7 +195,7 @@ public:
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
-   void              LoadMacro(const char *filename, Int_t *error = 0);
+   Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
    Int_t             Macro(const char *filename, Int_t *error = 0);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
