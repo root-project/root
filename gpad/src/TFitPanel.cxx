@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.2 2001/01/19 17:28:00 brun Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -161,6 +161,7 @@ TFitPanel::TFitPanel(const char *name, const char *title, UInt_t ww, UInt_t wh)
 
    Modified(kTRUE);
    Update();
+   SetEditable(kFALSE);
 
    fRefPad->cd();
 }
