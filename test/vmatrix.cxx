@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.13 2002/09/09 05:37:26 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.14 2002/10/23 20:47:47 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -13,6 +13,7 @@
 #include <float.h>
 
 #include "Riostream.h"
+#include "TROOT.h"
 #include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
@@ -937,6 +938,7 @@ void test_matrix_io()
 int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
+   gROOT->SetBatch();
    TApplication app("vmatrix", &argc, argv, 0, 0);
 
    cout<< "\n\n" <<

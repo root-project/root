@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.12 2002/07/23 09:42:01 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.13 2002/10/23 20:47:47 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,6 +9,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TROOT.h"
 #include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
@@ -557,6 +558,7 @@ void test_vector_io()
 int main(int argc, char **argv)
 {
    // Make sure all registered dictionaries have been initialized
+   gROOT->SetBatch();
    TApplication app("vvector", &argc, argv);
 
    cout<< "\n\n" <<
