@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.46 2005/01/18 21:04:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.48 2005/03/20 19:35:50 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -110,7 +110,9 @@ private:
    Long_t             fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    TStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+#if !defined(__CINT__)
    std::list<TClassRef*> *fRefs;        //!List of references to this object
+#endif
 
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *GetClassMethod(const char *name, const char *signature);
