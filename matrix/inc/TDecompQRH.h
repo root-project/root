@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.h,v 1.2 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -34,7 +34,7 @@ protected :
 
   static Bool_t QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol);
 
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fR; }
+  virtual const TMatrixD &GetDecompMatrix() const { return fR; }
 
 public :
 
@@ -50,12 +50,14 @@ public :
   virtual const TVectorD &GetUp    () const { return fUp; }
   virtual const TVectorD &GetW     () const { return fW; }
 
-  virtual Int_t  Decompose (const TMatrixDBase &a);
-  virtual Bool_t Solve     (TVectorD &b);
-  virtual Bool_t Solve     (TMatrixDColumn &b);
-  virtual Bool_t TransSolve(TVectorD &b);
-  virtual Bool_t TransSolve(TMatrixDColumn &b);
-  virtual void   Det       (Double_t &d1,Double_t &d2);
+  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Bool_t   Solve      (      TVectorD &b);
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   Solve      (      TMatrixDColumn &b);
+  virtual Bool_t   TransSolve (      TVectorD &b);
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   TransSolve (      TMatrixDColumn &b);
+  virtual void     Det        (Double_t &d1,Double_t &d2);
 
   TDecompQRH &operator= (const TDecompQRH &source);
 

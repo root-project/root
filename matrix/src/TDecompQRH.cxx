@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompQRH.cxx,v 1.3 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -178,30 +178,44 @@ Bool_t TDecompQRH::Solve(TVectorD &b)
 }
 
 //______________________________________________________________________________
+TVectorD TDecompQRH::Solve(const TVectorD &b,Bool_t &ok)
+{    
+// Solve A x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+// has *not* been transformed.  
+    
+  TVectorD x = b; 
+  ok = Solve(x);
+  if (GetNrows() != GetNcols())
+    x.ResizeTo(GetNcols());
+      
+  return x;
+}
+
+//______________________________________________________________________________
 Bool_t TDecompQRH::Solve(TMatrixDColumn &cb)
-{
+{ 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
   Assert(fStatus & kDecomposed);
 
   if (fQ.GetNrows() != b->GetNrows() || fQ.GetRowLwb() != b->GetRowLwb())
-  { 
+  {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE; 
-  }     
-
+  }
+  
   const Int_t nQRow = fQ.GetNrows();
   const Int_t nQCol = fQ.GetNcols();
-
+    
   // Calculate  Q^T.b
   const Int_t nQ = (nQRow <= nQCol) ? nQRow-1 : nQCol;
   for (Int_t k = 0; k < nQ; k++) {
     const TVectorD qc_k = TMatrixDColumn_const(fQ,k);
     ApplyHouseHolder(qc_k,fUp(k),fW(k),k,k+1,cb);
-  }
-
+  }   
+    
   const Int_t nRCol = fR.GetNcols();
-
+  
   const Double_t *pR  = fR.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
   const Int_t     inc = cb.GetInc();
@@ -278,6 +292,18 @@ Bool_t TDecompQRH::TransSolve(TVectorD &b)
 }
 
 //______________________________________________________________________________
+TVectorD TDecompQRH::TransSolve(const TVectorD &b,Bool_t &ok)
+{   
+// Solve A^T x=b assuming the QR form of A is stored in fR,fQ and fW, but assume b
+// has *not* been transformed.
+
+  TVectorD x = b;
+  ok = TransSolve(x);
+
+  return x;
+}
+
+//______________________________________________________________________________
 Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
@@ -288,18 +314,18 @@ Bool_t TDecompQRH::TransSolve(TMatrixDColumn &cb)
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
     return kFALSE;
   }
-
-  if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {   
+  
+  if (fR.GetNrows() != b->GetNrows() || fR.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE;
-  } 
-
+  }
+  
   const Double_t *pR  = fR.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
   const Int_t     inc = cb.GetInc();
-
+  
   const Int_t nRCol = fR.GetNcols();
-
+  
   // Backward substitution
   for (Int_t i = 0; i < nRCol; i++) {
     const Int_t off_i  = i*nRCol;

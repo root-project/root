@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.3 2004/01/28 07:39:18 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.4 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -182,20 +182,32 @@ Bool_t TDecompLU::Solve(TVectorD &b)
 }
 
 //______________________________________________________________________________
-Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
+TVectorD TDecompLU::Solve(const TVectorD &b,Bool_t &ok)
 {
 // Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
-// been transformed.  Solution returned in b.
+// been transformed.
 
+  TVectorD x = b;
+  ok = Solve(x);
+
+  return x;
+}
+
+//______________________________________________________________________________
+Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
+{ 
+// Solve Ax=b assuming the LU form of A is stored in fLU, but assume b has *not*
+// been transformed.  Solution returned in b.
+    
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
   Assert(fStatus & kDecomposed);
-
-  if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) { 
+    
+  if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE; 
-  }
-
+  }   
+    
   const Int_t     n   = fLU.GetNrows();
   const Double_t *pLU = fLU.GetMatrixArray();
 
@@ -242,6 +254,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 
   return kTRUE;
 }
+
 
 //______________________________________________________________________________
 Bool_t TDecompLU::TransSolve(TVectorD &b)
@@ -305,6 +318,18 @@ Bool_t TDecompLU::TransSolve(TVectorD &b)
 }
 
 //______________________________________________________________________________
+TVectorD TDecompLU::TransSolve(const TVectorD &b,Bool_t &ok)
+{
+// Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
+// been transformed.
+
+  TVectorD x = b;
+  ok = TransSolve(x);
+
+  return x;
+}
+
+//______________________________________________________________________________
 Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 {
 // Solve A^T x=b assuming the LU form of A^T is stored in fLU, but assume b has *not*
@@ -314,10 +339,10 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
   Assert(b->IsValid());
   Assert(fStatus & kDecomposed);
 
-  if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) { 
+  if (fLU.GetNrows() != b->GetNrows() || fLU.GetRowLwb() != b->GetRowLwb()) {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
-    return kFALSE; 
-  }   
+    return kFALSE;
+  }
 
   const Int_t n   = fLU.GetNrows();
   const Int_t lwb = fLU.GetRowLwb();

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.cxx,v 1.3 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -86,6 +86,7 @@ Int_t TDecompChol::Decompose(const TMatrixDBase &a)
       if (irow == icol)
       {
         if (pU[rowOff+irow] <= 0) {
+          Error("Decompose(const TMatrixDBase &","matrix not positive definite");
           fU.Invalidate();
           return kFALSE;
         }
@@ -112,8 +113,8 @@ const TMatrixD TDecompChol::GetMatrix() const
 Bool_t TDecompChol::Solve(TVectorD &b)
 {
 // Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
-// assumed to be in upper triang of fU. The real fTol is used to determine if
-// diagonal element is zero. The solution is returned in b.
+// assumed to be in upper triang of fU. fTol is used to determine if diagonal
+// element is zero. The solution is returned in b.
 
   Assert(b.IsValid());
   Assert(fStatus & kDecomposed);
@@ -127,83 +128,96 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 
   const Int_t n = fU.GetNrows();
 
-  const Double_t *pA = fU.GetMatrixArray();
+  const Double_t *pU = fU.GetMatrixArray();
         Double_t *pb = b.GetMatrixArray();
 
   Int_t i;
-  // step 1: Forward substitution
-  for (i = n-1; i >= 0; i--) {
+  // step 1: Forward substitution on U^T
+  for (i = 0; i < n; i++) {
     const Int_t off_i = i*n;
-    if (pA[off_i+i] < fTol)
+    if (pU[off_i+i] < fTol)
     {
-      Error("Solve(TVectorD &b)","u[%d,%d]=%.4e < %.4e",i,i,pA[off_i+i],fTol);
+      Error("Solve(TVectorD &b)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
       return kFALSE;
     }
     Double_t r = pb[i];
-    for (Int_t j = n-1; j >= i; j--) {
+    for (Int_t j = 0; j < i; j++) {
       const Int_t off_j = j*n;
-      r -= pA[off_j+i]*pb[j];
+      r -= pU[off_j+i]*pb[j];
     }
-    pb[i] = r/pA[off_i+i];
+    pb[i] = r/pU[off_i+i];
   }
 
- // step 2: Backward substitution
-  for (i = 0; i < n; i++) {
+ // step 2: Backward substitution on U
+  for (i = n-1; i >= 0; i--) {
     const Int_t off_i = i*n;
     Double_t r = pb[i];
-    for (Int_t j = 0; j < i-1; j++)
-      r -= pA[off_i+j]*pb[j];
-    pb[i] = r/pA[off_i+i];
+    for (Int_t j = i+1; j < n; j++)
+      r -= pU[off_i+j]*pb[j];
+    pb[i] = r/pU[off_i+i];
   }
 
   return kTRUE;
 }
 
 //______________________________________________________________________________
+TVectorD TDecompChol::Solve(const TVectorD &b,Bool_t &ok)
+{    
+// Solve equations Ax=b assuming A has been factored by Cholesky. The factor U is
+// assumed to be in upper triang of fU. fTol is used to determine if diagonal
+// element is zero.
+    
+  TVectorD x = b; 
+  ok = Solve(x);
+      
+  return x;
+}
+
+//______________________________________________________________________________
 Bool_t TDecompChol::Solve(TMatrixDColumn &cb)
-{
+{ 
   const TMatrixDBase *b = cb.GetMatrix();
   Assert(b->IsValid());
   Assert(fStatus & kDecomposed);
-
+      
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
-  {
+  { 
     Error("Solve(TMatrixDColumn &cb","vector and matrix incompatible");
-    return kFALSE;
+    return kFALSE; 
   }
-
+      
   const Int_t n = fU.GetNrows();
-
-  const Double_t *pA  = fU.GetMatrixArray();
+    
+  const Double_t *pU  = fU.GetMatrixArray();
         Double_t *pcb = cb.GetPtr();
-  const Int_t     inc = cb.GetInc();
-
+  const Int_t     inc = cb.GetInc(); 
+  
   Int_t i;
-  // step 1: Forward substitution
-  for (i = n-1; i >= 0; i--) {
+  // step 1: Forward substitution U^T
+  for (i = 0; i < n; i++) { 
     const Int_t off_i  = i*n;
     const Int_t off_i2 = i*inc;
-    if (pA[off_i+i] < fTol)
+    if (pU[off_i+i] < fTol)
     {
-      Error("Solve(TMatrixDColumn &cb)","u[%d,%d]=%.4e < %.4e",i,i,pA[off_i+i],fTol);
+      Error("Solve(TMatrixDColumn &cb)","u[%d,%d]=%.4e < %.4e",i,i,pU[off_i+i],fTol);
       return kFALSE;
     }
     Double_t r = pcb[off_i2];
-    for (Int_t j = n-1; j >= i; j--) {
+    for (Int_t j = 0; j < i; j++) {
       const Int_t off_j = j*n;
-      r -= pA[off_j+i]*pcb[j*inc];
+      r -= pU[off_j+i]*pcb[j*inc];
     }
-    pcb[off_i2] = r/pA[off_i+i];
+    pcb[off_i2] = r/pU[off_i+i];
   }
- 
-  // step 2: Backward substitution
-  for (i = 0; i < n; i++) {
+
+  // step 2: Backward substitution U
+  for (i = n-1; i >= 0; i--) {
     const Int_t off_i  = i*n;
     const Int_t off_i2 = i*inc;
     Double_t r = pcb[off_i2];
-    for (Int_t j = 0; j < i-1; j++)
-      r -= pA[off_i+j]*pcb[j*inc];
-    pcb[off_i2] = r/pA[off_i+i];
+    for (Int_t j = i+1; j < n; j++)
+      r -= pU[off_i+j]*pcb[j*inc];
+    pcb[off_i2] = r/pU[off_i+i];
   }
 
   return kTRUE;
@@ -243,27 +257,77 @@ TDecompChol &TDecompChol::operator=(const TDecompChol &source)
 //______________________________________________________________________________
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b)
 {
-  // Solve A . x = b for vector x where
+  // Solve min {(A . x - b)^T (A . x - b)} for vector x where
   //   A : (m x n) matrix, m >= n
   //   b : (m)     vector
   //   x : (n)     vector
 
-  TDecompChol ch(TMatrixD(TMatrixDBase::kAtA,A));
-  TVectorD x = TMatrixD(TMatrixDBase::kTransposed,A)*b;
-  ch.Solve(x);
-  return x;
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
+  Bool_t ok;
+  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,A)*b,ok);
+}
+
+//______________________________________________________________________________
+TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std)
+{
+  // Solve min {(A . x - b)^T W (A . x - b)} for vector x where
+  //   A : (m x n) matrix, m >= n
+  //   b : (m)     vector
+  //   x : (n)     vector
+  //   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
+  //                                         = 0           fir i != j
+
+  if (!AreCompatible(b,std)) {
+    ::Error("NormalEqn","vectors b and std are not compatible");
+    return TVectorD();
+  }
+
+  TMatrixD Aw = A;
+  TVectorD bw = b;
+  for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
+    TMatrixDRow(Aw,irow) *= 1/std(irow);
+    bw(irow) /= std(irow);
+  }
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,Aw));
+  Bool_t ok;
+  return ch.Solve(TMatrixD(TMatrixDBase::kTransposed,Aw)*bw,ok);
 }
 
 //______________________________________________________________________________
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B)
 {
-  // Solve A . x = B for matrix x where
+  // Solve min {(A . X_j - B_j)^T (A . X_j - B_j)} for each column j in
+  // B and X
   //   A : (m x n ) matrix, m >= n
   //   B : (m x nb) matrix, nb >= 1
-  //   x : (n x nb) matrix
+  //   X : (n x nb) matrix
 
   TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,A));
   TMatrixD X(A,TMatrixDBase::kTransposeMult,B);
+  ch.MultiSolve(X);
+  return X;
+}
+
+//______________________________________________________________________________
+TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std)
+{
+  // Solve min {(A . X_j - B_j)^T W (A . X_j - B_j)} for each column j in
+  // B and X
+  //   A : (m x n ) matrix, m >= n
+  //   B : (m x nb) matrix, nb >= 1
+  //   X : (n x nb) matrix
+  //   W : (m x m) weight matrix with W(i,j) = 1/std(i)^2  for i == j
+  //                                         = 0           fir i != j
+
+  TMatrixD Aw = A;
+  TMatrixD Bw = B;
+  for (Int_t irow = 0; irow < A.GetNrows(); irow++) {
+    TMatrixDRow(Aw,irow) *= 1/std(irow);
+    TMatrixDRow(Bw,irow) *= 1/std(irow);
+  }
+
+  TDecompChol ch(TMatrixDSym(TMatrixDBase::kAtA,Aw));
+  TMatrixD X(Aw,TMatrixDBase::kTransposeMult,Bw);
   ch.MultiSolve(X);
   return X;
 }

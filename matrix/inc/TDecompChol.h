@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompChol.h,v 1.2 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -28,7 +28,7 @@ protected :
 
   TMatrixD fU; // decomposed matrix fU so that a = fU^T fU
 
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
+  virtual const TMatrixD &GetDecompMatrix() const { return fU; }
 
 public :
 
@@ -43,12 +43,14 @@ public :
   virtual       Int_t     GetNcols  () const { return fU.GetNcols(); }
           const TMatrixD &GetU      () const { return fU; }
 
-  virtual Int_t  Decompose (const TMatrixDBase &a);
-  virtual Bool_t Solve     (TVectorD &b);
-  virtual Bool_t Solve     (TMatrixDColumn &b);
-  virtual Bool_t TransSolve(TVectorD &b)       { return Solve(b); }
-  virtual Bool_t TransSolve(TMatrixDColumn &b) { return Solve(b); }
-  virtual void   Det       (Double_t &d1,Double_t &d2);
+  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Bool_t   Solve      (      TVectorD &b);
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   Solve      (      TMatrixDColumn &b);
+  virtual Bool_t   TransSolve (      TVectorD &b)            { return Solve(b); }
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
+  virtual Bool_t   TransSolve (      TMatrixDColumn &b)      { return Solve(b); }
+  virtual void     Det        (Double_t &d1,Double_t &d2);
 
   TDecompChol &operator= (const TDecompChol &source);
 
@@ -56,6 +58,8 @@ public :
 };
 
 TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b);
+TVectorD NormalEqn(const TMatrixD &A,const TVectorD &b,const TVectorD &std);
 TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &b);
+TMatrixD NormalEqn(const TMatrixD &A,const TMatrixD &B,const TVectorD &std);
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.h,v 1.2 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected :
   static void   Diag_3       (TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l);
   static void   SortSingular (TMatrixD &v,TMatrixD &u,TVectorD &sDiag);
 
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
+  virtual const TMatrixD &GetDecompMatrix() const { return fU; }
 
 public :
 
@@ -54,13 +54,15 @@ public :
           const TMatrixD &GetV      () const { return fV; }
           const TVectorD &GetSig    () const { return fSig; }
 
-  virtual Int_t    Decompose   (const TMatrixDBase &a);
-  virtual Bool_t   Solve       (TVectorD &b);
-  virtual Bool_t   Solve       (TMatrixDColumn &b);
-  virtual Bool_t   TransSolve  (TVectorD &b);
-  virtual Bool_t   TransSolve  (TMatrixDColumn &b);
-  virtual Double_t Condition   ();
-  virtual void     Det         (Double_t &d1,Double_t &d2);
+  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Bool_t   Solve      (      TVectorD &b);
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   Solve      (      TMatrixDColumn &b);
+  virtual Bool_t   TransSolve (      TVectorD &b);
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   TransSolve (      TMatrixDColumn &b);
+  virtual Double_t Condition  ();
+  virtual void     Det        (Double_t &d1,Double_t &d2);
 
   TDecompSVD &operator= (const TDecompSVD &source);
 

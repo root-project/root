@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.cxx,v 1.5 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -157,7 +157,7 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 // This routine uses Hager's Convex Optimisation Algorithm.
 // See Applied Numerical Linear Algebra, p139 & SIAM J Sci Stat Comp 1984 pp 311-16
 
-  const TMatrixDBase &m = GetDecompMatrix();
+  const TMatrixD &m = GetDecompMatrix();
   Assert(m.IsValid());
 
   const Int_t n = m.GetNrows();
@@ -261,11 +261,11 @@ Double_t TDecompBase::Condition()
 }
 
 //______________________________________________________________________________
-Bool_t TDecompBase::MultiSolve(TMatrixDBase &B)
+Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 {
 // Solve set of equations with RHS in columns of B
 
-  const TMatrixDBase &m = GetDecompMatrix();
+  const TMatrixD &m = GetDecompMatrix();
   Assert(m.IsValid() && B.IsValid());
 
   const Int_t colLwb = B.GetColLwb();
@@ -283,9 +283,9 @@ Bool_t TDecompBase::MultiSolve(TMatrixDBase &B)
 }
 
 //______________________________________________________________________________
-void TDecompBase::Invert(TMatrixDBase &inv)
+void TDecompBase::Invert(TMatrixD &inv)
 {
-  // For a matrix A(m,n) the inverse is so that A * A_inv = A_inv * A = unit
+  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
   // The user should always supply a matrix of size (m x m) !
   // If m > n , only the (n x m) part of the returned (pseudo inverse) matrix
   // should be used .
@@ -302,6 +302,20 @@ void TDecompBase::Invert(TMatrixDBase &inv)
 }
 
 //______________________________________________________________________________
+TMatrixD TDecompBase::Invert()
+{   
+  // For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
+  // (n x m) Ainv is returned . 
+
+  TMatrixD inv(GetNrows(),GetNrows());
+  inv.UnitMatrix();
+  MultiSolve(inv);
+  inv.ResizeTo(GetNcols(),GetNrows());
+
+  return inv;
+}
+
+//______________________________________________________________________________
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
   if ( !(fStatus & kDetermined) ) {
@@ -309,7 +323,7 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
       fDet1 = 0.0;
       fDet2 = 0.0;
     } else {
-      const TMatrixDBase &m = GetDecompMatrix();
+      const TMatrixD &m = GetDecompMatrix();
       Assert(m.IsValid());
       const TVectorD diagv = TMatrixDDiag_const(m);
       DiagProd(diagv,fTol,fDet1,fDet2);

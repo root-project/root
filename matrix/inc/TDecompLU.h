@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.2 2004/01/28 07:39:18 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.3 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -32,7 +32,7 @@ protected :
   TMatrixD  fLU;        // decomposed matrix so that a = l u where
                         // l is stored lower left and u upper right side
 
-  virtual const TMatrixDBase &GetDecompMatrix() const { return fLU; }
+  virtual const TMatrixD &GetDecompMatrix() const { return fLU; }
 
 public :
 
@@ -46,11 +46,14 @@ public :
   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
           const TMatrixD &GetLU     () const { return fLU; }
 
-  virtual Int_t    Decompose (const TMatrixDBase &a);
-  virtual Bool_t   Solve     (TVectorD &b);
-  virtual Bool_t   Solve     (TMatrixDColumn &b);
-  virtual Bool_t   TransSolve(TVectorD &b);
-  virtual Bool_t   TransSolve(TMatrixDColumn &b);
+  virtual Int_t    Decompose  (const TMatrixDBase &a);
+  virtual Bool_t   Solve      (      TVectorD &b);
+  virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   Solve      (      TMatrixDColumn &b);
+  virtual Bool_t   TransSolve (      TVectorD &b);
+  virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok);
+  virtual Bool_t   TransSolve (      TMatrixDColumn &b);
+
   virtual Double_t Condition ();
   virtual void     Det       (Double_t &d1,Double_t &d2);
 

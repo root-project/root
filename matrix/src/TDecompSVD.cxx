@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.5 2004/01/29 16:08:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.6 2004/02/03 16:50:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -502,7 +502,7 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
   const Double_t threshold = fSig(0)*fTol;
 
   TVectorD tmp(lwb,upb);
-  for (Int_t irow = lwb; irow < upb; irow++) {
+  for (Int_t irow = lwb; irow <= upb; irow++) {
     Double_t r = 0.0;
     if (fSig(irow-lwb) > threshold) {
       const TVectorD uc_i = TMatrixDColumn(fU,irow);
@@ -523,29 +523,45 @@ Bool_t TDecompSVD::Solve(TVectorD &b)
 }
 
 //______________________________________________________________________________
-Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
-{
-  const TMatrixDBase *b = cb.GetMatrix();
-  Assert(b->IsValid());
-  Assert(fStatus & kDecomposed);
+TVectorD TDecompSVD::Solve(const TVectorD &b,Bool_t &ok)
+{    
+// Solve Ax=b assuming the SVD form of A is stored .
+// If A is of size (m x n), the solution will be of size (n) .
+//
+// For m > n , x  is the least-squares solution of min(A . x - b)
+    
+  TVectorD x = b; 
+  ok = Solve(x);
+  if (GetNrows() != GetNcols())
+    x.ResizeTo(GetNcols());
+     
+  return x;
+}   
 
+//______________________________________________________________________________
+Bool_t TDecompSVD::Solve(TMatrixDColumn &cb)
+{ 
+  const TMatrixDBase *b = cb.GetMatrix();
+  Assert(b->IsValid());    
+  Assert(fStatus & kDecomposed);
+  
   if (fU.GetNrows() != b->GetNrows() || fU.GetRowLwb() != b->GetRowLwb())
   { 
     Error("Solve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE; 
   }     
-
+      
   // We start with fU fSig fV^T x = b, and turn it into  fV^T x = fSig^-1 fU^T b
   // Form tmp = fSig^-1 fU^T b but ignore diagonal elements in
   // fSig(i) < fTol * max(fSig)
-
+    
   const Int_t    lwb       = fU.GetColLwb();
   const Int_t    upb       = lwb+fV.GetNcols()-1;
   const Double_t threshold = fSig(0)*fTol;
-
+      
   TVectorD tmp(lwb,upb);
   const TVectorD vb = cb;
-  for (Int_t irow = lwb; irow < upb; irow++) {
+  for (Int_t irow = lwb; irow <= upb; irow++) {
     Double_t r = 0.0;
     if (fSig(irow-lwb) > threshold) {
       const TVectorD uc_i = TMatrixDColumn(fU,irow);
@@ -610,6 +626,17 @@ Bool_t TDecompSVD::TransSolve(TVectorD &b)
 }
 
 //______________________________________________________________________________
+TVectorD TDecompSVD::TransSolve(const TVectorD &b,Bool_t &ok)
+{ 
+// Solve A^T x=b assuming the SVD form of A is stored .
+
+  TVectorD x = b;
+  ok = TransSolve(x);
+
+  return x;
+}  
+
+//______________________________________________________________________________
 Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
 {
   const TMatrixDBase *b = cb.GetMatrix();
@@ -619,21 +646,21 @@ Bool_t TDecompSVD::TransSolve(TMatrixDColumn &cb)
   if (fU.GetNcols() != fU.GetNrows()) {
     Error("TransSolve(TMatrixDColumn &","matrix should be square");
     return kFALSE;
-  } 
-
+  }
+  
   if (fV.GetNrows() != b->GetNrows() || fV.GetRowLwb() != b->GetRowLwb())
-  {   
+  {
     Error("TransSolve(TMatrixDColumn &","vector and matrix incompatible");
     return kFALSE;
   } 
-
+    
   // We start with fV fSig fU^T x = b, and turn it into  fU^T x = fSig^-1 fV^T b
   // Form tmp = fSig^-1 fV^T b but ignore diagonal elements in
   // fSig(i) < fTol * max(fSig)
-
+    
   const Int_t    nCol_v    = fV.GetNcols();
   const Double_t threshold = fSig(0)*fTol;
-
+  
   const TVectorD vb = cb;
   TVectorD tmp(nCol_v);
   for (Int_t i = 0; i < nCol_v; i++) {

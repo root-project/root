@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.9 2004/01/25 20:33:32 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.10 2004/01/25 23:28:44 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -166,5 +166,10 @@
 #pragma link C++ function VerifyVectorIdentity(const TVectorD     &,const TVectorD     &,Int_t,Double_t);
 #pragma link C++ function VerifyMatrixValue   (const TMatrixDBase &,Double_t            ,Int_t,Double_t);
 #pragma link C++ function VerifyMatrixIdentity(const TMatrixDBase &,const TMatrixDBase &,Int_t,Double_t);
+
+#pragma link C++ function NormalEqn (const TMatrixD &,const TVectorD &                 );
+#pragma link C++ function NormalEqn (const TMatrixD &,const TVectorD &,const TVectorD &);
+#pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &                 );
+#pragma link C++ function NormalEqn (const TMatrixD &,const TMatrixD &,const TVectorD &);
 
 #endif
