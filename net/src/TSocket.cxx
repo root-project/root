@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.2 2000/06/28 15:27:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.3 2000/08/21 10:37:30 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -349,7 +349,7 @@ Int_t TSocket::Recv(char *str, Int_t max)
 Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
 {
    // Receive a character string message of maximum max length. Returns in
-   // kind the message type. Returns length of received string (can be 0 if
+   // kind the message type. Returns length of received string+4 (can be 0 if
    // other side of connection is closed) or -1 in case of error or -4 in
    // case a non-blocking socket would block (i.e. there is nothing to be read).
 
@@ -368,7 +368,7 @@ Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
    }
    delete mess;
 
-   return n - sizeof(Int_t);   // number of bytes read - TMessage::What()
+   return n;   // number of bytes read (len of str + sizeof(kind)
 }
 
 //______________________________________________________________________________
