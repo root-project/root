@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.2 2000/06/13 11:27:04 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -125,11 +125,13 @@ void TGroupButton::ExecuteAction()
          TBox *pl = (TBox*)obj;
          dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
          sprintf(params,"%f",dy/(pl->GetY2() - pl->GetY1()));
+         obj->Execute("SetTextSize",params);
       } else {
-         dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-         sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
+         //dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
+         //sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
+         sprintf(params,"%d",npixels);
+         obj->Execute("SetTextSizePixels",params);
       }
-      obj->Execute("SetTextSize",params);
    }
 }
 
