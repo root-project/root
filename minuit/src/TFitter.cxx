@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.19 2004/07/09 08:14:42 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.20 2004/07/28 08:02:04 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -492,9 +492,9 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    Double_t fxmax = f1->GetXmax();
    npar           = f1->GetNpar();
 
-   f1->InitArgs(x,u);
    f      = 0;
    for (bin=0;bin<n;bin++) {
+      f1->InitArgs(x,u); //must be inside the loop because of TF1::Derivative calling InitArgs
       x[0] = gx[bin];
       if (!f1->IsInside(x)) continue;
       cu   = gy[bin];
@@ -521,19 +521,18 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       if (exh < 0) exh = 0;
       if (ey < 0)  ey  = 0;
       if (exh > 0 && exl > 0) {
-        xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
-        xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
-
-        //"Effective Variance" method introduced by Anna Kreshuk 
-        // in version 4.00/08.
-	
-	eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
-	
-	//Without the "variance method", we had the 3 next lines instead
+	//Without the "variance method", we had the 6 next lines instead
         // of the line above.
-        //x[0] = xm; fm = f1->EvalPar(x,u);
-        //x[0] = xp; fp = f1->EvalPar(x,u);
-        //eux = 0.5*(fp-fm);
+         //xm = x[0] - exl; if (xm < fxmin) xm = fxmin;
+         //xp = x[0] + exh; if (xp > fxmax) xp = fxmax;
+         //Double_t fm,fp;
+         //x[0] = xm; fm = f1->EvalPar(x,u);
+         //x[0] = xp; fp = f1->EvalPar(x,u);
+         //eux = 0.5*(fp-fm);
+         
+        //"Effective Variance" method introduced by Anna Kreshuk 
+        // in version 4.00/08.	
+	eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
       } else
         eux = 0.;
       eu = ey*ey+eux*eux;
