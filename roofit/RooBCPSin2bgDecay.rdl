@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.rdl,v 1.2 2002/03/14 01:15:05 walkowia Exp $
+ *    File: $Id: RooBCPSin2bgDecay.rdl,v 1.3 2002/04/09 22:58:35 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
@@ -27,8 +27,9 @@ public:
     // Constructors, assignment etc
     inline RooBCPSin2bgDecay() { }
     RooBCPSin2bgDecay(const char *name, const char *title, 
-		      RooRealVar& t, RooAbsCategory& tag,
+		      RooRealVar& t, 
 		      RooAbsCategory& mixState,
+		      RooAbsCategory& tagFlav,
 		      RooAbsReal& tau, RooAbsReal& dm,
 		      RooAbsReal& avgMistag,
 		      RooAbsReal& absLambda, 
@@ -40,8 +41,9 @@ public:
 		      DecayType type=DoubleSided) ;
     
      RooBCPSin2bgDecay(const char *name, const char *title, 
-		       RooRealVar& t, RooAbsCategory& tag,
+		       RooRealVar& t, 
 		       RooAbsCategory& mixState,
+		       RooAbsCategory& tagFlav,
 		       RooAbsReal& tau, RooAbsReal& dm,
 		       RooAbsReal& avgMistag,
 		       RooAbsReal& absLambda,
@@ -87,7 +89,7 @@ protected:
     RooRealProxy _t ;
     RooRealProxy _tau ;
     RooRealProxy _dm ;
-    RooCategoryProxy _tag ;
+    RooCategoryProxy _tagFlav ;
     RooCategoryProxy _mixState ;
     Double_t _genFlavFrac ;
     Double_t _genMixFrac ;

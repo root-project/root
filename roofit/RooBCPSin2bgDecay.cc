@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.cc,v 1.2 2002/03/14 01:15:05 walkowia Exp $
+ *    File: $Id: RooBCPSin2bgDecay.cc,v 1.3 2002/04/09 22:58:35 walkowia Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
@@ -50,8 +50,9 @@ ClassImp(RooBCPSin2bgDecay)
 ;
 
 RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title, 
-				     RooRealVar& t, RooAbsCategory& tag,
+				     RooRealVar& t, 
 				     RooAbsCategory& mixState,
+				     RooAbsCategory& tagFlav,
 				     RooAbsReal& tau, RooAbsReal& dm,
 				     RooAbsReal& avgMistag, 
 				     RooAbsReal& absLambda, 
@@ -70,8 +71,8 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
     _delMistag("delMistag","Delta mistag rate",this,delMistag),  
     _alphaD0("alphaD0","D0 tagged fraction",this,alphaD0),
     _rhoOffD0("rhoOffD0","D0 mixed fraction",this,rhoD0),
-    _tag("tag","Btag state",this,tag),
     _mixState("mixState","mix state",this,mixState),
+    _tagFlav("tagFlav","Btag flavor",this,tagFlav),
     _tau("tau","decay time",this,tau),
     _dm("dm","mixing frequency",this,dm),
     _t("t","time",this,t),
@@ -87,8 +88,9 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
 }
 
 RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title, 
-				     RooRealVar& t, RooAbsCategory& tag,
+				     RooRealVar& t, 
 				     RooAbsCategory& mixState,
+				     RooAbsCategory& tagFlav,
 				     RooAbsReal& tau, RooAbsReal& dm,
 				     RooAbsReal& avgMistag, 
 				     RooAbsReal& absLambda, 
@@ -107,8 +109,8 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
     _alphaD0("alphaD0","-- not used --",this,
 	     (RooRealVar&)RooRealConstant::value(0.)),
     _rhoOffD0("rhoOffD0","D0 offset",this,offsetD0),
-    _tag("tag","Btag state",this,tag),
     _mixState("mixState","mix state",this,mixState),
+    _tagFlav("tagFlav","Btag flavor",this,tagFlav),
     _tau("tau","decay time",this,tau),
     _dm("dm","mixing frequency",this,dm),
     _t("t","time",this,t),
@@ -133,8 +135,8 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other,
     _delMistag("delMistag",this,other._delMistag),
     _alphaD0("alphaD0",this,other._alphaD0),
     _rhoOffD0("rhoOffD0",this,other._rhoOffD0),
-    _tag("tag",this,other._tag),
     _mixState("mixState",this,other._mixState),
+    _tagFlav("tagFlav",this,other._tagFlav),
     _tau("tau",this,other._tau),
     _dm("dm",this,other._dm),
     _t("t",this,other._t),
@@ -161,8 +163,8 @@ RooBCPSin2bgDecay::~RooBCPSin2bgDecay()
 
 Double_t RooBCPSin2bgDecay::coefficient(Int_t basisIndex) const 
 {
-    // B0      : _tag      = +1 
-    // B0bar   : _tag      = -1 
+    // B0      : _tagFlav  = +1 
+    // B0bar   : _tagFlav  = -1 
     // unmixed : _mixState = +1
     // mixed   : _mixState = -1
 
@@ -171,16 +173,16 @@ Double_t RooBCPSin2bgDecay::coefficient(Int_t basisIndex) const
 
     if (basisIndex==_basisExp) {
 	//exp term: (1 - tag*dw +mix*off)(1+a^2)/4 
-	return (1 - _tag*dw + _mixState*off)*(1+_absLambda*_absLambda)/4 ;
+	return (1 - _tagFlav*dw + _mixState*off)*(1+_absLambda*_absLambda)/4 ;
     }
     
     if (basisIndex==_basisSin) {
 	//sin term: - tag*dil*absLambda*ImLambda/2
         // ( = - tag * dil * |l| * sin(2b+g+/-d)/2 )
-	if ( _tag*_mixState < 0 ) { 
-	    return -_tag*dil*_absLambda*_argLambdaMinus/2 ;
+	if ( _tagFlav*_mixState < 0 ) { 
+	    return -_tagFlav*dil*_absLambda*_argLambdaMinus/2 ;
 	} else {
-	    return -_tag*dil*_absLambda*_argLambdaPlus/2 ;
+	    return -_tagFlav*dil*_absLambda*_argLambdaPlus/2 ;
 	}
     }
   
@@ -195,11 +197,11 @@ Double_t RooBCPSin2bgDecay::coefficient(Int_t basisIndex) const
 
 
 Int_t RooBCPSin2bgDecay::getCoefAnalyticalIntegral(RooArgSet& allVars, 
-						    RooArgSet& analVars) const 
+						   RooArgSet& analVars) const 
 {
-  if (matchArgs(allVars,analVars,_tag,_mixState)) return 3 ;
-  if (matchArgs(allVars,analVars,_mixState)     ) return 2 ;
-  if (matchArgs(allVars,analVars,_tag)          ) return 1 ;
+  if (matchArgs(allVars,analVars,_tagFlav,_mixState)) return 3 ;
+  if (matchArgs(allVars,analVars,_mixState)         ) return 2 ;
+  if (matchArgs(allVars,analVars,_tagFlav)          ) return 1 ;
   return 0 ;
 }
 
@@ -215,7 +217,7 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 	// No integration
 	case 0: return coefficient(basisIndex) ;
 	    
-	    // integration over 'tag' and 'mixState'
+	    // integration over 'tagFlav' and 'mixState'
 	case 3: 
 	    if (basisIndex==_basisExp) {
 		return (1+_absLambda*_absLambda) ;
@@ -227,17 +229,17 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 	case 2:
 	    // integration over 'mixState' 
 	    if (basisIndex==_basisExp) {
-		return (1+_absLambda*_absLambda)*(1-_tag*dw)/2 ;
+		return (1+_absLambda*_absLambda)*(1-_tagFlav*dw)/2 ;
 	    }
 	    if (basisIndex==_basisSin) {
-		return -_tag*dil*_absLambda
+		return -_tagFlav*dil*_absLambda
 		    *(_argLambdaPlus+_argLambdaMinus)/2 ;
 	    }
 	    if (basisIndex==_basisCos) {
 		return 0 ;
 	    }
 
-	    // Integration over 'tag'
+	    // Integration over 'tagFlav'
 	case 1:
 	    if (basisIndex==_basisExp) {
 		return (1+_absLambda*_absLambda)*(1+_mixState*off)/2 ;
@@ -262,10 +264,10 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 Int_t RooBCPSin2bgDecay::getGenerator(const RooArgSet& directVars, 
 				       RooArgSet &generateVars) const
 {
-    if (matchArgs(directVars,generateVars,_t,_tag,_mixState)) return 4 ;  
-    if (matchArgs(directVars,generateVars,_t,_mixState)     ) return 3 ;  
-    if (matchArgs(directVars,generateVars,_t,_tag)          ) return 2 ;  
-    if (matchArgs(directVars,generateVars,_t)               ) return 1 ;  
+    if (matchArgs(directVars,generateVars,_t,_tagFlav,_mixState)) return 4 ;  
+    if (matchArgs(directVars,generateVars,_t,_mixState)         ) return 3 ;  
+    if (matchArgs(directVars,generateVars,_t,_tagFlav)          ) return 2 ;  
+    if (matchArgs(directVars,generateVars,_t)                   ) return 1 ;  
     return 0 ;
 }
 
@@ -279,8 +281,8 @@ void RooBCPSin2bgDecay::initGenerator(Int_t code)
 	    // calculate the fraction of B0-tagged events to generate
 	    Double_t sumInt = 
 		RooRealIntegral("sumInt","sum integral",*this, 
-				RooArgSet(_t.arg(),_tag.arg())).getVal();
-	    _tag = 1 ; // B0
+				RooArgSet(_t.arg(),_tagFlav.arg())).getVal();
+	    _tagFlav = 1 ; // B0
 	    Double_t flavInt = 
 		RooRealIntegral("flavInt","flavor integral",*this, 
 				RooArgSet(_t.arg())).getVal();
@@ -306,11 +308,11 @@ void RooBCPSin2bgDecay::initGenerator(Int_t code)
 	    Double_t sumInt = 
 		RooRealIntegral("sumInt","sum integral",*this, 
 				RooArgSet(_t.arg(),_mixState.arg(),
-					  _tag.arg())).getVal();
+					  _tagFlav.arg())).getVal();
 	    _mixState = -1 ; // mixed
 	    Double_t mixInt = 
 		RooRealIntegral("mixInt","mix integral",*this, 
-				RooArgSet(_t.arg(),_tag.arg())).getVal();
+				RooArgSet(_t.arg(),_tagFlav.arg())).getVal();
 	    _genMixFrac = mixInt/sumInt;
 
 	    // calculate the fraction of B0 tagged for mixed and unmixed
@@ -318,10 +320,10 @@ void RooBCPSin2bgDecay::initGenerator(Int_t code)
 	    RooRealIntegral dtInt("dtInt","dtintegral",*this, 
 				  RooArgSet(_t.arg())) ;
 	    _mixState = -1 ; // mixed
-	    _tag      =  1 ; // B0
+	    _tagFlav  =  1 ; // B0
 	    _genFlavFracMix   = dtInt.getVal() / mixInt ;
 	    _mixState =  1 ; // unmixed
-	    _tag      =  1 ; // B0
+	    _tagFlav  =  1 ; // B0
 	    _genFlavFracUnmix = dtInt.getVal() / (sumInt - mixInt) ;
 	    break;
 	}
@@ -336,7 +338,7 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	case 2:
 	{
 	    Double_t rand = RooRandom::uniform() ;
-	    _tag = (Int_t) ((rand<=_genFlavFrac) ? 1 : -1 );
+	    _tagFlav = (Int_t) ((rand<=_genFlavFrac) ? 1 : -1 );
 	    break;
 	}
 	case 3:
@@ -353,7 +355,7 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	    rand = RooRandom::uniform() ;
 	    Double_t genFlavFrac = (_mixState==-1) ? _genFlavFracMix 
 		: _genFlavFracUnmix ;
-	    _tag = (Int_t) ((rand<=genFlavFrac) ? 1 : -1) ;
+	    _tagFlav = (Int_t) ((rand<=genFlavFrac) ? 1 : -1) ;
 	    break;
 	}
     }
@@ -385,7 +387,7 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	    fabs(_argLambdaPlus) : fabs(_argLambdaMinus) ;
 	
 	Double_t argLambda = 
-	    (_mixState*_tag > 0) ? _argLambdaPlus : _argLambdaMinus ;
+	    (_mixState*_tagFlav > 0) ? _argLambdaPlus : _argLambdaMinus ;
 	
 	Double_t maxAcceptProb = 
 	    (1+fabs(dw)+fabs(off))*(1+al2) 
@@ -393,9 +395,9 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	    + fabs(2*dil*_absLambda*maxArgLambda) ;
 
 	Double_t acceptProb =   
-	    (1-_tag*dw+_mixState*off)*(1+al2) 
+	    (1-_tagFlav*dw+_mixState*off)*(1+al2) 
 	    + _mixState*dil*(1-al2)*cos(_dm*tval)
-	    - _tag*2*dil*_absLambda*argLambda*sin(_dm*tval) ;
+	    - _tagFlav*2*dil*_absLambda*argLambda*sin(_dm*tval) ;
 
 	// paranoid check
 	if ( acceptProb > maxAcceptProb ) {
