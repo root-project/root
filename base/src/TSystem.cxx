@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.114 2005/01/06 21:27:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.115 2005/01/06 23:18:23 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1989,8 +1989,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       // the script has already been loaded in interpreted mode
       // Let's warn the user and unload it.
 
-      ::Warning("ACLiC","script has already been loaded in interpreted mode");
-      ::Warning("ACLiC","unloading %s and compiling it", filename);
+      ::Info("ACLiC","script has already been loaded in interpreted mode");
+      ::Info("ACLiC","unloading %s and compiling it", filename);
 
       if ( G__unloadfile( (char*) filename ) != 0 ) {
          // We can not unload it.
@@ -2187,7 +2187,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
         || strlen(GetLibraries(library,"D",kFALSE)) != 0 ) {
       // The library has already been built and loaded.
 
-      ::Warning("ACLiC","%s script has already been compiled and loaded",
+      ::Info("ACLiC","%s script has already been compiled and loaded",
                 modified ? "modified" : "unmodified");
       if ( !recompile ) {
          return kTRUE;
@@ -2200,7 +2200,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          // does not properly get rid of the object.  It WILL provoke a
          // core dump at termination.
 
-         ::Warning("ACLiC","it will be regenerated and reloaded!");
+         ::Info("ACLiC","it will be regenerated and reloaded!");
          if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
             // The library is being used. We can not unload it.
             return kFALSE;
