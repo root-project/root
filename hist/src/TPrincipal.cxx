@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.3 2000/08/15 08:30:50 brun Exp $
-// $Date: 2000/08/15 08:30:50 $
+// $Id: TPrincipal.cxx,v 1.4 2000/08/15 08:41:53 brun Exp $
+// $Date: 2000/08/15 08:41:53 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -1264,7 +1264,8 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
   Bool_t makeS  = kFALSE;
 
   Int_t len     = strlen(opt);
-  for (Int_t i = 0; i < len; i++) {
+  Int_t i,j,k;
+  for (i = 0; i < len; i++) {
     switch (opt[i]) {
     case 'X':
     case 'x':
@@ -1343,7 +1344,6 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
   }
   
   // Initialize sub elements of the histogram arrays 
-  Int_t i,j,k;
   for (i = 0; i < fNumberOfVariables; i++) {
     if (makeX) {
       // We allow 4 sigma spread in the original data in our
