@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.56 2001/10/27 22:28:21 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.57 2001/11/01 22:52:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,6 @@
 #include "TH2.h"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooPlot.hh"
-#include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.cc,v 1.9 2001/10/08 05:20:11 verkerke Exp $
+ *    File: $Id: RooBrentRootFinder.cc,v 1.1 2001/11/15 01:49:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,7 +25,7 @@ ClassImp(RooBrentRootFinder)
 ;
 
 static const char rcsid[] =
-"$Id: RooAbsIntegrator.cc,v 1.9 2001/10/08 05:20:11 verkerke Exp $";
+"$Id: RooBrentRootFinder.cc,v 1.1 2001/11/15 01:49:32 david Exp $";
 
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
   RooAbsRootFinder(function)
@@ -43,7 +43,8 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   Double_t fa= (*_function)(&a) - value;
   Double_t fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
-    cout << "RooBrentRootFinder::findRoot: initial interval does not bracket a root" << endl;
+    cout << "RooBrentRootFinder::findRoot: initial interval does not bracket a root: ("
+	 << a << "," << b << "), value = " << value << endl;
     return kFALSE;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.rdl,v 1.8 2001/09/27 18:22:29 verkerke Exp $
+ *    File: $Id: RooHist.rdl,v 1.9 2001/11/09 21:25:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -22,12 +22,13 @@ public:
   RooHist() {} ;
   RooHist(Double_t nominalBinWidth, Double_t nSigma= 1);
   RooHist(const TH1 &data, Double_t nominalBinWidth= 0, Double_t nSigma= 1);
+  RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth= 0, Double_t nSigma= 1);
   virtual ~RooHist();
 
   // add a datapoint for a bin with n entries, using a Poisson error
   void addBin(Axis_t binCenter, Int_t n, Double_t binWidth= 0);
   // add a datapoint for the asymmetry (n1-n2)/(n1+n2), using a binomial error
-  void addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2);
+  void addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth= 0);
 
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
