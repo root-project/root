@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -44,8 +44,8 @@ class TTUBE : public TShape {
 
         Float_t fAspectRatio; // defines  (the ellipse semi-axis in Y)/(the ellipse semi-axis in X)
 
-        Double_t   *fSiTab;   // Table of sin(fPhi1) .... sin(fPhil+fDphi1)
-        Double_t   *fCoTab;   // Table of cos(fPhi1) .... cos(fPhil+fDphi1)
+        Double_t   *fSiTab;   //! Table of sin(fPhi1) .... sin(fPhil+fDphi1)
+        Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
         virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
         virtual void    PaintGLPoints(Float_t *vertex);
@@ -70,7 +70,7 @@ class TTUBE : public TShape {
         virtual void    SetAspectRatio(Float_t factor=1){fAspectRatio = factor;}
         virtual void    Sizeof3D() const;
 
-        ClassDef(TTUBE,2)  //TUBE shape
+        ClassDef(TTUBE,3)  //TUBE shape
 };
 
 #endif
