@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.111 2002/02/03 17:30:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.112 2002/02/08 22:03:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3179,10 +3179,10 @@ void TTree::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
          fDirectory = gDirectory;
-         gDirectory->Append(this);
          TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (fEstimate <= 10000) fEstimate = 1000000;
          fSavedBytes = fTotBytes;
+         gDirectory->Append(this);
          return;
       }
       //====process old versions before automatic schema evolution
