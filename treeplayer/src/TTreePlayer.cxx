@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.49 2001/06/05 13:51:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.50 2001/06/06 07:21:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -281,6 +281,7 @@ TTreePlayer::TTreePlayer()
    fVar2           = 0;
    fVar3           = 0;
    fVar4           = 0;
+   fMultiplicity   = 0;
    fScanFileName   = 0;
    fScanRedirect   = kFALSE;
    fSelect         = 0;
@@ -416,7 +417,13 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
 
 
   // we make a copy of the tree header
-   TTree *tree = (TTree*)fTree->CloneTree(0);
+   TTree *tree;
+   if (fTree->InheritsFrom("TChain")) {
+      fTree->LoadTree(0);
+      tree = (TTree*)fTree->GetTree()->CloneTree(0);
+   } else {
+      tree = (TTree*)fTree->CloneTree(0);
+   }
    if (tree == 0) return 0;
 
    Int_t entry,entryNumber;
@@ -427,25 +434,29 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
    }
 
    // Compile selection expression if there is one
-   TTreeFormula *select = 0;
    if (strlen(selection)) {
-      select = new TTreeFormula("Selection",selection,fTree);
-      if (!select || !select->GetNdim()) { delete select; select = 0; }
+      fSelect = new TTreeFormula("Selection",selection,fTree);
+      if (!fSelect || !fSelect->GetNdim()) { delete fSelect; fSelect = 0; }
    }
 
    //loop on the specified entries
+   Int_t tnumber = -1;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       fTree->LoadTree(entryNumber);
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+      if (tnumber != fTree->GetTreeNumber()) {
+         tnumber = fTree->GetTreeNumber();
+         fTree->CopyAddresses(tree);
+      }
+      if (fSelect) {
+         fSelect->GetNdata();
+         if (fSelect->EvalInstance(0) == 0) continue;
       }
       fTree->GetEntry(entryNumber);
       tree->Fill();
    }
-   delete select;
+   delete fSelect; fSelect = 0;
    return tree;
 }
 
@@ -2503,7 +2514,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
 
-   TTreeFormula *select, **var;
+   TTreeFormula **var;
    TString *cnames;
    TString onerow;
    Int_t entry,entryNumber,i,nch;
@@ -2541,11 +2552,11 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    }
 
 //*-*- Compile selection expression if there is one
-   select = 0;
+   fSelect = 0;
    if (strlen(selection)) {
-      select = new TTreeFormula("Selection",selection,fTree);
-      if (!select) return -1;
-      if (!select->GetNdim()) { delete select; return -1; }
+      fSelect = new TTreeFormula("Selection",selection,fTree);
+      if (!fSelect) return -1;
+      if (!fSelect->GetNdim()) { delete fSelect; fSelect = 0; return -1; }
    }
 //*-*- if varexp is empty, take first 8 columns by default
    int allvar = 0;
@@ -2604,9 +2615,9 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       fTree->LoadTree(entryNumber);
-      if (select) {
-         select->GetNdata();
-         if (select->EvalInstance(0) == 0) continue;
+      if (fSelect) {
+         fSelect->GetNdata();
+         if (fSelect->EvalInstance(0) == 0) continue;
       }
       onerow = Form("* %8d ",entryNumber);
       for (i=0;i<ncols;i++) {
@@ -2636,13 +2647,13 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
       out<<onerow.Data()<<"*"<<endl;
    else
       printf("%s*\n",onerow.Data());
-   if (select) Printf("==> %d selected %s", fSelectedRows,
+   if (fSelect) Printf("==> %d selected %s", fSelectedRows,
                       fSelectedRows == 1 ? "entry" : "entries");
    if (fScanRedirect) printf("File <%s> created\n", fname);
 
 //*-*- delete temporary objects
    if (!lenfile) delete [] fname;
-   delete select;
+   delete fSelect; fSelect = 0;
    for (i=0;i<ncols;i++) {
       delete var[i];
    }
@@ -3232,7 +3243,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
    //reset estimate
    fTree->SetEstimate(oldEstimate);
 
-   return nsel;
+   return nsel; 
 }
 
 
