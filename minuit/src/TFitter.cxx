@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.6 2003/03/05 11:02:31 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.7 2003/05/05 16:38:48 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -423,7 +423,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
       ey  = gr->GetErrorY(bin);
       if (ex < 0) ex = 0;
       if (ey < 0) ey = 0;
-      if (ex >= 0) {
+      if (ex > 0) {
         xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
         xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
         xx[0] = xm; fm = f1->EvalPar(xx,u);
