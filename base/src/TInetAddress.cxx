@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.4 2004/07/08 17:55:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.5 2004/07/13 16:48:21 rdm Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TInetAddress.h"
+#include "TClass.h"
 
 ClassImp(TInetAddress)
 
@@ -158,4 +159,49 @@ void TInetAddress::AddAlias(const char *alias)
    // Add alias to list of aliases.
 
    fAliases.push_back(TString(alias));
+}
+
+//______________________________________________________________________________
+void TInetAddress::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TInetAddress.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      if (R__v > 2) {
+         TInetAddress::Class()->ReadBuffer(R__b, this);
+         return;
+      }
+      // process old versions before automatic schema evolution
+      TObject::Streamer(R__b);
+      fHostname.Streamer(R__b);
+      R__b >> fAddress;
+      R__b >> fFamily;
+      R__b >> fPort;
+      if (R__v > 1) {
+         TInetAddress::AddressList_t &R__stl1 =  fAddresses;
+         R__stl1.clear();
+         int R__i, R__n;
+         R__b >> R__n;
+         R__stl1.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            unsigned int R__t1;
+            R__b >> R__t1;
+            R__stl1.push_back(R__t1);
+         }
+         TInetAddress::AliasList_t &R__stl2 =  fAliases;
+         R__stl2.clear();
+         R__b >> R__n;
+         R__stl2.reserve(R__n);
+         for (R__i = 0; R__i < R__n; R__i++) {
+            TString R__t2;
+            R__t2.Streamer(R__b);
+            R__stl2.push_back(R__t2);
+         }
+      }
+      R__b.CheckByteCount(R__s, R__c, TInetAddress::IsA());
+   } else {
+      TInetAddress::Class()->WriteBuffer(R__b, this);
+   }
 }
