@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.123 2003/01/09 06:59:59 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.124 2003/01/11 09:10:44 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -653,7 +653,6 @@ int NeedTemplateKeyword(G__ClassInfo &cl)
          // It might be a specialization without us seeing the template definition
          return 0;
       }
-      delete [] templatename;
    }
    return 0;
 }
