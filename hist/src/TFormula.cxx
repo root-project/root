@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.49 2003/07/23 21:48:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.50 2003/07/26 05:51:55 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -898,7 +898,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             } else {
               find=0;
               oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
-              if (oldformula && !oldformula->GetNumber()) {
+              if (oldformula) {
                 Int_t nprior = fNpar;
                 Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
                 fNpar = nprior;
