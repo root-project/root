@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.6 2004/05/26 12:30:31 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.7 2004/09/29 10:55:55 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -104,7 +104,7 @@ class TMultiLayerPerceptron : public TObject {
    void LoadWeights(Option_t* filename = "");
    Double_t Evaluate(Int_t index, Double_t* params) const;
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++") const;
-   virtual void Draw(const Option_t*);
+   virtual void Draw(Option_t *option="");
 
  protected:
    void AttachData();

@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.21 2004/07/30 10:50:07 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.22 2004/09/29 10:50:41 rdm Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1993,7 +1993,7 @@ void TMultiLayerPerceptron::BFGSDir(TMatrixD & BFGSH, Double_t * dir)
 }
 
 //______________________________________________________________________________
-void TMultiLayerPerceptron::Draw(const Option_t*)
+void TMultiLayerPerceptron::Draw(Option_t * /*option*/)
 {
   // Draws the network structure.
   // Neurons are depicted by a blue disk, and synapses by
