@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.3 2001/01/12 11:24:36 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.4 2001/06/28 16:38:39 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -325,7 +325,7 @@ void TLorentzVector::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v < 2) TObject::Streamer(R__b);
+      if (R__v != 2) TObject::Streamer(R__b);
       R__b >> x;
       R__b >> y;
       R__b >> z;
@@ -334,6 +334,7 @@ void TLorentzVector::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, TLorentzVector::IsA());
    } else {
       R__c = R__b.WriteVersion(TLorentzVector::IsA(), kTRUE);
+      TObject::Streamer(R__b);
       R__b << fP.X();
       R__b << fP.Y();
       R__b << fP.Z();
