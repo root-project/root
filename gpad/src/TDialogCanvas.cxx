@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -43,9 +43,9 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, UInt_t ww, UIn
 //*-*                    ========================
 
    SetFillColor(36);
-   fIsEditable = kFALSE;
-   fRefObject  = 0;
-   fRefPad     = 0;
+   fEditable  = kFALSE;
+   fRefObject = 0;
+   fRefPad    = 0;
 }
 
 //______________________________________________________________________________
