@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.1 2000/10/17 12:19:18 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -160,7 +160,7 @@ class TQObjSender : public TQObject {
 protected:
    void   *fSender;    //delegation object
 
-   virtual void *GetSender() const { return fSender; }
+   virtual void *GetSender() { return fSender; }
 
 public:
    TQObjSender() : TQObject() { }
