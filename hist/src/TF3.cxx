@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.11 2003/06/30 15:45:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.12 2003/07/08 06:56:23 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -194,6 +194,12 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 //*-*     - Look in which cell in the normalized integral r1 corresponds to
 //*-*     - make a linear interpolation in the returned cell
 //*-*
+//*-*
+//*-*  IMPORTANT NOTE
+//*-*  The integral of the function is computed at fNpx * fNpy * fNpz points. 
+//*-*  If the function has sharp peaks, you should increase the number of 
+//*-*  points (SetNpx, SetNpy, SetNpz) such that the peak is correctly tabulated 
+//*-*  at several points.
 
    //  Check if integral array must be build
    Int_t i,j,k,cell;
@@ -348,10 +354,22 @@ void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
 //______________________________________________________________________________
 void TF3::SetNpz(Int_t npz)
 {
-//*-*-*-*-*-*-*-*Set the number of points used to draw the function*-*-*-*-*-*
-//*-*            ==================================================
+// Set the number of points used to draw the function
+//
+// The default number of points along x is 30 for 2-d/3-d functions.
+// You can increase this value to get a better resolution when drawing
+// pictures with sharp peaks or to get a better result when using TF3::GetRandom2   
+// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
-   if(npz > 4 && npz < 1000) fNpz = npz;
+   if (npz < 4) {
+      Warning("SetNpz","Number of points must be >4 && < 10000, fNpz set to 4");
+      fNpz = 4;
+   } else if(npz > 100000) {
+      Warning("SetNpz","Number of points must be >4 && < 10000, fNpz set to 10000");
+      fNpz = 10000;
+   } else {
+      fNpz = npz;
+   }
    Update();
 }
 

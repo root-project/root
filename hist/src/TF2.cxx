@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.21 2003/06/30 15:45:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.22 2003/07/08 06:56:23 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -351,6 +351,12 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 //*-*     - Look in which cell in the normalized integral r1 corresponds to
 //*-*     - make a linear interpolation in the returned cell
 //*-*
+//*-*
+//*-*  IMPORTANT NOTE
+//*-*  The integral of the function is computed at fNpx * fNpy points. 
+//*-*  If the function has sharp peaks, you should increase the number of 
+//*-*  points (SetNpx, SetNpy) such that the peak is correctly tabulated 
+//*-*  at several points.
 
    //  Check if integral array must be build
    Int_t i,j,cell;
@@ -682,10 +688,22 @@ void TF2::SetContourLevel(Int_t level, Double_t value)
 //______________________________________________________________________________
 void TF2::SetNpy(Int_t npy)
 {
-//*-*-*-*-*-*-*-*Set the number of points used to draw the function*-*-*-*-*-*
-//*-*            ==================================================
+// Set the number of points used to draw the function
+//
+// The default number of points along x is 30 for 2-d/3-d functions.
+// You can increase this value to get a better resolution when drawing
+// pictures with sharp peaks or to get a better result when using TF2::GetRandom2   
+// the minimum number of points is 4, the maximum is 10000 for 2-d/3-d functions
 
-   if(npy > 4 && npy < 1000) fNpy = npy;
+   if (npy < 4) {
+      Warning("SetNpy","Number of points must be >4 && < 10000, fNpy set to 4");
+      fNpy = 4;
+   } else if(npy > 100000) {
+      Warning("SetNpy","Number of points must be >4 && < 10000, fNpy set to 10000");
+      fNpy = 10000;
+   } else {
+      fNpy = npy;
+   }
    Update();
 }
 

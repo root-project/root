@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.65 2003/06/30 15:45:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.66 2003/07/08 06:56:23 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1256,6 +1256,11 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 //*-*       the corresponding X value.
 //*-*   The parabolic approximation is very good as soon as the number
 //*-*   of bins is greater than 50.
+//*-*
+//*-*  IMPORTANT NOTE
+//*-*  The integral of the function is computed at fNpx points. If the function
+//*-*  has sharp peaks, you should increase the number of points (SetNpx)
+//*-*  such that the peak is correctly tabulated at several points.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
 
 //  Check if integral array must be build
@@ -2150,10 +2155,22 @@ void TF1::SetNDF(Int_t ndf)
 //______________________________________________________________________________
 void TF1::SetNpx(Int_t npx)
 {
-//*-*-*-*-*-*-*-*Set the number of points used to draw the function*-*-*-*-*-*
-//*-*            ==================================================
+// Set the number of points used to draw the function
+//
+// The default number of points along x is 100 for 1-d functions and 30 for 2-d/3-d functions
+// You can increase this value to get a better resolution when drawing
+// pictures with sharp peaks or to get a better result when using TF1::GetRandom   
+// the minimum number of points is 4, the maximum is 100000 for 1-d and 10000 for 2-d/3-d functions
 
-   if(npx > 4 && npx < 100000) fNpx = npx;
+   if (npx < 4) {
+      Warning("SetNpx","Number of points must be >4 && < 100000, fNpx set to 4");
+      fNpx = 4;
+   } else if(npx > 100000) {
+      Warning("SetNpx","Number of points must be >4 && < 100000, fNpx set to 100000");
+      fNpx = 100000;
+   } else {
+      fNpx = npx;
+   }
    Update();
 }
 
