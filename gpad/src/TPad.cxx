@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.27 2001/01/25 08:11:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.28 2001/02/01 18:04:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3071,22 +3071,22 @@ void TPad::PaintPolyLine3D(Int_t n, Double_t *p)
 }
 
 //______________________________________________________________________________
-void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
 {
 //*-*-*-*-*-*-*-*-*Paint polymarker in CurrentPad World coordinates*-*-*-*-*-*
 //*-*              ================================================
 
-   if (n < 0) return;
+   Int_t n = TMath::Abs(nn);
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
       if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
-   //if (TestBit(TGraph::kClipFrame)) {
+   if (nn > 0 || TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   //} else {
-   //   xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   //}
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   }
    Int_t i,j,i1=-1,np=0;
    for (i=0; i<n; i++) {
       if (x[i] >= xmin && x[i] <= xmax && y[i] >= ymin && y[i] <= ymax) {
@@ -3115,22 +3115,22 @@ void TPad::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPad::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
 {
 //*-*-*-*-*-*-*-*-*Paint polymarker in CurrentPad World coordinates*-*-*-*-*-*
 //*-*              ================================================
 
-   if (n < 0) return;
+   Int_t n = TMath::Abs(nn);
    TPoint *pxy = &gPXY[0];
    if (!gPad->IsBatch()) {
       if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    }
    Double_t xmin,xmax,ymin,ymax;
-   //if (TestBit(TGraph::kClipFrame)) {
+   if (nn > 0 || TestBit(TGraph::kClipFrame)) {
       xmin = fUxmin; ymin = fUymin; xmax = fUxmax; ymax = fUymax;
-   //} else {
-   //   xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
-   //}
+   } else {
+      xmin = fX1; ymin = fY1; xmax = fX2; ymax = fY2;
+   }
    Int_t i,j,i1=-1,np=0;
    for (i=0; i<n; i++) {
       if (x[i] >= xmin && x[i] <= xmax && y[i] >= ymin && y[i] <= ymax) {
@@ -3779,7 +3779,12 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       out<<"   view->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<endl;
    }
-   out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+   if (GetFillColor() != 19) {
+      out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
+   }
+   if (GetFillStyle() != 1001) {
+      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<endl;
+   }
    if (GetBorderMode() != 1) {
       out<<"   "<<GetName()<<"->SetBorderMode("<<GetBorderMode()<<");"<<endl;
    }
@@ -3827,7 +3832,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
    }
 
    if (fFrame) {
-      if (fFrame->GetFillColor() != GetFillColor()) {
+      if (fFrame->GetFillColor() != 19) {
          out<<"   "<<GetName()<<"->SetFrameFillColor("<<fFrame->GetFillColor()<<");"<<endl;
       }
       if (fFrame->GetFillStyle() != 1001) {
