@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.2 2000/10/11 07:13:11 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.3 2001/01/12 11:24:36 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -216,6 +216,11 @@ and negative light-cone components:<TT></TT>
 
 <P><TT>&nbsp; Double_t pcone = v.Plus();</TT>
 <BR><TT>&nbsp; Double_t mcone = v.Minus();</TT>
+<P>CAVEAT: The values returned are T{+,-}Z. It is known that some authors
+find it easier to define these components as (T{+,-}Z)/sqrt(2). Thus
+check what definition is used in the physics you're working in and adapt
+your code accordingly.
+   
 <H5>
 Transformation by TLorentzRotation</H5>
 A general Lorentz transformation see class <TT>TLorentzRotation</TT> can
