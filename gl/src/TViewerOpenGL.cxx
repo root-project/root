@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.36 2004/11/23 14:00:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.37 2004/11/23 21:42:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -154,7 +154,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fMenuBar = 0;
    fFileMenu = fViewMenu = fHelpMenu = 0;
    fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
-   fLightMask = 0x1f;   
+   fLightMask = 0x1b;   
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
    fNbShapes = 0;
@@ -527,23 +527,22 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
 
    MakeCurrent();
-   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos1);
-   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
-
+   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos1);
+   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
    gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos2);
    gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
    gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos3);
    gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
    gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos4);
    gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
-   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos5);
-   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos5);
+   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
    
-   gVirtualGL->EnableGL(kLIGHT0);
-   gVirtualGL->EnableGL(kLIGHT1);
-   gVirtualGL->EnableGL(kLIGHT2);
-   gVirtualGL->EnableGL(kLIGHT3);
-   gVirtualGL->EnableGL(kLIGHT4);
+   if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
+   if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
+   if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
+   if (fLightMask & 8) gVirtualGL->EnableGL(kLIGHT3);
+   if (fLightMask & 16) gVirtualGL->EnableGL(kLIGHT0);
 
    MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    SetWMPosition(fgInitX, fgInitY);
@@ -817,8 +816,8 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
          fRender->SetPlane(eqn);
       }
    case kTBTop:
-      if ((fLightMask ^= 1) & 1) gVirtualGL->EnableGL(kLIGHT0);
-      else gVirtualGL->DisableGL(kLIGHT0);
+      if ((fLightMask ^= 1) & 1) gVirtualGL->EnableGL(kLIGHT4);
+      else gVirtualGL->DisableGL(kLIGHT4);
       break;
    case kTBRight:
       if ((fLightMask ^= 2) & 2) gVirtualGL->EnableGL(kLIGHT1);
@@ -833,8 +832,8 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       else gVirtualGL->DisableGL(kLIGHT3);
       break;
    case kTBFront:
-      if ((fLightMask ^= 16) & 16) gVirtualGL->EnableGL(kLIGHT4);
-      else gVirtualGL->DisableGL(kLIGHT4);
+      if ((fLightMask ^= 16) & 16) gVirtualGL->EnableGL(kLIGHT0);
+      else gVirtualGL->DisableGL(kLIGHT0);
       break;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.10 2004/10/19 13:04:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.11 2004/11/23 21:42:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -662,7 +662,7 @@ TGLLightEditor::TGLLightEditor(const TGWindow *parent, TViewerOpenGL *v)
    fTrash.Add(fLights[kRight]);
    fLights[kBottom] = new TGCheckButton(ligFrame, "Bottom", kTBBottom);
    fLights[kBottom]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
-   fLights[kBottom]->SetState(kButtonDown);
+//   fLights[kBottom]->SetState(kButtonDown);
    fTrash.Add(fLights[kBottom]);
    fLights[kLeft] = new TGCheckButton(ligFrame, "Left", kTBLeft);
    fLights[kLeft]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
