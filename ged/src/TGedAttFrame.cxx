@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.10 2004/04/22 17:53:02 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.11 2004/04/23 12:36:44 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -792,9 +792,9 @@ void TGedAttAxisFrame::SetModel(TPad* pad, TObject* obj, Int_t)
    fTickLength->SetNumber(ticks);
    
    Int_t div = ExecuteInt(fModel, "GetNdivisions", "");
-   fDiv3->SetNumber(div % 100);
+   fDiv1->SetNumber(div % 100);
    fDiv2->SetNumber((div/100) % 100);
-   fDiv1->SetNumber((div/10000) % 100);
+   fDiv3->SetNumber((div/10000) % 100);
    
    if ((!strcmp(fModel->GetName(),"xaxis") && gPad->GetLogx()) ||
        (!strcmp(fModel->GetName(),"yaxis") && gPad->GetLogy()) ||
@@ -884,8 +884,8 @@ void TGedAttAxisFrame::DoDivisions()
    char a[100];
 
    // the number of divisions are used 3 number entry widgets
-   Int_t div = (Int_t)(fDiv3->GetNumber() + fDiv2->GetNumber()  * 100 
-                                          + fDiv1->GetNumber() * 10000);
+   Int_t div = (Int_t)(fDiv1->GetNumber() + fDiv2->GetNumber()  * 100 
+                                          + fDiv3->GetNumber() * 10000);
    snprintf(a, 100, "%d,%d", div, fOptimize->GetState());
    fModel->Execute("SetNdivisions", a, 0);
    Update();

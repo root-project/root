@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.6 2002/04/05 08:14:10 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.7 2004/03/17 07:52:07 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
   virtual Int_t     GetNpx() const {return fNpx;}
   virtual  void     Paint(Option_t *option="");
   virtual Double_t  Eval(Double_t x) const=0;
+  virtual  void     SaveAs(const char *filename) const {;}
            void     SetNpx(Int_t n) {fNpx=n;}
 
   ClassDef (TSpline,2) // Spline base class
@@ -171,6 +172,7 @@ public:
 		b=fPoly[i].B();c=fPoly[i].C();d=fPoly[i].D();}
   void GetKnot(Int_t i, Double_t &x, Double_t &y) const
     {x=fPoly[i].X(); y=fPoly[i].Y();}
+  virtual  void     SaveAs(const char *filename) const;
   static void Test();
 
   ClassDef (TSpline3,2)  // Class to create third natural splines
@@ -223,6 +225,7 @@ public:
     e=fPoly[i].E();f=fPoly[i].F();}
   void GetKnot(Int_t i, Double_t &x, Double_t &y) const
     {x=fPoly[i].X(); y=fPoly[i].Y();}
+  virtual  void     SaveAs(const char *filename) const;
   static void Test();
 
   ClassDef (TSpline5,2) // Class to create quintic natural splines
