@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.23 2001/05/31 13:45:58 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.24 2001/06/06 07:32:34 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -251,6 +251,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
          Int_t  uy = Int_t(cx*gStyle->GetCanvasDefY());
          fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, ux, uy, uw, uh);
       }
+      fCw = 500;
+      fCh = 500;
       if (form == 2) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 20, 20, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 3) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
@@ -301,6 +303,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       ww       = -ww;
       fMenuBar = kFALSE;
    }
+   fCw       = ww;
+   fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) delete old;
@@ -366,6 +370,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       wtopx    = -wtopx;
       fMenuBar = kFALSE;
    }
+   fCw       = ww;
+   fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) delete old;
