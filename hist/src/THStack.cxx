@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.5 2001/12/10 15:03:18 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.6 2001/12/21 13:41:09 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -330,7 +330,7 @@ void THStack::Paint(Option_t *option)
    Double_t themax,themin;
    if (fMaximum == -1111) themax = GetMaximum(option);
    else                   themax = fMaximum;
-   if (fMinimum == -1111) themin = GetMinimum(option);
+   if (fMinimum == -1111) {themin = GetMinimum(option); if (themin > 0) themin = 0;}
    else                   themin = fMinimum;
    if (!fHistogram) {
       Bool_t add = TH1::AddDirectoryStatus();
