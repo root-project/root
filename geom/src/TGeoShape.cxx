@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.14 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.15 2003/11/28 13:52:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -152,7 +152,6 @@
 
 const Double_t TGeoShape::kRadDeg = 180./TMath::Pi();
 const Double_t TGeoShape::kDegRad = TMath::Pi()/180.;
-const Double_t TGeoShape::kBig = 1E30;
 
 ClassImp(TGeoShape)
 

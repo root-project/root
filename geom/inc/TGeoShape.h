@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.17 2003/11/28 13:52:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.18 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -66,7 +66,7 @@ enum EShapeType {
 };
 static const Double_t kRadDeg;   // conversion factor rad->deg
 static const Double_t kDegRad;   // conversion factor deg->rad
-static const Double_t kBig;      // infinity
+static const Double_t kBig = 1E30;      // infinity
 protected :
 // data members
    Int_t                 fShapeId;   // shape id
