@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.45 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.46 2004/02/07 21:17:40 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -430,6 +430,7 @@ void TProfile::Copy(TObject &obj) const
    fBinEntries.Copy(((TProfile&)obj).fBinEntries);
    ((TProfile&)obj).fYmin = fYmin;
    ((TProfile&)obj).fYmax = fYmax;
+   ((TProfile&)obj).fScaling = fScaling;
    ((TProfile&)obj).fErrorMode = fErrorMode;
    ((TProfile&)obj).fTsumwy      = fTsumwy;
    ((TProfile&)obj).fTsumwy2     = fTsumwy2;
