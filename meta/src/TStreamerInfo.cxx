@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.214 2004/12/10 07:42:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.215 2004/12/10 09:28:47 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -368,12 +368,11 @@ void TStreamerInfo::BuildCheck()
       array = fClass->GetStreamerInfos();
       TStreamerInfo *info = 0;
 
-      // if a foreign class, search info with same checksum
-      Bool_t isForeign = kFALSE;
-      if (fClass->IsForeign()) {
-         isForeign = kTRUE;
-      } else if( !fClass->IsLoaded() ) {
-         // Whent the class is not loaded 
+      // If we have a foreign class, we need to search for a StreamerInfo 
+      // with same checksum.
+      Bool_t searchOnChecksum = kFALSE;
+      if( !fClass->IsLoaded() ) {
+         // When the class is not loaded 
          // the result of IsForeign is not what we are looking 
          // for (Technically IsForeign means IsLoaded and do not 
          // have a Streamer method).
@@ -382,13 +381,15 @@ void TStreamerInfo::BuildCheck()
          // Also we only care if a StreamerInfo has already been loaded
          if ( fClassVersion==1 && array->At(1) != 0 ) {
             if (fCheckSum != ((TStreamerInfo*)array->At(1))->GetCheckSum()) {
-               isForeign = kTRUE;
+               searchOnChecksum = kTRUE;
                fClassVersion = array->GetLast()+1;
             }
          }
+      } else if (fClass->IsForeign()) {
+         searchOnChecksum = kTRUE;
       }
 
-      if (isForeign) {
+      if (searchOnChecksum) {
          Int_t ninfos = array->GetEntriesFast();
          for (Int_t i=1;i<ninfos;i++) {
             info = (TStreamerInfo*)array->At(i);

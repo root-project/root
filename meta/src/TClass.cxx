@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.153 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.154 2004/10/29 18:03:10 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2065,7 +2065,8 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
    if (cl == this) return kTRUE;
 
    if (!fClassInfo) {
-      TStreamerInfo *sinfo = ((TClass *)this)->GetStreamerInfo();
+      TStreamerInfo *sinfo = ((TClass *)this)->GetCurrentStreamerInfo();
+      if (sinfo==0) sinfo = ((TClass *)this)->GetStreamerInfo();
       TIter next(sinfo->GetElements());
       TStreamerElement *element;
       while ((element = (TStreamerElement*)next())) {
