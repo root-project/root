@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.13 2002/12/04 10:38:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.14 2003/01/15 21:45:39 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -60,9 +60,9 @@ public:
        Double_t     GetRandom();
        Double_t     GetRandom(Double_t xmin, Double_t xmax);
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
-   virtual void     GetRange(Double_t &xmin, Double_t &xmax) { TF1::GetRange(xmin, xmax); }
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
+   virtual void     GetRange(Double_t &xmin, Double_t &xmax) const { TF1::GetRange(xmin, xmax); }
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetSave(const Double_t *x);
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}

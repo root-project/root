@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.8 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.9 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -53,9 +53,9 @@ public:
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
           Int_t     GetNpz() const {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);
-   virtual void     GetRange(Double_t &xmin, Double_t &xmax);
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
+   virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const ;
+   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return TF1::Integral(a,b,params,epsilon);}
@@ -73,9 +73,9 @@ public:
    ClassDef(TF3,2)  //The Parametric 3-D function
 };
 
-inline void TF3::GetRange(Double_t &xmin, Double_t &xmax)
+inline void TF3::GetRange(Double_t &xmin, Double_t &xmax) const
    { TF2::GetRange(xmin, xmax); }
-inline void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax)
+inline void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
    { TF2::GetRange(xmin, ymin, xmax, ymax); }
 inline void TF3::SetRange(Double_t xmin, Double_t xmax)
    { TF2::SetRange(xmin, xmax); }

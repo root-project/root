@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.57 2003/03/02 11:51:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.58 2003/03/06 15:27:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1270,7 +1270,7 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Double_t &xmin, Double_t &xmax)
+void TF1::GetRange(Double_t &xmin, Double_t &xmax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 1-D function*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -1280,7 +1280,7 @@ void TF1::GetRange(Double_t &xmin, Double_t &xmax)
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax)
+void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -1292,7 +1292,7 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ym
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
+void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================

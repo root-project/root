@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.8 2002/10/12 16:41:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.9 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -234,7 +234,7 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 }
 
 //______________________________________________________________________________
-void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
+void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.17 2003/01/15 21:45:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.18 2003/03/07 10:45:02 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -366,7 +366,7 @@ void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 }
 
 //______________________________________________________________________________
-void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax)
+void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -378,7 +378,7 @@ void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ym
 }
 
 //______________________________________________________________________________
-void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
+void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
