@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.34 2003/01/22 11:23:03 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.35 2003/03/11 14:35:02 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -61,6 +61,11 @@ ClassImp(TLatex)
 <img src="gif/latex_frac.gif">
 */
 //End_Html
+//
+//   ** splitting a line in two lines
+//   --------------------------------
+//   A text can be split in two lines via the command #splitline
+//   For example #splitline{"21 April 2003}{14:02:30}
 //
 //   ** Roots
 //   --------
@@ -439,6 +444,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
       Int_t Operp           = 0;    // position of #perp
       Int_t OpOdot          = 0;    // position of #odot
       Int_t Oparallel       = 0;    // position of #parallel
+      Int_t OpSplitLine     = -1;   // Position of first \splitline
       Bool_t OpFound = kFALSE;
       Bool_t quote1 = kFALSE, quote2 = kFALSE ;
 
@@ -514,6 +520,15 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          // detect other operators
          if (text[i]=='\\' || text[i]=='#' && !OpFound && NbBrackets==0 && NbCroch==0) {
 
+            if (length>i+10 ) {
+               Char_t buf[10];
+               strncpy(buf,&text[i+1],10);
+               if (strncmp(buf,"splitline{",10)==0) {
+                  OpSplitLine=i; OpFound = kTRUE;
+                  if (i>0 && OpCloseCurly==-2) OpCloseCurly=i-1;
+                  continue;
+               }
+            }
             if (length>i+8 ) {
                Char_t buf[8];
                strncpy(buf,&text[i+1],8);
@@ -1199,6 +1214,36 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
       }
+      else if (OpSplitLine>-1) { // \splitline found
+         if (OpCurlyCurly==-1) { // }{ not found
+            // arguments missing for \splitline
+            fError = "Missing second line for #splitline";
+            return FormSize(0,0,0);
+         }
+         Double_t height = GetHeight()*spec.size/8;
+         if (!fShow) {
+            fs1 = Anal1(spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11);
+            fs2 = Anal1(spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);
+            Savefs(&fs1);
+            Savefs(&fs2);
+         } else {
+            fs2 = Readfs();
+            fs1 = Readfs();
+            Double_t addW1,addW2;
+            if (fs1.Width()<fs2.Width()) {
+               addW1 = (fs2.Width()-fs1.Width())/2;
+               addW2 = 0;
+            } else {
+               addW1 = 0;
+               addW2 = (fs1.Width()-fs2.Width())/2;
+            }
+            Analyse(x+addW2,y+fs2.Dessus()-height,spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);  // second line
+            Analyse(x+addW1,y-fs1.Dessous()-3*height,spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11); //first line
+         }
+
+         result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
+
+      }
       else if (OpSqrt>-1) { // \sqrt found
          if (!fShow) {
             if (OpSquareCurly>-1) {
@@ -1576,7 +1621,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                        "\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
                        "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{"}; // check for }
    const Char_t *kWord2[] = {"#color[","#font[","#sqrt[","\\color[","\\font[","\\sqrt["}; // check for ]{ + }
-   const Char_t *kWord3[] = {"#frac{","\\frac{"} ; // check for }{ then }
+   const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"} ; // check for }{ then }
    const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("} ;
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"} ;
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"} ;
@@ -1585,8 +1630,8 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                       7,6,6,4,4,4,4,4,
                       5,5,5,5,6,7,7,7} ;
    Int_t lkWord2[] = {7,6,6,7,6,6} ;
-   Int_t lkWord3[] = {6,6} ;
-   Int_t NkWord1 = 36, NkWord2 = 6, NkWord3 = 2 ;
+   Int_t lkWord3[] = {6,6,11,11} ;
+   Int_t NkWord1 = 36, NkWord2 = 6, NkWord3 = 4 ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
    Int_t lLeft2 = 4 ;
@@ -1595,7 +1640,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    nOfLeft = nOfRight = 0 ;
 
    Int_t i,k ;
-   Char_t buf[7] ;
+   Char_t buf[11] ;
    Bool_t opFound ;
    Int_t  opFrac = 0;
    Int_t length = text.Length() ;
@@ -1657,7 +1702,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
          //   i++;
          //   continue ;
          //}
-         strncpy(buf,&text[i],TMath::Min(7,length-i));
+         strncpy(buf,&text[i],TMath::Min(11,length-i));
          opFound = kFALSE ;
 
          for(k=0;k<NkWord1;k++) {

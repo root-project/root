@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.46 2003/04/10 09:00:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.47 2003/04/10 09:05:29 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -512,8 +512,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    char *LABEL;
    char *CHTEMP;
    char *CODED;
-   char CHLABEL[32];
-   char kCHTEMP[36];
+   char CHLABEL[256];
+   char kCHTEMP[256];
    char CHCODED[8];
    TLine *linegrid;
    TString timeformat;
@@ -1325,16 +1325,13 @@ L110:
                   timed = Wlabel + (int)(timeoffset);
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = localtime(&timelabel);
-                  strftime(LABEL,36,timeformat.Data(),utctis);
-                  first = 0; last=strlen(LABEL)-1;
+                  TString timeformattmp = timeformat;
 
 //*-*-              Appends fractionnal part if seconds displayed
                   if (DWlabel<0.9) {
                      double tmpdb;
-                     int tmplast, tmpfirst;
-                     strcpy(CHTEMP,&LABEL[first]);
-                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
-                     sprintf(LABEL,"%7.5f",modf(timed,&tmpdb));
+                     int tmplast;
+                     sprintf(LABEL,"%%S%7.5f",modf(timed,&tmpdb));
                      tmplast = strlen(LABEL)-1;
 
 //*-*-              We eliminate the non significiant 0 after '.'
@@ -1342,18 +1339,15 @@ L110:
                         LABEL[tmplast] = 0; tmplast--;
                      }
 
+                     timeformattmp.ReplaceAll("%S",LABEL);
 //*-*-              replace the "0." at the begining by "s"
-                     if (CHTEMP[strlen(CHTEMP)-1] == 's' || CHTEMP[strlen(CHTEMP)-1] == 'S') {
-                        tmpfirst = 2;
-                     } else {
-                        tmpfirst = 1;
-                        LABEL[tmpfirst] = 's';
-                     }
+                     timeformattmp.ReplaceAll("%S0.","%Ss");
 
-                     strcat(CHTEMP, &LABEL[tmpfirst]);
-                     strcpy(LABEL, CHTEMP);
-                     first = 0; last = strlen(LABEL)-1;
                   }
+                  
+                  strftime(LABEL,36,timeformattmp.Data(),utctis);
+                  strcpy(CHTEMP,&LABEL[0]);
+                  first = 0; last=strlen(LABEL)-1;
 
                   Wlabel = wTimeIni + (k+1)*DWlabel;
                }
@@ -1379,10 +1373,18 @@ L110:
                   if (!OptionText) {
                      if (first > last)  strcpy(CHTEMP, " ");
                      else               strcpy(CHTEMP, &LABEL[first]);
-                     textaxis->PaintTextNDC(XX,YY,CHTEMP);
+                     textaxis->PaintLatex(gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1()),
+                           gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1()),
+                           0,
+                           textaxis->GetTextSize(),
+                           CHTEMP);
                   }
                   else  {
-                     if (OptionText == 1) textaxis->PaintTextNDC(XX,YY,fAxis->GetBinLabel(k+fAxis->GetFirst()));
+                     if (OptionText == 1) textaxis->PaintLatex(gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1()),
+                                                   gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1()),
+                                                   0,
+                                                   textaxis->GetTextSize(),
+                                                   fAxis->GetBinLabel(k+fAxis->GetFirst()));
                   }
                }
                else {
@@ -1398,7 +1400,11 @@ L110:
                         if (LNLEN == 0) strcpy(CHTEMP, " ");
                         else            strcpy(CHTEMP, "1");
                      }
-                     textaxis->PaintTextNDC(XX,YY,CHTEMP);
+                     textaxis->PaintLatex(gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1()),
+                           gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1()),
+                           0,
+                           textaxis->GetTextSize(),
+                           CHTEMP);
                      YY -= charheight*1.3;
                   }
                }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.41 2003/04/08 13:05:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.42 2003/04/10 09:00:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -161,7 +161,7 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 //   set reasonable format
    switch (reasformat) {
       case 0:
-        formatstr = "%Ss";
+        formatstr = "%S";
         break;
       case 1:
         formatstr = "%Mm%S";
