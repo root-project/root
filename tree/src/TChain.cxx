@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.58 2002/11/05 13:21:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.59 2002/12/02 18:50:08 rdm Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -630,7 +630,12 @@ Double_t TChain::GetWeight() const
 //  in TChain::fWeight.
 
    if (TestBit(kGlobalWeight)) return fWeight;
-   else                        return fTree->GetWeight();
+   else {
+      if (fTree) return fTree->GetWeight();
+      ((TChain*)this)->LoadTree(0);
+      if (fTree) return fTree->GetWeight();
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -663,7 +668,7 @@ Int_t TChain::LoadTree(Int_t entry)
       // call to t->LoadTree inside the chain would fix that.
       fTree->LoadTree(fReadEntry);
       if (fFriends) {
-         // The current tree as not change but some of its friend might.
+         // The current tree has not changed but some of its friend might.
 
          //An Alternative would move this code to each of the function calling LoadTree
          //(and to overload a few more).
@@ -681,7 +686,7 @@ Int_t TChain::LoadTree(Int_t entry)
                Int_t newNumber = ((TChain*)t)->GetTreeNumber();
                if (oldNumber!=newNumber) {
                   // We can not compare the tree pointers because they could be reused.
-                  // so we compare the number number instead.
+                  // so we compare the tree number instead.
                   needUpdate = kTRUE;
                   fTree->RemoveFriend(old);
                   fTree->AddFriend(t->GetTree(),fe->GetName());

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.138 2002/11/24 14:04:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.139 2002/12/02 18:50:08 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2694,11 +2694,36 @@ Int_t TTree::LoadTree(Int_t entry)
    fReadEntry = entry;
 
    if (fFriends) {
+      // The current tree has not changed but some of its friend might.
+
+      //An Alternative would move this code to each of the function calling LoadTree
+      //(and to overload a few more).
       TIter nextf(fFriends);
       TFriendElement *fe;
+      Bool_t needUpdate = kFALSE;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
-         if (t) t->LoadTree(entry);
+         if (t->IsA()!=TTree::Class()) {
+            Int_t oldNumber = t->GetTreeNumber();
+
+            t->LoadTree(entry);
+
+            Int_t newNumber = t->GetTreeNumber();
+            if (oldNumber!=newNumber) {
+
+               // We can not just compare the tree pointers because they could be reused.
+               // So we compare the tree number instead.
+               needUpdate = kTRUE;
+
+            }
+         } // else we assume it is a simple tree so we have nothing to do.         
+      } // for each friend
+
+      if (needUpdate) {
+         //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
+         if (fPlayer) fPlayer->UpdateFormulaLeaves();
+         //Notify user if requested
+         if (fNotify) fNotify->Notify();
       }
    }
 
@@ -3642,7 +3667,9 @@ TObject *TTreeFriendLeafIter::Next()
    TTree * nextTree;
 
    if (!fLeafIter) {
-     fLeafIter =  fTree->GetListOfLeaves()->MakeIterator(fDirection);
+      TObjArray *list = fTree->GetListOfLeaves();
+      if (!list) return 0; // Can happen with an empty chain.
+      fLeafIter =  list->MakeIterator(fDirection);
    }
 
    next = fLeafIter->Next();

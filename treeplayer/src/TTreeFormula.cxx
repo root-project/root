@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.104 2002/12/01 08:33:08 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.105 2002/12/02 18:50:09 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2004,7 +2004,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       // change from tree to tree!.
 
       // Let's reconstruct the name of the leaf, including the possible friend alias
-      const char* alias = fTree->GetTree()->GetFriendAlias(leaf->GetBranch()->GetTree());
+      TTree *realtree = fTree->GetTree();
+      const char* alias = 0;
+      if (realtree) alias = realtree->GetFriendAlias(leaf->GetBranch()->GetTree());
       if (alias) sprintf(scratch,"%s.%s",alias,leaf->GetName());
       else strcpy(scratch,leaf->GetName());
 
