@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.5 2002/05/31 11:29:24 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.6 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -30,9 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <time.h>
 #if !defined(__CINT__)
-#include <sys/types.h>
 #include <sys/stat.h>
 #endif
 #include <string>
@@ -111,7 +109,7 @@ public:
    virtual Int_t Rm(const char *lfn, Bool_t recursive = kFALSE) = 0;
    virtual Int_t Cp(const char *sourcelfn, const char *targetlfn) = 0;
    virtual Int_t Mv(const char *sourcelfn, const char *targetlfn) = 0;
-   virtual Int_t Chmod(const char *lfn, mode_t mode) = 0;
+   virtual Int_t Chmod(const char *lfn, UInt_t mode) = 0;
    virtual Int_t Chown(const char *lfn, const char *owner,
                        const char *group) = 0;
 
@@ -156,7 +154,7 @@ public:
 
    //--- file access posix interface
    virtual Grid_FileHandle_t GridOpen(const char *lfn, Int_t flags,
-                                      mode_t mode = 0) = 0;
+                                      UInt_t mode = 0) = 0;
 
    virtual Int_t GridClose(Grid_FileHandle_t handle) = 0;
    virtual Int_t GridRead(Grid_FileHandle_t handle, void *buffer,
@@ -166,9 +164,9 @@ public:
    virtual Int_t GridFstat(Grid_FileHandle_t handle,
                            gridstat_t *statbuf) = 0;
    virtual Int_t GridFsync(Grid_FileHandle_t handle) = 0;
-   virtual Int_t GridFchmod(Grid_FileHandle_t handle, mode_t mode) = 0;
-   virtual Int_t GridFchown(Grid_FileHandle_t handle, uid_t owner,
-                            gid_t group) = 0;
+   virtual Int_t GridFchmod(Grid_FileHandle_t handle, UInt_t mode) = 0;
+   virtual Int_t GridFchown(Grid_FileHandle_t handle, UInt_t owner,
+                            UInt_t group) = 0;
    virtual Int_t GridLink(const char *source, const char *target) = 0;
    virtual Int_t GridSymlink(const char *source, const char *target) = 0;
    virtual Int_t GridReadlink(const char *lfn, char *buf, size_t bufsize) = 0;

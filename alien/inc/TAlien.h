@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.6 2002/05/31 11:29:23 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.7 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    Int_t Rm(const char *lfn, Bool_t recursive = kFALSE);
    Int_t Cp(const char *sourcelfn, const char *targetlfn);
    Int_t Mv(const char *sourcelfn, const char *targetlfn);
-   Int_t Chmod(const char *lfn, mode_t mode);
+   Int_t Chmod(const char *lfn, UInt_t mode);
    Int_t Chown(const char *lfn, const char *owner, const char *group);
 
    Int_t AddFile(const char *newlfn, const char *pfn, Int_t size =
@@ -118,7 +118,7 @@ public:
    char *GetFileUrl(const char *msn, const char *path);
 
    //--- file access posix interface
-   Grid_FileHandle_t GridOpen(const char *lfn, Int_t flags, mode_t mode);
+   Grid_FileHandle_t GridOpen(const char *lfn, Int_t flags, UInt_t mode);
    Int_t GridClose(Grid_FileHandle_t handle);
    Int_t GridRead(Grid_FileHandle_t handle, void *buffer, Long_t size,
                   Long64_t offset);
@@ -128,8 +128,8 @@ public:
    Int_t GridFstat(Grid_FileHandle_t handle, gridstat_t *statbuf);
 
    Int_t GridFsync(Grid_FileHandle_t handle);
-   Int_t GridFchmod(Grid_FileHandle_t handle, mode_t mode);
-   Int_t GridFchown(Grid_FileHandle_t handle, uid_t owner, gid_t group);
+   Int_t GridFchmod(Grid_FileHandle_t handle, UInt_t mode);
+   Int_t GridFchown(Grid_FileHandle_t handle, UInt_t owner, UInt_t group);
    Int_t GridLink(const char *source, const char *target);
    Int_t GridSymlink(const char *source, const char *target);
    Int_t GridReadlink(const char *lfn, char *buf, size_t bufsize);

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.8 2003/09/04 10:00:00 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.9 2003/11/13 15:15:11 rdm Exp $
 // Author: Andreas Peters     04.09.2003
 
 /*************************************************************************
@@ -309,7 +309,7 @@ int TAlien::Mv(const char *sourcelfn, const char *targetlfn)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::Chmod(const char *lfn, mode_t mode)
+Int_t TAlien::Chmod(const char *lfn, UInt_t mode)
 {
    // Changes the permission of <lfn> to <mode>.
    // Returns -1 in case of error.
@@ -617,7 +617,7 @@ char *TAlien::GetFileUrl(const char *msn, const char *path)
 }
 
 //______________________________________________________________________________
-Grid_FileHandle_t TAlien::GridOpen(const char *lfn, Int_t flags, mode_t mode)
+Grid_FileHandle_t TAlien::GridOpen(const char *lfn, Int_t flags, UInt_t mode)
 {
    // POSIX open for grid files. Returns 0 in case of error.
 
@@ -685,7 +685,7 @@ Int_t TAlien::GridFsync(Grid_FileHandle_t handle)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::GridFchmod(Grid_FileHandle_t handle, mode_t mode)
+Int_t TAlien::GridFchmod(Grid_FileHandle_t handle, UInt_t mode)
 {
    // POSIX fchmod for grid files. Returns < 0 in case of error.
 
@@ -696,7 +696,7 @@ Int_t TAlien::GridFchmod(Grid_FileHandle_t handle, mode_t mode)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::GridFchown(Grid_FileHandle_t handle, uid_t owner, gid_t group)
+Int_t TAlien::GridFchown(Grid_FileHandle_t handle, UInt_t owner, UInt_t group)
 {
    // POSIX fchown for grid files. Returns < 0 in case of error.
 
