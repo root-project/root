@@ -138,7 +138,9 @@
 
 /* For a machine which has unaddressable bool */
 #ifndef G__UNADDRESSABLEBOOL
-/* #define G__UNADDRESSABLEBOOL */
+#if defined(__APPLE__)
+#define G__UNADDRESSABLEBOOL
+#endif
 #endif
 
 /* Speed up G__strip_quotation */
