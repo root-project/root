@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.6 2002/08/02 11:06:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDatime.cxx,v 1.7 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   05/01/95
 
 /*************************************************************************
@@ -150,6 +150,7 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
    if (toGMT) {
       struct tm *tg;
       tg = gmtime(&t);
+      tg->tm_isdst = -1;
       t  = mktime(tg);
    }
    return (UInt_t)t;
