@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.1 2001/01/15 07:25:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.2 2001/01/16 16:24:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -40,12 +40,13 @@ protected:
     
 public:
     TBranchElement();
-    TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+    TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
+    virtual Int_t   GetID() {return fID;}
     TStreamerInfo  *GetInfo() const {return fInfo;}
     Bool_t          IsFolder() const;
     virtual void    Print(Option_t *option="") const;
