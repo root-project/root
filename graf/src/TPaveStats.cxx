@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.12 2002/04/30 21:33:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.13 2002/07/15 10:45:18 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -76,7 +76,7 @@ TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Optio
 TPaveStats::~TPaveStats()
 {
    // TPaveStats default destructor
-   if (!fParent->TestBit(kInvalidObject)) fParent->RecursiveRemove(this);
+   if ( fParent && !fParent->TestBit(kInvalidObject)) fParent->RecursiveRemove(this);
 }
 
 //______________________________________________________________________________
