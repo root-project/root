@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.9 2001/02/09 10:24:46 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.10 2001/02/09 17:01:52 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,6 @@ int main(int argc, char **argv)
    if (arg5 < 10)  printev = 10000;
 
    Track::Class()->IgnoreTObjectStreamer();
-   Track::Class()->BypassStreamer();      
 
 //         Read case
    if (read) {
