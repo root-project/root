@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: eventa.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Rene Brun   10/01/97
 
 {
@@ -31,7 +31,6 @@
       if(i%50 == 0) printf("Event:%d\n",i);
       nb += T->GetEntry(i);                  //read complete event in memory
       if (i < 3) event->Dump();              //dump the first 3 events
-      event->Clear();                        //clear tracks array
    }
 
 //  Stop timer and print results
