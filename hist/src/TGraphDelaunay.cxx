@@ -612,7 +612,7 @@ TList *TGraphDelaunay::GetContourList(Double_t contour)
    // Returns the X and Y graphs building a contour. A contour level may 
    // consist in several parts not connected to each other. This function
    // finds them and returns them in a graphs' list.
-
+#ifdef SHOULDBEINHISTPAINTER
    // Exit if the contour is outisde the Z range.
    Double_t zmin = fGraph2D->GetZmin();
    Double_t zmax = fGraph2D->GetZmax();
@@ -816,6 +816,8 @@ L02:
    delete [] ys1;
    delete [] SegUsed;
    return list;
+#endif
+   return 0;
 }
 
 
