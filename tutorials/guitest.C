@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.3 2000/10/30 11:01:15 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.4 2001/04/03 10:37:18 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -743,10 +743,10 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
                            200, 2, 2, 2);
    fF2 = new TGCompositeFrame(tf, 60, 20, kVerticalFrame);
-   fF2->AddFrame(fBtn1 = new TGTextButton(fF2, "&Button 1", 0), fL1);
-   fF2->AddFrame(fBtn2 = new TGTextButton(fF2, "B&utton 2", 0), fL1);
-   fF2->AddFrame(fChk1 = new TGCheckButton(fF2, "C&heck 1", 0), fL1);
-   fF2->AddFrame(fChk2 = new TGCheckButton(fF2, "Chec&k 2", 0), fL1);
+   fF2->AddFrame(fBtn1 = new TGTextButton(fF2, "&Button 1", 61), fL1);
+   fF2->AddFrame(fBtn2 = new TGTextButton(fF2, "B&utton 2", 62), fL1);
+   fF2->AddFrame(fChk1 = new TGCheckButton(fF2, "C&heck 1", 71), fL1);
+   fF2->AddFrame(fChk2 = new TGCheckButton(fF2, "Chec&k 2", 72), fL1);
    fF2->AddFrame(fRad1 = new TGRadioButton(fF2, "&Radio 1", 81), fL1);
    fF2->AddFrame(fRad2 = new TGRadioButton(fF2, "R&adio 2", 82), fL1);
    fCombo = new TGComboBox(fF2, 88);
@@ -1020,6 +1020,12 @@ void TestDialog::HandleButtons(Int_t id)
          break;
       case 41:  // stop histogram filling
          fFillHistos = kFALSE;
+         break;
+      case 61:  // show item 1 in the combo box
+         fCombo->Select(1);
+         break;
+      case 62:  // show item 2 in the combo box
+         fCombo->Select(2);
          break;
       case 90:  // add one entry in list box
          fLastEntry++;
