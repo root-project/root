@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.3 2000/07/29 10:54:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.4 2000/09/05 08:50:32 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -65,7 +65,7 @@ enum EObjBits {
    kObjIsParent      = BIT(1),   // if hyperlink is parent of linked list (TLink)
    kObjIsPersistent  = BIT(2),   // if datamember is persistent (TDataMember)
    kObjInCanvas      = BIT(3),   // if object has been inserted in a pad/canvas
-   kModified         = BIT(4),   // if object has been modified
+   kMustCleanup      = BIT(3),   // if object destructor must call Cleanups RecursiveRemove
    kDoneByView       = BIT(5),   // if object was created by the TObjectView
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.6 2000/09/05 11:04:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.7 2000/09/06 14:11:50 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -225,9 +225,8 @@ TObject::~TObject()
    if (gROOT) {
       if (gROOT->MustClean()) {
          if (gROOT == this) return;
-         if (TestBit(kObjInCanvas)) {
-            if (gROOT->GetListOfCanvases()) gROOT->GetListOfCanvases()->RecursiveRemove(this);
-            if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->RecursiveRemove(this);
+         if (TestBit(kMustCleanup)) {
+            gROOT->GetListOfCleanups()->RecursiveRemove(this);
          }
       }
    }
@@ -247,7 +246,7 @@ void TObject::AppendPad(Option_t *option)
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
    }
-   SetBit(kObjInCanvas);
+   SetBit(kMustCleanup);
    gPad->GetListOfPrimitives()->Add(this,option);
    gPad->Modified(kTRUE);
 }
@@ -410,7 +409,7 @@ void TObject::Execute(const char *method, const char *params)
 
    gInterpreter->Execute(this, IsA(), method, params);
 
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -425,7 +424,7 @@ void TObject::Execute(TMethod *method, TObjArray *params)
 
    gInterpreter->Execute(this, IsA(), method, params);
 
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 
@@ -707,7 +706,7 @@ void TObject::SetDrawOption(Option_t *option)
    if (!gPad || !option) return;
 
    TListIter next(gPad->GetListOfPrimitives());
-   delete gPad->GetPrimitive("Tframe");
+   delete gPad->FindObject("Tframe");
    TObject *obj;
    while ((obj = next()))
       if (obj == this) {
