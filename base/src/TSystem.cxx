@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.80 2004/01/25 17:59:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.81 2004/01/28 02:41:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1478,7 +1478,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    //     k : keep the shared library after the session end.
    //     f : force recompilation.
    //     g : compile with debug symbol
-   //     O : optimized the code (ignore if 'd' is specified)
+   //     O : optimized the code (ignore if 'g' is specified)
    //     c : compile only, do not attempt to the load the library.
    //
    // If library_specified is specified, CompileMacro generates the file
