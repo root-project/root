@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.13 2000/12/19 14:36:09 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.14 2000/12/19 16:18:27 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1279,7 +1279,7 @@ int main(int argc, char **argv)
                break;
 
             default:
-               ErrorFatal(kErrFatal, "unknown command line option: %s", *s);
+               ErrorFatal(kErrFatal, "unknown command line option: %c", *s);
          }
 
    if (!gInetdFlag) {

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.15 2000/12/19 15:27:57 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.16 2000/12/19 16:18:27 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -795,8 +795,8 @@ int main(int argc, char **argv)
 
             default:
                if (!gInetdFlag)
-                  fprintf(stderr, "unknown command line option: %s\n", *s);
-               ErrorFatal("unknown command line option: %s", *s);
+                  fprintf(stderr, "unknown command line option: %c\n", *s);
+               ErrorFatal("unknown command line option: %c", *s);
          }
 
    if (argc > 0) {
