@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.78 2002/07/16 17:22:23 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.79 2002/07/17 11:07:37 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3618,7 +3618,7 @@ void TPad::Print(const char *filename, Option_t *option)
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
       if (gVirtualX->WriteGIF(psname)) {
-         Info("TPad::Print", "GIF file %s has been created", psname);
+         Info("Print", "GIF file %s has been created", psname);
       }
       return;
    }
@@ -3638,7 +3638,7 @@ void TPad::Print(const char *filename, Option_t *option)
       fsave->Close();
       delete fsave;
       if (dirsav) dirsav->cd();
-      Info("TPad::Print", "ROOT file %s has been created", psname);
+      Info("Print", "ROOT file %s has been created", psname);
       return;
    }
 
@@ -3688,7 +3688,7 @@ void TPad::Print(const char *filename, Option_t *option)
       gVirtualPS->SetBit(kPrintingPS);
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
-      Info("TPad::Print", "PostScript file %s has been created", psname);
+      Info("Print", "PostScript file %s has been created", psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
@@ -3702,7 +3702,7 @@ void TPad::Print(const char *filename, Option_t *option)
       // Append to existing Postscript file
       gVirtualPS->NewPage();
       Paint();
-      Info("TPad::Print", "Current canvas added to PostScript file %s", psname);
+      Info("Print", "Current canvas added to PostScript file %s", psname);
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
          delete gVirtualPS;
