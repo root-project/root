@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -41,6 +41,7 @@ public:
    TGString(TString s) { fString = s; }
    TGString(const char *s) { fString = s; }
    TGString(const TGString *s) { fString = s->fString; }
+   TGString(Int_t number) { fString += number; }
    virtual ~TGString() { }
 
    Int_t GetLength() const { return fString.Length(); }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.4 2001/01/08 14:35:24 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.5 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
    const TGString *GetText() const { return fText; }
    void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
+   void SetText(Int_t number) { SetText(new TGString(number)); }
    void SetTextJustify(Int_t tmode) { fTMode = tmode; }
 
    ClassDef(TGLabel,0)  // A label GUI element
