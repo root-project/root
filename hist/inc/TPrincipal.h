@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.6 2000/08/12 21:32:26 cholm Exp $
-// $Author: cholm $
-// $Date: 2000/08/12 21:32:26 $
+// $Id: TPrincipal.h,v 1.1 2000/08/15 07:48:50 brun Exp $
+// $Author: brun $
+// $Date: 2000/08/15 07:48:50 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
@@ -39,7 +39,7 @@ protected:
  
   Double_t   fTrace;                // Trace of covarience matrix 
 
-  TList*     fHistograms;           // List of histograms
+  TList     *fHistograms;           // List of histograms
 
   Bool_t     fIsNormalised;         // Normalize matrix?
 
@@ -47,33 +47,33 @@ protected:
   void       MakeTridiagonal();
   void       MakeEigenVectors();
   void       MakeOrdered();
-  void       MakeRealCode(const Char_t* filename, const Char_t* prefix, Option_t* option="");
+  void       MakeRealCode(const char *filename, const char *prefix, Option_t *option="");
 
 public:
   TPrincipal();
   virtual ~TPrincipal();
-  TPrincipal(Int_t nVariables, Option_t* opt="N");
+  TPrincipal(Int_t nVariables, Option_t *opt="N");
   
-  virtual void    AddRow(Double_t* x);
-  virtual void    Browse(TBrowser* b);
-  virtual void    Clear(Option_t* option="");
+  virtual void    AddRow(Double_t *x);
+  virtual void    Browse(TBrowser *b);
+  virtual void    Clear(Option_t *option="");
   const TMatrixD *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
   const TVectorD *GetEigenValues() const      {return &fEigenValues;}
   const TMatrixD *GetEigenVectors() const     {return &fEigenVectors;}
   TList          *GetHistograms() {return fHistograms;}
   const TVectorD *GetMeanValues() const       {return &fMeanValues;}
-  virtual const Char_t* GetName() const { return "PCA"; }
+  virtual const char *GetName() const { return "PCA"; }
   const Double_t *GetRow(Int_t row);
   const TVectorD *GetSigmas() const           {return &fSigmas;}
   const TVectorD *GetUserData() const         {return &fUserData;}
   Bool_t          IsFolder() { return kTRUE;}
-  virtual void    MakeCode(const Char_t* filename ="pca", Option_t *option="");  // *MENU*
-  virtual void    MakeHistograms(const Char_t* name = "pca", Option_t *option="epsdx"); // *MENU*
-  virtual void    MakeMethods(const Char_t* classname = "PCA", Option_t *option=""); // *MENU*
+  virtual void    MakeCode(const char *filename ="pca", Option_t *option="");  // *MENU*
+  virtual void    MakeHistograms(const char *name = "pca", Option_t *option="epsdx"); // *MENU*
+  virtual void    MakeMethods(const char *classname = "PCA", Option_t *option=""); // *MENU*
   virtual void    MakePrincipals();            // *MENU*
   virtual void    P2X(Double_t *p, Double_t *x, Int_t nTest);
-  virtual void    Print(Option_t* opt="MSE");         // *MENU*
-  virtual void    SumOfSquareResiduals(Double_t* x, Double_t* s); 
+  virtual void    Print(Option_t *opt="MSE");         // *MENU*
+  virtual void    SumOfSquareResiduals(Double_t *x, Double_t *s); 
   void            Test(Option_t *option="");       // *MENU*
   virtual void    X2P(Double_t *x, Double_t *p);
 

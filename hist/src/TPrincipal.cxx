@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.6 2000/08/15 09:00:43 brun Exp $
-// $Date: 2000/08/15 09:00:43 $
+// $Id: TPrincipal.cxx,v 1.7 2000/08/15 09:22:33 brun Exp $
+// $Date: 2000/08/15 09:22:33 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -679,7 +679,7 @@ in the transformed space.
 ClassImp(TPrincipal); 
 
 //____________________________________________________________________
-TPrincipal::TPrincipal(void) 
+TPrincipal::TPrincipal() 
 {
   // Empty CTOR, Do not use. 
 
@@ -687,18 +687,7 @@ TPrincipal::TPrincipal(void)
 }
 
 //____________________________________________________________________
-TPrincipal::~TPrincipal(void) 
-{
-  // Empty DTOR
-
-   if (fHistograms) {
-      fHistograms->Delete();
-      delete fHistograms;
-   }
-}
-
-//____________________________________________________________________
-TPrincipal::TPrincipal(Int_t nVariables, Option_t* opt) 
+TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt) 
   : fMeanValues(1,nVariables),
     fSigmas(1,nVariables),
     fCovarianceMatrix(1,nVariables, 1,nVariables),
@@ -749,8 +738,18 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t* opt)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::AddRow(Double_t* p) 
+TPrincipal::~TPrincipal() 
+{
+  // Empty DTOR
+
+   if (fHistograms) {
+      fHistograms->Delete();
+      delete fHistograms;
+   }
+}
+
+//____________________________________________________________________
+void TPrincipal::AddRow(Double_t *p) 
 {
   // Begin_Html
   /* 
@@ -920,8 +919,7 @@ With <IMG
 }
 
 //____________________________________________________________________
-void
-TPrincipal::Browse(TBrowser* b)
+void TPrincipal::Browse(TBrowser *b)
 {
   // Browse the TPrincipal object in the TBrowser. 
   if (fHistograms) {
@@ -941,8 +939,7 @@ TPrincipal::Browse(TBrowser* b)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::Clear(Option_t* opt) 
+void TPrincipal::Clear(Option_t *opt) 
 {
   // Clear the data in Object. Notice, that's not possible to change
   // the dimension of the original data. 
@@ -964,8 +961,7 @@ TPrincipal::Clear(Option_t* opt)
 }
 
 //____________________________________________________________________
-const Double_t*
-TPrincipal::GetRow(Int_t row) 
+const Double_t *TPrincipal::GetRow(Int_t row) 
 {
   // Return a row of the user supplied data. 
   // If row is out of bounds, 0 is returned. 
@@ -980,8 +976,7 @@ TPrincipal::GetRow(Int_t row)
 
 
 //____________________________________________________________________
-void
-TPrincipal::MakeCode(const Char_t* filename, Option_t *opt)
+void TPrincipal::MakeCode(const char *filename, Option_t *opt)
 {
   // Generates the file <filename>, with .C appended if it does
   // argument doesn't end in .cxx or .C.
@@ -1014,8 +1009,7 @@ TPrincipal::MakeCode(const Char_t* filename, Option_t *opt)
 }
 
 //____________________________________________________________________
-void 
-TPrincipal::MakeEigenVectors(void) 
+void TPrincipal::MakeEigenVectors() 
 {
   // Begin_Html
   /*
@@ -1240,8 +1234,7 @@ TPrincipal::MakeEigenVectors(void)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::MakeHistograms(const char* name, Option_t *opt)
+void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 {
   // Make histograms of the result of the analysis. 
   // The option string say which histograms to create
@@ -1454,8 +1447,7 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
 }
 
 //____________________________________________________________________
-void 
-TPrincipal::MakeNormalised(void) 
+void TPrincipal::MakeNormalised() 
 {
   // PRIVATE METHOD: Normalize the covariance matrix
   
@@ -1479,8 +1471,7 @@ TPrincipal::MakeNormalised(void)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::MakeMethods(const Char_t* classname, Option_t *opt) 
+void TPrincipal::MakeMethods(const char *classname, Option_t *opt) 
 {
   // Generate the file <classname>PCA.cxx which contains the
   // implementation of two methods:
@@ -1528,8 +1519,7 @@ TPrincipal::MakeMethods(const Char_t* classname, Option_t *opt)
 
 
 //____________________________________________________________________
-void
-TPrincipal::MakePrincipals(void) 
+void TPrincipal::MakePrincipals() 
 {
   // Perform the principal components analysis. 
   // This is done is several stages:
@@ -1552,8 +1542,7 @@ TPrincipal::MakePrincipals(void)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::MakeOrdered(void)
+void TPrincipal::MakeOrdered()
 {
   // Begin_Html
   /*
@@ -1594,9 +1583,7 @@ TPrincipal::MakeOrdered(void)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
-			 Option_t *opt) 
+void TPrincipal::MakeRealCode(const char *filename, const char *classname, Option_t *opt) 
 {
   // PRIVATE METHOD:
   // This is the method that actually generates the code for the
@@ -1606,8 +1593,8 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
   // The options are: NONE so far
 
   Bool_t  isMethod = (classname[0] == '\0' ? kFALSE : kTRUE);
-  const Char_t* prefix   = (isMethod ? Form("%s::", classname) : "");
-  const Char_t* cv_qual  = (isMethod ? "" : "static ");
+  const char *prefix   = (isMethod ? Form("%s::", classname) : "");
+  const char *cv_qual  = (isMethod ? "" : "static ");
 
   ofstream outFile(filename,ios::out|ios::trunc); 
   if (!outFile) {
@@ -1765,8 +1752,7 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
 }
 
 //____________________________________________________________________
-void 
-TPrincipal::MakeTridiagonal(void)
+void TPrincipal::MakeTridiagonal()
 {
   // Begin_Html
   /*
@@ -1907,8 +1893,7 @@ TPrincipal::MakeTridiagonal(void)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::P2X(Double_t* p, Double_t* x, Int_t nTest)
+void TPrincipal::P2X(Double_t *p, Double_t *x, Int_t nTest)
 {
   // Calculate x as a function of nTest of the most significant
   // principal components p, and return it in x.  
@@ -1924,8 +1909,7 @@ TPrincipal::P2X(Double_t* p, Double_t* x, Int_t nTest)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::Print(Option_t* opt)
+void TPrincipal::Print(Option_t *opt)
 {
   // Print the statistics
   // Options are 
@@ -2011,8 +1995,7 @@ TPrincipal::Print(Option_t* opt)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::SumOfSquareResiduals(Double_t* x, Double_t* s)
+void TPrincipal::SumOfSquareResiduals(Double_t *x, Double_t *s)
 {
   // PRIVATE METHOD: 
   // Begin_html
@@ -2081,8 +2064,7 @@ TPrincipal::SumOfSquareResiduals(Double_t* x, Double_t* s)
 }
 
 //____________________________________________________________________
-void
-TPrincipal::Test(Option_t* opt) 
+void TPrincipal::Test(Option_t *opt) 
 {
   // Test the PCA, bye calculating the sum square of residuals 
   // (see method SumOfSquareResiduals), and display the histogram 
@@ -2099,8 +2081,7 @@ TPrincipal::Test(Option_t* opt)
 }
       
 //____________________________________________________________________
-void
-TPrincipal::X2P(Double_t *x, Double_t *p)
+void TPrincipal::X2P(Double_t *x, Double_t *p)
 {
   // Calculate the principal components from the original data vector
   // x, and return it in p. 
