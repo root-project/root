@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.66 2003/10/23 17:32:24 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.67 2003/10/27 09:48:35 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -311,13 +311,15 @@ extern "C" {
 }
 #endif
 
-#ifdef R__KRB5
-#include "Krb5Auth.h"
-#endif
-
-// Local include
 #include "rootdp.h"
 
+#ifdef R__KRB5
+#include "Krb5Auth.h"
+namespace ROOT {
+   extern krb5_keytab  gKeytab;      // to allow specifying on the command line
+   extern krb5_context gKcontext;
+}
+#endif
 
 //--- Globals ------------------------------------------------------------------
 
@@ -343,12 +345,6 @@ char    gRootdTab[kMAXPATHLEN]   = { 0 };   // keeps track of open files
 int     gUploaded                = 0;
 int     gWritable                = 0;
 int     gReadOnly                = 0;
-
-
-#ifdef R__KRB5
-extern krb5_keytab  gKeytab;      // to allow specifying on the command line
-extern krb5_context gKcontext;
-#endif
 
 using namespace ROOT;
 

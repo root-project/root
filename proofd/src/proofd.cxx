@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.50 2003/10/26 01:03:38 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.51 2003/10/27 09:48:35 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -211,13 +211,21 @@ extern "C" int gethostname(char *, int);
 
 #ifdef R__KRB5
 #include "Krb5Auth.h"
-extern krb5_keytab  gKeytab; // to allow specifying on the command line
-extern krb5_context gKcontext;
+namespace ROOT {
+   extern krb5_keytab  gKeytab; // to allow specifying on the command line
+   extern krb5_context gKcontext;
+}
+#endif
+
+#ifdef R__GLBS
+namespace ROOT {
+   extern int gShmIdCred;  // global, to pass the shm ID to proofserv
+}
 #endif
 
 //--- Globals ------------------------------------------------------------------
 
-const int   kMaxSlaves         = 32;
+const int kMaxSlaves             = 32;
 
 char    gFilePA[40]              = { 0 };
 
@@ -232,10 +240,6 @@ int     gProtocol                = 8;       // increase when protocol changes
 char    gRcFile[kMAXPATHLEN]     = { 0 };
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
-
-#ifdef R__GLBS
-extern int gShmIdCred;  // global, to pass the shm ID to proofserv
-#endif
 
 using namespace ROOT;
 

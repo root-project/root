@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.20 2003/10/27 10:36:33 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.21 2003/10/27 17:46:17 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -146,6 +146,20 @@ extern "C" {
 
 //--- Machine specific routines ------------------------------------------------
 
+#if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
+extern "C" {
+   int seteuid(int euid);
+   int setegid(int egid);
+}
+#endif
+
+#if defined(_AIX)
+extern "C" {
+   int seteuid(uid_t euid);
+   int setegid(gid_t egid);
+}
+#endif
+
 #if !defined(__hpux) && !defined(linux) && !defined(__FreeBSD__) || \
     defined(cygwingcc)
 static int setresgid(gid_t r, gid_t e, gid_t)
@@ -170,7 +184,9 @@ extern "C" {
 #endif
 #endif
 
+
 namespace ROOT {
+
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
 const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
@@ -228,8 +244,6 @@ int  gSaltRequired = -1;
 int  gSec = -1;
 int  gTriedMeth[kMAXSEC];
 
-} //namespace ROOT
-
 #ifdef R__KRB5
 krb5_keytab gKeytab = 0;        // to allow specifying on the command line
 krb5_context gKcontext;
@@ -248,18 +262,49 @@ const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
 
-namespace ROOT {
+//______________________________________________________________________________
+static int rpdstrncasecmp(const char *str1, const char *str2, int n)
+{
+   // Case insensitive string compare of n characters.
+
+   while (n > 0) {
+      int c1 = *str1;
+      int c2 = *str2;
+
+      if (isupper(c1))
+         c1 = tolower(c1);
+
+      if (isupper(c2))
+         c2 = tolower(c2);
+
+      if (c1 != c2)
+         return c1 - c2;
+
+      str1++;
+      str2++;
+      n--;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+static int rpdstrcasecmp(const char *str1, const char *str2)
+{
+   // Case insensitive string compare.
+
+   return rpdstrncasecmp(str1, str2, strlen(str2) + 1);
+}
 
 #ifdef R__KRB5
 //______________________________________________________________________________
-void PrintPrincipal(krb5_principal principal)
+static void PrintPrincipal(krb5_principal principal)
 {
    ErrorInfo("PrintPrincipal: realm == '%s'",
              principal->realm.data);
    ErrorInfo("PrintPrincipal: length == %d type == %d",
              principal->length, principal->type);
    for (int i = 0; i < principal->length; i++) {
-      ErrorInfo("PrintPrincipal: data[%d]==%s",
+      ErrorInfo("PrintPrincipal: data[%d] == %s",
                 i, principal->data[i].data);
    }
 }
@@ -1149,7 +1194,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
          }
 
          // We are at the end and there will be a continuation line ...
-         if ((int) rest[0] == 92) {
+         if (rest[0] == '\\') {
             cont = 1;
             continue;
          }
@@ -1178,7 +1223,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
             if (strlen(tmp) > 1) {
 
                for (tmet = 0; tmet < kMAXSEC; tmet++) {
-                  if (!strcasecmp(kAuthMeth[tmet],tmp))
+                  if (!rpdstrcasecmp(kAuthMeth[tmet], tmp))
                      break;
                }
                if (tmet < kMAXSEC) {
