@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.18 2001/11/21 15:51:50 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1219,13 +1219,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.18 2001/11/21 15:51:50 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.18 2001/11/21 15:51:50 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1422,9 +1422,11 @@ void TPostScript::Initialize()
    if( format == 0 )  format = 4;
    if( format == 99 ) format = 0;
 //*-*
-   PrintStr("%%Title:");
+   PrintStr("%%Title: ");
+   const char *pstitle = gStyle->GetTitlePS();
+   if (!strlen(pstitle)) pstitle = gPad->GetMother()->GetTitle();
    PrintStr(GetName());
-   if( fMode != 3) {;
+   if(!strlen(pstitle) && fMode != 3) {;
       if ( fMode == 1 || fMode == 4) PrintFast(10," (Portrait");
       if ( fMode == 2 || fMode == 5) PrintFast(11," (Landscape");
       if ( format <= 99 ) {;
@@ -1441,6 +1443,7 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
+      PrintStr(pstitle);
       PrintStr("@");
    }
 
@@ -1930,7 +1933,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.17 2001/11/19 17:37:38 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.18 2001/11/21 15:51:50 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from

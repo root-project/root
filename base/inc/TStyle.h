@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.5 2001/05/09 13:27:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.6 2001/06/05 11:29:42 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -134,6 +134,7 @@ private:
         TArrayI       fPalette;           //Color palette
         TString       fLineStyle[30];     //String describing line style i (for postScript)
         TString       fHeaderPS;          //User defined additional Postscript header
+        TString       fTitlePS;           //User defined Postscript file title
         TString       fFitFormat;         //Printing format for fit parameters
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
         Double_t      fTimeOffset;        //Time offset (UTC) to the beginning of an axis
@@ -250,12 +251,14 @@ public:
         Float_t          GetTitleW() const     {return fTitleW;}  //return width of histogram title TPaveLabel
         Float_t          GetTitleH() const     {return fTitleH;}  //return height of histogram title TPavelabel
         const char      *GetHeaderPS() const {return fHeaderPS.Data();}
+        const char      *GetTitlePS()  const {return fTitlePS.Data();}
         const char      *GetLineStyleString(Int_t i=1) const;
         Float_t          GetLineScalePS() const {return fLineScalePS;}
         virtual void     Reset(Option_t *option="");
 
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
         void             SetHeaderPS(const char *header);
+        void             SetTitlePS(const char *pstitle);
         void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
         void             SetLineStyleString(Int_t i, const char *text);
         void             SetNdivisions(Int_t n=510, Option_t *axis="X");

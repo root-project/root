@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.10 2001/10/02 08:03:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.11 2001/10/23 14:15:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 //  - TStyle::SetNdivisions
 //  - TStyle::SetAxisColor
 //  - TStyle::SetHeaderPS
+//  - TStyle::SetTitlePS
 //  - TStyle::SetLabelColor
 //  - TStyle::SetLabelFont
 //  - TStyle::SetLabelOffset
@@ -337,6 +338,7 @@ void TStyle::Copy(TObject &obj)
       ((TStyle&)obj).fPalette.fArray[i] = fPalette.fArray[i];
    }
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
+   ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
@@ -429,6 +431,7 @@ void TStyle::Reset(Option_t *)
    fShowEventStatus= 0;
    fLegoInnerR     = 0.5;
    fHeaderPS       = "";
+   fTitlePS        = "";
 
    SetDateX();
    SetDateY();
@@ -628,6 +631,15 @@ void TStyle::SetHeaderPS(const char *header)
 // This information is used in TPostScript::Initialize
 
    fHeaderPS = header;
+}
+
+//______________________________________________________________________________
+void TStyle::SetTitlePS(const char *pstitle)
+{
+// Define a string to be used in the %%Title of the Postscript files.
+// If this string is not defined, ROOT will use the canvas title.
+
+   fTitlePS = pstitle;
 }
 
 //______________________________________________________________________________
