@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.16 2002/12/09 15:12:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.17 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -57,6 +57,20 @@ inline void *operator new(size_t /*size*/, ROOT::TOperatorNewHelper *p)
 #ifdef R__PLACEMENTDELETE
 // this should never be used but help quiet down some compiler!
 inline void operator delete(void*, ROOT::TOperatorNewHelper*) { }
+#endif
+
+// The STL GenerateInitInstance are not unique and hence are declared static
+// (not accessible outside the dictionary and not linker error for duplicate)
+#if defined(__CINT__)
+#define RootStlStreamer(name,STREAMER) 
+#else
+#define RootStlStreamer(name,STREAMER)                               \
+namespace ROOT {                                                     \
+   static TGenericClassInfo *GenerateInitInstance(const name*);      \
+   static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
+           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
+   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
+}
 #endif
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.152 2004/01/23 18:50:03 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.153 2004/01/27 19:52:48 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1265,7 +1265,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    fprintf(fp, "namespace ROOT {\n");
 
    fprintf(fp, "   // Return the actual TClass for the object argument\n");
-   fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",mappedname.c_str());
+   fprintf(fp, "   static TClass *%s_IsA(const void *obj) {\n",mappedname.c_str());
    if (!cl.HasMethod("IsA")) {
       fprintf(fp, "      return GetROOT()->GetClass(typeid(*(%s*)obj));\n",classname.c_str());
    } else {
@@ -1276,7 +1276,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    if (HasDefaultConstructor(cl)) {
       // write the constructor wrapper only for concrete classes
       fprintf(fp, "   // Wrappers around operator new\n");
-      fprintf(fp, "   void *new_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "   static void *new_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      return  p ? ");
       if (HasCustomOperatorNewPlacement(cl)) {
         fprintf(fp, "new(p) %s : ",classname.c_str());
@@ -1286,22 +1286,22 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       fprintf(fp, "new %s;\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void *newArray_%s(Long_t size) {\n",mappedname.c_str());
+      fprintf(fp, "   static void *newArray_%s(Long_t size) {\n",mappedname.c_str());
       fprintf(fp, "      return new %s[size];\n",classname.c_str());
       fprintf(fp, "   }\n");
    }
 
    if (NeedDestructor(cl)) {
       fprintf(fp, "   // Wrapper around operator delete\n");
-      fprintf(fp, "   void delete_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "   static void delete_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      delete ((%s*)p);\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void deleteArray_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "   static void deleteArray_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      delete [] ((%s*)p);\n",classname.c_str());
       fprintf(fp, "   }\n");
 
-      fprintf(fp, "   void destruct_%s(void *p) {\n",mappedname.c_str());
+      fprintf(fp, "   static void destruct_%s(void *p) {\n",mappedname.c_str());
       fprintf(fp, "      typedef %s current_t;\n",classname.c_str());
       fprintf(fp, "      ((current_t*)p)->~current_t();\n");
       fprintf(fp, "   }\n");
@@ -2045,17 +2045,17 @@ void WriteClassInit(G__ClassInfo &cl)
            mappedname.c_str() );
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
-      fprintf(fp, "   void %s_Dictionary();\n",mappedname.c_str());
+      fprintf(fp, "   static void %s_Dictionary();\n",mappedname.c_str());
 
-   fprintf(fp, "   TClass *%s_IsA(const void*);\n",mappedname.c_str());
+   fprintf(fp, "   static TClass *%s_IsA(const void*);\n",mappedname.c_str());
    if (HasDefaultConstructor(cl)) {
-      fprintf(fp, "   void *new_%s(void *p = 0);\n",mappedname.c_str());
-      fprintf(fp, "   void *newArray_%s(Long_t size);\n",mappedname.c_str());
+      fprintf(fp, "   static void *new_%s(void *p = 0);\n",mappedname.c_str());
+      fprintf(fp, "   static void *newArray_%s(Long_t size);\n",mappedname.c_str());
    }
    if (NeedDestructor(cl)) {
-      fprintf(fp, "   void delete_%s(void *p);\n",mappedname.c_str());
-      fprintf(fp, "   void deleteArray_%s(void *p);\n",mappedname.c_str());
-      fprintf(fp, "   void destruct_%s(void *p);\n",mappedname.c_str());
+      fprintf(fp, "   static void delete_%s(void *p);\n",mappedname.c_str());
+      fprintf(fp, "   static void deleteArray_%s(void *p);\n",mappedname.c_str());
+      fprintf(fp, "   static void destruct_%s(void *p);\n",mappedname.c_str());
    }
    fprintf(fp, "\n");
 
@@ -2073,6 +2073,9 @@ void WriteClassInit(G__ClassInfo &cl)
            classname.c_str(), classname.c_str() );
    fprintf(fp, "#endif\n");
 #endif
+   if (stl) 
+      fprintf(fp, "   static // The GenerateInitInstance for STL are not unique and should not be externally accessible\n");
+
    fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n",
            classname.c_str());
 
@@ -2169,7 +2172,7 @@ void WriteClassInit(G__ClassInfo &cl)
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       fprintf(fp, "\n   // Dictionary for non-ClassDef classes\n");
-      fprintf(fp, "   void %s_Dictionary() {\n",mappedname.c_str());
+      fprintf(fp, "   static void %s_Dictionary() {\n",mappedname.c_str());
       fprintf(fp, "      ROOT::GenerateInitInstance((const %s*)0x0)->GetClass();\n",classname.c_str());
       fprintf(fp, "   }\n\n");
    }

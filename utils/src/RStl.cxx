@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.3 2004/01/16 21:29:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.4 2004/01/27 19:52:48 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -177,7 +177,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "_____________________________________________________________\n");
    fprintf(file, "namespace ROOT {\n");
    fprintf(file, "   typedef %s %s;\n",shortTypeName.c_str(), typedefName.c_str());
-   fprintf(file, "   void %s(TBuffer &R__b, void *R__p)\n",streamerName.c_str());
+   fprintf(file, "   static void %s(TBuffer &R__b, void *R__p)\n",streamerName.c_str());
    fprintf(file, "   {\n");
    fprintf(file, "      if (gDebug>1) Info(__FILE__,\"Running compiled streamer for %s at %%p\",R__p);\n",shortTypeName.c_str());
    fprintf(file, "      %s &R__stl = *(%s *)R__p;\n",shortTypeName.c_str(),shortTypeName.c_str());
@@ -265,8 +265,8 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "   } // end of %s streamer\n",stlcl.Fullname());
    fprintf(file, "} // close namespace ROOT\n\n");
 
-   fprintf(file, "// Register the streamer\n");
-   fprintf(file, "RootStreamer(%s,%s);\n", typedefName.c_str(), streamerName.c_str());
+   fprintf(file, "// Register the streamer (a typedef is used to avoid problem with macro parameters\n");
+   fprintf(file, "RootStlStreamer(%s,%s);\n", typedefName.c_str(), streamerName.c_str());
    fprintf(file, "\n");
 
 }
