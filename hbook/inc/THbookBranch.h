@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.2 2002/02/20 16:57:30 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookBranch.h,v 1.3 2002/04/30 07:26:47 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -39,7 +39,7 @@ public:
         const char *GetBlockName() const {return fBlockName.Data();}
    virtual void     SetAddress(void *addobj);
            void     SetBlockName(const char *name) {fBlockName=name;}
-   virtual void     SetEntries(Int_t n) {fEntries=n;}
+   virtual void     SetEntries(Double_t n) {fEntries=n;}
 
    ClassDef(THbookBranch,1)  //A branch for a THbookTree
 };
