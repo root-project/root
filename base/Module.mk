@@ -76,9 +76,6 @@ distclean-base: clean-base
 distclean::     distclean-base
 
 ##### extra rules ######
-$(BASEDIRS)/G__Base2.d: $(BASEDS2) $(RMKDEP)
-	$(MAKEDEP) $@ "$(CFLAGS) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
-	   $*.cxx > $@
 ifeq ($(ARCH),alphacxx6)
 $(BASEDIRS)/TRandom.o: $(BASEDIRS)/TRandom.cxx
 	$(CXX) $(NOOPT) $(CXXFLAGS) -o $@ -c $<

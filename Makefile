@@ -345,10 +345,14 @@ build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	fi)
 
 %.d: %.c $(RMKDEP)
-	$(MAKEDEP) $@ "$(CFLAGS)" $*.c > $@
+	$(MAKEDEP) $@ "$(CFLAGS)" $< > $@
+
+G__%.d: G__%.cxx $(RMKDEP)
+	$(MAKEDEP) $@ "$(CXXFLAGS) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
+	   $< > $@
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
+	$(MAKEDEP) $@ "$(CXXFLAGS)" $< > $@
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
