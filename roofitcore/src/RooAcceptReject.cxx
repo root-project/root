@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.19 2001/11/06 18:32:59 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.20 2001/11/07 01:56:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.19 2001/11/06 18:32:59 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.20 2001/11/07 01:56:06 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -216,6 +216,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
 
     // first generate enough events to get reasonable estimates for the integral and
     // maximum function value
+
     while(_totalEvents < _minTrials) {
       addEventToCache();
 
@@ -336,8 +337,17 @@ void RooAcceptReject::addEventToCache() {
 Double_t RooAcceptReject::getFuncMax() 
 {
   // Generate the minimum required number of samples for a reliable maximum estimate
-  while(_totalEvents < _minTrials) addEventToCache();
-  
+  while(_totalEvents < _minTrials) {
+    addEventToCache();
+
+    // Limit cache size to 1M events
+    if (_cache->numEntries()>1000000) {
+      cout << "RooAcceptReject::getFuncMax: resetting event cache" << endl ;
+      _cache->reset() ;
+      _eventsUsed = 0 ;
+    }
+  }  
+
   return _maxFuncVal ;
 }
 

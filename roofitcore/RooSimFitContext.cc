@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.12 2001/10/27 22:28:22 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.13 2001/11/19 07:24:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ ClassImp(RooSimFitContext)
 ;
 
 RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf, const RooArgSet* projDeps) : 
-  RooFitContext(data,simpdf,kFALSE,kTRUE,projDeps)
+  RooFitContext(data,simpdf,kFALSE,kTRUE,projDeps), _nGlobEvents(-1)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 
@@ -105,8 +105,31 @@ RooSimFitContext::~RooSimFitContext()
 }
 
 
+RooFitResult* RooSimFitContext::fit(Option_t *fitOptions, Option_t* optOptions) 
+{
+  // Setup and perform MINUIT fit of PDF to dataset
+  if (_zombie) return 0 ;
 
-Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy) const 
+  // Parse our fit options string
+  TString fitOpts= fitOptions;
+  fitOpts.ToLower();
+  
+  Bool_t extendedMode = fitOpts.Contains("e") ;
+  Bool_t globExtMode  = fitOpts.Contains("g") ;
+
+  if (globExtMode) {
+    if (extendedMode) {
+      _nGlobEvents = _dataClone->numEntries() ;
+      cout << "nGlobEvents = " << _dataClone->numEntries() << endl ;
+    } else {
+      cout << "RooSimFitContext::fit: WARNING option 'g' meaningless without option 'e'" << endl ;
+    }    
+  }
+
+  return RooFitContext::fit(fitOptions,optOptions) ;
+}
+
+Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy, Int_t nObserved) const 
 {
   Double_t nllSum(0) ;
   // Update likelihood from subcontexts that changed
@@ -116,7 +139,7 @@ Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy) const
     if (_ctxArray[i]) {
       if (_dirtyArray[i]) {
 	Bool_t extend = (_extendedMode && _ctxArray[i]->_pdfClone->canBeExtended()) ;
-	_nllArray[i] = _ctxArray[i]->nLogLikelihood(extend) + _offArray[i] ;
+	_nllArray[i] = _ctxArray[i]->nLogLikelihood(extend,_nGlobEvents) + _offArray[i] ;
 	_dirtyArray[i] = kFALSE ;
       }
       nllSum += _nllArray[i] ;

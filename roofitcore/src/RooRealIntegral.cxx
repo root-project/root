@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.49 2001/10/31 07:19:30 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.50 2001/11/19 07:23:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -95,11 +95,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   
   // Make internal copy of dependent list
   RooArgSet intDepList(depList) ;
-
-  // Force projected dependents as parameters
-  RooAbsCollection* pdset = intDepList.selectByAttrib("ProjectedDependent",kTRUE) ;
-  intDepList.remove(*pdset) ;
-  delete pdset ;
 
   RooAbsArg *arg ;
 
@@ -306,7 +301,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       TIterator *adIter = argDepList->createIterator() ;
       while (argDep=(RooAbsArg*)adIter->Next()) {
 	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-	  numIntDepList.add(*argDep) ;
+	  numIntDepList.add(*argDep,kTRUE) ;
 	}
       }
       delete adIter ;
@@ -324,7 +319,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Process only derived RealLValues
       if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived()) {
-	numIntDepList.add(*arg) ;	
+	numIntDepList.add(*arg,kTRUE) ;	
       } else {
 	
 	// Expand server in final dependents 
@@ -336,7 +331,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	RooAbsArg* dep ;
 	while(dep=(RooAbsArg*)iter->Next()) {
 	  if (!_anaList.find(dep->GetName())) {
-	    numIntDepList.add(*dep) ;
+	    numIntDepList.add(*dep,kTRUE) ;
 	  }
 	}      
 	delete iter ;

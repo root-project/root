@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.42 2001/11/19 23:09:53 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.43 2001/11/22 01:07:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,7 @@ static TVirtualFitter *_theFitter(0);
 RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
 			     Bool_t cloneData, Bool_t clonePdf, const RooArgSet* projDeps) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
-  _ownData(cloneData), _zombie(kFALSE)
+  _ownData(cloneData), _zombie(kFALSE), _projDeps(0)
 {
   // Constructor
 
@@ -165,21 +165,10 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf,
   // Store normalization set
   _normSet = (RooArgSet*) data->get()->snapshot(kFALSE) ;
 
-
-  // Mark projected dependents
-  ((RooArgSet*)_dataClone->get())->setAttribAll("ProjectedDependent",kFALSE) ;
+  // Remove projected dependents from normalization set
   if (projDeps) {
-    TIterator* iter = projDeps->createIterator() ;
-    RooAbsArg* pdep ;
-    while(pdep=(RooAbsArg*)iter->Next()) {
-      RooAbsArg* pdep2 = _dataClone->get()->find(pdep->GetName()) ;
-      if (!pdep2) {
-	cout << "RooFitContext(" << GetName() << ") WARNING: projection request for non-dependent " 
-	     << pdep->GetName() << " ignored" << endl ;
-	continue ;
-      }
-      pdep2->setAttribute("ProjectedDependent",kTRUE) ;
-    }
+    _projDeps = (RooArgSet*) projDeps->snapshot(kFALSE) ;
+    _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
   }
 }
 
@@ -192,6 +181,7 @@ RooFitContext::~RooFitContext()
   if (_ownData) {
     delete _dataClone ;
   }
+  if (_projDeps) delete _projDeps ;
   delete _floatParamList ;
   delete _constParamList ;
   delete _normSet ;
@@ -330,7 +320,12 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       // Refresh normSet pointer (same contents) to force a normalization sync in all PDF components
       delete _normSet ;
       _normSet = (RooArgSet*) _dataClone->get()->snapshot(kFALSE) ;      
+      // Remove projected dependents from normalization set
+      if (_projDeps) {
+	_normSet->remove(*_projDeps,kTRUE,kTRUE) ;
+      }
       
+
       // WVE --- Is this still necessary now that we use RooNameSets? YES!!! --------
       //         Forces actual calculation of normalization of cached 
       //         variables while this is still posible
@@ -737,7 +732,7 @@ RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions)
 
 
 
-Double_t RooFitContext::nLogLikelihood(Bool_t extended) const 
+Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const 
 {
   // Return the likelihood of this PDF for the given dataset
   Double_t result(0);
@@ -746,6 +741,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended) const
     cout << _dataClone->GetName() << "::nLogLikelihood: cannot get values from dataset " << endl ;
     return 0.0;
     }
+
 
   Stat_t events= _dataClone->numEntries();
   for(Int_t index= 0; index<events; index++) {
@@ -759,8 +755,9 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended) const
   }
 
   // include the extended maximum likelihood term, if requested
+  nObserved = (nObserved==-1) ? _dataClone->numEntries() : nObserved ;
   if(extended) {
-    result+= _pdfClone->extendedTerm(events);
+    result+= _pdfClone->extendedTerm(nObserved);
   }
 
   return result;

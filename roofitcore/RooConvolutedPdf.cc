@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.27 2001/11/21 19:36:37 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.28 2001/11/21 21:35:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -286,7 +286,6 @@ Double_t RooConvolutedPdf::evaluate() const
 Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
 	  				        RooArgSet& analVars, const RooArgSet* normSet) const 
 {
-
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
 
@@ -367,7 +366,10 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   Int_t masterCode(0) ;
   Int_t tmp(0) ;
   masterCode = _codeReg.store(&tmp,1,intCoefSet,intConvSet,normCoefSet,normConvSet)+1 ; // takes ownership of all sets
-  analVars.add(allVars) ;
+
+  RooArgSet* allDeps = getDependents(allVars) ;
+  analVars.add(*allDeps) ;
+  delete allDeps ;
 
 //   cout << this << "---> masterCode = " << masterCode << endl ;
   
@@ -556,7 +558,7 @@ void RooConvolutedPdf::syncCoefNormalizations(RooArgList& coefNormList, const Ro
 
     delete coefVars ;
   }
-
+  
   Int_t i ;
   for (i=0 ; i<_coefVarList.getSize() ; i++) {
     RooRealIntegral* coefInt = new RooRealIntegral("coefInt","coefInt",(RooAbsReal&)(*_coefVarList.at(i)),*nset) ;
