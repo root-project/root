@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.3 2001/08/01 01:24:08 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.4 2001/08/02 21:39:12 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -19,6 +19,7 @@
 #include "RooFitCore/RooSetProxy.hh"
 #include "RooFitCore/RooSimFitContext.hh"
 class RooAbsCategoryLValue ;
+class RooFitResult ;
 
 class RooSimultaneous : public RooAbsPdf {
 public:
@@ -34,7 +35,7 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
-  virtual Int_t fitTo(RooDataSet& data, Option_t *options, Double_t *minValue=0) ;
+  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *options) ;
   
 protected:
 

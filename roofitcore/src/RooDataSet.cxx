@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.36 2001/08/17 00:35:57 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.37 2001/08/17 01:18:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -189,21 +189,12 @@ void RooDataSet::initialize(const RooArgSet& vars) {
   // Initialize dataset: attach variables of internal ArgSet 
   // to the corresponding TTree branches
 
-  // iterate over the variables for this dataset
-  TIterator* iter = vars.MakeIterator() ;
+  // Attach each variable to the dataset
+  _iterator->Reset() ;
   RooAbsArg *var;
-  while(0 != (var= (RooAbsArg*)iter->Next())) {
-    if (!var->isFundamental()) {
-      cout << "RooDataSet::initialize(" << GetName() 
-	   << "): Data set cannot contain non-fundamental types, ignoring " 
-	   << var->GetName() << endl ;
-    } else {
-      RooAbsArg* varClone = (RooAbsArg*) var->Clone() ;
-      varClone->attachToTree(*_tree) ;
-      _vars.add(*varClone) ;
-    }
+  while(0 != (var= (RooAbsArg*)_iterator->Next())) {
+    var->attachToTree(*_tree) ;
   }
-  delete iter ;
 }
 
 

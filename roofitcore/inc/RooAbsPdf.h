@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.19 2001/08/01 01:24:08 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.20 2001/08/02 21:39:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@ class RooDataSet;
 class RooArgSet ;
 class RooRealProxy ;
 class RooGenContext ;
+class RooFitResult ;
 class TPaveText;
 class TH1F;
 class TH2F;
@@ -55,7 +56,7 @@ public:
                         Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
 
   // Interactions with a dataset  
-  virtual Int_t fitTo(RooDataSet& data, Option_t *options = "", Double_t *minValue= 0) ;
+  virtual const RooFitResult* fitTo(RooDataSet& data, Option_t *options = "") ;
   Int_t fitTo(TH1F* hist, Option_t *options = "", Double_t *minValue= 0) { return 0 ; }
 
   // Function evaluation support

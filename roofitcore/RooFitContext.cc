@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.16 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.17 2001/08/15 23:38:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,6 +36,7 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooFitResult.hh"
 
 ClassImp(RooFitContext)
 ;
@@ -85,20 +86,29 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
   _pdfClone->resetErrorCounters() ;
 
   // Cache parameter list
-  _paramList = _pdfClone->getParameters(_dataClone) ;
-  _paramList->Sort() ;
+  RooArgSet* paramList = _pdfClone->getParameters(_dataClone) ;
+
+  _floatParamList = paramList->selectByAttrib("Constant",kFALSE) ; 
+  _floatParamList->Sort() ;
+  _floatParamList->SetName("floatParamList") ;
+
+  _constParamList = paramList->selectByAttrib("Constant",kFALSE) ;
+  _constParamList->Sort() ;
+  _constParamList->SetName("constParamList") ;
+
+  delete paramList ;
 
   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
-  TIterator* pIter = _paramList->MakeIterator() ;
+  TIterator* pIter = _floatParamList->MakeIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)pIter->Next()) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       cout << "RooFitContext::RooFitContext: removing parameter " << arg->GetName() 
 	   << " from list because it is not of type RooRealVar" << endl ;
-      _paramList->remove(*arg) ;
+      _floatParamList->remove(*arg) ;
     }
   }
-  _nPar      = _paramList->GetSize() ;  
+  _nPar      = _floatParamList->GetSize() ;  
   delete pIter ;
 
   // Store the original leaf node list
@@ -114,7 +124,8 @@ RooFitContext::~RooFitContext()
   if (_ownData) {
     delete _dataClone ;
   }
-  delete _paramList ;
+  delete _floatParamList ;
+  delete _constParamList ;
 }
 
 
@@ -131,7 +142,8 @@ void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) 
   _pdfCompList->printToStream(os,opt,indent) ;
 
   os << indent << "Parameter list:" << endl ;
-  _paramList->printToStream(os,opt,indent) ;
+  _constParamList->printToStream(os,opt,indent) ;
+  _floatParamList->printToStream(os,opt,indent) ;
 
   return ;
 }
@@ -140,21 +152,21 @@ void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) 
 Double_t RooFitContext::getPdfParamVal(Int_t index)
 {
   // Access PDF parameter value by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_paramList->At(index))->getVal() ;
+  return ((RooRealVar*)_floatParamList->At(index))->getVal() ;
 }
 
 
 Double_t RooFitContext::getPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_paramList->At(index))->getError() ;  
+  return ((RooRealVar*)_floatParamList->At(index))->getError() ;  
 }
 
 
 Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   // Modify PDF parameter value by ordinal index (needed by MINUIT)
-  RooRealVar* par = (RooRealVar*)_paramList->At(index) ;
+  RooRealVar* par = (RooRealVar*)_floatParamList->At(index) ;
 
   if (par->getVal()!=value) {
     if (verbose) cout << par->GetName() << "=" << value << ", " ;
@@ -170,7 +182,7 @@ Bool_t RooFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose
 void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
-  ((RooRealVar*)_paramList->At(index))->setError(value) ;    
+  ((RooRealVar*)_floatParamList->At(index))->setError(value) ;    
 }
 
 
@@ -370,7 +382,7 @@ Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
 
 
 
-Int_t RooFitContext::fit(Option_t *options, Double_t *minVal) 
+const RooFitResult* RooFitContext::fit(Option_t *options) 
 {
   // Setup and perform MINUIT fit of PDF to dataset
 
@@ -388,13 +400,18 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   Bool_t doOptData     = opts.Contains("oo") ;
   Bool_t doOptCache    = opts.Contains("ooo") ;
   Bool_t doStrat0      = opts.Contains("0") ;
+  Bool_t doSaveResult  = opts.Contains("r") ;
+
+  // Create fit result container if so requested
+  RooFitResult* fitRes(0) ;
+  if (doSaveResult) fitRes = new RooFitResult ;
 
   // Check if an extended ML fit is possible
   if(_extendedMode) {
     if(!_pdfClone->canBeExtended()) {
       cout << _pdfClone->GetName() << "::fitTo: this PDF does not support extended "
            << "maximum likelihood fits" << endl;
-      return -1;
+      return 0;
     }
     if(verbose) {
       cout << _pdfClone->GetName() << "::fitTo: will use extended maximum likelihood" << endl;
@@ -404,11 +421,17 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   // Check if there are any unprotected multiple occurrences of dependents
   if (_pdfClone->checkDependents(_dataClone->get())) {
     cout << "RooFitContext::fit: Error in PDF dependents, abort" << endl ;
-    return -1 ;
+    return 0 ;
   }
 
   // Run the optimizer if requested
   if (doOptPdf||doOptData||doOptCache) optimize(doOptPdf,doOptData,doOptCache) ;
+
+  // Save constant and initial parameters 
+  if (doSaveResult) {
+    fitRes->setConstParList(*_constParamList) ;
+    fitRes->setInitParList(*_floatParamList) ;
+  }
 
   // Create a log file if requested
   if(saveLog) {
@@ -431,7 +454,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   if(profileTimer) timer.Start();
 
   // Initialize MINUIT
-  Int_t nPar= _paramList->GetSize();
+  Int_t nPar= _floatParamList->GetSize();
   Double_t params[100], arglist[100];
 
   if (_theFitter) delete _theFitter ;
@@ -441,9 +464,9 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   _theFitter->Clear();
 
   // Be quiet during the setup
-  arglist[0] = -1;
-  _theFitter->ExecuteCommand("SET PRINT",arglist,1);
-  _theFitter->ExecuteCommand("SET NOWARNINGS",arglist,0);
+  //arglist[0] = -1;
+  //_theFitter->ExecuteCommand("SET PRINT",arglist,1);
+  //_theFitter->ExecuteCommand("SET NOWARNINGS",arglist,0);
 
   // Tell MINUIT to use our global glue function
   _theFitter->SetFCN(RooFitGlue);
@@ -455,7 +478,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
   // Declare our parameters
   Int_t index(0), nFree(nPar);
   for(index= 0; index < nPar; index++) {
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_paramList->At(index)) ;
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->At(index)) ;
 
     Double_t pstep(0) ;
     Double_t pmin= par->getFitMin();
@@ -467,7 +490,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
       if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
 	cout << "RooFitContext::fit: Error, non-constant parameter " << par->GetName() 
 	     << " is not of type RooRealVar" << endl ;
-	return -1 ;
+	return 0 ;
       }
 
       // Calculate step size
@@ -554,10 +577,14 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
     }
   }
 
-  if(minVal != 0) { // Get the minimum function value if requested
-    Double_t edm, errdef;
+  if(doSaveResult) { // Get the minimum function value if requested
+    Double_t edm, errdef, minVal;
     Int_t nvpar, nparx;
-    _theFitter->GetStats(*minVal, edm, errdef, nvpar, nparx);
+    _theFitter->GetStats(minVal, edm, errdef, nvpar, nparx);
+    fitRes->setMinNLL(minVal) ;
+    fitRes->setEDM(edm) ;    
+    fitRes->setFinalParList(*_floatParamList) ;
+    fitRes->fillCorrMatrix() ;
   }
 
   // Print the time used, if requested
@@ -574,7 +601,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
     _logfile= 0;
   }
 
-  return status;
+  return fitRes ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.5 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.6 2001/08/15 23:38:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -145,12 +145,12 @@ Bool_t RooSimFitContext::setPdfParamVal(Int_t index, Double_t value, Bool_t verb
   // Forward parameter change to sub-contexts
   for (i=0 ; i<_nCtx ; i++) {
     if (_ctxArray[i]) {
-      TObject* par = _paramList->At(index) ;
+      TObject* par = _floatParamList->At(index) ;
       if (!par) {
 	cout << "RooSimFitContext::setPdfParamVal: cannot find parameter with index " << index << endl ;
 	assert(0) ;
       }      
-      Int_t subIdx = _ctxArray[i]->_paramList->IndexOf(par) ;
+      Int_t subIdx = _ctxArray[i]->_floatParamList->IndexOf(par) ;
 
       // Mark subcontexts as dirty
       if (subIdx!=-1) {	  
