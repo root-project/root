@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.142 2003/06/06 16:41:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.143 2003/06/18 15:28:50 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4061,7 +4061,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
 
-      stats->SetParent(fFunctions);
+      stats->SetParent(fH);
       stats->SetOptFit(dofit);
       stats->SetOptStat(dostat);
       stats->SetFillColor(gStyle->GetStatColor());
@@ -4213,7 +4213,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
 
-      stats->SetParent(fFunctions);
+      stats->SetParent(fH);
       stats->SetOptFit(dofit);
       stats->SetOptStat(dostat);
       stats->SetFillColor(gStyle->GetStatColor());
