@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.27 2001/12/02 16:16:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.28 2001/12/02 16:22:58 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -263,6 +263,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
 
    SetTitle(name);
    if (name) {
+      if (*name == '*') return; //case happens via SavePrimitive
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
       fNumber = -1;
@@ -1660,19 +1661,39 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
 
+   Int_t i;
    char quote = '"';
    out<<"   "<<endl;
-   if (gROOT->ClassSaved(TF1::Class())) {
-       out<<"   ";
-   } else {
-       out<<"   TF1 *";
-   }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
+      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
+      if (fNpx != 100) {
+         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
+      }
    } else {
-      out<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
+      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<"*"<<GetName()<<quote<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
+      out<<"    //The original function : "<<GetTitle()<<" had originally been created created by:" <<endl;
+      out<<"    //TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetRange("<<fXmin<<","<<fXmax<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+      if (fNpx != 100) {
+         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
+      }
+      Double_t dx = (fXmax-fXmin)/fNpx;
+      Double_t xv[1];
+      InitArgs(xv,fParams);
+      for (i=0;i<=fNpx;i++) {
+         xv[0]    = fXmin + dx*i;
+         Double_t save = EvalPar(xv,fParams);
+         out<<"   "<<GetName()<<"->SetSavedPoint("<<i<<","<<save<<");"<<endl;
+      }
+      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+1<<","<<fXmin<<");"<<endl;
+      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+2<<","<<fXmax<<");"<<endl;
    }
 
+   if (TestBit(kNotDraw)) {
+      out<<"   "<<GetName()<<"->SetBit(TF1::kNotDraw);"<<endl;
+   }
    if (GetFillColor() != 0) {
       out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
@@ -1697,21 +1718,20 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
    if (GetLineStyle() != 1) {
       out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<endl;
    }
-   if (GetNpx() != 100) {
-      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<endl;
-   }
    if (GetChisquare() != 0) {
       out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<endl;
    }
    Double_t parmin, parmax;
-   for (Int_t i=0;i<fNpar;i++) {
+   for (i=0;i<fNpar;i++) {
       out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<endl;
       out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<endl;
       GetParLimits(i,parmin,parmax);
       out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<endl;
    }
-   out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+   if (!strstr(option,"nodraw")) {
+      out<<"   "<<GetName()<<"->Draw("
+         <<quote<<option<<quote<<");"<<endl;
+   }
 }
 
 //______________________________________________________________________________
@@ -1761,6 +1781,19 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
    fXmin = xmin;
    fXmax = xmax;
    Update();
+}
+
+//______________________________________________________________________________
+void TF1::SetSavedPoint(Int_t point, Double_t value)
+{
+    // Restore value of function saved at point
+
+   if (!fSave) {
+      fNsave = fNpx+3;
+      fSave  = new Double_t[fNsave];
+   }
+   if (point < 0 || point >= fNsave) return;
+   fSave[point] = value;
 }
 
 //_______________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.17 2001/10/27 10:38:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.18 2001/12/02 16:16:52 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -139,6 +139,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t xmax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
+   virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     Update();
 
    static  void     RejectPoint(Bool_t reject=kTRUE);
