@@ -1812,14 +1812,22 @@ void mstress_inversion()
 
       TMatrixDSym ms = THilbertMatrixDSym(msize);
       TMatrixDDiag(ms) += 1;
+      if (verbose)
+        cout << "Test inversion through SVD" << endl;
       TMatrixD inv_svd (msize,msize); TDecompSVD  svd (ms); svd.Invert(inv_svd);
       ok &= VerifyMatrixIdentity(inv_svd,m,verbose,epsilon);
+      if (verbose)
+        cout << "Test inversion through LU" << endl;
       TMatrixD inv_lu  (msize,msize); TDecompLU   lu  (ms); lu.Invert(inv_lu);
+      ok &= VerifyMatrixIdentity(inv_lu,m,verbose,epsilon);
       if (msize <= 10) {
-        ok &= VerifyMatrixIdentity(inv_lu,m,verbose,epsilon);
+        if (verbose)
+          cout << "Test inversion through Cholesky" << endl;
         TMatrixD inv_chol(msize,msize); TDecompChol chol(ms); chol.Invert(inv_chol);
         ok &= VerifyMatrixIdentity(inv_chol,m,verbose,epsilon);
       }
+      if (verbose)
+        cout << "Test inversion through QRH" << endl;
       TMatrixD inv_qrh (msize,msize); TDecompQRH  qrh (ms); qrh.Invert(inv_qrh);
       ok &= VerifyMatrixIdentity(inv_qrh,m,verbose,epsilon);
 
@@ -1860,7 +1868,7 @@ void mstress_inversion()
       m1.Invert(&det1);
       m2.InvertFast(&det2);
       ok &= VerifyMatrixIdentity(m1,m2,gVerbose,EPSILON);
-      ok &= (TMath::Abs(det1-det2) < 10e-14);
+      ok &= (TMath::Abs(det1-det2) < EPSILON);
       if (gVerbose) {
         cout << "det(Invert)= " << det1 << "  det(InvertFast)= " << det2 <<endl;
         cout << " deviation= " << TMath::Abs(det1-det2);
