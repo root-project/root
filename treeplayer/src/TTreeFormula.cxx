@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.112 2003/02/27 21:10:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.113 2003/03/06 23:07:06 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -161,9 +161,12 @@ public:
          switch (type) {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP:
            Error("GetValuePointer","Type (%d) not yet supported\n",type);
            break;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAny:
            thisobj = (char*)(address+offset);
            break;
          case TStreamerInfo::kObject:
@@ -360,7 +363,11 @@ public:
                              type == TStreamerInfo::kObjectp ||
                              type == TStreamerInfo::kObjectP ||
                              type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP) {
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP ||
+                             type == TStreamerInfo::kAnyp ||
+                             type == TStreamerInfo::kAnyP ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP) {
                     fOffset += offset;
                     cl = element->GetClassPointer();
                   }
@@ -498,6 +505,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 
       case TStreamerInfo::kObjectp:
       case TStreamerInfo::kObjectP:
+      case TStreamerInfo::kAnyp:
+      case TStreamerInfo::kAnyP:
         {TObject **obj = (TObject**)(thisobj+fOffset);   return *obj; }
 
       case TStreamerInfo::kObject:
@@ -507,6 +516,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
       case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
       case TStreamerInfo::kAny:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP:
         {TObject *obj = (TObject*)(thisobj+fOffset);   return obj; }
 
       case kOther_t:
@@ -822,6 +833,8 @@ public:
          // basic types
          case TStreamerInfo::kObjectp:
          case TStreamerInfo::kObjectP:
+         case TStreamerInfo::kAnyp:
+         case TStreamerInfo::kAnyP:
          {TObject **obj = (TObject**)(whereoffset);
           return fNext->ReadValue((char*)*obj,instance); }
 
@@ -831,6 +844,8 @@ public:
          case TStreamerInfo::kTObject:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp:
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP:
          case TStreamerInfo::kAny:
            {TObject *obj = (TObject*)(whereoffset);
             return fNext->ReadValue((char*)obj,instance); }
@@ -2094,12 +2109,17 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             case TStreamerInfo::kTNamed:
             case TStreamerInfo::kTObject:
             case TStreamerInfo::kAny:
+            case TStreamerInfo::kAnyP:
+            case TStreamerInfo::kAnyp:
             case TStreamerInfo::kObjectp:
             case TStreamerInfo::kObjectP: {
               element = (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
               if (element) cl = element->GetClassPointer();
             }
             break;
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kAny:
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp:
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
             case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
@@ -2134,9 +2154,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
               Int_t offset;
               info->GetStreamerElement(element->GetName(),offset);
               if (type == TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kObjectP ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP) {
+                  type == TStreamerInfo::kObjectP ||
+                  type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp ||
+                  type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP ||
+                  type == TStreamerInfo::kAnyp ||
+                  type == TStreamerInfo::kAnyP ||
+                  type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp ||
+                  type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP) {
                  previnfo = new TFormLeafInfoPointer(cl,offset+BranchEl->GetOffset(),element);
               } else {
                  previnfo = new TFormLeafInfo(cl,offset+BranchEl->GetOffset(),element);
@@ -2465,7 +2489,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   } else if (type == TStreamerInfo::kObjectp ||
                              type == TStreamerInfo::kObjectP ||
                              type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp ||
-                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP) {
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP ||
+                             type == TStreamerInfo::kAnyp ||
+                             type == TStreamerInfo::kAnyP ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyp ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kAnyP) {
                      // this is a pointer to be followed.
                      if (element->GetClassPointer()!=  TClonesArray::Class()) {
                         leafinfo = new TFormLeafInfoPointer(cl,offset,element);
@@ -2475,6 +2503,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         mustderef = kTRUE;
                      }
                   } else if (type == TStreamerInfo::kAny ||
+                             type == TStreamerInfo::kOffsetL + TStreamerInfo::kAny ||
                              type == TStreamerInfo::kObject ||
                              type == TStreamerInfo::kOffsetL + TStreamerInfo::kObject ||
                              type == TStreamerInfo::kTString  ||

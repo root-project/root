@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.114 2003/03/18 13:26:18 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.115 2003/04/04 00:39:12 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2135,7 +2135,7 @@ void TClass::Streamer(void *object, TBuffer &b)
       TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
       tobj->Streamer(b);
 
-   } else if (!IsForeign()) {   // Instrumented class
+   } else if (fClassInfo && !IsForeign()) {   // Instrumented class
 
       if (!fInterStreamer)  {
          G__CallFunc* f  = new G__CallFunc;
