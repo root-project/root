@@ -242,12 +242,12 @@ G__value buf;
     return((long)buf.obj.d);
 #ifndef G__OLDIMPLEMENTATION2202
   case 'n':
-    G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
-    G__printlinenum();
+    /* G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
+    G__printlinenum(); */
     return((long)buf.obj.ll);
   case 'm':
-    G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
-    G__printlinenum();
+    /* G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
+    G__printlinenum(); */
     return((long)buf.obj.ull);
   case 'q':
     return((long)buf.obj.ld);
@@ -275,12 +275,12 @@ G__value buf;
     return(buf.obj.ulo);
 #ifndef G__OLDIMPLEMENTATION2202
   case 'n':
-    G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
-    G__printlinenum();
+    /* G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
+    G__printlinenum(); */
     return((unsigned long)buf.obj.ll);
   case 'm':
-    G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
-    G__printlinenum();
+    /* G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
+    G__printlinenum(); */
     return((unsigned long)buf.obj.ull);
   case 'q':
     return((unsigned long)buf.obj.ld);
