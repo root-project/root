@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.17 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.18 2003/02/01 17:35:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,39 +51,40 @@ friend class TCanvasImp;
 friend class TThread;
 
 protected:
-   TAttCanvas   fCatt;            //Canvas attributes
-   TString      fDISPLAY;         //Name of destination screen
-   Size_t       fXsizeUser;       //User specified size of canvas along X in CM
-   Size_t       fYsizeUser;       //User specified size of canvas along Y in CM
-   Size_t       fXsizeReal;       //Current size of canvas along X in CM
-   Size_t       fYsizeReal;       //Current size of canvas along Y in CM
-   Color_t      fHighLightColor;  //Highlight color of active pad
-   Int_t        fDoubleBuffer;    //Double buffer flag (0=off, 1=on)
-   Int_t        fWindowTopX;      //Top X position of window (in pixels)
-   Int_t        fWindowTopY;      //Top Y position of window (in pixels)
-   UInt_t       fWindowWidth;     //Width of window (including borders, etc.)
-   UInt_t       fWindowHeight;    //Height of window (including menubar, borders, etc.)
-   UInt_t       fCw;              //Width of the canvas along X (pixels)
-   UInt_t       fCh;              //Height of the canvas along Y (pixels)
-   Int_t        fEvent;           //!Type of current or last handled event
-   Int_t        fEventX;          //!Last X mouse position in canvas
-   Int_t        fEventY;          //!Last Y mouse position in canvas
-   Int_t        fCanvasID;        //!Canvas identifier
-   TObject     *fSelected;        //!Currently selected object
-   TString      fSelectedOpt;     //!Drawing option of selected object
-   TPad        *fSelectedPad;     //!Pad containing currently selected object
-   TPad        *fPadSave;         //!Pointer to saved pad in HandleInput
-   TControlBar *fEditorBar;       //!Editor control bar
-   TCanvasImp  *fCanvasImp;       //!Window system specific canvas implementation
-   TContextMenu   *fContextMenu;  //!Context menu pointer
-   Bool_t       fBatch;           //!True when in batchmode
-   Bool_t       fRetained;        //Retain structure flag
-   Bool_t       fShowEventStatus; //Show event status panel
-   Bool_t       fAutoExec;        //To auto exec the list of pad TExecs
-   Bool_t       fMoveOpaque;      //Move objects in opaque mode
-   Bool_t       fResizeOpaque;    //Resize objects in opaque mode
-   Bool_t       fMenuBar;         //False if no menubar is displayed
-
+   TAttCanvas    fCatt;            //Canvas attributes
+   TString       fDISPLAY;         //Name of destination screen
+   Size_t        fXsizeUser;       //User specified size of canvas along X in CM
+   Size_t        fYsizeUser;       //User specified size of canvas along Y in CM
+   Size_t        fXsizeReal;       //Current size of canvas along X in CM
+   Size_t        fYsizeReal;       //Current size of canvas along Y in CM
+   Color_t       fHighLightColor;  //Highlight color of active pad
+   Int_t         fDoubleBuffer;    //Double buffer flag (0=off, 1=on)
+   Int_t         fWindowTopX;      //Top X position of window (in pixels)
+   Int_t         fWindowTopY;      //Top Y position of window (in pixels)
+   UInt_t        fWindowWidth;     //Width of window (including borders, etc.)
+   UInt_t        fWindowHeight;    //Height of window (including menubar, borders, etc.)
+   UInt_t        fCw;              //Width of the canvas along X (pixels)
+   UInt_t        fCh;              //Height of the canvas along Y (pixels)
+   Int_t         fEvent;           //!Type of current or last handled event
+   Int_t         fEventX;          //!Last X mouse position in canvas
+   Int_t         fEventY;          //!Last Y mouse position in canvas
+   Int_t         fCanvasID;        //!Canvas identifier
+   TObject      *fSelected;        //!Currently selected object
+   TString       fSelectedOpt;     //!Drawing option of selected object
+   TPad         *fSelectedPad;     //!Pad containing currently selected object
+   TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
+   TControlBar  *fEditorBar;       //!Editor control bar
+   TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
+   TContextMenu   *fContextMenu;   //!Context menu pointer
+   Bool_t        fBatch;           //!True when in batchmode
+   Bool_t        fRetained;        //Retain structure flag
+   Bool_t        fShowEventStatus; //Show event status panel
+   Bool_t        fAutoExec;        //To auto exec the list of pad TExecs
+   Bool_t        fMoveOpaque;      //Move objects in opaque mode
+   Bool_t        fResizeOpaque;    //Resize objects in opaque mode
+   Bool_t        fMenuBar;         //False if no menubar is displayed
+   static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
+   
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone
    TCanvas &operator=(const TCanvas &rhs);  // idem
@@ -159,6 +160,7 @@ public:
    Bool_t            HasMenuBar() const { return fMenuBar; }
    void              Iconify() { fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsFolder() const;
    Bool_t            IsRetained() const { return fRetained; }
    virtual void      ls(Option_t *option="") const;
    void              MoveOpaque(Int_t set=1);
@@ -184,6 +186,7 @@ public:
    void              Show() { fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);
+   static  void      SetFolder(Bool_t isfolder=kTRUE);
    void              SetRetained(Bool_t retained=kTRUE) { fRetained=retained;}
    void              SetTitle(const char *title="");
    virtual void      ToggleEventStatus();

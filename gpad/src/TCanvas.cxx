@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.41 2002/11/25 16:29:01 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.42 2003/02/01 17:35:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -43,6 +43,8 @@ public:
 static TInitMakeDefCanvas makedefcanvas_init;
 
 //*-*x16 macros/layout_canvas
+
+Bool_t TCanvas::fgIsFolder = kFALSE;
 
 const Size_t kDefaultCanvasSize   = 20;
 
@@ -510,7 +512,7 @@ void TCanvas::Browse(TBrowser *b)
 {
     Draw();
     cd();
-    fPrimitives->Browse(b);
+    if (fgIsFolder) fPrimitives->Browse(b);
 }
 
 
@@ -643,8 +645,9 @@ void TCanvas::Draw(Option_t *)
    if (old == this) {
       Paint();
       return;
-   }
-   if (old) gROOT->GetListOfCanvases()->Remove(old);
+   } 
+   if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
+     
    if (fWindowWidth  == 0) fWindowWidth  = 800;
    if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
@@ -1125,6 +1128,12 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
+Bool_t TCanvas::IsFolder() const 
+{
+   return fgIsFolder;
+}
+
+//______________________________________________________________________________
 void TCanvas::ls(Option_t *option) const
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*List all pads*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -1506,6 +1515,15 @@ void TCanvas::SetFixedAspectRatio(Bool_t fixed)
       fFixedAspectRatio = kFALSE;
       fAspectRatio = 0;
    }
+}
+
+//______________________________________________________________________________
+void TCanvas::SetFolder(Bool_t isfolder) 
+{
+// if isfolder=kTRUE, the canvas can be browsed like a folder
+// by default a canvas is not browsable
+   
+   fgIsFolder = isfolder;
 }
 
 //______________________________________________________________________________
