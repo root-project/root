@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.50 2001/10/02 08:03:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.51 2001/10/02 16:51:37 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -97,6 +97,7 @@
 #include "TFolder.h"
 #include "TQObject.h"
 #include "TProcessID.h"
+#include "TRef.h"
 
 #if defined(R__UNIX)
 #include "TUnixSystem.h"
@@ -289,6 +290,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    TProcessID *pid1 = new TProcessID(1);
    pid1->IncrementCount(); //this object should not be deleted
    fProcessIDs->Add(pid1);
+   TRef::SetCurrentPID(pid1);
    
    fRootFolder = new TFolder();
    fRootFolder->SetName("root");
