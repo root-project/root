@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.92 2004/11/19 14:28:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.93 2004/12/16 18:08:03 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3137,7 +3137,7 @@ ULong_t TMath::Hash(const void *txt, Int_t ntxt)
    for (i = 0; i < ntxt; i++) {
       idx = (uc[i] ^ i) & 255;
       uu  = (uu << 1) ^ (utab[idx] & msk[i & 3]);
-      if (i & 3 == 3) u.u ^= uu;
+      if ((i & 3) == 3) u.u ^= uu;
    }
    if (i & 3) u.u ^= uu;
 
