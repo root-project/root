@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.31 2002/01/29 17:23:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.32 2002/02/14 19:11:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1463,7 +1463,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
 
-  for ( int i = 0; i < 6; i++ ) {
+  int i;
+  for (i = 0; i < 6; i++ ) {
      char * name;
      TString extra_linkdef = BaseName( filename_noext );
      extra_linkdef.Append(GetLinkdefSuffix());
@@ -1477,7 +1478,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   }
 
   if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
-  for ( int i = 0; i < 6; i++ ) {
+  for (i = 0; i < 6; i++ ) {
      char * name;
      TString lookup = BaseName( filename_noext );
      lookup.Append(extensions[i]);
