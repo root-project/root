@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.10 2001/06/27 17:31:39 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.12 2001/09/29 07:31:58 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01) 
 
 /*************************************************************************
@@ -3164,7 +3164,7 @@ void THtml::WriteHtmlFooter( ofstream &out, const char *dir, const char *lastUpd
 				char* cCurrentPos=name;
 				// remove blanks in front of and behind the name
 				while (*cCurrentPos==' ') cCurrentPos++;
-				bool bBlank=kFALSE;
+				Bool_t bBlank=kFALSE;
 				for (; cCurrentPos!=ptr && *cCurrentPos!=0; cCurrentPos++) {
 					if (*cCurrentPos!=' ') {
 						if (bBlank) {
