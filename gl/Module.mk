@@ -20,7 +20,7 @@ GLDH         := $(GLDS:.cxx=.h)
 GLH          := $(wildcard $(MODDIRI)/*.h)
 GLH1         := $(MODDIRI)/TViewerOpenGL.h $(MODDIRI)/TGLRenderArea.h \
                 $(MODDIRI)/TGLEditor.h $(MODDIRI)/TArcBall.h \
-                $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLRender.h $(MODDIRI)/TGLSceneObject.h
+                $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLSceneObject.h
 GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx TGLRenderArea.cxx \
                 TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx
 ifneq ($(ARCH),win32)

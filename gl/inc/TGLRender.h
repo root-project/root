@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.9 2004/11/23 14:00:29 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.10 2004/11/24 14:48:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -90,7 +90,7 @@ private:
    TGLRender(const TGLRender &);
    TGLRender & operator = (const TGLRender &);
    
-   ClassDef(TGLRender,0)
+   //ClassDef(TGLRender,0)
 };
 
 #endif
