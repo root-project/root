@@ -1,4 +1,8 @@
-// @(#)root/qt:$Name:$:$Id:$
+// Author: Valeri Fine   25/03/2004
+#ifndef ROOT_TQtEventQueue
+#define ROOT_TQtEventQueue
+
+// @(#)root/qt:$Name:  $:$Id: TQtEventQueue.h,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   25/03/2004
 
 /*************************************************************************
@@ -10,22 +14,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TQtEventQueue
-#define ROOT_TQtEventQueue
-
 #include "GuiTypes.h"
-#include <qptrlist.h>
+#include <qptrlist.h> 
 
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtEventQueue is a queue container of the pointers of Event_t
-//  structures created by TQtClientFilter class.
-//  If auto-deleting is turned on, all the items in a collection are
-//  deleted when the collection itself is deleted.
-//  For the full list of the members see:
-//  http://doc.trolltech.com/3.3/qptrlist.html
+//  TQtEventQueue is a queue container of the pointers of Event_t structures 
+//  created by TQtClientFilter class
+//  If auto-deleting is turned on, all the items in a collection are deleted when 
+//  the collection itself is deleted.
+//  (for the full list of the members see: 
+//  http://doc.trolltech.com/3.3/qptrlist.html)
 //
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 
 class TQtEventQueue : public QPtrList<Event_t> {

@@ -21,7 +21,7 @@ QTROOTH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 QTROOTS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 QTROOTO      := $(QTROOTS:.cxx=.o)
 
-QTROOTDE     := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
+QTROOTDEP    := $(QTROOTO:.o=.d) $(QTROOTDO:.o=.d)
 
 QTROOTLIB    := $(LPATH)/libQtRoot.$(SOEXT)
 
@@ -52,7 +52,7 @@ all-qtroot:     $(QTROOTLIB)
 
 map-qtroot:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(QTROOTLIB) \
-		   -d $(QTROOTLIBDEP) -c $(QTROOTL)
+                  -d $(QTROOTLIBDEP) -c $(QTROOTL)
 
 map::           map-qtroot
 
@@ -69,4 +69,4 @@ distclean::     distclean-qtroot
 
 ##### extra rules ######
 $(sort $(QTROOTO)): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<
+		$(CXX) $(OPT) $(CXXFLAGS) $(GQTCXXFLAGS) -o $@ -c $<

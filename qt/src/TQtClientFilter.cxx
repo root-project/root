@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.3 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -84,7 +84,7 @@ static inline void MapEvent(QMouseEvent &qev, Event_t &ev)
    };
    ev.fState |= MapModifierState(qev.state());
    if (ev.fCode)
-      ev.fUser[0] = TGQt::iwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
+      ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
 
    qev.ignore(); // propage the mouse event further
 }
@@ -161,7 +161,7 @@ static inline void MapEvent(const QKeyEvent  &qev, Event_t &ev)
    ev.fCode  = MapKeySym(qev);
    ev.fState = MapModifierState(qev.state());
    ev.fCount = qev.count();
-   ev.fUser[0] = TGQt::iwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
+   ev.fUser[0] = TGQt::rootwid(TGQt::wid(ev.fWindow)->childAt(ev.fX,ev.fY)) ;
 //   qev.accept();
 }
 //______________________________________________________________________________________
@@ -288,7 +288,7 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
 
    // Fill the default event values
 
-   event.fWindow    = TGQt::iwid(paintDev);
+   event.fWindow    = TGQt::rootwid(paintDev);
 
    event.fSendEvent = !e->spontaneous();
    event.fTime      = QTime::currentTime().msec ();

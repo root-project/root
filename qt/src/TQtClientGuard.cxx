@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtClientGuard.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -52,7 +52,7 @@ void TQtClientGuard::Disconnect(QWidget *w)
 {
    // Disconnect and unregister the object
    fQClientGuard.find(w);
-   // fprintf(stderr, "Disconnecting widget %p\n", w);
+   // fprintf(stderr, "TQtClientGuard::Disconnecting widget %p\n", w);
    if ( fQClientGuard.current() ) {
       // ungrab the poiner just in case
       QWidget *grabber = QWidget::mouseGrabber();
@@ -98,7 +98,7 @@ QWidget *TQtClientGuard::Find(Window_t id)
 {
    // Find the object by ROOT id
 
-   // fprintf(stderr," TQtClientGuard::Find %d %lp %p index=%d\n", id, id, TGQt::wid(id),
+   // fprintf(stderr," TQtClientGuard::Find %d %lp %p\n", id, id, TGQt::wid(id));
    fQClientGuard.find(TGQt::wid(id));
    return  fQClientGuard.current();
 }
@@ -108,7 +108,7 @@ void TQtClientGuard::Disconnect()
 {
    // Disconnect object Qt slot
    QWidget *w = (QWidget *)sender();
-   fprintf(stderr, "Disconnecting  SLOT widget %p\n", w);
+   // fprintf(stderr, "Disconnecting  SLOT widget %p\n", w);
    fQClientGuard.find(w);
    if ( fQClientGuard.current() ) {
       if ( w == QWidget::mouseGrabber())
