@@ -657,9 +657,9 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.15 2001/05/07 18:41:49 rdm Exp $
-// $Date: 2001/05/07 18:41:49 $
-// $Author: rdm $
+// $Id: TPrincipal.cxx,v 1.16 2001/10/12 06:46:56 brun Exp $
+// $Date: 2001/10/12 06:46:56 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
@@ -891,11 +891,11 @@ With <IMG
   }
   else {
 
-    Double_t cor = 1 - 1./Double_t(fNumberOfDataPoints - 1);
+    Double_t cor = 1 - 1./Double_t(fNumberOfDataPoints);
     for (i = 0; i < fNumberOfVariables; i++) {
 
       fMeanValues(i + 1) *= cor;
-      fMeanValues(i + 1) += p[i] / Double_t(fNumberOfDataPoints - 1);
+      fMeanValues(i + 1) += p[i] / Double_t(fNumberOfDataPoints);
       Double_t t1 = (p[i] - fMeanValues(i+1)) / (fNumberOfDataPoints - 1);
 
       // Setting Matrix (lower triangle) elements
