@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -67,6 +67,7 @@ public :
    Bool_t               IsGeneral()     const {return (TestBit(kGeoTranslation) 
                             && TestBit(kGeoRotation) && TestBit(kGeoScale));}
    Bool_t               IsRegistered()  const {return TestBit(kGeoRegistered);}
+   Bool_t               IsRotAboutZ()   const;
    void                 GetHomogenousMatrix(Double_t *hmat) const;
 
    virtual Int_t              GetByteCount() const;
@@ -147,6 +148,7 @@ public :
    void                 Clear(Option_t *option ="");
    Double_t             Determinant() const;
    void                 FastRotZ(Double_t *sincos);
+   Double_t             GetPhiRotation() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const
                           {TGeoRotation::LocalToMaster(local, master);}

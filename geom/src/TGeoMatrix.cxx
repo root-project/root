@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id:$
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.3 2002/07/10 19:24:16 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -51,6 +51,17 @@ TGeoMatrix::TGeoMatrix(const char *name)
 // Constructor
    if (!gGeoManager) gGeoManager = new TGeoManager("Geometry", "Default geometry");
 }
+//-----------------------------------------------------------------------------
+Bool_t TGeoMatrix::IsRotAboutZ() const
+{
+// Returns true if no rotation or the rotation is about Z axis
+   if (IsIdentity()) return kTRUE;
+   const Double_t *rot = GetRotationMatrix();
+   if (TMath::Abs(rot[6])>1E-9) return kFALSE;
+   if (TMath::Abs(rot[7])>1E-9) return kFALSE;
+   if ((1.-TMath::Abs(rot[8]))>1E-9) return kFALSE;
+   return kTRUE;
+}   
 //-----------------------------------------------------------------------------
 Int_t TGeoMatrix::GetByteCount() const
 {
@@ -326,16 +337,16 @@ TGeoRotation::TGeoRotation(const char *name)
    gGeoManager->AddTransformation(this);
 }
 //-----------------------------------------------------------------------------
-TGeoRotation::TGeoRotation(const char *name, Double_t alpha, Double_t beta, Double_t gamma)
+TGeoRotation::TGeoRotation(const char *name, Double_t phi, Double_t theta, Double_t psi)
              :TGeoMatrix(name)
 {
-// Default rotation constructor with Euler angles. Gamma is the rotation angle about
-// Z axis (clockwise) and is done first, beta is the rotation about Y and is done
-// second, alpha is the rotation angle about X and is done third. All angles are in
+// Default rotation constructor with Euler angles. Phi is the rotation angle about
+// Z axis  and is done first, theta is the rotation about new Y and is done
+// second, psi is the rotation angle about new Z and is done third. All angles are in
 // degrees.
    SetBit(kGeoRotation);
    SetDefaultName();
-   SetAngles(alpha, beta, gamma);
+   SetAngles(phi, theta, psi);
    CheckMatrix();
    gGeoManager->AddTransformation(this);
 }
@@ -370,6 +381,13 @@ void TGeoRotation::FastRotZ(Double_t *sincos)
    fRotationMatrix[4] = sincos[1];
 }
 //-----------------------------------------------------------------------------
+Double_t TGeoRotation::GetPhiRotation() const
+{
+//--- Returns rotation angle about Z axis in degrees.
+   Double_t phi = 180.*TMath::ATan2(fRotationMatrix[1], fRotationMatrix[0])/TMath::Pi();
+   return phi;
+}   
+//-----------------------------------------------------------------------------
 void TGeoRotation::LocalToMaster(const Double_t *local, Double_t *master) const
 {
 // convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
@@ -392,32 +410,26 @@ void TGeoRotation::MasterToLocal(const Double_t *master, Double_t *local) const
    }
 }
 //-----------------------------------------------------------------------------
-void TGeoRotation::SetAngles(Double_t alpha, Double_t beta, Double_t gamma)
+void TGeoRotation::SetAngles(Double_t phi, Double_t theta, Double_t psi)
 {
 // Set matrix elements according to Euler angles
    Double_t degrad = TMath::Pi()/180.;
-   Double_t sinalf = TMath::Sin(degrad*alpha);
-   Double_t cosalf = TMath::Cos(degrad*alpha);
-   Double_t sinbet = TMath::Sin(degrad*beta);
-   Double_t cosbet = TMath::Cos(degrad*beta);
-   Double_t singam = TMath::Sin(degrad*gamma);
-   Double_t cosgam = TMath::Cos(degrad*gamma);
+   Double_t sinphi = TMath::Sin(degrad*phi);
+   Double_t cosphi = TMath::Cos(degrad*phi);
+   Double_t sinthe = TMath::Sin(degrad*theta);
+   Double_t costhe = TMath::Cos(degrad*theta);
+   Double_t sinpsi = TMath::Sin(degrad*psi);
+   Double_t cospsi = TMath::Cos(degrad*psi);
 
-   fRotationMatrix[0] = cosbet*cosgam;
-   fRotationMatrix[1] = cosalf*singam + sinalf*sinbet*cosgam;
-   fRotationMatrix[2] = sinalf*singam - cosalf*sinbet*cosgam;
-   fRotationMatrix[3] = - cosbet*singam;
-   fRotationMatrix[4] = cosalf*cosgam - sinalf*sinbet*singam;
-   fRotationMatrix[5] = sinalf*cosgam + cosalf*sinbet*singam;
-   fRotationMatrix[6] = sinbet;
-   fRotationMatrix[7] = - sinalf*cosbet;
-   fRotationMatrix[8] = cosalf*cosbet;
-   // do the trick to eliminate most of the floating point errors
-   for (Int_t i=0; i<9; i++) {
-      if (TMath::Abs(fRotationMatrix[i])<1E-15) fRotationMatrix[i] = 0;
-      if (TMath::Abs(fRotationMatrix[i]-1)<1E-15) fRotationMatrix[i] = 1;
-      if (TMath::Abs(fRotationMatrix[i]+1)<1E-15) fRotationMatrix[i] = -1;
-   }   
+   fRotationMatrix[0] =  cospsi*costhe*cosphi - sinpsi*sinphi;
+   fRotationMatrix[1] = -sinpsi*costhe*cosphi - cospsi*sinphi;
+   fRotationMatrix[2] =  sinthe*cosphi;
+   fRotationMatrix[3] =  cospsi*costhe*sinphi + sinpsi*cosphi;
+   fRotationMatrix[4] = -sinpsi*costhe*sinphi + cospsi*cosphi;
+   fRotationMatrix[5] =  sinthe*sinphi;
+   fRotationMatrix[6] = -cospsi*sinthe;
+   fRotationMatrix[7] =  sinpsi*sinthe;
+   fRotationMatrix[8] =  costhe;
 }
 //-----------------------------------------------------------------------------
 void TGeoRotation::SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
