@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.cc,v 1.12 2004/11/29 20:23:54 wverkerke Exp $
+ *    File: $Id: RooHtml.cc,v 1.13 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,7 +45,7 @@ const char   *formatStr      = "%12s %5s %s";
 ClassImp(RooHtml)
   ;
 
-void RooHtml::WriteHtmlHeader(ofstream &out, const char *title) {
+void RooHtml::WriteHtmlHeader(ofstream &out, const char *title, TClass* cls) {
   // Write a custom html header for RooFit class documentation to the specified output stream.  
 
   out
@@ -110,7 +110,7 @@ void RooHtml::WriteHtmlFooter(ofstream &out, const char *dir, const char *lastUp
       << "<td>Last CVS Update: " << update << "</td>" << endl
       << "<td NOSAVE align=right><b><a href=\"#TopOfPage\">Top</a></b></td>" << endl
       << "</tr></table></center>" << endl
-      << "<center>Copyright &copy 2001 University of California</center>" << endl
+      << "<center>Copyright &copy 2000-2005 University of California, Stanford University</center>" << endl
       << "</body>" << endl ;
 }
 
@@ -206,8 +206,14 @@ char* RooHtml::getClassGroup(const char* fileName)
   static char buffer[1024] = "" ;
   strcpy(buffer,"USER") ;
 
+  const char* fullName = gSystem->Which(fSourceDir, fileName, kReadPermission) ;
+  if (!fullName) {
+    return buffer ;
+  }
+
   // Scan file contents
-  ifstream ifs(fileName) ;
+  ifstream ifs(fullName) ;
+
   char line[1024] ;
   while(ifs.good()) {
     ifs.getline(line,sizeof(line),'\n') ;

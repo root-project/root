@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHtml.rdl,v 1.8 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooHtml.rdl,v 1.9 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,7 +25,7 @@ class RooHtml : public THtml {
 public:
   inline RooHtml(const char *version) : _version(version), _hfColor("#FFCC00") { };
   inline virtual ~RooHtml() { };
-  virtual void WriteHtmlHeader(std::ofstream &out, const char *title);
+  virtual void WriteHtmlHeader(std::ofstream &out, const char *title, TClass* cls=0);
   virtual void  WriteHtmlFooter(std::ofstream &out, const char *dir="", const char *lastUpdate="",
 				const char *author="", const char *copyright="");
 

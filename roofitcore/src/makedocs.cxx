@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: makedocs.cc,v 1.16 2004/11/29 20:24:44 wverkerke Exp $
+ *    File: $Id: makedocs.cc,v 1.17 2005/02/25 14:23:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,18 +16,16 @@
 
 void makedocs(const char *version="Development", const char *where= "./html", Bool_t doTutorial=kFALSE) 
 {
-  const char *bfarch= gSystem->Getenv("BFARCH");
-  TString sourceDir("RELEASE/RooFitCore:RELEASE/tmp/");
-  sourceDir.Append(bfarch);
-  sourceDir.Append("/RooFitCore");
-  gEnv->SetValue("Root.Html.SourceDir",sourceDir.Data());
-  gEnv->SetValue("Root.Html.OutputDir",where);
-  gEnv->SetValue("Root.Html.Description","// -- CLASS DESCRIPTION");
-  gEnv->SetValue("Root.Html.LastUpdate"," *    File: $Id: ");
+
+  TString sourceDir(".:../RooFitCore:../RooFitCore/tmp/RooFitCore/include:../RooFitModels:../RooFitModels/tmp/RooFitModels") ;
+  gEnv->SetValue("Unix.*.Root.Html.SourceDir",sourceDir.Data());
+  gEnv->SetValue("Unix.*.Root.Html.OutputDir",where);
+  gEnv->SetValue("Unix.*.Root.Html.Description","// -- CLASS DESCRIPTION");
+  gEnv->SetValue("Unix.*.Root.Html.LastUpdate"," *    File: $Id: ");
 
   RooHtml docMaker(version);
   docMaker.setHeaderColor("#FFFFFF") ;
-  
+
   if (doTutorial) {
     docMaker.Convert("intro1.cc","Elementary operations on a gaussian PDF") ;
     docMaker.Convert("intro2.cc","Building more complex PDFs via addition") ;
