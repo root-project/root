@@ -14,16 +14,9 @@
 //  TH2Editor                                                           //
 //                                                                      //
 //  Editor for histogram attributes.                                    //
-//	 ?????????? all parts are missing !!!!!!!!                      //
+//	                                                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-/*
-Latest changes:
-
-- correct inconsistency (fAddError)
-- inconsistency: fDimGroup was only half initialised
-
-*/
 
 //Begin_Html
 /*
@@ -550,7 +543,6 @@ TH2Editor::~TH2Editor()
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
-//   Cleanup();
 }
 
 //______________________________________________________________________________
@@ -698,17 +690,16 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       if (fTypeCombo->GetSelected()==-1) fTypeCombo->Select(kTYPE_LEGO);
       if (fCoordsCombo->GetSelected()==-1) fCoordsCombo->Select(kCOORDS_CAR);
       if (str.Contains("CONT")){
-         if (str.Contains("CONT1")) if (fContCombo->GetSelected()!=kCONT_1) fContCombo->Select(kCONT_1);
-	 else if (str.Contains("CONT2")) if (fContCombo->GetSelected()!=kCONT_2) fContCombo->Select(kCONT_2);
-	 else if (str.Contains("CONT3")) if (fContCombo->GetSelected()!=kCONT_3) fContCombo->Select(kCONT_3);
-	 else if (str.Contains("CONT4")) if (fContCombo->GetSelected()!=kCONT_4) fContCombo->Select(kCONT_4);
-	 else if (str.Contains("CONT0") || str.Contains("CONT")) if (fContCombo->GetSelected()!=kCONT_0) fContCombo->Select(kCONT_0);
-      } else if (fContCombo->GetSelected()!=kCONT_NONE) fContCombo->Select(kCONT_NONE);
+         if (str.Contains("CONT1")) fContCombo->Select(kCONT_1);
+	 else if (str.Contains("CONT2")) fContCombo->Select(kCONT_2);
+	 else if (str.Contains("CONT3")) fContCombo->Select(kCONT_3);
+	 else if (str.Contains("CONT4")) fContCombo->Select(kCONT_4);
+	 else if (str.Contains("CONT0") || str.Contains("CONT")) fContCombo->Select(kCONT_0);
+      } else fContCombo->Select(kCONT_NONE);
 
       if (str.Contains("ARR")) fAddArr->SetState(kButtonDown);
       else fAddArr->SetState(kButtonUp);
       if (str.Contains("BOX")) fAddBox->SetState(kButtonDown);
-//      else if (str.Contains("COL")) fAddBox->SetState(kButtonDisabled);
       else fAddBox->SetState(kButtonUp);
       if (str.Contains("COL")) fAddCol->SetState(kButtonDown);
       else fAddCol->SetState(kButtonUp);
@@ -741,22 +732,22 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
       fDimGroup->SetButton(kDIM_COMPLEX, kTRUE);  
       fDimGroup->SetButton(kDIM_SIMPLE, kFALSE);        
-      if (str.Contains("LEGO2")) {if (fTypeCombo->GetSelected()!=kTYPE_LEGO2) fTypeCombo->Select(kTYPE_LEGO2);}
-      else if (str.Contains("LEGO1")) {if (fTypeCombo->GetSelected()!=kTYPE_LEGO1) fTypeCombo->Select(kTYPE_LEGO1);}
-      else if (str.Contains("LEGO"))  {if (fTypeCombo->GetSelected()!=kTYPE_LEGO) fTypeCombo->Select(kTYPE_LEGO);}
-      else if (str.Contains("SURF5")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF5) fTypeCombo->Select(kTYPE_SURF5);}
-      else if (str.Contains("SURF4")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF4) fTypeCombo->Select(kTYPE_SURF4);}
-      else if (str.Contains("SURF3")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF3) fTypeCombo->Select(kTYPE_SURF3);}
-      else if (str.Contains("SURF2")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF2) fTypeCombo->Select(kTYPE_SURF2);}
-      else if (str.Contains("SURF1")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF1) fTypeCombo->Select(kTYPE_SURF1);}
-      else if (str.Contains("SURF")) {if (fTypeCombo->GetSelected()!=kTYPE_SURF) fTypeCombo->Select(kTYPE_SURF);}
+      if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
+      else if (str.Contains("LEGO1")) fTypeCombo->Select(kTYPE_LEGO1);
+      else if (str.Contains("LEGO"))  fTypeCombo->Select(kTYPE_LEGO);
+      else if (str.Contains("SURF5")) fTypeCombo->Select(kTYPE_SURF5);
+      else if (str.Contains("SURF4")) fTypeCombo->Select(kTYPE_SURF4);
+      else if (str.Contains("SURF3")) fTypeCombo->Select(kTYPE_SURF3);
+      else if (str.Contains("SURF2")) fTypeCombo->Select(kTYPE_SURF2);
+      else if (str.Contains("SURF1")) fTypeCombo->Select(kTYPE_SURF1);
+      else if (str.Contains("SURF")) fTypeCombo->Select(kTYPE_SURF);
        
       
-      if (str.Contains("CYL")) {if (fCoordsCombo->GetSelected()!=kCOORDS_CYL) fCoordsCombo->Select(kCOORDS_CYL);}
-      else if (str.Contains("POL")) {if (fCoordsCombo->GetSelected()!=kCOORDS_POL) fCoordsCombo->Select(kCOORDS_POL);}
-      else if (str.Contains("SPH")) {if (fCoordsCombo->GetSelected()!=kCOORDS_SPH) fCoordsCombo->Select(kCOORDS_SPH);}
-      else if (str.Contains("PSR")) {if (fCoordsCombo->GetSelected()!=kCOORDS_PSR) fCoordsCombo->Select(kCOORDS_PSR);}
-      else {if (fCoordsCombo->GetSelected()!=kCOORDS_CAR) fCoordsCombo->Select(kCOORDS_CAR);} //default
+      if (str.Contains("CYL")) fCoordsCombo->Select(kCOORDS_CYL);
+      else if (str.Contains("POL")) fCoordsCombo->Select(kCOORDS_POL);
+      else if (str.Contains("SPH")) fCoordsCombo->Select(kCOORDS_SPH);
+      else if (str.Contains("PSR")) fCoordsCombo->Select(kCOORDS_PSR);
+      else fCoordsCombo->Select(kCOORDS_CAR); //default
       
       if (fContCombo->GetSelected()==-1) fContCombo->Select(kCONT_NONE);
       fAddArr->SetState(kButtonUp);
@@ -859,10 +850,10 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fBin->ShowFrame(fBinYCont1);      
       fBinXSlider1->SetPosition(5);      
       fBinXNumberEntry1->SetLimits(TGNumberFormat::kNELLimitMinMax , 1, 1000);
-      fBinXNumberEntry1->SetIntNumber(fHist->GetXaxis()->GetNbins());
+      fBinXNumberEntry1->SetIntNumber(nxbinmax-nxbinmin+1);
       fBinYSlider1->SetPosition(5);      
       fBinYNumberEntry1->SetLimits(TGNumberFormat::kNELLimitMinMax , 1, 1000);
-      fBinYNumberEntry1->SetIntNumber(fHist->GetYaxis()->GetNbins());
+      fBinYNumberEntry1->SetIntNumber(nybinmax-nybinmin+1);
    }
 
    fXOffsetNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax, 0, fHist->GetXaxis()->GetBinWidth(1));
@@ -2278,29 +2269,6 @@ void TH2Editor::DoSliderYReleased()
    }
 }
 
-//______________________________________________________________________________
-/*
-void TH2Editor::DoSliderYReleased()
-{
-   // Slot connected to the y axis range slider
-   // updates some widgets in delay drawn mode
-   
-   TAxis* yaxis = fHist->GetYaxis();
-   Int_t last = yaxis->GetLast();
-   Int_t first = yaxis->GetFirst();
-   if (fDelaydraw->GetState()==kButtonDown) {
-      yaxis->SetRange((Int_t)((fSliderY->GetMinPosition())+0.5),(Int_t)((fSliderY->GetMaxPosition())+0.5));
-      fSldYMin->SetNumber(yaxis->GetBinLowEdge(first));
-      fSldYMax->SetNumber(yaxis->GetBinUpEdge(last));
-      Update();
-   }
-   TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();   
-   if (player) if (player->GetHistogram() == fHist) {
-      fBinYNumberEntry1->SetIntNumber(last-first+1);
-      Update();
-   }
-}
-*/
 //______________________________________________________________________________
 
 void TH2Editor::DoYAxisRange()

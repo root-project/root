@@ -68,17 +68,6 @@
 //			       througth the histogram bins		//
 //	 ?????????? some parts are missing !!!!!!!!                     //
 //////////////////////////////////////////////////////////////////////////
-/*
-
-Latest changes:
-
-- inconsistency: rebinned histogram (not derived from ntuple) got "old" drawoptions before fix
-- inconsistency: fDimGroup was only half initialised
-- connect the delay checkbox to all sliders
-- add several TGMsgBoxes to avoid the user to do stupid things (hard work!!!!)
-
-
-*/
 
 //Begin_Html
 /*
@@ -423,7 +412,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f12);
       ShowFrame(f15);
       fCoordsCombo->Select(kCOORDS_CAR);
-      if (fErrorCombo->GetSelected()!=kERRORS_NO) fErrorCombo->Select(kERRORS_NO);
+      fErrorCombo->Select(kERRORS_NO);
       errorset=kTRUE;
       fAddCombo->Select(kADD_NONE);
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);
@@ -606,15 +595,12 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fBinSlider->SetRange(1,up);
       Int_t i = 1;
       if (fBinSlider->GetMaxPosition()==2 && fBinSlider->GetPosition()==2) fBinSlider->SetPosition(2);
-//      else if (n == nx) fBinSlider->SetPosition(1);
       else { 
          while ( div[i] != nx) i ++;
          fBinSlider->SetPosition(div[0] - i + 1);
       }
       fBinNumberEntry->SetLimits(TGNumberFormat::kNELLimitMinMax , 2, n);
       fBinNumberEntry->SetIntNumber(nx);
-/*      fBinSlider1->SetRange(0,1);
-      fBinSlider1->SetPosition(1);*/
    }
    else if (fHist==player->GetHistogram()) {
       fBin->HideFrame(fBinCont);
@@ -623,7 +609,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fBinSlider->SetPosition(0);
       fBinSlider1->SetPosition(5);      
       fBinNumberEntry1->SetLimits(TGNumberFormat::kNELLimitMinMax , 2, 10000);
-      fBinNumberEntry1->SetIntNumber(fHist->GetXaxis()->GetNbins());
+      fBinNumberEntry1->SetIntNumber(nxbinmax-nxbinmin+1);
    }
 
    fSlider->SetRange(1,nx);
@@ -641,7 +627,6 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    make=kTRUE;
    fTab->SetEnabled(1, kTRUE);
    SetActive(kTRUE);
-//   Update();
 }
 
 //______________________________________________________________________________
