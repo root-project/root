@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.26 2003/10/07 11:10:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.27 2003/11/26 21:48:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -33,9 +33,6 @@
 #ifndef ROOT_TSelectorDraw
 #include "TSelectorDraw.h"
 #endif
-//#ifndef ROOT_TTreeFormula
-//#include "TTreeFormula.h"
-//#endif
 #ifndef ROOT_TVirtualTreePlayer
 #include "TVirtualTreePlayer.h"
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.153 2003/12/19 09:31:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.154 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -243,12 +243,7 @@
 #include "TProfile2D.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
-#include "TGaxis.h"
-#include "TBrowser.h"
 #include "TStyle.h"
-#include "TSocket.h"
-#include "TMessage.h"
-#include "TInterpreter.h"
 #include "Foption.h"
 #include "TTreeResult.h"
 #include "TTreeRow.h"
@@ -257,6 +252,7 @@
 #include "TChain.h"
 #include "TChainElement.h"
 #include "TF1.h"
+#include "TH1.h"
 #include "TVirtualFitter.h"
 #include "TEnv.h"
 #include "THLimitsFinder.h"
@@ -620,14 +616,14 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
 //                 As a comparison
 //    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
-//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 will draw the sum arr3 for the index 0 to 2 only if the
 //                 actual_size_of_arr3 is greater or equal to 3.
 //                 Note that the array in 'primary' is flatened/linearilized thus using
 //                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
 //                 to yield the expected results.  To visualize a bit more what elements
 //                 would be matched by TTree::Draw, TTree::Scan can be used:
 //    tree->Scan("arr1:Alt$(arr2,0)");
-//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 will print on one line the value of arr1 and (arr2,0) that will be
 //                 matched by
 //    tree->Draw("arr1-Alt$(arr2,0)");
 //
@@ -973,16 +969,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
    TDatime td;
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
-   fprintf(fp,"//   This class has been automatically generated \n");
-   fprintf(fp,"//     (%s by ROOT version%s)\n",td.AsString(),gROOT->GetVersion());
+   fprintf(fp,"// This class has been automatically generated on\n");
+   fprintf(fp,"// %s by ROOT version %s\n",td.AsString(),gROOT->GetVersion());
    if (!ischain) {
-      fprintf(fp,"//   from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
-      fprintf(fp,"//   found on file: %s\n",treefile);
+      fprintf(fp,"// from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
+      fprintf(fp,"// found on file: %s\n",treefile);
    } else {
-      fprintf(fp,"//   from TChain %s/%s\n",fTree->GetName(),fTree->GetTitle());
+      fprintf(fp,"// from TChain %s/%s\n",fTree->GetName(),fTree->GetTitle());
    }
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
-   fprintf(fp,"\n");
    fprintf(fp,"\n");
    fprintf(fp,"#ifndef %s_h\n",classname);
    fprintf(fp,"#define %s_h\n",classname);
@@ -1023,7 +1018,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 		}
 		chain->LoadTree(0);
 	}
-			   
+
    leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
@@ -1046,15 +1041,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n");
    if (opt.Contains("selector")) {
       fprintf(fp,"class %s : public TSelector {\n",classname);
-      fprintf(fp,"   public :\n");
+      fprintf(fp,"public :\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
    } else {
       fprintf(fp,"class %s {\n",classname);
-      fprintf(fp,"   public :\n");
+      fprintf(fp,"public :\n");
       fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
       fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
    }
-   fprintf(fp,"//Declaration of leaves types\n");
+   fprintf(fp,"\n   // Declaration of leave types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
    TBranchElement *bre=0;
@@ -1112,7 +1107,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchElement::Class()) {
          bre = (TBranchElement*)branch;
-         if (bre->GetType() != 3 && bre->GetType() != 4 
+         if (bre->GetType() != 3 && bre->GetType() != 4
              && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) {
             leafStatus[l] = 0;
          }
@@ -1219,7 +1214,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 
 // generate list of branches
    fprintf(fp,"\n");
-   fprintf(fp,"//List of branches\n");
+   fprintf(fp,"   // List of branches\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
@@ -1271,7 +1266,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
       fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
       fprintf(fp,"   void    SlaveTerminate();\n");
-      fprintf(fp,"   void    Terminate();\n");
+      fprintf(fp,"   void    Terminate();\n\n");
       fprintf(fp,"   ClassDef(%s,0);\n",classname);
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
@@ -1389,10 +1384,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate code for class member function Init(), first pass = get branch pointer
    fprintf(fp,"void %s::Init(TTree *tree)\n",classname);
    fprintf(fp,"{\n");
+   fprintf(fp,"   // The Init() function is called when the selector needs to initialize\n"
+              "   // a new tree or chain. Typically here the branch addresses of the tree\n"
+              "   // will be set. It is normaly not necessary to make changes to the\n"
+              "   // generated code, but the routine can be extended by the user if needed.\n"
+              "   // Init() will be called many times when running with PROOF.\n\n");
    if (mustInit.Last()) {
       TIter next(&mustInit);
       TObject *obj;
-      fprintf(fp,"//   Set object pointer\n");
+      fprintf(fp,"   // Set object pointer\n");
       while( (obj = next()) ) {
          if (obj->InheritsFrom(TBranch::Class())) {
             strcpy(branchname,((TBranch*)obj)->GetName() );
@@ -1404,9 +1404,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          fprintf(fp,"   %s = 0;\n",branchname );
       }
    }
-   fprintf(fp,"//   Set branch addresses\n");
+   fprintf(fp,"   // Set branch addresses\n");
    fprintf(fp,"   if (tree == 0) return;\n");
-   fprintf(fp,"   fChain    = tree;\n");
+   fprintf(fp,"   fChain = tree;\n");
    if (!opt.Contains("selector")) fprintf(fp,"   fCurrent = -1;\n");
    fprintf(fp,"   fChain->SetMakeClass(1);\n");
    fprintf(fp,"\n");
@@ -1464,13 +1464,18 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // generate code for class member function Notify()
    fprintf(fp,"Bool_t %s::Notify()\n",classname);
    fprintf(fp,"{\n");
-   fprintf(fp,"   // Called when loading a new file.\n");
-   fprintf(fp,"   // Get branch pointers.\n");
+   fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
+              "   // can be either for a new TTree in a TChain or when when a new TTree\n"
+              "   // is started when using PROOF. Typically here the branch pointers\n"
+              "   // will be retrieved. It is normaly not necessary to make changes\n"
+              "   // to the generated code, but the routine can be extended by the\n"
+              "   // user if needed.\n\n");
+   fprintf(fp,"   // Get branch pointers\n");
    for (l=0;l<nleaves;l++) {
       if (leafStatus[l]) continue;
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       len = leaf->GetLen();
-      leafcount =leaf->GetLeafCount();
+      leafcount = leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
       if ( branch->GetNleaves() <= 1 ) {
@@ -1506,7 +1511,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       fprintf(fp,"   b_%s = fChain->GetBranch(\"%s\");\n",branchname,branch->GetName());
    }
-   fprintf(fp,"   return kTRUE;\n");
+   fprintf(fp,"\n   return kTRUE;\n");
    fprintf(fp,"}\n");
    fprintf(fp,"\n");
 
@@ -1533,16 +1538,15 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"}\n");
    }
    fprintf(fp,"#endif // #ifdef %s_cxx\n",classname);
-   fprintf(fp,"\n");
 
 //======================Generate classname.C=====================
    if (!opt.Contains("selector")) {
       // generate code for class member function Loop()
       fprintf(fpc,"#define %s_cxx\n",classname);
       fprintf(fpc,"#include \"%s\"\n",thead);
-      fprintf(fpc,"#include \"%s\"\n","TH2.h");
-      fprintf(fpc,"#include \"%s\"\n","TStyle.h");
-      fprintf(fpc,"#include \"%s\"\n","TCanvas.h");
+      fprintf(fpc,"#include <TH2.h>\n");
+      fprintf(fpc,"#include <TStyle.h>\n");
+      fprintf(fpc,"#include <TCanvas.h>\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"void %s::Loop()\n",classname);
       fprintf(fpc,"{\n");
@@ -1583,37 +1587,38 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       // generate usage comments and list of includes
       fprintf(fpc,"#define %s_cxx\n",classname);
       fprintf(fpc,"// The class definition in %s.h has been generated automatically\n",classname);
-      fprintf(fpc,"// by the ROOT utility TTree::MakeSelector().\n");
+      fprintf(fpc,"// by the ROOT utility TTree::MakeSelector(). This class is derived\n");
+      fprintf(fpc,"// from the ROOT class TSelector. For more information on the TSelector\n"
+                  "// framework see $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.\n\n");
+      fprintf(fpc,"// The following methods are defined in this file:\n");
+      fprintf(fpc,"//    Begin():        called everytime a loop on the tree starts,\n");
+      fprintf(fpc,"//                    a convenient place to create your histograms.\n");
+      fprintf(fpc,"//    SlaveBegin():   called after Begin(), when on PROOF called only on the\n"
+                  "//                    slave servers.\n");
+      fprintf(fpc,"//    Process():      called for each event, in this function you decide what\n");
+      fprintf(fpc,"//                    to read and fill your histograms.\n");
+      fprintf(fpc,"//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF\n"
+                  "//                    called only on the slave servers.\n");
+      fprintf(fpc,"//    Terminate():    called at the end of the loop on the tree,\n");
+      fprintf(fpc,"//                    a convenient place to draw/fit your histograms.\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"// This class is derived from the ROOT class TSelector.\n");
-      fprintf(fpc,"// The following members functions are called by the TTree::Process() functions:\n");
-      fprintf(fpc,"//    Begin():       called everytime a loop on the tree starts,\n");
-      fprintf(fpc,"//                   a convenient place to create your histograms.\n");
-      fprintf(fpc,"//    Notify():      this function is called at the first entry of a new Tree\n");
-      fprintf(fpc,"//                   in a chain.\n");
-      fprintf(fpc,"//    Process():     called for each event. In this function you decide what \n");
-      fprintf(fpc,"//                   to read and you fill your histograms.\n");
-      fprintf(fpc,"//    Terminate():   called at the end of a loop on the tree,\n");
-      fprintf(fpc,"//                   a convenient place to draw/fit your histograms.\n");
-      fprintf(fpc,"//\n");
-      fprintf(fpc,"//   To use this file, try the following session on your Tree T\n");
+      fprintf(fpc,"// To use this file, try the following session on your Tree T:\n");
       fprintf(fpc,"//\n");
       fprintf(fpc,"// Root > T->Process(\"%s.C\")\n",classname);
       fprintf(fpc,"// Root > T->Process(\"%s.C\",\"some options\")\n",classname);
       fprintf(fpc,"// Root > T->Process(\"%s.C+\")\n",classname);
-      fprintf(fpc,"//\n");
+      fprintf(fpc,"//\n\n");
       fprintf(fpc,"#include \"%s\"\n",thead);
-      fprintf(fpc,"#include \"%s\"\n","TH2.h");
-      fprintf(fpc,"#include \"%s\"\n","TStyle.h");
+      fprintf(fpc,"#include <TH2.h>\n");
+      fprintf(fpc,"#include <TStyle.h>\n");
       fprintf(fpc,"\n");
       // generate code for class member function Begin
       fprintf(fpc,"\n");
       fprintf(fpc,"void %s::Begin(TTree *tree)\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Function called before starting the event loop.\n");
-      fprintf(fpc,"   // When running with PROOF Begin() is only called in the client.\n");
-      fprintf(fpc,"   // Initialize the tree branches.\n");
-      fprintf(fpc,"\n");
+      fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
+      fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
+      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
@@ -1622,9 +1627,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"void %s::SlaveBegin(TTree *tree)\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Function called before starting the event loop.\n");
-      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called in each slave\n");
-      fprintf(fpc,"   // Initialize the tree branches.\n");
+      fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
+      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
+      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   Init(tree);\n");
       fprintf(fpc,"\n");
@@ -1635,16 +1640,22 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"Bool_t %s::Process(Int_t entry)\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Processing function. This function is called\n");
-      fprintf(fpc,"   // to process an event. It is the user's responsability to read\n");
-      fprintf(fpc,"   // the corresponding entry in memory (may be just a partial read).\n");
-      fprintf(fpc,"   // Once the entry is in memory one can apply a selection and if the\n");
-      fprintf(fpc,"   // event is selected histograms can be filled.\n\n");
+      fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
+                  "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
+                  "   // specifies which entry in the currently loaded tree is to be processed.\n"
+                  "   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()\n"
+                  "   // to read either all or the required parts of the data. When processing\n"
+                  "   // keyed objects with PROOF, the object is already loaded and is available\n"
+                  "   // via the fObject pointer.\n"
+                  "   //\n"
+                  "   // This function should contain the \"body\" of the analysis. It can contain\n"
+                  "   // simple or elaborate selection criteria, run algorithms on the data\n"
+                  "   // of the event and typically fill histograms.\n\n");
       fprintf(fpc,"   // WARNING when a selector is used with a TChain, you must use\n");
-      fprintf(fpc,"   //  the pointer to the current Tree to call GetEntry(entry).\n");
-      fprintf(fpc,"   //  entry is always the local entry number in the current tree.\n");
+      fprintf(fpc,"   //  the pointer to the current TTree to call GetEntry(entry).\n");
+      fprintf(fpc,"   //  The entry is always the local entry number in the current tree.\n");
       fprintf(fpc,"   //  Assuming that fChain is the pointer to the TChain being processed,\n");
-      fprintf(fpc,"   //  use fChain->GetTree()->GetEntry(entry);\n");
+      fprintf(fpc,"   //  use fChain->GetTree()->GetEntry(entry).\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
@@ -1653,7 +1664,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"void %s::SlaveTerminate()\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Function called at the end of the event loop in each PROOF slave.\n");
+      fprintf(fpc,"   // The SlaveTerminate() function is called after all entries or objects\n"
+                  "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
+                  "   // on each slave server.");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
@@ -1661,13 +1674,14 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"void %s::Terminate()\n",classname);
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // Function called at the end of the event loop.\n");
-      fprintf(fpc,"   // When running with PROOF Terminate() is only called in the client.\n");
+      fprintf(fpc,"   // The Terminate() function is the last function to be called during\n"
+                  "   // a query. It always runs on the client, it can be used to present\n"
+                  "   // the results graphically or save the results to file.");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
    }
-   Info("MakeClass","Files: %s and %s generated from Tree: %s",thead,tcimp,fTree->GetName());
+   Info("MakeClass","Files: %s and %s generated from TTree: %s",thead,tcimp,fTree->GetName());
    delete [] leafStatus;
    delete [] thead;
    delete [] tcimp;
@@ -1842,7 +1856,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    }
 
 // Second loop on all leaves to set the corresponding branch address
-   fprintf(fp,"\n//Set branch addresses\n");
+   fprintf(fp,"\n   // Set branch addresses.\n");
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       len = leaf->GetLen();
@@ -2011,8 +2025,8 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
             if (select->EvalInstance(inst) == 0) {
                continue;
             }
-         } 
-      
+         }
+
          if (inst==0) loaded = kTRUE;
          else if (!loaded) {
             // EvalInstance(0) always needs to be called so that
@@ -2194,7 +2208,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::Scan(const char *varexp, const char *selection, 
+Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
                         Option_t * option,
                        Int_t nentries, Int_t firstentry)
 {
@@ -2204,7 +2218,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    //
    // Arrays (within an entry) are printed in their linear forms.
    // If several arrays with multiple dimensions are printed together,
-   // they will NOT be synchronized.  For example print 
+   // they will NOT be synchronized.  For example print
    //   arr1[4][2] and arr2[2][3] will results in a printing similar to:
    // ***********************************************
    // *    Row   * Instance *      arr1 *      arr2 *
@@ -2222,11 +2236,11 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // all the formulas will be synchronized with the selection criterium
    // (see TTreePlayer::DrawSelect for more information).
    //
-   // If option contains 
+   // If option contains
    //    lenmax=dd
    // Where 'dd' is the maximum number of elements per array that should
    // be printed.  If 'dd' is 0, all elements are printed (this is the default)
-   
+
    TString opt = option;
    opt.ToLower();
    UInt_t lenmax = 0;
@@ -2238,7 +2252,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
       opt.Remove(start,strlen("lenmax")+numlen);
-      
+
       lenmax = atoi(num.Data());
    }
 
@@ -2346,7 +2360,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
             case  0:
                break;
          }
-         
+
       }
    }
 
@@ -2400,7 +2414,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
       }
 
       int ndata = 1;
-      if (forceDim) { 
+      if (forceDim) {
 
          if (manager) {
 
@@ -2416,7 +2430,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
             }
             if (select && select->GetNdata()==0) ndata = 0;
          }
-         
+
       }
 
       if (lenmax && ndata>(int)lenmax) ndata = lenmax;
@@ -2426,7 +2440,7 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
             if (select->EvalInstance(inst) == 0) {
                continue;
             }
-         } 
+         }
          if (inst==0) loaded = kTRUE;
          else if (!loaded) {
             // EvalInstance(0) always needs to be called so that
