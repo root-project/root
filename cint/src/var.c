@@ -1416,7 +1416,11 @@ int isdecl;
 #endif
 	var=varlocal;
 	if(varglobal&&0==isdecl) {
+#ifndef G__OLDIMPLEMENTATION1366
+	  if(G__exec_memberfunc||(-1!=G__tagdefining&&-1!=scope_tagnum)) {
+#else
 	  if(G__exec_memberfunc) {
+#endif
 	    ilg=G__MEMBER;
 	  }
 	  else {

@@ -6495,11 +6495,13 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1138
 	    ++done;
 #endif
+	    /* link class,struct */
 	    for(i=0;i<G__struct.alltag;i++) {
 	      if(G__struct.filenum[i]==ifile) {
 		G__struct.globalcomp[i]=globalcomp;
 	      }
 	    }
+	    /* link global function */
 	    ifunc = &G__ifunc;
 	    while(ifunc) {
 	      for(i=0;i<ifunc->allifunc;i++) {
@@ -6509,7 +6511,29 @@ int link_stub;
 	      }
 	      ifunc = ifunc->next;
 	    }
-	      break;
+#ifdef G__VARIABLEFPOS
+	    /* link global variable */
+	    {
+	      struct G__var_array *var = &G__global;
+	      while(var) {
+		for(i=0;i<var->allvar;i++) {
+		  if(var->filenum[i]==ifile) {
+		    var->globalcomp[i] = globalcomp;
+		  }
+		}
+		var = var->next;
+	      }
+	    }
+#endif
+#ifdef G__TYPEDEFFPOS
+	    /* link typedef */
+	    for(i=0;i<G__newtype.alltype;i++) {
+	      if(G__newtype.filenum[i]==ifile) {
+		G__newtype.globalcomp[i] = globalcomp;
+	      }
+	    }
+#endif
+	    break;
 	  }
 	}
       }
@@ -6567,6 +6591,28 @@ int link_stub;
 	  }
 	  ifunc = ifunc->next;
 	}
+#ifdef G__VARIABLEFPOS
+	/* link global variable */
+	{
+	  struct G__var_array *var = &G__global;
+	  while(var) {
+	    for(i=0;i<var->allvar;i++) {
+	      if(var->filenum[i]==ifile) {
+		var->globalcomp[i] = globalcomp;
+	      }
+	    }
+	    var = var->next;
+	  }
+	}
+#endif
+#ifdef G__TYPEDEFFPOS
+	/* link typedef */
+	for(i=0;i<G__newtype.alltype;i++) {
+	  if(G__newtype.filenum[i]==ifile) {
+	    G__newtype.globalcomp[i] = globalcomp;
+	  }
+	}
+#endif
 	break;
       }
     }

@@ -4518,6 +4518,12 @@ int recursive;
 	  G__funclist_delete(funclist);
 	  return(p_ifunc);
 	}
+#ifndef G__OLDIMPLEMENTATION1367
+	if(-1!=p_ifunc->tagnum && memfunc_flag==G__TRYNORMAL &&
+	   strcmp(G__struct.name[p_ifunc->tagnum],funcname)==0) {
+	  continue;
+	}
+#endif
 	funclist = G__funclist_add(funclist,p_ifunc,ifn);
 	if(p_ifunc->para_nu[ifn]<libp->paran ||
 	   (p_ifunc->para_nu[ifn]>libp->paran&&
