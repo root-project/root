@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.rdl,v 1.3 2001/08/20 21:47:29 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.rdl,v 1.1 2001/08/25 22:25:43 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -17,6 +17,7 @@
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "TH2.h"
+#include "TFile.h"
 
 class RooRealVar;
 class RooDataSet;
@@ -24,30 +25,36 @@ class RooDataSet;
 class Roo2DHistPdf : public RooAbsPdf {
 public:
   Roo2DHistPdf(const char * name, const char *title,
-             RooAbsReal& x, RooAbsReal &y, RooDataSet & data, TString opt = "");
+             RooAbsReal& x, RooAbsReal &y, const char * rootFile, const char * histName, TString options);
+  Roo2DHistPdf(const char * name, const char *title,
+             RooAbsReal& x, RooAbsReal &y, RooDataSet & data, TString options);
   Roo2DHistPdf(const char *name, const char *title,
-             RooAbsReal& x, RooAbsReal &y, TH2F * hist, TString opt = "");
+             RooAbsReal& x, RooAbsReal &y, TH2F * hist, TString options);
   Roo2DHistPdf(const char *name, const char *title,
-             RooAbsReal& x, RooAbsReal &y, TH2D * hist, TString opt = "");
+             RooAbsReal& x, RooAbsReal &y, TH2D * hist, TString options);
 
   Roo2DHistPdf(const Roo2DHistPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new Roo2DHistPdf(*this,newname); }
 
   virtual ~Roo2DHistPdf();
 
+// interesting values for 'options':
 // 'e' extrapolate between bins when using evaluate(), if this option is not set, the actual
 //     bin content is used instead
-// 's' set to smooth the probability LUT
-  void     SetOptions(TString opt);
+// 's' set to smooth the probability LUT - not yet implemented :-(
+  Int_t loadNewHist(TH2F * aNewHist, TString options);
 
   RooRealProxy x;
   RooRealProxy y;
 
 protected:
-  void     GetProbability(TH2F * theHist);      //calculate PDF LUT, _p[];
+  Int_t    GetProbability(TH2F * theHist);      //calculate PDF LUT, _p[];
   Double_t evaluate() const;
+  void     SetOptions(TString options = "");
 
 private:
+  TFile    * _file;
+  TH2F     * _hist;
 
   Double_t _xbinWidth;
   Double_t _ybinWidth;

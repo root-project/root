@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.1 2001/08/25 22:25:43 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.2 2001/08/26 17:48:48 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -24,6 +24,29 @@
 
 ClassImp(Roo2DHistPdf)
 
+Roo2DHistPdf::Roo2DHistPdf(const char * name, const char *title,
+                           RooAbsReal& xx, RooAbsReal &yy, const char * rootFile, const char * histName, TString opt):
+  RooAbsPdf(name,title),
+  x("x", "x dimension",this, xx),
+  y("y", "y dimension",this, yy)
+{
+  _file = new TFile(rootFile);
+  if(!_file)
+  {
+    cout << "Roo2DHistPdf::Roo2DHistPdf Unable to open file "<< rootFile <<endl;
+    return;
+  }
+
+  _hist = (TH2F*)_file->Get(histName);
+  if(!_hist)
+  {
+    cout << "Roo2DHistPdf::Roo2DHistPdf Unable to get histogram "<< rootFile << " from file " << rootFile<<endl;
+    return;
+  }
+
+  loadNewHist(_hist, opt);
+}
+
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
                        RooAbsReal& xx, RooAbsReal & yy, RooDataSet& data, TString opt):
   RooAbsPdf(name,title),
@@ -31,9 +54,7 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   y("y", "y dimension",this, yy)
 {
   TH2F * hist = (TH2F*)data.createHistogram(xx,yy);
-  SetOptions(opt);
-
-  GetProbability(hist);
+  loadNewHist(_hist, opt);
 }
 
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
@@ -42,9 +63,7 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   x("x", "x dimension",this, xx),
   y("y", "y dimension",this, yy)
 {
-  SetOptions(opt);
-
-  GetProbability(hist);
+  loadNewHist(_hist, opt);
 }
 
 Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
@@ -54,19 +73,22 @@ Roo2DHistPdf::Roo2DHistPdf(const char *name, const char *title,
   y("y", "y dimension",this, yy)
 {
   _iWantToExtrapolate = 0;
-
-  SetOptions(opt);
-  GetProbability((TH2F*)hist);
+  loadNewHist( (TH2F*)_hist, opt);
 }
 
+// dont take on the file and histogram source from the original
+// PDF in case the clone goes out of scope at a different time
+// to the original
 Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
   RooAbsPdf(other,name),
   x("x", this, other.x),
   y("y", this, other.y)
 {
-  SetOptions("");
   _nPointsx = other._nPointsx;
   _nPointsy = other._nPointsy;
+
+  _iWantToSmooth      = other._iWantToSmooth;
+  _iWantToExtrapolate = other._iWantToExtrapolate;
 
   //set boundary values
   _lox = x.min();
@@ -87,8 +109,15 @@ Roo2DHistPdf::Roo2DHistPdf(const Roo2DHistPdf & other, const char* name) :
   }
 }
 
-Roo2DHistPdf::~Roo2DHistPdf() {
-  //do nothing
+Roo2DHistPdf::~Roo2DHistPdf() 
+{
+  if(_file) _file->Close();
+}
+
+Int_t Roo2DHistPdf::loadNewHist(TH2F * aNewHist, TString options)
+{
+  SetOptions(options);
+  return GetProbability(aNewHist);
 }
 
 // 'e' extrapolation between bins to try and smooth out the logo shape
@@ -108,10 +137,13 @@ void Roo2DHistPdf::SetOptions(TString opt)
 //====================//
 //calculate the LUT   //
 //====================//
-void Roo2DHistPdf::GetProbability(TH2F * theHist)
+Int_t Roo2DHistPdf::GetProbability(TH2F * theHist)
 {
-  if(theHist == 0)   cout <<"Trying to use an null histogram in Roo2DHistPdf::GetProbability"<<endl;
-
+  if(theHist == 0)
+  {
+    cout <<"Roo2DHistPdf::GetProbability Trying to use an null histogram"<<endl;
+    return 1;
+  }
   Int_t nx = theHist->GetNbinsX();
   Int_t ny = theHist->GetNbinsY();
 
@@ -137,16 +169,26 @@ void Roo2DHistPdf::GetProbability(TH2F * theHist)
   _hiy = y.max();
   _ybinWidth = (_hiy-_loy)/(_nPointsy);
 
+  if( (_xbinWidth == 0.0) || (_ybinWidth == 0.0))
+  {
+    cout << "Roo2DHistPdf::GetProbability histogram bin width = 0" <<endl;
+    return 1;
+  }
   //read in the table of values
   for(Int_t i = 1; i <= nx; i++)
   {
     for(Int_t j = 1; j <= ny; j++)
     {
       _p[i-1][j-1] = theHist->GetBinContent(i, j);
+      if(_p[i-1][j-1] < 0.0)
+      {
+        cout << "Roo2DHistPdf::GetProbability histogram bin content: "<< _p[i-1][j-1] <<" < 0; setting to probability to 0.0"<<endl;
+        _p[i-1][j-1] = 0.0;
+      }
     }
   }
 
-  return;
+  return 0;
 }
 
 //=======================================================================================//
