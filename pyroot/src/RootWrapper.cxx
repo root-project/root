@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.5 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.6 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -255,9 +255,13 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
 PyObject* PyROOT::buildRootClassBases( TClass* cls ) {
    TList* allbases = cls->GetListOfBases();
 
+   std::vector< std::string >::size_type nbases = 0;
+   if ( allbases != 0 )
+      nbases = allbases->GetSize();
+
 // collect bases, remove duplicates
    std::vector< std::string > uqb;
-   uqb.reserve( allbases->GetSize() );
+   uqb.reserve( nbases );
 
    TIter nextbase( allbases );
    while ( TBaseClass* base = (TBaseClass*)nextbase() ) {
@@ -268,7 +272,7 @@ PyObject* PyROOT::buildRootClassBases( TClass* cls ) {
    }
 
 // allocate a tuple for the base classes, special case for no bases
-   std::vector< std::string >::size_type nbases = uqb.size();
+   nbases = uqb.size();
 
    PyObject* pybases = PyTuple_New( nbases ? nbases : 1 );
    if ( ! pybases )
