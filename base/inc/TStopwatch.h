@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.h,v 1.3 2002/06/13 13:42:54 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
    Double_t    CpuTime();
    void        Print(Option_t *option="") const;
 
-   ClassDef(TStopwatch,0)  //A stopwatch which times real and cpu time
+   ClassDef(TStopwatch,1)  //A stopwatch which times real and cpu time
 };
 
 #endif
