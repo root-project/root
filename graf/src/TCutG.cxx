@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.4 2000/09/08 07:41:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.5 2000/11/28 07:26:58 brun Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -254,4 +254,18 @@ void TCutG::SetVarY(const char *vary)
    fVarY = vary;
    delete fObjectY;
    fObjectY = 0;
+}
+
+
+//______________________________________________________________________________
+void TCutG::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TCutG.
+
+   if (R__b.IsReading()) {
+      TCutG::Class()->ReadBuffer(R__b, this);
+      gROOT->GetListOfSpecials()->Add(this);
+   } else {
+      TCutG::Class()->WriteBuffer(R__b, this);
+   }
 }
