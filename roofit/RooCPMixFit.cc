@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.7 2002/02/28 16:50:52 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.8 2002/04/04 00:17:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -147,7 +147,8 @@ void RooCPMixFit::initDataVars()
   pType8   = new RooRealVar  ("pType8"   ,"prob that the event is of BG type 8",0.,1.);  // col# 27
   deltaE   = new RooRealVar  ("deltaE"   ,"Delta(E)_ES",-0.1,0.1,"GeV");                 // col# 28
   mB       = new RooRealVar  ("mB"       ,"E_Beam Substituted Mass",5.200001,5.30,"GeV");// col# 29
-  runNumber= new RooRealVar  ("runNumber","run number",0,0,30000);                       // col# 30
+  //  runNumber= new RooRealVar  ("runNumber","run number",0,0,30000);                       // col# 30
+  runNumber= new RooRealVar  ("runNumber","run number",0,0,1e8);                       // col# 30
   tstamph  = new RooStringVar("tstamph"  ,"time stamp upper ID","");                     // col# 31
   tstampl  = new RooStringVar("tstampl"  ,"time stamp lower ID","");                     // col# 32
 
@@ -647,6 +648,50 @@ void RooCPMixFit::defineBDecayModes(RooCategory& cat)
   cat.defineType("B+->D*0bA1p, D*0b->D0bPi0, D0b->KPiPi0",3146) ;
   cat.defineType("B+->D*0bA1p, D*0b->D0bPi0, D0b->K3Pi",3147) ;            
   cat.defineType("B+->D*0bA1p, D*0b->D0bPi0, D0b->KsPi+Pi-",3148) ;
+  // add D(*)D(*) modes (lillard-060302)
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpi, D0b->Kpi",23030) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpipi0, D0b->Kpi",23130) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpi, D0b->Kpipi0",23031) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->K3pi, D0b->Kpi",23230) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpi, D0b->K3pi",23032) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kspipi, D0b->Kpi",23330) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpi, D0b->Kspipi",23033) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpipi0, D0b->Kpipi0",23131) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->K3pi, D0b->Kpipi0",23231) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpipi0, D0b->K3pi",23132) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kspipi, D0b->Kpipi0",23331) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kpipi0, D0b->Kspipi",23133) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->K3pi, D0b->K3pi",23232) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kspipi, D0b->K3pi",23332) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->K3pi, D0b->Kspipi",23233) ;
+  cat.defineType("B0->D*+D*-, D0pi D0pi, D0->Kspipi, D0b->Kspipi",23333) ;
+
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpi, D-->Kpipi",23035) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpi, D-->Kspi",23034) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpi, D-->KKpi",23039) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpipi0, D-->Kpipi",23135) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpipi0, D-->Kspi",23134) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kpipi0, D-->KKpi",23139) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->K3pi, D-->Kpipi",23235) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->K3pi, D-->Kspi",23234) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->K3pi, D-->KKpi",23239) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kspipi, D-->Kpipi",23335) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kspipi, D-->Kspi",23334) ;
+  cat.defineType("B0->D*+D*-, D0pi D-pi0, D0->Kspipi, D-->KKpi",23339) ;
+
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kpipi, D0b->Kpi",23530) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kpipi, D0b->Kpipi0",23531) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kpipi, D0b->K3pi",23532) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kpipi, D0b->Kspipi",23533) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kspi, D0b->Kpi",23430) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kspi, D0b->Kpipi0",23431) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kspi, D0b->K3pi",23432) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->Kspi, D0b->Kspipi",23433) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->KKpi, D0b->Kpi",23930) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->KKpi, D0b->Kpipi0",23931) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->KKpi, D0b->K3pi",23932) ;
+  cat.defineType("B0->D*+D*-, D+pi0 D0pi, D+->KKpi, D0b->Kspipi",23933) ;
+
 }
 
 
