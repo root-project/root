@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.51 2001/02/06 11:02:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.52 2001/02/12 07:35:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -705,9 +705,21 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
 //*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchElement*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================================
 //
+//    WARNING about this new function
+//    ===============================
+//    This function is designed to replace the function TTree::Branch above
+//    in a future version of Root. This function is far more powerful than
+//    the Branch function. It supports the full C++, including STL and
+//    has the same behaviour in split or non-split mode.
+//    The function is based on the new TStreamerInfo.
+//    The Root team encourages users to try this new function to write
+//    and read their existing classes. However, Trees written with this function
+//    cannot be analyzed yet with TTree::Draw, Scan or the Browsers.
+//    --------------------------------------------------------------------
+//
 //    Build a TBranchElement for an object of class classname.
 //    addobj is the address of a pointer to an object of class classname.
-//    IMPORTANT: classname must derive from TObject.
+//    IMPORTANT: classname doest not have to derive from TObject.
 //    The class dictionary must be available (ClassDef in class header).
 //
 //    This option requires access to the library where the corresponding class
@@ -740,10 +752,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       return 0;
    }
    Bool_t delobj = kFALSE;
-   TObject **ppointer = (TObject**)add;
-   TObject *objadd = *ppointer;
+   char **ppointer = (char**)add;
+   char *objadd = *ppointer;
    if (!objadd) {
-      objadd = (TObject*)cl->New();
+      objadd = (char*)cl->New();
       *ppointer = objadd;
       delobj = kTRUE;
    }
