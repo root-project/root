@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.8 2002/05/18 08:21:59 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.9 2003/05/30 19:41:01 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -227,7 +227,7 @@ void TParticle::SetPolarisation(Double_t polx, Double_t poly, Double_t polz)
 {
   if(polx || poly || polz) {
     fPolarTheta = TMath::ACos(polz/TMath::Sqrt(polx*polx+poly*poly+polz*polz));
-    fPolarPhi   = kPI+TMath::ATan2(-poly,-polx);
+    fPolarPhi   = TMath::Pi()+TMath::ATan2(-poly,-polx);
   } else {
     fPolarTheta = -99;
     fPolarPhi = -99;
