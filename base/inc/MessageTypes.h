@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.18 2003/05/01 17:51:42 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.19 2003/08/29 10:41:27 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -25,6 +25,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 enum EMessageTypes {
+   kMESS_ZIP             = 0x20000000,   //OR with kMESS_ZIP to compress message
    kMESS_ACK             = 0x10000000,   //OR with kMESS_ACK to force each
                                          //message to be acknowledged
    kMESS_ANY             = 0,            //generic message type

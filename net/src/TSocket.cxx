@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.13 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.14 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -30,6 +30,10 @@
 #include "Bytes.h"
 #include "TROOT.h"
 #include "TError.h"
+
+extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
+const Int_t kMAXBUF = 0xffffff;
 
 UInt_t TSocket::fgBytesSent = 0;
 UInt_t TSocket::fgBytesRecv = 0;
@@ -64,6 +68,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
    fBytesRecv = 0;
+   fCompress  = 0;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -103,6 +108,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
+   fCompress  = 0;
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
@@ -141,6 +147,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    SetName(fAddress.GetHostName());
    fBytesSent = 0;
    fBytesRecv = 0;
+   fCompress  = 0;
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
@@ -186,6 +193,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    SetTitle(fService);
    fBytesSent = 0;
    fBytesRecv = 0;
+   fCompress  = 0;
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
    if (fSocket == -1) {
@@ -208,6 +216,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fService = (char *)kSOCKD;
    fBytesSent = 0;
    fBytesRecv = 0;
+   fCompress  = 0;
 
    if (desc >= 0) {
       fSocket  = desc;
@@ -222,15 +231,16 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
 {
    // TSocket copy ctor.
 
-   fSocket       = s.fSocket;
-   fService      = s.fService;
-   fAddress      = s.fAddress;
-   fLocalAddress = s.fLocalAddress;
-   fBytesSent    = s.fBytesSent;
-   fBytesRecv    = s.fBytesRecv;
-   fSecContext   = s.fSecContext;
+   fSocket         = s.fSocket;
+   fService        = s.fService;
+   fAddress        = s.fAddress;
+   fLocalAddress   = s.fLocalAddress;
+   fBytesSent      = s.fBytesSent;
+   fBytesRecv      = s.fBytesRecv;
+   fCompress       = s.fCompress;
+   fSecContext     = s.fSecContext;
    fRemoteProtocol = s.fRemoteProtocol;
-   fServType     = s.fServType;
+   fServType       = s.fServType;
 
    if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
 }
@@ -363,14 +373,29 @@ Int_t TSocket::Send(const TMessage &mess)
    TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
+
    if (mess.IsReading()) {
       Error("Send", "cannot send a message used for reading");
       return -1;
    }
 
-   Int_t nsent;
    mess.SetLength();   //write length in first word of buffer
-   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(),0)) <= 0) {
+
+   if (fCompress > 0 && mess.GetCompressionLevel() == 0)
+      const_cast<TMessage&>(mess).SetCompressionLevel(fCompress);
+
+   if (mess.GetCompressionLevel() > 0)
+      const_cast<TMessage&>(mess).Compress();
+
+   char *mbuf = mess.Buffer();
+   Int_t mlen = mess.Length();
+   if (mess.CompBuffer()) {
+      mbuf = mess.CompBuffer();
+      mlen = mess.CompLength();
+   }
+
+   Int_t nsent;
+   if ((nsent = gSystem->SendRaw(fSocket, mbuf, mlen, 0)) <= 0) {
       if (nsent == -5) {
          // Connection reset by peer or broken
          Close();
@@ -659,9 +684,24 @@ Int_t TSocket::GetErrorCode() const
 }
 
 //______________________________________________________________________________
+void TSocket::SetCompressionLevel(Int_t level)
+{
+   // Set the message compression level. Can be between 0 and 9 with 0
+   // being no compression and 9 maximum compression. In general the default
+   // level of 1 is the best compromise between achieved compression and
+   // cpu time. Compression will only happen when the message is > 256 bytes.
+
+   if (level < 0) level = 0;
+   if (level > 9) level = 9;
+
+   fCompress = level;
+}
+
+//______________________________________________________________________________
 Bool_t TSocket::Authenticate(const char *user)
 {
    // Authenticated the socket with specified user.
+
    Bool_t rc = kFALSE;
 
    // Parse protocol name

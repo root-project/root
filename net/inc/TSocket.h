@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.10 2004/03/22 18:35:00 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.11 2004/03/23 00:12:42 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -82,12 +82,13 @@ protected:
    TString       fService;        // name of service (matches remote port #)
    EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
+   Int_t         fCompress;       // compression level from 0 (not compressed) to 9 (max compression)
    TString       fUrl;            // needs this for special authentication options
 
    static UInt_t fgBytesRecv;     // total bytes received by all socket objects
    static UInt_t fgBytesSent;     // total bytes sent by all socket objects
 
-   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fSecContext = 0; }
+   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fCompress = 0; fSecContext = 0; }
    Bool_t       Authenticate(const char *user);
 
 private:
@@ -118,6 +119,7 @@ public:
    virtual Int_t         GetLocalPort();
    UInt_t                GetBytesSent() const { return fBytesSent; }
    UInt_t                GetBytesRecv() const { return fBytesRecv; }
+   Int_t                 GetCompressionLevel() const { return fCompress; }
    Int_t                 GetErrorCode() const;
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);
    Int_t                 GetRemoteProtocol() const { return fRemoteProtocol; }
@@ -137,6 +139,7 @@ public:
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
+   void                  SetCompressionLevel(Int_t level = 1);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }

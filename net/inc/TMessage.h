@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.5 2002/03/19 10:57:24 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.6 2003/09/22 10:27:01 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -36,8 +36,12 @@ friend class TSocket;
 friend class TPSocket;
 
 private:
-   UInt_t   fWhat;   //message type
-   TClass  *fClass;  //if message is kMESS_OBJECT, pointer to object's class
+   UInt_t   fWhat;        //Message type
+   TClass  *fClass;       //If message is kMESS_OBJECT pointer to object's class
+   Int_t    fCompress;    //Compression level from 0 (not compressed) to 9 (max compression)
+   char    *fBufComp;     //Compressed buffer
+   char    *fBufCompCur;  //Current position in compressed buffer
+   char    *fCompPos;     //Position of fBufCur when message was compressed
 
    // TMessage objects cannot be copied or assigned
    TMessage(const TMessage &);           // not implemented
@@ -49,7 +53,7 @@ protected:
 
 public:
    TMessage(UInt_t what = kMESS_ANY);
-   virtual ~TMessage() { }
+   virtual ~TMessage();
 
    void     Forward();
    TClass  *GetClass() const { return fClass; }
@@ -57,6 +61,13 @@ public:
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
    void     SetWhat(UInt_t what);
+
+   void     SetCompressionLevel(Int_t level = 1);
+   Int_t    GetCompressionLevel() const { return fCompress; }
+   Int_t    Compress();
+   Int_t    Uncompress();
+   char    *CompBuffer() const { return fBufComp; }
+   Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
 
    ClassDef(TMessage,0)  // Message buffer class
 };

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.10 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.11 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -87,7 +87,7 @@ TPSocket::TPSocket(const char *host, const char *service, Int_t size,
 
 //______________________________________________________________________________
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
-                   Int_t tcpwindowsize) 
+                   Int_t tcpwindowsize)
                   : TSocket(host, port, (Int_t)(size > 1 ? -1 : tcpwindowsize))
 {
    // Create a parallel socket. Connect to specified port # on the remote host.
@@ -116,7 +116,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 
    // Check if we are calle from CreateAuthSocket
    Bool_t authreq = kFALSE;
-   char *pauth = (char *)strstr(host,"?A"); 
+   char *pauth = (char *)strstr(host,"?A");
    if (pauth) {
       authreq = kTRUE;
       fRemoteProtocol= atoi(pauth+2);
@@ -151,7 +151,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
       *pauth = '\0';
       SetUrl(host);
    }
-   
+
    // Open the sockets ...
    if (!RootdSrv || fRemoteProtocol > 9) {
       if (valid) {
@@ -261,35 +261,35 @@ void TPSocket::Init(Int_t tcpwindowsize)
       // set socket options (no blocking and no delay)
       TSocket::SetOption(kNoDelay, 1);
 
-      // If yes, communicate this to server 
+      // If yes, communicate this to server
       // (size = 0 for backward compatibility)
       TSocket::Send((Int_t)0, (Int_t)0);
 
       // Needs to fill additional private members
       fSockets = new TSocket*[1];
       fSockets[0]= (TSocket *)this;
- 
+
    } else {
       // create server that will be used to accept the parallel sockets from
       // the remote host, use port=0 to scan for a free port
       TServerSocket ss(0, kFALSE, fSize, tcpwindowsize);
-      
+
       // send the local port number of the just created server socket and the
       // number of desired parallel sockets
       TSocket::Send(ss.GetLocalPort(), fSize);
 
       fSockets = new TSocket*[fSize];
-      
+
       // establish fSize parallel socket connections between client and server
       for (i = 0; i < fSize; i++) {
          fSockets[i] = ss.Accept();
          gROOT->GetListOfSockets()->Remove(fSockets[i]);
       }
-      
+
       // set socket options (no blocking and no delay)
       SetOption(kNoDelay, 1);
       SetOption(kNoBlock, 1);
-      
+
       // Close original socket
       gSystem->CloseConnection(fSocket, kFALSE);
       fSocket = -1;
@@ -301,7 +301,7 @@ void TPSocket::Init(Int_t tcpwindowsize)
    fReadBytesLeft  = new Int_t[fSize];
    fWritePtr       = new char*[fSize];
    fReadPtr        = new char*[fSize];
-   
+
    for (i = 0; i < fSize; i++) {
       fWriteMonitor->Add(fSockets[i], TMonitor::kWrite);
       fReadMonitor->Add(fSockets[i], TMonitor::kRead);
@@ -329,7 +329,7 @@ TInetAddress TPSocket::GetLocalInetAddress()
 
 //______________________________________________________________________________
 Int_t TPSocket::GetDescriptor() const
-{ 
+{
     // Return socket descriptor
 
     if (fSize <= 1)
@@ -338,7 +338,6 @@ Int_t TPSocket::GetDescriptor() const
     return fSockets ? fSockets[0]->GetDescriptor() : -1;
 
 }
-
 
 //______________________________________________________________________________
 Int_t TPSocket::Send(const TMessage &mess)
@@ -363,13 +362,26 @@ Int_t TPSocket::Send(const TMessage &mess)
 
    mess.SetLength();   //write length in first word of buffer
 
+   if (fCompress > 0 && mess.GetCompressionLevel() == 0)
+      const_cast<TMessage&>(mess).SetCompressionLevel(fCompress);
+
+   if (mess.GetCompressionLevel() > 0)
+      const_cast<TMessage&>(mess).Compress();
+
+   char *mbuf = mess.Buffer();
+   Int_t mlen = mess.Length();
+   if (mess.CompBuffer()) {
+      mbuf = mess.CompBuffer();
+      mlen = mess.CompLength();
+   }
+
    Int_t nsent, ulen = (Int_t) sizeof(UInt_t);
    // send length
-   if ((nsent = SendRaw(mess.Buffer(), ulen, kDefault)) <= 0)
+   if ((nsent = SendRaw(mbuf, ulen, kDefault)) <= 0)
       return nsent;
 
    // send buffer (this might go in parallel)
-   if ((nsent = SendRaw(mess.Buffer()+ulen, mess.Length()-ulen, kDefault)) <= 0)
+   if ((nsent = SendRaw(mbuf+ulen, mlen-ulen, kDefault)) <= 0)
       return nsent;
 
    // If acknowledgement is desired, wait for it
