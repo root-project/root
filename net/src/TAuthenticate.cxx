@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.60 2004/08/16 14:28:33 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.61 2004/09/16 20:18:10 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1319,11 +1319,11 @@ void TAuthenticate::SetDefaultRSAKeyType(Int_t key)
 }
 
 //______________________________________________________________________________
-void TAuthenticate::SetRSAInit()
+void TAuthenticate::SetRSAInit(Int_t init)
 {
    // Static method setting RSA initialization flag.
 
-   fgRSAInit = 1;
+   fgRSAInit = init;
 }
 
 //______________________________________________________________________________

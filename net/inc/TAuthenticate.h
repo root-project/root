@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.23 2004/05/30 16:15:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.24 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -204,7 +204,7 @@ public:
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetPromptUser(Bool_t promptuser);
    static void        SetDefaultRSAKeyType(Int_t key);
-   static void        SetRSAInit();
+   static void        SetRSAInit(Int_t init = 1);
    static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
    static void        SetSecureAuthHook(SecureAuth_t func);
    static void        Show(Option_t *opt="S");
