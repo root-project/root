@@ -5247,10 +5247,6 @@ gdk_event_translate(GdkEvent * event,
          break;
       }
 
-
-      /* HB: only process mouse move messages if we own the active window. */
-      GetWindowThreadProcessId(GetActiveWindow(), &pidActWin);
-      GetWindowThreadProcessId(xevent->hwnd, &pidThis);
       if (pidActWin != pidThis)
          break;
 
