@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.2 2001/09/25 17:37:24 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.3 2001/09/26 09:13:03 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -372,7 +372,6 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
              (newTableSize - branch->fTableSize));
       branch->fTableSize = newTableSize;
    }
-   return p;
 }
 
 //______________________________________________________________________________
