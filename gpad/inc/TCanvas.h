@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.7 2000/11/21 20:20:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.8 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -117,8 +117,8 @@ public:
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
    virtual void      Draw(Option_t *option="");
-   virtual void      DrawClone(Option_t *option="") const; // *MENU*
-   virtual void      DrawClonePad(); // *MENU*
+   virtual TObject  *DrawClone(Option_t *option="") const; // *MENU*
+   virtual TObject  *DrawClonePad(); // *MENU*
    virtual void      EditorBar();
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
    void              FeedbackMode(Bool_t set);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.18 2000/10/26 15:32:04 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.19 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -232,8 +232,8 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    if (old && old->IsOnHeap()) delete old;
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = 712;                // default size corresponds to A4
-      fWindowHeight = 950;
+      fWindowWidth  = gStyle->GetCanvasDefW()-4; 
+      fWindowHeight = gStyle->GetCanvasDefH()-28;
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
       fCanvasImp  = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
@@ -650,7 +650,7 @@ void TCanvas::Draw(Option_t *)
 }
 
 //______________________________________________________________________________
-void TCanvas::DrawClone(Option_t *option) const
+TObject *TCanvas::DrawClone(Option_t *option) const
 {
    // Draw a clone of this canvas
    // A new canvas is created that is a clone of this canvas
@@ -669,11 +669,12 @@ void TCanvas::DrawClone(Option_t *option) const
 
    newCanvas->Draw(option);
    newCanvas->Update();
+   return newCanvas;
 }
 
 
 //______________________________________________________________________________
-void TCanvas::DrawClonePad()
+TObject *TCanvas::DrawClonePad()
 {
    // Draw a clone of this canvas into the current pad
    // In an interactive session, select the destination/current pad
@@ -685,8 +686,7 @@ void TCanvas::DrawClonePad()
   TPad *padsav = (TPad*)gPad;
   TPad *pad = (TPad*)gROOT->GetSelectedPad();
   if (fCanvasID < 0 || padsav == 0 || pad == this) {
-     DrawClone();
-     return;
+     return DrawClone();
   }
   this->cd();
   TObject *obj, *clone;
@@ -715,6 +715,7 @@ void TCanvas::DrawClonePad()
   pad->Modified();
   pad->Update();
   padsav->cd();
+  return 0;
 }
 
 //______________________________________________________________________________
