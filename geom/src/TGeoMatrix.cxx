@@ -329,12 +329,14 @@ void TGeoMatrix::MasterToLocal(const Double_t *master, Double_t *local) const
      memcpy(local, master, kN3);
      return;
   }   
-  Double_t mt0 = master[0]-fTranslation[0];
-  Double_t mt1 = master[1]-fTranslation[1];
-  Double_t mt2 = master[2]-fTranslation[2];
-  local[0] = mt0*fRotationMatrix[0] + mt1*fRotationMatrix[3] + mt2*fRotationMatrix[6];
-  local[1] = mt0*fRotationMatrix[1] + mt1*fRotationmatrix[4] + mt2*fRotationMatrix[7];
-  local[2] = mt0*fRotationMatrix[2] + mt1*fRotationmatrix[5] + mt2*fRotationMatrix[8];
+  const Double_t *tr  = GetTranslation();
+  const Double_t *rot = GetRotationMatrix();
+  Double_t mt0  = master[0]-tr[0];
+  Double_t mt1  = master[1]-tr[1];
+  Double_t mt2  = master[2]-tr[2];
+  local[0] = mt0*rot[0] + mt1*rot[3] + mt2*rot[6];
+  local[1] = mt0*rot[1] + mt1*rot[4] + mt2*rot[7];
+  local[2] = mt0*rot[2] + mt1*rot[5] + mt2*rot[8];
 }
 //-----------------------------------------------------------------------------
 void TGeoMatrix::MasterToLocalVect(const Double_t *master, Double_t *local) const
