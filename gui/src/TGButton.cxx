@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.25 2003/12/16 17:00:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.26 2003/12/19 16:00:26 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -326,9 +326,9 @@ void TGTextButton::Init()
 
    int hotchar, max_ascent, max_descent;
 
-   fTMode = kTextCenterX | kTextCenterY;
-   fHKeycode = 0;
-   fIsOwnFont = kFALSE;
+   fTMode      = kTextCenterX | kTextCenterY;
+   fHKeycode   = 0;
+   fHasOwnFont = kFALSE;
 
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -479,10 +479,10 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
 }
 
 //______________________________________________________________________________
-void TGTextButton::SetFont(FontStruct_t font, Option_t *opt)
+void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
 {
-   // Changes text font
-   // if opt is non-zero font is changed globally
+   // Changes text font.
+   // If global is true font is changed globally.
 
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
@@ -490,10 +490,10 @@ void TGTextButton::SetFont(FontStruct_t font, Option_t *opt)
 
       fFontStruct = font;
       TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
- 
-      if (!opt) {
+
+      if (global) {
          gc = new TGGC(*gc); // copy
-         fIsOwnFont = kTRUE;
+         fHasOwnFont = kTRUE;
       }
       gc->SetFont(v);
       fNormGC = gc->GetGC();
@@ -507,28 +507,28 @@ void TGTextButton::SetFont(FontStruct_t font, Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TGTextButton::SetFont(const char *fontName, Option_t *opt)
+void TGTextButton::SetFont(const char *fontName, Bool_t global)
 {
-   // Changes text font specified by name
-   // if opt is non-zero font is changed globally
+   // Changes text font specified by name.
+   // If global is true font is changed globally.
 
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
-      SetFont(font->GetFontStruct(), opt);
+      SetFont(font->GetFontStruct(), global);
    }
 }
 
 //______________________________________________________________________________
-void TGTextButton::SetTextColor(Pixel_t color, Option_t *opt)
+void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
 {
-   // Changes text color
-   // if opt is non-zero color is changed globally
+   // Changes text color.
+   // If global is true color is changed globally.
 
    TGGC *gc = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
 
-   if (!opt) {
+   if (global) {
       gc = new TGGC(*gc); // copy
-      fIsOwnFont = kTRUE;
+      fHasOwnFont = kTRUE;
    }
 
    gc->SetForeground(color);
@@ -537,12 +537,12 @@ void TGTextButton::SetTextColor(Pixel_t color, Option_t *opt)
 }
 
 //______________________________________________________________________________
-Bool_t TGTextButton::IsOwnTextFont() const
+Bool_t TGTextButton::HasOwnFont() const
 {
-   // returns kTRUE if text attributes are unique
-   // returns kFALSE if text attributes are shared (global)
+   // Returns kTRUE if text attributes are unique,
+   // returns kFALSE if text attributes are shared (global).
 
-   return fIsOwnFont;
+   return fHasOwnFont;
 }
 
 //______________________________________________________________________________
@@ -1218,19 +1218,19 @@ void TGTextButton::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
@@ -1279,7 +1279,7 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
    option = GetName()+5;         // unique digit id of the name
    char ParGC[50];
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if (GetDefaultGC()() != fNormGC) {
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
@@ -1350,19 +1350,19 @@ void TGCheckButton::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (GetOptions() == kChildFrame) {
@@ -1419,19 +1419,19 @@ void TGRadioButton::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (GetOptions() == (kChildFrame)) {
