@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.42 2002/10/25 00:44:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.43 2002/11/05 08:15:20 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -101,6 +101,7 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
    fTimers        = 0;
    fCompiled      = 0;
    fHelpers       = 0;
+   fInsideNotify  = kFALSE;
 }
 
 //______________________________________________________________________________
