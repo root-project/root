@@ -706,8 +706,11 @@ typedef struct {
 #define G__USERHEADER 1
 #define G__SYSHEADER  2
 
-
-/* #define G__ANSI */
+#ifdef G__ROOT   /* ROOT only supports ANSI C compilers */
+#ifndef G__ANSI
+#define G__ANSI
+#endif
+#endif
 
 #ifdef __cplusplus
 

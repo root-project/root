@@ -1969,13 +1969,7 @@ void *p;
 /**************************************************************************
 * G__fprinterr()
 **************************************************************************/
-#if defined(G__ANSI) || defined(G__WIN32)
 int G__fprinterr(char* fmt,...)
-#else
-int G__fprinterr(fmt)
-char* fmt;
-
-#endif
 {
   int result;
   va_list argptr;
