@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.6 2002/03/07 02:04:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.7 2002/03/15 15:51:52 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -392,9 +392,10 @@ Bool_t operator==(const TMD5 &m1, const TMD5 &m2)
 TMD5 *TMD5::FileChecksum(const char *file)
 {
    // Returns checksum of specified file. The returned TMD5 object must
-   // be deleted by the user. Returns 0 in case of error.
-   // This method preserves the modtime of the file so it can be safely
-   // used in conjunction with methods that keep track of the file's modtime.
+   // be deleted by the user. Returns 0 in case the file does not exit
+   // or in case of error. This function preserves the modtime of the file
+   // so it can be safely used in conjunction with methods that keep track
+   // of the file's modtime.
 
    Long_t id, size, flags, modtime;
    if (gSystem->GetPathInfo(file, &id, &size, &flags, &modtime) == 0) {
@@ -403,7 +404,7 @@ TMD5 *TMD5::FileChecksum(const char *file)
          return 0;
       }
    } else {
-      Error("TMD5::FileChecksum", "could not stat %s", file);
+      // file does not exist
       return 0;
    }
 
