@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.3 2001/02/13 07:27:54 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.4 2002/07/16 13:59:19 rdm Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -108,7 +108,7 @@ Int_t TFitter::GetParameter(Int_t ipar,char *parname,Double_t &value,Double_t &v
 Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx)
 {
    // return global fit parameters
-   //   amin
+   //   amin     : chisquare
    //   edm      : estimated distance to minimum
    //   errdef
    //   nvpar    : number of variable parameters
