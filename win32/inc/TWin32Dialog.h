@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name$:$Id$
+// @(#)root/win32:$Name:  $:$Id: TWin32Dialog.h,v 1.1.1.1 2000/11/27 22:57:28 fisyak Exp $
 // Author: Valery Fine   19/03/96
 
 /*************************************************************************
@@ -44,8 +44,9 @@ class TWin32Dialog : public TNamed {
     Int_t   fyDefSize;
 
     UINT    fDialogResult;
+    HWND    fDialogWindows;  //  dialog box handle
 
-//*-*  Work bariable to create a dialog template and dialog items
+//*-*  Working variables to create a dialog template and dialog items
 
     LPWORD   fHgbl;
     Dialog_t fDlgPointers;
