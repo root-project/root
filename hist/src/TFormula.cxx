@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.19 2001/06/06 07:21:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.20 2001/06/14 20:32:48 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -295,8 +295,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
    Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter;
    Int_t compt,compt2,compt3,compt4,hexa;
-   Float_t vafConst;
-   UInt_t vafConst2;
+   Double_t vafConst;
+   ULong_t vafConst2;
    Bool_t parenthese;
    TString s,chaine_error,chaine1ST;
    TString s1,s2,s3,ctemp;
@@ -1267,9 +1267,9 @@ if (err==0) {
             }
             if (fNconst >= MAXCONST) err = 27;
             if (!err) {
-               if (hexa==0) {if (sscanf((const char*)chaine,"%g",&vafConst) > 0) err = 0; else err =1;}
-               else {if (sscanf((const char*)chaine,"%x",&vafConst2) > 0) err = 0; else err=1;
-               vafConst = (Float_t) vafConst2;}
+               if (hexa==0) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
+               else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
+               vafConst = (Double_t) vafConst2;}
                fExpr[fNoper] = chaine;
                k = -1;
                for (j=0;j<fNconst;j++) {
