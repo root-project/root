@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.57 2001/12/19 07:15:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.58 2001/12/21 09:56:25 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1140,21 +1140,33 @@ void TROOT::ls(Option_t *option) const
 void TROOT::LoadMacro(const char *filename, int *error)
 {
    // Load a macro in the interpreter's memory. Equivalent to the command line
-   // command ".L filename".
+   // command ".L filename". If the filename has "+" or "++" appended
+   // the macro will be compiled by ACLiC. The filename must have the format:
+   // [path/]macro.C[+|++].
    // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (fInterpreter) {
       char *fn1 = Strip(filename);
-      char *fn2 = Strip(fn1,'+');
-      char *mac = gSystem->Which(GetMacroPath(), fn2, kReadPermission);
+      // remove the possible ACLiC + or ++
+      char *fn2 = strchr(fn1, '+');
+      if (fn2) *fn2 = '\0';
+      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
       if (!mac) {
-         Error("LoadMacro", "macro %s not found in path %s", fn2, GetMacroPath());
+         Error("LoadMacro", "macro %s not found in path %s", fn1, GetMacroPath());
          if (error)
             *error = TInterpreter::kFatal;
-      } else
+      } else {
+         if (fn2) {
+            *fn2 = '+';
+            char *mac1 = new char [strlen(mac) + 3];
+            strcpy(mac1, mac);
+            strcat(mac1, fn2);
+            delete [] mac;
+            mac = mac1;
+         }
          fInterpreter->LoadMacro(mac, (TInterpreter::EErrorCode*)error);
+      }
       delete [] fn1;
-      delete [] fn2;
       delete [] mac;
    }
 }
@@ -1163,25 +1175,44 @@ void TROOT::LoadMacro(const char *filename, int *error)
 Int_t TROOT::Macro(const char *filename, int *error)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
-   // command ".x filename".
+   // command ".x filename". If the filename has "+" or "++" appended
+   // the macro will be compiled by ACLiC. The filename must have the format:
+   // [path/]macro.C[+|++][(args)].
    // The possible error codes are defined by TInterpreter::EErrorCode.
 
    Int_t result = 0;
 
    if (fInterpreter) {
-      char *fn1  = Strip(filename);
-      // And remove the possible arguments.
-      char * pos = strchr(fn1,'(');
-      if (pos) *pos = '\0';
-      char *fn2  = Strip(fn1,'+');
-      char *mac = gSystem->Which(GetMacroPath(), fn2, kReadPermission);
-      if (!mac)
-         Error("Macro", "macro %s not found in path %s", fn2, GetMacroPath());
-      else
-         result = fInterpreter->ExecuteMacro(filename,
+      char *fn1 = Strip(filename);
+      // remove the possible arguments
+      char *arg = strchr(fn1, '(');
+      if (arg) *arg = '\0';
+      // and the possible ACLiC + or ++
+      char *fn2  = strchr(fn1, '+');
+      if (fn2) *fn2 = '\0';
+      char *mac = gSystem->Which(GetMacroPath(), fn1, kReadPermission);
+      if (!mac) {
+         Error("Macro", "macro %s not found in path %s", fn1, GetMacroPath());
+         if (error)
+            *error = TInterpreter::kFatal;
+      } else {
+         if (fn2) *fn2 = '+';
+         if (arg) {
+            *arg = '(';
+            if (!fn2)
+               fn2 = arg;
+         }
+         if (fn2) {
+            char *mac1 = new char [strlen(mac) + strlen(fn2) + 1];
+            strcpy(mac1, mac);
+            strcat(mac1, fn2);
+            delete [] mac;
+            mac = mac1;
+         }
+         result = fInterpreter->ExecuteMacro(mac,
                                              (TInterpreter::EErrorCode*)error);
+      }
       delete [] fn1;
-      delete [] fn2;
       delete [] mac;
 
       if (gPad) gPad->Update();
