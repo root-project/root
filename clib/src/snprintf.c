@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.2 2002/12/02 18:50:01 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.3 2004/01/30 01:54:44 rdm Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -42,6 +42,14 @@
 #define vsnprintf r__vsnprintf
 #endif
 
+#if defined(R__WIN32) && !defined(__CINT__)
+typedef __int64            Long64_t;  //Portable signed long integer 8 bytes
+typedef unsigned __int64   ULong64_t; //Portable unsigned long integer 8 bytes
+#else
+typedef long long          Long64_t;  //Portable signed long integer 8 bytes
+typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
+#endif
+
 #undef isdigit
 #define isdigit(ch) ((ch) >= '0' && (ch) <= '9')
 
@@ -56,7 +64,7 @@
 #define IS_NEGATIVE 0x100
 #define UNSIGNED_DEC 0x200
 #define ZERO_PADDING 0x400
-
+#define IS_LONG_LONG_INT 0x800
 
 /* Extract a formatting directive from str. Str must point to a '%'.
    Returns number of characters used or zero if extraction failed. */
@@ -132,10 +140,19 @@ static int snprintf_get_directive(const char *str, int *flags, int *width,
          str++;
       } else {
          if (*str == 'l') {
-            *flags |= IS_LONG_INT;
+            if (*(str+1)=='l') {
+               *flags |= IS_LONG_LONG_INT;
+               str++;
+            } else {
+               *flags |= IS_LONG_INT;
+            }
             str++;
          } else {
-            if (*str == 'L') {
+            /* Support Win32 I64 type specifier, i.e. %I64d or %I64u */
+            if (*str == 'I' && *(str+1)=='6' && *(str+2)=='4') {
+               *flags |= IS_LONG_LONG_INT;
+               str += 3;
+            } else if (*str == 'L') {
                *flags |= IS_LONG_DOUBLE;
                str++;
             }
@@ -187,7 +204,7 @@ static int snprintf_get_directive(const char *str, int *flags, int *width,
    results.
 */
 static int snprintf_convert_ulong(char *buffer, size_t buf_size, int base,
-                                  char *digits, unsigned long int ulong_val,
+                                  char *digits, ULong64_t ulong_val,
                                   int flags, int width, int precision)
 {
    int tmp_buf_len = 100 + width, len;
@@ -324,8 +341,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
    int flags, width, precision, i;
    char format_char, *orig_str = str;
    int *int_ptr;
-   long int long_val;
-   unsigned long int ulong_val;
+   Long64_t long_val;
+   ULong64_t ulong_val;
    char *str_val;
    double dbl_val;
    int precision_specified = 0;
@@ -364,16 +381,18 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                   case 'd':
                      /* Convert to unsigned long int before
                         actual conversion to string */
-                     if (flags & IS_LONG_INT)
-                        long_val = va_arg(ap, long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        long_val = va_arg(ap, Long64_t);
+                     else if (flags & IS_LONG_INT)
+                        long_val = (Long64_t) va_arg(ap, long int);
                      else
-                        long_val = (long int) va_arg(ap, int);
+                        long_val = (Long64_t) va_arg(ap, int);
 
                      if (long_val < 0) {
-                        ulong_val = (unsigned long int) -long_val;
+                        ulong_val = (ULong64_t) -long_val;
                         flags |= IS_NEGATIVE;
                      } else {
-                        ulong_val = (unsigned long int) long_val;
+                        ulong_val = (ULong64_t) long_val;
                      }
                      status = snprintf_convert_ulong(str, left, 10,
                                                      "0123456789",
@@ -384,11 +403,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'x':
-                     if (flags & IS_LONG_INT)
-                        ulong_val = va_arg(ap, unsigned long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        ulong_val = va_arg(ap, ULong64_t);
+                     else if (flags & IS_LONG_INT)
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
                      else
-                        ulong_val =
-                            (unsigned long int) va_arg(ap, unsigned int);
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned int);
 
                      status = snprintf_convert_ulong(str, left, 16,
                                                      "0123456789abcdef",
@@ -399,11 +419,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'X':
-                     if (flags & IS_LONG_INT)
-                        ulong_val = va_arg(ap, unsigned long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        ulong_val = va_arg(ap, ULong64_t);
+                     else if (flags & IS_LONG_INT)
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
                      else
-                        ulong_val =
-                            (unsigned long int) va_arg(ap, unsigned int);
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned int);
 
                      status = snprintf_convert_ulong(str, left, 16,
                                                      "0123456789ABCDEF",
@@ -414,11 +435,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'o':
-                     if (flags & IS_LONG_INT)
-                        ulong_val = va_arg(ap, unsigned long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        ulong_val = va_arg(ap, ULong64_t);
+                     else if (flags & IS_LONG_INT)
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
                      else
-                        ulong_val =
-                            (unsigned long int) va_arg(ap, unsigned int);
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned int);
 
                      status = snprintf_convert_ulong(str, left, 8,
                                                      "01234567",
@@ -429,11 +451,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'u':
-                     if (flags & IS_LONG_INT)
-                        ulong_val = va_arg(ap, unsigned long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        ulong_val = va_arg(ap, ULong64_t);
+                     else if (flags & IS_LONG_INT)
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
                      else
-                        ulong_val =
-                            (unsigned long int) va_arg(ap, unsigned int);
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned int);
 
                      status = snprintf_convert_ulong(str, left, 10,
                                                      "0123456789",
@@ -447,11 +470,13 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      break;
 
                   case 'c':
-                     if (flags & IS_LONG_INT)
-                        ulong_val = va_arg(ap, unsigned long int);
+                     if (flags & IS_LONG_LONG_INT)
+                        ulong_val = va_arg(ap, ULong64_t);
+                     else if (flags & IS_LONG_INT)
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned long int);
                      else
-                        ulong_val =
-                            (unsigned long int) va_arg(ap, unsigned int);
+                        ulong_val = (ULong64_t) va_arg(ap, unsigned int);
+
                      *str++ = (unsigned char) ulong_val;
                      left--;
                      break;
