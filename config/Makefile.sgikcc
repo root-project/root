@@ -39,12 +39,12 @@ CXX           = KCC
 CC            = cc
 CXXFLAGS      = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                $(CXXOPT) -DSGI_REL=$(SGI_REL) \
+                --one_instantiation_per_object $(CXXOPT) -DSGI_REL=$(SGI_REL) \
                 $(EXTRA_CXXFLAGS)
 CFLAGS        = $(ABI) -signed $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 608 --diag_suppress 68 --diag_suppress 191 \
-                -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
+                --one_instantiation_per_object -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(CXXOPT) \
                 $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
