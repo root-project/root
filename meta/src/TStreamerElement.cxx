@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.21 2001/02/26 07:15:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.22 2001/02/27 17:22:32 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -234,6 +234,8 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    if (strcmp(name,"TObject") == 0) fType = TStreamerInfo::kTObject;
    if (strcmp(name,"TNamed")  == 0) fType = TStreamerInfo::kTNamed;
    fNewType = fType;
+   fBaseClass = gROOT->GetClass(GetName());
+   fBaseVersion = fBaseClass->GetClassVersion();
    Init();
 }
 
@@ -253,8 +255,6 @@ TClass *TStreamerBase::GetClassPointer() const
 //______________________________________________________________________________
 void TStreamerBase::Init(TObject *)
 {
-   fBaseClass = gROOT->GetClass(GetName());
-   fBaseVersion = fBaseClass->GetClassVersion();
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
@@ -352,6 +352,8 @@ ULong_t TStreamerBasicPointer::GetMethod() const
 {
    // return offset of counter
    
+   if (!fCounter) ((TStreamerBasicPointer*)this)->Init();
+   if (!fCounter) return 0;
    return (ULong_t)fCounter->GetOffset();
 }
 
