@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.80 2004/02/25 15:08:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.81 2004/03/16 06:18:42 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -33,6 +33,7 @@
 #include "TObjString.h"
 #include "TString.h"
 #include "TList.h"
+#include "TOrdCollection.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
 #include "TVirtualMutex.h"
@@ -78,8 +79,8 @@ extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
   TCint::UpdateClassInfo(c, l);
 }
 
-extern "C" int TCint_AutoLoadClass(char *c) {
-  return TCint::AutoLoadClass(c);
+extern "C" int TCint_AutoLoadCallback(char *c, char *l) {
+  return TCint::AutoLoadCallback(c, l);
 }
 
 extern "C" void *TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
@@ -104,13 +105,15 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-   G__set_autoloading(&TCint_AutoLoadClass);
+   G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
    G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
    fDictPos.ptype = 0;
-   fDictPosGlobals.ptype = 0; 
+   fDictPosGlobals.ptype = 0;
 
    ResetAll();
+   LoadLibraryMap();
+
 #ifndef WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif
@@ -129,14 +132,14 @@ TCint::~TCint()
      // G__scratch_all();
      G__close_inputfiles();
    }
-   //G__scratch_all();   
+   //G__scratch_all();
 }
 
 //______________________________________________________________________________
 void TCint::ClearFileBusy()
 {
-   // Reset CINT internal state in case a previous action was not correctly terminated
-   // by G__init_cint() and G__dlmod().
+   // Reset CINT internal state in case a previous action was not correctly
+   // terminated by G__init_cint() and G__dlmod().
 
    G__clearfilebusy(0);
 }
@@ -941,44 +944,48 @@ const char *TCint::TypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-int TCint::AutoLoadClass(const char *cls)
+Int_t TCint::LoadLibraryMap()
 {
-   // Load library containing specified class. Returns 0 in case of error
-   // and 1 in case of success.
+   // Load map between class and library. Cint uses this information to
+   // automatically load the shared library for a class (autoload mechanism).
+   // See also the AutoLoadCallback() method below.
 
    // open the [system].rootmap files
    static TEnv *mapfile = 0;
    if (!mapfile)
       mapfile = new TEnv(".rootmap");
 
-   // The cls string is in the form:
-   //    {new Type
-   //    {Type a
-   //    {Type *a
-   int i = 0, j = 0;
-   char classname[1024];
-   while (cls[i] && !isalpha(cls[i])) i++;
-   while (cls[i] && (isalnum(cls[i]) || '_' == cls[i]))
-      classname[j++] = cls[i++];
-   classname[j] = 0;
-   if (!strcmp(classname,"new")) {
-      j = 0;
-      while (cls[i] && !isalpha(cls[i])) i++;
-      while (cls[i] && (isalnum(cls[i]) || '_' == cls[i]))
-         classname[j++] = cls[i++];
-      classname[j] = 0;
-   }
-   if (classname[0]) {
-      TString key = TString("Library.") + classname;
-      const char *lib = mapfile->GetValue(key, "");
-      if (lib && strlen(lib)) {
-         ::Info("TCint::AutoLoadClass", "loading library %s for class %s", lib, classname);
-         //G__security_recover(G__sout);
-         G__security_recover(0);
-         if (gSystem->Load(lib) == 0)
-            return 1;
+   TEnvRec *rec;
+   TIter next(mapfile->GetTable());
+
+   while ((rec = (TEnvRec*) next())) {
+      const char *cls = rec->GetName();
+      if (!strncmp(cls, "Library.", 8) && strlen(cls) > 8) {
+         G__set_class_autoloading_table((char*)(cls+8), (char*)rec->GetValue());
+         if (gDebug > 0)
+            printf("<TCint::LoadLibraryMap>: adding class %s in lib %s\n",
+                   cls+8, rec->GetValue());
       }
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+int TCint::AutoLoadCallback(const char *cls, const char *lib)
+{
+   // Load library containing specified class. Returns 0 in case of error
+   // and 1 in case if success.
+
+   if (!gROOT) return 0;
+
+   if (gROOT->LoadClass(cls, lib) == 0) {
+      if (gDebug > 0)
+         ::Info("TCint::AutoLoadCallback", "loaded library %s for class %s",
+                lib, cls);
+      return 1;
+   } else
+      ::Error("TCint::AutoLoadCallback", "failure loading library %s for class %s",
+              lib, cls);
    return 0;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.15 2004/01/27 19:52:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.16 2004/02/25 08:45:30 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -61,6 +61,7 @@ private:
 
 protected:
    virtual void ExecThreadCB(TWin32SendClass *command);
+   virtual Int_t LoadLibraryMap();
 
 public:
    TCint(const char *name, const char *title);
@@ -114,7 +115,7 @@ public:
    const char *TypeName(const char *typeDesc);
 
    static void *FindSpecialObject(const char *name, G__ClassInfo *type, void **prevObj, void **assocPtr);
-   static int   AutoLoadClass(const char *cls);
+   static int   AutoLoadCallback(const char *cls, const char *lib);
    static void  UpdateClassInfo(char *name, Long_t tagnum);
    static void  UpdateAllCanvases();
 
