@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.19 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.20 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -70,7 +70,7 @@ protected :
 
    TObject           *fField;          //! just a hook for now
    TString            fOption;         //! option - if any
-
+   Int_t              fNumber;         //  volume serial number in the list of volumes
 public:
    enum EGeoVolumeTypes {
       kVolumeDiv     =     BIT(16),
@@ -132,6 +132,7 @@ public:
    TGeoNode       *GetNode(const char *name) const;
    TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
    Int_t           GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
+   Int_t           GetNumber() {return fNumber;}
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
@@ -161,6 +162,7 @@ public:
    virtual void    SetMedium(const TGeoMedium *medium) {fMedium = (TGeoMedium*)medium;}
    void            SetVoxelFinder(const TGeoVoxelFinder *finder) {fVoxels=(TGeoVoxelFinder*)finder;}
    void            SetFinder(const TGeoPatternFinder *finder) {fFinder=(TGeoPatternFinder*)finder;}
+   void            SetNumber(Int_t number) {fNumber = number;}
    virtual void    Sizeof3D() const;
    void            SortNodes();
    Bool_t          Valid() const;
@@ -168,7 +170,7 @@ public:
    void            InvisibleAll() {SetInvisible(); VisibleDaughters(kFALSE);} // *MENU*
    void            Voxelize(Option_t *option);
 
-  ClassDef(TGeoVolume, 2)              // geometry volume descriptor
+  ClassDef(TGeoVolume, 3)              // geometry volume descriptor
 };
 
 /*************************************************************************

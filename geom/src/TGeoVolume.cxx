@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.21 2003/01/23 14:25:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.22 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -114,6 +114,7 @@ TGeoVolume::TGeoVolume()
    fVoxels   = 0;
    fField    = 0;
    fMedium   = 0;
+   fNumber   = 0;
    fOption   = "";
    TObject::ResetBit(kVolumeImportNodes);
 }
@@ -130,7 +131,8 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fField    = 0;
    fOption   = "";
    fMedium   = (TGeoMedium*)med;
-   if (gGeoManager) gGeoManager->AddVolume(this);
+   fNumber   = 0;
+   if (gGeoManager) fNumber = gGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
 }
 

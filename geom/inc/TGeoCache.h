@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.11 2003/01/13 20:52:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.12 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
    virtual Bool_t       DumpNodes();
    virtual void        *GetBranch() const {return fBranch;}
    virtual void         GetBranchNames(Int_t *names) const {;}
-   virtual void         GetBranchNumbers(Int_t *numbers) const {;}
+   virtual void         GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const {;}
    virtual void         GetBranchOnlys(Int_t *isonly) const {;}
    virtual void        *GetMatrices() const {return fMatrices;}
    virtual TGeoHMatrix *GetCurrentMatrix() const;
@@ -216,7 +216,7 @@ public:
 
    virtual void        *GetBranch() const {return fNodeBranch;}
    virtual void         GetBranchNames(Int_t *names) const;
-   virtual void         GetBranchNumbers(Int_t *numbers) const;
+   virtual void         GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    virtual void         GetBranchOnlys(Int_t *isonly) const;
    virtual TGeoHMatrix *GetCurrentMatrix() const {return fMatrix;}
    Int_t                GetCurrentNode() const {return 0;}

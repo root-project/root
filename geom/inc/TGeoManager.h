@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.20 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.22 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -119,7 +119,7 @@ public:
    void                   CdUp();
    void                   CdTop();
    void                   GetBranchNames(Int_t *names) const;
-   void                   GetBranchNumbers(Int_t *numbers) const;
+   void                   GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const;
    void                   GetBranchOnlys(Int_t *isonly) const;
    Bool_t                 IsFolder() const { return kTRUE; }
    //--- visualization settings

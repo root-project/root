@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.13 2003/01/20 10:25:57 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.14 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -547,11 +547,12 @@ void TGeoCacheDummy::GetBranchNames(Int_t *names) const
 }
 
 //_____________________________________________________________________________
-void TGeoCacheDummy::GetBranchNumbers(Int_t *numbers) const
+void TGeoCacheDummy::GetBranchNumbers(Int_t *copyNumbers, Int_t *volumeNumbers) const
 {
 // Fill copy numbers of current branch nodes.
    for (Int_t i=0; i<fLevel+1; i++) {
-      numbers[i] = fNodeBranch[i]->GetNumber();
+      copyNumbers[i]   = fNodeBranch[i]->GetNumber();
+      volumeNumbers[i] = fNodeBranch[i]->GetVolume()->GetNumber();
    }
 }
 
