@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.44 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.1 2004/11/25 12:10:01 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -68,6 +68,7 @@ TGeoHype::TGeoHype()
 
 //_____________________________________________________________________________
 TGeoHype::TGeoHype(Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
+         :TGeoTube(rin, rout, dz)
 {
 // Constructor specifying hyperboloid parameters.
    SetShapeBit(TGeoShape::kGeoHype);
@@ -78,9 +79,9 @@ TGeoHype::TGeoHype(Double_t rin, Double_t stin, Double_t rout, Double_t stout, D
 }
 //_____________________________________________________________________________
 TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
+         :TGeoTube(name, rin, rout, dz)
 {
 // Constructor specifying parameters and name.
-   SetName(name);
    SetShapeBit(TGeoShape::kGeoHype);
    SetHypeDimensions(rin, stin, rout, stout, dz);
    // dz<0 can be used to force dz of hyperboloid fit the container volume 
@@ -90,6 +91,7 @@ TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, 
 
 //_____________________________________________________________________________
 TGeoHype::TGeoHype(Double_t *param)
+         :TGeoTube(param[1],param[3],param[0])
 {
 // Default constructor specifying a list of parameters
 // param[0] = dz

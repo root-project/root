@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.101 2004/12/01 16:56:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.102 2004/12/02 15:21:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -529,7 +529,7 @@ TGeoManager::TGeoManager()
       fMatrixReflection = kFALSE;
       fGLMatrix = 0;
       fPaintVolume = 0;
-      gGeoManager = this;
+      //gGeoManager = this;
     } else {
       Init();
       gGeoIdentity = 0;
@@ -1730,8 +1730,8 @@ void TGeoManager::DrawTracks(Option_t *option)
 // Draw tracks over the geometry, according to option. By default, only
 // primaries are drawn. See TGeoTrack::Draw() for additional options.
    TVirtualGeoTrack *track;
-   SetVisLevel(1);
-   SetVisOption(1);
+   //SetVisLevel(1);
+   //SetVisOption(1);
    SetAnimateTracks();
    for (Int_t i=0; i<fNtracks; i++) {
       track = GetTrack(i);
