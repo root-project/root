@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -38,17 +38,17 @@ protected:
    Int_t     fShowMul;    //if 1 show multiple inheritance
    Int_t     fShowHas;    //if 1 show "has a" relationship
    Int_t     fShowRef;    //if 1 show classes relationship other than inheritance
-   Int_t    *fCstatus;    //classes status
-   Int_t    *fNdata;      //Number of data members per class
-   Int_t    *fParents;    //parent number of classes (permanent)
-   Int_t    *fCparent;    //parent number of classes (temporary)
-   char    **fDerived;    //table to indicate if i derives from j
-   TClass  **fCpointer;   //pointers to the TClass objects
-   TString **fCnames;     //class names
-   TString **fCtitles;    //class titles
-   TString **fOptions;    //List of options per class
+   Int_t    *fCstatus;    //[fNclasses] classes status
+   Int_t    *fNdata;      //[fNclasses] Number of data members per class
+   Int_t    *fParents;    //[fNclasses] parent number of classes (permanent)
+   Int_t    *fCparent;    //!parent number of classes (temporary)
+   char    **fDerived;    //![fNclasses] table to indicate if i derives from j
+   TClass  **fCpointer;   //![fNclasses] pointers to the TClass objects
+   TString **fCnames;     //![fNclasses] class names
+   TString **fCtitles;    //![fNclasses] class titles
+   TString **fOptions;    //![fNclasses] List of options per class
    TString   fSourceDir;  //Concatenated source directories
-   TList   **fLinks;      //for each class, the list of referenced(ing) classes
+   TList   **fLinks;      //![fNclasses] for each class, the list of referenced(ing) classes
 
    virtual  void FindClassPosition(const char *classname, Float_t &x, Float_t &y);
    virtual  void FindClassesUsedBy(Int_t iclass);
