@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.8 2001/12/02 15:20:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.9 2001/12/03 10:26:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -210,6 +210,7 @@ void TRef::operator=(TObject *obj)
          Error("operator= ","Class: %s IgnoreTObjectStreamer. Cannot reference object",obj->ClassName());
          return;
       }
+      if (!fPID) fPID = TProcessID::GetProcessID(0);
       uid = TProcessID::AssignID(obj);
    }
    SetUniqueID(uid);
@@ -259,6 +260,7 @@ TObject *TRef::GetObject() const
    // Return a pointer to the referenced object.
 
    //TObject *obj = 0;
+   if (!fPID) return 0;
    UInt_t uid = GetUniqueID();
    //Try to find the object from the table of the corresponding PID
    TObject *obj = fPID->GetObjectWithID(uid);
@@ -277,6 +279,7 @@ TObject *TRef::GetObject() const
             if (obj){
                uid = TProcessID::AssignID(obj);
                ((TRef*)this)->SetUniqueID(uid);
+               fPID->PutObjectWithID(obj,uid);
             } else {
                //well may be the Exec has loaded the object
                obj = fPID->GetObjectWithID(uid);
