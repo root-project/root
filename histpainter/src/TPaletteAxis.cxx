@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.1 2002/11/15 16:04:57 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -116,7 +116,6 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    gPad->SetCursor(kHand);
    static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
-   Int_t bin1, bin2;
    Double_t temp, xmin,xmax;
 
    switch (event) {
@@ -151,8 +150,6 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          ratio2 = temp;
       }
       if (ratio2 - ratio1 > 0.05) {
-         bin1 = fH->GetZaxis()->FindFixBin(xmin);
-         bin2 = fH->GetZaxis()->FindFixBin(xmax);
          if (fH->GetDimension() == 2) {
             Float_t zmin = fH->GetMinimum();
             Float_t zmax = fH->GetMaximum();
