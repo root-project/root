@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.2 2000/05/29 06:19:21 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -55,9 +55,9 @@ public:
     virtual TTreeFormula  *GetVar2() = 0;
     virtual TTreeFormula  *GetVar3() = 0;
     virtual TTreeFormula  *GetVar4() = 0;
-    virtual Float_t       *GetV1() = 0;
-    virtual Float_t       *GetV2() = 0;
-    virtual Float_t       *GetV3() = 0;
+    virtual Double_t      *GetV1() = 0;
+    virtual Double_t      *GetV2() = 0;
+    virtual Double_t      *GetV3() = 0;
     virtual Double_t      *GetW() = 0;
     virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          MakeClass(const char *classname) = 0;
