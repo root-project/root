@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.106 2003/01/17 10:40:18 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.107 2003/02/21 10:26:58 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -637,10 +637,10 @@ void TClass::BuildRealDataFake(const char *name, Int_t offset, TClass *cl)
       TClass *cle   = element->GetClassPointer();
       if (etype == TStreamerInfo::kTObject || etype == TStreamerInfo::kTNamed || etype == TStreamerInfo::kBase) {
          //base class
-         cle->BuildRealDataFake(name,offset+eoffset,cl);
+         if (cle) cle->BuildRealDataFake(name,offset+eoffset,cl);
       } else if (etype == TStreamerInfo::kObject || etype == TStreamerInfo::kAny) {
          //member class
-         cle->BuildRealDataFake(Form("%s%s.",name,element->GetName()),offset+eoffset,cl);
+         if (cle) cle->BuildRealDataFake(Form("%s%s.",name,element->GetName()),offset+eoffset,cl);
       } else {
          //others
          TRealData *rd = new TRealData(Form("%s%s",name,element->GetName()),offset+eoffset,0);
@@ -828,6 +828,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase *base = (TStreamerBase*)element;
             TClass *baseclass = base->GetClassPointer();
+            if (!baseclass) return -1;
             Int_t subOffset = baseclass->GetBaseClassOffset(cl);
             if (subOffset != -1) return offset+subOffset;
             offset += baseclass->Size();
@@ -1461,6 +1462,7 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
       while ((element = (TStreamerElement*)next())) {
          if (element->IsA() == TStreamerBase::Class()) {
             TClass *clbase = element->GetClassPointer();
+            if (!clbase) return kFALSE; //missing class
             if (clbase->InheritsFrom(cl)) return kTRUE;
          }
       }
