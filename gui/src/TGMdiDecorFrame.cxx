@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.1 2004/09/03 00:25:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.2 2004/09/03 15:44:40 rdm Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -64,7 +64,7 @@ ClassImp(TGMdiCornerWinResizer)
 //______________________________________________________________________________
 TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
                                  Int_t w, Int_t h, const TGGC *boxGC,
-                                 UInt_t options, ULong_t back) :
+                                 UInt_t options, ULong_t /*back*/) :
   TGCompositeFrame(main->GetContainer(), w, h,
                    options | kOwnBackground | kVerticalFrame | kFixedSize)
 {
