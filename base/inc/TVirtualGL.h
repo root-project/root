@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.2 2000/09/14 06:28:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.3 2000/09/14 07:03:43 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
    virtual void EndGLCmd() { }
    virtual void FlushGL() { }
    virtual void FrontGLFace(EG3D2GLmode faceflag);
-   virtual void GetGL(EG3D2GLmode mode, Bool_t *params);
+   virtual void GetGL(EG3D2GLmode mode, UChar_t *params);
    virtual void GetGL(EG3D2GLmode mode, Double_t *params);
    virtual void GetGL(EG3D2GLmode mode, Float_t *params);
    virtual void GetGL(EG3D2GLmode mode, Int_t *params);
@@ -132,7 +132,7 @@ inline void TVirtualGL::DeleteGLLists(Int_t, Int_t) { }
 inline void TVirtualGL::DisableGL(EG3D2GLmode) { }
 inline void TVirtualGL::EnableGL(EG3D2GLmode) { }
 inline void TVirtualGL::FrontGLFace(EG3D2GLmode) { }
-inline void TVirtualGL::GetGL(EG3D2GLmode, Bool_t *) { }
+inline void TVirtualGL::GetGL(EG3D2GLmode, UChar_t *) { }
 inline void TVirtualGL::GetGL(EG3D2GLmode, Double_t *) { }
 inline void TVirtualGL::GetGL(EG3D2GLmode, Float_t *) { }
 inline void TVirtualGL::GetGL(EG3D2GLmode, Int_t *) { }

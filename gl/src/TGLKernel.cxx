@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.5 2000/09/14 07:03:44 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.6 2002/02/23 10:15:22 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -139,7 +139,7 @@ void TGLKernel::GetGL(EG3D2GLmode mode, void  *params, EGLTypes type)
 {
     switch (type) {
     case kBoolType:
-        TGLKernel::GetGL(mode,(Bool_t *)params);
+        TGLKernel::GetGL(mode,(UChar_t *)params);
         break;
     case kDoubleType:
         TGLKernel::GetGL(mode,(Double_t *)params);
@@ -155,8 +155,8 @@ void TGLKernel::GetGL(EG3D2GLmode mode, void  *params, EGLTypes type)
     };
 }
 //______________________________________________________________________________
-void TGLKernel::GetGL(EG3D2GLmode mode, Bool_t *params)
-{glGetBooleanv(GLCommand[mode],(UChar_t*)params);}
+void TGLKernel::GetGL(EG3D2GLmode mode, UChar_t *params)
+{glGetBooleanv(GLCommand[mode],params);}
 
 //______________________________________________________________________________
 void TGLKernel::GetGL(EG3D2GLmode mode, Double_t *params)

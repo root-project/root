@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.h,v 1.2 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual void DisableGL(EG3D2GLmode mode);
    virtual void EnableGL(EG3D2GLmode mode);
    virtual void GetGL(EG3D2GLmode mode, void  *params, EGLTypes type);
-   virtual void GetGL(EG3D2GLmode mode, Bool_t *params);
+   virtual void GetGL(EG3D2GLmode mode, UChar_t *params);
    virtual void GetGL(EG3D2GLmode mode, Double_t *params);
    virtual void GetGL(EG3D2GLmode mode, Float_t *params);
    virtual void GetGL(EG3D2GLmode mode, Int_t *params);
