@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.16 2005/03/09 18:19:26 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.17 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -146,7 +146,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    return kTRUE;                  
 }
 //-----------------------------------------------------------------------------
-void TGeoBoolNode::Paint(Option_t * /*option*/ )
+void TGeoBoolNode::Paint(Option_t * option)
 {
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
    if (!viewer) return;
@@ -157,8 +157,6 @@ void TGeoBoolNode::Paint(Option_t * /*option*/ )
    TGeoHMatrix mat;
    mat = glmat; // keep a copy
 
-   // TODO: Timur - Add the operation here?
-
    // Now perform fetch and add of the two components buffers.
    // Note we assume that composite shapes are always completely added
    // so don't bother to get addDaughters flag from viewer->AddObject()
@@ -166,15 +164,21 @@ void TGeoBoolNode::Paint(Option_t * /*option*/ )
    // Setup matrix and fetch/add the left component buffer
    glmat->Multiply(fLeftMat);
    //fLeft->Paint(option);
-   const TBuffer3D & leftBuffer = fLeft->GetBuffer3D(TBuffer3D::kAll, localFrame);
-   viewer->AddObject(leftBuffer);
+   if (TGeoCompositeShape *left = dynamic_cast<TGeoCompositeShape *>(fLeft)) left->PaintComposite(option);
+   else {
+      const TBuffer3D & leftBuffer = fLeft->GetBuffer3D(TBuffer3D::kAll, localFrame);
+      viewer->AddObject(leftBuffer);
+   }
 
    // Setup matrix and fetch/add the right component buffer
    *glmat = &mat;
    glmat->Multiply(fRightMat);
    //fRight->Paint(option);
-   const TBuffer3D & rightBuffer = fRight->GetBuffer3D(TBuffer3D::kAll, localFrame);
-   viewer->AddObject(rightBuffer);
+   if (TGeoCompositeShape *right = dynamic_cast<TGeoCompositeShape *>(fRight)) right->PaintComposite(option);
+   else {
+      const TBuffer3D & rightBuffer = fRight->GetBuffer3D(TBuffer3D::kAll, localFrame);
+      viewer->AddObject(rightBuffer);
+   }
 
    *glmat = &mat;   
 }
