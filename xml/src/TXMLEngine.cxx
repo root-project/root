@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -196,8 +196,11 @@ xmlDocPointer TXMLEngine::ParseFile(const char* filename) {
 Bool_t TXMLEngine::ValidateDocument(xmlDocPointer doc, Bool_t doout) {
 	xmlValidCtxt cvp;
 	cvp.userData = doout ? (void *) stderr : 0;
-	cvp.error    = doout ? (xmlValidityErrorFunc) fprintf : 0;
-	cvp.warning  = doout ? (xmlValidityWarningFunc) fprintf : 0;
+	//the following two lines do not compile on Solaris
+        //cvp.error    = doout ? (xmlValidityErrorFunc) fprintf : 0;
+	//cvp.warning  = doout ? (xmlValidityWarningFunc) fprintf : 0;
+	cvp.error    = 0;
+	cvp.warning  = 0;
 
     xmlDocPtr docptr = (xmlDocPtr) doc;
 
