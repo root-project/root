@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.27 2003/02/21 17:26:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.28 2003/03/07 10:18:21 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -362,9 +362,9 @@ void TStyle::Reset(Option_t *)
    TAttMarker::ResetAttMarker();
    SetFillStyle(1001);
    SetFillColor(19);
-   fXaxis.ResetAttAxis();
-   fYaxis.ResetAttAxis();
-   fZaxis.ResetAttAxis();
+   fXaxis.ResetAttAxis("X");
+   fYaxis.ResetAttAxis("Y");
+   fZaxis.ResetAttAxis("Z");
    fCanvasColor    = 19;
    fCanvasBorderSize= 2;
    fCanvasBorderMode= 1;
