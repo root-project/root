@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.5 2000/11/21 20:45:07 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.6 2000/12/14 12:16:51 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -798,7 +798,7 @@ void InfoPad::PaintModified()
       text->SetTextAlign(GetTextAlign());
       text->SetTextColor(GetTextColor());
       text->SetTextAngle(GetTextAngle());
-      TAttText::Modify();
+      //TAttText::Modify();
 
       // get text width and height (in pixels)
       gVirtualX->GetTextExtent(w,h,(char*)text->GetTitle());
