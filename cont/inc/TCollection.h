@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.10 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
    virtual            ~TCollection() { }
    virtual void       Add(TObject *obj) = 0;
    void               AddVector(TObject *obj1, ...);
-   virtual void       AddAll(TCollection *col);
+   virtual void       AddAll(const TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
    void               Browse(TBrowser *b);
    Int_t              Capacity() const { return fSize; }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.17 2002/05/30 19:43:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.18 2002/07/27 11:09:34 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -54,7 +54,7 @@ ClassImp(TCollection)
 ClassImp(TIter)
 
 //______________________________________________________________________________
-void TCollection::AddAll(TCollection *col)
+void TCollection::AddAll(const TCollection *col)
 {
    // Add all objects from collection col to this collection.
 
