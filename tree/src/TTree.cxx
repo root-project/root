@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.240 2005/03/13 07:38:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.241 2005/03/14 17:09:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -740,9 +740,9 @@ Long64_t TTree::AutoSave(Option_t *option)
 }
 
 //______________________________________________________________________________
-TBranch* TTree::BranchImp(const char *branchname, const char *classname, 
-                          TClass *ptrClass, void *addobj, Int_t bufsize, 
-                          Int_t splitlevel) 
+TBranch* TTree::BranchImp(const char *branchname, const char *classname,
+                          TClass *ptrClass, void *addobj, Int_t bufsize,
+                          Int_t splitlevel)
 {
    // Same as TTree::Branch with added check that the address passed in addobj
    // corresponding to className.  See TTree::Branch for other details.
@@ -767,8 +767,8 @@ TBranch* TTree::BranchImp(const char *branchname, const char *classname,
 }
 
 //______________________________________________________________________________
-TBranch* TTree::BranchImp(const char *branchname, TClass *ptrClass, void *addobj, 
-                          Int_t bufsize, Int_t splitlevel) 
+TBranch* TTree::BranchImp(const char *branchname, TClass *ptrClass, void *addobj,
+                          Int_t bufsize, Int_t splitlevel)
 {
    // Same as TTree::Branch but automatic detection of the class name
    // See TTree::Branch for other details.
@@ -1365,7 +1365,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    //if ( (stlcont>=1 && stlcont<=8) || (stlcont>=-8 && stlcont<=-1) || cl->GetCollectionProxy() ) {
    if (cl->GetCollectionProxy()) {
       TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy();
-      //if( !collProxy )  { 
+      //if( !collProxy )  {
       //   Error("Bronch","%s is missing its CollectionProxy (for branch %s)",classname,name);
       //}
       TClass *inklass = collProxy->GetValueClass();
@@ -1410,7 +1410,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       branch->SetAddress(add);
       return branch;
    }
-   
+
    if (!objadd) {
       objadd = (char*)cl->New();
       *ppointer = objadd;
@@ -1671,12 +1671,12 @@ TFile *TTree::ChangeFile(TFile *file)
 }
 
 //______________________________________________________________________________
-Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass, 
+Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass,
                                      EDataType datatype, Bool_t ptr)
 {
    // Check whether the address described by the last 3 parameters match the
    // content of the branch.
-    
+
    // Let determine what we need!
    TClass *expectedClass = 0;
    EDataType expectedType = kOther_t;
@@ -1724,8 +1724,8 @@ Bool_t TTree::CheckBranchAddressType(TBranch *branch, TClass *ptrClass,
             "The pointer type give (%s) does not correspond to the class needed (%s) by the branch: %s",
             ptrClass->GetName(),expectedClass->GetName(),branch->GetName());
       return kFALSE;
-   } else if (expectedType != kOther_t && datatype != kOther_t && 
-              expectedType != kNoType_t && datatype != kNoType_t && 
+   } else if (expectedType != kOther_t && datatype != kOther_t &&
+              expectedType != kNoType_t && datatype != kNoType_t &&
               expectedType != datatype) {
       if (datatype != kChar_t) {
          // For backward compatibility we assume that (char*) was just a cast and/or a generic address
@@ -2028,11 +2028,11 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  varexp is an expression of the general form
 //   - "e1"           produces a 1-d histogram (TH1F) of expression "e1"
 //   - "e1:e2"        produces an unbinned 2-d scatter-plot (TGraph) of "e1" versus "e2"
-//   - "e1:e2:e3"     produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1" 
+//   - "e1:e2:e3"     produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
 //                    versus "e2" versus "e3"
-//   - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1" 
+//   - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
 //                    versus "e2" versus "e3" and "e4" mapped on the color number.
-//  (to create histograms in the 2, 3, and 4 dimesional case, see section "Saving 
+//  (to create histograms in the 2, 3, and 4 dimesional case, see section "Saving
 //  the result of Draw to an histogram")
 //
 //  Example:
@@ -2071,9 +2071,9 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  option is the drawing option.
 //    - See TH1::Draw for the list of all drawing options.
-//    - If option COL is specified when varexp has three fields: 
+//    - If option COL is specified when varexp has three fields:
 //            tree.Draw("e1:e2:e3","","col");
-//      a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color 
+//      a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
 //      table.
 //    - If option contains the string "goff", no graphics is generated.
 //
@@ -2161,13 +2161,13 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //  By default the temporary histogram created is called "htemp", but only in
 //  the one dimensional Draw("e1") it contains the TTree's data points. For
-//  a two dimensional Draw, the data is filled into a TGraph which is named 
+//  a two dimensional Draw, the data is filled into a TGraph which is named
 //  "Graph". They can be retrieved by calling
 //    TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
 //    TGraph *graph = (TGraph*)gPad->GetPrimitive("graph"); // 2D
 //
 //  For a three and four dimensional Draw the TPloyMarker3D is unnamed, and
-//  cannot be retrieved. 
+//  cannot be retrieved.
 //
 //  gPad always contains a TH1 derived object called "htemp" which allows to
 //  access the axes:
@@ -2177,7 +2177,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //
 //     Saving the result of Draw to an histogram
 //     =========================================
-//  
+//
 //  If varexp0 contains >>hnew (following the variable(s) name(s),
 //  the new histogram created is called hnew and it is kept in the current
 //  directory (and also the current pad). This works for all dimensions.
@@ -2223,7 +2223,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //     Accessing collection objects
 //     ============================
 //
-//  TTree::Draw default's handling of collections is to assume that any 
+//  TTree::Draw default's handling of collections is to assume that any
 //  request on a collection pertain to it content.  For example, if fTracks
 //  is a collection of Track objects, the following:
 //      tree->Draw("event.fTracks.fPx");
@@ -2255,7 +2255,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
-//  Length$(formula): return the total number of element of the formula given as a 
+//  Length$(formula): return the total number of element of the formula given as a
 //                    parameter.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
@@ -2283,12 +2283,12 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //     =========================================================
 //
 //  If the formula contains  a file name, TTree::MakeProxy will be used
-//  to load and execute this file.   In particular it will draw the 
-//  result of a function with the same name as the file.  The function 
-//  will be executed in a context where the name of the branches can 
+//  to load and execute this file.   In particular it will draw the
+//  result of a function with the same name as the file.  The function
+//  will be executed in a context where the name of the branches can
 //  be used as a C++ variable.
 //
-//  For example draw px using the file hsimple.root (generated by the 
+//  For example draw px using the file hsimple.root (generated by the
 //  hsimple.C tutorial), we need a file named hsimple.cxx:
 //
 //     double hsimple() {
@@ -2299,9 +2299,9 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //  as follow:
 //     new TFile("hsimple.root")
 //     ntuple->Draw("hsimple.cxx");
-// 
+//
 //  A more complete example is available in the tutorials directory:
-//    h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C 
+//    h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C
 //  which reimplement the selector found in h1analysis.C
 //
 //  The main features of this facility are:
@@ -2312,7 +2312,7 @@ Long64_t TTree::Draw(const char *varexp, const char *selection, Option_t *option
 //    * ability to use the branch data as object (when the user code is available)
 //
 //  See TTree::MakeProxy for more details.
-// 
+//
 //     Making a Profile histogram
 //     ==========================
 //  In case of a 2-Dim expression, one can generate a TProfile histogram
@@ -3418,8 +3418,8 @@ Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
                        Int_t maxUnrolling)
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy.
-   // TBranchProxy is the base of a class hierarchy implementing an 
-   // indirect access to the content of the branches of a TTree. 
+   // TBranchProxy is the base of a class hierarchy implementing an
+   // indirect access to the content of the branches of a TTree.
    //
    // "proxyClassname" is expected to be of the form:
    //    [path/]fileprefix
@@ -3441,44 +3441,44 @@ Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
    //
    // 'maxUnrolling' controls how deep in the class hierachy does the
    // system 'unroll' class that are not split.  'unrolling' a class
-   // will allow direct access to its data members a class (this 
-   // emulates the behavior of TTreeFormula). 
+   // will allow direct access to its data members a class (this
+   // emulates the behavior of TTreeFormula).
    //
    // The main features of this skeleton are:
-   // 
+   //
    //    * on-demand loading of branches
    //    * ability to use the 'branchname' as if it was a data member
    //    * protection against array out-of-bound
    //    * ability to use the branch data as object (when the user code is available)
    //
-   // For example with Event.root, if 
+   // For example with Event.root, if
    //    Double_t somepx = fTracks.fPx[2];
-   // is executed by one of the method of the skeleton, 
+   // is executed by one of the method of the skeleton,
    // somepx will updated with the current value of fPx of the 3rd track.
    //
    // Both macrofilename and the optional cutfilename are expected to be
-   // the name of source files which contain at least a free standing 
+   // the name of source files which contain at least a free standing
    // function with the signature:
    //     x_t macrofilename(); // i.e function with the same name as the file
    // and
    //     y_t cutfilename();   // i.e function with the same name as the file
-   // 
-   // x_t and y_t needs to be types that can convert respectively to a double 
+   //
+   // x_t and y_t needs to be types that can convert respectively to a double
    // and a bool (because the skeleton uses:
    //     if (cutfilename()) htemp->Fill(macrofilename());
    //
-   // This 2 functions are run in a context such that the branch names are 
+   // This 2 functions are run in a context such that the branch names are
    // available as local variables of the correct (read-only) type.
    //
-   // Note that if you use the same 'variable' twice, it is more efficient 
+   // Note that if you use the same 'variable' twice, it is more efficient
    // to 'cache' the value. For example
    //   Int_t n = fEventNumber; // Read fEventNumber
    //   if (n<10 || n>10) { ... }
    // is more efficient than
    //   if (fEventNumber<10 || fEventNumber>10)
    //
-   // Also, optionally, the generated selector will also call methods named 
-   // macrofilename_methodname in each of 6 main selector methods if the method 
+   // Also, optionally, the generated selector will also call methods named
+   // macrofilename_methodname in each of 6 main selector methods if the method
    // macrofilename_methodname exist (Where macrofilename is stripped of its
    // extension).
    //
@@ -3493,17 +3493,17 @@ Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
    // Terminate       -> h1analysisProxy_Terminate
    //
    // If a file name macrofilename.h (or .hh, .hpp, .hxx, .hPP, .hXX) exist
-   // it is included before the declaration of the proxy class.  This can 
+   // it is included before the declaration of the proxy class.  This can
    // be used in particular to insure that the include files needed by
    // the macro file are properly loaded.
    //
    // The default histogram is accessible via the variable named 'htemp'.
-   // 
-   // If the library of the classes describing the data in the branch is 
-   // loaded, the skeleton will add the needed #include statements and 
+   //
+   // If the library of the classes describing the data in the branch is
+   // loaded, the skeleton will add the needed #include statements and
    // give the ability to access the object stored in the branches.
-   // 
-   // To draw px using the file hsimple.root (generated by the 
+   //
+   // To draw px using the file hsimple.root (generated by the
    // hsimple.C tutorial), we need a file named hsimple.cxx:
    //
    //     double hsimple() {
@@ -3514,9 +3514,9 @@ Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
    // as follow:
    //     new TFile("hsimple.root")
    //     ntuple->Draw("hsimple.cxx");
-   // 
+   //
    // A more complete example is available in the tutorials directory:
-   //   h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C 
+   //   h1analysisProxy.cxx , h1analysProxy.h and h1analysisProxyCut.C
    // which reimplement the selector found in h1analysis.C
 
    GetPlayer();
@@ -3746,21 +3746,6 @@ void TTree::Print(Option_t *option) const
    //
    // Wildcarding can be used to print only a subset of the branches
    // eg, T.Print("Elec*") will print all branches with name starting with "Elec"
-
-  if (!strcasecmp(option, "p") || !strcasecmp(option, "pa")) {
-#ifdef NEVER
-          TPacketGenerator *t = GetPacketGenerator();
-     if (!t) {
-        Printf("No TPacketGenerator object available");
-        return;
-     }
-     if (!strcasecmp(option, "p"))
-        t->Print();
-     else
-        t->Print("all");
-     return;
-#endif
-  }
 
   Int_t s = 0;
   Int_t skey = 0;
@@ -4143,7 +4128,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
    //  TTree::Scan, TTreeViewer) and will be evaluated as the content of
    //  'aliasFormula'.
    //  If the content of 'aliasFormula only contains symbol names, periods and
-   //  array index specification (for example event.fTracks[3]), then 
+   //  array index specification (for example event.fTracks[3]), then
    //  the content of 'aliasName' can be used as the start of symbol.
    //
    //  If the alias 'aliasName' already existed, it is replaced by the new
@@ -4243,12 +4228,12 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 }
 
 //_______________________________________________________________________
- void TTree::SetBranchAddress(const char *bname, void *add, 
-                              TClass *ptrClass, EDataType datatype, 
+ void TTree::SetBranchAddress(const char *bname, void *add,
+                              TClass *ptrClass, EDataType datatype,
                               Bool_t ptr)
 {
    //  Verify the validity of the type of add before calling SetBranchAddress.
-   
+
    TBranch *branch = GetBranch(bname);
    if (branch) {
 
@@ -4447,7 +4432,7 @@ Long64_t TTree::SetEntries(Long64_t n)
 {
   // if n >= 0 Set number of entries in the Tree = n.
   //
-  // if (n < 0) Set number of entries in the Tree to match the 
+  // if (n < 0) Set number of entries in the Tree to match the
   // number of entries in each branch. (default for n is -1)
   // This function should be called only when one fills each branch
   // independently via TBranch::Fill without calling TTree::Fill
@@ -4460,7 +4445,7 @@ Long64_t TTree::SetEntries(Long64_t n)
       fEntries = n;
       return n;
    }
-   
+
    // case 2; compute the number of entries from the number of entries in the branches
    TBranch * b;
    Long64_t nMin = 99999999;
