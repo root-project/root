@@ -4,7 +4,6 @@
 {
    gROOT->Reset();
    TCanvas c1("c1","multipads",900,700);
-   gStyle->SetPadBorderMode(0);
    gStyle->SetOptStat(0);
    c1.Divide(2,2,0,0);
    TH2F h1("h1","test1",10,0,1,20,0,20);
@@ -13,27 +12,19 @@
    TH2F h4("h4","test4",10,0,1,20,0,1000);
 
    c1.cd(1);
-   gPad->SetBottomMargin(0);
-   gPad->SetRightMargin(0);
    gPad->SetTickx(2);
    h1.Draw();
 
    c1.cd(2);
-   gPad->SetLeftMargin(0);
-   gPad->SetBottomMargin(0);
    gPad->SetTickx(2);
    gPad->SetTicky(2);
    h2.GetYaxis()->SetLabelOffset(0.01);
    h2.Draw();
    
    c1.cd(3);
-   gPad->SetTopMargin(0);
-   gPad->SetRightMargin(0);
    h3.Draw();
 
    c1.cd(4);
-   gPad->SetLeftMargin(0);
-   gPad->SetTopMargin(0);
    gPad->SetTicky(2);
    h4.Draw();
 }      
