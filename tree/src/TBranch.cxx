@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.10 2000/12/13 15:13:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.11 2000/12/20 15:45:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -33,6 +33,8 @@
 TBranch *gBranch;
 
 R__EXTERN TTree *gTree;
+
+Int_t TBranch::fgCount = 0;
 
 const Int_t kMaxRAM = 10;
 
@@ -691,12 +693,12 @@ void TBranch::Print(Option_t *) const
   if (aLength < 200) aLength = 200;
   char *bline = new char[aLength];
   if (fZipBytes) cx = fTotBytes/fZipBytes;
-  sprintf(bline,"*Branch  :%-9s : %-54s *",GetName(),GetTitle());
+  sprintf(bline,"*Br%5d :%-9s : %-54s *",fgCount,GetName(),GetTitle());
   if (strlen(bline) > UInt_t(kLINEND)) {
      int len=strlen(GetTitle());
      char *tmp = new char[strlen(bline)+1];
      strcpy(tmp, GetTitle());
-     sprintf(bline,"*Branch  :%-9s : ",GetName());
+     sprintf(bline,"*Br%5d :%-9s : ",fgCount,GetName());
      int pos = strlen (bline);
      int npos = pos;
      int beg=0, end;
@@ -739,6 +741,7 @@ void TBranch::Print(Option_t *) const
   Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
   Printf("*............................................................................*");
   delete [] bline;
+  fgCount++;
 }
 
 

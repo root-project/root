@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.4 2000/11/24 10:29:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.5 2000/12/13 15:13:54 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,6 +57,7 @@ protected:
     // TBranch status bits
     enum { kAutoDelete = BIT(15) };
 
+   static Int_t fgCount;          //! branch counter
     Int_t       fCompress;        //  (=1 branch is compressed, 0 otherwise)
     Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
     Int_t       fEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
@@ -138,6 +139,8 @@ public:
     virtual void     SetOffset(Int_t offset=0) {fOffset=offset;}
     virtual void     SetTree(TTree *tree) { fTree = tree;}
     virtual void     UpdateAddress() {;}
+    
+    static  void     ResetCount() {fgCount = 0;}
 
     ClassDef(TBranch,6)  //Branch descriptor
 };
