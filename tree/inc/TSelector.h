@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.9 2002/02/15 22:12:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.10 2002/04/19 18:24:01 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -46,14 +46,14 @@ public:
    virtual void        Init(TTree *) { }
    virtual void        Begin(TTree *) { }
    virtual Bool_t      Notify() { return kTRUE; }
-           const char *GetOption() const { return fOption.Data();}
+   virtual const char *GetOption() const { return fOption.Data();}
    virtual Bool_t      ProcessCut(int entry) { return kTRUE; }
    virtual void        ProcessFill(int entry) { }
    virtual Bool_t      Process(int entry) { return kFALSE; }
-           void        SetOption(const char *option) { fOption = option; }
-           void        SetObject(TObject *obj) { fObject = obj; }
-           void        SetInputList(TList *input) { fInput = input; }
-           TList      *GetOutputList() const { return fOutput; }
+   virtual void        SetOption(const char *option) { fOption = option; }
+   virtual void        SetObject(TObject *obj) { fObject = obj; }
+   virtual void        SetInputList(TList *input) { fInput = input; }
+   virtual TList      *GetOutputList() const { return fOutput; }
    virtual void        Terminate() { }
 
    static  TSelector  *GetSelector(const char *filename);

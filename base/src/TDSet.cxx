@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.6 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.cxx,v 1.7 2002/04/19 18:23:58 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -162,6 +162,23 @@ TDSet::~TDSet()
 
    delete fElements;
    delete fIterator;
+}
+
+//______________________________________________________________________________
+void TDSet::Print(const Option_t *option) const
+{
+   // Print TDSet basic or full data.
+
+   cout <<"OBJ: " << IsA()->GetName() << "\ttype " << GetName() << "\t"
+      << fObjName << "\tin " << GetTitle() << endl;
+
+   if (option && *option) {
+      TIter next(GetListOfElements());
+      TObject *obj;
+      while ((obj = next())) {
+         obj->Print(option);
+      }
+   }
 }
 
 //______________________________________________________________________________

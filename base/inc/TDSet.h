@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.6 2002/03/21 16:11:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDSet.h,v 1.7 2002/04/19 18:23:57 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    TDSet(const char *type, const char *objname = "*", const char *dir = "/");
    virtual ~TDSet();
 
+   void        Print(Option_t *option="") const;
    void        SetObjName(const char *objname);
    void        SetDirectory(const char *dir);
 

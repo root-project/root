@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.97 2002/04/19 07:40:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.98 2002/05/07 09:05:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1938,8 +1938,13 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"   void    Begin(TTree *tree);\n");
       fprintf(fp,"   void    Init(TTree *tree);\n");
       fprintf(fp,"   Bool_t  Notify();\n");
+      fprintf(fp,"   Bool_t  Process(Int_t entry);\n");
       fprintf(fp,"   Bool_t  ProcessCut(Int_t entry);\n");
       fprintf(fp,"   void    ProcessFill(Int_t entry);\n");
+      fprintf(fp,"   void    SetOption(const char *option) { fOption = option; }\n");
+      fprintf(fp,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
+      fprintf(fp,"   void    SetInputList(TList *input) {fInput = input;}\n");
+      fprintf(fp,"   TList  *GetOutputList() const { return fOutput; }\n");
       fprintf(fp,"   void    Terminate();\n");
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
@@ -2261,6 +2266,18 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
+      fprintf(fpc,"}\n");
+      // generate code for class member function Process
+      fprintf(fpc,"\n");
+      fprintf(fpc,"Bool_t %s::Process(Int_t entry)\n",classname);
+      fprintf(fpc,"{\n");
+      fprintf(fpc,"   // Processing function.\n");
+      fprintf(fpc,"   // Entry is the entry number in the current tree.\n");
+      fprintf(fpc,"   // Read only the necessary branches to select entries.\n");
+      fprintf(fpc,"   // To read complete event, call fChain->GetTree()->GetEntry(entry).\n");
+      fprintf(fpc,"   // Return kFALSE as stop processing.\n");
+      fprintf(fpc,"\n");
+      fprintf(fpc,"   return kTRUE;\n");
       fprintf(fpc,"}\n");
       // generate code for class member function ProcessCut
       fprintf(fpc,"\n");
