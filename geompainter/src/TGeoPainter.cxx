@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.55 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.56 2005/03/11 17:22:21 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -507,6 +507,7 @@ void TGeoPainter::Draw(Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
+   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
    // Clear pad if option "same" not given
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
@@ -516,18 +517,23 @@ void TGeoPainter::Draw(Option_t *option)
    // append this volume to pad
    fGeom->GetTopVolume()->AppendPad(option);
 
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      if (has_pad) gPad->Update();
+   }
+	
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   TView *view = gPad->GetView();
-   if (view) {
-      if (!view->IsPerspective()) view->SetPerspective();
-   }
+   if (!view->IsPerspective()) view->SetPerspective();
    
    fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
  
    // Create / recycle 3D viewer and paint pad into it
-   gPad->GetViewer3D(option);  
+   gPad->GetViewer3D(option);
+	gPad->Paint();  
 }
 
 //______________________________________________________________________________
@@ -544,7 +550,8 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
       ClearVisibleVolumes();
       fVisLock = kFALSE;
    }   
-   
+   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
+   // Clear pad if option "same" not given
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
@@ -553,15 +560,21 @@ void TGeoPainter::DrawOverlap(void *ovlp, Option_t *option)
    // append this volume to pad
    overlap->AppendPad(option);
 
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      PaintOverlap(ovlp, "range");
+      overlap->GetPolyMarker()->Draw("SAME");
+      if (has_pad) gPad->Update();
+   }
+
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   TView *view = gPad->GetView();
-   if (view) {
-      if (!view->IsPerspective()) view->SetPerspective();
-   }
-   
+   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
+
 
 //______________________________________________________________________________
 void TGeoPainter::DrawOnly(Option_t *option)
@@ -573,7 +586,8 @@ void TGeoPainter::DrawOnly(Option_t *option)
       fVisLock = kFALSE;
    }   
    fPaintingOverlaps = kFALSE;
-   
+   Bool_t has_pad = (gPad==0)?kFALSE:kTRUE;
+   // Clear pad if option "same" not given
    if (!gPad) {
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
@@ -582,12 +596,17 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // append this volume to pad
    fGeom->GetCurrentVolume()->AppendPad(option);
 
+   // Create a 3-D view
+   TView *view = gPad->GetView();
+   if (!view) {
+      view = new TView(11);
+      fVisOption = kGeoVisOnly;
+      if (has_pad) gPad->Update();
+   }
+
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
-   TView *view = gPad->GetView();
-   if (view) {
-      if (!view->IsPerspective()) view->SetPerspective();
-   }
+   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 
