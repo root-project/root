@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.17 2002/09/13 01:39:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.18 2002/09/18 12:13:12 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -803,6 +803,21 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->WMDeleteNotify(fId);
 
    fBindList = new TList;
+
+   fMWMValue    = 0;
+   fMWMFuncs    = 0;
+   fMWMInput    = 0;
+   fWMX         = -1;
+   fWMY         = -1;
+   fWMWidth     = (UInt_t) -1;
+   fWMHeight    = (UInt_t) -1;
+   fWMMinWidth  = (UInt_t) -1;
+   fWMMinHeight = (UInt_t) -1;
+   fWMMaxWidth  = (UInt_t) -1;
+   fWMMaxHeight = (UInt_t) -1;
+   fWMWidthInc  = (UInt_t) -1;
+   fWMHeightInc = (UInt_t) -1;
+   fWMInitState = (EInitialState) 0;
 }
 
 //______________________________________________________________________________
@@ -940,6 +955,7 @@ void TGMainFrame::SetWindowName(const char *name)
 {
    // Set window name. This is typically done via the window manager.
 
+   fWindowName = name;
    gVirtualX->SetWindowName(fId, (char *)name);
 }
 
@@ -948,6 +964,7 @@ void TGMainFrame::SetIconName(const char *name)
 {
    // Set window icon name. This is typically done via the window manager.
 
+   fIconName = name;
    gVirtualX->SetIconName(fId, (char *)name);
 }
 
@@ -957,6 +974,7 @@ void TGMainFrame::SetIconPixmap(const char *iconName)
    // Set window icon pixmap by name. This is typically done via the window
    // manager.
 
+   fIconPixmap = iconName;
    const TGPicture *iconPic = fClient->GetPicture(iconName);
    if (iconPic) {
       Pixmap_t pic = iconPic->GetPicture();
@@ -971,6 +989,8 @@ void TGMainFrame::SetClassHints(const char *className, const char *resourceName)
    // resources from the resource database. However, ROOT applications
    // will typically use the .rootrc file for this.
 
+   fClassName    = className;
+   fResourceName = resourceName;
    gVirtualX->SetClassHints(fId, (char *)className, (char *)resourceName);
 }
 
@@ -979,6 +999,9 @@ void TGMainFrame::SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input)
 {
    // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
 
+   fMWMValue = value;
+   fMWMFuncs = funcs;
+   fMWMInput = input;
    gVirtualX->SetMWMHints(fId, value, funcs, input);
 }
 
@@ -987,6 +1010,8 @@ void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
 {
    // Give the window manager a window position hint.
 
+   fWMX = x;
+   fWMY = y;
    gVirtualX->SetWMPosition(fId, x, y);
 }
 
@@ -995,6 +1020,8 @@ void TGMainFrame::SetWMSize(UInt_t w, UInt_t h)
 {
    // Give the window manager a window size hint.
 
+   fWMWidth  = w;
+   fWMHeight = h;
    gVirtualX->SetWMSize(fId, w, h);
 }
 
@@ -1006,6 +1033,12 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
    // Give the window manager minimum and maximum size hints. Also
    // specify via winc and hinc the resize increments.
 
+   fWMMinWidth  = wmin;
+   fWMMinHeight = hmin;
+   fWMMaxWidth  = wmax;
+   fWMMaxHeight = hmax;
+   fWMWidthInc  = winc;
+   fWMHeightInc = hinc;
    gVirtualX->SetWMSizeHints(fId, wmin, hmin, wmax, hmax, winc, hinc);
 }
 
@@ -1014,6 +1047,7 @@ void TGMainFrame::SetWMState(EInitialState state)
 {
    // Set the initial state of the window. Either kNormalState or kIconicState.
 
+   fWMInitState = state;
    gVirtualX->SetWMState(fId, state);
 }
 
@@ -1132,8 +1166,8 @@ void TGGroupFrame::SetTitle(TGString *title)
    // by the TGGroupFrame.
 
    if (!title) {
-      Error("SetTitle", "title cannot be 0, try \"\"");
-      return;
+      Warning("SetTitle", "title cannot be 0, try \"\"");
+      title = new TGString("");
    }
 
    delete fText;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.17 2002/09/13 01:39:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.18 2002/09/18 12:13:12 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -343,7 +343,26 @@ class TGMainFrame : public TGCompositeFrame {
 protected:
    enum { kDontCallClose = BIT(14) };
 
-   TList    *fBindList;    // list with key bindings
+   TList        *fBindList;     // list with key bindings
+   TString       fWindowName;   // window name
+   TString       fIconName;     // icon name
+   TString       fIconPixmap;   // icon pixmap name
+   TString       fClassName;    // WM class name
+   TString       fResourceName; // WM resource name
+   UInt_t        fMWMValue;     // MWM decoration hints
+   UInt_t        fMWMFuncs;     // MWM functions
+   UInt_t        fMWMInput;     // MWM input modes
+   Int_t         fWMX;          // WM x position
+   Int_t         fWMY;          // WM y position
+   UInt_t        fWMWidth;      // WM width
+   UInt_t        fWMHeight;     // WM height
+   UInt_t        fWMMinWidth;   // WM min width
+   UInt_t        fWMMinHeight;  // WM min height
+   UInt_t        fWMMaxWidth;   // WM max width
+   UInt_t        fWMMaxHeight;  // WM max height
+   UInt_t        fWMWidthInc;   // WM width increments
+   UInt_t        fWMHeightInc;  // WM height increments
+   EInitialState fWMInitState;  // WM initial state
 
 public:
    TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -369,6 +388,21 @@ public:
 
    virtual Bool_t BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const;
    virtual void   RemoveBind(const TGWindow *w, Int_t keycode, Int_t modifier) const;
+
+   const char *GetWindowName() const { return fWindowName; }
+   const char *GetIconName() const { return fIconName; }
+   const char *GetIconPixmap() const { return fIconPixmap; }
+   void GetClassHints(const char *&className, const char *&resourceName) const
+      { className = fClassName; resourceName = fResourceName; }
+   void GetMWMHints(UInt_t &value, UInt_t &funcs, UInt_t &input) const
+      { value = fMWMValue; funcs = fMWMFuncs; input = fMWMInput; }
+   void GetWMPosition(Int_t &x, Int_t &y) const { x = fWMX; y = fWMY; }
+   void GetWMSize(UInt_t &w, UInt_t &h) const { w = fWMWidth; h = fWMHeight; }
+   void GetWMSizeHints(UInt_t &wmin, UInt_t &hmin, UInt_t &wmax, UInt_t &hmax,
+                       UInt_t &winc, UInt_t &hinc) const
+      { wmin = fWMMinWidth; hmin = fWMMinHeight; wmax = fWMMaxWidth;
+        hmax = fWMMaxHeight; winc = fWMWidthInc; hinc = fWMHeightInc; }
+   EInitialState GetWMState() const { return fWMInitState; }
 
    virtual const TGWindow *GetMainFrame() const { return this; }
 
@@ -443,6 +477,7 @@ public:
    virtual void DrawBorder();
    virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
+   virtual const char *GetTitle() const { return fText->GetString(); }
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };
