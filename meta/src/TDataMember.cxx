@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.5 2001/04/27 19:06:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.6 2001/10/29 16:23:54 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -175,6 +175,7 @@
 #include "TIterator.h"
 #include "TList.h"
 #include "TGlobal.h"
+#include "TRealData.h"
 
 
 ClassImp(TDataMember)
@@ -474,10 +475,22 @@ const char *TDataMember::GetName() const
 //______________________________________________________________________________
 Int_t TDataMember::GetOffset() const
 {
-   // Get offset from "this". This information is only available for
-   // public datamembers.
+   // Get offset from "this".
 
-   return fInfo->Offset();
+   //case of an interpreted or fake class
+   if (fClass->GetDeclFileLine() < 0) return fInfo->Offset();
+   
+   //case of a compiled class
+   //Note that the offset cannot be computed in case of an abstract class
+   //for which the list of real data has not yet been computed via 
+   //a real daughter class.
+   fClass->BuildRealData();
+   TIter next(fClass->GetListOfRealData());
+   TRealData *rdm;
+   while ((rdm = (TRealData*)next())) {
+      if (rdm->GetDataMember() == this) return rdm->GetThisOffset();
+   }
+   return 0;
 }
 
 //______________________________________________________________________________
