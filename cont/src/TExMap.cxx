@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.3 2001/05/21 12:44:00 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.4 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -224,6 +224,43 @@ void TExMap::Expand(Int_t newSize)
             Error("Expand", "slot %d not empty (should never happen)", slot);
       }
    delete [] oldTable;
+}
+
+//_______________________________________________________________________
+void TExMap::Streamer(TBuffer &b)
+{
+   // Stream all objects in the collection to or from the I/O buffer.
+
+   Int_t i;
+   UInt_t R__s, R__c;
+
+   if (b.IsReading()) {
+      b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(b);
+      Int_t n;
+      b >> n;
+      ULong_t hash;
+      Long_t key,value;
+      for (i = 0; i < n; i++) {
+         b >> hash;
+         b >> key;
+         b >> value;
+         Add(hash,key,value);
+      }
+      b.CheckByteCount(R__s, R__c,TExMap::IsA());
+   } else {
+      R__c = b.WriteVersion(TExMap::IsA(), kTRUE);
+      TObject::Streamer(b);
+      b << fTally;
+
+      for (i=0;i<fSize;i++) {
+         if (!fTable[i]) continue;
+         b << fTable[i]->fHash;
+         b << fTable[i]->fKey;
+         b << fTable[i]->fValue;
+      }
+      b.SetByteCount(R__c, kTRUE);
+   }
 }
 
 

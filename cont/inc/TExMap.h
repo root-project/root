@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.h,v 1.2 2001/05/21 11:18:02 rdm Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -73,7 +73,7 @@ public:
    Long_t   &operator()(ULong_t hash, Long_t key);
    Long_t   &operator()(Long_t key) { return operator()(key, key); }
 
-   ClassDef(TExMap,0)  //Map with external hash
+   ClassDef(TExMap,1)  //Map with external hash
 };
 
 
