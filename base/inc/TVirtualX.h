@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -204,6 +204,8 @@ public:
                                  Int_t src_x, Int_t src_y, UInt_t width,
                                  UInt_t height, Int_t dest_x, Int_t dest_y);
    virtual void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr);
+   virtual void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
+                                       UChar_t *data, Int_t len);
    virtual void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    virtual void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
@@ -244,6 +246,7 @@ public:
    virtual void         SelectInput(Window_t id, UInt_t evmask);
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
+   virtual void         SetPrimarySelectionOwner(Window_t id);
    virtual void         ConvertPrimarySelection(Window_t id, Time_t when);
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar,
@@ -368,6 +371,8 @@ inline void         TVirtualX::Bell(Int_t) { }
 inline void         TVirtualX::CopyArea(Drawable_t, Drawable_t, GContext_t,
                                  Int_t, Int_t, UInt_t, UInt_t, Int_t, Int_t) { }
 inline void         TVirtualX::ChangeWindowAttributes(Window_t, SetWindowAttributes_t *) { }
+inline void         TVirtualX::ChangeProperty(Window_t, Atom_t, Atom_t,
+                                              UChar_t *, Int_t) { }
 inline void         TVirtualX::DrawLine(Drawable_t, GContext_t, Int_t, Int_t, Int_t, Int_t) { }
 inline void         TVirtualX::ClearArea(Window_t, Int_t, Int_t, UInt_t, UInt_t) { }
 inline Bool_t       TVirtualX::CheckEvent(Window_t, EGEventType, Event_t &) { return kFALSE; }
@@ -407,6 +412,7 @@ inline void         TVirtualX::DrawRectangle(Drawable_t, GContext_t, Int_t, Int_
 inline void         TVirtualX::DrawSegments(Drawable_t, GContext_t, Segment_t *, Int_t) { }
 inline void         TVirtualX::SelectInput(Window_t, UInt_t) { }
 inline void         TVirtualX::SetInputFocus(Window_t) { }
+inline void         TVirtualX::SetPrimarySelectionOwner(Window_t) { }
 inline void         TVirtualX::ConvertPrimarySelection(Window_t, Time_t) { }
 inline void         TVirtualX::LookupString(Event_t *, char *, Int_t, UInt_t &keysym) { keysym = 0; }
 inline void         TVirtualX::TranslateCoordinates(Window_t, Window_t, Int_t, Int_t,

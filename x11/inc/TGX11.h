@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name$:$Id$
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -261,6 +261,8 @@ public:
                          Int_t src_x, Int_t src_y, UInt_t width, UInt_t height,
                          Int_t dest_x, Int_t dest_y);
    void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr);
+   void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
+                               UChar_t *data, Int_t len);
    void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
@@ -301,6 +303,7 @@ public:
    void         SelectInput(Window_t id, UInt_t evmask);
    void         SetInputFocus(Window_t id);
    Window_t     GetPrimarySelectionOwner();
+   void         SetPrimarySelectionOwner(Window_t id);
    void         ConvertPrimarySelection(Window_t id, Time_t when);
    void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
