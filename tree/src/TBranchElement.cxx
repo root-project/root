@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.68 2001/11/19 21:09:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.69 2001/11/22 15:08:37 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -62,8 +62,9 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 //
 // If splitlevel > 0 this branch in turn is split into sub branches
 
-//printf("BranchElement, bname=%s, sinfo=%s, id=%d, splitlevel=%d\n",bname,sinfo->GetName(),id,splitlevel);
-   
+   if (gDebug > 0) {
+      printf("BranchElement, bname=%s, sinfo=%s, id=%d, splitlevel=%d\n",bname,sinfo->GetName(),id,splitlevel);
+   }
    char name[kMaxLen];
    strcpy(name,bname);
 
@@ -123,7 +124,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
    fClassName = sinfo->GetName();
-//printf("Building Branch=%s, class=%s, info=%s, version=%d, id=%d, fStreamerType=%d, btype=%d\n",bname,cl->GetName(),sinfo->GetName(),fClassVersion,id,fStreamerType,btype);
+   if (gDebug > 1) printf("Building Branch=%s, class=%s, info=%s, version=%d, id=%d, fStreamerType=%d, btype=%d\n",bname,cl->GetName(),sinfo->GetName(),fClassVersion,id,fStreamerType,btype);
    fCompress = -1;
    if (gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
@@ -988,16 +989,14 @@ void TBranchElement::SetAddress(void *add)
                char *clast2 = (char*)strrchr(pname,'.');
                if (clast2) {
                   binfo->GetStreamerElement(clast2+1,mOffset);
-                  if (!mOffset) {
-                     *clast2 = 0;
-                     char *clast3 = (char*)strrchr(pname,'.');
-                     if (clast3) {
-                        TStreamerElement *el = binfo->GetStreamerElement(clast3+1,mOffset);
-                        if (el) {
-                           Int_t mOffset2 = 0;
-                           el->GetClassPointer()->GetStreamerInfo()->GetStreamerElement(clast2+1,mOffset2);
-                           mOffset += mOffset2;
-                        }
+                  *clast2 = 0;
+                  char *clast3 = (char*)strrchr(pname,'.');
+                  if (clast3) {
+                     TStreamerElement *el3 = binfo->GetStreamerElement(clast3+1,mOffset);
+                     if (el3) {
+                        Int_t mOffset2 = 0;
+                        el3->GetClassPointer()->GetStreamerInfo()->GetStreamerElement(clast2+1,mOffset2);
+                        mOffset += mOffset2;
                      }
                   }
                }   
@@ -1137,16 +1136,18 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
    Int_t unroll = 0;
    for (Int_t i=0;i<ndata;i++) {
       elem = (TStreamerElement*)elems[i];
-//printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, splitlevel=%d, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),splitlevel,btype);
+     if (gDebug > 1) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, splitlevel=%d, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),splitlevel,btype);
      if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
          //here one should consider the case of a TClonesArray with a class
          //deriving from an abstract class
          //if ((cltop != cl) && (clbase->Property() & kIsAbstract)) return -1;
          //if (clbase->Property() & kIsAbstract) return -1;
-         if (clbase->Property() & kIsAbstract) unroll = -1;
+         if (clbase->Property() & kIsAbstract) {
+            if (cl->InheritsFrom("TCollection")) unroll = -1;
+         }
+         if (gDebug > 1) printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          if (unroll < 0 && btype != 31) return -1;
-//printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          else unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
          if (unroll < 0) {
             if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
@@ -1164,7 +1165,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                clbase = gROOT->GetClass(elem->GetTypeName());
                if (clbase->Property() & kIsAbstract) return -1;
 
-//printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+            if (gDebug > 1) printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
             if (elem->CannotSplit())    unroll = -1;
             else unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
             if (unroll < 0) {
