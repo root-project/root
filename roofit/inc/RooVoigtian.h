@@ -1,12 +1,14 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooVoigtian.rdl,v 1.6 2001/08/23 01:23:35 verkerke Exp $
+ *    File: $Id: RooVoigtian.rdl,v 1.1 2001/08/29 20:33:44 schieti Exp $
  * Authors:
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
  * History:
  *   09-Aug-2001 TS Created initial version from RooGaussian
  *   27-Aug-2001 TS Port to RooFitModels/RooFitCore
+ *   06-Sep-2001 TS Added class description and fast-algorithm
+ *                  option in constructor
  *
  * Copyright (C) 2001 Stanford Linear Accelerator Center
  *****************************************************************************/
@@ -22,7 +24,8 @@ class RooVoigtian : public RooAbsPdf {
 public:
   RooVoigtian(const char *name, const char *title,
 	      RooAbsReal& _x, RooAbsReal& _mean, 
-              RooAbsReal& _width, RooAbsReal& _sigma);
+              RooAbsReal& _width, RooAbsReal& _sigma,
+              Bool_t doFast = kFALSE);
   RooVoigtian(const RooVoigtian& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooVoigtian(*this,newname); }
   inline virtual ~RooVoigtian() { }

@@ -1,15 +1,26 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooVoigtian.cc,v 1.1 2001/08/09 19:15:55 schieti Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.1 2001/08/29 20:33:44 schieti Exp $
  * Authors:
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
  * History:
  *   09-Aug-2001 TS Created initial version from RooGaussian
  *   27-Aug-2001 TS Port to RooFitModels/RooFitCore
+ *   06-Sep-2001 TS Added class description and fast-algorithm
+ *                  option in constructor
  *
  * Copyright (C) 2001 Stanford Linear Accelerator Center
  *****************************************************************************/
+// -- CLASS DESCRIPTION --
+// RooVoigtian is an efficient implementation of the convolution of a 
+// Breit-Wigner with a Gaussian, making use of the complex error function.
+// RooFitCore provides two algorithms for the evaluation of the complex error 
+// function (the default CERNlib C335 algorithm, and a faster, look-up-table 
+// based method). By default, RooVoigtian employs the default (CERNlib) 
+// algorithm. Select the faster algorithm either in the constructor, or with
+// the selectFastAlgorithm() method.
+
 #include "BaBar/BaBar.hh"
 
 #include <iostream.h>
@@ -25,13 +36,14 @@ ClassImp(RooVoigtian)
 
 RooVoigtian::RooVoigtian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
-			 RooAbsReal& _width, RooAbsReal& _sigma) :
+			 RooAbsReal& _width, RooAbsReal& _sigma,
+    			 Bool_t doFast = kFALSE) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
   mean("mean","Mean",this,_mean),
   width("width","Breit-Wigner Width",this,_width),
   sigma("sigma","Gauss Width",this,_sigma),
-  _doFast(kFALSE)
+  _doFast(doFast)
 {
   _invRootPi= 1./sqrt(atan2(0.,-1.));
 }
