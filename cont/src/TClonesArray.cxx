@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.4 2000/11/21 16:47:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.5 2001/01/15 07:36:37 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -392,8 +392,9 @@ void TClonesArray::Streamer(TBuffer &b)
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
 
-      if (fClass->CanBypassStreamer()) {
-         TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      TStreamerInfo *sinfo = fClass->GetStreamerInfo();
+      //must test on sinfo and not on fClass (OK when writing)
+      if (sinfo->CanBypassStreamer()) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
