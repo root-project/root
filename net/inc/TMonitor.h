@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.2 2000/11/27 10:46:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.3 2001/01/25 18:39:42 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -30,15 +30,21 @@
 #include "TObject.h"
 #endif
 
-class TSocket;
 class TList;
+class TSocket;
+
 
 class TMonitor : public TObject {
+
+friend class TSocketHandler;
+friend class TTimeOutTimer;
 
 private:
    TList    *fActive;     //list of sockets to monitor
    TList    *fDeActive;   //list of (temporary) disabled sockets
-   TSocket  *fReady;      //socket which is ready to be read
+   TSocket  *fReady;      //socket which is ready to be read or written
+
+   void SetReady(TSocket *sock);
 
 public:
    enum EInterest { kRead = 1, kWrite = 2 };
@@ -57,10 +63,11 @@ public:
 
    TSocket *Select();
    TSocket *Select(Long_t timeout);
-   void     SetReady(TSocket *sock);
 
-   Int_t  GetActive() const;
-   Int_t  GetDeActive() const;
+   Int_t        GetActive() const;
+   Int_t        GetDeActive() const;
+   const TList *GetListOfActives() const { return fActive; }
+   const TList *GetListOfDeActives() const { return fDeActive; }
 
    ClassDef(TMonitor,0)  //Monitor activity on a set of TSocket objects
 };
