@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.196 2004/08/04 12:58:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.197 2004/08/05 17:20:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4289,9 +4289,10 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
 
 
 // ------------------------------------------------------------------------
-void  TH1::Smooth(Int_t ntimes)
+void  TH1::Smooth(Int_t ntimes, Int_t firstbin, Int_t lastbin)
 {
-// Smooth bin contents of this histogram.
+// Smooth bin contents of this histogram between firstbin and lastbin.
+// (if firstbin=-1 and lastbin=-1 (default) all bins are smoothed.
 // bin contents are replaced by their smooth values.
 // Errors (if any) are not modified.
 // algorithm can only be applied to 1-d histograms
@@ -4301,16 +4302,20 @@ void  TH1::Smooth(Int_t ntimes)
       return;
    }
    Int_t nbins = fXaxis.GetNbins();
+   if (firstbin < 0) firstbin = 1;
+   if (lastbin  < 0) lastbin  = nbins;
+   if (lastbin  > nbins+1) lastbin  = nbins;
+   nbins = lastbin - firstbin + 1;
    Double_t *XX = new Double_t[nbins];
    Int_t i;
    for (i=0;i<nbins;i++) {
-      XX[i] = GetBinContent(i+1);
+      XX[i] = GetBinContent(i+firstbin);
    }
 
    TH1::SmoothArray(nbins,XX,ntimes);
 
    for (i=0;i<nbins;i++) {
-      SetBinContent(i+1,XX[i]);
+      SetBinContent(i+firstbin,XX[i]);
    }
    delete [] XX;
 
