@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.20 2002/02/25 16:05:37 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.21 2002/04/12 09:18:14 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1042,10 +1042,12 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
   Int_t nx = GetNbinsX();
   Int_t ny = GetNbinsY();
   Int_t nz = GetNbinsZ();
-  if (ixmin < 0)  ixmin = 1;
-  if (ixmax > nx) ixmax = nx;
-  if (iymin < 0)  iymin = 1;
-  if (iymax > ny) iymax = ny;
+  if (ixmin < 0)    ixmin = 1;
+  if (ixmax > 9000) ixmax = nx;
+  if (ixmax > nx+1) ixmax = nx;
+  if (iymin < 0)    iymin = 1;
+  if (iymax > 9000) iymax = ny;
+  if (iymax > ny+1) iymax = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
