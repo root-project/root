@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.116 2003/11/22 21:48:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.117 2003/11/24 14:29:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TGraph.h"
 #include "TGaxis.h"
 #include "TH1.h"
@@ -466,7 +467,7 @@ void TGraph::Apply(TF1 *f)
 //______________________________________________________________________________
 void TGraph::Browse(TBrowser *)
 {
-    Draw("alp");
+    Draw(gEnv->GetValue("TGraph.BrowseOption","alp"));
     gPad->Update();
 }
 
