@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.56 2003/09/16 11:03:56 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.57 2003/09/16 11:17:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -490,8 +490,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t XLside, XMside;
    Double_t WW, AF, RNE;
    Double_t XX, YY;
-   Double_t XexpT = 0;
-   Double_t YexpT = 0;
    Double_t XMNLOG, X00, X11, H2, H2SAV, AXMUL, Y;
    Float_t chupxvsav, chupyvsav;
    Double_t rtxw, rtyw;
@@ -535,7 +533,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t rwma = wmax;
    CHTEMP = &kCHTEMP[0];
    LABEL  = &CHLABEL[0];
-
    linegrid  = 0;
 
    fFunction = (TF1*)gROOT->GetFunction(fFunctionName.Data());
@@ -549,7 +546,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- and the WC coordinates in the pad
 
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
-   Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t RWxmin = gPad->GetX1();
    Double_t RWxmax = gPad->GetX2();
    Double_t RWymin = gPad->GetY1();
@@ -1103,7 +1099,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (!Mside) Ytick0 -= atick[ltick];
                if (fFunction) {
                   Xtick0 = (fFunction->Eval(BinLow - Double_t(k)*DXtick)-rwmi)
-		           * axis_length / TMath::Abs(rwma-rwmi);
+                           * axis_length / TMath::Abs(rwma-rwmi);
                }
                Rotate(Xtick0,Ytick0,cosphi,sinphi,XX0,YY0 ,xpl2,ypl2);
                Rotate(Xtick0,atick[ltick],cosphi,sinphi,XX0,YY0 ,xpl1,ypl1);
@@ -1147,7 +1143,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (!Mside) Ytick1 -= atick[ltick];
                if (fFunction) {
                   Xtick1 = (fFunction->Eval(BinHigh + Double_t(k)*DXtick)-rwmi)
-	                   * axis_length / TMath::Abs(rwma-rwmi);
+                           * axis_length / TMath::Abs(rwma-rwmi);
                }
                Rotate(Xtick1,Ytick1,cosphi,sinphi,XX0,YY0 ,xpl2,ypl2);
                Rotate(Xtick1,atick[ltick],cosphi,sinphi,XX0,YY0 ,xpl1,ypl1);
@@ -1435,7 +1431,7 @@ L110:
 //*-*-                We use the format x 10 ** n
 
             if (FLEXE && !OptionText && NEXE)  {
-               sprintf(LABEL,"x10^{%d}", NEXE);
+               sprintf(LABEL,"#times10^{%d}", NEXE);
                if (X0 != X1) { Xfactor = X1-X0+0.1*charheight; Yfactor = 0; }
                else          { Xfactor = Y1-Y0+0.1*charheight; Yfactor = 0; }
                Rotate (Xfactor,Yfactor,cosphi,sinphi,X0,Y0,XX,YY);
@@ -1453,6 +1449,8 @@ L110:
 //*-*-              Log axis
 
    if (OptionLog && ndiv) {
+      UInt_t xi1=0,xi2,wi,yi1=0,yi2,hi;
+      Bool_t firstintlab = kTRUE, overlap = kFALSE;
       if ((wmin == wmax) || (ndiv == 0))  {
          Error(where, "wmin (%f) == wmax (%f), or ndiv == 0", wmin, wmax);
          goto L210;
@@ -1486,6 +1484,7 @@ L110:
       for (j=1; j<=NBININ; j++) {
 
 //*-*-              Plot decade
+         firstintlab = kTRUE, overlap = kFALSE;
          decade++;
          if (X0 == X1 && j == 1) Ylabel += charheight*0.33;
          if (Y0 == Y1 && j == 1) Ylabel -= charheight*0.65;
@@ -1525,7 +1524,7 @@ L110:
          if (!drawGridOnly && !OptionUnlab)  {
 
 //*-*-              We generate labels (numeric only).
-            if (MoreLogLabels || noExponent) {
+            if (noExponent) {
                rlab = TMath::Power(10,labelnumber);
                sprintf(LABEL, "%f", rlab);
                LabelsLimits(LABEL,first,last);
@@ -1551,50 +1550,31 @@ L110:
                      else                  XX    += 0.50*charheight;
                   }
                }
-               if (noExponent) XX += 0.25*charheight;
+               XX += 0.25*charheight;
             }
             if ((Y0 == Y1) && !OptionDown && !OptionUp) {
-               //if (Lside < 0) YY  -= charheight;
-               if (noExponent) YY += 0.5*charheight;
+               if (noExponent) YY += 0.33*charheight;
             }
             if (N1A == 0)goto L210;
             KMOD = NBININ/N1A;
             if (KMOD == 0) KMOD=1000000;
             if ((NBININ <= N1A) || (j == 1) || (j == NBININ) || ((NBININ > N1A)
             && (j%KMOD == 0))) {
-               if ((labelnumber != 0) && (labelnumber != 1)) {
-                  if (MoreLogLabels || noExponent) {
+               if (labelnumber == 0) {
+                  textaxis->PaintTextNDC(XX,YY,"1");
+               } else if (labelnumber == 1) {
+                  textaxis->PaintTextNDC(XX,YY,"10");
+               } else {
+                  if (noExponent) {
                      textaxis->PaintTextNDC(XX,YY,&LABEL[first]);
-                  }
-                  else {
-                     XX = XX-(last-first)*(charheight*0.25);
-                     textaxis->PaintTextNDC(XX,YY,"10");
-                     Double_t s10 = textaxis->GetTextSize();
-                     textaxis->SetTextSize (0.6*s10);
-                     Double_t pixels = 0.6*s10;
-                     if (textaxis->GetTextFont() % 10 < 3) {
-                        if (padw < padh) pixels = s10*padw;
-                        else             pixels = s10*padh;
-                     }
-                     Int_t alig  = textaxis->GetTextAlign();
-                     Int_t aligh = alig/10;
-                     Int_t aligv = alig%10;
-				 Float_t labsft = 1.;
-				 if (OptionLeft && X0 == X1) labsft = 1.8;
-                     if (aligh == 1) XexpT = XX + labsft*0.70*pixels/padw;
-                     if (aligh == 2) XexpT = XX + labsft*0.60*pixels/padw;
-                     if (aligh == 3) XexpT = XX + labsft*0.01*pixels/padw;
-                     if (aligv == 1) YexpT = YY + 0.60*pixels/padh;
-                     if (aligv == 2) YexpT = YY + 0.30*pixels/padh;
-                     if (aligv == 3) YexpT = YY + 0.01*pixels/padh;
-                     textaxis->SetTextAlign(11);
-                     textaxis->PaintTextNDC(XexpT,YexpT,&LABEL[first]);
-                     textaxis->SetTextSize (s10);
-                     textaxis->SetTextAlign(alig);
+                  } else {
+                        sprintf(CHTEMP, "10^{%d}", labelnumber);
+                        textaxis->PaintLatex(gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1()),
+                                             gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1()),
+                                             0, textaxis->GetTextSize(), CHTEMP);
+
                   }
                }
-               if (labelnumber == 0) textaxis->PaintTextNDC(XX,YY,"1");
-               if (labelnumber == 1) textaxis->PaintTextNDC(XX,YY,"10");
             }
             labelnumber++;
          }
@@ -1631,22 +1611,24 @@ L160:
 
 //*-*- Draw the intermediate LOG labels if requested
 
-               if (MoreLogLabels && !OptionUnlab) {
-                  rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
-                  sprintf(CHTEMP, "%d", Int_t(rlab));
-                  LNLEN = strlen(CHTEMP);
-                  if (CHTEMP[LNLEN-1] == '.') LNLEN--;
-                  Rotate (Xone,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
-//                  if ((X0 == X1) && !OptionPara) {
-//                     if (Lside < 0) {
-//                        if (labelnumber == 0) NCH=1;
-//                        else                  NCH=2;
-//                        XX += NCH*charheight;
-//                     }
-//                  }
-                  if ((Y0 == Y1) && !OptionDown && !OptionUp) {
-				 if (noExponent) YY += 0.5*charheight;
+               if (MoreLogLabels && !OptionUnlab && !drawGridOnly && !overlap) {
+                  if (noExponent) {
+                     rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
+                     sprintf(CHTEMP, "%g", rlab);
+                  } else {
+                     if (labelnumber-1 == 0) {
+                        sprintf(CHTEMP, "%d", k);
+                     } else if (labelnumber-1 == 1) {
+                        sprintf(CHTEMP, "%d", 10*k);
+                     } else {
+                        sprintf(CHTEMP, "%d#times10^{%d}", k, labelnumber-1);
+                     }
                   }
+                  Rotate (Xone,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
+                  if ((Y0 == Y1) && !OptionDown && !OptionUp) {
+                     if (noExponent) YY += 0.33*charheight;
+                  }
+                  if ((X0 == X1)) XX += 0.25*charheight;
                   if (OptionVert) {
                      if ((X0 != X1) && (Y0 != Y1)) {
                         Rotate(Xone,Ylabel,cosphi,sinphi,X0,Y0,XX,YY);
@@ -1654,7 +1636,27 @@ L160:
                         else            YY -= Ylabel;
                      }
                   }
-                  if (CHTEMP[0] != '0') textaxis->PaintTextNDC(XX,YY,CHTEMP);
+                  textaxis->SetTitle(CHTEMP);
+                  Double_t u = gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1());
+                  Double_t v = gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1());
+                  if (firstintlab) {
+                     textaxis->GetBoundingBox(wi, hi);
+                     xi1 = gPad->XtoAbsPixel(u);
+                     yi1 = gPad->YtoAbsPixel(v);
+                     firstintlab = kFALSE;
+                     textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),CHTEMP);
+                  } else {
+                     xi2 = gPad->XtoAbsPixel(u);
+                     yi2 = gPad->YtoAbsPixel(v);
+                     if ((X0 == X1 && yi1-hi <= yi2) || (Y0 == Y1 && xi1+wi >= xi2)){
+                        overlap = kTRUE;
+                     } else {
+                        xi1 = xi2;
+                        yi1 = yi2;
+                        textaxis->GetBoundingBox(wi, hi);
+                        textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),CHTEMP);
+                     }
+                  }
                }
 
 //*-*- Draw the intermediate LOG grid if only three decades are requested
@@ -1921,11 +1923,11 @@ void TGaxis::SetTimeOffset(Double_t toffset)
    char sqldate[20];
    time_t timeoff;
    struct tm* utctis;
-		     
+     
    Int_t IdF = fTimeFormat.Index("%F");
    if (IdF>=0) fTimeFormat.Remove(IdF);
    fTimeFormat.Append("%F");
-				    
+    
    timeoff = (time_t)((Long_t)(toffset));
    utctis = localtime(&timeoff);
 
