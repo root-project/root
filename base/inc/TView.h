@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.9 2002/11/20 08:55:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.10 2002/11/28 08:11:02 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -112,7 +112,7 @@ Bool_t           IsPerspective() const {return TestBit(kPerspective);}
    virtual void  NDCtoWC(const Double_t *pn, Double_t *pw);
    virtual void  NormalWCtoNDC(const Float_t *pw, Float_t *pn);
    virtual void  NormalWCtoNDC(const Double_t *pw, Double_t *pn);
-   virtual void  PadRange(Double_t rback);
+   virtual void  PadRange(Int_t rback);
    void          ResizePad();
    virtual void  SetAutoRange(Bool_t autorange=kTRUE) {fAutoRange=autorange;}
    virtual void  SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2);

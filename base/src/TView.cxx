@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.13 2002/11/20 08:55:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.14 2002/11/20 09:52:56 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1147,7 +1147,7 @@ void TView::NormalWCtoNDC(const Double_t *pw, Double_t *pn)
 }
 
 //______________________________________________________________________________
-void TView::PadRange(Double_t rback)
+void TView::PadRange(Int_t rback)
 {
 //*-*-*-*-*Set the correct window size for lego and surface plots*-*-*-*-*
 //*-*      ======================================================
