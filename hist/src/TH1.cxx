@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.31 2000/12/15 07:30:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.32 2000/12/22 12:44:33 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2267,10 +2267,34 @@ Axis_t TH1::GetRandom()
 //______________________________________________________________________________
 Stat_t TH1::GetBinContent(Int_t) const
 {
-//*-*-*-*-*-*-*Return content of global bin number bin*-*-*-*-*-*-*-*-*-*-*-*
-//*-*          =======================================
+//*-*-*-*-*-*-*Return content of bin number bin
+//*-*          ================================
+// Implemented in TH1C,S,F,D
+   
    AbstractMethod("GetBinContent");
    return 0;
+}
+
+//______________________________________________________________________________
+Stat_t TH1::GetBinContent(Int_t binx, Int_t biny) const
+{
+//*-*-*-*-*-*-*Return content of bin number binx, biny
+//*-*          =======================================
+// NB: Function to be called for 2-d histograms only
+   
+   Int_t bin = GetBin(binx,biny);
+   return GetBinContent(bin);
+}
+
+//______________________________________________________________________________
+Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
+{
+//*-*-*-*-*-*-*Return content of bin number binx,biny,binz
+//*-*          ===========================================
+// NB: Function to be called for 3-d histograms only
+  
+   Int_t bin = GetBin(binx,biny,binz);
+   return GetBinContent(bin);
 }
 
 //______________________________________________________________________________
@@ -3873,21 +3897,47 @@ Stat_t TH1::GetBinError(Int_t bin) const
 }
 
 //______________________________________________________________________________
+Stat_t TH1::GetBinError(Int_t binx, Int_t biny) const
+{
+//*-*-*-*-*-*-*Return error of bin number binx, biny
+//*-*          =====================================
+// NB: Function to be called for 2-d histograms only
+   
+   Int_t bin = GetBin(binx,biny);
+   return GetBinError(bin);
+}
+
+//______________________________________________________________________________
+Stat_t TH1::GetBinError(Int_t binx, Int_t biny, Int_t binz) const
+{
+//*-*-*-*-*-*-*Return error of bin number binx,biny,binz
+//*-*          =========================================
+// NB: Function to be called for 3-d histograms only
+  
+   Int_t bin = GetBin(binx,biny,binz);
+   return GetBinError(bin);
+}
+
+//______________________________________________________________________________
 Stat_t TH1::GetCellContent(Int_t binx, Int_t biny) const
 {
-  Stat_t binval;
-  if (GetDimension() > 1) {
-     binval = GetBinContent(biny*(fXaxis.GetNbins()+2) + binx);
-     return binval;
-  }
-  return GetBinContent(binx);
+//*-*-*-*-*-*-*Return content of bin number binx, biny
+//*-*          =====================================
+// NB: Function to be called for 2-d histograms only
+   
+   Int_t bin = GetBin(binx,biny);
+   return GetBinContent(bin);
 }
 
 //______________________________________________________________________________
 Stat_t TH1::GetCellError(Int_t binx, Int_t biny) const
 {
-  if (GetDimension() > 1) return GetBinError(biny*(fXaxis.GetNbins()+2) + binx);
-  return GetBinError(binx);
+//*-*-*-*-*-*-*Return error of bin number binx, biny
+//*-*          =====================================
+// NB: Function to be called for 2-d histograms only
+   
+   Int_t bin = GetBin(binx,biny);
+   return GetBinError(bin);
 }
 
 //______________________________________________________________________________
@@ -3899,11 +3949,47 @@ void TH1::SetBinError(Int_t bin, Stat_t error)
 }
 
 //______________________________________________________________________________
+void TH1::SetBinContent(Int_t binx, Int_t biny, Stat_t content)
+{
+  if (binx <0 || binx>fXaxis.GetNbins()+1) return;
+  if (biny <0 || biny>fYaxis.GetNbins()+1) return;
+  SetBinContent(biny*(fXaxis.GetNbins()+2) + binx,content);
+}
+
+//______________________________________________________________________________
+void TH1::SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content)
+{
+  if (binx <0 || binx>fXaxis.GetNbins()+1) return;
+  if (biny <0 || biny>fYaxis.GetNbins()+1) return;
+  if (binz <0 || binz>fZaxis.GetNbins()+1) return;
+  Int_t bin = GetBin(binx,biny,binz);
+  SetBinContent(bin,content);
+}
+
+//______________________________________________________________________________
 void TH1::SetCellContent(Int_t binx, Int_t biny, Stat_t content)
 {
   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
   SetBinContent(biny*(fXaxis.GetNbins()+2) + binx,content);
+}
+
+//______________________________________________________________________________
+void TH1::SetBinError(Int_t binx, Int_t biny, Stat_t error)
+{
+  if (binx <0 || binx>fXaxis.GetNbins()+1) return;
+  if (biny <0 || biny>fYaxis.GetNbins()+1) return;
+  SetBinError(biny*(fXaxis.GetNbins()+2) + binx,error);
+}
+
+//______________________________________________________________________________
+void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Stat_t error)
+{
+  if (binx <0 || binx>fXaxis.GetNbins()+1) return;
+  if (biny <0 || biny>fYaxis.GetNbins()+1) return;
+  if (binz <0 || binz>fZaxis.GetNbins()+1) return;
+  Int_t bin = GetBin(binx,biny,binz);
+  SetBinError(bin,error);
 }
 
 //______________________________________________________________________________

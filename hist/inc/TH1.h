@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.11 2000/12/02 11:11:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.12 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -158,7 +158,11 @@ public:
     virtual Int_t    GetBin(Int_t binx, Int_t biny=0, Int_t binz=0) const;
     virtual Axis_t   GetBinCenter(Int_t bin) const {return fXaxis.GetBinCenter(bin);}
     virtual Stat_t   GetBinContent(Int_t bin) const;
+    virtual Stat_t   GetBinContent(Int_t binx, Int_t biny) const;
+    virtual Stat_t   GetBinContent(Int_t binx, Int_t biny, Int_t binz) const;
     virtual Stat_t   GetBinError(Int_t bin) const;
+    virtual Stat_t   GetBinError(Int_t binx, Int_t biny) const;
+    virtual Stat_t   GetBinError(Int_t binx, Int_t biny, Int_t binz) const;
     virtual Axis_t   GetBinLowEdge(Int_t bin) const {return fXaxis.GetBinLowEdge(bin);}
     virtual Axis_t   GetBinWidth(Int_t bin) const {return fXaxis.GetBinWidth(bin);}
     virtual Stat_t   GetCellContent(Int_t binx, Int_t biny) const;
@@ -216,7 +220,11 @@ public:
     virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}
     virtual void     SetBarWidth(Float_t width=0.5) {fBarWidth = Short_t(1000*width);}
     virtual void     SetBinContent(Int_t bin, Stat_t content);
+    virtual void     SetBinContent(Int_t binx, Int_t biny, Stat_t content);
+    virtual void     SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content);
     virtual void     SetBinError(Int_t bin, Stat_t error);
+    virtual void     SetBinError(Int_t binx, Int_t biny, Stat_t error);
+    virtual void     SetBinError(Int_t binx, Int_t biny, Int_t binz, Stat_t error);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
