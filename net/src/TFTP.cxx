@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.1 2001/02/22 09:41:40 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.2 2001/02/22 13:32:26 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -375,7 +375,7 @@ Int_t TFTP::DeleteDirectory(const char *dir)
 }
 
 //______________________________________________________________________________
-Int_t TFTP::ListDirectory()
+Int_t TFTP::ListDirectory(Option_t *)
 {
    return 0;
 }
