@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -81,7 +81,7 @@ UInt_t TEmulatedMapProxy::Size() const   {
 /// Map input streamer
 void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)  {
   bool   vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
-  int    idx, loop, off[2] = {0, fKey->fSize };
+  int    idx, loop, off[2] = {0, fValOffset };
   Value  *v, *val[2] = { fKey, fVal };
   StreamHelper* helper;
   float f;
@@ -143,7 +143,7 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)  {
 /// Map output streamer
 void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)  {
   Value  *v, *val[2] = { fKey, fVal };
-  int    off[2]      = { 0, fKey->fSize };
+  int    off[2]      = { 0, fValOffset };
   StreamHelper* i;
   char* addr = 0; 
   char* temp = (char*)At(0);

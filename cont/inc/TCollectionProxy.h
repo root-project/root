@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.15 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -296,9 +296,11 @@ public:
 
   /// Generate proxy from template
   template <class T> static Proxy_t* genProxy()  {
+    std::pair<typename T::Value_t, typename T::Value_t>* p = 
+       (std::pair<typename T::Value_t, typename T::Value_t>*)0x1000;
     return genExplicitProxy(typeid(typename T::Cont_t),
                             sizeof(typename T::Iter_t),
-                            sizeof(typename T::Value_t),
+                            (((char*)&p->second)-((char*)&p->first)),
                             T::value_offset(),
                             T::size,
                             T::resize,
@@ -347,9 +349,11 @@ public:
 
   /// Generate class streamer from template
   template <class T> static TClassStreamer* genClassStreamer()  {
+    std::pair<typename T::Value_t, typename T::Value_t>* p = 
+       (std::pair<typename T::Value_t, typename T::Value_t>*)0x1000;
     return genExplicitClassStreamer(typeid(typename T::Cont_t),
                                     sizeof(typename T::Iter_t),
-                                    sizeof(typename T::Value_t),
+                                (((char*)&p->second)-((char*)&p->first)),
                                     T::value_offset(),
                                     T::size,
                                     T::resize,
@@ -381,9 +385,11 @@ public:
 
   /// Generate member streamer from template
   template <class T> static TMemberStreamer* genMemberStreamer()  {
+    std::pair<typename T::Value_t, typename T::Value_t>* p = 
+       (std::pair<typename T::Value_t, typename T::Value_t>*)0x1000;
     return genExplicitMemberStreamer( typeid(typename T::Cont_t),
                                       sizeof(typename T::Iter_t),
-                                      sizeof(typename T::Value_t),
+                                      (((char*)&p->second)-((char*)&p->first)),
                                       T::value_offset(),
                                       T::size,
                                       T::resize,

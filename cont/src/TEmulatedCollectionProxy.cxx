@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -68,6 +68,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
       std::string nam;
       fSTL_type = TClassEdit::STLKind(inside[0].c_str());
       // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
+      int slong = sizeof(void*);
       switch ( fSTL_type )  {
         case TClassEdit::kMap:
         case TClassEdit::kMultiMap:
@@ -76,15 +77,20 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
           fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
           if ( 0 == fValDiff )  {
             fValDiff = fKey->fSize + fVal->fSize;
+            fValDiff += (slong - fKey->fSize%slong)%slong;
+            fValDiff += (slong - fValDiff%slong)%slong;
+            
           }
           if ( 0 == fValOffset )  {
-            fValOffset = fKey->fSize;
+            fValOffset  = fKey->fSize;
+            fValOffset += (slong - fKey->fSize%slong)%slong;
           }
           break;
         default:
           fVal   = new Value(inside[1]);
           if ( 0 == fValDiff )  {
-            fValDiff = fVal->fSize;
+            fValDiff  = fVal->fSize;
+            fValDiff += (slong - fValDiff%slong)%slong;
           }
           break;
       }
@@ -130,7 +136,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
         case G__BIT_ISCLASS:
           for( i= fKey->fType ? left : nCurr; i<nCurr; ++i, addr += fValDiff )  {
             // Call emulation in case non-compiled content
-            fKey->fDtor ? (*fKey->fDtor)(addr) : fKey->fType->Destructor(addr, kTRUE);
+            fKey->fType->Destructor(addr, kTRUE);
           }
           break;
         case R__BIT_ISSTRING:
@@ -139,39 +145,27 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
           for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* i = *(StreamHelper**)addr;
+            StreamHelper* i = (StreamHelper*)addr;
             void* ptr = i->ptr();
-            if ( fKey->fDelete )  {       // Case of compiled content
-              (*fKey->fDelete)(ptr);
-            }
-            else if ( fKey->fType )  {    // Case of emulated content
-              fKey->fType->Destructor(ptr);
-            }
-            else if ( fKey->fDtor )  {    // Case of compiled content
-              (*fKey->fDtor)(ptr);
-              ::operator delete(ptr);
-            }
-            else {
-              ::operator delete(i->ptr());
-            }
+            fKey->fType->Destructor(ptr);
             i->set(0);
           }
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = *(StreamHelper**)addr;
-            delete (std::string*)i;
+            StreamHelper* i = (StreamHelper*)addr;
+            delete (std::string*)i->ptr();
             i->set(0);
           }
           break;
         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = *(StreamHelper**)addr;
-            delete i->tstr;
+            StreamHelper* i = (StreamHelper*)addr;
+            delete (TString*)i->ptr();
             i->set(0);
           }
           break;
       }
-      addr = ((char*)fEnv->start)+fKey->fSize+fValDiff*left;
+      addr = ((char*)fEnv->start)+fValOffset+fValDiff*left;
       // DO NOT break; just continue
 
     // General case for all values
@@ -181,9 +175,9 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
         case G__BIT_ISENUM:
           break;
         case G__BIT_ISCLASS:
-          for( i=fVal->fDtor ? left : nCurr; i<nCurr; ++i, addr += fValDiff )  {
+          for( i=left; i<nCurr; ++i, addr += fValDiff )  {
             // Call emulation in case non-compiled content
-            fKey->fDtor ? (*fKey->fDtor)(addr) : fKey->fType->Destructor(addr,kTRUE);
+            fVal->fType->Destructor(addr,kTRUE);
           }
           break;
         case R__BIT_ISSTRING:
@@ -192,36 +186,24 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t /* force
           break;
         case G__BIT_ISPOINTER|G__BIT_ISCLASS:
           for( i=left; i<nCurr; ++i, addr += fValDiff )  {
-            StreamHelper* i = *(StreamHelper**)addr;
+            StreamHelper* i = (StreamHelper*)addr;
             void* p = i->ptr();
             if ( p )  {
-              if ( fVal->fDelete )  {      // Case of compiled content
-                (*fVal->fDelete)(p);
-              }
-              else if ( fVal->fType )  {  // Case of emultated content
-                fVal->fType->Destructor(p);
-              }
-              else if ( fVal->fDtor )  {   // Case of compiled content
-                (*fVal->fDtor)(p);
-                ::operator delete(p);
-              }
-              else  {
-                ::operator delete(p);
-              }
+              fVal->fType->Destructor(p);
             }
             i->set(0);
           }
         case G__BIT_ISPOINTER|R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = *(StreamHelper**)addr;
-            delete (std::string*)i;
+            StreamHelper* i = (StreamHelper*)addr;
+            delete (std::string*)i->ptr();
             i->set(0);
           }
           break;
         case G__BIT_ISPOINTER|R__BIT_ISTSTRING|G__BIT_ISCLASS:
           for( i=nCurr; i<left; ++i, addr += fValDiff )   {
-            StreamHelper* i = *(StreamHelper**)addr;
-            delete i->tstr;
+            StreamHelper* i = (StreamHelper*)addr;
+            delete (TString*)i->ptr();
             i->set(0);
           }
           break;
@@ -247,8 +229,8 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)  {
         case G__BIT_ISENUM:
           break;
         case G__BIT_ISCLASS:
-          for( i=fVal->fCtor ? nCurr : left; i<left; ++i, addr += fValDiff )
-            (*fKey->fCtor)(addr);
+          for( i=nCurr; i<left; ++i, addr += fValDiff )
+            fKey->fType->New(addr);
           break;
         case R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )
@@ -261,7 +243,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)  {
             *(void**)addr = 0;
           break;
       }
-      addr = ((char*)fEnv->start)+fKey->fSize+fValDiff*nCurr;
+      addr = ((char*)fEnv->start)+fValOffset+fValDiff*nCurr;
       // DO NOT break; just continue
 
     // General case for all values
@@ -271,9 +253,10 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)  {
         case G__BIT_ISENUM:
           break;
         case G__BIT_ISCLASS:
-          for( i=fVal->fCtor ? nCurr : left; i<left; ++i, addr += fValDiff )
-            (*fVal->fCtor)(addr);
-          break;
+          for( i=nCurr; i<left; ++i, addr += fValDiff ) {
+            fVal->fType->New(addr);
+          }
+         break;
         case R__BIT_ISSTRING:
           for( i=nCurr; i<left; ++i, addr += fValDiff )
             ::new(addr) std::string();
@@ -330,7 +313,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
   bool vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
   StreamHelper* itm = (StreamHelper*)At(0);
   switch (fVal->fCase) {
-    case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
+    case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way
     case G__BIT_ISENUM:
       switch( int(fVal->fKind) )   {
         case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;

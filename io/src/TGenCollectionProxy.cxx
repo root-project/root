@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.4 2004/11/01 08:52:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.5 2004/11/01 11:14:34 rdm Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -192,7 +192,7 @@ public:
       }
     }
     if ( fVal->fCase&G__BIT_ISPOINTER )  {
-      char *addr = ((char*)ptr)+fKey->fSize;
+      char *addr = ((char*)ptr)+fValOffset;
       if ( *(void**)addr ) (*fVal->fDelete)(*(void**)addr);
     }
   }
@@ -441,6 +441,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx() {
     if ( num > 1 )  {
       std::string nam;
       fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+      int slong = sizeof(void*);
       switch ( fSTL_type )  {
         case TClassEdit::kMap:
         case TClassEdit::kMultiMap:
@@ -452,9 +453,12 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx() {
           fPointers = fPointers || (0 != (fKey->fCase&G__BIT_ISPOINTER));
           if ( 0 == fValDiff )  {
             fValDiff = fKey->fSize + fVal->fSize;
+            fValDiff += (slong - fKey->fSize%slong)%slong;
+            fValDiff += (slong - fValDiff%slong)%slong;
           }
           if ( 0 == fValOffset )  {
             fValOffset = fKey->fSize;
+            fValOffset += (slong - fKey->fSize%slong)%slong;
           }
           break;
         default:
@@ -462,6 +466,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx() {
           fVal   = new Value(*fValue);
           if ( 0 == fValDiff )  {
             fValDiff = fVal->fSize;
+            fValDiff += (slong - fValDiff%slong)%slong;
           }
           break;
       }
@@ -697,12 +702,7 @@ void TGenCollectionProxy::DeleteItem(bool force, void* ptr)  const  {
           if (*(void**)ptr) (*fKey->fDelete)(*(void**)ptr);
         }
         if ( fVal->fCase&G__BIT_ISPOINTER )  {
-          char *addr = ((char*)ptr)+fKey->fSize;
-          //make sure the value address is aligned on a word boundary
-          long laddr = (long)addr;
-          int offset;
-          if ((offset = laddr % sizeof(void*)))
-             addr += sizeof(void*)-offset;
+          char *addr = ((char*)ptr)+fValOffset;
           if (*(void**)addr) (*fVal->fDelete)(*(void**)addr);
         }
         // (*fValue->fDtor)(ptr); No: pair must stay intact !

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.26 2004/10/13 15:30:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -257,17 +257,3 @@ void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */ ) {
   }
   InvalidProxyError();
 }
-#ifdef _WIN32
-#include <vector>
-#include <list>
-#include <deque>
-#include <set>
-#include <map>
-void __test()  {
-  TCollectionProxy::genProxy<TCollectionProxy::Pushback<std::vector<bool> > >();
-  TCollectionProxy::genProxy<TCollectionProxy::Pushback<std::list<bool> > >();
-  TCollectionProxy::genProxy<TCollectionProxy::Pushback<std::deque<bool> > >();
-  TCollectionProxy::genProxy<TCollectionProxy::Insert<std::set<bool> > >();
-  TCollectionProxy::genProxy<TCollectionProxy::MapInsert<std::map<bool,bool> > >();
-}
-#endif
