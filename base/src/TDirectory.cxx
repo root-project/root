@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.13 2001/06/02 10:01:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.14 2001/08/08 06:24:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -277,7 +277,7 @@ Bool_t TDirectory::cd(const char *path)
 }
 
 //______________________________________________________________________________
-Bool_t TDirectory::cd1(const char *path)
+Bool_t TDirectory::cd1(const char *apath)
 {
    // Change current directory to "this" directory . Using path one can
    // change the current directory to "path". The absolute path syntax is:
@@ -286,7 +286,9 @@ Bool_t TDirectory::cd1(const char *path)
    // in the file. Relative syntax is relative to "this" directory. E.g:
    // ../aa. Returns kFALSE in case path does not exist.
 
-   if (!path || !(strlen(path))) {
+   Int_t nch = 0;
+   if (apath) nch = strlen(apath);
+   if (!nch) {
       gDirectory = this;
       gFile      = fFile;
       TStreamerInfo::SetCurrentFile(fFile);
@@ -295,6 +297,8 @@ Bool_t TDirectory::cd1(const char *path)
 
    TDirectory *savdir = gDirectory;
 
+   char *path = new char[nch+1]; path[0] = 0;
+   if (nch) strcpy(path,apath);
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
@@ -306,12 +310,12 @@ Bool_t TDirectory::cd1(const char *path)
          if (s && *(s+1))
             if (!gDirectory->cd1(s+1)) {
                gDirectory = savdir;
-               return kFALSE;
+               delete [] path; return kFALSE;
             }
-         return kTRUE;
+         delete [] path; return kTRUE;
       } else {
          Error("cd", "No such file %s", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
    }
 
@@ -326,10 +330,10 @@ Bool_t TDirectory::cd1(const char *path)
 #else
       if (!td->cd1(path+1)) {
          gDirectory = savdir;
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
 #endif
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
 
    TObject *obj;
@@ -338,21 +342,21 @@ Bool_t TDirectory::cd1(const char *path)
       if (!strcmp(path, "..")) {
          if (fMother && fMother->InheritsFrom(TDirectory::Class()))
             ((TDirectory*)fMother)->cd();
-         return kTRUE;
+         delete [] path; return kTRUE;
       }
       obj = Get(path);
       if (!obj) {
          Error("cd","Unknown directory %s", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
 
       //Check return object is a directory
       if (!obj->InheritsFrom(TDirectory::Class())) {
          Error("cd","Object %s is not a directory", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
       ((TDirectory*)obj)->cd();
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
 
    char subdir[128];
@@ -364,26 +368,26 @@ Bool_t TDirectory::cd1(const char *path)
       if (fMother && fMother->InheritsFrom(TDirectory::Class()))
          if (!((TDirectory*)fMother)->cd1(slash+1)) {
              gDirectory = savdir;
-             return kFALSE;
+             delete [] path; return kFALSE;
          }
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
    obj = Get(subdir);
    if (!obj) {
       Error("cd","Unknown directory %s", subdir);
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
 
    //Check return object is a directory
    if (!obj->InheritsFrom(TDirectory::Class())) {
       Error("cd","Object %s is not a directory", subdir);
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
    if (!((TDirectory*)obj)->cd1(slash+1)) {
       gDirectory = savdir;
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
-   return kTRUE;
+   delete [] path; return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -399,7 +403,7 @@ Bool_t TDirectory::Cd(const char *path)
 }
 
 //______________________________________________________________________________
-Bool_t TDirectory::Cd1(const char *path)
+Bool_t TDirectory::Cd1(const char *apath)
 {
    // Change current directory to "path". The path syntax is:
    // file.root:/dir1/dir2
@@ -407,10 +411,14 @@ Bool_t TDirectory::Cd1(const char *path)
    // in the file. Returns kFALSE in case path does not exist.
 
    // null path is always true (i.e. stay in the current directory)
-   if (!path || !strlen(path)) return kTRUE;
+   Int_t nch = 0;
+   if (apath) nch = strlen(apath);
+   if (!nch) return kTRUE;
 
    TDirectory *savdir = gDirectory;
 
+   char *path = new char[nch+1]; path[0] = 0;
+   if (nch) strcpy(path,apath);
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
@@ -422,12 +430,12 @@ Bool_t TDirectory::Cd1(const char *path)
          if (s && *(s+1))
             if (!TDirectory::Cd1(s+1)) {
                gDirectory = savdir;
-               return kFALSE;
+               delete [] path; return kFALSE;
             }
-         return kTRUE;
+         delete [] path; return kTRUE;
       } else {
          ::Error("TDirectory::Cd", "No such file %s", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
    }
 
@@ -435,9 +443,9 @@ Bool_t TDirectory::Cd1(const char *path)
    if (path[0] == '/') {
       if (!TDirectory::Cd1(path+1)) {
          gDirectory = savdir;
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
 
    TObject *obj;
@@ -446,21 +454,21 @@ Bool_t TDirectory::Cd1(const char *path)
       if (!strcmp(path, "..")) {
          if (gDirectory->fMother && gDirectory->fMother->InheritsFrom(TDirectory::Class()))
             ((TDirectory*)gDirectory->fMother)->cd();
-         return kTRUE;
+         delete [] path; return kTRUE;
       }
       obj = gDirectory->Get(path);
       if (!obj) {
          ::Error("TDirectory::Cd","Unknown directory %s", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
 
       //Check return object is a directory
       if (!obj->InheritsFrom(TDirectory::Class())) {
          ::Error("TDirectory::Cd","Object %s is not a directory", path);
-         return kFALSE;
+         delete [] path; return kFALSE;
       }
       ((TDirectory*)obj)->cd();
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
 
    char subdir[128];
@@ -473,28 +481,28 @@ Bool_t TDirectory::Cd1(const char *path)
          ((TDirectory*)gDirectory->fMother)->cd();
          if (!TDirectory::Cd1(slash+1)) {
             gDirectory = savdir;
-            return kFALSE;
+            delete [] path; return kFALSE;
          }
       }
-      return kTRUE;
+      delete [] path; return kTRUE;
    }
    obj = gDirectory->Get(subdir);
    if (!obj) {
       ::Error("TDirectory::Cd","Unknown directory %s", subdir);
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
 
    //Check return object is a directory
    if (!obj->InheritsFrom(TDirectory::Class())) {
       ::Error("TDirectory::Cd","Object %s is not a directory", subdir);
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
    ((TDirectory*)obj)->cd();
    if (!TDirectory::Cd1(slash+1)) {
       gDirectory = savdir;
-      return kFALSE;
+      delete [] path; return kFALSE;
    }
-   return kTRUE;
+   delete [] path; return kTRUE;
 }
 
 //______________________________________________________________________________
