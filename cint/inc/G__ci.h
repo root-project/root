@@ -107,9 +107,11 @@
 /* Define G__ERRORCALLBACK to activat error message redirection. If
  * G__ERRORCALLBACK is defined, a user can set a callback routine for
  * handling error message by G__set_errmsgcallback() API */
+/*
 #ifndef G__ERRORCALLBACK
 #define G__ERRORCALLBACK
 #endif
+*/
 
 /* 2001 masks G__ateval overloading resolution error. It turns out this is
  * not a good way, the feature is turned off */
