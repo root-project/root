@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.3 2000/11/21 20:44:47 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.4 2001/01/12 11:24:36 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -167,6 +167,7 @@ theta plane) to the (x,y,z) frame.
 
 ClassImp(TVector3)
 
+//______________________________________________________________________________
 TVector3::TVector3(const TVector3 & p)
 : fX(p.fX), fY(p.fY), fZ(p.fZ) {}
 
@@ -181,6 +182,7 @@ TVector3::TVector3(const Float_t * x0)
 
 TVector3::~TVector3() {}
 
+//______________________________________________________________________________
 Double_t TVector3::operator () (int i) const {
   switch(i) {
   case 0:
@@ -195,6 +197,7 @@ Double_t TVector3::operator () (int i) const {
   return 0.;
 }
 
+//______________________________________________________________________________
 Double_t & TVector3::operator () (int i) {
   switch(i) {
   case 0:
@@ -209,15 +212,17 @@ Double_t & TVector3::operator () (int i) {
   return fX;
 }
 
-
+//______________________________________________________________________________
 TVector3 & TVector3::operator *= (const TRotation & m){
   return *this = m * (*this);
 }
 
+//______________________________________________________________________________
 TVector3 & TVector3::Transform(const TRotation & m) {
   return *this = m * (*this);
 }
 
+//______________________________________________________________________________
 void TVector3::RotateX(Double_t angle) {
   Double_t s = TMath::Sin(angle);
   Double_t c = TMath::Cos(angle);
@@ -226,6 +231,7 @@ void TVector3::RotateX(Double_t angle) {
   fZ = s*yy + c*fZ;
 }
 
+//______________________________________________________________________________
 void TVector3::RotateY(Double_t angle) {
   Double_t s = TMath::Sin(angle);
   Double_t c = TMath::Cos(angle);
@@ -234,6 +240,7 @@ void TVector3::RotateY(Double_t angle) {
   fX = s*zz + c*fX;
 }
 
+//______________________________________________________________________________
 void TVector3::RotateZ(Double_t angle) {
   Double_t s = TMath::Sin(angle);
   Double_t c = TMath::Cos(angle);
@@ -242,12 +249,14 @@ void TVector3::RotateZ(Double_t angle) {
   fY = s*xx + c*fY;
 }
 
+//______________________________________________________________________________
 void TVector3::Rotate(Double_t angle, const TVector3 & axis){
   TRotation trans;
   trans.Rotate(angle, axis);
   operator*=(trans);
 }
 
+//______________________________________________________________________________
 void TVector3::RotateUz(const TVector3& NewUzVector) {
   // NewUzVector must be normalized !
 
@@ -267,6 +276,7 @@ void TVector3::RotateUz(const TVector3& NewUzVector) {
   else {};
 }
 
+//______________________________________________________________________________
 Double_t TVector3::PseudoRapidity() const {
   //Double_t m = Mag();
   //return 0.5*log( (m+fZ)/(m-fZ) );
@@ -278,6 +288,19 @@ Double_t TVector3::PseudoRapidity() const {
   else        return -10e10;
 }
 
+//______________________________________________________________________________
+void TVector3::SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi) {
+  Double_t apt = TMath::Abs(pt);
+  SetXYZ(apt*TMath::Cos(phi), apt*TMath::Sin(phi), apt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))) );
+}
+
+//______________________________________________________________________________
+void TVector3::SetPtThetaPhi(Double_t pt, Double_t theta, Double_t phi) {
+  fX = pt * TMath::Cos(phi);
+  fY = pt * TMath::Sin(phi); 
+  Double_t tanTheta = TMath::Tan(theta);
+  fZ = tanTheta ? pt / tanTheta : 0;
+}
 
 //______________________________________________________________________________
 void TVector3::Streamer(TBuffer &R__b)
