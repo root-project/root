@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.76 2002/06/09 08:27:32 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.77 2002/06/11 21:17:03 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -306,7 +306,20 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
       struct G__Definedtemplateclass *templ = G__defined_templateclass(templatename);
       if (templ) {
          G__SourceFileInfo fileinfo(templ->filenum);
-         if (templ->line == cl.LineNumber() &&
+         // We are trying to discover wether the class was automatically 
+         // instantiated or not.  Sorrowfully CINT reports the starting line of 
+         // a class template as the line containing the 'template' keyword.  BUT it
+         // reports the stating line of an automatically instantiated class as the 
+         // line containing the keyword 'class'.  Those 2 can be different:
+         //            template <class T>
+         //            class Class2 { .....
+         // So until we get a better idea, we use the heuristic that the 2 keywords
+         // should be within 3 lines.
+         fprintf(stderr,"temp line %d, cl line %d\ntemp file %s, cl file %s\n",
+             templ->line ,cl.LineNumber(),
+              cl.FileName(), 
+             fileinfo.Name());
+         if (abs(templ->line-cl.LineNumber())<=3 &&
              strcmp(cl.FileName(), fileinfo.Name())==0) {
 
             // This is an automatically instantiated templated class.
@@ -319,8 +332,7 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
          } else {
 
             // This is a specialized templated class
-            // Modified by Mathieu to avoid compiler warning
-            return 1;
+            return 0;
          }
       } else {
          // It might be a specialization without us seeing the template definition
@@ -1381,6 +1393,13 @@ void WriteStreamer(G__ClassInfo &cl)
    ubc = 1;   // now we'll always generate byte count streamers
 
    // loop twice: first time write reading code, second time writing code
+   string classname = cl.Fullname();
+   if (strstr(cl.Fullname(),"::")) {
+      // there is a namespace involved, trigger MS VC bug workaround
+      fprintf(fp,"   //This works around a msvc bug and should be harmless on other plaforms\n");
+      fprintf(fp,"   typedef %s thisClass;\n",cl.Fullname());
+      classname = "thisClass";
+   }
    for (int i = 0; i < 2; i++) {
 
       int decli = 0;
@@ -1393,12 +1412,12 @@ void WriteStreamer(G__ClassInfo &cl)
          else
             fprintf(fp, "      Version_t R__v = R__b.ReadVersion(); if (R__v) { }\n");
       } else {
-         if (ubc) fprintf(fp, "      R__b.CheckByteCount(R__s, R__c, %s::IsA());\n", cl.Fullname());
+         if (ubc) fprintf(fp, "      R__b.CheckByteCount(R__s, R__c, %s::IsA());\n",classname.c_str());
          fprintf(fp, "   } else {\n");
          if (ubc)
-            fprintf(fp, "      R__c = R__b.WriteVersion(%s::IsA(), kTRUE);\n",cl.Fullname());
+            fprintf(fp, "      R__c = R__b.WriteVersion(%s::IsA(), kTRUE);\n",classname.c_str());
          else
-            fprintf(fp, "      R__b.WriteVersion(%s::IsA());\n",cl.Fullname());
+            fprintf(fp, "      R__b.WriteVersion(%s::IsA());\n",classname.c_str());
       }
 
       // Stream base class(es) when they have the Streamer() method
@@ -1972,12 +1991,23 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside) {
    // Write ShowMembers for base class(es) when they have the ShowMember() method
    G__BaseClassInfo b(cl);
 
+   int base = 0;
    while (b.Next()) {
+      base++;
       if (b.HasMethod("ShowMembers")) {
          if (outside) {
             fprintf(fp, "      sobj->%s::ShowMembers(R__insp, R__parent);\n", b.Fullname());
          } else {
-            fprintf(fp, "      %s::ShowMembers(R__insp, R__parent);\n", b.Fullname());
+            string baseclass = b.Fullname();
+            if (strstr(b.Fullname(),"::")) {
+               // there is a namespace involved, trigger MS VC bug workaround
+               fprintf(fp,"   //This works around a msvc bug and should be harmless on other plaforms\n");
+               fprintf(fp,"   typedef %s baseClass%d;\n",b.Fullname(),base);
+               baseclass = "baseClass";
+               fprintf(fp, "      %s%d::ShowMembers(R__insp, R__parent);\n", baseclass.c_str(), base);
+            } else {
+               fprintf(fp, "      %s::ShowMembers(R__insp, R__parent);\n", baseclass.c_str());
+            }
          }
       } else {
          if (outside) {
@@ -2103,34 +2133,68 @@ int WriteNamespaceHeader(G__ClassInfo &cl) {
   return closing_brackets;
 }
 
-const char *GetFullTemplateName(G__ClassInfo &cl)
-{
-  // Function added by Mathieu de Naurois
-  // for a template tmp<n1::A,n2::B,...>
-  // construct the string ::tmp< ::n1::A, ::n2::B,...>
-  // needed by the Shadow
+//______________________________________________________________________________
+void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
 
-   static string shadowName;
-   char arg[2048];
-   shadowName = "::";
-   strcpy(arg, cl.Fullname());
-   // arg is now a comma separated list of type names
-   int len = strlen(arg);
-   int need = 0;
+   string subQualifiedName = "";
+
+   fullyQualifiedName = "::";
+   
+   string name = cl.Fullname();
+   G__ClassInfo arg;
+   
+   int len = name.length();
+   int nesting = 0;
+   const char *current, *next;
+   current = next = 0;
+   current = &(name[0]);
+   next = &(name[0]);
    for (int c = 0; c<len; c++) {
-      switch (arg[c]) {
-      case '<':case '>':case ',':
-        need = 1;
-        shadowName += arg[c];
-        break;
-      default:
-        if(need) shadowName += " ::";
-        shadowName +=arg[c];
-        need = 0;
-        break;
+      switch (name[c]) {
+      case '<': if (nesting==0) {
+                   name[c]=0;
+                   current = next;
+                   next = &(name[c+1]);
+                   fullyQualifiedName += current;
+                   fullyQualifiedName += "< ";
+                   //fprintf(stderr,"will copy1: %s ...acu: %s\n",current,fullyQualifiedName.c_str());
+                }
+                nesting++; break;
+      case '>': nesting--; 
+                if (nesting==0) {
+                   name[c]=0;
+                   current = next;
+                   next = &(name[c+1]);
+                   arg.Init(current);
+                   if (arg.IsValid()) {
+					       GetFullyQualifiedName(arg,subQualifiedName);
+                      fullyQualifiedName += subQualifiedName;
+                   } else {
+                      fullyQualifiedName += current;
+                   }
+                   //fprintf(stderr,"will copy2: %s ...acu: %s\n",current,fullyQualifiedName.c_str());
+                   fullyQualifiedName += " >";
+                }
+                break;
+      case ',': if (nesting==0) {
+                   name[c]=0;
+                   current = next;
+                   next = &(name[c+1]);
+                   arg.Init(current);
+                   if (arg.IsValid()) {
+					       GetFullyQualifiedName(arg,subQualifiedName);
+                      fullyQualifiedName += subQualifiedName;
+                   } else {
+                      fullyQualifiedName += current;
+                   }
+                   fullyQualifiedName += ", ";
+                };
+                break;
       }
    }
-   return shadowName.c_str();
+   if (current == &(name[0]) ) {
+      fullyQualifiedName += current;
+   }
 }
 
 
@@ -2149,9 +2213,11 @@ void WriteShadowClass(G__ClassInfo &cl) {
   int closing_brackets = WriteNamespaceHeader(cl);
   if (closing_brackets) fprintf(fp,"\n");
   if (cl.HasMethod("Class_Name")) {
-
-//VP     fprintf(fp,"      typedef %s %s;\n",GetFullTemplateName(cl),classname.c_str());
-     fprintf(fp,"      typedef %s %s;\n",cl.Fullname(),classname.c_str());
+     
+     string fullname;
+	  GetFullyQualifiedName(cl,fullname);
+     fprintf(fp,"      typedef %s %s;\n",fullname.c_str(),classname.c_str());
+     //fprintf(fp,"      typedef %s %s;\n",cl.Fullname(),classname.c_str());
      // instead of fprintf(fp,"      using ::%s;\n",cl.Fullname());
   } else {
 
