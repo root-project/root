@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.115 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.116 2003/04/18 19:27:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -88,7 +88,25 @@ void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, c
          char *dot = strchr(rname,'.');
          if (!dot) return;
          *dot = 0;
-         if (!fRealDataClass->GetDataMember(rname)) return;
+         if (!fRealDataClass->GetDataMember(rname)) {
+            //could be a data member in a base class like in this example
+            // class Event : public Data {
+            //   class Data : public TObject {
+            //     EventHeader fEvtHdr;
+            //     class EventHeader {
+            //       Int_t     fEvtNum;
+            //       Int_t     fRun;
+            //       Int_t     fDate;
+            //       EventVertex fVertex;
+            //       class EventVertex {
+            //         EventTime  fTime;
+            //         class EventTime {
+            //           Int_t     fSec;
+            //           Int_t     fNanoSec;
+            if (!fRealDataClass->GetBaseDataMember(rname)) {
+               return;
+            }
+         }
          *dot = '.';
       }
    }
