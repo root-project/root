@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.11 2001/01/16 16:20:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.12 2001/01/16 16:45:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -185,20 +185,40 @@ TStreamerBase::~TStreamerBase()
 //______________________________________________________________________________
 void TStreamerBase::Init(TObject *)
 {
+   fBaseClass = gROOT->GetClass(GetName());
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
    fMethod = new TMethodCall();
-   fMethod->InitWithPrototype(gROOT->GetClass(GetName()),"StreamerNVirtual","TBuffer &");
+   fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
 }
 
 //______________________________________________________________________________
 const char *TStreamerBase::GetInclude() const
 {
-   TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) sprintf(includeName,"\"%s\"",cl->GetDeclFileName());
-   else                          sprintf(includeName,"\"%s.h\"",GetName());
+   if (fBaseClass->GetClassInfo()) sprintf(includeName,"\"%s\"",fBaseClass->GetDeclFileName());
+   else                            sprintf(includeName,"\"%s.h\"",GetName());
    return includeName;
 }
 
+//______________________________________________________________________________
+Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
+{
+   ULong_t args[1];
+   args[0] = (ULong_t)&b;
+   fMethod->SetParamPtrs(args);
+   fMethod->Execute((void*)(pointer+fOffset));
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
+{
+   ULong_t args[1];
+   args[0] = (ULong_t)&b;
+   fMethod->SetParamPtrs(args);
+   fMethod->Execute((void*)(pointer+fOffset));
+   fBaseClass->GetStreamerInfo()->ForceWriteInfo();
+   return 0;
+}
 
 //______________________________________________________________________________
 
