@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.4 2003/09/05 10:40:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.5 2003/09/11 10:39:01 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -972,9 +972,9 @@ Double_t TNeuron::GetDeDw()
       return fDeDw;
    fNewDeDw = false;
    fDeDw = GetError();
-   Int_t nentries = fpre.GetEntriesFast();
+   Int_t nentries = fpost.GetEntriesFast();
    for (Int_t i=0;i<nentries;i++) {
-      TSynapse *postSynapse = (TSynapse*)fpre.UncheckedAt(i);
+      TSynapse *postSynapse = (TSynapse*)fpost.UncheckedAt(i);
       fDeDw +=
           (postSynapse->GetWeight() * postSynapse->GetPost()->GetDeDw());
    }
