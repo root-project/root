@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.21 2001/04/20 21:21:38 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.1.1.17 2001/04/25 13:21:09 fisyak Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -37,7 +37,7 @@ class TStreamerBasicType;
 class TStreamerInfo : public TNamed {
 
 private:
-      
+
    UInt_t            fCheckSum;       //checksum of original class
    Int_t             fClassVersion;   //Class version identifier
    Int_t             fNumber;         //!Unique identifier
@@ -52,12 +52,12 @@ private:
    Bool_t            fOptimized;      //! true if has been optimized
    TClass           *fClass;          //!pointer to class
    TObjArray        *fElements;       //Array of TStreamerElements
-   
+
    static  Int_t     fgCount;         //Number of TStreamerInfo instances
    static  Bool_t    fgOptimize;      //True if optimization on
-   
+
    void              BuildUserInfo(const char *info);
-           
+
 public:
 
    //status bits
@@ -68,7 +68,7 @@ public:
       kUChar  = 11,  kUShort  = 12,  kUInt    = 13,  kULong   = 14,
       kObject = 61,  kAny     = 62,  kObjectp = 63,  kObjectP = 64,
       kTString= 65,  kTObject = 66,  kTNamed  = 67,  kMissing = 99999,
-      kSkip   =100,  kSkipL   =120,  kSkipP   =140,  
+      kSkip   =100,  kSkipL   =120,  kSkipP   =140,
       kConv   =200,  kConvL   =220,  kConvP   =240,  kStreamer=500,  kStreamLoop=501
    };
 
@@ -78,6 +78,7 @@ public:
    void                Build();
    void                BuildCheck();
    void                BuildOld();
+   void                BuildFake();
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo();
@@ -106,16 +107,17 @@ public:
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
    void                SetClass(TClass *cl) {fClass = cl;}
+   void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile();
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first);
-   
+
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl, Int_t version);
    static Bool_t       CanOptimize();
    static void         Optimize(Bool_t opt=kTRUE);
-    
+
    ClassDef(TStreamerInfo,2)  //Streamer information for one class version
 };
 
-   
+
 #endif
