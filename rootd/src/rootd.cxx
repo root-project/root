@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.71 2003/11/20 23:00:46 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.72 2003/12/05 01:43:24 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -599,9 +599,9 @@ int RootdCheckTab(int mode)
    // check if file can safely be opened in write mode, i.e. see if file
    // is not already opened in either read or write mode. If mode=0 then
    // check if file can safely be opened in read mode, i.e. see if file
-   // is not already opened in write mode. Returns 1 if file can be
-   // opened safely, otherwise 0. If mode is -1 check write mode like 1
-   // but do not update rootdtab file.
+   // is not already opened in write mode. If mode is -1 check write mode
+   // like 1 but do not update rootdtab file. Returns 1 if file can be
+   // opened safely, otherwise 0.
    //
    // The format of the file is:
    // filename inode mode username pid
