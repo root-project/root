@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.168 2004/09/10 16:44:04 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.169 2004/09/10 19:36:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -667,6 +667,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
 //  		   entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
+//
+//  Length$(formula): return the total number of element of the formula given as a 
+//                    parameter.
 //
 //  Alt$(primary,alternate) : return the value of "primary" if it is available
 //                 for the current iteration otherwise return the value of "alternate".
@@ -2668,7 +2671,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
          for (ui=0;ui<ncols;++ui) {
             TString numbFormat = Form("* %%%d.%ds ",colSizes[ui],colSizes[ui]);
             if (var[ui]->GetNdim()) onerow += Form(numbFormat.Data(),var[ui]->PrintValue(0,inst,colFormats[ui].Data()));
-            else onerow += Form("* %*c ",colSizes[ui],' ');
+            else onerow += Form("* %d % 9c ",colSizes[ui],' ');
          }
          fSelectedRows++;
          if (fScanRedirect)
@@ -2700,8 +2703,11 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
       out<<onerow.Data()<<"*"<<endl;
    else
       printf("%s*\n",onerow.Data());
-   if (select) Printf("==> %lld selected %s", fSelectedRows,
-                      fSelectedRows == 1 ? "entry" : "entries");
+   if (select) {
+      cout << "==> " << fSelectedRows << " selected ";
+      if (fSelectedRows == 1) cout << "entry\n";
+      else cout << "entries\n";
+   }
    if (fScanRedirect) printf("File <%s> created\n", fname);
 
 //*-*- delete temporary objects
