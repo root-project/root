@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.163 2004/02/16 08:47:11 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.164 2004/02/16 15:53:02 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -127,7 +127,10 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t yxaxis, dyaxis,xyaxis, dxaxis;
    Bool_t dsame;
    TString doption = gPad->GetPadPointer()->GetDrawOption();
-
+   Double_t factor = 1;
+   if (fH->GetNormFactor() != 0) {
+	   factor = fH->GetNormFactor()/fH->GetSumOfWeights();
+   }
 //     return if point is not in the histogram area
 
 //     If a 3-D view exists, check distance to axis
@@ -181,7 +184,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    if (gPad->IsVertical()) {
       Int_t bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
       Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoX(x1));
-      Double_t binval = fH->GetBinContent(bin);
+      Double_t binval = factor*fH->GetBinContent(bin);
       Int_t pybin    = gPad->YtoAbsPixel(gPad->YtoPad(binval));
       // special case if more than one bin for the pixel
       if (binsup-bin>1) {
@@ -189,7 +192,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          binvalmin=binval;
          binvalmax=binval;
          for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
-            Double_t binvaltmp = fH->GetBinContent(ibin);
+            Double_t binvaltmp = factor*fH->GetBinContent(ibin);
             if (binvalmin>binvaltmp) binvalmin=binvaltmp;
             if (binvalmax<binvaltmp) binvalmax=binvaltmp;
          }
@@ -203,7 +206,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       Double_t y1 = gPad->AbsPixeltoY(py+1);
       Int_t bin      = fXaxis->FindFixBin(gPad->PadtoY(y));
       Int_t binsup   = fXaxis->FindFixBin(gPad->PadtoY(y1));
-      Double_t binval = fH->GetBinContent(bin);
+      Double_t binval = factor*fH->GetBinContent(bin);
       Int_t pxbin    = gPad->XtoAbsPixel(gPad->XtoPad(binval));
       // special case if more than one bin for the pixel
       if (binsup-bin>1) {
@@ -211,7 +214,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          binvalmin=binval;
          binvalmax=binval;
          for (Int_t ibin=bin+1; ibin<binsup; ibin++) {
-            Double_t binvaltmp = fH->GetBinContent(ibin);
+            Double_t binvaltmp = factor*fH->GetBinContent(ibin);
             if (binvalmin>binvaltmp) binvalmin=binvaltmp;
             if (binvalmax<binvaltmp) binvalmax=binvaltmp;
          }
@@ -291,6 +294,11 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
+   
+   Double_t factor = 1;
+   if (fH->GetNormFactor() != 0) {
+	   factor = fH->GetNormFactor()/fH->GetSumOfWeights();
+   }
 
    switch (event) {
 
@@ -340,7 +348,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
 
       if (gROOT->GetEditHistograms()) {
-         binval = gPad->PadtoY(gPad->AbsPixeltoY(py2));
+         binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
          fH->SetBinContent(bin,binval);
          PaintInit();   // recalculate Hparam structure and recalculate range
       }
