@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.23 2002/06/28 08:40:33 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.24 2002/07/08 20:49:22 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2184,7 +2184,6 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
    Bool_t hide;
    Bool_t mmf = 0;
    static Bool_t pre_is_open = kFALSE;
-   Bool_t output_pre_tag = kFALSE;
 
    Int_t ichar=0;
 
