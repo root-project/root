@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id$
+// @(#)root/base:$Name:  $:$Id: TParameter.h,v 1.1 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn   21/06/2004
 
 /*************************************************************************
@@ -44,10 +44,11 @@ public:
              : fName(name), fVal(val) { }
    ~TParameter() { }
 
-   const char        *GetName() const { return fName; }
-   const AParamType   GetVal() const { return fVal; }
+   const char       *GetName() const { return fName; }
+   const AParamType &GetVal() const { return fVal; }
+   void              SetVal(const AParamType &val) { fVal = val; }
 
-   ClassDef(TParameter,1)  //Basic ROOT object
+   ClassDef(TParameter,1)  //Named templated parameter type
 };
 
 #endif

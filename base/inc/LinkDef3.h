@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.16 2004/06/25 17:27:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.17 2004/07/07 23:25:33 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -223,5 +223,6 @@
 #pragma extra_include "Rtypes.h";
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Long_t>+;
+#pragma link C++ class TParameter<Long64_t>+;
 
 #endif
