@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.8 2001/12/02 15:11:32 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.9 2001/12/03 10:29:13 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -12,12 +12,10 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // TProcessID
-// 
+//
 // A TProcessID identifies a ROOT job in a unique way in time and space.
-// The TProcessID title is made of :
-//    - The process pid
-//    - The system hostname
-//    - The system time in clock units
+// The TProcessID title consists of a TUUID object which provides a globally
+// unique identifier (for more see TUUID.h).
 //
 // A TProcessID is automatically created by the TROOT constructor.
 // When a TFile contains referenced objects (see TRef), the TProcessID
@@ -26,7 +24,7 @@
 // a TProcessID is written for each session.
 // These objects are used by the class TRef to uniquely identified
 // any TObject pointed by a TRef.
-// 
+//
 // When a referenced object is read from a file (its bit kIsReferenced is set),
 // this object is entered into the objects table of the corresponding TProcessID.
 // Each TFile has a list of TProcessIDs (see TFile::fProcessIDs) also
@@ -40,7 +38,7 @@
 // In the same way, when a TRef::GetObject is called, GetObject uses
 // its own fUniqueID to find the pointer to the referenced object.
 // See TProcessID::GetObjectWithID and PutObjectWithID.
-// 
+//
 // When a referenced object is deleted, its slot in fObjects is set to null.
 //
 //////////////////////////////////////////////////////////////////////////
@@ -83,7 +81,7 @@ TProcessID::TProcessID(const TProcessID &ref)
 TProcessID *TProcessID::AddProcessID()
 {
 // static function to add a new TProcessID to the list of PIDs
-   
+
    TProcessID *pid = new TProcessID();
 
    if (!fgPIDs) {
@@ -93,7 +91,7 @@ TProcessID *TProcessID::AddProcessID()
    }
    UShort_t apid = fgPIDs->GetEntriesFast();
    pid->IncrementCount();
-   
+
    fgPIDs->Add(pid);
    char name[20];
    sprintf(name,"ProcessID%d",apid);
@@ -125,18 +123,18 @@ UInt_t TProcessID::AssignID(TObject *obj)
 void TProcessID::Cleanup()
 {
    // static function (called by TROOT destructor) to delete all TProcessIDs
-   
+
    fgPIDs->Delete();
    delete fgPIDs;
 }
 
 //______________________________________________________________________________
-Int_t TProcessID::DecrementCount() 
+Int_t TProcessID::DecrementCount()
 {
 
    // the reference fCount is used to delete the TProcessID
    // in the TFile destructor when fCount = 0
-   
+
    fCount--;
    if (fCount < 0) fCount = 0;
    return fCount;
@@ -146,30 +144,30 @@ Int_t TProcessID::DecrementCount()
 TProcessID *TProcessID::GetProcessID(UShort_t pid)
 {
 // static function returning a pointer to TProcessID number pid in fgPIDs
-   
+
    return (TProcessID*)fgPIDs->At(pid);
 }
 
 //______________________________________________________________________________
-Int_t TProcessID::IncrementCount() 
+Int_t TProcessID::IncrementCount()
 {
 
    if (!fObjects) fObjects = new TObjArray(100);
    fCount++;
    return fCount;
 }
-   
+
 //______________________________________________________________________________
 UInt_t TProcessID::GetObjectCount()
 {
-// Return the current referenced object count 
+// Return the current referenced object count
 // fgNumber is incremented everytime a new object is referenced
-   
+
    return fgNumber;
 }
 
 //______________________________________________________________________________
-TObject *TProcessID::GetObjectWithID(UInt_t uid) 
+TObject *TProcessID::GetObjectWithID(UInt_t uid)
 {
    //returns the TObject with unique identifier uid in the table of objects
    //if (!fObjects) fObjects = new TObjArray(100);
@@ -178,7 +176,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uid)
 }
 
 //______________________________________________________________________________
-void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid) 
+void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {
 
    //stores the object at the uid th slot in the table of objects
@@ -196,13 +194,13 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
 
    //The TProcessID with number pidf is read from file.
    //If the object is not already entered in the gROOT list, it is added.
-   
+
    if (!file) return 0;
    TObjArray *pids = file->GetListOfProcessIDs();
    TProcessID *pid = 0;
    if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
    if (pid) return pid;
-   
+
    //check if fProcessIDs[uid] is set in file
    //if not set, read the process uid from file
    char pidname[32];
@@ -236,14 +234,14 @@ void TProcessID::RecursiveRemove(TObject *obj)
    UInt_t uid = obj->GetUniqueID();
    if (obj == GetObjectWithID(uid)) fObjects->RemoveAt(uid);
 }
-  
-   
+
+
 //______________________________________________________________________________
 void TProcessID::SetObjectCount(UInt_t number)
 {
-// static function to set the current referenced object count 
+// static function to set the current referenced object count
 // fgNumber is incremented everytime a new object is referenced
-   
+
    fgNumber = number;
 }
 
@@ -253,7 +251,7 @@ UShort_t TProcessID::WriteProcessID(TProcessID *pid, TFile *file)
 // static function
 // Check if the ProcessID pid is already in the file.
 // if not, add it and return the index  number in the local file list
-      
+
    if (!file) return 0;
    TObjArray *pids = file->GetListOfProcessIDs();
    Int_t pidf = 0;
