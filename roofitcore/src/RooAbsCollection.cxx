@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.cc,v 1.7 2001/10/08 05:20:11 verkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.8 2001/10/09 00:44:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,6 +26,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooStringVar.hh"
 #include "RooFitCore/RooTrace.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooAbsCollection)
   ;
@@ -72,10 +73,60 @@ RooAbsCollection::~RooAbsCollection()
 
   // Delete all variables in our list if we own them
   if(_ownCont){ 
-    _list.Delete();
+    safeDeleteList() ;
+    //_list.Delete();
   }
   RooTrace::destroy(this) ;
 }
+
+
+
+
+void RooAbsCollection::safeDeleteList() 
+{
+  // Examine client server dependencies in list and
+  // delete contents in safe order: any client
+  // is deleted before a server is deleted
+
+  // Handle trivial case here
+  if (getSize()==1) {
+    _list.Delete() ;
+    return ;
+  }
+  
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  Bool_t working = kTRUE ;
+
+  while(working) {
+    working = kFALSE ;
+    iter->Reset() ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+
+      // Check if arg depends on remainder of list      
+      if (!arg->dependsOn(*this,arg)) {
+	// Otherwise leave it our and delete it
+	remove(*arg) ;
+	working = kTRUE ;
+      }
+    }
+    if (_list.GetSize()<2) break ;
+  }
+  delete iter ;
+
+  // Check if there are any remaining elements
+  if (getSize()>1) {    
+    cout << "RooAbsCollection::safeDeleteList(" << GetName() 
+	 << ") WARNING: unable to delete following elements in client-server order " ;
+    Print("1") ;
+  }
+
+  // Built-in delete remaining elements
+  _list.Delete() ;
+}
+
+
+
 
 RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 {
@@ -322,19 +373,25 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t silent, Bool_t matc
   // removed from a copied list and will be deleted at the same time.
 
   // is var already in this list?
-  const char *name= var.GetName();
-  RooAbsArg *found= find(name);
-  if(!matchByNameOnly && found != &var) {    
-    if (!silent) cout << "RooAbsCollection: variable \"" << name << "\" is not in the list"
-		      << " and cannot be removed" << endl;
-    return kFALSE;
-  } else if (!found) {
-    return kFALSE ;
-  }
-  _list.Remove(found);
-  if(_ownCont) delete found;
+  TString name(var.GetName()) ;
+  Bool_t anyFound(kFALSE) ;
 
-  return kTRUE;
+  TIterator* iter = createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if ((&var)==arg) {
+      _list.Remove(arg) ;
+      anyFound=kTRUE ;
+    } else if (matchByNameOnly) {
+      if (!name.CompareTo(arg->GetName())) {
+	_list.Remove(arg) ;
+	anyFound=kTRUE ;
+      }
+    }
+  }
+  delete iter ;
+  
+  return anyFound ;
 }
 
 Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly) {
@@ -357,7 +414,7 @@ void RooAbsCollection::removeAll() {
   // just after calling the RooAbsCollection(const char*) constructor.
 
   if(_ownCont) {
-    _list.Delete();
+    safeDeleteList() ;
     _ownCont= kFALSE;
   }
   else {

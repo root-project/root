@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.4 2001/10/03 21:53:59 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.5 2001/10/09 00:44:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -88,6 +88,8 @@ protected:
 
   Bool_t _ownCont;  // Flag to identify a list that owns its contents.
   TString _name;    // Our name.
+
+  void safeDeleteList() ;
 
   // Support for snapshot method 
   void addServerClonesToList(const RooAbsArg& var) ;

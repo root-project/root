@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.3 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.4 2001/10/08 21:22:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -36,6 +36,7 @@ public:
   }
 
   // Accessors
+  inline Int_t status() const { return _status ; }
   inline Double_t edm() const { return _edm ; }
   inline Double_t minNll() const { return _minNLL ; }
   inline const RooArgList& constPars() const { return *_constPars ; } 
@@ -56,8 +57,10 @@ protected:
   void setFinalParList(const RooArgList& list) ;
   inline void setMinNLL(Double_t val) { _minNLL = val ; }
   inline void setEDM(Double_t val) { _edm = val ; }
+  inline void setStatus(Int_t val) { _status = val ; }
   void fillCorrMatrix() ;
 
+  Int_t    _status ;          // MINUIT status code
   Double_t _minNLL ;          // NLL at minimum
   Double_t _edm ;             // Estimated distance to minimum
   RooArgList* _constPars ;    // List of constant parameters

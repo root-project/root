@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.49 2001/10/08 05:20:12 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.50 2001/10/09 01:41:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -522,15 +522,12 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   // consistently with the way they would be bound with a non-trivial projection.
   RooArgSet empty;
   if(0 == projectedVars) projectedVars= &empty;
+
   TString name(GetName()),title(GetTitle());
   name.Append("Projected");
   title.Prepend("Projection of ");
 
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet);
-//   projected->getVal() ;
-//   clone->getVal(&normSet) ;
-//   clone->Print("v") ;
-//   projected->Print("v") ;
   if(0 == projected || !projected->isValid()) {
     cout << ClassName() << "::" << GetName() << ":createProjection: cannot integrate out ";
     projectedVars->printToStream(cout,OneLine);

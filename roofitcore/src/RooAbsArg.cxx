@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.54 2001/10/08 05:20:10 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.55 2001/10/08 21:22:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -113,7 +113,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
 
   RooTrace::create(this) ;
 }
-
 
 
 RooAbsArg::~RooAbsArg() 
@@ -447,7 +446,7 @@ Bool_t RooAbsArg::checkDependents(const RooArgSet* nset) const
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList) const
+Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg) const
 {
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
@@ -456,7 +455,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList) const
   TIterator* sIter = serverList.createIterator();
   RooAbsArg* server ;
   while (!result && (server=(RooAbsArg*)sIter->Next())) {
-    if (dependsOn(*server)) {
+    if (dependsOn(*server,ignoreArg)) {
       result= kTRUE;
     }
   }
@@ -465,11 +464,13 @@ Bool_t RooAbsArg::dependsOn(const RooAbsCollection& serverList) const
 }
 
 
-Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg) const
+Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg) const
 {
   // Test whether we depend on (ie, are served by) the specified object.
   // Note that RooAbsArg objects are considered equivalent if they have
   // the same name.
+
+  if (this==ignoreArg) return kFALSE ;
 
   // First check if testArg is self 
   if (!TString(testArg.GetName()).CompareTo(GetName())) return kTRUE ;

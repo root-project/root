@@ -1,22 +1,12 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.10 2001/10/04 01:44:33 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.11 2001/10/08 05:20:23 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
- *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  * History:
- *   01-Nov-1999 DK Created initial version
- *   19-Apr-2000 DK Bug fix to read() method which caused an error on EOF
- *   21-Jun-2000 DK Change allocation unit in loadValues() from Float_t
- *                  to Double_t (this is still not quite right...)
- *   19-Oct-2000 DK Add constructor and read method for 6 variables.
- *   08-Nov-2000 DK Overhaul of loadValues() to support different leaf types.
- *   29-Nov-2000 WV Add support for reading hex numbers from ascii files
- *   30-Nov-2000 WV Add support for multiple file reading with optional common path
  *   09-Mar-2001 WV Migrate from RooFitTools and adapt to RooFitCore
- *   24-Aug-2001 AB Added TH2F * createHistogram method
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/

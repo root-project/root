@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.28 2001/09/18 18:36:19 david Exp $
+ *    File: $Id: RooFormula.cc,v 1.29 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -190,7 +190,7 @@ Double_t RooFormula::eval(const RooArgSet* nset)
 
   // WVE sanity check should go here
   if (!_isOK) {
-    cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile" << endl ;
+    cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile: " << GetTitle() << endl ;
     return 0. ;
   }
 

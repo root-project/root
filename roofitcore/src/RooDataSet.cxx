@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.50 2001/10/04 01:44:33 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.51 2001/10/08 05:20:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -545,4 +545,30 @@ RooDataSet *RooDataSet::read(const char *fileList, RooArgList &variables,
   cout << "RooDataSet::read: read " << data->GetEntries()
        << " events (ignored " << outOfRange << " out of range events)" << endl;
   return data;
+}
+
+
+
+
+Bool_t RooDataSet::write(const char* filename)
+{
+  // Open file for writing 
+  ofstream ofs(filename) ;
+  if (ofs.fail()) {
+    cout << "RooDataSet::write(" << GetName() << ") cannot create file " << filename << endl ;
+    return kTRUE ;
+  }
+
+  // Write all lines as arglist in compact mode
+  cout << "RooDataSet::write(" << GetName() << ") writing ASCII file " << filename << endl ;
+  Int_t i ;
+  for (i=0 ; i<numEntries() ; i++) {
+    RooArgList list(*get(i),"line") ;
+    list.writeToStream(ofs,kTRUE) ;
+  }
+
+  if (ofs.fail()) {
+    cout << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
+  }
+  return ofs.fail() ;
 }

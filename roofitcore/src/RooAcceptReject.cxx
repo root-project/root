@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.12 2001/10/08 05:20:12 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.13 2001/10/10 00:22:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.12 2001/10/08 05:20:12 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.13 2001/10/10 00:22:23 david Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -197,7 +197,7 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
       _eventsUsed= 0;
       // Calculate how many more events to generate using our best estimate of our efficiency.
       // Always generate at least one more event so we don't get stuck.
-      Int_t extra= 1 + (Int_t)(1.02*(nEvents - generatedEvts)/eff());
+      Int_t extra= 1 + (Int_t)(1.05*(nEvents - generatedEvts)/eff());
       if(_verbose) cout << "generating " << extra << " events into reset cache" << endl;
       Double_t oldMax(_maxFuncVal);
       while(extra--) addEvent(cache,nextCatVar,nextRealVar,funcVal);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.27 2001/09/27 18:22:30 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.28 2001/10/08 05:20:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooNumber.hh"
 
 class RooArgSet ;
+class RooErrorVar ;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -42,6 +43,7 @@ public:
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error; }
   inline void setError(Double_t value) { _error= value; }
+  RooErrorVar* errorVar() const ;
 
   // Set/get finite fit range limits
   void setFitMin(Double_t value) ;
@@ -67,11 +69,13 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   TString* format(Int_t sigDigits, const char *options) ;
+  
 
 protected:
 
   virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
   virtual void copyCache(const RooAbsArg* source) ;
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
   Double_t chopAt(Double_t what, Int_t where) ;
 

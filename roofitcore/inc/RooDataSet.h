@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.32 2001/09/12 01:25:44 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.33 2001/10/03 21:54:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,6 +45,7 @@ public:
   static RooDataSet *read(const char *filename, RooArgList &variables,
 			  const char *opts= "", const char* commonPath="",
 			  const char *indexCatName=0) ;
+  Bool_t write(const char* filename) ;
 
   virtual Double_t weight() const { return 1.0 ; } ; 
 

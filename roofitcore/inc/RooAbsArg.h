@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.51 2001/10/09 01:41:18 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.52 2001/10/09 18:16:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,8 +48,8 @@ public:
 
   // Accessors to client-server relation information 
   Bool_t isDerived() const { return _serverList.First()?kTRUE:kFALSE; }
-  Bool_t dependsOn(const RooAbsCollection& serverList) const ;
-  Bool_t dependsOn(const RooAbsArg& server) const ;
+  Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const ;
+  Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const ;
   Bool_t overlaps(const RooAbsArg& testArg) const ;
   inline TIterator* clientIterator() const { return _clientList.MakeIterator() ; }
   inline TIterator* valueClientIterator() const { return _clientListValue.MakeIterator() ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.45 2001/10/08 05:20:20 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.46 2001/10/09 00:44:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -76,19 +76,23 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //   G) Split numeric list in integration list and summation list   
   //
 
-  // Save private copy of funcNormSet, if supplied
-  _funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
-  
-  // Delete all factorizing terms from funcNormSet
-  if (_funcNormSet) {
-    TIterator* iter = _funcNormSet->createIterator() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      if (!function.dependsOn(*arg)) _funcNormSet->remove(*arg) ;
+  // Save private copy of funcNormSet, if supplied, excluding factorizing terms
+  if (funcNormSet) {
+    _funcNormSet = new RooArgSet ;
+    TIterator* iter = funcNormSet->createIterator() ;
+    RooAbsArg* nArg ;  
+    while (nArg=(RooAbsArg*)iter->Next()) {
+      if (function.dependsOn(*nArg)) {
+	_funcNormSet->addClone(*nArg) ;
+      }
     }
     delete iter ;
+  } else {
+    _funcNormSet = 0 ;
   }
 
+  //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
+  
   // Make internal copy of dependent list
   RooArgSet intDepList(depList) ;
   RooAbsArg *arg ;

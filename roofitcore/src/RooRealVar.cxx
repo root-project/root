@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.27 2001/09/28 21:59:29 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.28 2001/10/08 05:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@
 #include "TTree.h"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooStreamParser.hh"
+#include "RooFitCore/RooErrorVar.hh"
 
 ClassImp(RooRealVar)
 
@@ -87,6 +88,16 @@ void RooRealVar::setVal(Double_t value) {
   _value = clipValue;
 }
 
+RooErrorVar* RooRealVar::errorVar() const 
+{
+  TString name(GetName()), title(GetTitle()) ;
+  name.Append("err") ;
+  title.Append(" Error") ;
+
+  return new RooErrorVar(name,title,*this) ;
+}
+
+
 void RooRealVar::setFitMin(Double_t value) 
 {
   // Set new minimum of fit range 
@@ -147,15 +158,6 @@ void RooRealVar::setFitRange(Double_t min, Double_t max)
   }
 
   setShapeDirty() ;  
-}
-
-
-void RooRealVar::copyCache(const RooAbsArg* source) 
-{
-  // Overloaded from RooAbsRealLValue to skip back-prop
-
-  // Copy cache of another RooAbsArg to our cache
-  RooAbsReal::copyCache(source) ;
 }
 
 
@@ -369,4 +371,47 @@ Double_t RooRealVar::chopAt(Double_t what, Int_t where) {
   Int_t trunc= (Int_t)floor(what/scale + 0.5);
   return (Double_t)trunc*scale;
 }
+
+
+
+void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
+{
+  // Follow usual procedure for value
+  RooAbsReal::attachToTree(t,bufSize) ;
+
+  // Attach/create additional branch for error
+  TString errName(GetName()) ;
+  errName.Append("_err") ;
+  TBranch* branch = t.GetBranch(errName) ;
+  if (branch) {     
+    t.SetBranchAddress(errName,&_error) ;
+  } else {
+    TString format(errName);
+    format.Append("/D");
+    t.Branch(errName, &_error, (const Text_t*)format, bufSize);
+  }
+}
+
+
+void RooRealVar::copyCache(const RooAbsArg* source) 
+{
+  // Copy the cached value of another RooAbsArg to our cache
+
+  // Warning: This function copies the cached values of source,
+  //          it is the callers responsibility to make sure the cache is clean
+
+
+
+  // Follow usual procedure for value
+  RooAbsReal::copyCache(source) ;
+
+  // Copy error too, if source has one
+  RooRealVar* other = dynamic_cast<RooRealVar*>(const_cast<RooAbsArg*>(source)) ;
+  if (other) {
+    // Copy additional error value
+    _error = other->_error ;
+  }
+}
+
+
 

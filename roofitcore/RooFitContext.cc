@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.28 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.29 2001/10/08 05:20:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -608,6 +608,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
     Double_t edm, errdef, minVal;
     Int_t nvpar, nparx;
     _theFitter->GetStats(minVal, edm, errdef, nvpar, nparx);
+    fitRes->setStatus(status) ;
     fitRes->setMinNLL(minVal) ;
     fitRes->setEDM(edm) ;    
     fitRes->setFinalParList(*_floatParamList) ;
@@ -650,7 +651,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
     _dataClone->get(index);
 
     Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
-    if(term == 0 && _dataClone->weight()) return 0;
+    //if(term == 0 && _dataClone->weight()) return 0;
     result-= term;
   }
 
