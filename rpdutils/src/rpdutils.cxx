@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.37 2004/04/27 12:06:39 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.38 2004/04/29 10:08:32 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2206,9 +2206,11 @@ void RpdKrb5Auth(const char *sstr)
             RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
             return;
          }
-         char ccname[265];
-         sprintf(ccname,"%s",ccacheName);
-         setenv("KRB5CCNAME",ccname,1);
+         {
+            char *ccname = new char[strlen("KRB5CCNAME")+strlen("ccacheName")+2];
+            sprintf(ccname,"%s=%s","KRB5CCNAME",ccacheName);
+            putenv(ccname);
+         }
 
          if (gDebug>5)
             ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
