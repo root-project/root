@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.7 2003/10/27 16:51:54 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.8 2003/12/16 14:09:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -888,7 +888,6 @@ Double_t TNeuron::GetValue() const
       }
       return (((TNeuron*)this)->fValue = value);
    }
-   return 0;
 }
 
 //______________________________________________________________________________
