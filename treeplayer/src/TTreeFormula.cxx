@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.70 2001/10/19 16:10:43 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.71 2001/10/25 06:20:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2029,6 +2029,16 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //*-*- May be a graphical cut ?
    TCutG *gcut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(name.Data());
    if (gcut) {
+      if (gcut->GetObjectX()) {
+         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class())) {
+            delete gcut->GetObjectX(); gcut->SetObjectX(0);
+         }
+      }
+      if (gcut->GetObjectY()) {
+         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class())) {
+            delete gcut->GetObjectY(); gcut->SetObjectY(0);
+         }
+      }
       if (!gcut->GetObjectX()) {
          TTreeFormula *fx = new TTreeFormula("f_x",gcut->GetVarX(),fTree);
          gcut->SetObjectX(fx);
