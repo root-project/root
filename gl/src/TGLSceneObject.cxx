@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.19 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.20 2004/11/26 11:08:05 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TGLSelection::DrawBox()const
    glEnd();
 
    glEnable(GL_DEPTH_TEST);
-   glEnable(GL_LIGHTING);   
+   glEnable(GL_LIGHTING);
 }
 
 //______________________________________________________________________________
@@ -155,7 +155,7 @@ void TGLSelection::Stretch(Double_t xs, Double_t ys, Double_t zs)
 //______________________________________________________________________________
 TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
                                const Float_t *color, UInt_t glName, TObject *obj)
-                   :fVertices(start, end), fColor(), 
+                   :fVertices(start, end), fColor(),
                     fGLName(glName), fNextT(0), fRealObject(obj)
 {
    if (color) {
@@ -214,11 +214,11 @@ void TGLSceneObject::SetBox()
    PDD_t yb(fVertices[1], fVertices[1]);
    PDD_t zb(fVertices[2], fVertices[2]);
    for (Int_t nv = 3, e = fVertices.size(); nv < e; nv += 3) {
-      xb.first = TMath::Min(xb.first, fVertices[nv]); 
+      xb.first = TMath::Min(xb.first, fVertices[nv]);
       xb.second = TMath::Max(xb.second, fVertices[nv]);
       yb.first = TMath::Min(yb.first, fVertices[nv + 1]);
       yb.second = TMath::Max(yb.second, fVertices[nv + 1]);
-      zb.first = TMath::Min(zb.first, fVertices[nv + 2]); 
+      zb.first = TMath::Min(zb.first, fVertices[nv + 2]);
       zb.second = TMath::Max(zb.second, fVertices[nv + 2]);
    }
    fSelectionBox.SetBox(xb, yb, zb);
@@ -243,11 +243,11 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
    for (Int_t numPol = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
       Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
-      Int_t s1 = pols[segmentInd]; 
+      Int_t s1 = pols[segmentInd];
       segmentInd += shiftInd;
-      Int_t s2 = pols[segmentInd]; 
+      Int_t s2 = pols[segmentInd];
       segmentInd += shiftInd;
-      Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2], 
+      Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2],
                          segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
       Int_t numPnts[3] = {0};
 
@@ -320,7 +320,7 @@ void TGLFaceSet::GLDraw()const
 
    for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
       Int_t npoints = pols[j++];
-      
+
       if (tessObj && npoints > 4) {
          gluBeginPolygon(tessObj);
          gluNextContour(tessObj, (GLenum)GLU_UNKNOWN);
@@ -424,7 +424,7 @@ void TGLFaceSet::CalculateNormals()
       j += 4;
       Int_t check = CheckPoints(norm, norm), ngood = check;
       if (check == 3) {
-         TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3, 
+         TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3,
                              pnts + norm[2] * 3, &fNormals[i * 3]);
          j = polEnd;
          continue;
@@ -434,7 +434,7 @@ void TGLFaceSet::CalculateNormals()
          if (ngood == 3) {
             ngood = CheckPoints(norm, norm);
             if (ngood == 3) {
-               TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3, 
+               TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3,
                                    pnts + norm[2] * 3, &fNormals[i * 3]);
                j = polEnd;
                break;
@@ -610,7 +610,7 @@ void TGLSphere::GLDraw()const
       glDepthMask(GL_FALSE);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
-   
+
    if (GLUquadric *quadObj = GetQuadric()) {
       glLoadName(GetGLName());
       glPushMatrix();
@@ -695,10 +695,12 @@ void TGLTube::GLDraw()const
 
       gluCylinder(quadObj, fRmax1, fRmax2, 2 * fDz, fNdiv, 1);
       //inner surface
-      gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
-      gluCylinder(quadObj, fRmin1, fRmin2, 2 * fDz, fNdiv, 1);
-      //return orientation back   
-      gluQuadricOrientation(quadObj, (GLenum)GLU_OUTSIDE);
+      if (fRmin1 && fRmin2) {
+         gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
+         gluCylinder(quadObj, fRmin1, fRmin2, 2 * fDz, fNdiv, 1);
+         //return orientation back
+         gluQuadricOrientation(quadObj, (GLenum)GLU_OUTSIDE);
+      }
 
       glPopMatrix();
 
@@ -734,10 +736,10 @@ void TGLTube::Shift(Double_t x, Double_t y, Double_t z)
 
 //______________________________________________________________________________
 TGLSimpleLight::TGLSimpleLight(UInt_t n, UInt_t l, const Float_t *c, const Double_t *pos)
-                   :TGLSceneObject(pos, pos + 3, c, n, 0), 
+                   :TGLSceneObject(pos, pos + 3, c, n, 0),
                     fLightName(l)
 {
-   fColor[16] = -10.f; 
+   fColor[16] = -10.f;
    fColor[0] = c[0];
    fColor[1] = c[1];
    fColor[2] = c[2];
@@ -748,7 +750,7 @@ TGLSimpleLight::TGLSimpleLight(UInt_t n, UInt_t l, const Float_t *c, const Doubl
 void TGLSimpleLight::GLDraw()const
 {
    const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
-   const Float_t lightPos[] = {Float_t(fVertices[0]), Float_t(fVertices[1]), 
+   const Float_t lightPos[] = {Float_t(fVertices[0]), Float_t(fVertices[1]),
                                Float_t(fVertices[2]), 1.f};
    glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
