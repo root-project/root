@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -240,11 +240,12 @@ TGFileItem::TGFileItem(const TGWindow *p,
    fSubnames[4] = 0;
 
    int i;
-   for (i = 0; fSubnames[i] != 0; ++i);
-      fCtw = new int[i];
+   for (i = 0; fSubnames[i] != 0; ++i)
+      ;
+   fCtw = new int[i];
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                             fSubnames[i]->GetLength());
+                                     fSubnames[i]->GetLength());
 #else
    Error("TGFileItem", "not yet implemented for Win32");
 #endif
