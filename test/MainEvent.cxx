@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.24 2002/08/17 21:39:33 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.25 2002/11/13 17:35:50 rdm Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -144,9 +144,8 @@ int main(int argc, char **argv)
    if (arg5 < 100) printev = 1000;
    if (arg5 < 10)  printev = 10000;
 
-   //In this new version of mainEvent, one cannot activate the next statement
-   //because tracks are referenced
-   //Track::Class()->IgnoreTObjectStreamer();
+   //Authorize Trees up to 2 Terabytes (if the system can do it)
+   TTree::SetMaxTreeSize(1000*Long64_t(2000000000));
 
 //         Read case
    if (read) {
