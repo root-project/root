@@ -131,9 +131,12 @@ else
 		else \
 			NOUNGIF="--with-builtin-ungif"; \
 		fi; \
+		if [ "$(FREETYPEDIRI)" != "" ]; then \
+			TTFINCDIR="--with-ttf-includes=-I../../../$(FREETYPEDIRI)"; \
+		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
-		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) \
+		--with-ttf $$TTFINCDIR \
 		--with-afterbase=no \
 		--disable-glx \
 		$$MMX \
