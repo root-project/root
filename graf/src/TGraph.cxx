@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.120 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.121 2004/03/17 07:52:22 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -672,19 +672,37 @@ void TGraph::DrawPanel()
 }
 
 //______________________________________________________________________________
-Double_t TGraph::Eval(Double_t x, TSpline *spline) const
+Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 {
 // Interpolate points in this graph at x using a TSpline
-//  -if spline==0 a TSpline3 object is created using this graph
+//  -if spline==0 and option="" a linear interpolation between the two points
+//   close to x is computed. If x is outside the graph range, a linear
+//   extrapolation is computed.
+//  -if spline==0 and option="S" a TSpline3 object is created using this graph
 //   and the interpolated value from the spline is returned.
 //   the internally created spline is deleted on return.
 //  -if spline is specified, it is used to return the interpolated value.
    
    if (!spline) {
-      TSpline3 *s = new TSpline3("",this);
-      return s->Eval(x);
-      delete s;
+      TString opt = option;
+      opt.ToLower();
+      if (opt.Contains("s")) {
+         // spline interpolation creating a new spline
+         TSpline3 *s = new TSpline3("",this);
+         return s->Eval(x);
+         delete s;
+      }
+      //linear interpolation
+      //find point in graph immediatly below x
+      //In case x is < fX[0] or > fX[fNpoints-1] return the extrapolated point
+      Int_t up, low = TMath::BinarySearch(fNpoints,fX,x);
+      if (low == fNpoints-1) {up=low; low = up+1;}
+      if (low == -1) {low=0; up=1;}
+      if (fX[low] == fX[low+1]) return fY[low];
+      Double_t yn = x*(fY[low]-fY[low+1]) +fX[low]*fY[low+1] - fX[low+1]*fY[low];
+      return yn/(fX[low]-fX[low+1]);
    } else {
+      //spline interpolation using the input spline
       return spline->Eval(x);
    }
 }
