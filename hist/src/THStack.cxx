@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.14 2002/07/15 10:39:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.15 2002/07/15 15:03:38 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
+#include "TList.h"
 #include "Riostream.h"
 
 ClassImp(THStack)
@@ -109,18 +110,19 @@ THStack::THStack(const THStack &hstack)
 }
 
 //______________________________________________________________________________
-void THStack::Add(TH1 *h1)
+void THStack::Add(TH1 *h1, Option_t *option)
 {
    // add a new histogram to the list
    // Only 1-d and 2-d histograms currently supported.
-
+   // A drawing option may be specified
+   
    if (!h1) return;
    if (h1->GetDimension() > 2) {
       Error("Add","THStack supports only 1-d and 2-d histograms");
       return;
    }
-   if (!fHists) fHists = new TObjArray();
-   fHists->Add(h1);
+   if (!fHists) fHists = new TList();
+   fHists->Add(h1,option);
    Modified(); //invalidate stack
 }
 
@@ -139,7 +141,7 @@ void THStack::BuildStack()
 
    if (fStack) return;
    if (!fHists) return;
-   Int_t nhists = fHists->GetEntriesFast();
+   Int_t nhists = fHists->GetSize();
    fStack = new TObjArray(nhists);
    Bool_t add = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
@@ -173,7 +175,7 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
    if (!fHists) return distance;
    TH1 *h = 0;
    const char *doption = GetDrawOption();
-   Int_t nhists = fHists->GetEntriesFast();
+   Int_t nhists = fHists->GetSize();
    for (Int_t i=0;i<nhists;i++) {
       h = (TH1*)fHists->At(i);
       if (fStack && !strstr(doption,"nostack")) h = (TH1*)fStack->At(i);
@@ -238,7 +240,7 @@ Double_t THStack::GetMaximum(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Double_t them=0, themax = -1e300;
-   Int_t nhists = fHists->GetEntriesFast();
+   Int_t nhists = fHists->GetSize();
    TH1 *h;
    if (!opt.Contains("nostack")) {
        BuildStack();
@@ -265,7 +267,7 @@ Double_t THStack::GetMinimum(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Double_t them=0, themin = 1e300;
-   Int_t nhists = fHists->GetEntriesFast();
+   Int_t nhists = fHists->GetSize();
    TH1 *h;
    if (!opt.Contains("nostack")) {
        BuildStack();
@@ -354,7 +356,7 @@ void THStack::Paint(Option_t *option)
    opt.ToLower();
    
    if (opt.Contains("pads")) {
-      Int_t npads = fHists->GetEntries();
+      Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
       //if pad is not already divided into subpads, divide it
       Int_t nps = 0;
@@ -370,12 +372,14 @@ void THStack::Paint(Option_t *option)
          padsav->Divide(nx,nx);
       }
       TH1 *h;
-      TIter next(fHists);
       Int_t i = 0;
-      while ((h=(TH1*)next())) {
+      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      while (lnk) {
          i++;
          padsav->cd(i);
-         h->Draw();
+         h = (TH1*)lnk->GetObject();
+         h->Paint(lnk->GetOption());
+         lnk = (TObjOptLink*)lnk->Next();
       }
       padsav->cd();
       return;
@@ -439,11 +443,21 @@ void THStack::Paint(Option_t *option)
    if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
    if (strstr(loption,"lego")) return;
 
-   Int_t nhists = fHists->GetEntriesFast();
-   strcat(loption,"same");
-   for (Int_t i=0;i<nhists;i++) {
-      if (nostack) fHists->At(i)->Paint(loption);
-      else         fStack->At(nhists-i-1)->Paint(loption);
+   Int_t nhists = fHists->GetSize();
+   if (nostack) {
+      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      for (Int_t i=0;i<nhists;i++) {
+         sprintf(loption,"%ssame%s",opt.Data(),lnk->GetOption());
+         fHists->At(i)->Paint(loption);
+         lnk = (TObjOptLink*)lnk->Next();
+      }
+   } else {
+      TObjOptLink *lnk = (TObjOptLink*)fHists->LastLink();
+      for (Int_t i=0;i<nhists;i++) {
+         sprintf(loption,"%ssame%s",opt.Data(),lnk->GetOption());
+         fStack->At(nhists-i-1)->Paint(loption);
+         lnk = (TObjOptLink*)lnk->Prev();
+      }
    }
 }
 
@@ -473,19 +487,28 @@ void THStack::SavePrimitive(ofstream &out, Option_t *option)
    } else {
        out<<"   THStack *";
    }
-   out<<"hstack = new THStack();"<<endl;
-   out<<"   hstack->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   out<<"   hstack->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<GetName()<<" = new THStack();"<<endl;
+   out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<endl;
+   out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
 
+   if (fMinimum != -1111) {
+      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
+   }
+   if (fMaximum != -1111) {
+      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
+   }
+   
    TH1 *h;
    if (fHists) {
-     TIter   next(fHists);
-     while ((h = (TH1*) next())) {
-       h->SavePrimitive(out,"nodraw");
-       out<<"   hstack->Add("<<h->GetName()<<");"<<endl;
-     }
+      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      while (lnk) {
+         h = (TH1*)lnk->GetObject();
+         h->SavePrimitive(out,"nodraw");
+         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<endl;
+         lnk = (TObjOptLink*)lnk->Next();
+      }
    }
-   out<<"   hstack->Draw("
+   out<<"   "<<GetName()<<"->Draw("
       <<quote<<option<<quote<<");"<<endl;
 }
 

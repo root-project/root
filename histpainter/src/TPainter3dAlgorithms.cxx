@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.5 2002/07/16 20:34:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.6 2002/08/05 09:26:08 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2118,9 +2118,9 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 
     vv[1] = Hparam.zmin;
     vv[2] = gCurrentHist->GetCellContent(ixt, iyt);
-    TObjArray *stack = gCurrentHist->GetPainter()->GetStack();
+    TList *stack = gCurrentHist->GetPainter()->GetStack();
     Int_t nids = 0; //not yet implemented
-    if (stack) nids = stack->GetEntriesFast();
+    if (stack) nids = stack->GetSize();
     if (nids) {
 	for (i = 2; i <= nids + 1; ++i) {
             TH1 *hid = (TH1*)stack->At(i-2);

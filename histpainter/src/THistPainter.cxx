@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.93 2002/08/07 10:59:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.94 2002/08/09 08:29:07 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3469,7 +3469,7 @@ void THistPainter::PaintLego(Option_t *)
    }
    if (Hoption.Lego == 11) {
       Int_t nids = 1;
-      if (fStack) nids = fStack->GetEntriesFast();
+      if (fStack) nids = fStack->GetSize();
       TH1 *hid = fH;
       for (Int_t id=0;id<=nids;id++) {
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);

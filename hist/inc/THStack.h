@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.4 2002/06/21 06:57:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.5 2002/07/15 10:46:08 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -34,7 +34,7 @@ class TBrowser;
 class THStack : public TNamed {
 
 protected:
-    TObjArray  *fHists;      //Pointer to array of TH1
+    TList      *fHists;      //Pointer to array of TH1
     TObjArray  *fStack;      //!Pointer to array of sums of TH1
     TH1        *fHistogram;  //!Pointer to histogram used for drawing axis
     Double_t    fMaximum;    //Maximum value for plotting along y
@@ -48,12 +48,12 @@ public:
         THStack(const char *name, const char *title);
         THStack(const THStack &hstack);
         virtual ~THStack();
-        virtual void     Add(TH1 *h);
+        virtual void     Add(TH1 *h, Option_t *option="");
         virtual void     Browse(TBrowser *b);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *chopt="");
         TH1             *GetHistogram() const;
-        TObjArray       *GetHists()  const { return fHists; }
+        TList           *GetHists()  const { return fHists; }
         TObjArray       *GetStack();
         virtual Double_t GetMaximum(Option_t *option="");
         virtual Double_t GetMinimum(Option_t *option="");

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.6 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.7 2002/07/16 20:30:22 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 
 class TH1;
 class TF1;
-class TObjArray;
+class TList;
 
 
 class TVirtualHistPainter : public TObject {
@@ -43,12 +43,12 @@ public:
    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
    virtual void       FitPanel() = 0;
    virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
-   virtual TObjArray *GetStack() const = 0;
+   virtual TList     *GetStack() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
    virtual void       ProcessMessage(const char *mess, const TObject *obj) = 0;
    virtual void       SetHistogram(TH1 *h) = 0;
-   virtual void       SetStack(TObjArray *stack) = 0;
+   virtual void       SetStack(TList *stack) = 0;
 
    static TVirtualHistPainter *HistPainter(TH1 *obj);
    static void                 SetPainter(const char *painter);

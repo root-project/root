@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.14 2002/07/15 10:48:37 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.15 2002/07/16 20:32:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -50,7 +50,7 @@ protected:
     Int_t                 fNcuts;             //Number of graphical cuts
     Int_t                 fCutsOpt[kMaxCuts]; //sign of each cut
     TCutG                *fCuts[kMaxCuts];    //Pointers to graphical cuts
-    TObjArray            *fStack;             //Pointer to stack of histograms (if any)
+    TList                *fStack;             //Pointer to stack of histograms (if any)
 
 public:
     THistPainter();
@@ -61,7 +61,7 @@ public:
     virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual void       FitPanel();
     virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
-    virtual TObjArray *GetStack() const {return fStack;}
+    virtual TList     *GetStack() const {return fStack;}
     virtual Bool_t     IsInside(Int_t x, Int_t y);
     virtual Bool_t     IsInside(Double_t x, Double_t y);
     virtual Int_t      MakeChopt(Option_t *option);
@@ -100,7 +100,7 @@ public:
     virtual void       RecalculateRange();
     virtual void       RecursiveRemove(TObject *) {;}
     virtual void       SetHistogram(TH1 *h);
-    virtual void       SetStack(TObjArray *stack) {fStack = stack;}
+    virtual void       SetStack(TList *stack) {fStack = stack;}
     virtual Int_t      TableInit();
 
     ClassDef(THistPainter,0)  //Helper class to draw histograms
