@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.39 2001/05/02 20:44:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.40 2001/05/16 06:46:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -964,7 +964,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                leafinfo = 0; 
                current = &(work[0]);
                continue;
-            } else if (right[i] == '.' || right[i] == '[' || right[i] == '\0' ) {
+            } else if (i > 0 && (right[i] == '.' || right[i] == '[' || right[i] == '\0') ) {
                // A delimiter happened let's see if what we have seen
                // so far does point to a data member.
                *current = '\0';
