@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.17 2002/05/30 13:20:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.18 2002/07/02 06:43:32 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -315,12 +315,8 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #      define isnan  _isnan
 #   endif
 #endif
-#if defined(R__GNU) && defined(__STRICT_ANSI__)
-#   define finite __finite
-#   define isnan  __isnan
-#endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
-    defined(R__HPUX11) || defined(R__USESTHROW)
+    defined(R__HPUX11) || defined(R__GLIBC)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -345,10 +341,10 @@ extern "C" {
    extern double log(double);
    extern double log10(double);
 #ifndef R__WIN32
-#   if !defined(finite) || defined(R__GNU)
+#   if !defined(finite)
        extern int finite(double);
 #   endif
-#   if !defined(isnan) || defined(R__GNU)
+#   if !defined(isnan)
        extern int isnan(double);
 #   endif
 #endif
