@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.108 2005/02/24 22:36:04 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.109 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -985,7 +985,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.curveInvisible = pc.getInt("curveInvisible") ;
   o.addToCurveName = pc.getString("addToCurveName",0,kTRUE) ;
   o.addToWgtSelf = pc.getDouble("addToWgtSelf") ;
-  o.addToWgtOther = pc.getDouble("addToWgtOther") ;
+  o.addToWgtOther = pc.getDouble("addToWgtOther") ;  
 
   if (o.addToCurveName && !frame->findObject(o.addToCurveName,RooCurve::Class())) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") cannot find existing curve " << o.addToCurveName << " to add to in RooPlot" << endl ;
@@ -1263,6 +1263,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode) ;
     cout << endl ;
 
+    if (o.curveName) {
+      curve->SetName(o.curveName) ;
+    }
+
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions);
 
@@ -1288,7 +1292,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       delete curve ;
       curve = sumCurve ;
     }
-
 
     if (o.curveName) {
       curve->SetName(o.curveName) ;
