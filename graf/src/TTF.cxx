@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.1 2003/01/22 11:07:26 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.cxx,v 1.3 2003/04/03 14:51:47 rdm Exp $
 // Author: Olivier Couet     01/10/02
 
 /*************************************************************************
@@ -268,7 +268,6 @@ void TTF::SetRotationMatrix(Float_t angle)
 {
    // Set the rotation matrix used to rotate the font outlines.
 
-   if (fgRotMatrix) SafeDelete(fgRotMatrix);
    Float_t rangle = Float_t(angle * TMath::Pi() / 180.); // Angle in radian
 #if defined(FREETYPE_PATCH) && \
     (FREETYPE_MAJOR == 2) && (FREETYPE_MINOR == 1) && (FREETYPE_PATCH == 2)
@@ -279,7 +278,7 @@ void TTF::SetRotationMatrix(Float_t angle)
    Float_t cos    = TMath::Cos(-rangle);
 #endif
 
-   fgRotMatrix = new FT_Matrix;
+   if (!fgRotMatrix) fgRotMatrix = new FT_Matrix;
 
    fgRotMatrix->xx = (FT_Fixed) (cos * (1<<16));
    fgRotMatrix->xy = (FT_Fixed) (sin * (1<<16));
