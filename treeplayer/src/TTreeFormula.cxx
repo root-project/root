@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.48 2001/06/01 07:05:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.49 2001/06/02 20:28:14 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -31,8 +31,6 @@
 #include <stdio.h>
 #include <math.h>
 
-const Int_t kMETHOD   = 1000;
-const Int_t kDATAMEMBER = 1000;
 const Int_t kMaxLen     = 512;
 
 ClassImp(TTreeFormula)
@@ -817,7 +815,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    TBranch *branch=0, *tmp_branch=0;
 
    Bool_t final = kFALSE;
-   Bool_t ismethod = kFALSE;
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) { 
       // We will treated the terminator as a token.
       *current++ = cname[i];
@@ -871,7 +868,6 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   // We have a method that works.
                   // We will use it.
                   leaf = leafcur;
-                  ismethod = kTRUE;
                }
                delete method;
             }
