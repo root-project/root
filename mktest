@@ -1,18 +1,18 @@
 #!/bin/bash
+# Name: mktest
+# Desc: Add test directories, copies Makefiles and update CVS repository
+# Args: $1 -> dest dir
 
-# Error Message
-printERROR() { echo "Error: $@." >&2 ; exit 1; }
-
+# Saves the parent directory
 PARENT_DIR=${1%/*}
-#echo $PARENT_DIR
 
+# if this is the top directory or not
 r=`echo $1 | grep '/'`
-#echo $r
 
 	if [ "$r" == "$1" ]; then 
-		#printERROR "the source $1 is not dir, or does not exist"
+		
 		if [ ! -d "$PARENT_DIR" ] ; then
-		mktest $PARENT_DIR
+			mktest $PARENT_DIR
 		fi
 		
 	fi
@@ -22,7 +22,6 @@ mkdir $1
 
 #Copy Makefile.template to the new test directory
 cp root/Makefile.template $1
-
 
 #Add to CVS
 #cvs add $1
