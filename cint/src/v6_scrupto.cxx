@@ -766,7 +766,13 @@ int ig15;
 	  }
 	  else {
 	    G__store_struct_offset = var->p[itemp];
-	    if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
+	    if((i=var->varlabel[itemp][1])>0 
+#ifndef G__OLDIMPLEMENTATION2011
+	       || var->paran[itemp]
+#endif
+	       ) { 
+	       G__cpp_aryconstruct=i+1;
+	    }
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	    G__cpp_aryconstruct=0;
 	  }
