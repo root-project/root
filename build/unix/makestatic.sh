@@ -13,7 +13,7 @@ LDFLAGS=$5
 XLIBS=$6
 SYSLIBS=$7
 
-ROOTALIB=lib/libRoot.a
+ROOTALIB=lib/libRoot.a 
 ROOTAEXE=bin/roota
 PROOFAEXE=bin/proofserva
 
@@ -53,7 +53,7 @@ fi
 
 echo "Making $ROOTAEXE..."
 $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS
+   $XLIBS $SYSLIBS lib/libfreetype.a
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
@@ -62,7 +62,7 @@ fi
 
 echo "Making $PROOFAEXE..."
 $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o  $dummyo $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS
+   $XLIBS $SYSLIBS lib/libfreetype.a
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
