@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.93 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.94 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -876,9 +876,7 @@ void RootdFstat(const char *buf)
    // Return file stat information in same format as TSystem::GetPathInfo().
 
    char     msg[256];
-   int      mode, uid, gid, islink = 0;
-   long     dev, ino, mtime;
-   Long64_t size;
+   int      islink = 0;
 
 #if defined(R__SEEK64)
    struct stat64 statbuf;
