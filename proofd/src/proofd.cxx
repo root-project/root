@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.13 2000/12/15 19:41:38 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.14 2000/12/19 14:35:08 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -43,6 +43,11 @@
 // Proofd arguments:                                                    //
 //   -i              says we were started by inetd                      //
 //   -p port#        specifies a different port to listen on            //
+//   -d level        level of debug info written to syslog              //
+//                   0 = no debug (default)                             //
+//                   1 = minimum                                        //
+//                   2 = medium                                         //
+//                   3 = maximum                                        //
 //   rootsys_dir     directory which must contain bin/proofserv and     //
 //                   proof/etc/proof.conf                               //
 //                                                                      //
