@@ -4,8 +4,15 @@
 #F77 := g77
 #LD  := g++
 #SOFLAGS   = -Wl,-soname,${@F} -shared
+ARCH          = $(shell root-config --arch)
+PLATFORM      = $(ARCH)
 
+ifeq ($(PLATFORM),win32)
+# Test disable because of the shared library building
+TEST_TARGETS +=
+else
 TEST_TARGETS += sepDictLibs
+endif
 CLEAN_TARGETS +=  *.o *.so *Dict* run.output
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -38,6 +45,7 @@ libslave1.so:  Slave1Dict.o
 
 libslave2.so:  Slave2Dict.o
 	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+    
 
 MasterDict.C: MyClass.hh MasterLinkDef.hh
 Slave1Dict.C: MyClass.hh Slave1LinkDef.hh
@@ -47,10 +55,10 @@ Slave2Dict.C: MyClass.hh Slave2LinkDef.hh
 	$(CMDECHO)rootcint -f $@ -c $^ 
 
 %Dict.o: %Dict.C	
-	$(CMDECHO)$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@ >& $@_build.log
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@ > $@_build.log 2>&1
 
-%.o: %.C	
-	$(CMDECHO)$(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@ >& $@_build.log
+%.o: %.C
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@ > $@_build.log 2>&1
 
 clean_sepdict:
 	$(CMDECHO)rm -f *.o *.so *Dict*

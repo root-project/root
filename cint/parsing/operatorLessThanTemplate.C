@@ -175,17 +175,17 @@ namespace genie {
       //   static ConfigPool * fInstance;
       
       map<string, genie::Registry *> fRegistryPool;    //-- algorithm/param_set -> Registry
-      
+   public:
       struct Cleaner {
          void DummyMethodAndSilentCompiler() { }
          ~Cleaner() {
          }
       };
-      
+	  public:
       friend struct Cleaner;
    };
    
-   ostream& operator<<(ostream& stream, const ConfigPool & config_pool) {
+   ostream& operator<<(ostream& stream, const ConfigPool & config_poo) {
       return stream;
    }
    ostream& operator>>(ostream& stream, const ConfigPool & config_pool) {

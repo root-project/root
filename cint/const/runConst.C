@@ -13,12 +13,10 @@ MyClass4* g(MyClass4* arg  ) {
   return arg;
 }
 
-void run() {
+void runConst() {
   g( (const MyClass4*)0 );
   g( (MyClass4*)0 );
-
 }
-
 /*
 >It seems (and you might already know :) ) that the function matching
 >algorithm does not use the constness of the argument.  The following

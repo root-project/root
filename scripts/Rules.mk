@@ -137,34 +137,34 @@ MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
 %.o: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
 
 %.o: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1
 
 %.o: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log 2>&1
 
 %.obj: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log 2>&1
 
 %.obj: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log 2>&1
 
 %.obj: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 	
 %_cpp.$(DllSuf) : %.cpp
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cpp.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
 %_C.$(DllSuf) : %.C
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_C.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_C.build.log 2>&1
 
 %_cxx.$(DllSuf) : %.cxx
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_cxx.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
 %_h.$(DllSuf) : %.h
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) >& $*_h.build.log
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
 %.log : run%.C
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
@@ -176,3 +176,8 @@ endef
 define TestDiff
 	$(CMDECHO) diff -b $@.ref $<
 endef
+
+RemoveLeadingDirs := sed -e 's?^[A-z/\].*[/\]??' -e 's/.dll/.so/'
+RemoveDirs := sed -e 's?([A-z]:|[/]).*[/\]??'
+
+

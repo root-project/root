@@ -9,4 +9,4 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 argtwice:
-	@(echo '.x argeval.C' | root -l -b)
+	@root.exe -b -l -q 'argeval.C' | grep -v 'root[0]'

@@ -27,8 +27,8 @@ endif
 
 operator1:
 	$(CMDECHO)rm  -f operator1.cint.out operator1.comp.out
-	$(CMDECHO)(echo '.x smalltest.C' | root.exe -l -b ) > operator1.cint.out 2>&1
-	$(CMDECHO)(echo '.x smalltest.C++' | root.exe -l -b ) > operator1.comp.out 2>&1
+	$(CMDECHO) root.exe -q -l -b smalltest.C > operator1.cint.out 2>&1
+	$(CMDECHO) root.exe -q -l -b smalltest.C+ > operator1.comp.out 2>&1
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 else

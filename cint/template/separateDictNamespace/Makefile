@@ -1,5 +1,11 @@
+ARCH          = $(shell root-config --arch)
+PLATFORM      = $(ARCH)
 
+ifeq ($(PLATFORM),win32)
+# disabled because of the building of shared library
+else
 TEST_TARGETS += sepDictLibs
+endif
 CLEAN_TARGETS +=  *.o *.so *Dict* run.output
 
 ifeq ($(strip $(ROOTTEST_HOME)),)

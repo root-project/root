@@ -13,7 +13,6 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-
 stldictTest: MyDict1.o MyDict2.o MyDict3.o
 	$(CMDECHO) echo mytest > /dev/null
 

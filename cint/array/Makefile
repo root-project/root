@@ -25,8 +25,10 @@ endif
 # Remember that sometest.log can be made automatically from
 # from runsometest.C
 
+array1test.log: array1.C
+
 array1test.short.log : array1test.log
-	$(CMDECHO) cat array1test.log | sed -e s/0x[^\ ]\*//g > $@
+	$(CMDECHO) cat array1test.log | sed -e s/0x[^\ ]\*//g -e s/[A-z]:.*array1.C/array1.C/g > $@
 
 array1test: array1test.short.log
 	$(TestDiff)

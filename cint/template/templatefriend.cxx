@@ -31,7 +31,7 @@ public:
 
   shared_ptr(T* someobject) 
   { 
-#ifdef __CINT__
+#if defined(__CINT__) || defined(_MSC_VER)
     std::cout << "shared_ptr<T>::shared_ptr(T *) [with T = " << typeid(T).name() << "]" << endl;
 #else
     std::cout << __PRETTY_FUNCTION__ << std::endl;
@@ -43,7 +43,7 @@ public:
   shared_ptr(shared_ptr<Y> const &rhs) 
     : theobject(dynamic_cast<T*>(rhs.theobject)) 
   {
-#ifdef __CINT__
+#if defined(__CINT__) || defined(_MSC_VER)
      std::cout << "shared_ptr<T>::shared_ptr(const shared_ptr<Y> &) [with Y = " << typeid(Y).name()
                << ", T = " << typeid(T).name() << "]" << endl;
 #else

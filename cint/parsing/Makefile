@@ -34,7 +34,7 @@ else
 endif
 
 operatorLessThanTemplate.log: runoperatorLessThanTemplate.C operatorLessThanTemplate_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -l -b  runoperatorLessThanTemplate.C | grep -v tagnum > $@ 2>&1
+	$(CMDECHO) root.exe -q -l -b  runoperatorLessThanTemplate.C | $(RemoveLeadingDirs) | grep -v -e tagnum -e size= > $@ 2>&1
 	@echo "Warning: operatorLessThanTemplate has some known defect (needs to modify the file to see them)"
 
 operatorLessThanTemplate:  operatorLessThanTemplate.log
