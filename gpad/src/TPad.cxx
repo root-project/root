@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.124 2004/03/12 15:05:34 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.125 2004/03/17 17:35:31 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2921,7 +2921,7 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
       } else {
          gVirtualX->DrawFillArea(n,pxy);
       }
-      if (n > kPXY) delete [] pxy;
+      if (n >= kPXY) delete [] pxy;
    }
 
    if (gVirtualPS) {
@@ -3006,7 +3006,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
       } else {
          gVirtualX->DrawFillArea(n,pxy);
       }
-      if (n > kPXY) delete [] pxy;
+      if (n >= kPXY) delete [] pxy;
    }
 
    if (gVirtualPS) {
@@ -3250,7 +3250,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *)
       }
 //*-*- invoke the graphics subsystem
       gVirtualX->DrawPolyLine(n,pxy);
-      if (n > kPXY)  delete [] pxy;
+      if (n >= kPXY)  delete [] pxy;
    }
 
    if (gVirtualPS) {
