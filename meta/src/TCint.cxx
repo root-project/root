@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.28 2001/06/26 08:26:46 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.29 2001/06/30 13:18:14 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -449,12 +449,12 @@ void TCint::SetClassInfo(TClass *cl)
       // specifically check that each level of nesting is already loaded.
       char *classname = StrDup(cl->GetName());
       char *current = strstr(classname,"::");
-      while(current) {
+      while (current) {
          *current = '\0';
          G__ClassInfo info(classname);
-         if (! info.IsLoaded() ) {
-           delete [] classname;
-           return;
+         if (!info.IsLoaded()) {
+            delete [] classname;
+            return;
          }
          *current = ':';
          current = strstr(current+1,"::");
@@ -463,9 +463,9 @@ void TCint::SetClassInfo(TClass *cl)
 
       cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
-      //In case a class contains an external enum, the enum will be seen as a class
-      //We must detect this special case and make the class a Zombie
-      //Here we assume that a class has at least one method
+      // In case a class contains an external enum, the enum will be seen as a
+      // class. We must detect this special case and make the class a Zombie.
+      // Here we assume that a class has at least one method.
       if (cl->Property() & (kIsClass|kIsStruct) == 0) {
          cl->MakeZombie();
       }
@@ -761,8 +761,8 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
    // the TClass for class "item".
 
    if (gROOT && gROOT->GetListOfClasses()) {
-      TClass *cl = gROOT->GetClass(item, kFALSE);
-      if (cl) {
+      TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(item);
+      if (cl && cl->GetImplFileLine() >= 0) {
          G__ClassInfo *info = cl->GetClassInfo();
          if (info && info->Tagnum() != tagnum) {
             info->Init((int)tagnum);
