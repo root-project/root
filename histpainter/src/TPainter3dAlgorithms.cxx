@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.80 2002/05/04 16:07:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.1 2002/05/21 13:19:26 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -4182,7 +4182,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w;
 
    Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
-   Double_t dtria[kNmaxt][6], abcd[kNmaxt][3];
+   Double_t dtria[kNmaxt][6], abcd[kNmaxt][4];
    Int_t    itria[kNmaxt][3], iorder[kNmaxt];
 
    TView *view = gPad->GetView();
@@ -5334,7 +5334,7 @@ void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
 //______________________________________________________________________________
 void TPainter3dAlgorithms::ZDepth(Double_t xyz[52][3], Int_t &nface, 
                                   Int_t iface[48][3], Double_t dface[48][6],
-                                  Double_t abcd[48][3], Int_t *iorder)
+                                  Double_t abcd[48][4], Int_t *iorder)
 {
    // Z-depth algorithm for set of triangles
    //
@@ -5639,7 +5639,7 @@ void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
    Int_t ix, ix1=0, ix2=0, iy, iy1=0, iy2=0, iz, iz1=0, iz2=0, k, kx, ky, kz, isurf, nsurf;
    
    Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
-   Double_t dtria[kNmaxt][6], abcd[kNmaxt][3];
+   Double_t dtria[kNmaxt][6], abcd[kNmaxt][4];
    Int_t    itria[kNmaxt][3], iorder[kNmaxt], iattr[kNmaxt];
    
    static Int_t ind[8][3] = { { 0,0,0 }, { 1,0,0 }, { 1,0,1 }, { 0,0,1 },
