@@ -13,7 +13,7 @@
 //
 // The test prints a summary table comparing performances for all above cases
 // (CPU, file size, compression factors).
-// Reference numbers on a Pentium III 650 Mhz machine are given as reference.
+// Reference numbers on a Pentium IV 2.4 Ghz machine are given as reference.
 //
 // A canvas is created showing the same results in a graphical form.
 // The bench can be run in batch mode (bench -b).
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
   Double_t cp11r = timer.CpuTime();
   cptot += cp11r;
   printf("19 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 70.94;
-  Double_t rootmarks = cpref*200/cptot;
+  Double_t cpref = 24.92;
+  Double_t rootmarks = cpref*600/cptot;
 
   //delete temp file used for the benchmark
   gSystem->Exec("rm -f /tmp/bench.root");
@@ -274,39 +274,39 @@ int main(int argc, char** argv)
      else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
   }
   printf("*     Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1                 *\n");
-  printf("*         (Pentium III 600 Mhz 256 Mbytes RAM, IDE disk)                     *\n");
+  printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                     *\n");
   printf("*           (send your results to rootdev@root.cern.ch)                      *\n");
   printf("******************************************************************************\n");
   printf("* Time to fill the structures (seconds)   Reference      cx      Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        1.91     %5.2f        4.57     *\n",cp1,cx3);
-  printf("* vector<THit*>                 %6.2f        1.86     %5.2f        4.57     *\n",cp4,cx6);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.62     %5.2f        6.74     *\n",cp7,cx9);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.62     %5.2f        6.73     *\n",cp7,cx11);
+  printf("* vector<THit>                  %6.2f        0.98     %5.2f        4.56     *\n",cp1,cx3);
+  printf("* vector<THit*>                 %6.2f        0.90     %5.2f        4.57     *\n",cp4,cx6);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.74     %5.2f        6.78     *\n",cp7,cx9);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.74     %5.2f        6.76     *\n",cp7,cx11);
   printf("******************************************************************************\n");
   printf("* Size of file in bytes         comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %8d   42053117   %8d    9211877    *\n",nbytes1,nbytes3);
-  printf("* vector<THit*>                 %8d   42078431   %8d    9213085    *\n",nbytes5,nbytes6);
-  printf("* TClonesArray(TObjHit)         %8d   39805839   %8d    5904218    *\n",nbytes8,nbytes9);
-  printf("* TClonesArray(TObjHit) split   %8d   39805839   %8d    5913737    *\n",nbytes10,nbytes11);
+  printf("* vector<THit>                  %8d   42053204   %8d    9216240    *\n",nbytes1,nbytes3);
+  printf("* vector<THit*>                 %8d   42078513   %8d    9211408    *\n",nbytes5,nbytes6);
+  printf("* TClonesArray(TObjHit)         %8d   39804327   %8d    5868868    *\n",nbytes8,nbytes9);
+  printf("* TClonesArray(TObjHit) split   %8d   39804327   %8d    5890034    *\n",nbytes10,nbytes11);
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        1.69    %6.2f        8.87     *\n",cp2w-cp1, cp3w-cp1);
-  printf("* vector<THit*>                 %6.2f        1.46    %6.2f        8.71     *\n",cp5w-cp1, cp6w-cp1);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.84    %6.2f        5.26     *\n",cp8w-cp1, cp9w-cp1);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.78    %6.2f        5.25     *\n",cp10w-cp1,cp11w-cp1);
+  printf("* vector<THit>                  %6.2f        0.41    %6.2f        2.54     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* vector<THit*>                 %6.2f        0.40    %6.2f        2.53     *\n",cp5w-cp1, cp6w-cp1);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.05    %6.2f        1.39     *\n",cp8w-cp1, cp9w-cp1);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.04    %6.2f        1.41     *\n",cp10w-cp1,cp11w-cp1);
   printf("******************************************************************************\n");
   printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        2.29    %6.2f        3.21     *\n",cp2r,cp3r);
-  printf("* vector<THit*>                 %6.2f        2.10    %6.2f        3.12     *\n",cp5r,cp6r);
-  printf("* TClonesArray(TObjHit)         %6.2f        1.36    %6.2f        1.92     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        1.36    %6.2f        1.93     *\n",cp10r,cp11r);
+  printf("* vector<THit>                  %6.2f        0.70    %6.2f        1.25     *\n",cp2r,cp3r);
+  printf("* vector<THit*>                 %6.2f        0.69    %6.2f        1.22     *\n",cp5r,cp6r);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.32    %6.2f        0.60     *\n",cp8r,cp9r);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.32    %6.2f        0.59     *\n",cp10r,cp11r);
   printf("******************************************************************************\n");
   printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
-  printf("* Estimated ROOTMARKS         %8.2f      200.00                           *\n",rootmarks);
+  printf("* Estimated ROOTMARKS         %8.2f      600.00                           *\n",rootmarks);
   printf("******************************************************************************\n");
 
   // show results with graphics
@@ -319,8 +319,8 @@ int main(int argc, char** argv)
    head->SetTextAlign(22);
    head->AddText(line1);
    head->AddText(line2);
-   head->AddText("Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1");
-   head->AddText("(Pentium III 650 Mhz 256 Mbytes RAM, IDE disk)");
+   head->AddText("Reference machine pcbrun.cern.ch  RH 7.3/gcc3.2");
+   head->AddText("(Pentium IV 2.4Ghz 512 Mbytes RAM, IDE disk)");
    head->AddText("(send your results to rootdev@root.cern.ch)");
    head->Draw();
    TPad *pmain = new TPad("pmain","pmain",0,0,1,.8);
