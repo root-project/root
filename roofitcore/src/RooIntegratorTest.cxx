@@ -7,6 +7,8 @@
 
 // Study the performance of the Monte Carlo integration algorithm
 
+enum MCMode { Naive, Stratified, Importance, Pseudo };
+
 void runMCStudy() {
   RooRealVar x("x","A variable",-1,+1);
   RooRealVar s("s","A variable",1,2);
@@ -19,29 +21,98 @@ void runMCStudy() {
   TCanvas *c= new TCanvas("mcstudy","MC Integration Study",800,700);
   c->Divide(2,2);
 
-  If.setAlpha(0.0);
   c->cd(1);
-  calculateMCSpread(If)->DrawClone();
+  //calculateMCSpread(If,Naive)->DrawCopy();
+  c->Update();
 
-  If.setAlpha(1.5);
   c->cd(2);
-  calculateMCSpread(If)->DrawClone();
+  calculateMCSpread(If,Stratified)->DrawCopy();
+  c->Update();
+
+  c->cd(3);
+  calculateMCSpread(If,Importance)->DrawCopy();
 }
 
-TH1F *calculateMCSpread(RooMCIntegrator &integrator, Int_t trials= 100) {
+TH1F *calculateMCSpread(RooMCIntegrator &integrator, MCMode mode,
+			Int_t samples= 100000, Int_t trials= 100, Double_t exact= 1.1763744607) {
 
-  Double_t exact= 1.1763744607;
+  // Perform a number of statistically independent Monte Carlo integrations of
+  // the specified integrand and return a histogram of the resulting fractional errors
+  // relative to the specified exact result. Each integration will use approximately
+  // the specified number of integrand samples.
 
-  // create an empty histogram to fill
-  TH1F *hist= new TH1F("hist","hist",20,-2e-4,+2e-4);
+  // calculate the expected fractional error RMS for the naive integration, which will be used
+  // to scale the actual error calculated for each trial.
+  Double_t sigma= 1./sqrt(samples);
 
-  for(int trial= 0; trial < trials; trial++) {
-    // divide the first 10k calls between 5 iterations to refine the grid
-    integrator.vegas(RooMCIntegrator::AllStages,2000,5);
-    Double_t ferr= (integrator.vegas(RooMCIntegrator::ReuseGrid,10000,1) - exact)/exact;
-    cout << "ferr = " << ferr << endl;
-    hist->Fill(ferr);
+  // create an empty histogram to fill with a mode-specific name
+  TString name= Form("mode-%d",mode);
+  Double_t lim(0.01);
+  if(mode == Naive) lim= 1;
+  TH1F *hist= new TH1F(name,name,20,-lim,+lim);
+  hist->SetXTitle("Fractional Error * #sqrt{N}");
+  hist->SetYTitle("Trials");
+
+  Double_t sum1(0),sum2(0);
+
+  if(mode == Naive) {
+    const RooAbsFunc *func= integrator.integrand();
+    int dim= func->getDimension();
+    Double_t *x= new Double_t[dim];
+    Double_t vol= integrator.grid().getVolume();
+    for(int trial= 0; trial < trials; trial++) {
+      Double_t sum(0);
+      for(int sample= 0; sample < samples; sample++) {
+	// choose random values for each dependent
+	for(int index= 0; index < dim; index++) {
+	  x[index]= func->getMinLimit(index) +
+	    (func->getMaxLimit(index) - func->getMinLimit(index))*RooGenContext::uniform();
+	}
+	// evaluate the function at this randomly chosen point
+	sum+= integrator.integrand(x);
+      }
+      Double_t result= sum*vol/samples;
+      sum1+= result;
+      sum2+= result*result;
+      Double_t ferr= (result-exact)/exact/sigma;
+      if(trial % 100 == 0) cout << "trial " << trial << " gives " << ferr << endl;
+      hist->Fill(ferr);
+    }
+    delete x;
   }
+  else {
+    if(mode == Stratified) {
+      integrator.setAlpha(0);
+    }
+    else {
+      integrator.setAlpha(1.5);
+    }
+    for(int trial= 0; trial < trials; trial++) {
+      Double_t result(0);
+      if(mode == Stratified) {
+	result= integrator.vegas(RooMCIntegrator::AllStages,samples,1);
+      }
+      else {
+	// first refine the grid with 5 low precision steps
+	Int_t presamples= samples/50;
+	integrator.vegas(RooMCIntegrator::AllStages,presamples,5);
+	// use the remaining samples for a higher precision integration on the refined grid
+	result= integrator.vegas(RooMCIntegrator::ReuseGrid,samples-5*presamples,1);
+      }
+      sum1+= result;
+      sum2+= result*result;
+      Double_t ferr= (result - exact)/exact/sigma;
+      if(trial % 100 == 0) cout << "trial " << trial << " gives " << ferr << endl;
+      hist->Fill(ferr);
+    }
+  }
+
+  // calculate the mean (relative to the exact result) and rms (normalized to the exact result)
+  // of this set of trials
+  Double_t mean= sum1/trials - exact;
+  Double_t rms= sqrt((sum2 - sum1*sum1/trials)/(trials-1.))/exact;
+
+  cout << "mode-" << mode << " : " << mean << " +/- " << rms << endl;
 
   return hist;
 }

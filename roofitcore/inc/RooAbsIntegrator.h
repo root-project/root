@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooAbsIntegrator.rdl,v 1.7 2001/08/08 23:11:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@ public:
   inline Bool_t isValid() const { return _valid; }
 
   inline Double_t integrand(const Double_t x[]) const { return (*_function)(x); }
+  inline const RooAbsFunc *integrand() const { return _function; }
 
   virtual Double_t integral()=0 ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.6 2001/08/02 23:54:24 david Exp $
+ *    File: $Id: RooMCIntegrator.rdl,v 1.1 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,8 @@ public:
 
   Double_t getAlpha() const { return _alpha; }
   void setAlpha(Double_t alpha) { _alpha= alpha; }
+
+  const RooGrid &grid() const { return _grid; }
 
 protected:
 
