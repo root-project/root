@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.20 2004/01/10 10:52:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.21 2004/03/12 00:31:22 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -637,27 +637,29 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
       if (!cl) cl = fClass;
 
       if (fValueGetter) {
+         TString methodname = fValueGetter->GetMethodName();
          delete fValueGetter;
-         fValueGetter = 0;
+         fValueGetter = new TMethodCall(cl, methodname.Data(), "");
+
+      } else { 
+         // try to guess Getter function:
+         // we strip the fist character of name of data field ('f') and then
+         // try to find the name of Getter by applying "Get", "Is" or "Has"
+         // as a prefix
+
+         const char *dataname = GetName();
+
+         char gettername[128];
+         sprintf(gettername, "Get%s", dataname+1);
+         if (GetClass()->GetMethod(gettername, ""))
+            return fValueGetter = new TMethodCall(cl, gettername, "");
+         sprintf(gettername, "Is%s", dataname+1);
+         if (GetClass()->GetMethod(gettername, ""))
+            return fValueGetter = new TMethodCall(cl, gettername, "");
+         sprintf(gettername, "Has%s", dataname+1);
+         if (GetClass()->GetMethod(gettername, ""))
+            return fValueGetter = new TMethodCall(cl, gettername, "");
       }
-
-      // try to guess Getter function:
-      // we strip the fist character of name of data field ('f') and then
-      // try to find the name of Getter by applying "Get", "Is" or "Has"
-      // as a prefix
-
-      const char *dataname = GetName();
-
-      char gettername[128];
-      sprintf(gettername, "Get%s", dataname+1);
-      if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(cl, gettername, "");
-      sprintf(gettername, "Is%s", dataname+1);
-      if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(cl, gettername, "");
-      sprintf(gettername, "Has%s", dataname+1);
-      if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(cl, gettername, "");
    }
 
    return fValueGetter;
@@ -672,22 +674,34 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
    // inheritance TMethodCall needs to know this to calculate the proper
    // offset).
 
-   if (!fValueSetter) {
+   if (!fValueSetter || cl) {
 
-      // try to guess Setter function:
-      // we strip the fist character of name of data field ('f') and then
-      // try to find the name of Setter by applying "Set" as a prefix
+      if (!cl) cl = fClass;
 
-      const char *dataname = GetName();
+      if (fValueSetter) {
+      
+         TString methodname = fValueSetter->GetMethodName();
+         TString params = fValueSetter->GetParams();
+         delete fValueSetter;
+         fValueSetter = new TMethodCall(cl, methodname.Data(), params.Data());
+      
+      } else {
+         
+         // try to guess Setter function:
+         // we strip the fist character of name of data field ('f') and then
+         // try to find the name of Setter by applying "Set" as a prefix
 
-      char settername[64];
-      sprintf(settername, "Set%s", dataname+1);
-      if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
-      if (GetClass()->GetMethod(settername, "1"))
-         fValueSetter = new TMethodCall(cl, settername, "1");
-      if (!fValueSetter)
-         if (GetClass()->GetMethod(settername, "true"))
-            fValueSetter = new TMethodCall(cl, settername, "true");
+         const char *dataname = GetName();
+
+         char settername[64];
+         sprintf(settername, "Set%s", dataname+1);
+         if (strstr(settername, "Is")) sprintf(settername, "Set%s", dataname+3);
+         if (GetClass()->GetMethod(settername, "1"))
+            fValueSetter = new TMethodCall(cl, settername, "1");
+         if (!fValueSetter)
+            if (GetClass()->GetMethod(settername, "true"))
+               fValueSetter = new TMethodCall(cl, settername, "true");
+      }
    }
 
    return fValueSetter;
