@@ -23,7 +23,7 @@ TEST_TARGETS += $(TEST_TARGETS_DIR)
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib dummy.C 
+ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def
 
 export CURDIR=$(shell basename `pwd`)
 #debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
@@ -83,11 +83,12 @@ CXXFLAGS      += /TP /GX  -G5 -GR
 LD            = link
 #LDOPT         = -opt:ref
 #LDOPT         = -debug
-#LDFLAGS       = $(LDOPT) -pdb:none -nologo -nodefaultlib -incremental:no
+#LDFLAGS       = $(LDOPT) -nologo -nodefaultlib -incremental:no
 SOFLAGS       = -DLL
 SYSLIBS       = msvcrt.lib oldnames.lib kernel32.lib  ws2_32.lib mswsock.lib \
-                advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib \
-                msvcirt.lib
+                advapi32.lib  user32.lib gdi32.lib comdlg32.lib winspool.lib 
+
+#                msvcirt.lib
 
 endif
 
@@ -128,6 +129,7 @@ ExeSuf   =
 OutPutOpt= -o 
 endif
 
+.SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf)
 
 ##### utilities #####
 
@@ -185,6 +187,12 @@ endef
 define BuildFromObj
 $(CMDECHO) touch dummy.C
 $(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"dummy.C\"\,\"$<\",1\) > $@.build.log 2>&1
+$(CMDECHO) mv dummy_C.$(DllSuf) $@ 
+endef
+
+define BuildFromObjs
+$(CMDECHO) touch dummy.C
+$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy.C\",\"$^\",1)" > $@.build.log 2>&1
 $(CMDECHO) mv dummy_C.$(DllSuf) $@ 
 endef
 
