@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.30 2004/01/18 16:19:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.31 2004/01/18 16:33:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -302,7 +302,7 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
    Int_t npts = 0;
    for (i=0; i<4; i++) {
       j  = (i+1)%4;
-	  y1 = poly[2*i+1];
+      y1 = poly[2*i+1];
       y2 = poly[2*j+1];
 //      printf("check Yp=%f against y1=%f y2=%f\n", point[1], y1, y2);
       if ((point[1]-y1)*(y2-point[1])<0) continue;
@@ -403,7 +403,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
    Double_t d=b*b-c;
    if (d>=0) {
       Double_t sqd = TMath::Sqrt(d);
-	  s=-b-sqd;
+      s=-b-sqd;
       if (s>0) {
          if (in) return s;
          zi=point[2]+s*dir[2];
