@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.2 2001/05/09 13:09:12 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.3 2001/05/15 14:19:04 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -76,13 +76,13 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
                                  kLHintsExpandX|kLHintsShrinkX|kLHintsFillX);
    table->AddFrame(fHScaleCanvas,tloh);
    fHScaleCanvas->GetCanvas()->cd();
-   fHScaleCanvas->GetCanvas()->SetEditable(kFALSE);
    fHScaleCanvas->GetCanvas()->Range(0,0,1,1);
    fHScale = new TGaxis(0.0,0.5, 1.0,0.5, 0.0,100.0, 510, "-");
    //fHScale->SetLabelOffset(0.4);
    fHScale->SetLabelSize(0.4);
    fHScale->SetName("X Scale");
    fHScale->Draw();
+   fHScaleCanvas->GetCanvas()->SetEditable(kFALSE);
 
    fVScaleCanvas =
        new TRootEmbeddedCanvas("V Scale",table,50,300);
@@ -90,13 +90,13 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
                                  kLHintsExpandY|kLHintsShrinkY|kLHintsFillY);
    table->AddFrame(fVScaleCanvas,tloh);
    fVScaleCanvas->GetCanvas()->cd();
-   fVScaleCanvas->GetCanvas()->SetEditable(kFALSE);
    fVScaleCanvas->GetCanvas()->Range(0,0,1,1);
    fVScale = new TGaxis(0.5,0.0, 0.50001,1.0, 0.0,100.0, 510, "-");
    //fVScale->SetLabelOffset(0.4);
    fVScale->SetLabelSize(0.4);
    fVScale->SetName("Y Scale");
    fVScale->Draw();
+   fVScaleCanvas->GetCanvas()->SetEditable(kFALSE);
 
    // Call this after scales/sliders are setup
    SetRange(0,0,100,100);
@@ -269,6 +269,9 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    //cerr << "x=[" << xmin << " - " << xmax << "], "
    //     << "y=[" << ymin << " - " << ymax << "]\n";
 
+   fHScaleCanvas->GetCanvas()->SetEditable(kTRUE);
+   fVScaleCanvas->GetCanvas()->SetEditable(kTRUE);
+
    fHScale->SetWmin(xmin);
    fHScale->SetWmax(xmax);
    fVScale->SetWmin(ymin);
@@ -286,7 +289,10 @@ void Viewer::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
    fCanvas->Update();
    fHScaleCanvas->GetCanvas()->Update();
    fVScaleCanvas->GetCanvas()->Update();
-   gClient->ForceRedraw();  //prevent GUI from being starved of redraws
+   fClient->ForceRedraw();  //prevent GUI from being starved of redraws
+
+   fHScaleCanvas->GetCanvas()->SetEditable(kFALSE);
+   fVScaleCanvas->GetCanvas()->SetEditable(kFALSE);
 }
 
 
