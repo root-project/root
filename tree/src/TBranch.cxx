@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.66 2003/12/30 18:17:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.67 2003/12/30 22:10:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1300,6 +1300,7 @@ void TBranch::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
 
+         Int_t i;
          //TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
          TNamed::Streamer(b);
          TAttFill::Streamer(b);
@@ -1315,6 +1316,7 @@ void TBranch::Streamer(TBuffer &b)
          b >> fTotBytes;
          b >> fZipBytes;
          fBranches.Streamer(b);
+         gBranch = this;  // must be set again, was changed in previous statement
          fLeaves.Streamer(b);
          fBaskets.Streamer(b);
          fBasketEntry = new Int_t[fMaxBaskets];
@@ -1326,24 +1328,21 @@ void TBranch::Streamer(TBuffer &b)
          b >> isArray;
          b.ReadFastArray(fBasketEntry,fMaxBaskets);
          b >> isArray;
-         for (Int_t i=0;i<fMaxBaskets;i++) {
+         for (i=0;i<fMaxBaskets;i++) {
             if (isArray == 2) b >> fBasketSeek[i];
             else              {Int_t bsize; b >> bsize; fBasketSeek[i] = (Long64_t)bsize;};
          }
          fFileName.Streamer(b);
          b.CheckByteCount(R__s, R__c, TBranch::IsA());
-
          fDirectory = gDirectory;
          if (fFileName.Length() != 0) fDirectory = 0;
-         TIter next(GetListOfLeaves());
-         TLeaf *leaf;
-         while ((leaf=(TLeaf*)next())) {
+         fNleaves = fLeaves.GetEntriesFast();
+         for (i=0;i<fNleaves;i++) {
+            TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
             leaf->SetBranch(this);
          }
-         fNleaves = fLeaves.GetEntriesFast();
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
-         
          return;
       }
       //====process old versions before automatic schema evolution
