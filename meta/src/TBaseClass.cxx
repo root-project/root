@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.5 2000/12/18 20:09:00 rdm Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -60,11 +60,11 @@ void TBaseClass::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TClass *TBaseClass::GetClassPointer()
+TClass *TBaseClass::GetClassPointer(Bool_t load)
 {
    // Get pointer to the base class TClass.
 
-   if (!fClassPtr) fClassPtr = gROOT->GetClass(fName);
+   if (!fClassPtr) fClassPtr = gROOT->GetClass(fName, load);
    return fClassPtr;
 }
 
