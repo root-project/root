@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name$:$Id$
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.1 2000/06/16 15:15:47 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -147,7 +147,7 @@ private:
    const TMatrixD *fMatrix;  // the matrix I am a row of
    Int_t           fRowInd;  // effective row index
    Int_t           fInc;     // if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
-   Double_t       *fPtr;     // pointer to the a[row,0]
+   Double_t       *fPtr;     //! pointer to the a[row,0]
 
    TMatrixDRow() { fMatrix = 0; fInc = 0; fPtr = 0; }
 
@@ -183,7 +183,7 @@ friend class TVectorD;
 private:
    const TMatrixD *fMatrix;         // the matrix I am a column of
    Int_t           fColInd;         // effective column index
-   Double_t       *fPtr;            // pointer to the a[0,i] column
+   Double_t       *fPtr;            //! pointer to the a[0,i] column
 
    TMatrixDColumn() { fMatrix = 0; fPtr = 0; }
 
@@ -220,7 +220,7 @@ private:
    const TMatrixD *fMatrix;  // the matrix I am the diagonal of
    Int_t           fInc;     // if ptr=@a[i,i], then ptr+inc = @a[i+1,i+1]
    Int_t           fNdiag;   // number of diag elems, min(nrows,ncols)
-   Double_t       *fPtr;     // pointer to the a[0,0]
+   Double_t       *fPtr;     //! pointer to the a[0,0]
 
    TMatrixDDiag() { fMatrix = 0; fInc = 0; fNdiag = 0; fPtr = 0; }
 
