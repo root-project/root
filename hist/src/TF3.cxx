@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.10 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.11 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TF3::TF3(): TF2()
 
 //______________________________________________________________________________
 TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
-      :TF2(name,formula,xmin,xmax,ymin,ymax)
+      :TF2(name,formula,xmax,xmin,ymin,ymax)
 {
 //*-*-*-*-*-*-*F3 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -49,6 +49,10 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fZmin   = zmin;
    fZmax   = zmax;
    fNpz    = 30;
+   if (fNdim != 3 && xmin < xmax) {
+      Error("TF3","function: %s/%s has %d parameters instead of 3",name,formula,fNdim);
+      MakeZombie();
+   }
 }
 
 

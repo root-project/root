@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.20 2003/04/20 20:03:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.21 2003/06/30 15:45:51 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TF2::TF2(): TF1()
 
 //______________________________________________________________________________
 TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
-      :TF1(name,formula,xmin,xmax)
+      :TF1(name,formula,xmax,xmin)
 {
 //*-*-*-*-*-*-*F2 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
 //*-*          =========================================
@@ -65,6 +65,10 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
+   if (fNdim != 2 && xmin < xmax) {
+      Error("TF2","function: %s/%s has %d parameters instead of 2",name,formula,fNdim);
+      MakeZombie();
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.64 2003/06/10 16:45:57 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.65 2003/06/30 15:45:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -168,8 +168,13 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   fXmin      = xmin;
-   fXmax      = xmax;
+   if (xmin < xmax ) {
+      fXmin      = xmin;
+      fXmax      = xmax;
+   } else {
+      fXmin = xmax; //when called from TF2,TF3
+      fXmax = xmin;
+   }
    fNpx       = 100;
    fType      = 0;
    fFunction  = 0;
@@ -201,6 +206,11 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fMinimum    = -1111;
    fMaximum    = -1111;
    fMethodCall = 0;
+   
+   if (fNdim != 1 && xmin < xmax) {
+      Error("TF1","function: %s/%s has %d parameters instead of 1",name,formula,fNdim);
+      MakeZombie();
+   }
 
    if (!gStyle) return;
    SetLineColor(gStyle->GetFuncColor());
