@@ -1488,8 +1488,9 @@ TGListTreeItem *TGListTree::FindSiblingByName(TGListTreeItem *item, const char *
          item = item->fPrevsibling;
 
       while (item) {
-         if (item->fText == name)
+         if (item->fText == name) {
             return item;
+         }
          item = item->fNextsibling;
       }
       return item;
@@ -1508,8 +1509,9 @@ TGListTreeItem *TGListTree::FindSiblingByData(TGListTreeItem *item, void *userDa
          item = item->fPrevsibling;
 
       while (item) {
-         if (item->fUserData == userData)
+         if (item->fUserData == userData) {
             return item;
+         }
          item = item->fNextsibling;
       }
       return item;
@@ -1574,6 +1576,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    const char *p = path, *s;
    char dirname[256];
    TGListTreeItem *item = 0;
+   item = FindChildByName(item, "/");  // dirty trick for a while
 
    while (1) {
       while (*p && *p == '/') p++;
@@ -1587,7 +1590,6 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
          dirname[s-p] = 0;
       }
       item = FindChildByName(item, dirname);
-
       if (!s || !strlen(s)) return item;
       p = ++s;
    }

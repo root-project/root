@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.9 2002/01/24 11:39:31 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -142,6 +142,9 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
    }
 
    table->Layout();
+
+   // exit on close window
+   Connect("CloseWindow()","TApplication",gApplication,"Terminate(=0)");
 
    MapSubwindows();
    Layout();
