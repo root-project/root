@@ -1,5 +1,9 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.14 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.15 2004/08/04 20:46:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
+
+// CINT
+#include "Api.h"
+#include "TVirtualMutex.h"
 
 // Bindings
 #include "PyROOT.h"
@@ -21,18 +25,14 @@
 #include "Gtypes.h"
 #include "GuiTypes.h"
 
-// CINT
-#include "Api.h"
-#include "TVirtualMutex.h"
-
 // Standard
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <exception>
 #include <map>
 #include <string>
-
 #include <iostream>
 
 
@@ -198,6 +198,12 @@ namespace {
       func->SetArg( reinterpret_cast< long >( obj ) );
       return true;
    }
+
+// CINT temp level guard
+   struct TempLevelGuard {
+      TempLevelGuard() { G__settemplevel( 1 ); }
+      ~TempLevelGuard() { G__settemplevel( -1 ); }
+   };
 
 } // unnamed namespace
 
@@ -373,7 +379,7 @@ PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
    m_isInitialized = false;
 }
 
-PyROOT::MethodHolder::MethodHolder( const MethodHolder& om ) {
+PyROOT::MethodHolder::MethodHolder( const MethodHolder& om ) : PyCallable( om ) {
    copy_( om );
 }
 
@@ -396,10 +402,15 @@ PyROOT::MethodHolder::~MethodHolder() {
 //- protected members -----------------------------------------------------------
 bool PyROOT::MethodHolder::execute( void* self ) {
    R__LOCKGUARD( gCINTMutex );
+   TempLevelGuard g;
 
-   G__settemplevel( 1 );
-   m_methodCall->Exec( (void*) ( (long) self + m_offset ) );
-   G__settemplevel( -1 );
+   try {
+      m_methodCall->Exec( (void*) ( (long) self + m_offset ) );
+   }
+   catch ( std::exception& e ) {
+      std::cout << "C++ exception caught: " << e.what() << std::endl;
+      return false;
+   }
 
    return true;
 }
@@ -407,10 +418,15 @@ bool PyROOT::MethodHolder::execute( void* self ) {
 
 bool PyROOT::MethodHolder::execute( void* self, long& val ) {
    R__LOCKGUARD( gCINTMutex );
+   TempLevelGuard g;
 
-   G__settemplevel( 1 );
-   val = m_methodCall->ExecInt( (void*) ( (long) self + m_offset ) );
-   G__settemplevel( -1 );
+   try {
+      val = m_methodCall->ExecInt( (void*) ( (long) self + m_offset ) );
+   }
+   catch ( std::exception& e ) {
+      std::cout << "C++ exception caught: " << e.what() << std::endl;
+      return false;
+   }
 
    return true;
 }
@@ -418,10 +434,15 @@ bool PyROOT::MethodHolder::execute( void* self, long& val ) {
 
 bool PyROOT::MethodHolder::execute( void* self, double& val ) {
    R__LOCKGUARD( gCINTMutex );
+   TempLevelGuard g;
 
-   G__settemplevel( 1 );
-   val = m_methodCall->ExecDouble( (void*) ( (long) self + m_offset ) );
-   G__settemplevel( -1 );
+   try {
+      val = m_methodCall->ExecDouble( (void*) ( (long) self + m_offset ) );
+   }
+   catch ( std::exception& e ) {
+      std::cout << "C++ exception caught: " << e.what() << std::endl;
+      return false;
+   }
 
    return true;
 }

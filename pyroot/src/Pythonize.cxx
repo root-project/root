@@ -1,21 +1,31 @@
 // Author: Wim Lavrijsen, Jul 2004
 
+// CINT
+#include "Api.h"
+
 // Bindings
 #include "PyROOT.h"
 #include "Pythonize.h"
 #include "ObjectHolder.h"
 #include "RootWrapper.h"
 #include "Utility.h"
+#include "PyCallable.h"
+#include "MethodDispatcher.h"
+#include "PyBufferFactory.h"
 
 // ROOT
 #include "TClass.h"
 #include "TCollection.h"
 #include "TSeqCollection.h"
+#include "TObject.h"
 
 // Standard
+#include <stdexcept>
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <map>
+#include <utility>
 
 
 namespace {
@@ -563,6 +573,123 @@ namespace {
 
       return next;
    }
+
+
+//- TF1 behaviour --------------------------------------------------------------
+   std::map< int, std::pair< PyObject*, int > > s_PyObjectCallbacks;
+
+   int pyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash ) {
+      std::pair< PyObject*, int > info = s_PyObjectCallbacks[ res->tagnum ];
+      PyObject* pyfunc = info.first;
+
+      PyObject* arg1 = PyTuple_New( 4 );
+      double* buf = (double*)G__int(libp->para[0]);
+      for ( int i = 0; i < 4; ++i ) {
+         PyTuple_SET_ITEM( arg1, i, PyFloat_FromDouble( buf[i] ) );
+      }
+
+      PyObject* arg2 = PyTuple_New( info.second );
+      buf = (double*)G__int(libp->para[1]);
+      for ( int i = 0; i < info.second; ++i ) {
+         PyTuple_SET_ITEM( arg2, i, PyFloat_FromDouble( buf[i] ) );
+      }
+
+      PyObject* result = PyObject_CallFunction( pyfunc, "OO", arg1, arg2 );
+      Py_DECREF( arg1 );
+      Py_DECREF( arg2 );
+
+      double d = 0.;
+      if ( ! result ) {
+         PyErr_Print();
+         throw std::runtime_error( "TF1 python function call failed" );
+      }
+      else {
+         d = PyFloat_AsDouble( result );
+         Py_DECREF( result );
+      }
+
+      G__letdouble( res, 100, d );
+      return ( 1 || hash || res || libp );
+   }
+
+   class TF1InitWithPyFunc : public PyCallable {
+      static int s_count;
+
+   public:
+      virtual PyObject* operator()( PyObject* aTuple, PyObject* /* aDict */ ) {
+      // expected signature: ( char*, pyfunc, double, double, int )
+         int nArgs = PyTuple_GET_SIZE( aTuple );
+         if ( nArgs != 6 )
+            return 0;              // reported as an overload failure
+
+         PyObject* fcn = PyTuple_GetItem( aTuple, 2 );
+         if ( ! fcn or ! PyCallable_Check( fcn ) ) {
+            PyErr_SetString( PyExc_ValueError, "not a valid function" );
+            return 0;
+         }
+
+      // construct new identifier
+         char fid[ 32 ];
+         sprintf( fid, "pyroot_func_%d", s_count++ );
+
+      // build CINT functionclass placeholder
+         G__lastifuncposition();
+         G__memfunc_setup(
+            fid, 444, (G__InterfaceMethod)NULL,
+            100, -1, -1, 0, 2, 1, 1, 0, "D - - 0 - - D - - 0 - -",
+            (char*)NULL, (void*)((int)this + s_count), 0 );
+         G__resetifuncposition();
+
+         G__ClassInfo gcl;
+         gcl.AddMethod( "D", fid, "double*, double*" );
+
+         long offset = 0;
+         G__MethodInfo m = gcl.GetMethod( fid, "double*, double*", &offset );
+
+         G__ifunc_table* ifunc = m.ifunc();
+         int index = m.Index();
+
+         ifunc->pentry[index]->size        = -1;
+         ifunc->pentry[index]->filenum     = -1;
+         ifunc->pentry[index]->line_number = -1;
+         ifunc->pentry[index]->tp2f = (void*) pyFuncCallback;
+         ifunc->pentry[index]->p    = (void*) pyFuncCallback;
+
+      // setup association
+         int tag = -1 - s_count;
+         ifunc->p_tagtable[index] = tag;
+         Py_INCREF( fcn );
+         s_PyObjectCallbacks[ tag ] =
+            std::make_pair( fcn, (int) PyInt_AsLong( PyTuple_GET_ITEM( aTuple, 5 ) ) );
+
+      // get constructor and re-run
+         PyObject* pymeth =
+            PyObject_GetAttrString( PyTuple_GET_ITEM( aTuple, 0 ), "__init__" );
+
+         PyObject* args = PyTuple_New( nArgs - 1 );
+         ObjectHolder* dummy =
+            new ObjectHolder( (void*)((int)this + s_count), TObject::Class(), false );
+
+         for ( int iarg = 1; iarg < nArgs; ++iarg ) {
+            PyObject* item = PyTuple_GET_ITEM( aTuple, iarg );
+            if ( iarg != 2 ) {
+               Py_INCREF( item );
+               PyTuple_SET_ITEM( args, iarg - 1, item );
+            }
+            else {
+               PyTuple_SET_ITEM( args, iarg - 1, bindRootObject( dummy ) );
+            }
+         }
+
+         PyObject* result = PyObject_CallObject( pymeth, args );
+
+         Py_DECREF( args );
+         Py_DECREF( pymeth );
+         return result;
+      }
+   };
+
+   int TF1InitWithPyFunc::s_count = 0;
 }
 
 
@@ -644,6 +771,18 @@ bool PyROOT::pythonize( PyObject* pyclass, const std::string& name ) {
       Utility::addToClass( "__iter__", iterIter, pyclass );
       Utility::addToClass( "next",     iterNext, pyclass );
 
+      return true;
+   }
+
+   if ( name == "TF1" ) {
+   // allow instantiation with python function
+      PyObject* pymeth = PyObject_GetAttrString( pyclass, "__init__" );
+      MethodDispatcher* pmd = reinterpret_cast< MethodDispatcher* >(
+         PyCObject_AsVoidPtr( PyCFunction_GetSelf( PyMethod_Function( pymeth ) ) ) );
+
+      pmd->addMethod( new TF1InitWithPyFunc() );
+
+      Py_DECREF( pymeth );
       return true;
    }
 

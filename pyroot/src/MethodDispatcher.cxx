@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.5 2004/08/04 04:45:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.6 2004/08/04 20:46:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -97,6 +97,6 @@ PyObject* PyROOT::MethodDispatcher::operator()( PyObject* aTuple, PyObject* aDic
 }
 
 
-void PyROOT::MethodDispatcher::addMethod( MethodHolder* pmh ) {
+void PyROOT::MethodDispatcher::addMethod( PyCallable* pmh ) {
    m_methods.push_back( pmh );
 }

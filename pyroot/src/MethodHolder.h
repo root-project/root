@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.6 2004/07/29 04:41:38 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.7 2004/08/04 04:45:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -6,6 +6,7 @@
 
 // Bindings
 #include "Utility.h"
+#include "PyCallable.h"
 
 // ROOT
 class TClass;
@@ -24,10 +25,10 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    05/06/2004
-      @version 1.7
+      @version 1.8
  */
 
-   class MethodHolder {
+   class MethodHolder : public PyCallable {
    public:
       MethodHolder( TClass*, TMethod* tm );
       MethodHolder( const MethodHolder& );

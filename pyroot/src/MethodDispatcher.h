@@ -1,11 +1,11 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.3 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.4 2004/08/04 04:45:21 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODDISPATCHER_H
 #define PYROOT_METHODDISPATCHER_H
 
 // Bindings
-#include "MethodHolder.h"
+#include "PyCallable.h"
 
 // Standard
 #include <map>
@@ -23,7 +23,7 @@ namespace PyROOT {
 
    class MethodDispatcher {
       typedef std::map< unsigned long, int > DispatchMap_t;
-      typedef std::vector< MethodHolder* > Methods_t;
+      typedef std::vector< PyCallable* > Methods_t;
 
    public:
    // add the given dispatcher to the class, takes ownership of dispatcher
@@ -39,7 +39,7 @@ namespace PyROOT {
       }
 
       virtual PyObject* operator()( PyObject* aTuple, PyObject* aDict );
-      virtual void addMethod( MethodHolder* );
+      virtual void addMethod( PyCallable* );
 
    protected:
       static void destroy( void* );
