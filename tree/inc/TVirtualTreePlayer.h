@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.12 2002/02/20 16:48:42 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.13 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 class TTree;
 class TH1;
 class TTreeFormula;
-class TSlave;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -50,7 +49,6 @@ public:
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          GetDimension() const = 0;
     virtual TH1           *GetHistogram() const = 0;
-    virtual void           GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed) = 0;
     virtual Int_t          GetNfill() const = 0;
     virtual Int_t          GetSelectedRows() const = 0;
     virtual Int_t          GetMultiplicity() const = 0;
@@ -61,7 +59,7 @@ public:
     virtual TTreeFormula  *GetVar4() const = 0;
     virtual Double_t      *GetV1() const = 0;
     virtual Double_t      *GetV2() const = 0;
-    virtual Double_t      *GetV3() const = 0;
+    virtual Double_t      *GetV3() const = 0; 
     virtual Double_t      *GetW() const = 0;
     virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
@@ -75,7 +73,6 @@ public:
     virtual TSQLResult    *Query(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual void           SetEstimate(Int_t n) = 0;
-    virtual void           SetPacketSize(Int_t) = 0;
     virtual void           SetTree(TTree *t) = 0;
     virtual void           StartViewer(Int_t ww, Int_t wh) = 0;
     virtual Int_t          UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option

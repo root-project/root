@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.104 2002/09/12 07:03:25 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.105 2002/09/13 19:44:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -247,9 +247,7 @@
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TSocket.h"
-#include "TSlave.h"
 #include "TMessage.h"
-#include "TPacketGenerator.h"
 #include "TInterpreter.h"
 #include "Foption.h"
 #include "TTreeResult.h"
@@ -294,8 +292,6 @@ TTreePlayer::TTreePlayer()
    fSelect         = 0;
    fSelectedRows   = 0;
    fDraw           = 0;
-   fPacketGen      = 0;
-   fPacketSize     = 100;
    fHistogram      = 0;
 }
 
@@ -310,7 +306,6 @@ TTreePlayer::~TTreePlayer()
    if (fV2)    delete [] fV2;
    if (fV3)    delete [] fV3;
    if (fW)     delete [] fW;
-   delete fPacketGen;
 }
 
 //______________________________________________________________________________
@@ -1600,17 +1595,6 @@ const char *TTreePlayer::GetNameByIndex(TString &varexp, Int_t *index,Int_t coli
   column = varexp(i1,n);
 //  return (const char*)Form((const char*)column);
   return column.Data();
-}
-
-//______________________________________________________________________________
-void TTreePlayer::GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed)
-{
-   // Return in nentries and firstentry the optimal range of entries (packet)
-   // to be processed by slave sl. See TPacketGenerator for the algorithm
-   // used to get the packet size.
-
-   fPacketGen->GetNextPacket(sl, nentries, firstentry);
-   processed = fPacketGen->GetEntriesProcessed();
 }
 
 //______________________________________________________________________________
@@ -3107,15 +3091,6 @@ void TTreePlayer::SetEstimate(Int_t )
    delete [] fV2;  fV2 = 0;
    delete [] fV3;  fV3 = 0;
    delete [] fW;   fW  = 0;
-}
-
-//_______________________________________________________________________
-void TTreePlayer::SetPacketSize(Int_t size)
-{
-//*-*-*-*-*-*-*-*-*Set number of entries per packet for parallel root*-*-*-*-*
-//*-*              =================================================
-
-   fPacketSize = size;
 }
 
 //_______________________________________________________________________

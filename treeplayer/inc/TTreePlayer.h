@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.19 2002/02/23 15:45:57 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.20 2002/03/26 07:05:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,8 +37,6 @@
 class TTreeFormula;
 class TTreeFormulaManager;
 class TH1;
-class TSlave;
-class TPacketGenerator;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -60,7 +58,6 @@ protected:
     Int_t          fMultiplicity;   //  Indicator of the variability of the size of entries
     Int_t          fDimension;      //  Dimension of the current expression
     Int_t          fSelectedRows;   //  Number of selected entries
-    Int_t          fPacketSize;     //  Number of entries in one packet for parallel root
     Int_t          fNbins[4];       //  Number of bins per dimension
     Double_t       fVmin[4];        //  Minima of varexp columns
     Double_t       fVmax[4];        //  Maxima of varexp columns
@@ -68,7 +65,6 @@ protected:
     Double_t      *fV2;             //[fSelectedRows]Local buffer for variable 2
     Double_t      *fV3;             //[fSelectedRows]Local buffer for variable 3
     Double_t      *fW;              //[fSelectedRows]Local buffer for weights
-    TPacketGenerator *fPacketGen;   //! Packet generator
     TH1           *fHistogram;      //! Pointer to histogram used for the projection
 
 protected:
@@ -95,10 +91,7 @@ public:
     virtual Int_t     GetDimension() const {return fDimension;}
     TH1              *GetHistogram() const {return fHistogram;}
     Int_t             GetMultiplicity() const   {return fMultiplicity;}
-    virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
     virtual Int_t     GetNfill() const {return fNfill;}
-    TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
-    virtual Int_t     GetPacketSize() const {return fPacketSize;}
     const char       *GetScanFileName() const {return fScanFileName;}
     TTreeFormula     *GetSelect() const    {return fSelect;}
     virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
@@ -123,7 +116,6 @@ public:
     virtual TSQLResult *Query(const char *varexp="", const char *selection="", Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetEstimate(Int_t n);
-    virtual void      SetPacketSize(Int_t size = 100);
     void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
     void              SetScanFileName(const char *name) {fScanFileName=name;}
     virtual void      SetTree(TTree *t) {fTree = t;}
