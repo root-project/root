@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.10 2003/07/27 08:05:07 brun Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.11 2003/10/13 18:20:18 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -78,14 +78,14 @@
 #define ROOTBINARY "root.exe"
 #endif
 
-extern void PopupLogo();
+extern void PopupLogo(bool);
+extern void WaitLogo();
 extern void PopdownLogo();
 extern void CloseDisplay();
 
 
 static STRUCT_UTMP *gUtmpContents;
-static int          gBatch  = 0;
-static int          gNoLogo = 0;
+static bool gNoLogo = false;
 
 
 static int GetErrno()
@@ -233,7 +233,7 @@ static void SigUsr1(int)
 {
    // When we get SIGUSR1 from child (i.e. ROOT) then pop down logo.
 
-   if (!gBatch)
+   if (!gNoLogo)
       PopdownLogo();
 }
 
@@ -293,24 +293,38 @@ int main(int argc, char **argv)
    }
 #endif
 
-   // In batch mode don't show splash screen
+   // In batch mode don't show splash screen, idem for no logo mode,
+   // in about mode show always splash screen
+   bool batch = false, about = false;
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2)) {
          PrintUsage(argv[0]);
          return 1;
       }
-      if (!strcmp(argv[i], "-b")) gBatch  = 1;
-      if (!strcmp(argv[i], "-l")) gNoLogo = 1;
+      if (!strcmp(argv[i], "-b")) batch   = true;
+      if (!strcmp(argv[i], "-l")) gNoLogo = true;
+      if (!strcmp(argv[i], "-a")) about   = true;
+   }
+   if (batch)
+      gNoLogo = true;
+   if (about) {
+      batch   = false;
+      gNoLogo = false;
    }
 
-   if (!gBatch) {
+   if (!batch) {
       SetDisplay();
       if (!getenv("DISPLAY")) {
          fprintf(stderr, "%s: can't figure out DISPLAY, set it manually\n", argv[0]);
          return 1;
       }
-      if (!gNoLogo) PopupLogo();
+      if (about) {
+         PopupLogo(true);
+         WaitLogo();
+         return 0;
+      } else if (!gNoLogo)
+         PopupLogo(false);
    }
 
    // Ignore SIGINT and SIGQUIT. Install handler for SIGUSR1.
@@ -350,8 +364,11 @@ int main(int argc, char **argv)
    if ((childpid = fork()) < 0) {
       fprintf(stderr, "%s: error forking child\n", argv[0]);
       return 1;
-   } else if (childpid > 0)
+   } else if (childpid > 0) {
+      if (!gNoLogo)
+         WaitLogo();
       WaitChild(childpid);
+   }
 
    // Continue with child...
 
