@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.46 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.47 2003/11/07 08:59:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -15,8 +15,8 @@
 #include "TF2.h"
 #include "TProfile.h"
 #include "TRandom.h"
-#include "TMatrix.h"
-#include "TMatrixD.h"
+#include "TMatrixFBase.h"
+#include "TMatrixDBase.h"
 #include "THLimitsFinder.h"
 
 ClassImp(TH2)
@@ -2275,8 +2275,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2F::TH2F(const TMatrix &m)
-     :TH2("TMatrix","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
+TH2F::TH2F(const TMatrixFBase &m)
+     :TH2("TMatrixFBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
    TArrayF::Set(fNcells);
    Int_t ilow = m.GetRowLwb();
@@ -2509,8 +2509,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 //______________________________________________________________________________
-TH2D::TH2D(const TMatrixD &m)
-     :TH2("TMatrixD","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
+TH2D::TH2D(const TMatrixDBase &m)
+     :TH2("TMatrixDBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
    TArrayD::Set(fNcells);
    Int_t ilow = m.GetRowLwb();

@@ -5,7 +5,7 @@
 PLATFORM      = macosx
 
 DEBUGFLAGS    = -g -O
-OPTFLAGS      = -O
+OPTFLAGS      = -O2
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -22,11 +22,11 @@ endif
 # LD            = c++
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -W -Wall -fsigned-char -fno-common \
+CXXFLAGS      = -pipe -Wall -W -Woverloaded-virtual -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
-CINTCXXFLAGS  = -pipe -W -Wall -fsigned-char -fno-common \
+CINTCXXFLAGS  = -pipe -Wall -W -Woverloaded-virtual -fsigned-char -fno-common \
                 -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
 		-DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL

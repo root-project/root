@@ -656,14 +656,15 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.23 2002/12/02 18:50:04 rdm Exp $
-// $Date: 2002/12/02 18:50:04 $
-// $Author: rdm $
+// $Id: TPrincipal.cxx,v 1.24 2003/09/03 06:08:34 brun Exp $
+// $Date: 2003/09/03 06:08:34 $
+// $Author: brun $
 
 #include "TPrincipal.h"
 
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#include "TMatrixDSymEigen.h"
 #include "TList.h"
 #include "TH2.h"
 #include "TDatime.h"
@@ -686,7 +687,7 @@ TPrincipal::TPrincipal()
 TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   : fMeanValues(nVariables),
     fSigmas(nVariables),
-    fCovarianceMatrix(nVariables,nVariables),
+    fCovarianceMatrix(nVariables),
     fEigenVectors(nVariables,nVariables),
     fEigenValues(nVariables),
     fOffDiagonal(nVariables),
@@ -1329,7 +1330,9 @@ void TPrincipal::MakePrincipals()
   // Normalize matrix covariance matrix
   MakeNormalised();
 
-  fEigenVectors= fCovarianceMatrix.EigenVectors(fEigenValues);
+  TMatrixDSymEigen eigen(fCovarianceMatrix);
+  fEigenVectors = eigen.GetEigenVectors();
+  fEigenValues  = eigen.GetEigenValues();
 }
 
 //____________________________________________________________________
@@ -1617,7 +1620,7 @@ void TPrincipal::Print(Option_t *opt) const
     for (Int_t i = 0; i < fNumberOfVariables; i++) {
       cout << "Eigenvector # " << i << flush;
       TVectorD v(fNumberOfVariables);
-      v = TMatrixDColumn(fEigenVectors,i);
+      v = TMatrixDColumn_const(fEigenVectors,i);
       v.Print();
     }
   }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TUtilHist.cxx,v 1.1 2002/09/15 10:16:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TUtilHist.cxx,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -19,9 +19,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TUtilHist.h"
-#include "TMatrix.h"
-#include "TMatrixD.h"
-#include "TVector.h"
+#include "TMatrixFBase.h"
+#include "TMatrixDBase.h"
+#include "TVectorF.h"
 #include "TVectorD.h"
 #include "TH2.h"
 #include "TF1.h"
@@ -49,46 +49,46 @@ void TUtilHist::InitStandardFunctions()
 }
 
 //______________________________________________________________________________
-void TUtilHist::PaintMatrix(TMatrix &m, Option_t *option)
+void TUtilHist::PaintMatrix(const TMatrixFBase &m, Option_t *option)
 {
-// to draw a TMatrix using a TH2F
+// to draw a TMatrixFBase using a TH2F
    
    Bool_t status = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
-   TH2F *R__TMatrix = new TH2F(m);
-   R__TMatrix->SetBit(kCanDelete);
-   R__TMatrix->Draw(option);
+   TH2F *R__TMatrixFBase = new TH2F(m);
+   R__TMatrixFBase->SetBit(kCanDelete);
+   R__TMatrixFBase->Draw(option);
    TH1::AddDirectory(status);   
 }
 
 //______________________________________________________________________________
-void TUtilHist::PaintMatrix(TMatrixD &m, Option_t *option)
+void TUtilHist::PaintMatrix(const TMatrixDBase &m, Option_t *option)
 {
-// to draw a TMatrixD using a TH2D
+// to draw a TMatrixDBase using a TH2D
    
    Bool_t status = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
-   TH2D *R__TMatrixD = new TH2D(m);
-   R__TMatrixD->SetBit(kCanDelete);
-   R__TMatrixD->Draw(option);
+   TH2D *R__TMatrixDBase = new TH2D(m);
+   R__TMatrixDBase->SetBit(kCanDelete);
+   R__TMatrixDBase->Draw(option);
    TH1::AddDirectory(status);   
 }
 
 //______________________________________________________________________________
-void TUtilHist::PaintVector(TVector &v, Option_t *option)
+void TUtilHist::PaintVector(const TVectorF &v, Option_t *option)
 {
-// to draw a TVector using a TH1F
+// to draw a TVectorF using a TH1F
    
    Bool_t status = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
-   TH1F *R__TVector = new TH1F(v);
-   R__TVector->SetBit(kCanDelete);
-   R__TVector->Draw(option);
+   TH1F *R__TVectorF = new TH1F(v);
+   R__TVectorF->SetBit(kCanDelete);
+   R__TVectorF->Draw(option);
    TH1::AddDirectory(status);   
 }
 
 //______________________________________________________________________________
-void TUtilHist::PaintVector(TVectorD &v, Option_t *option)
+void TUtilHist::PaintVector(const TVectorD &v, Option_t *option)
 {
 // to draw a TVectorD using a TH1D
    

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.25 2004/01/06 15:51:52 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.26 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -197,7 +197,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 }
 
 //______________________________________________________________________________
-void Event::Clear(Option_t *option)
+void Event::Clear(Option_t * /*option*/)
 {
    fTracks->Clear("C"); //will also call Track::Clear
    fHighPt->Delete();
@@ -205,7 +205,7 @@ void Event::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t * /*option*/)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);

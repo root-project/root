@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.6 2002/01/24 11:39:31 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.7 2002/10/23 20:47:47 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -15,7 +15,7 @@
 #include "Riostream.h"
 
 
-class do_downsample : public TElementPosAction {
+class do_downsample : public TElementPosActionF {
 private:
    const TMatrix &fOrigMatrix;
    const int row_lwb, col_lwb;
@@ -29,25 +29,25 @@ public:
 };
 
 // Downsample matrix - new style
-class downsample_matrix : public TLazyMatrix {
+class downsample_matrix : public TMatrixFLazy {
 private:
    const TMatrix &fOrigMatrix;
-   void FillIn(TMatrix &m) const;
+   void FillIn(TMatrixF &m) const;
 public:
   downsample_matrix(const TMatrix &orig_matrix);
 };
 
 // Just figure out the dimensions of the downsampled (lazy) matrix
 downsample_matrix::downsample_matrix(const TMatrix &orig_matrix)
-        : TLazyMatrix(orig_matrix.GetRowLwb(),
-                     (orig_matrix.GetNrows()+1)/2 + orig_matrix.GetRowLwb()-1,
-                     orig_matrix.GetColLwb(),
-                     (orig_matrix.GetNcols()+1)/2 + orig_matrix.GetColLwb()-1),
-		     fOrigMatrix(orig_matrix)
+        : TMatrixFLazy(orig_matrix.GetRowLwb(),
+                      (orig_matrix.GetNrows()+1)/2 + orig_matrix.GetRowLwb()-1,
+                      orig_matrix.GetColLwb(),
+                      (orig_matrix.GetNcols()+1)/2 + orig_matrix.GetColLwb()-1),
+		      fOrigMatrix(orig_matrix)
 { }
 
 // "construct" the new matrix (when the lazy matrix is being "rolled out")
-void downsample_matrix::FillIn(TMatrix &m) const
+void downsample_matrix::FillIn(TMatrixF &m) const
 {
    do_downsample d(fOrigMatrix);
    m.Apply(d);
@@ -77,7 +77,7 @@ int main()
 
    {
       cout << "\nMake sure that both methods give the same results" << endl;
-      TMatrix orig_m = THaarMatrix(9,201);   // which is a pretty big matrix
+      TMatrix orig_m = THaarMatrixF(9,201);   // which is a pretty big matrix
       TMatrix small1 = traditional_downsampling(orig_m);
       TMatrix small2 = downsample_matrix(orig_m);
       Assert( small1 == small2 );
@@ -87,7 +87,7 @@ int main()
       cout << "\nClock the traditional downsampling" << endl;
       sw.Start();
       for (int order = 1; order <= 10; order++) {
-         TMatrix orig_m = THaarMatrix(order);   // may be pretty big, btw
+         TMatrix orig_m = THaarMatrixF(order);   // may be pretty big, btw
          for (int count = 0; count < (1<<(12-order)); count++) {
             TMatrix small = traditional_downsampling(orig_m);
             small(0,0) = 1;                     // just to use the matrix
@@ -101,7 +101,7 @@ int main()
       cout << "\nClock the 'new style' downsampling (with lazy matrices)"<< endl;
       sw.Start();
       for (int order = 1; order <= 10; order++) {
-         TMatrix orig_m = THaarMatrix(order);     // may be pretty big, btw
+         TMatrix orig_m = THaarMatrixF(order);     // may be pretty big, btw
          for (int count = 0; count < (1<<(12-order)); count++) {
             TMatrix small = downsample_matrix(orig_m);
             small(0,0) = 1;                       // just to use the matrix

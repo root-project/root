@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.37 2003/07/25 17:22:38 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.38 2003/12/16 09:03:12 brun Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1747,7 +1747,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    return dirname;
 }
 
-Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TestDirList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
    // process message sent to this widget.
 
@@ -1933,7 +1933,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kPointer));
 }
 
-Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
    // process message sent to this widget.
 
@@ -2277,7 +2277,7 @@ void EntryTestDlg::SetLimits()
    }
 }
 
-Bool_t EntryTestDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t EntryTestDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:

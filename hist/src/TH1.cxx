@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.164 2004/01/08 14:54:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.165 2004/01/16 13:32:46 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "THLimitsFinder.h"
 #include "TProfile.h"
 #include "TStyle.h"
-#include "TVector.h"
+#include "TVectorF.h"
 #include "TVectorD.h"
 
 //______________________________________________________________________________
@@ -6190,11 +6190,11 @@ TH1F::TH1F(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1F::TH1F(const TVector &v)
-     : TH1("TVector","",v.GetNrows(),0,v.GetNrows())
+TH1F::TH1F(const TVectorF &v)
+     : TH1("TVectorF","",v.GetNrows(),0,v.GetNrows())
 {
-// Create a histogram from a TVector
-// by default the histogram name is "TVector" and title = ""
+// Create a histogram from a TVectorF
+// by default the histogram name is "TVectorF" and title = ""
 
    TArrayF::Set(fNcells);
    fDimension = 1;
@@ -6393,8 +6393,8 @@ TH1D::TH1D(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 TH1D::TH1D(const TVectorD &v)
      : TH1("TVectorD","",v.GetNrows(),0,v.GetNrows())
 {
-// Create a histogram from a TVector
-// by default the histogram name is "TVector" and title = ""
+// Create a histogram from a TVectorD
+// by default the histogram name is "TVectorD" and title = ""
 
    TArrayD::Set(fNcells);
    fDimension = 1;

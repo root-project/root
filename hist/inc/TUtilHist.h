@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.1 2002/09/15 10:16:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TUtilHist.h,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -25,9 +25,9 @@
 #include "TVirtualUtilHist.h"
 #endif
 
-class TMatrix;
-class TMatrixD;
-class TVector;
+class TMatrixFBase;
+class TMatrixDBase;
+class TVectorF;
 class TVectorD;
 
 class TUtilHist : public TVirtualUtilHist {
@@ -37,10 +37,10 @@ public:
    TUtilHist();
    virtual     ~TUtilHist();
    virtual void  InitStandardFunctions();
-   virtual void  PaintMatrix(TMatrix &m, Option_t *option);
-   virtual void  PaintMatrix(TMatrixD &m, Option_t *option);
-   virtual void  PaintVector(TVector &v, Option_t *option);
-   virtual void  PaintVector(TVectorD &v, Option_t *option);
+   virtual void  PaintMatrix(const TMatrixFBase &m, Option_t *option);
+   virtual void  PaintMatrix(const TMatrixDBase &m, Option_t *option);
+   virtual void  PaintVector(const TVectorF     &v, Option_t *option);
+   virtual void  PaintVector(const TVectorD     &v, Option_t *option);
 
    ClassDef(TUtilHist,0)  //misc. histogram  utilities
 };

@@ -102,7 +102,7 @@ void TSTLhit::Clear(Option_t *)
    fList1.erase(fList1.begin(),fList1.end());
 }
 
-void TSTLhit::MakeEvent(int ievent)
+void TSTLhit::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
@@ -177,7 +177,7 @@ void TSTLhitStar::Clear(Option_t *)
    fList2.erase(fList2.begin(),fList2.end());
 }
 
-void TSTLhitStar::MakeEvent(int ievent)
+void TSTLhitStar::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
@@ -251,7 +251,7 @@ void TCloneshit::Clear(Option_t *)
    //fList3->Clear();   
 }
 
-void TCloneshit::MakeEvent(int ievent)
+void TCloneshit::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {

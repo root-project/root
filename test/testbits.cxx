@@ -178,7 +178,7 @@ static void test_get_to_int(UInt_t nbits) {
 // don't have access to a 64-bit machine at the moment so long test would be
 // pointless...
 
-int main(int c,char **v) {
+int main(int /*c*/,char **v) {
     TROOT app("bits_test", "Tests the TBits class's new functionality");
     
     fprintf(stderr,"%s: ",v[0]);

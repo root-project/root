@@ -55,6 +55,10 @@ VMATRIXO      = vmatrix.$(ObjSuf)
 VMATRIXS      = vmatrix.$(SrcSuf)
 VMATRIX       = vmatrix$(ExeSuf)
 
+STRESSLO      = stressLinear.$(ObjSuf)
+STRESSLS      = stressLinear.$(SrcSuf)
+STRESSL       = stressLinear$(ExeSuf)
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
@@ -108,7 +112,7 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM) $(TESTBITS)
+                $(STRESSGEOM) $(STRESSL) $(TESTBITS)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -185,6 +189,10 @@ $(VMATRIX):     $(VMATRIXO)
 		@echo "$@ done"
 
 $(VLAZY):       $(VLAZYO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSL):     $(STRESSLO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
