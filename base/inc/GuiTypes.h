@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.4 2002/06/16 01:21:55 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: GuiTypes.h,v 1.5 2003/05/28 11:55:32 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,7 +63,7 @@ enum EGEventType {
    kMotionNotify, kEnterNotify, kLeaveNotify, kFocusIn, kFocusOut,
    kExpose, kConfigureNotify, kMapNotify, kUnmapNotify, kDestroyNotify,
    kClientMessage, kSelectionClear, kSelectionRequest, kSelectionNotify,
-   kColormapNotify, kOtherEvent
+   kColormapNotify, kButtonDoubleClick, kOtherEvent
 };
 
 enum EGraphicsFunction {
@@ -211,7 +211,7 @@ enum EMouseButton { kAnyButton, kButton1, kButton2, kButton3,
                     kButton4, kButton5 };
 
 // Some magic X notify modes used in TGTextEntry widget.
-// Values must match the ones in /usr/include/X11/X.h Check when porting.
+// Values must match the ones in /usr/include/X11/X.h. Check when porting.
 enum EXMagic { kNotifyNormal = 0, kNotifyGrab = 1, kNotifyUngrab = 2,
                kNotifyPointer = 5, kColormapUninstalled = 0,
                kColormapInstalled = 1 };

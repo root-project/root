@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.50 2004/03/12 13:09:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.51 2004/03/12 14:17:01 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -351,7 +351,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    // Handle all frame events. Events are dispatched to the specific
    // event handlers.
 
-   if (IsEditEvent(event)) return HandleEditEvent(event);
+   if (IsEditEvent(event))
+      return HandleEditEvent(event);
 
    switch (event->fType) {
 
@@ -375,7 +376,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
          HandleFocusChange(event);
          break;
 
-     case kButtonPress:
+      case kButtonPress:
          {
             Int_t dbl_clk = kFALSE;
 
@@ -383,13 +384,14 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
                 (event->fCode == fgLastButton) &&
                 (TMath::Abs(event->fXRoot - fgDbx) < 6) &&
                 (TMath::Abs(event->fYRoot - fgDby) < 6) &&
-                (event->fWindow == fgDbw)) dbl_clk = kTRUE;
+                (event->fWindow == fgDbw))
+               dbl_clk = kTRUE;
 
-             fgLastClick = event->fTime;
-             fgLastButton = event->fCode;
-             fgDbx = event->fXRoot;
-             fgDby = event->fYRoot;
-             fgDbw = event->fWindow;
+            fgLastClick  = event->fTime;
+            fgLastButton = event->fCode;
+            fgDbx = event->fXRoot;
+            fgDby = event->fYRoot;
+            fgDbw = event->fWindow;
 
             if (!dbl_clk && IsEditEvent(event) &&
                 (event->fCode == kButton3)) {
@@ -403,6 +405,18 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             } else {
                HandleButton(event);
             }
+         }
+         break;
+
+      case kButtonDoubleClick:
+         {
+            fgLastClick  = event->fTime;
+            fgLastButton = event->fCode;
+            fgDbx = event->fXRoot;
+            fgDby = event->fYRoot;
+            fgDbw = event->fWindow;
+
+            HandleDoubleClick(event);
          }
          break;
 
