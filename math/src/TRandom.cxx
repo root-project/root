@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.2 2000/05/25 06:35:32 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -211,7 +211,7 @@ Int_t TRandom::Binomial(Int_t ntot, Float_t prob)
    if (prob < 0 || prob > 1) return 0;
    Int_t N = 0;
    for (Int_t i=0;i<ntot;i++) {
-      if (Rndm(N) > prob) break;
+      if (Rndm(N) > prob) continue;
       N++;
    }
    return N;
