@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.3 2000/07/18 07:11:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.4 2002/01/15 00:45:21 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -18,18 +18,18 @@
 
 #include "TROOT.h"
 #include "TTree.h"
+#include "THashList.h"
 #include "TSelectorCint.h"
 #include "Api.h"
 
 ClassImp(TSelectorCint)
 
 //______________________________________________________________________________
-TSelectorCint::TSelectorCint(): TSelector()
+TSelectorCint::TSelectorCint() : TSelector()
 {
    // Default constructor for a Selector.
 
    fFuncBegin   = 0;
-   fFuncBegin2  = 0;
    fFuncNotif   = 0;
    fFuncTerm    = 0;
    fFuncCut     = 0;
@@ -49,7 +49,6 @@ TSelectorCint::~TSelectorCint()
    // destructor for a Selector.
 
    delete fFuncBegin;
-   delete fFuncBegin2;
    delete fFuncNotif;
    delete fFuncTerm;
    delete fFuncCut;
@@ -68,7 +67,6 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 
    fIntSelector = iselector;
    fFuncBegin   = new G__CallFunc();
-   fFuncBegin2  = new G__CallFunc();
    fFuncNotif   = new G__CallFunc();
    fFuncTerm    = new G__CallFunc();
    fFuncCut     = new G__CallFunc();
@@ -80,7 +78,6 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    fFuncOut     = new G__CallFunc();
    Long_t offset = 0;
    fFuncBegin->SetFuncProto(cl,"Begin","TTree*",&offset);
-   fFuncBegin2->SetFuncProto(cl,"Begin","",&offset);
    fFuncNotif->SetFuncProto(cl,"Notify","",&offset);
    fFuncTerm->SetFuncProto (cl,"Terminate","",&offset);
    fFuncCut->SetFuncProto  (cl,"ProcessCut","int",&offset);
@@ -100,15 +97,6 @@ void TSelectorCint::Begin(TTree *tree)
 
    fFuncBegin->SetArg((Long_t)tree);
    fFuncBegin->ExecInt(fIntSelector);
-}
-
-
-//______________________________________________________________________________
-void TSelectorCint::Begin()
-{
-   // Invoke the Begin function via the interpreter
-
-   fFuncBegin2->ExecInt(fIntSelector);
 }
 
 
@@ -182,7 +170,7 @@ void TSelectorCint::SetInputList(TList *input)
 
 
 //______________________________________________________________________________
-TList *TSelectorCint::GetOutputList()
+TList *TSelectorCint::GetOutputList() const
 {
    return (TList *) fFuncOut->ExecInt(fIntSelector);
 }

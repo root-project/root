@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name$:$Id$ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,5 +20,10 @@
 #pragma link C++ class TProof;
 #pragma link C++ class TProofServ;
 #pragma link C++ class TSlave;
+#pragma link C++ class TProofPlayer+;
+#pragma link C++ class TProofPlayerLocal+;
+#pragma link C++ class TProofPlayerRemote+;
+#pragma link C++ class TProofPlayerSlave+;
+#pragma link C++ class TEventIter+;
 
 #endif

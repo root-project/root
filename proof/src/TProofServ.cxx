@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.13 2001/10/02 09:09:54 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.14 2002/01/15 00:45:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -45,7 +45,7 @@ typedef long off_t;
 #include "TEnv.h"
 #include "TError.h"
 #include "TTree.h"
-#include "TPlayer.h"
+#include "TProofPlayer.h"
 #include "TDSet.h"
 
 
@@ -528,12 +528,12 @@ void TProofServ::HandleSocketInput()
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
-            TPlayer *p;
+            TProofPlayer *p;
 
             if (IsMaster()) {
-               p = new TPlayerRemote(gProof);
+               p = new TProofPlayerRemote(gProof);
             } else {
-               p = new TPlayerSlave;
+               p = new TProofPlayerSlave;
             }
 
             TIter next(input);

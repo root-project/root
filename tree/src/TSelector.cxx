@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.5 2000/07/18 07:11:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.6 2001/03/03 08:49:35 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -32,21 +32,30 @@
 
 #include "TROOT.h"
 #include "TTree.h"
+#include "THashList.h"
+#include "TError.h"
 #include "TSelectorCint.h"
 #include "Api.h"
 
 ClassImp(TSelector)
 
 //______________________________________________________________________________
-TSelector::TSelector(): TObject()
+TSelector::TSelector() : TObject()
 {
-   // Default constructor for a Selector.
+   // Default selector ctor.
+
+   fObject = 0;
+   fInput  = 0;
+   fOutput = new THashList;
+   fOutput->IsOwner();;
 }
 
 //______________________________________________________________________________
 TSelector::~TSelector()
 {
-   // destructor for a Selector.
+   // Selector destructor.
+
+   delete fOutput;
 }
 
 
@@ -59,10 +68,10 @@ TSelector *TSelector::GetSelector(const char *filename)
 //
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
-//   
+//
 //     Bool_t TSelector::Notify(). This function is called at the first entry
 //          of a new file in a chain.
-//   
+//
 //     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
@@ -71,14 +80,14 @@ TSelector *TSelector::GetSelector(const char *filename)
 //     void TSelector::ProcessFill(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
 //     void TSelector::Terminate(). This function is called at the end of
-//          the loop on all events. 
+//          the loop on all events.
 //
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
 //      and dynamically loaded. The corresponding binary file and shared library
 //      will be deleted at the end of the function.
 //   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. At next call, if file.C is older than file.o 
+//      and dynamically loaded. At next call, if file.C is older than file.o
 //      and file.so, the file.C is not compiled, only file.so is loaded.
 //
 //   The static function returns a pointer to a TSelector object
@@ -87,7 +96,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    char localname[256];
    sprintf(localname,".L %s",filename);
    gROOT->ProcessLine(localname);
-   
+
    //loop on all classes known to CINT to find the class on filename
    //that derives from TSelector
    strcpy(localname,filename);
@@ -103,10 +112,10 @@ TSelector *TSelector::GetSelector(const char *filename)
       break;
    }
    if (!OK) {
-      gROOT->Error("GetSelector","file:%s does not have a valid class deriving from TSelector",filename);
+      ::Error("TSelector::GetSelector","file %s does not have a valid class deriving from TSelector",filename);
       return 0;
-   } 
-   
+   }
+
    // we can now create an instance of the class
    TSelector *selector = (TSelector*)cl.New();
    if (!selector || IsCompiled) return selector;
@@ -114,7 +123,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    //create a fake selector
    TSelectorCint *select = new TSelectorCint();
    select->Build(selector,&cl);
-   
+
    return select;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.10 2001/04/11 11:10:44 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.11 2002/01/15 00:45:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -41,7 +41,7 @@ class TMonitor;
 class TFile;
 class TSignalHandler;
 class TSlave;
-class TPlayer;
+class TProofPlayer;
 class TDSet;
 class TEventList;
 class TTree;  // obsolete
@@ -85,7 +85,7 @@ private:
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
    Int_t     fLimits;        //used by Limits()
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
-   TPlayer  *fPlayer;        //current player
+   TProofPlayer   *fPlayer;     //current player
 
    Int_t     Init(const char *masterurl, const char *conffile,
                   const char *confdir, Int_t loglevel);

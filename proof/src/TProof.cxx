@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.12 2001/03/05 15:34:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.13 2002/01/15 00:45:20 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
-#include "TPlayer.h"
+#include "TProofPlayer.h"
 
 class TDSet;
 
@@ -1101,7 +1101,7 @@ Int_t TProof::Process(TDSet *set, const char *selector, Int_t nentries,
    // Process a data set (TDSet) using the specified selector (.C) file.
 
    if (!fPlayer)
-      fPlayer = new TPlayerRemote(this);
+      fPlayer = new TProofPlayerRemote(this);
 
    fPlayer->GetOutputList()->Delete();
 
@@ -1115,7 +1115,7 @@ void TProof::AddInput(TObject *obj)
    // the selector (see Process()).
 
    if (!fPlayer)
-      fPlayer = new TPlayerRemote(this);
+      fPlayer = new TProofPlayerRemote(this);
 
    fPlayer->AddInput(obj);
 }
