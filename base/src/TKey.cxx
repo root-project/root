@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.8 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.9 2000/12/19 08:51:38 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -456,8 +456,15 @@ TObject *TKey::ReadObj()
          bufcur += nin;
          objbuf += nout;
       }
-      if (nout) obj->Streamer(*fBufferRef);
-      delete [] fBuffer;
+      if (nout) {
+         obj->Streamer(*fBufferRef);
+         delete [] fBuffer;
+      } else {
+         delete [] fBuffer;
+         delete obj;
+         obj = 0;
+         goto CLEAR;
+      }
    } else {
       obj->Streamer(*fBufferRef);
    }
@@ -470,6 +477,7 @@ TObject *TKey::ReadObj()
       dir->SetTitle(GetTitle());
       gDirectory->Append(dir);
    }
+CLEAR:
    delete fBufferRef;
    fBufferRef = 0;
    fBuffer    = 0;
