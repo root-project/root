@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.1 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoTrack.h,v 1.2 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   2003/04/10
 
 /*************************************************************************
@@ -75,7 +75,7 @@ public:
    Bool_t              HasPoints() const {return (GetNpoints()==0)?kFALSE:kTRUE;}
    Bool_t              IsInTimeRange() const;
    virtual void        Paint(Option_t *option="") = 0;
-   virtual void        PaintCollect(Double_t /*time*/, Double_t */*box*/) {;}
+   virtual void        PaintCollect(Double_t /*time*/, Double_t * /*box*/) {;}
    virtual void        PaintCollectTrack(Double_t /*time*/, Double_t */*box*/) {;}
    virtual void        PaintTrack(Option_t *option="") = 0;
    virtual void        ResetTrack() = 0;
