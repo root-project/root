@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.100 2004/05/17 15:06:37 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.101 2004/05/18 04:55:29 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2098,8 +2098,8 @@ const char *TUnixSystem::GetLinkedLibraries()
    if (once)
       return 0;
 
-   const char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
-                                    kExecutePermission);
+   char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
+                              kExecutePermission);
    if (!exe) {
       once = kTRUE;
       return 0;
@@ -2127,12 +2127,15 @@ const char *TUnixSystem::GetLinkedLibraries()
       TString delim(" \t");
       TObjArray *tok = ldd.Tokenize(delim);
 
+      // expected format:
+      //    libCore.so => /home/rdm/root/lib/libCore.so (0x40017000)
       TObjString *solibName = (TObjString*)tok->At(2);
-      if (solibName==0) {
-         // Case where there is only one name of the list.
+      if (!solibName) {
+         // case where there is only one name of the list:
+         //    /usr/platform/SUNW,UltraAX-i2/lib/libc_psr.so.1
          solibName = (TObjString*)tok->At(0);
       }
-      if ( solibName ) {
+      if (solibName) {
          TString solib = solibName->String();
          if (solib.EndsWith(".so")) {
             if (!linkedLibs.IsNull())
@@ -2140,7 +2143,7 @@ const char *TUnixSystem::GetLinkedLibraries()
             linkedLibs += solib;
          }
       }
-      delete tok;        
+      delete tok;
    }
    ClosePipe(p);
 #endif
