@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.103 2003/09/10 15:14:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.106 2003/11/13 15:15:11 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1517,9 +1517,10 @@ TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
       if (h->LoadPlugin() == -1)
          return 0;
       if (!configfile)
-         return h->ExecPlugin(1, cluster);
-      return h->ExecPlugin(2, cluster, configfile);
+         return (TVirtualProof *) h->ExecPlugin(1, cluster);
+      return (TVirtualProof *) h->ExecPlugin(2, cluster, configfile);
    }
+   return 0;
 }
 
 //______________________________________________________________________________
