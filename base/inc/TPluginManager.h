@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.2 2002/01/27 15:53:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.h,v 1.3 2002/07/16 13:57:14 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -123,7 +123,7 @@ public:
    void   LoadHandlersFromEnv(TEnv *env);
    void   AddHandler(const char *base, const char *regexp,
                      const char *className, const char *pluginName,
-                     const char *ctor);
+                     const char *ctor = 0);
    void   RemoveHandler(const char *base, const char *regexp = 0);
 
    TPluginHandler *FindHandler(const char *base, const char *uri = 0);
