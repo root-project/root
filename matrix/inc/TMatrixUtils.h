@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.2 2000/11/21 20:39:01 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -144,7 +144,7 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;  // the matrix I am a row of
+   const TMatrix  *fMatrix;  //! the matrix I am a row of
    Int_t           fRowInd;  // effective row index
    Int_t           fInc;     // if ptr = @a[row,i], then ptr+inc = @a[row,i+1]
    Real_t         *fPtr;     //! pointer to the a[row,0]
@@ -181,7 +181,7 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;         // the matrix I am a column of
+   const TMatrix  *fMatrix;         //! the matrix I am a column of
    Int_t           fColInd;         // effective column index
    Real_t         *fPtr;            //! pointer to the a[0,i] column
 
@@ -217,7 +217,7 @@ friend class TMatrix;
 friend class TVector;
 
 private:
-   const TMatrix  *fMatrix;  // the matrix I am the diagonal of
+   const TMatrix  *fMatrix;  //! the matrix I am the diagonal of
    Int_t           fInc;     // if ptr=@a[i,i], then ptr+inc = @a[i+1,i+1]
    Int_t           fNdiag;   // number of diag elems, min(nrows,ncols)
    Real_t         *fPtr;     //! pointer to the a[0,0]
