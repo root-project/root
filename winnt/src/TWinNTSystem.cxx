@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.57 2003/12/31 16:36:32 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.58 2004/01/12 10:10:45 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -341,11 +341,9 @@ Bool_t TWinNTSystem::Init()
 
 
 #ifdef GDK_WIN32
-//    if (!gROOT->IsBatch()) {
-        hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-        hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
-            &thread1ID );
-//    }
+   hEvent1 = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+   hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
+                                      &thread1ID );
 #else
    // Create Event HANDLE for stand-alone ROOT-based applications
    fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
@@ -751,6 +749,15 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event in TApplication::Run() loop
 
+   // We do not use blocking (like MsgWaitForMultipleObjects or unix select). 
+   // calling ::SleepEx(1, 1) on return does the same dirty work ;-) 
+   // i.e. prevents from 100% CPU time occupation.
+   class ThreadSwitch {
+   public:
+      ThreadSwitch() {}
+      ~ThreadSwitch() { ::SleepEx(1, 1); } 
+   } switcher;
+
    if (gROOT->IsLineProcessing()) {
       return;   // might block, but rarely
    }
@@ -806,11 +813,6 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
    fNfd = 0;
    fReadready.Zero();
    fWriteready.Zero();
-
-   // We do not use blocking (like MsgWaitForMultipleObjects). 
-   // ::SleepEx(1, 1) does the same dirty work ;-)
-   // i.e. prevents from 100% CPU time occupation.
-   ::SleepEx(1, 1);
 }
 
 #endif
