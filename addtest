@@ -18,7 +18,7 @@ printUSAGE() {
 
 printALREADY_EXIST() {
 			echo "" ;
-			echo "Test name already exists" ;
+			echo "A target '$1' already exists in $2/Makefile " ;
 			exit 1 ;
 		     }
 
@@ -38,7 +38,7 @@ check_target2=`grep -F "$1:" $2/Makefile`
 
 
 if [ "$check_target" != "" ]; then
-	printALREADY_EXIST ;
+	printALREADY_EXIST $1 $2;
 fi
 
 #printERROR ;
