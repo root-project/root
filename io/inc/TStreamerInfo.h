@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.35 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.36 2002/07/04 16:15:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -109,7 +109,11 @@ public:
    void                PrintValue(const char *name, char *pointer, Int_t i, Int_t len) const;
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset) const;
    Int_t               ReadBuffer(TBuffer &b, char *pointer, Int_t first);
+   Int_t               ReadBufferSkip(TBuffer &b, char *pointer, Int_t i, Int_t kase, TStreamerElement *aElement);
+   Int_t               ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t kase, TStreamerElement *aElement);
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
+   Int_t               ReadBufferClonesSkip(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t i, Int_t kase, TStreamerElement *aElement);
+   Int_t               ReadBufferClonesConv(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t i, Int_t kase, Int_t eoffset, TStreamerElement *aElement);
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile(TFile *fFile);
