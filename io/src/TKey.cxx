@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.9 2000/12/19 08:51:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.10 2001/01/02 20:54:42 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -651,8 +651,8 @@ Int_t TKey::WriteFile(Int_t cycle)
   if (fLeft > 0) nsize += sizeof(Int_t);
   gFile->Seek(fSeekKey);
   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-     int nb = kMAXFILEBUFFER;
-     if( i+nb >nsize) nb= int(nsize -i);
+     Int_t nb = kMAXFILEBUFFER;
+     if (i+nb > nsize) nb = nsize - i;
      gFile->WriteBuffer(buffer,nb);
      buffer += nb;
   }
