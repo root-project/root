@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.4 2000/11/17 10:26:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.5 2002/08/02 11:05:01 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -57,13 +57,14 @@
 class TTimer : public TSysEvtHandler {
 
 protected:
-   TTime     fTime;      // time out time in ms
-   TTime     fAbsTime;   // absolute time out time in ms
-   Bool_t    fTimeout;   // true if timer has timed out
-   Bool_t    fSync;      // true if synchrounous timer
-   UInt_t    fTimeID;    // the system ID of this timer (for WIN32)
-   TObject  *fObject;    // object to be notified (if any)
-   TString   fCommand;   // interpreter command to be executed
+   TTime     fTime;       // time out time in ms
+   TTime     fAbsTime;    // absolute time out time in ms
+   Bool_t    fTimeout;    // true if timer has timed out
+   Bool_t    fSync;       // true if synchrounous timer
+   Bool_t    fIntSyscall; // true is a-synchronous timer is to interrupt system calls
+   UInt_t    fTimeID;     // the system ID of this timer (for WIN32)
+   TObject  *fObject;     // object to be notified (if any)
+   TString   fCommand;    // interpreter command to be executed
 
 public:
    TTimer(Long_t milliSec = 0, Bool_t mode = kTRUE);
@@ -80,12 +81,14 @@ public:
    Bool_t         HasTimedOut() const { return fTimeout; }
    Bool_t         IsSync() const { return fSync; }
    Bool_t         IsAsync() const { return !fSync; }
+   Bool_t         InterruptsSyscall() const { return fIntSyscall; }
    virtual Bool_t Notify();
    void           Add() { TurnOn(); }
    void           Remove() { TurnOff(); }
    void           Reset();
    void           SetCommand(const char *command);
    void           SetObject(TObject *object);
+   void           SetInterruptSyscall(Bool_t set = kTRUE);
    void           SetTime(Long_t milliSec) { fTime = milliSec; }
    void           SetTimerID(UInt_t id = 0) { fTimeID = id; }
    virtual void   Start(Int_t milliSec = -1, Bool_t singleShot = kFALSE);

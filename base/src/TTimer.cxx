@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.6 2002/06/03 13:10:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.7 2002/08/02 11:05:01 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -82,9 +82,10 @@ TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
    // derive from TTimer and override Notify() or connect slots to the
    // signals Timeout(), TurnOn() and TurnOff().
 
-   fObject  = 0;
-   fCommand = "";
-   fSync    = mode;
+   fObject     = 0;
+   fCommand    = "";
+   fSync       = mode;
+   fIntSyscall = kFALSE;
    Reset();
 }
 
@@ -96,9 +97,10 @@ TTimer::TTimer(TObject *obj, Long_t ms, Bool_t mode) : fTime(ms)
    // Add a timer to the system eventloop by calling TurnOn().
    // The object's HandleTimer() will be called by Notify().
 
-   fObject  = obj;
-   fCommand = "";
-   fSync    = mode;
+   fObject     = obj;
+   fCommand    = "";
+   fSync       = mode;
+   fIntSyscall = kFALSE;
    Reset();
 }
 
@@ -110,9 +112,10 @@ TTimer::TTimer(const char *command, Long_t ms, Bool_t mode) : fTime(ms)
    // Add a timer to the system eventloop by calling TurnOn().
    // The interpreter will execute command from Notify().
 
-   fObject  = 0;
-   fCommand = command;
-   fSync    = mode;
+   fObject     = 0;
+   fCommand    = command;
+   fSync       = mode;
+   fIntSyscall = kFALSE;
    Reset();
 }
 
@@ -175,6 +178,18 @@ void TTimer::SetObject(TObject *object)
 
    fObject  = object;
    fCommand = "";
+}
+
+//______________________________________________________________________________
+void TTimer::SetInterruptSyscall(Bool_t set)
+{
+   // When the argument is true the a-synchronous timer (SIGALRM) signal
+   // handler is set so that interrupted syscalls will not be restarted
+   // by the kernel. This is typically used in case one wants to put a
+   // timeout on an I/O operation. By default interrupted syscalls will
+   // be restarted.
+
+   fIntSyscall = set;
 }
 
 //___________________________________________________________________
