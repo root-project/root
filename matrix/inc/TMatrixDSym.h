@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.7 2004/04/20 06:31:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.8 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -19,14 +19,14 @@
 // Implementation of a symmetric matrix in the linear algebra package   //
 //                                                                      //
 // Note that in this implementation both matrix element m[i][j] and     //
-// m[j][i] are updated and stored in memory . However, when making the  //                             
+// m[j][i] are updated and stored in memory . However, when making the  //
 // object persistent only the upper right triangle is stored .          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMatrixDBase
 #include "TMatrixDBase.h"
-#endif 
+#endif
 
 class TMatrixD;
 class TVectorD;
@@ -70,7 +70,7 @@ public:
   virtual const Int_t    *GetColIndexArray() const { return 0; }
   virtual       Int_t    *GetColIndexArray()       { return 0; }
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); 
+  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                   else fElements = 0;  fNelems = 0; }
 
   void        Use            (Int_t nrows,Double_t *data);
@@ -96,8 +96,8 @@ public:
   inline  TMatrixDSym &T         () { return this->Transpose(*this); }
 
   // Either access a_ij as a(i,j)
-  inline const Double_t           operator()(Int_t rown,Int_t coln) const;
-  inline       Double_t          &operator()(Int_t rown,Int_t coln);
+  inline Double_t           operator()(Int_t rown,Int_t coln) const;
+  inline Double_t          &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDRow_const  operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }
@@ -129,7 +129,7 @@ inline const Double_t *TMatrixDSym::GetMatrixArray() const { return fElements; }
 inline       Double_t *TMatrixDSym::GetMatrixArray()       { return fElements; }
 inline       void      TMatrixDSym::Use           (TMatrixDSym &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
 
-inline const Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const {
+inline Double_t TMatrixDSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;

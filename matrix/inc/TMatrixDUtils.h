@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.22 2004/03/22 16:13:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.23 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -120,7 +120,7 @@ public:
   inline const Double_t     *GetPtr   () const { return fPtr; }
   inline       Int_t         GetInc   () const { return fInc; }
   inline const Double_t     &operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
-                                                          Assert(acoln < fMatrix->GetNcols() && acoln >= 0);                    
+                                                          Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                           return fPtr[acoln]; }
   inline const Double_t     &operator [](Int_t i) const { return (*(const TMatrixDRow_const *)this)(i); }
 
@@ -129,12 +129,12 @@ public:
 
 class TMatrixDRow : public TMatrixDRow_const {
 
-public: 
+public:
   TMatrixDRow() {}
   TMatrixDRow(TMatrixD    &matrix,Int_t row);
   TMatrixDRow(TMatrixDSym &matrix,Int_t row);
   TMatrixDRow(const TMatrixDRow &mr);
-   
+
   inline Double_t *GetPtr() const { return const_cast<Double_t *>(fPtr); }
 
   inline Double_t &operator()(Int_t i) { const Int_t acoln = i-fMatrix->GetColLwb();
@@ -180,7 +180,7 @@ public:
   inline const TMatrixDBase *GetMatrix() const { return fMatrix; }
   inline const Double_t     *GetPtr   () const { return fPtr; }
   inline       Int_t         GetInc   () const { return fInc; }
-  inline const Double_t     &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb(); 
+  inline const Double_t     &operator ()(Int_t i) const { const Int_t arown = i-fMatrix->GetRowLwb();
                                                           Assert(arown < fMatrix->GetNrows() && arown >= 0);
                                                           return fPtr[arown*fInc]; }
   inline const Double_t &operator [](Int_t i) const { return ((*(const TMatrixDColumn_const *)this)(i)); }
@@ -362,12 +362,12 @@ public:
   inline const Int_t        *GetColPtr () const { return fColPtr; }
   inline       Int_t         GetNindex () const { return fNindex; }
 
-  inline const Double_t operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
+  inline Double_t operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
                                                      Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
                                                      const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
                                                      if (index < 0) return 0.0;
                                                      else           return fDataPtr[index]; }
-  inline const Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
+  inline Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
 
   ClassDef(TMatrixDSparseRow_const,0)  // One row of a sparse matrix (double precision)
 };

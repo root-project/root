@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.8 2004/03/22 10:50:44 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.9 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -50,7 +50,7 @@ class TElementPosActionD;
 class TMatrixDBase : public TObject {
 
 private:
-  Double_t *GetElements();  // This function is now obsolete (and is not implemented) you should use TMatrix::GetMatrixArray().   
+  Double_t *GetElements();  // This function is now obsolete (and is not implemented) you should use TMatrix::GetMatrixArray().
 
 protected:
   Int_t     fNrows;               // number of rows
@@ -149,8 +149,8 @@ public:
   void Draw (Option_t *option="");       // *MENU*
   void Print(Option_t *option="") const; // *MENU*
 
-  virtual const Double_t  operator()(Int_t rown,Int_t coln) const = 0;
-  virtual       Double_t &operator()(Int_t rown,Int_t coln)       = 0;
+  virtual Double_t  operator()(Int_t rown,Int_t coln) const = 0;
+  virtual Double_t &operator()(Int_t rown,Int_t coln)       = 0;
 
   Bool_t operator==(Double_t val) const;
   Bool_t operator!=(Double_t val) const;

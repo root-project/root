@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.7 2004/04/15 09:21:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.8 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -103,8 +103,8 @@ public:
   inline void Mult(const TMatrixFSym &a,const TMatrixF    &b) { AMultB(a,b,0); }
 
   // Either access a_ij as a(i,j)
-  inline const Float_t            operator()(Int_t rown,Int_t coln) const;
-  inline       Float_t           &operator()(Int_t rown,Int_t coln);
+  inline Float_t            operator()(Int_t rown,Int_t coln) const;
+  inline Float_t           &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixFRow_const  operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
@@ -169,7 +169,7 @@ inline       Float_t  *TMatrixF::GetMatrixArray()       { return fElements; }
 inline       void      TMatrixF::Use           (TMatrixF &a) { Use(a.GetRowLwb(),a.GetRowUpb(),
                                                                    a.GetColLwb(),a.GetColUpb(),a.GetMatrixArray()); }
 
-inline const Float_t TMatrixF::operator()(Int_t rown,Int_t coln) const {
+inline Float_t TMatrixF::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.29 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.1 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
   virtual void ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
   virtual void ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
   inline  void ResizeTo      (const TMatrixDSparse &m) {
-                                  ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); } 
+                                  ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb()); }
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner && fElements) {
                                                     delete [] fElements; fElements = 0;
@@ -116,8 +116,8 @@ public:
   void            SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &source);
 
   virtual Bool_t IsSymmetric() const { MayNotUse("IsSymmetric()"); return kFALSE; }
-  TMatrixDSparse &Transpose  (const TMatrixDSparse &source);                       
-  inline TMatrixDSparse &T () { return this->Transpose(*this); }     
+  TMatrixDSparse &Transpose  (const TMatrixDSparse &source);
+  inline TMatrixDSparse &T () { return this->Transpose(*this); }
 
   inline void Mult(const TMatrixDSparse &a,const TMatrixDSparse &b) { AMultB(a,b,0); }
 
@@ -130,8 +130,8 @@ public:
                                     { MayNotUse("NormByDiag"); return *this; }
 
   // Either access a_ij as a(i,j)
-  inline const Double_t                 operator()(Int_t rown,Int_t coln) const;
-  inline       Double_t                &operator()(Int_t rown,Int_t coln);
+  inline Double_t                 operator()(Int_t rown,Int_t coln) const;
+  inline Double_t                &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDSparseRow_const  operator[](Int_t rown) const { return TMatrixDSparseRow_const(*this,rown); }
@@ -168,7 +168,7 @@ inline       Int_t    *TMatrixDSparse::GetRowIndexArray()       { return fRowInd
 inline const Int_t    *TMatrixDSparse::GetColIndexArray() const { return fColIndex; }
 inline       Int_t    *TMatrixDSparse::GetColIndexArray()       { return fColIndex; }
 
-inline const Double_t TMatrixDSparse::operator()(Int_t rown,Int_t coln) const {
+inline Double_t TMatrixDSparse::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   if (fNrowIndex > 0 && fRowIndex[fNrowIndex-1] == 0) {
     Error("operator=()(Int_t,Int_t) const","row/col indices are not set");

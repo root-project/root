@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.6 2004/04/15 09:21:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.7 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -19,14 +19,14 @@
 // Implementation of a symmetric matrix in the linear algebra package   //
 //                                                                      //
 // Note that in this implementation both matrix element m[i][j] and     //
-// m[j][i] are updated and stored in memory . However, when making the  //                             
+// m[j][i] are updated and stored in memory . However, when making the  //
 // object persistent only the upper right triangle is stored .          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMatrixFBase
 #include "TMatrixFBase.h"
-#endif 
+#endif
 
 class TMatrixF;
 class TVectorF;
@@ -88,8 +88,8 @@ public:
   inline  TMatrixFSym &T         () { return this->Transpose(*this); }
 
   // Either access a_ij as a(i,j)
-  inline const Float_t            operator()(Int_t rown,Int_t coln) const;
-  inline       Float_t           &operator()(Int_t rown,Int_t coln);
+  inline Float_t            operator()(Int_t rown,Int_t coln) const;
+  inline Float_t           &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixFRow_const  operator[](Int_t rown) const { return TMatrixFRow_const(*this,rown); }
@@ -119,7 +119,7 @@ public:
 inline const Float_t  *TMatrixFSym::GetMatrixArray  () const { return fElements; }
 inline       Float_t  *TMatrixFSym::GetMatrixArray  ()       { return fElements; }
 
-inline const Float_t TMatrixFSym::operator()(Int_t rown,Int_t coln) const {
+inline Float_t TMatrixFSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());
   const Int_t arown = rown-fRowLwb;
   const Int_t acoln = coln-fColLwb;
