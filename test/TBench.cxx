@@ -525,7 +525,7 @@ void TSTLhitMap::MakeEvent(int /*ievent*/)
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
       hit.Set(j);
-      fList1.insert(std::make_pair(j,hit));
+      fList1.insert(std::pair<const Int_t ,THit> (j,hit));
    }
 }
 
@@ -1195,7 +1195,7 @@ void TSTLhitStarMap::MakeEvent(int /*ievent*/)
    Clear();
 //   hitCount.print("1.1");
    for (Int_t j=0; j<fNhits; j++) {
-     fList2.insert(std::make_pair(j,new THit(j)));
+     fList2.insert(std::pair<const Int_t, THit*> (j,new THit(j)));
    }
 //   hitCount.print("1.2");
 }
