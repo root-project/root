@@ -336,6 +336,8 @@ endif
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
 
+.NOTPARALLEL:   map
+
 all:            rootexecs
 
 fast:           rootexecs
@@ -535,7 +537,9 @@ html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
-install: all map
+install: all
+	@rm -f $(ROOTMAP)
+	@$(MAKE) map
 	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
