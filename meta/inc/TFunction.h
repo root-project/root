@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.4 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.h,v 1.5 2003/04/04 00:55:49 rdm Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -45,7 +45,10 @@ protected:
 
 public:
    TFunction(G__MethodInfo *info = 0);
+   TFunction(const TFunction&);
+   TFunction& operator=(const TFunction&);
    virtual            ~TFunction();
+   virtual TObject    *Clone(const char *newname="") const;
    virtual const char *GetMangledName() const;
    virtual const char *GetPrototype() const;
    const char         *GetSignature();
