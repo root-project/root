@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.126 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.127 2004/07/19 12:10:11 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -986,7 +986,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    char * buffer   = new char[nb];
    char * psave    = buffer;
    tobuf(buffer, nbytes);
-   if (nlast == fEND-1) fEND = nfirst;
+   if (last == fEND-1) fEND = nfirst;
    Seek(nfirst);
    WriteBuffer(psave, nb);
    Flush();
