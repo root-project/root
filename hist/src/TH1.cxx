@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.60 2001/09/25 15:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.61 2001/10/18 10:03:08 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1136,11 +1136,14 @@ void TH1::Draw(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   if (gPad && !opt.Contains("same")) {
-      //the following statement is necessary in case one attempts to draw
-      //a temporary histogram already in the current pad
-      if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
-      gPad->Clear();
+   if (gPad) {
+      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
+      if (!opt.Contains("same")) {
+         //the following statement is necessary in case one attempts to draw
+         //a temporary histogram already in the current pad
+         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         gPad->Clear();
+      }
    }
    AppendPad(opt.Data());
 }

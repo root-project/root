@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.46 2001/10/01 14:40:36 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.47 2001/10/12 07:49:41 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -237,6 +237,9 @@ void TGraph::Draw(Option_t *option)
    if ((pos = opt.Index("*")) != kNPOS) {
       SetMarkerStyle(3);
       opt.Replace(pos, 1, "P");
+   }
+   if (gPad) {
+      if (!gPad->IsEditable()) (gROOT->GetMakeDefCanvas())();
    }
    AppendPad(opt);
 }
