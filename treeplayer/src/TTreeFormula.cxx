@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.42 2001/05/21 08:55:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.43 2001/05/25 06:23:27 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1716,10 +1716,29 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf *leaf) const
 }
 
 //______________________________________________________________________________
+Bool_t TTreeFormula::IsInteger() const
+{
+   // return TRUE if the formula corresponds to one single Tree leaf
+   // and this leaf is short, int or unsigned short, int
+   // When a leaf is of type integer, the generated histogram is forced
+   // to have an integer bin width
+      
+   if (fNoper > 1) return kFALSE;
+   if (fLeaves.GetEntries() != 1) return kFALSE;
+   TLeaf *leaf = (TLeaf*)fLeaves.At(0);
+   if (!leaf) return kFALSE;
+   if (!strcmp(leaf->GetTypeName(),"Int_t"))    return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"UShort_t")) return kTRUE;
+   return kFALSE;   
+}
+
+//______________________________________________________________________________
 void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance) 
 {
 
-   char *thisobj;
+   char *thisobj = 0;
    if (leaf->InheritsFrom("TLeafObject") ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
@@ -1829,14 +1848,13 @@ void* TFormLeafInfo::GetValuePointer(TLeaf *leaf, Int_t instance)
 
 
 //______________________________________________________________________________
-Double_t TFormLeafInfo::GetValue(TLeaf *leaf, 
-                                 Int_t instance)
+Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
 {
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
 //
 
-   char *thisobj;
+   char *thisobj = 0;
    if (leaf->InheritsFrom("TLeafObject") ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
@@ -1868,8 +1886,7 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf,
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfo::ReadValue(char *thisobj, 
-                                 Int_t instance)
+Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
 {
    if (fNext) return fNext->ReadValue(thisobj+fOffset,instance);
    //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetType(),instance,1);

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.11 2001/04/20 21:21:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.12 2001/04/27 06:59:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -93,6 +93,7 @@ public:
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword. 
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
+   virtual Bool_t     IsInteger() const;
    virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
