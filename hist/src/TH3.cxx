@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.31 2003/02/25 14:17:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.32 2003/04/19 16:59:27 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1034,7 +1034,11 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
 //   ranging from ixmin to ixmax and iymin to iymax included.
 //   By default, bins 1 to nx and 1 to ny  are included
 //
-//   if option "E" is specified, the errors are computed.
+//   if option "e" is specified, the errors are computed.
+//   if option "d" is specified, the projection is drawn in the current pad.
+//
+//   NOTE that if a TH1D named name exists in the current directory or pad,
+//   the histogram is reset and filled again with the current contents of the TH2.
 //
 //   code from Paola Collins & Hans Dijkstra
 
@@ -1057,15 +1061,23 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1;
-  const TArrayD *bins = fZaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TH1D(pname,GetTitle(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
-  } else {
-     h1 = new TH1D(pname,GetTitle(),nz,bins->fArray);
+  TH1D *h1=0;
+  //check if histogram with identical name exist
+  TObject *h1obj = gROOT->FindObject(pname);
+  if (h1obj && h1obj->InheritsFrom("TH1D")) {
+     h1 = (TH1D*)h1obj;
+     h1->Reset();
   }
-  Bool_t computeErrors = kFALSE;
-  if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
+
+  if (!h1) {
+     const TArrayD *bins = fZaxis.GetXbins();
+     if (bins->fN == 0) {
+        h1 = new TH1D(pname,GetTitle(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
+     } else {
+        h1 = new TH1D(pname,GetTitle(),nz,bins->fArray);
+     }
+  }
+  if (opt.Contains("e")) h1->Sumw2();
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
@@ -1077,7 +1089,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
         for (Int_t binz=0;binz<=(nz+1);binz++){
            Int_t bin = GetBin(ixbin,iybin,binz);
            cont = GetBinContent(bin);
-           if (computeErrors) {
+           if (h1->GetSumw2N()) {
               e        = GetBinError(bin);
               e1       = h1->GetBinError(binz);
               newerror = TMath::Sqrt(e*e + e1*e1);
@@ -1086,12 +1098,29 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
               h1->Fill(fZaxis.GetBinCenter(binz), cont);
               entries += cont;
            }
-           if (computeErrors) h1->SetBinError(binz,newerror);
+           if (h1->GetSumw2N()) h1->SetBinError(binz,newerror);
         }
      }
   }
   if (iymin <=1 && iymax >= ny && ixmin <=1 && ixmax >= nx) h1->SetEntries(fEntries);
   else h1->SetEntries(entries);
+  
+  if (opt.Contains("d")) {
+     TVirtualPad *padsav = gPad;
+     TVirtualPad *pad = gROOT->GetSelectedPad();
+     if (pad) pad->cd();
+     char optin[100];
+     strcpy(optin,opt.Data());
+     char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     if (!gPad->FindObject(h1)) {
+        h1->Draw(optin);
+     } else {
+        h1->Paint(optin);
+     }
+     if (padsav) padsav->cd();
+  }
+  
   return h1;
 }
 

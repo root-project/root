@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.41 2003/04/17 07:55:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.42 2003/04/19 16:59:27 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1157,6 +1157,10 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
+//   if option "d" is specified, the profile is drawn in the current pad.
+//
+//   NOTE that if a TProfile named name exists in the current directory or pad,
+//   the histogram is reset and filled again with the current contents of the TH2.
 
   TString opt = option;
   opt.ToLower();
@@ -1173,12 +1177,21 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1;
-  const TArrayD *bins = fXaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
-  } else {
-     h1 = new TProfile(pname,GetTitle(),nx,bins->fArray,option);
+  TProfile *h1=0;
+  //check if a profile with identical name exist
+  TObject *h1obj = gROOT->FindObject(pname);
+  if (h1obj && h1obj->InheritsFrom("TProfile")) {
+     h1 = (TProfile*)h1obj;
+     h1->Reset();
+  }
+
+  if (!h1) {
+     const TArrayD *bins = fXaxis.GetXbins();
+     if (bins->fN == 0) {
+        h1 = new TProfile(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),option);
+     } else {
+        h1 = new TProfile(pname,GetTitle(),nx,bins->fArray,option);
+     }
   }
   if (pname != name)  delete [] pname;
 
@@ -1193,6 +1206,22 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      }
   }
   if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
+  
+  if (opt.Contains("d")) {
+     TVirtualPad *padsav = gPad;
+     TVirtualPad *pad = gROOT->GetSelectedPad();
+     if (pad) pad->cd();
+     char optin[100];
+     strcpy(optin,opt.Data());
+     char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     if (!gPad->FindObject(h1)) {
+        h1->Draw(optin);
+     } else {
+        h1->Paint(optin);
+     }
+     if (padsav) padsav->cd();
+  }
   return h1;
 }
 
@@ -1209,6 +1238,10 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //   is set to the number of entries of the 2-D histogram, otherwise
 //   the number of entries is incremented by 1 for all non empty cells.
 //
+//   if option "d" is specified, the profile is drawn in the current pad.
+//
+//   NOTE that if a TProfile named name exists in the current directory or pad,
+//   the histogram is reset and filled again with the current contents of the TH2.
 
   TString opt = option;
   opt.ToLower();
@@ -1225,12 +1258,21 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TProfile *h1;
-  const TArrayD *bins = fYaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
-  } else {
-     h1 = new TProfile(pname,GetTitle(),ny,bins->fArray,option);
+  TProfile *h1=0;
+  //check if a profile with identical name exist
+  TObject *h1obj = gROOT->FindObject(pname);
+  if (h1obj && h1obj->InheritsFrom("TProfile")) {
+     h1 = (TProfile*)h1obj;
+     h1->Reset();
+  }
+
+  if (!h1) {
+     const TArrayD *bins = fYaxis.GetXbins();
+     if (bins->fN == 0) {
+        h1 = new TProfile(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),option);
+     } else {
+        h1 = new TProfile(pname,GetTitle(),ny,bins->fArray,option);
+     }
   }
   if (pname != name)  delete [] pname;
 
@@ -1245,6 +1287,22 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      }
   }
   if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
+  
+  if (opt.Contains("d")) {
+     TVirtualPad *padsav = gPad;
+     TVirtualPad *pad = gROOT->GetSelectedPad();
+     if (pad) pad->cd();
+     char optin[100];
+     strcpy(optin,opt.Data());
+     char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     if (!gPad->FindObject(h1)) {
+        h1->Draw(optin);
+     } else {
+        h1->Paint(optin);
+     }
+     if (padsav) padsav->cd();
+  }
   return h1;
 }
 
@@ -1268,6 +1326,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
+//   NOTE that if a TH1D named name exists in the current directory or pad,
+//   the histogram is reset and filled again with the current contents of the TH2.
 
   TString opt = option;
   opt.ToLower();
@@ -1284,15 +1344,23 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1;
-  const TArrayD *bins = fXaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
-  } else {
-     h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+  TH1D *h1=0;
+  //check if histogram with identical name exist
+  TObject *h1obj = gROOT->FindObject(pname);
+  if (h1obj && h1obj->InheritsFrom("TH1D")) {
+     h1 = (TH1D*)h1obj;
+     h1->Reset();
   }
-  Bool_t computeErrors = kFALSE;
-  if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
+
+  if (!h1) {
+     const TArrayD *bins = fXaxis.GetXbins();
+     if (bins->fN == 0) {
+        h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+     } else {
+        h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+     }
+     if (opt.Contains("e")) h1->Sumw2();
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
@@ -1307,7 +1375,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
            h1->Fill(fXaxis.GetBinCenter(binx), cont);
         }
      }
-     if (computeErrors) h1->SetBinError(binx,TMath::Sqrt(err2));
+     if (h1->GetSumw2N()) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
   if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
   
@@ -1315,7 +1383,15 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
      if (pad) pad->cd();
-     h1->Draw(option);
+     char optin[100];
+     strcpy(optin,opt.Data());
+     char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     if (!gPad->FindObject(h1)) {
+        h1->Draw(optin);
+     } else {
+        h1->Paint(optin);
+     }
      if (padsav) padsav->cd();
   }
   
@@ -1342,6 +1418,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
+//   NOTE that if a TH1D named name exists in the current directory or pad,
+//   the histogram is reset and filled again with the current contents of the TH2.
 
   TString opt = option;
   opt.ToLower();
@@ -1358,15 +1436,23 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1;
-  const TArrayD *bins = fYaxis.GetXbins();
-  if (bins->fN == 0) {
-     h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
-  } else {
-     h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
+  TH1D *h1=0;
+  //check if histogram with identical name exist
+  TObject *h1obj = gROOT->FindObject(pname);
+  if (h1obj && h1obj->InheritsFrom("TH1D")) {
+     h1 = (TH1D*)h1obj;
+     h1->Reset();
   }
-  Bool_t computeErrors = kFALSE;
-  if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
+
+  if (!h1) {
+     const TArrayD *bins = fYaxis.GetXbins();
+     if (bins->fN == 0) {
+        h1 = new TH1D(pname,GetTitle(),ny,fYaxis.GetXmin(),fYaxis.GetXmax());
+     } else {
+     h1 = new TH1D(pname,GetTitle(),ny,bins->fArray);
+     }
+     if (opt.Contains("e")) h1->Sumw2();
+  }
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
@@ -1381,7 +1467,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
            h1->Fill(fYaxis.GetBinCenter(biny), cont);
         }
      }
-     if (computeErrors) h1->SetBinError(biny,TMath::Sqrt(err2));
+     if (h1->GetSumw2N()) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
   if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
   
@@ -1389,11 +1475,19 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      TVirtualPad *padsav = gPad;
      TVirtualPad *pad = gROOT->GetSelectedPad();
      if (pad) pad->cd();
-     h1->Draw(option);
+     char optin[100];
+     strcpy(optin,opt.Data());
+     char *d = (char*)strstr(optin,"d"); if (d) {*d = ' '; if (*(d+1) == 0) *d=0;}
+     char *e = (char*)strstr(optin,"e"); if (e) {*e = ' '; if (*(e+1) == 0) *e=0;}        
+     if (!gPad->FindObject(h1)) {
+        h1->Draw(optin);
+     } else {
+        h1->Paint(optin);
+     }
      if (padsav) padsav->cd();
   }
-
-    return h1;
+  
+  return h1;
 }
 
 //______________________________________________________________________________
