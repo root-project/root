@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.25 2004/03/31 01:37:39 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.26 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,7 @@
 #include "RooFitCore/RooTreeData.hh"
 #include "RooFitCore/RooDirItem.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooNameSet.hh"
 
 class RooAbsArg;
 class RooAbsReal ;
@@ -100,6 +101,7 @@ protected:
 	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
+  void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) ;
 
@@ -119,12 +121,16 @@ protected:
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
 
+
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
   mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
   mutable Double_t _curWgtErrHi ; // Error on weight associated with the current coordinate
   mutable Double_t _curSumW2 ; // Current sum of weights^2
   mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
   mutable Int_t    _curIndex ; // Current index
+
+  mutable Double_t* _pbinv ; //! Partial bin volume array
+  mutable RooNameSet _pbinvCache ; //! Partial bin volume definition currently cached
 
 private:
 

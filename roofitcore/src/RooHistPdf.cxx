@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.cc,v 1.12 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.13 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,8 +89,10 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
   if ((allVars.getSize()==_depList.getSize()) && 
       matchArgs(allVars,analVars,_depList)) return 1000 ;
 
-  // WVE -- disable partial analytical integrals for the moment, not working correctly
-  return 0 ;
+  // Disable partial analytical integrals if interpolation is used
+  if (_intOrder>0) {
+    return 0 ;
+  }
 
   // Find subset of _depList that integration is requested over
   RooArgSet* allVarsSel = (RooArgSet*) allVars.selectCommon(_depList) ;
@@ -132,7 +134,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code) const
   RooArgSet* intSet = 0;
   _codeReg.retrieve(code-1,intSet) ;
 
-  return _dataHist->sum(*intSet,_depList,kFALSE) ;
+  return _dataHist->sum(*intSet,_depList,kTRUE) ;
 }
 
 
