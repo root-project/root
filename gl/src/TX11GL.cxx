@@ -1,4 +1,4 @@
-// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.1 2004/08/09 15:46:53 brun Exp $
+// @(#)root/gx11:$Name:  $:$Id: TX11GL.cxx,v 1.1 2004/08/09 22:09:15 rdm Exp $
 // Author: Timur Pocheptsov 09/08/2004
 
 /*************************************************************************
@@ -61,12 +61,14 @@ Window_t TX11GL::CreateGLWindow(Window_t wind)
 
    Int_t  xval = 0, yval = 0;
    UInt_t wval = 0, hval = 0, border = 0, d = 0;
-   Window root = {0};
+   Window root;
 
    XGetGeometry(fDpy, wind, &root, &xval, &yval, &wval, &hval, &border, &d);
    ULong_t mask = 0;
-   XSetWindowAttributes attr = {0};
+   XSetWindowAttributes attr;
 
+   attr.background_pixel = 0;
+   attr.border_pixel = 0;
    attr.colormap = XCreateColormap(fDpy, root, fVisInfo->visual, AllocNone);
    attr.event_mask = NoEventMask;
    attr.backing_store = Always;
