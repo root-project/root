@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.10 2001/01/02 20:54:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.11 2001/01/15 01:28:31 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -55,8 +55,10 @@
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-const Int_t kMAXFILEBUFFER = 262144;
 const Int_t kMAXBUF = 0xffffff;
+#if 0
+const Int_t kMAXFILEBUFFER = 262144;
+#endif
 
 ClassImp(TKey)
 
@@ -570,11 +572,15 @@ void TKey::ReadFile()
 //*-*                      ====================================
   Int_t nsize = fNbytes;
   gFile->Seek(fSeekKey);
+#if 0
   for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
      int nb = kMAXFILEBUFFER;
      if (i+nb > nsize) nb = nsize - i;
      gFile->ReadBuffer(fBuffer+i,nb);
   }
+#else
+  gFile->ReadBuffer(fBuffer,nsize);
+#endif
   if (gDebug) {
      cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<endl;
   }
@@ -650,12 +656,16 @@ Int_t TKey::WriteFile(Int_t cycle)
 
   if (fLeft > 0) nsize += sizeof(Int_t);
   gFile->Seek(fSeekKey);
+#if 0
   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
      Int_t nb = kMAXFILEBUFFER;
      if (i+nb > nsize) nb = nsize - i;
      gFile->WriteBuffer(buffer,nb);
      buffer += nb;
   }
+#else
+   gFile->WriteBuffer(buffer,nsize);
+#endif
 //  gFile->Flush(); Flushing takes too much time.
 //                  Let user flush the file when he wants.
   if (gDebug) {
