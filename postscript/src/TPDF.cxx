@@ -163,7 +163,7 @@ void TPDF::Close(Option_t *)
    WriteInteger(fNbObj+1);
    PrintStr("@");
    PrintStr("0000000000 65535 f @");
-   char str[20];
+   char str[21];
    for (i=0; i<fNbObj; i++) {
       sprintf(str,"%10.10d 00000 n @",fObjPos[i]);
       PrintStr(str);
@@ -1087,7 +1087,8 @@ void TPDF::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new ofstream(fname,ios::out);
+   fStream = new ofstream();
+   fStream->open(fname, ofstream::out | ofstream::binary);
    if (fStream == 0) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
       return;
@@ -1147,7 +1148,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr("/CreationDate (");
    TDatime t;
-   char str[16];
+   char str[17];
    sprintf(str,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d",
                 t.GetYear()  , t.GetMonth(),
                 t.GetDay()   , t.GetHour(),
