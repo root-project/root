@@ -1,6 +1,16 @@
 all: tests
 test: tests
 
+# The user directory should define
+# SUBDIRS listing any activated subdirectory
+# TEST_TARGETS with the list of activated test
+# CLEAN_TARGETS with the list of things to delete
+
+# doing gmake VERBOSE=true allows for more output, include the original
+# commands.
+
+# doing gmake FAIL=true run the test that are known to fail
+
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test) 
 TEST_TARGETS += $(TEST_TARGETS_DIR)
 
@@ -16,8 +26,14 @@ $(TEST_TARGETS_DIR): %.test:
 $(CLEAN_TARGETS_DIR): %.clean:
 	@(cd $*; gmake clean)
 
+ifeq ($(VERBOSE),) 
+   CMDECHO=@
+else
+   CMDECHO=
+endif
+
 clean:  $(CLEAN_TARGETS_DIR)
-	rm -f main *Dict* Event.root *~ $(CLEAN_TARGETS)
+	$(CMDECHO) rm -f main *Dict* Event.root *~ $(CLEAN_TARGETS)
 
 
 # here we guess the platform
