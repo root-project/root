@@ -1181,7 +1181,6 @@ if test ! "x$enable_asimage" = "xno" ; then
        /usr/local/include /usr/include /opt/include /sw/include
     asgifincdir=$found_dir
 
-    chirpincdir=$found_dir
     asextralib=""
     asextralibdir=""
     found_libz=""
