@@ -935,7 +935,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=2; 
 		       
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 2:  // upper limit x-axis
 		     ii=0; 
@@ -944,7 +945,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=2; 
 		       
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 3:  // binning y-axis
 		     if (ncols<3) gEnv->SetValue("Hist.Binning.2D.y",(int)value);
@@ -959,14 +961,16 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		     else               ii=1;
 		       
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 5:  // upper limit y-axis
 		     ii=1; 
 		     if      (ncols==2) ii=0;
 		     else               ii=1;
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 6:  // binning z-axis
 		     gEnv->SetValue("Hist.Binning.3D.z",(int)value);
@@ -974,12 +978,14 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 		   case 7:  // lower limit z-axis
 		     ii=0; 
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e < %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   case 8:  // upper limit z-axis
 		     ii=0; 
 		     if (ncols>ii) 
-		       isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       //isize = snprintf(buffer,size,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
+		       isize = sprintf(buffer,"%e > %s",value,GetNameByIndex(vexp,iindex,ii));
 		     break;
 		   default:
 		     Error("DrawSelect","j>8");
