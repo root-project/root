@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.30 2004/11/15 12:35:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.31 2005/03/09 18:19:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -113,7 +113,7 @@ protected:
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
 
    // 3D Viewer support
-   TVirtualViewer3D *fViewer3D;    // Current 3D viewer 
+   TVirtualViewer3D *fViewer3D;    //! Current 3D viewer 
 
    void          DestroyExternalViewer3D();
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
