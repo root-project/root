@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.8 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.9 2001/03/05 15:34:32 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -41,6 +41,7 @@ class TMonitor;
 class TFile;
 class TTree;
 class TSignalHandler;
+class TSlave;
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol = 1;            // protocol version number

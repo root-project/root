@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.2 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMapFile.h,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@
 class TBrowser;
 class TDirectory;
 class TList;
+class TMapRec;
 
 class TMapFile : public TObject {
 

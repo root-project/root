@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.5 2000/10/22 19:28:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.6 2000/10/29 14:26:53 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -66,6 +66,7 @@ class TGWidget;
 class TGHotString;
 class TGPicture;
 class TGToolTip;
+class TGButtonGroup;
 
 
 class TGButton : public TGFrame, public TGWidget {

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -34,6 +34,7 @@ class TGMenuBar;
 class TGPopupMenu;
 class TGLayoutHints;
 class TGStatusBar;
+class TRootContainer;
 
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {

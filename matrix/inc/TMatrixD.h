@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.3 2000/11/21 20:38:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -49,8 +49,6 @@
 #endif
 
 class TLazyMatrixD;
-
-
 
 class TMatrixD : public TObject {
 

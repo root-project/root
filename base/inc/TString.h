@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.7 2001/03/09 17:47:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.8 2001/04/10 15:25:18 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -56,7 +56,7 @@ class ostream;
 #endif
 
 class TRegexp;
-
+class TString;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.h,v 1.3 2001/03/09 10:58:29 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -25,6 +25,7 @@
 #include "TGFrame.h"
 #endif
 
+class TGStatusBarPart;
 
 class TGStatusBar : public TGFrame {
 
