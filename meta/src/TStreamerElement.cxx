@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.46 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.47 2002/05/23 15:27:09 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -576,6 +576,7 @@ ULong_t TStreamerLoop::GetMethod() const
    //   Init();
    //   if (!fCounter) return 0;
    //}
+   if (!fCounter) return 0;
    return (ULong_t)fCounter->GetOffset(); 
 }
 
