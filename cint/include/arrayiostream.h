@@ -22,7 +22,7 @@
 #ifndef G__XGRAPHSL
 
 #ifdef G__SHAREDLIB
-#pragma include_noerr <xgraph.dll>
+#pragma include_noerr <xgraph.dl>
 # ifndef G__XGRAPHSL
 #include <xgraph.c>
 # endif
@@ -32,6 +32,8 @@
 
 #endif
 
+typedef unsigned short UNITCIRCLE_t;
+UNITCIRCLE_t UNITCIRCLE;
 
 /**********************************************************
 * arrayostream
@@ -45,6 +47,7 @@ class arrayostream {
 	FILE *fp;
 	int filen;
 	int importedfp;
+        int unitcircle;               // unit circle mode
 
 	// private member function
 	void plotdata(void);
@@ -63,6 +66,7 @@ class arrayostream {
 	arrayostream& operator <<(double min); // specify min scale
 	arrayostream& operator  |(double max); // specify max scale
 	arrayostream& operator <<(ISLOG log);  // specify log scale
+	arrayostream& operator <<(UNITCIRCLE_t uc);  // specify log scale
 	arrayostream& operator <<(char c);     // do plot
 } ;
 
@@ -75,6 +79,7 @@ arrayostream::arrayostream(FILE *fp_init)
 	filen=0;
 	fp=fp_init;
 	importedfp=1;
+        unitcircle=0;
 }
 
 arrayostream::arrayostream(char *filename)
@@ -84,6 +89,7 @@ arrayostream::arrayostream(char *filename)
 	fp=fopen(filename,"wb");
 	if(NULL==fp) cerr << filename << " could not open\n" ;
 	importedfp=0;
+        unitcircle=0;
 }
 
 arrayostream::~arrayostream()
@@ -140,6 +146,13 @@ arrayostream& arrayostream::operator >>(double max)
 arrayostream& arrayostream::operator <<(ISLOG log)
 {
 	*buf << log;
+	return(*this);
+}
+
+// add unit circle information
+arrayostream& arrayostream::operator <<(UNITCIRCLE_t uc)
+{
+        unitcircle=1;
 	return(*this);
 }
 
@@ -226,6 +239,21 @@ void arrayostream::plotdata(void)
 				    ,buf->Name(i)
 				    );
 		}
+                if(unitcircle) {
+                         int nuc = 100;
+                         double dpi = 3.141592*2/100;
+                         double x[100],y[100];
+                         for(i=0;i<nuc;i++) {
+                                 x[i] = cos(dpi*i);
+                                 y[i] = sin(dpi*i);
+                         }
+			xgraph_data(fname
+				    ,x
+				    ,y
+				    ,nuc
+				    ,"unit_circle"
+				    );
+                }
 		xgraph_invoke(fname
 			      ,buf->Xmin(),buf->Xmax()
 			      ,buf->Ymin(),buf->Ymax()

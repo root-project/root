@@ -1784,6 +1784,7 @@ int ig15;
   int known;
   int i;
 
+
   tagnum = var->p_tagtable[ig15];
 
   store_var_type=G__var_type;
@@ -1810,7 +1811,11 @@ int ig15;
 
   if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
     /* delete current object */
+#ifndef G__OLDIMPLEMENTATION1568
+    if(var->p[ig15]) G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#else  
     G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#endif
     /* set newly constructed object */
     var->p[ig15]=store_globalvarpointer;
     if(G__dispsource){
@@ -1822,13 +1827,21 @@ int ig15;
       for(i=G__cpp_aryconstruct-1;i>=0;i--) {
 	/* call destructor without freeing memory */
 	G__store_struct_offset=var->p[ig15]+G__struct.size[tagnum]*i;
+#ifndef G__OLDIMPLEMENTATION1568
+	if(var->p[ig15]) G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#else
 	G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#endif
 	if(G__return>G__RETURN_NORMAL||0==known) break;
       }
     }
     else {
       G__store_struct_offset=var->p[ig15];
+#ifndef G__OLDIMPLEMENTATION1568
+      if(var->p[ig15]) G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#else
       G__getfunction(temp,&known,G__TRYDESTRUCTOR);
+#endif
     }
   }
 
@@ -2419,7 +2432,6 @@ struct G__var_array *varglobal,*varlocal;
 			  ,&store_struct_offset,&ig15
 			  ,G__decl||G__def_struct_member);
 #endif
-
 
     
     /* assign value */
@@ -3917,7 +3929,7 @@ struct G__var_array *varglobal,*varlocal;
       if(1==G__decl && 1==G__getarraydim && 0==G__struct_offset &&
 	 var->p[ig15]<100) {
 	/* prevent segv in following example. A bit tricky.
-q	*  void f(const int n) { int a[n]; } */
+	*  void f(const int n) { int a[n]; } */
 	G__abortbytecode();
 	return(result);
       }

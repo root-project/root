@@ -41,6 +41,32 @@
 #pragma link off function gluBuild2DMipmapLevels;
 #pragma link off function gluBuild1DMipmapLevels;
 #pragma link off function XMesaMakeCurrent2;
+
+// Mandrake8.0 specific
+#pragma link off function XMesaGetString;
+#pragma link off function XMesaCreateVisual;
+#pragma link off function XMesaUnbindContext;
+#pragma link off function XMesaGetCurrentReadBuffer;
+#pragma link off function  XMesaSwapBuffers;
+#pragma link off function  XMesaDestroyContext;
+#pragma link off function  XMesaGetBackBuffer;
+#pragma link off function  glXGetCurrentDrawableEXT;
+#pragma link off function  XMesaCreatePixmapBuffer;
+#pragma link off function  XMesaGetDepthBuffer;
+#pragma link off function   XMesaGarbageCollect;
+#pragma link off function   XMesaDestroyBuffer;
+#pragma link off function    XMesaCreateWindowBuffer;
+#pragma link off function    XMesaGetCurrentBuffer;
+#pragma link off function    XMesaCreateContext;
+#pragma link off function    XMesaFlush;
+#pragma link off function     XMesaCopySubBuffer;
+#pragma link off function     XMesaDestroyVisual;
+#pragma link off function     XMesaSetFXmode;
+#pragma link off function     XMesaGetCurrentContext;
+#pragma link off function     XMesaDitherColor;
+#pragma link off function     XMesaFindBuffer ;
+#pragma link off function     XMesaMakeCurrent ;
+
 #endif
 
 

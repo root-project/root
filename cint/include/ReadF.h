@@ -34,6 +34,11 @@ class ReadFile {
   ReadFile(FILE *fpin);
   ~ReadFile();
 
+  void parse(const char* s) {
+    strcpy(buf,s);
+    separatearg();
+  }
+
   int read();
   int readword();
 #ifdef G__NEVER

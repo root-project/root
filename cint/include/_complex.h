@@ -8,6 +8,7 @@
 #define G__COMPLEX
 
 #include <iostream.h>
+#include <math.h>
 
 template<class scalar>
 class complex {

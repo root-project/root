@@ -270,7 +270,11 @@ int ifn;
     }
 #endif
 #ifdef G__ASM_WHOLEFUNC
-    if(ifunc->pentry[i]->bytecode) {
+    if(
+#ifndef G__OLDIMPLEMENTATION1567
+       ifunc->pentry[i] && 
+#endif
+       ifunc->pentry[i]->bytecode) {
       G__free_bytecode(ifunc->pentry[i]->bytecode);
       ifunc->pentry[i]->bytecode = (struct G__bytecodefunc*)NULL;
     }
