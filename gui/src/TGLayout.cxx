@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.8 2003/12/10 15:33:39 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.9 2003/12/10 15:36:32 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TGVerticalLayout::Layout()
 
    if (nb_expand) {
       size_expand = remain/nb_expand;
-      
+
       if (size_expand < exp_max)
          esize_expand = (remain - exp)/nb_expand;
       rem_expand = remain % nb_expand;
@@ -145,7 +145,7 @@ void TGVerticalLayout::Layout()
             x = msize.fWidth - bw - csize.fWidth - pad_right;
          } else if (hints & kLHintsCenterX) {
             int tmp = msize.fWidth - (bw << 1) - csize.fWidth;
-            x = tmp>0 ? tmp >> 1 : 0;
+            x = tmp > 0 ? tmp >> 1 : 0;
          } else { // defaults to kLHintsLeft
             x = pad_left + bw;
          }
@@ -162,7 +162,7 @@ void TGVerticalLayout::Layout()
                size.fHeight = size_expand - pad_top - pad_bottom;
             else
                size.fHeight = csize.fHeight + esize_expand;
-  
+
             tmp_expand += rem_expand;
             if (tmp_expand >= nb_expand) {
                size.fHeight++;
@@ -173,9 +173,9 @@ void TGVerticalLayout::Layout()
             if (hints & kLHintsCenterY) {
                if (size_expand >= exp_max) {
                   int tmp = size_expand - pad_top - pad_bottom - size.fHeight;
-                  extra_space = tmp>0 ? tmp >> 1 : 0;
+                  extra_space = tmp > 0 ? tmp >> 1 : 0;
                } else {
-                  extra_space = esize_expand>0 ? esize_expand >> 1 : 0;
+                  extra_space = esize_expand > 0 ? esize_expand >> 1 : 0;
                }
                y += extra_space;
                top += extra_space;
@@ -295,9 +295,10 @@ void TGHorizontalLayout::Layout()
 
          if (hints & kLHintsBottom) {
             y = msize.fHeight - bw - csize.fHeight - pad_bottom;
-         } else if (hints & kLHintsCenterY) {int tmp = 0;
+         } else if (hints & kLHintsCenterY) {
+            int tmp = 0;
             tmp = msize.fHeight - (bw << 1) - csize.fHeight;
-            y = 1 ? tmp >> 1 : 0;
+            y = tmp >> 1;
          } else { // kLHintsTop by default
             y = pad_top + bw;
          }
@@ -326,7 +327,7 @@ void TGHorizontalLayout::Layout()
             if (hints & kLHintsCenterX) {
                if (size_expand >= exp_max) {
                   int tmp = size_expand - pad_left - pad_right - size.fWidth;
-                  extra_space = tmp>0 ? tmp >> 1 : 0;
+                  extra_space = tmp > 0 ? tmp >> 1 : 0;
                } else {
                   extra_space = esize_expand >> 1;
                }
