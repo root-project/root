@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.15 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.16 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -51,6 +51,8 @@
 #include "TFree.h"
 #include "TBrowser.h"
 #include "Bytes.h"
+#include "TInterpreter.h"
+#include "Api.h"
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -404,6 +406,19 @@ TObject *TKey::ReadObj()
 //  object of the class type it describes. This new object now calls its
 //  Streamer function to rebuilt itself.
 //
+//  NOTE:
+//  In case the class of this object derives from TObject but not
+//  as a first inheritance, one must cast the return value twice.
+//  Example1: Normal case:
+//      class MyClass : public TObject, public AnotherClass
+//   then on return, one can do:
+//    MyClass *obj = (MyClass*)key->ReadObj();
+//
+//  Example2: Special case:
+//      class MyClass : public AnotherClass, public TObject
+//   then on return, one must do:
+//    MyClass *obj = (MyClass*)((void*)key->ReadObj());
+//
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
@@ -434,7 +449,6 @@ TObject *TKey::ReadObj()
    // Create an instance of this class
 
    obj = (TObject*)cl->New();
-
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
@@ -442,6 +456,9 @@ TObject *TKey::ReadObj()
    if (kvers > 1)
       fBufferRef->MapObject(obj);  //register obj in map to handle self reference
 
+   char cmd[2048];
+   sprintf(cmd,"((%s*)0x%x)->Streamer((TBuffer&)0x%x);",cl->GetName(),(Seek_t)obj,(Seek_t)fBufferRef);
+   
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
@@ -458,7 +475,8 @@ TObject *TKey::ReadObj()
          objbuf += nout;
       }
       if (nout) {
-         obj->Streamer(*fBufferRef);
+         //obj->Streamer(*fBufferRef); //does not work with example 2 above
+         gInterpreter->Calc(cmd); //also works if TObject is not the first base class
          delete [] fBuffer;
       } else {
          delete [] fBuffer;
@@ -467,12 +485,13 @@ TObject *TKey::ReadObj()
          goto CLEAR;
       }
    } else {
-      obj->Streamer(*fBufferRef);
+      //obj->Streamer(*fBufferRef);
+      gInterpreter->Calc(cmd);
    }
 
    if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
 
-   if (obj->IsA() == TDirectory::Class()) {
+   if (cl == TDirectory::Class()) {
       TDirectory *dir = (TDirectory*)obj;
       dir->SetName(GetName());
       dir->SetTitle(GetTitle());
