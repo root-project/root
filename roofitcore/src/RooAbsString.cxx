@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.16 2002/01/10 00:09:00 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.17 2002/02/14 23:12:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,11 @@
 
 ClassImp(RooAbsString) 
 ;
+
+
+RooAbsString::RooAbsString() : RooAbsArg(), _value(new char[128]), _len(128) 
+{
+}
 
 
 RooAbsString::RooAbsString(const char *name, const char *title, Int_t bufLen) : 
