@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.55 2004/06/17 17:31:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.56 2004/07/01 04:55:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -153,7 +153,7 @@ TDirectory::~TDirectory()
    TCollection::EmptyGarbageCollection();
 
    if (gDebug)
-      cerr << "TDirectory dtor called for "<< GetName() << endl;
+      Info("~TDirectory", "dtor called for %s", GetName());
 }
 
 //______________________________________________________________________________
@@ -822,7 +822,7 @@ TObject *TDirectory::Get(const char *namecycle)
 //  The retrieved object should in principle derive from TObject.
 //  If not, the function TDirectory::GetObject should be called.
 //  However, this function will still work for a non-TObject, providing that
-//  the calling application cast the return type to the correct type (which 
+//  the calling application cast the return type to the correct type (which
 //  is the actual type of the object).
 //
 //  NOTE:
@@ -914,7 +914,7 @@ void *TDirectory::GetObjectUnchecked(const char *namecycle)
 //   cycle = "" or cycle = 9999 ==> apply to a memory object
 //
 //  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned object to 
+//  The calling application must cast the returned object to
 //  the final type, eg
 //      MyClass *obj = (MyClass*)directory->GetObject("some object of MyClass");
 
@@ -942,7 +942,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 //   cycle = "" or cycle = 9999 ==> apply to a memory object
 //
 //  VERY IMPORTANT NOTE:
-//  The calling application must cast the returned pointer to 
+//  The calling application must cast the returned pointer to
 //  the type described by the 2 arguments (i.e. cl):
 //      MyClass *obj = (MyClass*)directory->GetObjectChecked("some object of MyClass","MyClass"));
 //
@@ -950,7 +950,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* cl)
 //      MyClass *obj = 0;
 //      directory->GetObject("some object inheriting from MyClass",obj);
 //      if (obj) { ... we found what we are looking for ... }
-   
+
    Short_t  cycle;
    char     name[kMaxLen];
 
@@ -1291,8 +1291,8 @@ Int_t TDirectory::ReadKeys()
          // header key in the list.  To prevent further crashes (due to the deletion
          // below) we remove it explicit and warn of potential problems.
          Error("ReadKeys","Abnormal case while reading the header key.  The %s (%s) is probably corrupted.",IsA()->GetName(),GetName());
-         
-         fKeys->Remove(headerkey); 
+
+         fKeys->Remove(headerkey);
       }
       TKey *key;
       frombuf(buffer, &nkeys);
@@ -1581,7 +1581,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    }
 
    if (!obj) return 0;
-   
+
    TString opt = option;
    opt.ToLower();
 
@@ -1630,7 +1630,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) return 0;
-   
+
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
@@ -1645,7 +1645,7 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const char *classname, const c
    // Write object from pointer of class classname in this directory
    // obj may not derive from TObject
    // see TDirectory::WriteObject for comments
-   // 
+   //
    // VERY IMPORTANT NOTE:
    //    The value passed as 'obj' needs to be from a pointer to the type described by classname
    //    For example with:
@@ -1661,14 +1661,14 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const char *classname, const c
    // We STRONGLY recommend to use
    //      TopClass *top = ....;
    //      directory->WriteObject(top,"name of object")
-   
+
    TClass *cl = ROOT::GetROOT()->GetClass(classname);
    if (!cl) {
       Error("WriteObjectAny","Unknown class: %s",classname);
       return 0;
    }
    return WriteObjectAny(obj,cl,name,option);
-}   
+}
 
 //______________________________________________________________________________
 Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
