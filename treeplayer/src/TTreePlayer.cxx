@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.34 2001/02/09 16:47:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.35 2001/02/09 16:54:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -213,6 +213,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <float.h>
+#include <fstream.h>
 
 #include "TTreePlayer.h"
 #include "TROOT.h"
@@ -283,6 +284,8 @@ TTreePlayer::TTreePlayer()
    fVar2           = 0;
    fVar3           = 0;
    fVar4           = 0;
+   fScanFileName   = 0;
+   fScanRedirect   = kFALSE;
    fSelect         = 0;
    fDraw           = 0;
    fPacketGen      = 0;
@@ -2455,6 +2458,27 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    Int_t entry,entryNumber,i,nch;
    Int_t *index = 0;
    Int_t ncols = 8;   // by default first 8 columns are printed only
+   ofstream out;
+   Int_t lenfile = 0;
+   char * fname = 0;
+   if (fScanRedirect) {
+      fTree->SetScanField(0);  // no page break if Scan is redirected
+      fname = (char *) fScanFileName;
+      if (!fname) fname = "";
+      lenfile = strlen(fname);
+      if (!lenfile) {
+         Int_t nch = strlen(fTree->GetName());
+         fname = new char[nch+10];
+         strcpy(fname, fTree->GetName());
+         strcat(fname, "-scan.dat");
+      }
+      out.open(fname, ios::out);
+      if (!out.good ()) {
+         if (!lenfile) delete [] fname;
+         Error("Scan","Can not open file for redirection");
+         return 0;
+      }
+   }
    TObjArray *leaves = fTree->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntriesFast();
    if (nleaves < ncols) ncols = nleaves;
@@ -2503,17 +2527,26 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
-   printf("%s*\n",onerow.Data());
+   if (fScanRedirect)
+      out.form("%s*\n",onerow.Data());
+   else
+      printf("%s*\n",onerow.Data());
    onerow = "*    Row   ";
    for (i=0;i<ncols;i++) {
       onerow += Form("* %9.9s ",var[i]->PrintValue(-1));
    }
-   printf("%s*\n",onerow.Data());
+   if (fScanRedirect)
+      out.form("%s*\n",onerow.Data());
+   else
+      printf("%s*\n",onerow.Data());
    onerow = "***********";
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
-   printf("%s*\n",onerow.Data());
+   if (fScanRedirect)
+      out.form("%s*\n",onerow.Data());
+   else
+      printf("%s*\n",onerow.Data());
 //*-*- loop on all selected entries
    fSelectedRows = 0;
    for (entry=firstentry;entry<firstentry+nentries;entry++) {
@@ -2529,6 +2562,9 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
          onerow += Form("* %9.9s ",var[i]->PrintValue(0));
       }
       fSelectedRows++;
+   if (fScanRedirect)
+      out.form("%s*\n",onerow.Data());
+   else
       printf("%s*\n",onerow.Data());
       if (fTree->GetScanField() > 0 && fSelectedRows > 0) {
          if (fSelectedRows%fTree->GetScanField() == 0) {
@@ -2545,11 +2581,16 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    for (i=0;i<ncols;i++) {
       onerow += Form("*%11.11s",var[i]->PrintValue(-2));
    }
-   printf("%s*\n",onerow.Data());
+   if (fScanRedirect)
+      out.form("%s*\n",onerow.Data());
+   else
+      printf("%s*\n",onerow.Data());
    if (select) Printf("==> %d selected %s", fSelectedRows,
                       fSelectedRows == 1 ? "entry" : "entries");
+   if (fScanRedirect) printf("File <%s> created\n", fname);
 
 //*-*- delete temporary objects
+   if (!lenfile) delete [] fname;
    delete select;
    for (i=0;i<ncols;i++) {
       delete var[i];

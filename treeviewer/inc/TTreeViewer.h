@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.5 2000/11/27 12:24:25 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.6 2000/12/14 15:23:47 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -22,7 +22,10 @@
 #include "TGFrame.h"
 #endif
 
-class TGTreeLVC;
+class TTreeViewer;
+class TTVLVContainer;
+class TTVLVEntry;
+class TTVSession;
 class TGSelectBox;
 class TTree;
 class TBranch;
@@ -36,6 +39,7 @@ class TGPopupMenu;
 class TGToolBar;
 class TGLabel;
 class TGCheckButton;
+class TGComboBox;
 class TGTextButton;
 class TGTextEntry;
 class TGDoubleVSlider;
@@ -68,10 +72,15 @@ public:
 
 private:
    TTree                *fTree;                 // selected tree
+   TTVSession           *fSession;              // current tree-viewer session
+   const char           *fFilename;             // name of the file containing the tree
+   const char           *fSourceFile;           // name of the C++ source file - default treeviewer.C
+   const char           *fLastOption;           // last graphic option
    TTree                *fMappedTree;           // listed tree
    TBranch              *fMappedBranch;         // listed branch
    Int_t                fDimension;             // histogram dimension
    Bool_t               fVarDraw;               // true if an item is double-clicked
+   Bool_t               fScanMode;              // flag activated when Scan Box is double-clicked
    TContextMenu         *fContextMenu;          // context menu for tree viewer
    TGSelectBox          *fDialogBox;            // expression editor
    TList                *fTreeList;             // list of mapped trees
@@ -84,6 +93,7 @@ private:
    Bool_t               fCounting;              // true if timer is counting
    Bool_t               fStopMapping;           // true if branch don't need remapping
    Bool_t               fEnableCut;             // true if cuts are enabled
+   Int_t                fNexpressions;          // number of expression widgets
 // menu bar, menu bar entries and layouts
    TGLayoutHints        *fMenuBarLayout;
    TGLayoutHints        *fMenuBarItemLayout;
@@ -126,56 +136,85 @@ private:
    TGLabel              *fBLbl5;        // label for output list entry
    TGTextEntry          *fBarListIn;    // tree input event list name entry
    TGTextEntry          *fBarListOut;   // tree output event list name entry
-   TGPictureButton      *fbDRAW;        // DRAW button
-   TGPictureButton      *fbSTOP;        // interrupt current command (not yet)
+   TGPictureButton      *fDRAW;         // DRAW button
+   TGPictureButton      *fSTOP;         // interrupt current command (not yet)
    TGStatusBar          *fStatusBar;    // status bar
+   TGComboBox           *fCombo;        // combo box with session records
+   TGPictureButton      *fBGFirst;
+   TGPictureButton      *fBGPrevious;
+   TGPictureButton      *fBGRecord;
+   TGPictureButton      *fBGNext;
+   TGPictureButton      *fBGLast;
    TGTextButton         *fReset;        // clear expression's entries
 // ListTree
    TGCanvas             *fTreeView;     // ListTree canvas container
    TGListTree           *fLt;           // ListTree with file and tree items
 // ListView
    TGListView           *fListView;     // ListView with branches and leaves
-   TGTreeLVC            *fLVContainer;  // container for listview
+   TTVLVContainer       *fLVContainer;  // container for listview
 
    TList                *fWidgets;      // list of widgets to be deleted
 
 private:
 // private methods
-   void         BuildInterface();
-   const char*  Cut();
-   Int_t        Dimension();
-   const char*  Ex();
-   const char*  Ey();
-   const char*  Ez();
-   void         MapBranch(TBranch *branch, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
-   void         MapOptions(Long_t parm1);
-   void         MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
-   const char*  ScanList();
-   void         SetParentTree(TGListTreeItem *item);
-   void         Warning(const char* msg);
+   void          BuildInterface();
+   const char   *Cut();
+   Int_t         Dimension();
+   const char   *EmptyBrackets(const char* name);
+   const char   *Ex();
+   const char   *Ey();
+   const char   *Ez();
+   void          MapBranch(TBranch *branch, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapOptions(Long_t parm1);
+   void          MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          SetFile();
+   const char   *ScanList();
+   void          SetParentTree(TGListTreeItem *item);
+   void          Warning(const char* msg);
 
 public:
    TTreeViewer(const char* treeName = 0);
-   virtual      ~TTreeViewer();
+   virtual       ~TTreeViewer();
 // public methods
-   virtual void CloseWindow();
-   virtual void Delete(Option_t *option = "") {}                // *MENU*
-   void         EditExpression();                               // *MENU*
-   void         Empty();                                        // *MENU*
-   void         EmptyAll();                                     // *MENU*
-   void         ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
-   void         ExecuteDraw();
-   TTree*       GetTree() {return fTree;};
-   Bool_t       HandleTimer(TTimer *timer);
-   Int_t        MakeSelector(const char* selector = 0);         // *MENU*
-   void         Message(const char* msg);
-   void         NewExpression();                                // *MENU*
-   void         PrintEntries();
-   Int_t        Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-   Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   void         RemoveItem();                                   // *MENU*
-   void         SetTreeName(const char* treeName);              // *MENU*
-   Bool_t       SwitchTree(Int_t index);
+   void          ActivateButtons(Bool_t first, Bool_t previous,
+                                 Bool_t next , Bool_t last);
+   virtual void  CloseWindow();
+   virtual void  Delete(Option_t *option = "") {}                // *MENU*
+   void          EditExpression();
+   void          Empty();
+   void          EmptyAll();                                     // *MENU*
+   void          ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
+   void          ExecuteDraw();
+   TTVLVEntry   *ExpressionItem(Int_t index);
+   TList        *ExpressionList();
+   const char   *GetGrOpt();
+   TTree        *GetTree() {return fTree;}
+   Bool_t        HandleTimer(TTimer *timer);
+   Bool_t        IsCutEnabled() {return fEnableCut;}
+   Bool_t        IsScanRedirected();
+   Int_t         MakeSelector(const char* selector = 0);         // *MENU*
+   void          Message(const char* msg);
+   void          NewExpression();                                // *MENU*
+   void          PrintEntries();
+   Int_t         Process(const char* filename, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+   Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   void          RemoveItem();
+   void          RemoveLastRecord();                                 // *MENU*
+   void          SaveSource(const char* filename="");            // *MENU*
+   void          SetHistogramTitle(const char *title);
+   void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
+   void          SetCurrentRecord(Int_t entry);
+   void          SetGrOpt(const char *option);
+   void          SetNexpressions(Int_t expr);
+   void          SetRecordName(const char *name);                // *MENU*
+   void          SetScanFileName(const char *name="");           // *MENU*
+   void          SetScanMode(Bool_t mode=kTRUE) {fScanMode = mode;}
+   void          SetScanRedirect(Bool_t mode);
+   void          SetSession(TTVSession *session);
+   void          SetTreeName(const char* treeName);              // *MENU*
+   Bool_t        SwitchTree(Int_t index);
+   void          UpdateCombo();
+   void          UpdateRecord(const char *name="new name");      // *MENU*
 
    ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
 };

@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TGTreeLVC.cxx,v 1.8 2000/11/27 12:24:25 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVLVContainer.cxx,v 1.9 2000/12/14 15:23:47 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -9,14 +9,59 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGTreeLVC.h"
+#include "TTVLVContainer.h"
 #include "TTreeViewer.h"
 #include "TGPicture.h"
 #include "TGLabel.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
+#include "TGToolTip.h"
 
-ClassImp(TGLVTreeEntry)
+ClassImp(TGItemContext)
+
+//////////////////////////////////////////////////////////////////////////
+// TGItemContext  -  empty object used as context menu support for      //
+// TGLVTreeEntries                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TGItemContext::TGItemContext()
+{
+   fItem = 0;
+}
+//______________________________________________________________________________
+void TGItemContext::Draw()
+{
+   fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
+}
+//______________________________________________________________________________
+void TGItemContext::EditExpression()
+{
+   fItem->GetContainer()->GetViewer()->EditExpression();
+}
+//______________________________________________________________________________
+void TGItemContext::Empty()
+{
+   fItem->Empty();
+}
+//______________________________________________________________________________
+void TGItemContext::RemoveItem()
+{
+   fItem->GetContainer()->GetViewer()->RemoveItem();
+}
+//______________________________________________________________________________
+void TGItemContext::Scan()
+{
+   fItem->GetContainer()->GetViewer()->SetScanMode();
+   fItem->GetContainer()->GetViewer()->ProcessMessage(MK_MSG(kC_CONTAINER, kCT_ITEMDBLCLICK), kButton1, 0);
+}
+//______________________________________________________________________________
+void TGItemContext::SetExpression(const char *name, const char *alias, Bool_t cut)
+{
+   fItem->SetExpression(name, alias, cut);
+}
+
+ClassImp(TTVLVEntry)
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -27,7 +72,7 @@ ClassImp(TGLVTreeEntry)
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TGLVTreeEntry::TGLVTreeEntry(const TGWindow *p,
+TTVLVEntry::TTVLVEntry(const TGWindow *p,
                              const TGPicture *bigpic, const TGPicture *smallpic,
                              TGString *name, TGString **subnames,
                              EListViewMode ViewMode)
@@ -37,21 +82,78 @@ TGLVTreeEntry::TGLVTreeEntry(const TGWindow *p,
 
    // both alias and true name are initialized to name
    fTrueName.InitialCapacity(1000);
-//   fAlias = name->GetString();
+   fContainer = (TTVLVContainer *) p;
+   fTip = 0;
+   fIsCut = kFALSE;
    fTrueName = name->GetString();
+   fContext = new TGItemContext();
+   fContext->Associate(this);
+      
+   AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 //______________________________________________________________________________
-void TGLVTreeEntry::CopyItem(TGLVTreeEntry *dest)
+TTVLVEntry::~TTVLVEntry()
+{
+// TGTreeLVEntry destructor
+   if (fTip) delete fTip;
+   delete fContext;
+}
+//______________________________________________________________________________
+const char *TTVLVEntry::ConvertAliases()
+{
+// Convert all aliases into true names
+   TList *list = GetContainer()->GetViewer()->ExpressionList();
+   fConvName = fTrueName;
+   TIter next(list);
+   TTVLVEntry* item;
+   while (!FullConverted()) {
+      next.Reset();
+      while ((item=(TTVLVEntry*)next())) {
+         if (item != this)
+            fConvName.ReplaceAll(item->GetAlias(), item->GetTrueName());
+      }
+   }
+   return(fConvName.Data());
+}
+//______________________________________________________________________________
+Bool_t TTVLVEntry::FullConverted()
+{
+// Return true if converted name is alias free
+   TList *list = GetContainer()->GetViewer()->ExpressionList();
+   TIter next(list);
+   TTVLVEntry* item;
+   while ((item=(TTVLVEntry*)next())) {
+      if (item != this) {
+         if (fConvName.Contains(item->GetAlias())) return kFALSE;
+      }
+   }
+   return kTRUE;
+}
+//______________________________________________________________________________
+void TTVLVEntry::CopyItem(TTVLVEntry *dest)
 {
    // Copy this item's name and alias to an other.
-
    if (!dest) return;
-   dest->SetItemName(fName->GetString());
-   dest->SetAlias(fAlias);
-   dest->SetTrueName(fTrueName);
+   UInt_t *type = (UInt_t *)GetUserData();
+   if (*type & TTreeViewer::kLTExpressionType) {
+      if (!fAlias.BeginsWith("~") && !fAlias.Contains("empty")) fAlias.Prepend("~");
+   }
+   dest->SetExpression(fTrueName.Data(), fAlias.Data(), fIsCut);
 }
 //______________________________________________________________________________
-Bool_t TGLVTreeEntry::HasAlias()
+Bool_t TTVLVEntry::HandleCrossing(Event_t *event)
+{
+// Handle mouse crossing event.
+   if (fTip) {
+      if (event->fType == kEnterNotify)
+         fTip->Reset();
+      else
+         fTip->Hide();
+   }
+   return kTRUE;
+}
+//______________________________________________________________________________
+Bool_t TTVLVEntry::HasAlias()
 {
    // Check if alias name is not empty.
 
@@ -59,7 +161,7 @@ Bool_t TGLVTreeEntry::HasAlias()
    return kFALSE;
 }
 //______________________________________________________________________________
-void TGLVTreeEntry::SetItemName(const char* name)
+void TTVLVEntry::SetItemName(const char* name)
 {
 // redraw this entry with new name
    if (fName) delete fName;
@@ -73,15 +175,59 @@ void TGLVTreeEntry::SetItemName(const char* name)
    fClient->NeedRedraw(this);
 }
 //______________________________________________________________________________
-void TGLVTreeEntry::Empty()
+void TTVLVEntry::SetCutType(Bool_t type)
 {
-// clear all names and alias
-   SetItemName("-empty-");
-   SetAlias("-empty-");
-   SetTrueName("");
+      if (fIsCut && type) return;
+      if (!fIsCut && !type) return;
+      if (type) { 
+         SetSmallPic(fClient->GetPicture("selection_t.xpm"));
+         SetToolTipText("Selection expression. Drag to scissors to activate");
+      } else
+         SetSmallPic(fClient->GetPicture("expression_t.xpm"));
+      fIsCut = type;
 }
 //______________________________________________________________________________
-void TGLVTreeEntry::SetSmallPic(const TGPicture *spic)
+void TTVLVEntry::SetExpression(const char* name, const char* alias, Bool_t cutType)
+{
+   // Set the true name, alias and type of the expression, then refresh it
+   SetItemName(alias);
+   SetAlias(alias);
+   SetTrueName(name);
+   ULong_t *itemType = (ULong_t *) GetUserData();
+   if (*itemType & TTreeViewer::kLTPackType) { 
+      if (strlen(name))
+         SetSmallPic(fClient->GetPicture("pack_t.xpm"));
+      else
+         SetSmallPic(fClient->GetPicture("pack-empty_t.xpm"));
+   }
+   if ((*itemType & TTreeViewer::kLTDragType) && strlen(name) && !fIsCut)
+      SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit."); 
+   if (*itemType & TTreeViewer::kLTDragType) SetCutType(cutType);
+}
+//______________________________________________________________________________
+void TTVLVEntry::Empty()
+{
+   // clear all names and alias
+   SetExpression("","-empty-");
+   ULong_t *itemType = (ULong_t *) GetUserData();
+   if (itemType && (*itemType & TTreeViewer::kLTDragType))
+      SetToolTipText("User-defined expression/cut. Double-click to edit");
+}
+//______________________________________________________________________________
+void TTVLVEntry::SetToolTipText(const char *text, Long_t delayms)
+{
+   // Set tool tip text associated with this item. The delay is in
+   // milliseconds (minimum 250). To remove tool tip call method with text = 0
+   if (fTip) {
+      delete fTip;
+      fTip = 0;
+   }
+   
+   if (text && strlen(text)) 
+      fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+}
+//______________________________________________________________________________
+void TTVLVEntry::SetSmallPic(const TGPicture *spic)
 {
    const TGPicture *cspic = fSmallPic;
    fSmallPic = spic;
@@ -95,91 +241,126 @@ void TGLVTreeEntry::SetSmallPic(const TGPicture *spic)
    fClient->FreePicture(cspic);
 }
 
-ClassImp(TGTreeLVC)
+ClassImp(TTVLVContainer)
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//   TGTreeLVC                                                          //
+//   TTVLVContainer                                                          //
 //                                                                      //
 // This class represent the list view container for the                 //
 // TreeView class. It is a TGLVContainer with item dragging             //
-// capabilities for the TGLVTreeEntry objects inside                    //
+// capabilities for the TTVLVEntry objects inside                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TGTreeLVC::TGTreeLVC(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
+TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
           :TGLVContainer(p, w, h,options | kSunkenFrame)
 {
 // TGLVContainer constructor
 
    fListView = 0;
    fViewer = 0;
+   fExpressionList = new TList;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
 }
 //______________________________________________________________________________
-const char* TGTreeLVC::Cut()
+TTVLVContainer::~TTVLVContainer()
+{
+// TGLVContainer destructor
+   delete fExpressionList;
+}
+//______________________________________________________________________________
+const char* TTVLVContainer::Cut()
 {
 // return the cut entry
    TGFrameElement *el = (TGFrameElement *) fList->At(3);
    if (el) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName();
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+      if (f) return f->ConvertAliases();
       return 0;
    }
    return 0;
 }
 //______________________________________________________________________________
-const char* TGTreeLVC::Ex()
+TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
+{
+// return the expression item at specific position
+   TGFrameElement *el = (TGFrameElement *) fList->At(index);
+   if (el) {
+      TTVLVEntry *item = (TTVLVEntry *) el->fFrame;
+      return item;
+   }
+   return 0;
+}
+//______________________________________________________________________________
+TList* TTVLVContainer::ExpressionList()
+{
+// return the list of user-defined expressions
+   fExpressionList->Clear();
+   TIter next(fList);
+   TGFrameElement *el;
+   while ((el = (TGFrameElement*)next())) {
+      TTVLVEntry *item = (TTVLVEntry *)el->fFrame;
+      if (item) {
+         ULong_t *itemType = (ULong_t *) item->GetUserData();
+         if ((*itemType & TTreeViewer::kLTExpressionType) &&
+            (*itemType & TTreeViewer::kLTDragType)) fExpressionList->Add(item);
+      }
+   }
+   return fExpressionList;
+}
+//______________________________________________________________________________
+const char* TTVLVContainer::Ex()
 {
 // return the expression on X
    TGFrameElement *el = (TGFrameElement *) fList->At(0);
    if (el) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName();
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+      if (f) return f->ConvertAliases();
       return 0;
    }
    return 0;
 }
 //______________________________________________________________________________
-const char* TGTreeLVC::Ey()
+const char* TTVLVContainer::Ey()
 {
 // return the expression on Y
    TGFrameElement *el = (TGFrameElement *) fList->At(1);
    if (el) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName();
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+      if (f) return f->ConvertAliases();
       return 0;
    }
    return 0;
 }
 //______________________________________________________________________________
-const char* TGTreeLVC::Ez()
+const char* TTVLVContainer::Ez()
 {
 // return the expression on Z
    TGFrameElement *el = (TGFrameElement *) fList->At(2);
    if (el) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-      if (f) return f->GetTrueName();
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+      if (f) return f->ConvertAliases();
       return 0;
    }
    return 0;
 }
 //______________________________________________________________________________
-const char* TGTreeLVC::ScanList()
+const char* TTVLVContainer::ScanList()
 {
 // return the cut entry
    TGFrameElement *el = (TGFrameElement *) fList->At(4);
    if (el) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->GetTrueName();
       return 0;
    }
    return 0;
 }
 //______________________________________________________________________________
-Bool_t TGTreeLVC::HandleButton(Event_t *event)
+Bool_t TTVLVContainer::HandleButton(Event_t *event)
 {
    // Handle mouse button event in container.
 
@@ -197,10 +378,11 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
       TGFrameElement *el;
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
-         TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+         TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
          ++total;
          if (f->GetId() == (Window_t)event->fUser[0]) {  // fUser[0] = subwindow
             f->Activate(kTRUE);
+            if (f->GetTip()) (f->GetTip())->Hide();
             fX0 = f->GetX();
             fY0 = f->GetY();
             ++selected;
@@ -236,40 +418,42 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
            TGFrameElement *el;
            TIter next(fList);
            while ((el = (TGFrameElement *) next())) {
-              TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+              TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
               if ((f == fLastActive) || !f->IsActive()) continue;
               ULong_t *itemType = (ULong_t *) f->GetUserData();
               fLastActive->Activate(kFALSE);
               if (!(*itemType & TTreeViewer::kLTPackType)) {
                  // dragging items to expressions
-                 ((TGLVTreeEntry *) fLastActive)->CopyItem(f);
+                 ((TTVLVEntry *) fLastActive)->CopyItem(f);
+                 if (*itemType & TTreeViewer::kLTDragType) 
+                    f->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
               } else {
-                 if (strlen(((TGLVTreeEntry *) fLastActive)->GetTrueName())) {
+                 if (strlen(((TTVLVEntry *) fLastActive)->GetTrueName())) {
                     // dragging to scan box
                     if (!strlen(f->GetTrueName())) {
-                       f->SetTrueName(((TGLVTreeEntry *)fLastActive)->GetTrueName());
+                       f->SetTrueName(((TTVLVEntry *)fLastActive)->GetTrueName());
                        f->SetSmallPic(fClient->GetPicture("pack_t.xpm"));
                     } else {
                        TString name(2000);
-		       TString dragged = ((TGLVTreeEntry *)fLastActive)->GetTrueName();
+                       TString dragged = ((TTVLVEntry *)fLastActive)->GetTrueName();
                        name  = f->GetTrueName();
-		       if ((name.Length()+dragged.Length()) < 228) { 
+                       if ((name.Length()+dragged.Length()) < 228) { 
                           name += ":";
                           name += dragged;
                           f->SetTrueName(name.Data());
                        } else {
                           Warning("HandleButton", 
-                                  "Name too long. Can not add any more items to scan box");		    
+                                  "Name too long. Can not add any more items to scan box");    
                        }
                     }
                  }
               }
               fLastActive = f;
               if (fViewer) {
-	         char msg[2000];
-	         msg[0] = 0;
-	         sprintf(msg, "Content : %s", f->GetTrueName());
-                 fViewer->Message(msg);
+                  char msg[2000];
+                  msg[0] = 0;
+                  sprintf(msg, "Content : %s", f->GetTrueName());
+                  fViewer->Message(msg);
               }
            }
            if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
@@ -284,7 +468,7 @@ Bool_t TGTreeLVC::HandleButton(Event_t *event)
    return kTRUE;
 }
 //______________________________________________________________________________
-Bool_t TGTreeLVC::HandleMotion(Event_t *event)
+Bool_t TTVLVContainer::HandleMotion(Event_t *event)
 {
    // Handle mouse motion events.
    Int_t xf0, xff, yf0, yff;
@@ -296,8 +480,11 @@ Bool_t TGTreeLVC::HandleMotion(Event_t *event)
       ULong_t *itemType;
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
-         TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
-         if (f == fLastActive) continue;
+         TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
+         if (f == fLastActive) {
+            if (f->GetTip()) (f->GetTip())->Hide();
+            continue;
+         }
          xf0 = f->GetX();
          yf0 = f->GetY();
          xff = f->GetX() + f->GetWidth();
@@ -322,13 +509,13 @@ Bool_t TGTreeLVC::HandleMotion(Event_t *event)
    return kTRUE;
 }
 //______________________________________________________________________________
-void TGTreeLVC::EmptyAll()
+void TTVLVContainer::EmptyAll()
 {
 // Clear all names and aliases for expression type items
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       UInt_t *userData = (UInt_t *) f->GetUserData();
       if (*userData & TTreeViewer::kLTExpressionType) {
          if (*userData & TTreeViewer::kLTPackType) {
@@ -341,13 +528,13 @@ void TGTreeLVC::EmptyAll()
    }
 }
 //______________________________________________________________________________
-void TGTreeLVC::RemoveNonStatic()
+void TTVLVContainer::RemoveNonStatic()
 {
    // remove all non-static items from the list view, except expressions
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       UInt_t *userData = (UInt_t *) f->GetUserData();
       if (!((*userData) & TTreeViewer::kLTExpressionType)) {
          RemoveItem(f);
@@ -355,7 +542,7 @@ void TGTreeLVC::RemoveNonStatic()
    }
 }
 //______________________________________________________________________________
-void TGTreeLVC::SelectItem(const char* name)
+void TTVLVContainer::SelectItem(const char* name)
 {
  // select an item
    if (fLastActive) {
@@ -363,12 +550,14 @@ void TGTreeLVC::SelectItem(const char* name)
       fLastActive = 0;
    }
    TGFrameElement *el;
+   fSelected = 0;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
-      TGLVTreeEntry *f = (TGLVTreeEntry *) el->fFrame;
+      TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (!strcmp(f->GetItemName()->GetString(),name)) {
          f->Activate(kTRUE);
-         fLastActive = f;
+         fLastActive = (TGLVEntry *) f;
+         fSelected++;
       } else {
          f->Activate(kFALSE);
       }
@@ -383,7 +572,7 @@ ClassImp(TGSelectBox)
 //   TGSelectBox                                                        //
 //                                                                      //
 // This class represent a specialized expression editor for             //
-// TGLVTreeEntry 'true name' and 'alias' data members.                  //
+// TTVLVEntry 'true name' and 'alias' data members.                  //
 // It is a singleton in order to be able to use it for several          //
 //  expressions                                                         //
 //                                                                      //
@@ -394,7 +583,7 @@ enum ETransientFrameCommands {
    kTFCancel
 };
 
-TGSelectBox* TGSelectBox::fpInstance = 0;
+TGSelectBox* TGSelectBox::fInstance = 0;
 
 //______________________________________________________________________________
 TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
@@ -403,37 +592,38 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
 {
    // TGSelectBox constructor
 
-   if (!fpInstance) {
-      fpInstance = this;
-//      ULong_t color;
-//      if (!gClient->GetColorByName("#808080",color))
-//      gClient->GetColorByName("gray",color);
+   if (!fInstance) {
+      fInstance = this;
+      fViewer = (TTreeViewer *)fMain;
+      if (!fViewer) Error("TGSelectBox", "Must be started from viewer");
       fEntry = 0;
       fLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterY | kLHintsExpandX, 0, 0, 0, 2);
-      fbLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 2, 2, 2);
-      fbLayout1= new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 0, 2, 2);
+      fBLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 2, 2, 2);
+      fBLayout1= new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 0, 2, 2);
 
       fLabel = new TGLabel(this, "");
       AddFrame(fLabel,fLayout);
 
       fTe = new TGTextEntry(this, new TGTextBuffer(2000));
+      fTe->SetToolTipText("Type an expression using C++ syntax. Click other expression/leaves to paste them here.");
       AddFrame(fTe, fLayout);
 
       fLabelAlias = new TGLabel(this, "Alias");
       AddFrame(fLabelAlias,fLayout);
 
       fTeAlias = new TGTextEntry(this, new TGTextBuffer(100));
+      fTeAlias->SetToolTipText("Define an alias for this expression. Do NOT use leading strings of other aliases.");
       AddFrame(fTeAlias, fLayout);
 
       fBf = new TGHorizontalFrame(this, 10, 10);
 
-      fbCancel = new TGTextButton(fBf, "&Cancel", kTFCancel);
-      fbCancel->Associate(this);
-      fBf->AddFrame(fbCancel, fbLayout);
+      fCANCEL = new TGTextButton(fBf, "&Cancel", kTFCancel);
+      fCANCEL->Associate(this);
+      fBf->AddFrame(fCANCEL, fBLayout);
 
-      fbDone = new TGTextButton(fBf, "&Done", kTFDone);
-      fbDone->Associate(this);
-      fBf->AddFrame(fbDone, fbLayout1);
+      fDONE = new TGTextButton(fBf, "&Done", kTFDone);
+      fDONE->Associate(this);
+      fBf->AddFrame(fDONE, fBLayout1);
 
       AddFrame(fBf, fLayout);
 
@@ -455,17 +645,17 @@ TGSelectBox::~TGSelectBox()
 {
    // TGSelectBox destructor
 
-   fpInstance = 0;
+   fInstance = 0;
    delete fLabel;
    delete fTe;
    delete fLabelAlias;
    delete fTeAlias;
-   delete fbDone;
-   delete fbCancel;
+   delete fDONE;
+   delete fCANCEL;
    delete fBf;
    delete fLayout;
-   delete fbLayout;
-   delete fbLayout1;
+   delete fBLayout;
+   delete fBLayout1;
 }
 //______________________________________________________________________________
 void TGSelectBox::CloseWindow()
@@ -478,7 +668,7 @@ void TGSelectBox::CloseWindow()
 TGSelectBox * TGSelectBox::GetInstance()
 {
 // return the pointer to the instantiated singleton
-   return fpInstance;
+   return fInstance;
 }
 //______________________________________________________________________________
 void TGSelectBox::GrabPointer()
@@ -501,22 +691,44 @@ void TGSelectBox::SaveText()
 {
 // save the edited entry true name and alias
    if (fEntry) {
-      fEntry->SetTrueName(fTe->GetText());
-      fEntry->SetAlias(fTeAlias->GetText());
-      if (strlen(fTeAlias->GetText())) {
-         fEntry->SetItemName(fTeAlias->GetText());
-      } else {
-         fEntry->SetItemName(fTe->GetText());
+
+      Bool_t cutType;
+      TString name(fTe->GetText());
+      if (name.Length())
+         fEntry->SetToolTipText("Double-click to draw. Drag and drop. Use Edit/Expression or context menu to edit.");
+      else
+         fEntry->SetToolTipText("User-defined expression/cut. Double-click to edit");
+      // Set type of item to "cut" if containing boolean operators
+      cutType = name.Contains("<") || name.Contains(">") || name.Contains("=") ||
+                name.Contains("!") || name.Contains("&") || name.Contains("|");
+      TString alias(fTeAlias->GetText());
+      if (!alias.BeginsWith("~") && !alias.Contains("empty")) fTeAlias->InsertText("~", 0); 
+      fEntry->SetExpression(fTe->GetText(), fTeAlias->GetText(), cutType);
+
+      if (fOldAlias.Contains("empty")) {
+         fOldAlias = fTeAlias->GetText();
+         return;
+      }
+      TList *list = fViewer->ExpressionList();
+      TIter next(list);
+      TTVLVEntry* item;
+      while ((item=(TTVLVEntry*)next())) {
+         if (item != fEntry) {
+            TString name = item->GetTrueName();
+            name.ReplaceAll(fOldAlias.Data(), fTeAlias->GetText());
+            item->SetTrueName(name.Data());
+         }
       }
    }
 }
 //______________________________________________________________________________
-void TGSelectBox::SetEntry(TGLVTreeEntry *entry)
+void TGSelectBox::SetEntry(TTVLVEntry *entry)
 {
    // connect one entry
    fEntry = entry;
    fTe->SetText(entry->GetTrueName());
    fTeAlias->SetText(entry->GetAlias());
+   fOldAlias = entry->GetAlias();
 }
 //______________________________________________________________________________
 void TGSelectBox::InsertText(const char* text)

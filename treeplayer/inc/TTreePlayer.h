@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.11 2000/12/13 15:13:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.12 2000/12/21 14:03:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,6 +52,8 @@ protected:
     TTreeFormula  *fVar4;           //  Pointer to fourth variable formula
     TTreeFormula  *fSelect;         //  Pointer to selection formula
     TTreeFormula  *fMultiplicity;   //  Pointer to formula giving ndata per entry
+    Bool_t         fScanRedirect;   //  Switch to redirect TTree::Scan output to a file
+    const char    *fScanFileName;   //  Name of the file where Scan is redirected
     Int_t          fDraw;           //! Last entry loop number when object was drawn
     Int_t          fNfill;          //! Local for EntryLoop
     Int_t          fDimension;      //  Dimension of the current expression
@@ -96,6 +98,7 @@ public:
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
     TPacketGenerator *GetPacketGenerator() const { return fPacketGen; }
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
+    const char       *GetScanFileName() const {return fScanFileName;}
     TTreeFormula     *GetSelect() const    {return fSelect;}
     virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
     TTreeFormula     *GetVar1() const {return fVar1;}
@@ -115,10 +118,13 @@ public:
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
+    Bool_t            ScanRedirected() {return fScanRedirect;}
     virtual TSQLResult *Query(const char *varexp="", const char *selection="", Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetEstimate(Int_t n);
     virtual void      SetPacketSize(Int_t size = 100);
+    void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
+    void              SetScanFileName(const char *name) {fScanFileName=name;}
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
     virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option 
