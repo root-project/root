@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.1.1.4 2001/01/16 01:46:57 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.12 2001/02/07 08:18:15 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -105,7 +105,7 @@ class TDataSet : public TNamed
     virtual void         AddLast(TDataSet *dataset);
             TDataSet    *At(Int_t idx) const;
     virtual void         Browse(TBrowser *b);
-    virtual TObject     *Clone() const;
+    virtual TObject     *Clone(const char *newname="") const;
     virtual void         Delete(Option_t *opt="");
     virtual TDataSet    *Find(const char *path) const;
     virtual TDataSet    *FindByPath(const char *path) const;
