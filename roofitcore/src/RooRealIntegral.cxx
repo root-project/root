@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.2 2001/04/18 20:38:03 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.3 2001/04/19 01:42:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,10 +26,10 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 RooDerivedReal& function, RooArgSet& depList,
+				 const RooDerivedReal& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
   RooDerivedReal(name,title), _function(&function), _mode(0),
-  _intList("intList"), _sumList("sumList"), _depList("depList"), _init(kFALSE)
+  _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
 
   // Filter out junk variables from dependent list
@@ -52,32 +52,22 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     
     // Add integrand as shape server 
     addServer(*arg,kFALSE,kTRUE) ;
-    _depList.add(*arg) ;
   }
   delete depIter ;
 
   // Register all non-integrands of functions as value servers
   TIterator* sIter = function.serverIterator() ;
   while (arg=(RooAbsArg*)sIter->Next()) {
-    if (!_depList.FindObject(arg))
+    if (!depList.FindObject(arg))
       addServer(*arg,kTRUE,kFALSE) ;
   }
   delete sIter ;
 
-  // Remaining initialization deferred (implemented in deferredInit())
-}
-
-
-void RooRealIntegral::deferredInit() 
-{
-  if (_init) return ;
-
   // Determine which parts needs to be integrated numerically
   RooArgSet numDepList("numDepList") ;
-  _mode = _function->getAnalyticalIntegral(_depList,numDepList) ;    
+  _mode = _function->getAnalyticalIntegral(depList,numDepList) ;    
   
   // Split numeric integration list in summation and integration lists
-  RooAbsArg* arg ;
   TIterator* numIter=numDepList.MakeIterator() ;
   while (arg=(RooAbsArg*)numIter->Next()) {
   
@@ -90,7 +80,6 @@ void RooRealIntegral::deferredInit()
   delete numIter ;
 
   initNumIntegrator() ;
-  _init = kTRUE ;
 }
 
 
@@ -116,24 +105,22 @@ void RooRealIntegral::initNumIntegrator()
 }
 
 RooRealIntegral::RooRealIntegral(const char* name, const RooRealIntegral& other) : 
-  RooDerivedReal(name,other), _function(other._function), 
-  _intList("intList"), _sumList("sumList"), _depList("depList"), _init(other._init) 
+  RooDerivedReal(name,other), _function(other._function), _mode(other._mode),
+  _intList("intList"), _sumList("sumList") 
 {
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
-  copyList(_depList,other._depList) ;  
-  if (other._init) initNumIntegrator() ;
+  initNumIntegrator() ;
 }
 
 
 RooRealIntegral::RooRealIntegral(const RooRealIntegral& other) :
-  RooDerivedReal(other), _function(other._function),
-  _intList("intList"), _sumList("sumList"), _init(other._init)
+  RooDerivedReal(other), _function(other._function), _mode(other._mode),
+  _intList("intList"), _sumList("sumList")
 {
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
-  copyList(_depList,other._depList) ;
-  if (other._init) initNumIntegrator() ;
+  initNumIntegrator() ;
 }
 
 
@@ -149,7 +136,7 @@ RooRealIntegral& RooRealIntegral::operator=(const RooRealIntegral& other)
   RooDerivedReal::operator=(other) ;
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
-  copyList(_depList,other._depList) ;
+  _mode = other._mode ;
   _function = other._function ;
   setValueDirty(kTRUE) ;
   return *this ;
@@ -165,9 +152,6 @@ RooAbsArg& RooRealIntegral::operator=(const RooAbsArg& aother)
 
 Double_t RooRealIntegral::evaluate() const 
 {
-  // Perform deferred initialization
-  if (!_init) deferredInit() ;
-
   // Save current integrand values 
   RooArgSet saveInt("saveInt",_intList), saveSum("saveSum",_sumList) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.1 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.2 2001/04/19 01:42:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,7 +27,7 @@ public:
 
   // Constructors, assignment etc
   inline RooRealIntegral() { }
-  RooRealIntegral(const char *name, const char *title, RooDerivedReal& function, 
+  RooRealIntegral(const char *name, const char *title, const RooDerivedReal& function, 
 		  RooArgSet& depList, Int_t maxSteps=20, Double_t eps=1e-6) ;
   RooRealIntegral(const RooRealIntegral& other);
   RooRealIntegral(const char* name, const RooRealIntegral& other);
@@ -39,8 +39,6 @@ public:
 
 protected:
 
-  Bool_t _init ;
-  void deferredInit() ;
   void initNumIntegrator() ;
   RooAbsArg& operator=(const RooAbsArg& other) ;
 
@@ -56,12 +54,11 @@ protected:
 
   // Function pointer and integrands list
   RooDerivedReal* _function ;
-  mutable RooArgSet _depList ;
   mutable RooArgSet _sumList ;
   mutable RooArgSet _intList ;
   Int_t _mode ;
 
-  RooAbsIntegrator* _numIntEngine ;
+  mutable RooAbsIntegrator* _numIntEngine ;
 
   ClassDef(RooRealIntegral,1) // a real-valued variable and its value
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNormFunction.cc,v 1.1 2001/04/18 20:38:03 verkerke Exp $
+ *    File: $Id: RooNormFunction.cc,v 1.2 2001/04/20 01:51:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,94 +15,111 @@
 #include "TObjString.h"
 #include "TH1.h"
 #include "RooFitCore/RooNormFunction.hh"
+#include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
 
 ClassImp(RooNormFunction) 
 ;
 
 
-RooNormFunction::RooNormFunction(const char *name, const char *title, RooArgSet& depList, 
-				 RooArgSet& parList, const char *unit= "") : 
-  RooDerivedReal(name,title,unit)
+RooNormFunction::RooNormFunction(const char *name, const char *title, const char *unit= "") : 
+  RooDerivedReal(name,title,unit), _norm(0), _lastDataSet(0)
 {
-  init(depList,parList) ;
 }
 
 
-RooNormFunction::RooNormFunction(const char *name, const char *title, Double_t plotMin,
-		       Double_t plotMax,  RooArgSet& depList, RooArgSet& parList, const char *unit= "") :
-  RooDerivedReal(name,title,plotMin,plotMax,unit)
+RooNormFunction::RooNormFunction(const char *name, const char *title, 
+				 Double_t plotMin, Double_t plotMax, const char *unit= "") :
+  RooDerivedReal(name,title,plotMin,plotMax,unit), _norm(0), _lastDataSet(0)
 {
-  init(depList,parList) ;
 }
 
 
 
 RooNormFunction::~RooNormFunction()
 {
-  // Clear depedent/parameter attributes in our servers
-  _depList.setAttribAll(depAttribName(),kFALSE) ;
-  _parList.setAttribAll(parAttribName(),kFALSE) ;
-
-  delete _norm ;
-}
-
-
-
-void RooNormFunction::init(RooArgSet& depList, RooArgSet& parList) 
-{
-  addServerList(depList,kTRUE,kFALSE) ;
-  addServerList(parList,kTRUE,kFALSE) ;
-
-  copyList(_depList,depList) ;
-  copyList(_parList,parList) ;
-
-  depList.setAttribAll(depAttribName()) ;
-  parList.setAttribAll(parAttribName()) ;
-
-  _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),TString(GetTitle()).Append(" Integral"),*this,depList) ;
-}
-
-
-
-const char* RooNormFunction::parAttribName() const 
-{
-  static char buf[1024] ;
-  sprintf(buf,"Par(%s,%x)",GetName(),this) ;  
-  return buf ;
-}
-
-const char* RooNormFunction::depAttribName() const 
-{
-  static char buf[1024] ;
-  sprintf(buf,"Dep(%s,%x)",GetName(),this) ;  
-  return buf ;
+  if (_norm) delete _norm ;
 }
 
 
 
 RooNormFunction::RooNormFunction(const char* name, const RooNormFunction& other) : 
-  RooDerivedReal(name,other)
+  RooDerivedReal(name,other), _norm(0), _lastDataSet(0)
 {
-  copyList(_depList,other._depList) ;
-  copyList(_parList,other._parList) ;
-
-  _depList.setAttribAll(depAttribName()) ;
-  _parList.setAttribAll(parAttribName()) ;
-
-  _norm = new RooRealIntegral(TString(name).Append("Norm"),*other._norm) ;
 }
 
 
 
 
 RooNormFunction::RooNormFunction(const RooNormFunction& other) :
-  RooDerivedReal(other)
+  RooDerivedReal(other), _norm(0), _lastDataSet(0)
 {
-  copyList(_depList,other._depList) ;
-  copyList(_parList,other._parList) ;
+}
 
-  _norm = new RooRealIntegral(*other._norm) ;
+
+Double_t RooNormFunction::getNorm(const RooDataSet* dset) const
+{
+  // Trivial case: normalization cache still valid
+  if (dset==_lastDataSet) return _norm->getVal() ;
+
+  // Destroy old normalization
+  if (_norm) delete _norm ;
+
+  // Create new normalization
+  RooArgSet* depList = getDependents(dset) ;
+  _lastDataSet = (RooDataSet*) dset ;
+  _norm = new RooRealIntegral(TString(GetName()).Append("Norm"),
+			      TString(GetTitle()).Append(" Integral"),*this,*depList) ;
+  delete depList ;
+  
+  return _norm->getVal() ;
+}
+
+
+
+Int_t RooNormFunction::getNPar(const RooDataSet* set) 
+{
+  RooArgSet* parList = getParameters(set) ;
+  Int_t npar = parList->GetSize() ;
+  delete parList ;
+  
+  return npar ;
+}
+
+
+
+RooArgSet* RooNormFunction::getParameters(const RooDataSet* set) const 
+{
+  RooArgSet* parList = new RooArgSet("parameters") ;
+  const RooArgSet* dataList = set->get() ;
+
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)sIter->Next()) {
+    if (!dataList->FindObject(arg->GetName())) {
+      parList->add(*arg) ;
+    }
+  }
+
+  return parList ;
+}
+
+
+
+RooArgSet* RooNormFunction::getDependents(const RooDataSet* set) const 
+{
+  RooArgSet* depList = new RooArgSet("parameters") ;
+  const RooArgSet* dataList = set->get() ;
+
+  TIterator* sIter = serverIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*)sIter->Next()) {
+    if (dataList->FindObject(arg->GetName())) {
+      depList->add(*arg) ;
+    }
+  }
+
+  return depList ;
 }
 
 
