@@ -74,6 +74,7 @@ class multimap {
 	: public _Bidit<T,difference_type> 
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif defined(G__INTEL_COMPILER)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
@@ -110,6 +111,7 @@ class multimap {
 	: public _Bidit<T,difference_type> 
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif defined(G__INTEL_COMPILER)
 #else
   	: public bidirectional_iterator<T,difference_type> 
 #endif

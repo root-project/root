@@ -68,6 +68,7 @@ class set {
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif defined(G__INTEL_COMPILER)
 #else
   	: public bidirectional_iterator<Key,difference_type>
 #endif
@@ -108,6 +109,7 @@ class set {
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif defined(G__INTEL_COMPILER)
 #else
   	: public bidirectional_iterator<Key,difference_type>
 #endif
@@ -184,6 +186,9 @@ class set {
   // set operations:
 #if defined(G__HPUX) || defined(G__VISUAL)
   iterator  find(const Key& x) ;
+#elif defined(G__INTEL_COMPILER)
+  iterator  find(const Key& x) ;
+  const_iterator  find(const Key& x) const;
 #else
   iterator  find(const Key& x) const;
 #endif
@@ -191,6 +196,11 @@ class set {
 #if defined(G__HPUX) || defined(G__VISUAL)
   iterator  lower_bound(const Key& x) ;
   iterator  upper_bound(const Key& x) ;
+#elif defined(G__INTEL_COMPILER)
+  iterator  lower_bound(const Key& x) ;
+  iterator  upper_bound(const Key& x) ;
+  const_iterator  lower_bound(const Key& x) const;
+  const_iterator  upper_bound(const Key& x) const;
 #else
   iterator  lower_bound(const Key& x) const;
   iterator  upper_bound(const Key& x) const;

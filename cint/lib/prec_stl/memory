@@ -152,7 +152,7 @@ public:
   pointer allocate(size_type _N, void *);
 #endif
   //char  *_Charalloc(size_type _N);
-#if !defined(G__KCC) && !defined(G__BORLANDCC5)
+#if !defined(G__KCC) && !defined(G__BORLANDCC5) && !defined(G__INTEL_COMPILER)
   void deallocate(void *_P, size_type);
 #else
   void deallocate(T *_P, size_type); //???
