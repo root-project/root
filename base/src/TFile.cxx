@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.21 2001/01/15 01:25:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.22 2001/01/16 17:22:32 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -420,8 +420,13 @@ void TFile::Init(Bool_t create)
    }
    gROOT->GetListOfFiles()->Add(this);
 
-   fClassIndex = new TArrayC(gROOT->GetListOfStreamerInfo()->GetSize()+1);
-   if (!create) ReadStreamerInfo();
+   // Create StreamerInfo index
+   {
+      Int_t lenIndex = gROOT->GetListOfStreamerInfo()->GetSize()+1;
+      if (lenIndex < 5000) lenIndex = 5000;
+      fClassIndex = new TArrayC(lenIndex);
+      if (!create) ReadStreamerInfo();
+   }
 
    if (TClassTable::GetDict("TProof")) {
       if (gROOT->ProcessLineFast("TProof::IsActive()"))
