@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.3 2000/12/13 15:56:17 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.4 2000/12/13 16:05:18 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TMath.h"
 #include "TString.h"
 #include "TError.h"
+#include "TRegexp.h"
 
 
 TClassTable *gClassTable;
@@ -58,11 +59,43 @@ TClassTable::~TClassTable()
 }
 
 //______________________________________________________________________________
-void TClassTable::Print(Option_t *) const
+void TClassTable::Print(Option_t *option) const
 {
-   // Print the class table.
+   // Print the class table. Before printing the table is sorted
+   // alphabetically. Only classes specified in option are listed.
+   // default is to list all classes.
+   // Standard wilcarding notation supported.
+   
+   if (fgTally == 0 || !fgTable)
+      return;
 
-   PrintTable();
+   SortTable();
+
+   int n = 0, ninit = 0, nl = 0;
+
+   int nch = strlen(option);
+   TRegexp re(option,kTRUE);
+   Printf("");
+   Printf("Defined classes");
+   Printf("class                              version  bits  initialized");
+   Printf("=============================================================");
+   for (int i = 0; i < fgTally; i++) {
+      ClassRec_t *r = fgSortedTable[i];
+      n++;
+      TString s = r->name;
+      if (nch && strcmp(option,r->name) && s.Index(re) == kNPOS) continue;
+      nl++;
+      if (gROOT->GetClass(r->name, kFALSE)) {
+         ninit++;
+         Printf("%-32s %6d %7d       Yes", r->name, r->id, r->bits);
+      } else
+         Printf("%-32s %6d %7d       No",  r->name, r->id, r->bits);
+   }
+   Printf("-------------------------------------------------------------");
+   Printf("Listed Classes: %4d  Total classes: %4d   initialized: %4d",nl, n, ninit);
+   Printf("=============================================================");
+
+   Printf("");
 }
 
 //---- static members --------------------------------------------------------
