@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.7 2000/06/13 09:15:34 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.8 2000/06/14 09:06:44 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -63,21 +63,22 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    fIndex        = new Int_t[fNindex];
    fNcodes       = 0;
    fMultiplicity = 0;
-   
-   for (Int_t j=0; j<kMAXCODES; j++) {
+   Int_t i,j,k;
+      
+   for (j=0; j<kMAXCODES; j++) {
       fNdimensions[j] = 0;
-      for (Int_t k = 0; k<kMAXFORMDIM; k++) {
+      for (k = 0; k<kMAXFORMDIM; k++) {
          fIndexes[j][k] = -1;
          fCumulSize[j][k] = 1;
       }
    }
-   for (Int_t k = 0; k<kMAXFORMDIM+1; k++) {
+   for (k = 0; k<kMAXFORMDIM+1; k++) {
       fCumulUsedSize[k] = 1;
    }
 
    if (Compile(expression)) {fTree = 0; return; }
    SetName(name);
-   for (Int_t i=0;i<fNcodes;i++) {
+   for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
       TLeaf *leaf = GetLeaf(i);
       if (leaf->InheritsFrom("TLeafC")) SetBit(kIsCharacter);
@@ -98,7 +99,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       if (fIndex[i] == -1 ) fIndex[i] = 0;
 
       // Add up the cumulative size
-      for (Int_t k = fNdimensions[i]; (k > 0) && (fCumulSize[k-1]>=0); k--) {
+      for (k = fNdimensions[i]; (k > 0) && (fCumulSize[k-1]>=0); k--) {
          if ( (fCumulSize[i][k-1]>=0) && (fIndexes[i][k-1] >= fCumulSize[i][k-1]) ) {
             // unreacheable element requested:
             fCumulUsedSize[k-1] = 0;
@@ -106,7 +107,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
          fCumulSize[i][k-1] *= fCumulSize[i][k];
       }
    }
-   for (Int_t k = kMAXFORMDIM; (k > 0) && (fCumulUsedSize[k-1]>=0); k--) {
+   for (k = kMAXFORMDIM; (k > 0) && (fCumulUsedSize[k-1]>=0); k--) {
       fCumulUsedSize[k-1] *= fCumulUsedSize[k];
    }
    
