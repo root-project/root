@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.45 2002/12/08 16:51:41 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.46 2002/12/08 19:21:22 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1260,6 +1260,8 @@ void TUnixSystem::StackTrace()
    int fd = STDERR_FILENO;
    if (fd) { }  // remove unused warning (remove later)
 
+   const char *message = " Generating stack trace...\n";
+
 #if defined(HAVE_U_STACK_TRACE) || defined(HAVE_XL_TRBK)   // hp-ux, aix
 /*
    // FIXME: deal with inability to duplicate the file handle
@@ -1290,6 +1292,7 @@ void TUnixSystem::StackTrace()
    // take care of demangling
    Bool_t demangle = kTRUE;
    // check for c++filt (g++), iccfilt (icc) or eccfilt (ecc)
+   // could also use c++filt --format=gnu-new-abi for g++ v3 and icc
 #ifdef R__INTEL_COMPILER
 #ifdef __ia64__
    const char *cppfilt = "eccfilt";
@@ -1299,10 +1302,32 @@ void TUnixSystem::StackTrace()
 #else
    const char *cppfilt = "c++filt";
 #endif
+#ifdef R__B64
+   const char *format1 = " 0x%016lx in %.100s %s 0x%lx from %.100s\n";
+   const char *format2 = " 0x%016lx in %.100s at %.100s from %.100s\n";
+   const char *format3 = " 0x%016lx in %.100s from %.100s\n";
+   const char *format4 = " 0x%016lx in <unknown function>\n";
+#else
+   const char *format1 = " 0x%08lx in %.100s %s 0x%lx from %.100s\n";
+   const char *format2 = " 0x%08lx in %.100s at %.100s from %.100s\n";
+   const char *format3 = " 0x%08lx in %.100s from %.100s\n";
+   const char *format4 = " 0x%08lx in <unknown function>\n";
+#endif
+
    char *filter = Which(Getenv("PATH"), cppfilt, kExecutePermission);
    if (!filter)
       demangle = kFALSE;
-   // open tmp file for mangled stack trace
+
+   // addr2line uses debug info to convert addresses into file names
+   // and line numbers
+   char *addr2line = Which(Getenv("PATH"), "addr2line", kExecutePermission);
+
+   if (addr2line) {
+      // might take some time so tell what we are doing...
+      write(fd, message, strlen(message));
+   }
+
+   // open tmp file for demangled stack trace
    char tmpf1[L_tmpnam];
    ofstream file1;
    if (demangle) {
@@ -1315,24 +1340,49 @@ void TUnixSystem::StackTrace()
       }
    }
 
-   char buffer[256];
+   char buffer[2048];
    void *trace[kMAX_BACKTRACE_DEPTH];
    int  depth = backtrace(trace, kMAX_BACKTRACE_DEPTH);
-   for (int n = 0; n < depth; ++n) {
+   for (int n = 0; n < depth; n++) {
       unsigned long addr = (unsigned long) trace[n];
       Dl_info info;
 
       if (dladdr(trace[n], &info) && info.dli_fname && info.dli_fname[0]) {
          const char   *libname = info.dli_fname;
-         const char   *symname = (info.dli_sname && info.dli_sname[0]
-                                 ? info.dli_sname : "");
+         const char   *symname = (info.dli_sname && info.dli_sname[0])
+                                 ? info.dli_sname : "<unknown>";
+         unsigned long libaddr = (unsigned long) info.dli_fbase;
          unsigned long symaddr = (unsigned long) info.dli_saddr;
          bool          gte = (addr >= symaddr);
-         unsigned long diff = (gte ? addr - symaddr : symaddr - addr);
-         sprintf(buffer, " 0x%08lx %.100s %s 0x%lx [%.100s]\n",
-                 addr, symname, gte ? "+" : "-", diff, libname);
+         unsigned long diff = (gte) ? addr - symaddr : symaddr - addr;
+         if (addr2line && symaddr) {
+            unsigned long offset = (addr >= libaddr) ? addr - libaddr :
+                                                       libaddr - addr;
+            sprintf(buffer, "%s -e %s 0x%016lx", addr2line, libname, offset);
+            Bool_t nodebug = kTRUE;
+            if (FILE *pf = ::popen(buffer, "r")) {
+               char buf[1024];
+               if (fgets(buf, 1024, pf)) {
+                  buf[strlen(buf)-1] = 0;  // remove trailing \n
+                  if (strncmp(buf, "??", 2)) {
+                     sprintf(buffer, format2, addr, symname, buf, libname);
+                     nodebug = kFALSE;
+                  }
+               }
+               ::pclose(pf);
+            }
+            if (nodebug)
+               sprintf(buffer, format1, addr, symname,
+                       gte ? "+" : "-", diff, libname);
+         } else {
+            if (symaddr)
+               sprintf(buffer, format1, addr, symname,
+                       gte ? "+" : "-", diff, libname);
+            else
+               sprintf(buffer, format3, addr, symname, libname);
+         }
       } else {
-         sprintf(buffer, " 0x%08lx <unknown function>\n", addr);
+         sprintf(buffer, format4, addr);
       }
 
       if (demangle)
@@ -1340,6 +1390,8 @@ void TUnixSystem::StackTrace()
       else
          write(fd, buffer, ::strlen(buffer));
    }
+
+   delete [] addr2line;
 
    if (demangle) {
       char tmpf2[L_tmpnam];
