@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.4 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.h,v 1.5 2004/11/05 11:38:05 brun Exp $
 // Author: Markus Frank  28/10/04
 
 /*************************************************************************
@@ -25,7 +25,10 @@
 class TBuffer;
 class TClassStreamer;
 class TMemberStreamer;
+class TGenCollectionProxy;
+class TGenCollectionStreamer;
 class TVirtualCollectionProxy;
+class TEmulatedCollectionProxy;
 
 #if defined(_WIN32) 
   #if _MSC_VER<1300
@@ -305,7 +308,7 @@ public:
   };
 
   /// Generate emulated collection proxy for a given class
-  static Proxy_t* genEmulatedProxy(const char* class_name);
+  static TVirtualCollectionProxy* genEmulatedProxy(const char* class_name);
 
   /// Generate emulated class streamer for a given collection class
   static TClassStreamer* genEmulatedClassStreamer(const char* class_name);
@@ -349,7 +352,7 @@ public:
   }
 
   /// Generate streamer from static functions
-  static Proxy_t* 
+  static TGenCollectionStreamer* 
     genExplicitStreamer(  Info_t  info,
                           size_t  iter_size,
                           size_t  value_diff,
@@ -438,7 +441,7 @@ public:
   }
 };
 
-/** @class TCollectionStreamer TEmulatedCollectionProxy.h cont/TEmulatedCollectionProxy.h
+/** @class TCollectionStreamer TCollectionProxy.h cont/TCollectionProxy.h
   *
   * TEmulatedClassStreamer
   *
@@ -450,7 +453,7 @@ public:
   */
 class TCollectionStreamer   {
 protected:
-  TVirtualCollectionProxy* fProxy;   /// Pointer to worker proxy
+  TGenCollectionProxy* fStreamer;   /// Pointer to worker streamer
 
   /// Issue Error about invalid proxy
   void InvalidProxyError();
@@ -463,14 +466,14 @@ public:
   /// Standard destructor
   virtual ~TCollectionStreamer();
   /// Attach worker proxy
-  void AdoptProxy(TVirtualCollectionProxy* proxy);
+  void AdoptStreamer(TGenCollectionProxy* streamer);
   /// Streamer for I/O handling
   void Streamer(TBuffer &refBuffer, void *pObject, int siz);
 };
 
 #include "TClassStreamer.h"
 
-/** @class TEmulatedClassStreamer TEmulatedCollectionProxy.h cont/TEmulatedCollectionProxy.h
+/** @class TEmulatedClassStreamer TCollectionProxy.h cont/TCollectionProxy.h
   *
   * TEmulatedClassStreamer
   *
@@ -495,7 +498,7 @@ public:
 
 #include "TMemberStreamer.h"
 
-/** @class TCollectionMemberStreamer TEmulatedCollectionProxy.h cont/TEmulatedCollectionProxy.h
+/** @class TCollectionMemberStreamer TCollectionProxy.h cont/TCollectionProxy.h
   *
   * TCollectionMemberStreamer
   *

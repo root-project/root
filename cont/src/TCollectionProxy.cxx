@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.1 2004/10/29 18:03:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollectionProxy.cxx,v 1.2 2004/11/01 12:26:07 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -35,32 +35,39 @@
 #include "TEmulatedMapProxy.h"
 #include "TEmulatedCollectionProxy.h"
 
-static TClassEdit::ESTLType stl_type(const char* class_name)  {
-  if ( class_name )  {
-    int nested = 0;
-    std::vector<std::string> inside;
-    int num = TClassEdit::GetSplit(class_name,inside,nested);
-    if ( num > 1 )  {
-      return (TClassEdit::ESTLType)TClassEdit::STLKind(inside[0].c_str());
+// Do not clutter global namespace with shit....
+namespace {
+  static TClassEdit::ESTLType stl_type(const char* class_name)  {
+    if ( class_name )  {
+      int nested = 0;
+      std::vector<std::string> inside;
+      int num = TClassEdit::GetSplit(class_name,inside,nested);
+      if ( num > 1 )  {
+        return (TClassEdit::ESTLType)TClassEdit::STLKind(inside[0].c_str());
+      }
     }
+    return TClassEdit::kNotSTL;
   }
-  return TClassEdit::kNotSTL;
+
+  static TEmulatedCollectionProxy* genEmulation(const char* class_name)  {
+    switch ( stl_type(class_name) )  {
+      case TClassEdit::kNotSTL:
+        return 0;
+      case TClassEdit::kMap:
+      case TClassEdit::kMultiMap:
+        return new TEmulatedMapProxy(class_name);
+      default:
+        return new TEmulatedCollectionProxy(class_name);
+    }
+    return 0;
+  }
 }
 
 /// Generate emulated collection proxy for a given class
-TCollectionProxy::Proxy_t* 
+TVirtualCollectionProxy* 
 TCollectionProxy::genEmulatedProxy(const char* class_name)  
 {
-  switch ( stl_type(class_name) )  {
-    case TClassEdit::kNotSTL:
-      return 0;
-    case TClassEdit::kMap:
-    case TClassEdit::kMultiMap:
-      return new TEmulatedMapProxy(class_name);
-    default:
-      return new TEmulatedCollectionProxy(class_name);
-  }
-  return 0;
+  return genEmulation(class_name);
 }
 
 /// Generate emulated class streamer for a given collection class
@@ -68,7 +75,7 @@ TClassStreamer*
 TCollectionProxy::genEmulatedClassStreamer(const char* class_name)
 {
   TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptProxy(genEmulatedProxy(class_name));
+  s->AdoptStreamer(genEmulation(class_name));
   return s;
 }
 
@@ -77,7 +84,7 @@ TMemberStreamer*
 TCollectionProxy::genEmulatedMemberStreamer(const char* class_name)
 {
   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptProxy(genEmulatedProxy(class_name));
+  s->AdoptStreamer(genEmulation(class_name));
   return s;
 }
 
@@ -115,7 +122,7 @@ TCollectionProxy::genExplicitProxy( Info_t info,
 }
 
 /// Generate streamer from static functions
-TCollectionProxy::Proxy_t* 
+TGenCollectionStreamer* 
 TCollectionProxy::genExplicitStreamer(  Info_t  info,
                                         size_t  iter_size,
                                         size_t  value_diff,
@@ -165,7 +172,7 @@ TCollectionProxy::genExplicitClassStreamer( Info_t info,
                                             )
 {
   TCollectionClassStreamer* s = new TCollectionClassStreamer();
-  s->AdoptProxy(genExplicitStreamer(info, 
+  s->AdoptStreamer(genExplicitStreamer(info, 
                                     iter_size,
                                     value_diff,
                                     value_offset,
@@ -199,7 +206,7 @@ TCollectionProxy::genExplicitMemberStreamer(Info_t info,
                                             )
 {
   TCollectionMemberStreamer* s = new TCollectionMemberStreamer();
-  s->AdoptProxy(genExplicitStreamer(info, 
+  s->AdoptStreamer(genExplicitStreamer(info, 
                                     iter_size,
                                     value_diff,
                                     value_offset,
@@ -221,13 +228,14 @@ void TCollectionStreamer::InvalidProxyError()   {
 }
 
 /// Initializing constructor
-TCollectionStreamer::TCollectionStreamer() : fProxy(0) {       
+TCollectionStreamer::TCollectionStreamer() : fStreamer(0) {       
 }
 
 /// Copy constructor
 TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)  {
-  if ( c.fProxy )  {
-    fProxy = c.fProxy->Generate();
+  if ( c.fStreamer )  {
+    fStreamer = dynamic_cast<TGenCollectionProxy*>(c.fStreamer->Generate());
+    Assert(fStreamer != 0);
     return;
   }
   InvalidProxyError();
@@ -235,24 +243,24 @@ TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c)  {
 
 /// Standard destructor
 TCollectionStreamer::~TCollectionStreamer()    {       
-  if ( fProxy )  {
-    delete fProxy;
+  if ( fStreamer )  {
+    delete fStreamer;
   }
 }
 
 /// Attach worker proxy
-void TCollectionStreamer::AdoptProxy(TVirtualCollectionProxy* proxy)  {
-  if ( fProxy )  {
-    delete fProxy;
+void TCollectionStreamer::AdoptStreamer(TGenCollectionProxy* streamer)  {
+  if ( fStreamer )  {
+    delete fStreamer;
   }
-  fProxy = proxy;
+  fStreamer = streamer;
 }
 
 /// Streamer for I/O handling
 void TCollectionStreamer::Streamer(TBuffer &buff, void *pObj, int /* siz */ ) {
-  if ( fProxy )  {
-    TVirtualCollectionProxy::TPushPop env(fProxy, pObj);
-    fProxy->Streamer(buff);
+  if ( fStreamer )  {
+    TVirtualCollectionProxy::TPushPop env(fStreamer, pObj);
+    fStreamer->Streamer(buff);
     return;
   }
   InvalidProxyError();

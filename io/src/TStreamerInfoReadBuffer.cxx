@@ -900,6 +900,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
                   TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
                   DOLOOP {
+                     void* env;
                      void **contp = (void**)(arr[k]+ioffset);
                      int j;
                      for(j=0;j<fLength[i];j++) {
@@ -911,8 +912,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         TVirtualCollectionProxy::TPushPop helper( proxy, cont );
                         Int_t nobjects;
                         b >> nobjects;
-                        proxy->Resize(nobjects,true);
+                        env = proxy->Allocate(nobjects,true);
                         subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                        proxy->Commit(env);
                      }
                   }
                   b.CheckByteCount(start,count,aElement->GetFullName());

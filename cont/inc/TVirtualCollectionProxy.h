@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.6 2004/10/08 15:19:37 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVirtualCollectionProxy.h,v 1.7 2004/10/29 18:03:10 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -23,9 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClass.h"
-#include "TObjArray.h"
-#include "TStreamer.h"
 #include "TDataType.h"
+
 
 class TVirtualCollectionProxy {
 protected:
@@ -64,14 +63,11 @@ public:
 
    virtual TClass   *GetValueClass() = 0;     // Return a pointer to the TClass representing the content.
    virtual EDataType GetType() = 0;           // If the content is a simple numerical value, return its type (see TDataType)
-
    virtual void     *At(UInt_t idx) = 0;                       // Return the address of the value at index 'idx'
    virtual void      Clear(const char *opt = "") = 0;          // Clear the container
-   virtual void      Resize(UInt_t n, Bool_t forceDelete) = 0; // Resize the container
    virtual UInt_t    Size() const = 0;                         // Return the current size of the container
    virtual void*     Allocate(UInt_t n, Bool_t forceDelete) = 0;
    virtual void      Commit(void*) = 0;
-   virtual void      Streamer(TBuffer &b) = 0;                 // Stream the proxied container
            char     *operator[](UInt_t idx) const { return (char*)(const_cast<TVirtualCollectionProxy*>(this))->At(idx); }
 };
 
