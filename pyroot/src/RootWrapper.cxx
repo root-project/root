@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.17 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.18 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -285,7 +285,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& name )
       PyObject* pybases = BuildRootClassBases( klass );
       if ( pybases != 0 ) {
       // create a fresh Python class, given bases, name, and empty dictionary
-         PyObject* args = Py_BuildValue( "OO{}", pyname, pybases );
+         PyObject* args = Py_BuildValue( const_cast< char* >( "OO{}" ), pyname, pybases );
          pyclass = PyType_Type.tp_new( &PyType_Type, args, NULL );
 
          Py_DECREF( args );

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.5 2004/11/23 21:45:06 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootModule.cxx,v 1.6 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -79,10 +79,10 @@ namespace {
    PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
    {
       PyObject* dict = 0;
-      if ( ! PyArg_ParseTuple( args, "O!", &PyDict_Type, &dict ) )
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
 
-      ((PyDictObject*)dict)->ma_lookup = RootLookDictString;
+      ((dictlookup&)((PyDictObject*)dict)->ma_lookup) = RootLookDictString;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -110,7 +110,7 @@ extern "C" void initlibPyROOT()
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();
-   dictLookupOrg = ((PyDictObject*)dict)->ma_lookup;
+   dictLookupOrg = (dictlookup)((PyDictObject*)dict)->ma_lookup;
    Py_DECREF( dict );
 
 // setup PyROOT

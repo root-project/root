@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PropertyProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -162,7 +162,7 @@ namespace {
 PyTypeObject PropertyProxy_Type = {
    PyObject_HEAD_INIT( &PyType_Type )
    0,                         // ob_size
-   "ROOT.PropertyProxy",      // tp_name
+   (char*)"ROOT.PropertyProxy",                  // tp_name
    sizeof(PropertyProxy),     // tp_basicsize
    0,                         // tp_itemsize
    0,                         // tp_dealloc
@@ -181,7 +181,7 @@ PyTypeObject PropertyProxy_Type = {
    0,                         // tp_setattro
    0,                         // tp_as_buffer
    Py_TPFLAGS_DEFAULT,        // tp_flags
-   "PyROOT property proxy (internal)",            // tp_doc
+   (char*)"PyROOT property proxy (internal)",    // tp_doc
    0,                         // tp_traverse
    0,                         // tp_clear
    0,                         // tp_richcompare

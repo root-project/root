@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -58,8 +58,8 @@ namespace {
    }
 
    PyGetSetDef mp_getset[] = {
-      { "__name_", (getter)mp_name, NULL, NULL, NULL },
-      { "__doc__", (getter)mp_doc, NULL, NULL, NULL },
+      { (char*)"__name_", (getter)mp_name, NULL, NULL, NULL },
+      { (char*)"__doc__", (getter)mp_doc, NULL, NULL, NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
@@ -181,7 +181,7 @@ namespace {
 PyTypeObject MethodProxy_Type = {
    PyObject_HEAD_INIT( &PyType_Type )
    0,                         // ob_size
-   "ROOT.MethodProxy",        // tp_name
+   (char*)"ROOT.MethodProxy", // tp_name
    sizeof(MethodProxy),       // tp_basicsize
    0,                         // tp_itemsize
    (destructor)mp_dealloc,    // tp_dealloc
@@ -199,8 +199,8 @@ PyTypeObject MethodProxy_Type = {
    0,                         // tp_getattro
    0,                         // tp_setattro
    0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,       // tp_flags
-   "PyROOT method proxy (internal)",              // tp_doc
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,      // tp_flags
+   (char*)"PyROOT method proxy (internal)",      // tp_doc
    (traverseproc)mp_traverse, // tp_traverse
    (inquiry)mp_clear,         // tp_clear
    0,                         // tp_richcompare

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.68 2005/01/28 05:45:41 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectProxy.cxx,v 1.1 2005/03/04 07:44:11 brun Exp $
 // Author: Wim Lavrijsen, Jan 2005
 
 // Bindings
@@ -80,7 +80,7 @@ namespace {
 PyTypeObject ObjectProxy_Type = {
    PyObject_HEAD_INIT( &PyType_Type )
    0,                         // ob_size
-   "ROOT.ObjectProxy",        // tp_name
+   (char*)"ROOT.ObjectProxy", // tp_name
    sizeof(ObjectProxy),       // tp_basicsize
    0,                         // tp_itemsize
    (destructor)op_dealloc,    // tp_dealloc
@@ -98,8 +98,8 @@ PyTypeObject ObjectProxy_Type = {
    0,                         // tp_getattro
    0,                         // tp_setattro
    0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,      // tp_flags
-   "PyROOT object proxy (internal)",              // tp_doc
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,     // tp_flags
+   (char*)"PyROOT object proxy (internal)",      // tp_doc
    0,                         // tp_traverse
    0,                         // tp_clear
    0,                         // tp_richcompare
