@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoElement.cxx,v 1.1 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -26,6 +26,8 @@ ClassImp(TGeoElement)
 TGeoElement::TGeoElement()
 {
 // Default constructor
+   SetDefined(kFALSE);
+   SetUsed(kFALSE);
    fZ = 0;
    fA = 0.0;
 }
@@ -35,6 +37,8 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
             :TNamed(name, title)
 {
 // Constructor
+   SetDefined(kFALSE);
+   SetUsed(kFALSE);
    fZ = z;
    fA = a;
 }

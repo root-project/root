@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.9 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.10 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -66,7 +66,7 @@ public:
    TGeoMaterial(const char *name, Double_t a, Double_t z, 
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
    TGeoMaterial(const char *name, TGeoElement *elem, 
-                Double_t rho, Double_t radlen=0, Double_t intlen=0);
+                Double_t rho);
    // destructor
    virtual ~TGeoMaterial();
    // methods
@@ -87,6 +87,7 @@ public:
    virtual void             Print(const Option_t *option="") const;
    void                     SetIndex(Int_t index) {fIndex=index;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
+   void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
    static  Double_t         ScreenFactor(Double_t z);
 

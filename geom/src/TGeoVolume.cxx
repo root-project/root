@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.41 2004/01/20 15:44:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.42 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -378,6 +378,9 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fField    = 0;
    fOption   = "";
    fMedium   = (TGeoMedium*)med;
+   if (fMedium) {
+      if (fMedium->GetMaterial()) fMedium->GetMaterial()->SetUsed();
+   }   
    fNumber   = 0;
    fNtotal   = 0;
    if (gGeoManager) fNumber = gGeoManager->AddVolume(this);

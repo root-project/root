@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.10 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.cxx,v 1.11 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -76,17 +76,8 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
    fA        = a;
    fZ        = z;
    fDensity  = rho;
-   fRadLen   = radlen;
    fCerenkov = 0;
-   
-   if (a > 0 && fRadLen <= 0) {
-      //taken grom Geant3 routine GSMATE
-      const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
-      fRadLen = a/(ALR2AV*rho*z*(z +TGeoMaterial::ScreenFactor(z))*
-             (AL183-TMath::Log(z)/3-TGeoMaterial::Coulomb(z)));
-   }
-   
-   fIntLen  = intlen;       
+   SetRadLen(radlen, intlen);
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -97,7 +88,7 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 }
 //-----------------------------------------------------------------------------
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
-                Double_t rho, Double_t radlen, Double_t intlen)
+                Double_t rho)
              :TNamed(name, "")
 {
 // constructor
@@ -107,17 +98,9 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem,
    fA        = elem->A();
    fZ        = elem->Z();
    fDensity  = rho;
-   fRadLen   = radlen;
    fCerenkov = 0;
    
-   if (fA > 0 && fRadLen <= 0) {
-      //taken grom Geant3 routine GSMATE
-      const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
-      fRadLen = fA/(ALR2AV*rho*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
-             (AL183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
-   }
-   
-   fIntLen  = intlen;       
+   SetRadLen(0,0);
    if (!gGeoManager) {
       gGeoManager = new TGeoManager("Geometry", "default geometry");
    }
@@ -131,6 +114,20 @@ TGeoMaterial::~TGeoMaterial()
 {
 // Destructor
 }
+
+//-----------------------------------------------------------------------------
+void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
+{
+// Set radiation/absorbtion lengths
+   fRadLen = radlen;
+   fIntLen = intlen;
+   if (fA > 0 && fRadLen <= 0) {
+      //taken grom Geant3 routine GSMATE
+      const Double_t ALR2AV=1.39621E-03, AL183=5.20948;
+      fRadLen = fA/(ALR2AV*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
+             (AL183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
+   }
+}   
 
 //-----------------------------------------------------------------------------
 Double_t TGeoMaterial::Coulomb(Double_t z)
@@ -254,7 +251,7 @@ void TGeoMixture:: DefineElement(Int_t i, Double_t a, Double_t z, Double_t weigh
    fWeights[i]  = weight;
    if (z - Int_t(z) > 1E-3)
       Warning("DefineElement", "Mixture %s has element defined with fractional Z=%f", GetName(), z);
-   GetElement(i)->SetUsed();
+   GetElement(i)->SetDefined();
    
    //compute equivalent radiation length (taken from Geant3/GSMIXT)
    const Double_t ALR2AV = 1.39621E-03 , AL183 =5.20948;

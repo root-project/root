@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoElement.h,v 1.1 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   17/06/04
 
 /*************************************************************************
@@ -30,7 +30,8 @@ class TGeoElementTable;
 class TGeoElement : public TNamed
 {
    enum EGeoElement {
-      kElemUsed   =   BIT(17)
+      kElemUsed    =   BIT(17),
+      kElemDefined =   BIT(18)
    };
 
 protected:
@@ -48,7 +49,9 @@ public:
    // methods
    Int_t                    Z() const {return fZ;}
    Double_t                 A() const {return fA;}
+   Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
+   void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}                    
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}                    
    TGeoElementTable        *GetElementTable() const;
    

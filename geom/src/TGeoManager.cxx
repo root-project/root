@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.83 2004/05/26 15:11:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.84 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -579,6 +579,7 @@ TGeoManager::~TGeoManager()
    if (fNodes) delete fNodes;
    if (fOverlaps) {fOverlaps->Delete(); delete fOverlaps;}
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
+   if (TGeoElementTable::Instance()) delete TGeoElementTable::Instance();
    if (fMedia) {fMedia->Delete(); delete fMedia;}
    if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}   
