@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.2 2000/05/18 17:05:56 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -3159,8 +3159,6 @@ void TMinuit::mnhelp(TString comd)
 //*-*     Author: Rene Brun
 //*-*             comments extracted from the MINUIT documentation file.
 //*-*
-//*-*
-//*-* command name ASSUMED to be in upper case
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 //*-*.......................................................................
