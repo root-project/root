@@ -1179,10 +1179,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
          while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) {
-               fFunctions->Remove(obj);
-               delete obj;
-            }
+            if (obj->InheritsFrom(TF1::Class())) delete obj;
          }
       }
       fnew1 = new TF1();
@@ -3890,6 +3887,14 @@ void TGraph::Streamer(TBuffer &b)
       if (R__v > 2) {
          TGraph::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (fHistogram) fHistogram->SetDirectory(0);
+         TIter next(fFunctions);
+         TObject *obj;
+         while ((obj = next())) {
+            if (obj->InheritsFrom(TF1::Class())) {
+               TF1 *f1 = (TF1*)obj;
+               f1->SetParent(this);
+            }
+         }
          return;
       }
       //====process old versions before automatic schema evolution
