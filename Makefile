@@ -327,11 +327,11 @@ clean::
 
 ifeq ($(CXX),KCC)
 clean::
-	@find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1
+	@(find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1;true)
 endif
 ifeq ($(SUNCC5),true)
 clean::
-	@find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1
+	@(find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1;true)
 endif
 
 distclean:: clean
