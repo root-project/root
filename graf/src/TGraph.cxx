@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.18 2000/10/12 13:24:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.19 2000/10/13 07:30:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2140,19 +2140,19 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
           Double_t xl[2]; Double_t yl[2];
           if (!OptionRot) {
             xc[nrLine] = gPad->AbsPixeltoX(ax1Pix+ipix);
-            yc[nrLine] = gPad->AbsPixeltoY(centrPix[ipix]);
+            yc[nrLine] = gPad->AbsPixeltoY((Int_t)centrPix[ipix]);
 
             xl[0]      = xc[nrLine];
-            yl[0]      = gPad->AbsPixeltoY(minPix[ipix]);
+            yl[0]      = gPad->AbsPixeltoY((Int_t)minPix[ipix]);
             xl[1]      = xc[nrLine];
-            yl[1]      = gPad->AbsPixeltoY(maxPix[ipix]);
+            yl[1]      = gPad->AbsPixeltoY((Int_t)maxPix[ipix]);
           } else {
             yc[nrLine] = gPad->AbsPixeltoY(ay1Pix+ipix);
-            xc[nrLine] = gPad->AbsPixeltoX(centrPix[ipix]);
+            xc[nrLine] = gPad->AbsPixeltoX((Int_t)centrPix[ipix]);
 
-            xl[0]      = gPad->AbsPixeltoX(minPix[ipix]);
+            xl[0]      = gPad->AbsPixeltoX((Int_t)minPix[ipix]);
             yl[0]      = yc[nrLine];
-            xl[1]      = gPad->AbsPixeltoX(maxPix[ipix]);
+            xl[1]      = gPad->AbsPixeltoX((Int_t)maxPix[ipix]);
             yl[1]      = yc[nrLine];
           }
           if (!OptionZ && gPad->GetLogx()) {
