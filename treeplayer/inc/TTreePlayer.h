@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.27 2003/11/26 21:48:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.28 2004/03/08 14:54:31 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -64,10 +64,13 @@ public:
 
     virtual TTree    *CopyTree(const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     DrawScript(const char* wrapperPrefix, 
+                                 const char *macrofilename, const char *cutfilename, 
+                                 Option_t *option, Int_t nentries, Int_t firstentry);
     virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option
-                       ,Int_t nentries, Int_t firstentry);
+                                 ,Int_t nentries, Int_t firstentry);
     virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
-                        Option_t *goption ,Int_t nentries, Int_t firstentry);
+                          Option_t *goption ,Int_t nentries, Int_t firstentry);
     virtual Int_t     GetDimension() const {return fDimension;}
     TH1              *GetHistogram() const {return fHistogram;}
     virtual Int_t     GetNfill() const {return fSelector->GetNfill();}
@@ -86,6 +89,7 @@ public:
     virtual Double_t *GetW() const    {return fSelector->GetW();}
     virtual Int_t     MakeClass(const char *classname, Option_t *option);
     virtual Int_t     MakeCode(const char *filename);
+    virtual Int_t     MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3);
     TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry);

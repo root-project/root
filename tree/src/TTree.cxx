@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.195 2004/06/14 17:00:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.196 2004/06/22 06:18:57 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3143,6 +3143,32 @@ Int_t TTree::MakeSelector(const char *selector)
 //    root > T->Process("select.C")
 
    return MakeClass(selector,"selector");
+}
+
+//______________________________________________________________________________
+Int_t TTree::MakeProxy(const char *classname, const char *macrofilename, 
+                       const char *cutfilename, Int_t maxUnrolling)
+{
+   // Generate a skeleton analysis class for this Tree using TBranchProxy
+   //
+   // The skeleton is a TSelector where the access to the data is set
+   // via TBranchProxy.  
+   //
+   // macrofilename and cutfilename can be files contains a C++ function
+   // (with the same name as the file) using the branches of the Tree
+   // as if they were data members.
+   //
+   // Only the branch used will be read.
+   //
+   // 'maxUnrolling' controls how deep in the class hierachy does the 
+   // system 'unroll' class that are not split.
+   //
+   // 'unrolling' means to offer an direct access to the data members of
+   // a class (this emulates the behavior of TTreeFormula).
+
+      GetPlayer();
+   if (!fPlayer) return 0;
+   return fPlayer->MakeProxy(classname,macrofilename,cutfilename,maxUnrolling);
 }
 
 //______________________________________________________________________________

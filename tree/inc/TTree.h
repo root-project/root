@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.63 2004/06/04 08:35:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.64 2004/06/05 05:19:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -248,6 +248,7 @@ public:
     virtual Int_t     LoadTree(Int_t entry);
     virtual Int_t     MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
+    virtual Int_t     MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3);
     virtual Int_t     MakeSelector(const char *selector=0);
     Bool_t            MemoryFull(Int_t nbytes);
     virtual Int_t     Merge(TCollection *list);

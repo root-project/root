@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.154 2004/01/10 10:52:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.155 2004/03/08 14:54:31 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -259,6 +259,7 @@
 #include "TSelectorDraw.h"
 #include "TPluginManager.h"
 #include "TObjString.h"
+#include "TTreeProxyGenerator.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -401,10 +402,68 @@ void TTreePlayer::DeleteSelectorFromFile()
 }
 
 //______________________________________________________________________________
+Int_t TTreePlayer::DrawScript(const char* wrapperPrefix, 
+                              const char *macrofilename, const char *cutfilename, 
+                              Option_t *option, Int_t nentries, Int_t firstentry) 
+{
+   // Draw the result of a C++ script
+   //
+   // macrofilename and optionally cutfilename are assumed to contain
+   // at least a method with the same name as the file.  The method
+   // should return a value that can be automatically cast to
+   // respectively a double and a boolean.
+   //
+   // Both methods will be executed in a context such that the 
+   // branch names can be used as C++ variables. This is 
+   // accomplished by generating a TTreeProxy (see MakeProxy) 
+   // and including the files in the proper location.
+   // 
+   // If a cutfilename is specified, for each entry, we execute
+   //   if (cutfilename()) htemp->Fill(macrofilename());
+   // If no cutfilename is specified, for each entry we execute
+   //   htemp(macrofilename());
+   //
+   // The default for the histogram are the same as for
+   // TTreePlayer::DrawSelect
+
+   if (!macrofilename || strlen(macrofilename)==0) return 0;
+   
+   TString aclicMode;
+   TString arguments;
+   TString io;
+   TString realcutname;
+   if (cutfilename && strlen(cutfilename))
+      realcutname =  gSystem->SplitAclicMode(cutfilename, aclicMode, arguments, io);
+   
+   // we ignore the aclicMode for the cutfilename!
+   TString realname = gSystem->SplitAclicMode(macrofilename, aclicMode, arguments, io);
+   
+   TString selname = wrapperPrefix;
+   
+   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,3);
+   
+   selname = gp.GetFilename();
+   if (aclicMode.Length()==0) {
+      Warning("DrawScript","TTreeProxy does not work in interpreted mode yet.  The script will to compiled.");
+      aclicMode = "+";
+   }
+   selname.Append(aclicMode);
+   
+   Info("DrawScript",Form("Will process tree/chain using %s",selname.Data()));
+   Int_t result = fTree->Process(selname,option,nentries,firstentry);
+   
+   // could delete the file selname+".h" 
+   // However this would remove the optimization of avoiding a useless
+   // recompilation if the user ask for the same thing twice!
+   
+   return result; 
+}
+
+//______________________________________________________________________________
 Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-//*-*                  ===========================================
+//*-*                  ============================================
 //
 //  varexp is an expression of the general form
 //   - "e1"           produces a 1-d histogram of expression "e1"
@@ -739,6 +798,28 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //       - execute statement "tree->StartViewer();"
 //
    if (fTree->GetEntriesFriend() == 0) return 0;
+
+   // Let's see if we have a filename as arguments instead of
+   // a TTreeFormula expression.
+
+   if (gSystem->IsFileInIncludePath(varexp0)) {
+
+      if (selection && strlen(selection) && !gSystem->IsFileInIncludePath(selection)) {
+         Error("DrawSelect",
+               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
+               selection);
+         return 0;
+      }
+      return DrawScript("generatedSel",varexp0,selection,option,nentries,firstentry);
+
+   } else if (gSystem->IsFileInIncludePath(selection)) {
+
+      Error("DrawSelect",
+            "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
+            varexp0);
+      return 0;
+
+   }
 
    Int_t oldEstimate  = fTree->GetEstimate();
    TEventList *elist  = fTree->GetEventList();
@@ -1913,6 +1994,24 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 }
 
 //______________________________________________________________________________
+Int_t TTreePlayer::MakeProxy(const char *classname, 
+                             const char *macrofilename, const char *cutfilename,
+                             Int_t maxUnrolling)
+{
+   // Generate a skeleton analysis class for this Tree using TBranchProxy
+   
+   if (macrofilename==0 || strlen(macrofilename)) {
+      // We currently require a file name for the script
+      Error("MakeProxy","A file name for the user script is required");
+      return 0;
+   }
+
+   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,classname,maxUnrolling);
+
+   return 0;
+}
+
+//______________________________________________________________________________
 TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Interface to the Principal Components Analysis class*-*-*
@@ -2870,7 +2969,6 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    return nsel;
 }
-
 
 //______________________________________________________________________________
 void TTreePlayer::UpdateFormulaLeaves()
