@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.41 2003/07/12 16:14:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.42 2003/07/16 06:52:14 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -261,7 +261,7 @@ void TMatrix::ResizeTo(Int_t nrows, Int_t ncols)
          return;
 
       const Real_t  *elements_old = fElements;
-      Real_t *const *index_old    = fIndex;
+            Real_t **index_old    = fIndex;
       const Int_t    nrows_old    = fNrows;
       const Int_t    ncols_old    = fNcols;
 
@@ -275,11 +275,12 @@ void TMatrix::ResizeTo(Int_t nrows, Int_t ncols)
       const Int_t ncols_copy = TMath::Min(fNcols,ncols_old);
       const Int_t nrows_copy = TMath::Min(fNrows,nrows_old);
 
-      for (Int_t i = 0; i < ncols_copy; i++)
+      for (Int_t i = 0; i < ncols_copy; i++) {
          memcpy(fIndex[i],index_old[i],nrows_copy*sizeof(Real_t));
+         delete [] index_old[i];
+      }
 
-      if (ncols_old != 1)
-         delete [] index_old;
+      if (ncols_old != 1) delete [] index_old;
       delete [] elements_old;
    } else {
       Allocate(nrows, ncols);
@@ -303,7 +304,7 @@ void TMatrix::ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_up
          return;
 
       const Real_t  *elements_old = fElements;
-      Real_t *const *index_old    = fIndex;
+      Real_t       **index_old    = fIndex;
       const Int_t    nrows_old    = fNrows;
       const Int_t    ncols_old    = fNcols;
       const Int_t    rowLwb_old   = fRowLwb;
