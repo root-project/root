@@ -1,11 +1,32 @@
 #!/bin/bash
 
+# Error Message
+printERROR() { echo "Error: $@." >&2 ; exit 1; }
+
+f=${1%/*}
+echo $f
+
+#checks if the directory exists
+if [ ! -d "$f" ] ; then
+	#printERROR "the source $1 is not dir, or does not exist"
+	mktest $f
+fi
+
+
+#Make Direcroty	
 mkdir $1
+
+#Copy Makefile.template to the new test directory
 cp root/Makefile.template $1
 
-cvs add $1
 
+#Add to CVS
+#cvs add $1
+
+# change directory and rename the Makfile.templete to Makefile
 cd $1
 mv Makefile.template Makefile
-cvs add Makefile
-cvs commit -m "Makefile" Makefile
+
+#Add & Commit Makefile to CVS
+#cvs add Makefile
+#cvs commit -m "Makefile" Makefile
