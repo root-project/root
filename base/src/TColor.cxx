@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.17 2004/04/30 06:27:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.18 2004/05/30 15:39:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -436,13 +436,19 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 
    TIter next(colors);
 
+   Int_t nplanes = 16;
+   Float_t thres = 1.0/31.0;   // 5 bits per color : 0 - 0x1F !
+   if (gVirtualX) gVirtualX->GetPlanes(nplanes);
+   if (nplanes >= 24)
+      thres = 1.0/255.0;       // 8 bits per color : 0 - 0xFF !
+
    // Loop over all defined colors
    while ((color = (TColor*)next())) {
-      if (TMath::Abs(color->GetRed() - rr) > (1.0/255.0))
+      if (TMath::Abs(color->GetRed() - rr) > thres)
          continue;
-      if (TMath::Abs(color->GetGreen() - gg) > (1.0/255.0))
+      if (TMath::Abs(color->GetGreen() - gg) > thres)
          continue;
-      if (TMath::Abs(color->GetBlue() - bb) > (1.0/255.0))
+      if (TMath::Abs(color->GetBlue() - bb) > thres)
          continue;
 
       // We found a matching color in the color table
