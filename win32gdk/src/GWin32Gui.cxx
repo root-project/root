@@ -345,6 +345,7 @@ void TGWin32::IconifyWindow(Window_t id)
    fThreadP.Drawable = (GdkDrawable *) id;
    PostThreadMessage(fIDThread, WIN32_GDK_WIN_LOWER, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   ::CloseWindow((HWND)GDK_DRAWABLE_XID((GdkWindow *)id));
    LeaveCriticalSection(flpCriticalSection);
 }
 
