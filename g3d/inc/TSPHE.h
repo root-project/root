@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -30,12 +30,12 @@
 class TSPHE : public TShape {
 
     private:
-       Double_t   *fSiTab;     // Table of sin(fPhimin) .... sin(Phi)
-       Double_t   *fCoTab;     // Table of cos(fPhimin) .... cos(Phi)
-       Double_t   *fCoThetaTab;// Table of sin(gThemin) .... cos(Theta)
-       Int_t      fNdiv;       // number of divisions
-       Int_t      fNz;         // number of sections
-       Float_t    fAspectRatio;// Relation between asumth and grid size (by default 1.0)
+       Double_t  *fSiTab;       //! Table of sin(fPhimin) .... sin(Phi)
+       Double_t  *fCoTab;       //! Table of cos(fPhimin) .... cos(Phi)
+       Double_t  *fCoThetaTab;  //! Table of sin(gThemin) .... cos(Theta)
+       Int_t      fNdiv;        // number of divisions
+       Int_t      fNz;          //! number of sections
+       Float_t    fAspectRatio; // Relation between asumth and grid size (by default 1.0)
 
 
     protected:
@@ -48,6 +48,7 @@ class TSPHE : public TShape {
         Float_t faX;      // Coeff along Ox
         Float_t faY;      // Coeff along Oy
         Float_t faZ;      // Coeff along Oz
+        
         virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
         virtual void    PaintGLPoints(Float_t *vertex);
 
@@ -75,7 +76,7 @@ class TSPHE : public TShape {
         virtual void    SetPoints  (Float_t *buff);
         virtual void    Sizeof3D() const;
 
-        ClassDef(TSPHE,2)  //SPHE shape
+        ClassDef(TSPHE,3)  //SPHE shape
 };
 
 #endif
