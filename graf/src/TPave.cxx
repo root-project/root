@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.9 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.6 2000/11/21 20:26:58 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TPave.h"
 #include "TVirtualPad.h"
@@ -560,11 +561,8 @@ void TPave::SavePrimitive(ofstream &out, Option_t *)
       out<<"pave = new TPave("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
          <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<endl;
    }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<endl;
-   }
    if (fCornerRadius) {
-      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
+      out<<"pave->SetCornerRadius("<<fCornerRadius<<");"<<endl;
    }
    SaveFillAttributes(out,"pave",0,1001);
    SaveLineAttributes(out,"pave",1,1,1);
@@ -597,7 +595,7 @@ void TPave::Streamer(TBuffer &R__b)
       fName.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPave::IsA());
       //====end of old versions
-
+      
    } else {
       TPave::Class()->WriteBuffer(R__b,this);
    }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.30 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.20 2001/06/25 12:54:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -25,8 +25,9 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"
@@ -38,7 +39,6 @@
 #include "TRegexp.h"
 #include "TTimer.h"
 #include "TObjString.h"
-#include "TError.h"
 
 #include "compiledata.h"
 
@@ -151,8 +151,6 @@ Bool_t TSystem::Init()
    fFileHandler   = new TOrdCollection;
    fTimers        = new TOrdCollection;
 
-   fBuildArch     = BUILD_ARCH;
-   fBuildNode     = BUILD_NODE;
    fIncludePath   = INCLUDEPATH;
    fLinkedLibs    = LINKEDLIBS;
    fSoExt         = SOEXT;
@@ -753,10 +751,9 @@ char *TSystem::ExpandPathName(const char *)
 }
 
 //______________________________________________________________________________
-Bool_t TSystem::AccessPathName(const char *, EAccessMode)
+Bool_t TSystem::AccessPathName(const char*, EAccessMode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
-   // Attention, bizarre convention of return value!!
 
    return kFALSE;
 }
@@ -828,7 +825,6 @@ int TSystem::Umask(Int_t)
 char *TSystem::Which(const char *, const char *, EAccessMode)
 {
    // Find location of file in a search path. User must delete returned string.
-   // Returns 0 in case file is not found.
 
    AbstractMethod("Which");
    return 0;
@@ -945,19 +941,11 @@ Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
 }
 
 //______________________________________________________________________________
-void TSystem::Unload(const char *module)
+void TSystem::Unload(const char *)
 {
    // Unload a shared library.
 
-#ifdef NOCINT
    AbstractMethod("UnLoad");
-#else
-   char *path;
-   if ((path = DynamicPathName(module))) {
-     G__unloadfile(path);
-     delete [] path;
-   }
-#endif
 }
 
 //______________________________________________________________________________
@@ -1354,8 +1342,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
      // the script has already been loaded in interpreted mode
      // Let's warn the user and unload it.
 
-     ::Warning("ACLiC","script has already been loaded in interpreted mode");
-     ::Warning("ACLiC","unloading %s and compiling it", filename);
+     cerr << "script has already been loaded in interpreted mode" << endl;
+     cerr << "Unloading " << filename << " and compiling it" << endl;
 
      if ( G__unloadfile( (char*) filename ) != 0 ) {
        // We can not unload it.
@@ -1382,20 +1370,24 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
        || strlen(GetLibraries(library,"D")) != 0 ) {
      // The library has already been built and loaded.
 
-     ::Warning("ACLiC","%s script has already been compiled and loaded",
-               modified ? "modified" : "unmodified");
+     if (modified)
+        cerr << "Modified ";
+     else
+        cerr << "Unmodified ";
+     cerr << "script has already been compiled and loaded. " << endl;
      if ( !recompile ) {
         return G__LOADFILE_SUCCESS;
      } else {
 #ifdef R__KCC
-        ::Error("ACLiC","shared library can not be updated (when using the KCC compiler)!");
+        cerr << "Shared library can not be updated (when using the KCC compiler)!"
+             << endl;
         return G__LOADFILE_DUPLICATE;
 #else
         // the following is not working in KCC because it seems that dlclose
         // does not properly get rid of the object.  It WILL provoke a
         // core dump at termination.
 
-        ::Warning("ACLiC","it will be regenerated and reloaded!");
+        cerr << "It will be regenerated and reloaded!" << endl;
         if ( G__unloadfile( (char*) library.Data() ) != 0 ) {
           // The library is being used. We can not unload it.
           return(G__LOADFILE_FAILURE);
@@ -1410,7 +1402,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     return !gSystem->Load(library);
   }
 
-  Info("ACLiC","creating shared library %s",library.Data());
+  cerr << "Creating shared library " << library << endl;
 
   // ======= Select the dictionary name
   TString dict =BaseName( tmpnam(0) );
@@ -1418,13 +1410,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
-  static const int maxforbidden = 26;
-  static const char *forbidden_chars[maxforbidden] = 
-        { "+","-","*","/","&","%","|","^",">","<","=","~",".",
-          "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
-  for( int ic = 0; ic < maxforbidden; ic++ ) {
-     dict.ReplaceAll( forbidden_chars[ic],"_" );
-  }
+  dict.ReplaceAll( "-","_" );
   if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
   dict.Prepend( build_loc + "/" );
   TString dicth = dict;
@@ -1459,7 +1445,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     incPath.ReplaceAll(" :",":");
   }
   incPath.Prepend(file_location+":.:");
-  if (gDebug>5) Info("ACLiC","looking for header in: %s",incPath.Data());
+  if (gDebug>5) cout << "Looking for header in:" << endl << incPath << endl;
   const char * extensions[] = { ".h", ".hh", ".hpp", ".hxx",  ".hPP", ".hXX" };
   for ( int i = 0; i < 6; i++ ) {
     char * name;
@@ -1539,14 +1525,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // ======= Run the build
 
   if (gDebug>3) {
-     ::Info("ACLiC","creating the dictionary files");
-     if (gDebug>4)  ::Info("ACLiC",rcint.Data());
+     cout << "Creating the dictionary files." << endl;
+     if (gDebug>4) cout << rcint << endl;
   }
   int result = !gSystem->Exec(rcint);
 
   if (gDebug>3) {
-     ::Info("ACLiC","compiling the dictionary and script files");
-     if (gDebug>4)  ::Info("ACLiC",cmd.Data());
+     cout << "Compiling the dictionary and script files." << endl;
+     if (gDebug>4) cout << cmd << endl;
   }
   if (result) result = !gSystem->Exec( cmd );
 
@@ -1559,7 +1545,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
     // by the library are present.
     G__Set_RTLD_NOW();
 #endif
-    if (gDebug>3)  ::Info("ACLiC","loading the shared library");
+    if (gDebug>3) cout << "Loading the shared library." << endl;
     result = !gSystem->Load(library);
 #ifndef NOCINT
     G__Set_RTLD_LAZY();
@@ -1567,8 +1553,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
     if ( !result ) {
       if (gDebug>3) {
-         ::Info("ACLiC","testing for missing symbols:");
-         if (gDebug>4)  ::Info("ACLiC",testcmd.Data());
+         cout << "Testing for missing symbols:" << endl;
+         if (gDebug>4) cout << testcmd << endl;
       }
       gSystem->Exec(testcmd);
       gSystem->Unlink( exec );
@@ -1594,18 +1580,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   }
 
   return result;
-}
-
-//______________________________________________________________________________
-const char *TSystem::GetBuildArch() const
-{
-   return fBuildArch;
-}
-
-//______________________________________________________________________________
-const char *TSystem::GetBuildNode() const
-{
-   return fBuildNode;
 }
 
 //______________________________________________________________________________

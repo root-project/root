@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.26 2001/06/29 17:03:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
@@ -25,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -41,6 +43,9 @@ public:
 };
 
 static TInitMakeDefCanvas makedefcanvas_init;
+
+
+
 
 //*-*x16 macros/layout_canvas
 
@@ -161,8 +166,8 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
 
-   Init();
-
+   fSelected     = 0;
+   fSelectedPad  = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -170,11 +175,14 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fWindowHeight = wh;
    fCw           = ww;
    fCh           = wh;
-   fMenuBar      = kFALSE;
-   fBatch        = kFALSE;
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   fBatch        = kFALSE;
 
-   SetName(name);
+   fMenuBar      = kFALSE;
+   fContextMenu  = 0;
+   fEditorBar    = 0;
+
+   SetName((char *)name);
    Build();
 }
 
@@ -213,7 +221,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
 
-   Init();
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
+
+   fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -282,7 +295,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
 
-   Init();
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
+
+   fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (ww < 0) {
       ww       = -ww;
@@ -345,7 +363,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
 
-   Init();
+   // Make sure the application environment exists.
+   if (!gApplication)
+      TApplication::CreateApplication();
+
+   fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (wtopx < 0) {
       wtopx    = -wtopx;
@@ -377,9 +400,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 }
 
 //_____________________________________________________________________________
-void TCanvas::Init()
+void TCanvas::Build()
 {
-   // Initialize the TCanvas members. Called by all constructors.
+   // Build a canvas. Called by all constructors.
 
    // Make sure the application environment exists. It is need for graphics
    // (colors are initialized in the TApplication ctor).
@@ -393,14 +416,37 @@ void TCanvas::Init()
    fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
    fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
 
+   // Get window identifier
+   if (fCanvasID == -1)
+      fCanvasID = fCanvasImp->InitWindow();
+#ifndef WIN32
+   if (fCanvasID < 0) return;
+#else
+   // fCanvasID is in fact a pointer to the TGWin32 class
+   if (fCanvasID  == -1) return;
+#endif
+
+   fContextMenu = 0;
    // Fill canvas ROOT data structure
    fXsizeUser = 0;
    fYsizeUser = 0;
-   fXsizeReal = kDefaultCanvasSize;
-   fYsizeReal = kDefaultCanvasSize;
+   if ( fCw < fCh ) {
+      fYsizeReal = kDefaultCanvasSize;
+      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+   }
+   else {
+      fXsizeReal = kDefaultCanvasSize;
+      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+   }
 
    fDISPLAY         = "$DISPLAY";
-   fRetained        = kTRUE;
+   fRetained        = 1;
+
+   // transient canvases have typically no menubar and should not get
+   // by default the event status bar (if set by default)
+   if (fShowEventStatus && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowStatusBar(fShowEventStatus);
+
    fSelected        = 0;
    fSelectedPad     = 0;
    fPadSave         = 0;
@@ -408,37 +454,6 @@ void TCanvas::Init()
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
-   fContextMenu     = 0;
-   SetBit(kMustCleanup);
-}
-
-//_____________________________________________________________________________
-void TCanvas::Build()
-{
-   // Build a canvas. Called by all constructors.
-
-   // Get window identifier
-   if (fCanvasID == -1)
-      fCanvasID = fCanvasImp->InitWindow();
-#ifndef WIN32
-   if (fCanvasID < 0) return;
-#else
-#ifndef GDK_WIN32
-   // fCanvasID is in fact a pointer to the TGWin32 class
-   if (fCanvasID  == -1) return;
-#else
-   if (fCanvasID < 0) return;
-#endif
-#endif
-
-   if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
-   else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
-
-   // transient canvases have typically no menubar and should not get
-   // by default the event status bar (if set by default)
-   if (fShowEventStatus && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowStatusBar(fShowEventStatus);
-
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
       gVirtualX->SelectWindow(fCanvasID);
@@ -489,11 +504,9 @@ void TCanvas::Build()
       Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
       PaintBorder(GetFillColor(), kTRUE);    //Paint background
    }
-
+   SetBit(kMustCleanup);
 #ifdef WIN32
-#ifndef GDK_WIN32
    gVirtualX->UpdateWindow(1);
-#endif
 #endif
 }
 
@@ -741,12 +754,23 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
 
    if (!fShowEventStatus || !selected) return;
 
+//#ifndef WIN32
+#if 0
+   static Int_t pxt, pyt;
+   gPad->SetDoubleBuffer(0);           // Turn off double buffer mode
+   gVirtualX->SetTextColor(1);
+   gVirtualX->SetTextAlign(11);
+
+   pxt = gPad->GetCanvas()->XtoAbsPixel(gPad->GetCanvas()->GetX1()) + 5;
+   pyt = gPad->GetCanvas()->YtoAbsPixel(gPad->GetCanvas()->GetY1()) - 5;
+
+   sprintf(atext,"%s / %s ", selected->GetName()
+                           , selected->GetObjectInfo(px,py));
+   for (Int_t i=strlen(atext);i<kTMAX-1;i++) atext[i] = ' ';
+   atext[kTMAX-1] = 0;
+   gVirtualX->DrawText(pxt, pyt, 0, 1, atext, TVirtualX::kOpaque);
+#else
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
-
-   TVirtualPad* savepad;
-   savepad = gPad;
-   gPad = GetSelectedPad();
-
    fCanvasImp->SetStatusText(selected->GetTitle(),0);
    fCanvasImp->SetStatusText(selected->GetName(),1);
    if (event == kKeyPress)
@@ -755,7 +779,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
       sprintf(atext, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
-   gPad = savepad;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1353,24 +1377,15 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
-   char lcname[10];
-   const char *cname = GetName();
-   Bool_t invalid = kFALSE;
 //    if filename is given, open this file, otherwise create a file
 //    with a name equal to the canvasname.C
    if (lenfile) {
        fname = (char*)filename;
        out.open(fname, ios::out);
    } else {
-       Int_t nch = strlen(cname);
-       if (nch < 10) {
-          strcpy(lcname,cname);
-          for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-          if (lcname[0] == 0) {invalid = kTRUE; strcpy(lcname,"c1"); nch = 2;}
-          cname = lcname;
-       }
+       Int_t nch = strlen(GetName());
        fname = new char[nch+3];
-       strcpy(fname,cname);
+       strcpy(fname,GetName());
        strcat(fname,".C");
        out.open(fname, ios::out);
    }
@@ -1393,11 +1408,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   "<<ClassName()<<" *"<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TCanvas *"<<GetName()<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
@@ -1420,9 +1435,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
 
    out <<"}"<<endl;
    out.close();
@@ -1485,35 +1498,8 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    if (fDoubleBuffer)
       gVirtualX->SelectWindow(fPixmapID);
    else
-#else
-#ifdef GDK_WIN32
-   if (fDoubleBuffer)
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-#endif
 #endif
       gVirtualX->SelectWindow(fCanvasID);
-}
-
-//______________________________________________________________________________
-void TCanvas::SetFixedAspectRatio(Bool_t fixed)
-{
-   // Fix canvas aspect ratio to current value if fixed is true.
-
-   if (fixed) {
-      if (!fFixedAspectRatio) {
-         if (fCh != 0)
-            fAspectRatio = Double_t(fCw) / fCh;
-         else {
-            Error("SetAspectRatio", "cannot fix aspect ratio, height of canvas is 0");
-            return;
-         }
-         fFixedAspectRatio = kTRUE;
-      }
-   } else {
-      fFixedAspectRatio = kFALSE;
-      fAspectRatio = 0;
-   }
 }
 
 //______________________________________________________________________________

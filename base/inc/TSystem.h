@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.15 2001/10/22 14:54:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.13 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -82,7 +82,7 @@ enum ELogFacility {
 
 enum ESysConstants {
   kMAXSIGNALS       = 15,
-  kMAXPATHLEN       = 2048,
+  kMAXPATHLEN       = 1024,
   kBUFFERSIZE       = 8192,
   kItimerResolution = 10      // interval-timer resolution in ms
 };
@@ -166,10 +166,8 @@ protected:
    TSeqCollection  *fFileHandler;      //List of file handlers
    TSeqCollection  *fOnExitList;       //List of items to be cleaned-up on exit
 
-   TString          fListLibs;         //List shared libraries, cache used by GetLibraries
+   TString          fListLibs;         //List shared libraries. Cache used by GetLibraries
 
-   TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
-   TString          fBuildNode;        //Detailed information where ROOT was built
    TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
    TString          fIncludePath;      //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
    TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
@@ -301,8 +299,6 @@ public:
 
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "");
-   virtual const char     *GetBuildArch() const;
-   virtual const char     *GetBuildNode() const;
    virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetMakeExe() const;
    virtual const char     *GetIncludePath();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.22 2001/12/03 13:32:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.20 2001/07/17 10:29:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -46,7 +46,6 @@ protected:
     TBranchElement     *fBranchCount2;  //pointer to secondary branchcount branch
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
-    char               *fBranchPointer; //!Pointer to object for a master branch
     
 public:
     TBranchElement();
@@ -74,7 +73,6 @@ public:
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
     virtual const char *GetTypeName() const;
             Double_t GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
-    virtual void    *GetValuePointer() const;
             Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
     virtual Bool_t   Notify() {fAddress = 0; return 1;}
@@ -93,7 +91,7 @@ public:
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,7)  //Branch in case of an object
+    ClassDef(TBranchElement,6)  //Branch in case of an object
 };
 
 #endif

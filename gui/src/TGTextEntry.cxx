@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.13 2001/10/16 17:28:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.11 2001/08/27 11:07:55 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -332,8 +332,8 @@ void TGTextEntry::Init()
    gVirtualX->SetCursor(fId, fgDefaultCursor);
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kButtonMotionMask, kNone, kNone);
+                         kButtonPressMask | kButtonReleaseMask | kPointerMotionMask,
+                         kNone, kNone);
 
    AddInput(kKeyPressMask | kFocusChangeMask |
             kEnterWindowMask | kLeaveWindowMask);
@@ -1170,9 +1170,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    if (!IsEnabled()) return kTRUE;
 
-#ifdef GDK_WIN32
-   if (event->fType == kGKeyPress) {
-#endif
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
    Int_t unknown = 0;
@@ -1279,9 +1276,7 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    UpdateOffset();
    fClient->NeedRedraw(this);
-#ifdef GDK_WIN32
-   }
-#endif
+
    return kTRUE;
 }
 

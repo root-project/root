@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.2 2001/05/10 14:31:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -58,8 +58,8 @@ public:
    ClassDef(TCanvasImp,0)  //ABC describing main window protocol
 };
 
-inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, UInt_t, UInt_t) : fCanvas(c) { }
-inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, Int_t, Int_t, UInt_t, UInt_t) : fCanvas(c) { }
+inline TCanvasImp::TCanvasImp(TCanvas *, const char *, UInt_t, UInt_t) { }
+inline TCanvasImp::TCanvasImp(TCanvas *, const char *, Int_t, Int_t, UInt_t, UInt_t) { }
 inline void TCanvasImp::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
                { x = y = 0; w = h = 0; }
 inline void TCanvasImp::SetStatusText(const char *, Int_t) { }

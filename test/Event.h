@@ -16,6 +16,7 @@
 #include "TH1.h"
 #include "TMath.h"
 
+#include <iostream.h>
 
 class TDirectory;
 
@@ -92,7 +93,6 @@ class Event : public TObject {
 
 private:
    char           fType[20];          //event type
-   char          *fEventName;         //run+event number in character format
    Int_t          fNtrack;            //Number of tracks
    Int_t          fNseg;              //Number of track segments
    Int_t          fNvertex;
@@ -100,22 +100,20 @@ private:
    Float_t        fTemperature;
    Int_t          fMeasures[10];
    Float_t        fMatrix[4][4];
-   Float_t       *fClosestDistance;   //[fNvertex]
+   Float_t       *fClosestDistance;   //[fNvertex] 
    EventHeader    fEvtHdr;
    TClonesArray  *fTracks;            //->array with all tracks
    TRefArray     *fHighPt;            //array of High Pt tracks only
    TRefArray     *fMuons;             //array of Muon tracks only
    TRef           fLastTrack;         //reference pointer to last track
-   TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
    TH1F          *fH;                 //->
-
+      
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
 
 public:
    Event();
    virtual ~Event();
-   void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
    void          Clear(Option_t *option ="");
    static void   Reset(Option_t *option ="");
    void          ResetHistogramPointer() {fH=0;}
@@ -126,7 +124,7 @@ public:
    void          SetTemperature(Float_t t) { fTemperature = t; }
    void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
-   Track        *AddTrack(Float_t random, Float_t ptmin=1);
+   Track        *AddTrack(Float_t random);
    void          SetMeasure(UChar_t which, Int_t what);
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
    void          SetRandomVertex();
@@ -139,12 +137,11 @@ public:
    UInt_t        GetFlag() const { return fFlag; }
    Float_t       GetTemperature() const { return fTemperature; }
    EventHeader  *GetHeader() { return &fEvtHdr; }
-   TClonesArray *GetTracks() const {return fTracks;}
+   TClonesArray *GetTracks() const { return fTracks; }
    TRefArray    *GetHighPt() const {return fHighPt;}
    TRefArray    *GetMuons()  const {return fMuons;}
    Track        *GetLastTrack() const {return (Track*)fLastTrack.GetObject();}
-   TH1F         *GetHistogram() const {return fH;}
-   TH1          *GetWebHistogram()  const {return (TH1*)fWebHistogram.GetObject();}
+   TH1F         *GetHistogram() const { return fH; }
    Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
    Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
 

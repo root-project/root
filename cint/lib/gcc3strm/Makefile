@@ -11,7 +11,7 @@ SRCCPPIFH     = $(CINTSYSDIR)/src/gcc3strm.h
 CPPIFC     = gcc3strm.cxx
 CPPIFH     = gcc3strm.h
 
-CPPHEADER  = iostrm.h fstrm.h sstrm.h linkdef.h
+CPPHEADER  = iostrm.h fstrm.h sstrm.h
 
 #		stdiostr.h \
 

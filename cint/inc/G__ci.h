@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter parser header file
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015028
-#define G__CINTVERSIONSTR  "5.15.28, Jan 20 2002"
+#define G__CINTVERSION      5015014
+#define G__CINTVERSIONSTR  "5.15.14, Sep 25 2001"
 
 
 /**********************************************************************
@@ -607,7 +607,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__LONGLINE    1024  /* Length of expression */
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      256  /* Variable name */
+#define G__MAXNAME      128  /* Variable name */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */
@@ -1352,7 +1352,7 @@ struct G__typedef {
   short  tagnum[G__MAXTYPEDEF];
   char reftype[G__MAXTYPEDEF];
 #ifdef G__CPPLINK1
-  G__SIGNEDCHAR_T globalcomp[G__MAXTYPEDEF];
+  char globalcomp[G__MAXTYPEDEF];
 #endif
   int nindex[G__MAXTYPEDEF];
   int *index[G__MAXTYPEDEF];
@@ -1667,17 +1667,6 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
  **************************************************************************/
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 extern G__EXPORT int G__setmasksignal G__P((int));
-#ifndef G__OLDIMPLEMENTATION1596
-extern void G__settemplevel G__P((int val));
-extern void G__clearstack G__P(());
-#endif
-#ifndef G__OLDIMPLEMENTATION1600
-extern G__EXPORT int G__lasterror G__P(()) ;
-extern G__EXPORT void G__reset_lasterror G__P(());
-#endif
-#ifndef G__OLDIMPLEMENTATION1601
-extern G__EXPORT int G__gettempfilenum G__P(());
-#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 

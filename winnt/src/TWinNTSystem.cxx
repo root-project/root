@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.27 2002/01/27 15:55:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.21 2001/09/27 18:18:59 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -116,67 +116,6 @@
 
 const char *kProtocolName   = "tcp";
 
-// for testing purpose only !!!
-#ifdef GDK_WIN32
-HANDLE hEvent1;
-HANDLE hThread1,hThread2;
-unsigned thread1ID,thread2ID;
-#endif
-
-
-#ifdef GDK_WIN32
-struct  itimerval {
-   struct  timeval it_interval;
-   struct  timeval it_value;
-};
-
-static UINT   timer_active = 0;
-static struct itimerval itv;
-static DWORD  start_time;
-
-#define ITIMER_REAL     0
-#define ITIMER_VIRTUAL  1
-#define ITIMER_PROF     2
-
-int setitimer (int which, const struct itimerval *value, struct itimerval *oldvalue)
-{
-  UINT elapse;
-
-  if (which != ITIMER_REAL)
-    {
-      return -1;
-    }
-  /* Check if we will wrap */
-  if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000))
-    {
-      return -1;
-    }
-  if (timer_active)
-    {
-      KillTimer (NULL, timer_active);
-      timer_active = 0;
-    }
-  if (oldvalue)
-    *oldvalue = itv;
-  if (value == NULL)
-    {
-      return -1;
-    }
-  itv = *value;
-  elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
-  if (elapse == 0)
-    if (itv.it_value.tv_usec)
-      elapse = 1;
-    else
-      return 0;
-  if (!(timer_active = SetTimer (NULL, 1, elapse, NULL)))
-    {
-      return -1;
-    }
-  start_time = GetTickCount ();
-  return 0;
-}
-#endif
 
 //______________________________________________________________________________
 BOOL ConsoleSigHandler(DWORD sig)
@@ -297,26 +236,8 @@ TWinNTSystem::~TWinNTSystem()
       fhNormalIconList = 0;
    }
 
-#ifdef GDK_WIN32
-   if (hThread1) CloseHandle(hThread1);
-#endif
    CloseHandle(fhTermInputEvent);
 }
-
-#ifdef GDK_WIN32
-unsigned __stdcall HandleConsoleThread(void *pArg )
-{
-    while (1) {
-        if(gROOT->GetApplication()) {
-            WaitForSingleObject(hEvent1, 10);
-            if(gROOT->GetApplication())
-                gROOT->GetApplication()->HandleTermInput();
-        }
-    }
-    _endthreadex( 0 );
-    return 0;
-}
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -364,20 +285,12 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-#ifndef GDK_WIN32
    // The the name of the DLL to be used as a stock of the icon
    SetShellName();
    CreateIcons();
-#endif
 
    // Create Event HANDLE for stand-alone ROOT-based applications
    fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
-
-#ifdef GDK_WIN32
-    hEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
-    hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
-        &thread1ID );
-#endif
 
    return kFALSE;
 }
@@ -714,7 +627,6 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 }
 
-#ifndef GDK_WIN32
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
 {
@@ -737,72 +649,6 @@ void TWinNTSystem::DispatchOneEvent(Bool_t)
      ResetEvent(fhTermInputEvent);
   }
 }
-#else
-
-//______________________________________________________________________________
-void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
-{
- // Dispatch a single event via Command thread
-
-   while (1) {
-      fReadready  = fReadmask;
-      fWriteready = fWritemask;
-      PulseEvent(hEvent1);
-      if ((gXDisplay) && gXDisplay->Notify()) {
-         if (fReadready.IsSet(gXDisplay->GetFd())) {
-            fReadready.Clr(gXDisplay->GetFd());
-            fNfd--;
-         }
-         if (!pendingOnly) {
-             return;
-         }
-      }
-      // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-          TFileHandler *fh;
-          TIter next(fFileHandler);
-
-          while (fh = (TFileHandler*) next()) {
-              int fd = fh->GetFd();
-              if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-                  fReadready.Clr(fd);
-                  if (fh->ReadNotify()) {
-                      return;
-                  }
-              }
-              if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-                  fWriteready.Clr(fd);
-                  if (fh->WriteNotify()) {
-                      return;
-                  }
-              }
-          }
-      }
-      fNfd = 0;
-      fReadready.Zero();
-      fWriteready.Zero();
-
-      // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-         if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
-      fSigcnt = 0;
-      fSignals.Zero();
-
-      // check synchronous timers
-      if (fTimers && fTimers->GetSize() > 0)
-         if (DispatchTimers(kTRUE)) {
-            // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
-               return;
-         }
-
-      if (pendingOnly) return;
-   }
-
-}
-#endif
 
 //______________________________________________________________________________
 void TWinNTSystem::ExitLoop()
@@ -1182,7 +1028,6 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the WinNT access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::_access(path, mode) == 0)
       return kFALSE;
@@ -1317,26 +1162,6 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    // skip leading blanks
    while (*patbuf == ' ')
       patbuf++;
-
-   // skip leading ':'
-   while (*patbuf == ':')
-      patbuf++;
-
-   // skip leading ';'
-   while (*patbuf == ';')
-      patbuf++;
-
-   // Transform a Unix list of directory into a Windows list
-   // by changing the separator from ':' into ';'
-   for (q = (char*)patbuf; *q; q++) {
-      if ( *q == ':' ) {
-               // We are avoiding substitution in the case of
-               // ....;c:....
-         if ( ((q-2)>patbuf) && ( (*(q-2)!=';') || !isalpha(*(q-1)) ) )
-             *q=';';
-
-        }
-   }
 
    // any shell meta characters ?
    for (p = patbuf; *p; p++)
@@ -1486,7 +1311,7 @@ const char *TWinNTSystem::GetDynamicPath()
 char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
 {
    // Find location of file in a search path.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    static char name[kMAXPATHLEN];
    char *lpFilePart = 0;
@@ -1583,7 +1408,9 @@ void TWinNTSystem::Unload(const char *module)
 #ifdef NOCINT
    WinNTDynUnload(module);
 #else
-   if (module) { TSystem::Unload(module); }
+   if (module) { }
+   // should call CINT unload file here, but does not work for sl's yet.
+   Warning("Unload", "CINT does not support unloading shared libs");
 #endif
 }
 
@@ -1623,36 +1450,36 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("\.dll$", kFALSE);
-      TRegexp user_lib("\.lib$", kFALSE);
+      TRegexp user_dll("*.dll", kTRUE);
+      TRegexp user_lib("*.lib", kTRUE);
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
 
       while ((start < libs.Length()) && (index != kNPOS)) {
-         index = libs.Index(separator,&end,start);
-         if (index >= 0) {
-            s = libs(index,end);
-            if (s.Index(user_dll) != kNPOS) {
-               s.ReplaceAll(".dll",".lib");
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            } else if (s.Index(user_lib) != kNPOS) {
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            }
-            if (!fListLibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
-         }
-         start += end+1;
+	index = libs.Index(separator,&end,start);
+	if (index >= 0) {
+	  s = libs(index,end);
+	  if (s.Index(user_dll) != kNPOS) {
+	    s.ReplaceAll(".dll",".lib");
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  } else if (s.Index(user_lib) != kNPOS) {
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  }
+	  if (!fListLibs.IsNull())
+	    ntlibs.Append(" ");
+	  ntlibs.Append(s);
+	}
+	start += end+1;
       }
-   } else {
-      ntlibs = libs;
-   }
+   } else
+     ntlibs = libs;
 
    fListLibs = ntlibs;
    return fListLibs;
@@ -1664,7 +1491,6 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 //______________________________________________________________________________
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
-#ifndef GDK_WIN32
     if (ti)
     {
         TSystem::AddTimer(ti);
@@ -1676,61 +1502,16 @@ void TWinNTSystem::AddTimer(TTimer *ti)
                 RemoveTimer(ti);
         }
     }
-#else
-   TSystem::AddTimer(ti);
-   if (!fInsideNotify && ti->IsAsync())
-      WinNTSetitimer(NextTimeOut(kFALSE));
-#endif
 }
 //______________________________________________________________________________
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
-#ifndef GDK_WIN32
     if (ti && fWin32Timer ) {
        fWin32Timer->KillTimer(ti);
        return TSystem::RemoveTimer(ti);
     }
     return 0;
-#else
-   TTimer *t = TSystem::RemoveTimer(ti);
-   if (ti->IsAsync())
-      WinNTSetitimer(NextTimeOut(kFALSE));
-   return t;
-#endif
 }
-
-#ifdef GDK_WIN32
-//______________________________________________________________________________
-Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
-{
-   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
-   // timers else a-synchronous timers.
-
-   if (!fTimers) return kFALSE;
-
-   fInsideNotify = kTRUE;
-
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
-   TTimer *t;
-   Bool_t  timedout = kFALSE;
-
-   while ((t = (TTimer *) it.Next())) {
-      TTime now = Now();
-      now += TTime(kItimerResolution);
-      if (mode && t->IsSync()) {
-         if (t->CheckTimer(now))
-            timedout = kTRUE;
-      } else if (!mode && t->IsAsync()) {
-         if (t->CheckTimer(now)) {
-            WinNTSetitimer(NextTimeOut(kFALSE));
-            timedout = kTRUE;
-         }
-      }
-   }
-   fInsideNotify = kFALSE;
-   return timedout;
-}
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::DispatchSynchTimers()
@@ -1905,7 +1686,7 @@ char *TWinNTSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -2475,31 +2256,23 @@ long TWinNTSystem::WinNTNow()
    return (t.wMinute*60 + t.wSecond) * 1000 + t.wMilliseconds;
 }
 
-#ifndef GDK_WIN32
 //______________________________________________________________________________
 int TWinNTSystem::WinNTSetitimer(TTimer *ti)
 {
    // Set interval timer to time-out in ms milliseconds.
 
-   return 0;
-}
-
-#else
-//______________________________________________________________________________
-int TWinNTSystem::WinNTSetitimer(Long_t ms)
-{
-   // Set interval timer to time-out in ms milliseconds.
-
-   struct itimerval itval;
-   itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
-   itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
+#ifndef WIN32
+   struct itimerval itv;
+   itv.it_interval.tv_sec = itv.it_interval.tv_usec = 0;
+   itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
    if (ms >= 0) {
-      itval.it_value.tv_sec  = ms / 1000;
-      itval.it_value.tv_usec = (ms % 1000) * 1000;
+      itv.it_value.tv_sec  = ms / 1000;
+      itv.it_value.tv_usec = (ms % 1000) * 1000;
    }
-   return setitimer(ITIMER_REAL, &itval, 0);
-}
+   return setitimer(ITIMER_REAL, &itv, 0);
 #endif
+        return 0;
+}
 
 //---- file descriptors --------------------------------------------------------
 
@@ -2780,7 +2553,7 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2869,7 +2642,7 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);

@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.8 2001/11/16 02:37:41 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.6 2001/09/25 16:17:36 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -178,19 +178,11 @@ extern long G__globalvarpointer;
 #endif
 #endif
 
-#ifdef R__THROWNEWDELETE
-#define R__THROW_BAD  throw(std::bad_alloc)
-#define R__THROW_NULL throw()
-#else
-#define R__THROW_BAD
-#define R__THROW_NULL
-#endif
-
 static const char *spaceErr = "storage exhausted (failed to allocate %ld bytes)";
 static int newInit = 0;
 
 //______________________________________________________________________________
-void *operator new(size_t size) R__THROW_BAD
+void *operator new(size_t size)
 {
    // Custom new() operator.
 
@@ -231,9 +223,9 @@ void *operator new(size_t size) R__THROW_BAD
    return ExtStart(vp);
 }
 
-#ifndef R__PLACEMENTINLINE
+#ifndef R__KCC
 //______________________________________________________________________________
-void *operator new(size_t size, void *vp) R__THROW_NULL
+void *operator new(size_t size, void *vp)
 {
    // Custom new() operator with placement argument.
 
@@ -274,7 +266,7 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 #endif
 
 //______________________________________________________________________________
-void operator delete(void *ptr) R__THROW_NULL
+void operator delete(void *ptr)
 {
    // Custom delete() operator.
 
@@ -315,18 +307,18 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
-#ifdef R__VECNEWDELETE
+#if defined(R__VECNEWDELETE)
 //______________________________________________________________________________
-void *operator new[](size_t size) R__THROW_BAD
+void *operator new[](size_t size)
 {
    // Custom vector new operator.
 
    return ::operator new(size);
 }
 
-#ifndef R__PLACEMENTINLINE
+#ifndef R__KCC
 //______________________________________________________________________________
-void *operator new[](size_t size, void *vp) R__THROW_NULL
+void *operator new[](size_t size, void *vp)
 {
    // Custom vector new() operator with placement argument.
 
@@ -335,7 +327,7 @@ void *operator new[](size_t size, void *vp) R__THROW_NULL
 #endif
 
 //______________________________________________________________________________
-void operator delete[](void *ptr) R__THROW_NULL
+void operator delete[](void *ptr)
 {
    ::operator delete(ptr);
 }
@@ -353,7 +345,7 @@ void *CustomReAlloc1(void *ovp, size_t size)
    static const char *where = "CustomReAlloc1";
 
    if (ovp == 0)
-      return ::operator new(size);
+      return new char[size];
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");
@@ -389,7 +381,7 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    static const char *where = "CustomReAlloc2";
 
    if (ovp == 0)
-      return ::operator new(size);
+      return new char[size];
 
    if (!newInit)
       Fatal(where, "space was not allocated via custom new");

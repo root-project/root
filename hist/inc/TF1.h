@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.19 2001/12/10 21:10:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.14 2001/07/09 17:20:55 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -68,8 +68,6 @@ protected:
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
-   static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
-   
 public:
     // TF1 status bits
     enum {
@@ -102,11 +100,10 @@ public:
           Int_t     GetNumberFitPoints() const {return fNpfits;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
-       Double_t     GetParError(Int_t ipar) const;
+       Double_t     GetParError(Int_t ipar) const {return fParErrors[ipar];}
        Double_t    *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
    virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
    virtual Double_t GetRandom();
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
@@ -120,31 +117,25 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
-   virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
-   virtual void     SetFunction(Double_t (*fcn)(Double_t *, Double_t *)) { fFunction = fcn;}
    virtual void     SetMaximum(Double_t maximum=-1111) {fMaximum=maximum;} // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111) {fMinimum=minimum;} // *MENU*
    virtual void     SetNDF(Int_t ndf);
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
    virtual void     SetNpx(Int_t npx=100); // *MENU*
-   virtual void     SetParError(Int_t ipar, Double_t error);
+   virtual void     SetParError(Int_t ipar, Double_t error) {fParErrors[ipar] = error;}
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
    virtual void     SetParent(TObject *p=0) {fParent = p;}
    virtual void     SetRange(Double_t xmin, Double_t xmax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
-   virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     Update();
 
-   static  void     RejectPoint(Bool_t reject=kTRUE);
-   static  Bool_t   RejectedPoint();
-   
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 

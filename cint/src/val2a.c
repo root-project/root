@@ -269,11 +269,6 @@ char *temp;
       sprintf(temp,"(int*)0x%lx",buf.obj.i);
     }
     break;
-#ifndef G__OLDIMPLEMENTATION1604
-  case 'g':
-    sprintf(temp,"(bool)%d",(int)buf.obj.i?1:0);
-    break;
-#endif
   case 'k':
     if(G__in_pause)
       sprintf(temp,"(unsigned long)%lu",(unsigned long)buf.obj.i);
@@ -685,9 +680,6 @@ int type,tagnum,typenum,reftype,isconst;
     case 'i': strcpy(string,"int"); break;
     case 'k': strcpy(string,"unsigned long"); break;
     case 'l': strcpy(string,"long"); break;
-#ifndef G__OLDIMPLEMENTATION1604
-    case 'g': strcpy(string,"bool"); break;
-#endif
     case 'f': strcpy(string,"float"); break;
     case 'd': strcpy(string,"double"); break;
     case 'q': 
@@ -1625,12 +1617,6 @@ int noerror;
       result.type='y';
       break;
     }
-#ifndef G__OLDIMPLEMENTATION1604
-    if(strcmp(typenam,"bool")==0) {
-      result.type='g';
-      break;
-    }
-#endif
     break;
   case 5:
     if(strcmp(typenam,"short")==0) {

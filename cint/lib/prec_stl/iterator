@@ -135,20 +135,18 @@ struct iterator {
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
 class reverse_iterator 
-#if defined(G__KCC)
-  : public iterator<iterator_traits<Iterator>::iterator_category,
-                    iterator_traits<Iterator>::value_type,
-                    iterator_traits<Iterator>::difference_type,
-                    iterator_traits<Iterator>::pointer,
-                    iterator_traits<Iterator>::reference> 
-#endif
+  //: public iterator<iterator_traits<Iterator>::iterator_category,
+  //                  iterator_traits<Iterator>::value_type,
+  //                  iterator_traits<Iterator>::difference_type,
+  //                  iterator_traits<Iterator>::pointer,
+  //                  iterator_traits<Iterator>::reference> 
 {
 #if 0
  protected:
   Iterator current;
 #endif
  public:
-#if defined(G__KCC)
+#if 0
    typedef Iterator iterator_type;
    typedef typename iterator_traits<Iterator>::difference_type difference_type;
    typedef typename iterator_traits<Iterator>::reference reference;
@@ -240,7 +238,7 @@ _Iter_cat(const T*) {
 }
 #endif
 
-#if (G__GNUC>=3) && !defined(G__KCC)
+#if (G__GNUC>=3)
 // for g++ 3.00
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator
@@ -305,54 +303,6 @@ public:
 
   const _Iterator& base() const ;
 };
-
-// forward iterator requirements
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool
-operator==(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	   const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return __lhs.base() == __rhs.base(); }
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool
-operator!=(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	   const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return !(__lhs == __rhs); }
-
-// random access iterator requirements
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool 
-operator<(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	  const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return __lhs.base() < __rhs.base(); }
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool
-operator>(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	  const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return __rhs < __lhs; }
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool
-operator<=(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	   const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return !(__rhs < __lhs); }
-
-template<typename _IteratorL, typename _IteratorR, typename _Container>
-inline bool
-operator>=(const __normal_iterator<_IteratorL, _Container>& __lhs,
-	   const __normal_iterator<_IteratorR, _Container>& __rhs)
-{ return !(__lhs < __rhs); }
-
-template<typename _Iterator, typename _Container>
-inline __normal_iterator<_Iterator, _Container>
-operator+(__normal_iterator<_Iterator, _Container>::difference_type __n,
-          const __normal_iterator<_Iterator, _Container>& __i)
-{ return __normal_iterator<_Iterator, _Container>(__i.base() + __n); }
-
-
-#endif // G__GNUC>=3
+#endif
 
 #pragma endif

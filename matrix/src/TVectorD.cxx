@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.7 2001/05/07 18:41:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.6 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -65,8 +65,7 @@ void TVectorD::Allocate(Int_t nrows, Int_t row_lwb)
    fNmem   = nrows;
    fRowLwb = row_lwb;
 
-   //fElements = new Double_t[fNrows];  because of use of ReAlloc()
-   fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t));
+   fElements = new Double_t[fNrows];
    if (fElements)
       memset(fElements, 0, fNrows*sizeof(Double_t));
 }
@@ -102,7 +101,7 @@ TVectorD::~TVectorD()
    // TVectorD destructor.
 
    if (IsValid())
-      ::operator delete(fElements);
+      delete [] fElements;
 
    Invalidate();
 }
@@ -144,7 +143,7 @@ void TVectorD::ResizeTo(Int_t lwb, Int_t upb)
    // If the vector is to grow, reallocate and clear the newly added elements
    if (fNrows > old_nrows) {
       fElements = (Double_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Double_t),
-                                                fNmem*sizeof(Double_t));
+                                              fNmem*sizeof(Double_t));
       fNmem = fNrows;
    } else if (old_nrows - fNrows > (old_nrows>>2)) {
       // Vector is to shrink a lot (more than 1/4 of the original size), reallocate
@@ -270,12 +269,11 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
    }
 
    const Int_t old_nrows = fNrows;
-   Double_t *old_vector = fElements;        // Save the old vector elements
+   Double_t *old_vector = fElements;        // Save the old vector elem
    fRowLwb = a.fRowLwb;
    Assert((fNrows = a.fNrows) > 0);
 
-   //Assert((fElements = new Double_t[fNrows]) != 0);
-   Assert((fElements = (Double_t*) ::operator new(fNrows*sizeof(Double_t))) != 0);
+   Assert((fElements = new Double_t[fNrows]) != 0);
    fNmem = fNrows;
 
    Double_t *tp = fElements;                     // Target vector ptr
@@ -289,7 +287,7 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
    }
    Assert(mp == a.fElements + a.fNrows);
 
-   ::operator delete(old_vector);
+   delete [] old_vector;
    return *this;
 }
 

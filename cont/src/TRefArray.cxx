@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.6 2002/02/02 11:57:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.2 2001/10/04 19:26:42 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    } else if (s == 0)
       s = TCollection::kInitCapacity;
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = 0;
    fUIDs = 0;
    Init(s, lowerBound);
 }
@@ -62,7 +62,7 @@ TRefArray::TRefArray(const TRefArray &a)
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = 0;
    fUIDs = 0;
    Init(a.fSize, a.fLowerBound);
 
@@ -92,8 +92,8 @@ void TRefArray::AddFirst(TObject *obj)
    // first element that might have been there. To have insertion semantics
    // use either a TList or a TOrdCollection.
 
-   if (!obj) return;
-   fUIDs[0] = TProcessID::AssignID(obj);
+   fUIDs[0] = (Long_t)obj;
+   if (obj) obj->SetBit(kIsReferenced);
    Changed();
 }
 
@@ -156,15 +156,14 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
    // Add object at position idx. If idx is larger than the current size
    // of the array, expand the array (double its size).
 
-   if (!obj) return;
    if (idx < fLowerBound) {
       Error("AddAt", "out of bounds at %d in %x", idx, this);
       return;
    }
    if (idx-fLowerBound >= fSize)
       Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
-
-   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
+   fUIDs[idx-fLowerBound] = (Long_t)obj;
+   if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
@@ -175,10 +174,10 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
    // Add object at position ids. Give an error when idx is out of bounds
    // (i.e. the array is not expanded).
 
-   if (!obj) return;
    if (!BoundsOk("AddAt", idx)) return;
 
-   fUIDs[idx-fLowerBound] = TProcessID::AssignID(obj);
+   fUIDs[idx-fLowerBound] = (Long_t)obj;
+   if (obj) obj->SetBit(kIsReferenced);
    fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
    Changed();
 }
@@ -189,12 +188,12 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
    // Return the position of the new object.
    // Find the first empty cell or AddLast if there is no empty cell
 
-   if (!obj) return 0;
    if (Last()) {    // <---------- This is to take in account "empty" TRefArray's
        Int_t i;
        for (i = 0; i < fSize; i++)
           if (!fUIDs[i]) {         // Add object at position i
-             fUIDs[i] = TProcessID::AssignID(obj);
+             fUIDs[i] = (Long_t)obj;
+             if (obj) obj->SetBit(kIsReferenced);
              fLast = TMath::Max(i, GetAbsLast());
              Changed();
              return i+fLowerBound;
@@ -209,12 +208,12 @@ TObject *TRefArray::After(TObject *obj) const
 {
    // Return the object after obj. Returns 0 if obj is last object.
 
-   if (!obj || !fPID) return 0;
+   if (!obj) return 0;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == fSize-1) return 0;
 
-   return fPID->GetObjectWithID(fUIDs[idx+1]);
+   return (TObject*)fUIDs[idx+1];
 }
 
 //______________________________________________________________________________
@@ -222,12 +221,12 @@ TObject *TRefArray::Before(TObject *obj) const
 {
    // Return the object before obj. Returns 0 if obj is first object.
 
-   if (!obj || !fPID) return 0;
+   if (!obj) return 0;
 
    Int_t idx = IndexOf(obj) - fLowerBound;
    if (idx == -1 || idx == 0) return 0;
 
-   return fPID->GetObjectWithID(fUIDs[idx+1]);
+   return (TObject*)fUIDs[idx-1];
 }
 
 //______________________________________________________________________________
@@ -239,6 +238,8 @@ void TRefArray::Clear(Option_t *)
    fLast = - 1;
 
    for (Int_t j=0 ; j < fSize; j++) fUIDs[j] = 0;
+   
+   fRefBits.ResetAllBits();
    
    Changed();
 }
@@ -271,6 +272,9 @@ void TRefArray::Delete(Option_t *)
 
    fSize = 0;
    if (fUIDs) {delete [] fUIDs; fUIDs = 0;}
+   
+   fRefBits.ResetAllBits();
+   fRefBits.Compact();
       
    Changed();
 }
@@ -285,13 +289,13 @@ void TRefArray::Expand(Int_t newSize)
       return;
    }
    if (newSize == fSize) return;
-   UInt_t *temp = fUIDs;
+   Long_t *temp = fUIDs;
    if (newSize != 0) {
-      fUIDs = new UInt_t[newSize];
-      if (newSize < fSize) memcpy(fUIDs,temp, newSize*sizeof(UInt_t));
+      fUIDs = new Long_t[newSize];
+      if (newSize < fSize) memcpy(fUIDs,temp, newSize*sizeof(Long_t));
       else {
-         memcpy(fUIDs,temp,fSize*sizeof(UInt_t));
-         memset(&fUIDs[fSize],0,(newSize-fSize)*sizeof(UInt_t));
+         memcpy(fUIDs,temp,fSize*sizeof(Long_t));
+         memset(&fUIDs[fSize],0,(newSize-fSize)*sizeof(Long_t));
       }
    } else {
      fUIDs = 0;
@@ -305,10 +309,9 @@ void TRefArray::Streamer(TBuffer &R__b)
 {
    // Stream all objects in the array to or from the I/O buffer.
 
+   Long_t uid;
    UInt_t R__s, R__c;
-   Int_t nobjects;
-   UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
+   Int_t nobjects, pidf;
    if (R__b.IsReading()) {
       R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
@@ -318,10 +321,16 @@ void TRefArray::Streamer(TBuffer &R__b)
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,file);
+      fPID = TProcessID::ReadProcessID(pidf,gFile);
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b >> fUIDs[i];
-          if (fUIDs[i] != 0) fLast = i;
+          R__b >> uid;
+          fUIDs[i] = uid + (Long_t)gSystem;
+          if (uid != -1) {
+             fRefBits.SetBitNumber(i);
+             fLast = i;
+          } else {
+             fUIDs[i] = 0;
+          }
       }
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
@@ -332,10 +341,16 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = TProcessID::WriteProcessID(fPID,file);
+      pidf = 0;
+      if (gFile) {
+         pidf = gFile->GetProcessCount();
+         gFile->SetBit(TFile::kHasReferences);
+      }
       R__b << pidf;
       for (Int_t i = 0; i < nobjects; i++) {
-          R__b << fUIDs[i];
+          uid = fUIDs[i] - (Long_t)gSystem;
+          if (!fUIDs[i]) uid = -1;
+          R__b << uid;
       }
       R__b.SetByteCount(R__c, kTRUE);
    }
@@ -346,7 +361,7 @@ TObject *TRefArray::First() const
 {
    // Return the object in the first slot.
 
-   return fPID->GetObjectWithID(fUIDs[0]);
+   return (TObject*)fUIDs[0];
 }
 
 //______________________________________________________________________________
@@ -357,7 +372,7 @@ TObject *TRefArray::Last() const
    if (fLast == -1)
       return 0;
    else
-      return fPID->GetObjectWithID(fUIDs[GetAbsLast()]);
+      return (TObject*)fUIDs[GetAbsLast()];
 }
 
 //______________________________________________________________________________
@@ -445,6 +460,8 @@ void TRefArray::Init(Int_t s, Int_t lowerBound)
 {
    // Initialize a TRefArray.
 
+   fRefBits.ResetAllBits();
+   
    if (fUIDs && fSize != s) {
       delete [] fUIDs;
       fUIDs = 0;
@@ -452,7 +469,7 @@ void TRefArray::Init(Int_t s, Int_t lowerBound)
 
    fSize = s;
 
-   fUIDs = new UInt_t[fSize];
+   fUIDs = new Long_t[fSize];
    for (Int_t i=0;i<s;i++) fUIDs[i] = 0;
    fLowerBound = lowerBound;
    fLast = -1;
@@ -487,7 +504,7 @@ TObject *TRefArray::RemoveAt(Int_t idx)
 
    TObject *obj = 0;
    if (fUIDs[i]) {
-      obj = fPID->GetObjectWithID(fUIDs[i]);
+      obj = (TObject*)fUIDs[i];
       fUIDs[i] = 0;
       // recalculate array size
       if (i == fLast)
@@ -509,7 +526,7 @@ TObject *TRefArray::Remove(TObject *obj)
 
    if (idx == -1) return 0;
 
-   TObject *ob = fPID->GetObjectWithID(fUIDs[idx]);
+   TObject *ob = (TObject*)fUIDs[idx];
    fUIDs[idx] = 0;
    // recalculate array size
    if (idx == fLast)

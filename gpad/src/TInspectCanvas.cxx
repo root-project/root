@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.5 2001/07/01 08:29:45 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TInspectCanvas.cxx,v 1.4 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   08/01/2000
 
 /*************************************************************************
@@ -96,7 +96,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
 
    TClass *cl = obj->IsA();
    if (cl == 0) return;
-   if (!cl->GetListOfRealData()) cl->BuildRealData(obj);
+   if (!cl->GetListOfRealData()) cl->BuildRealData();
 
    // Count number of data members in order to resize the canvas
    TRealData *rd;

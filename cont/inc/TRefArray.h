@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.4 2001/10/16 17:27:35 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.2 2001/10/04 19:26:42 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -35,14 +35,14 @@
 #include "TSystem.h"
 #endif
 
-
 class TRefArray : public TSeqCollection {
 
 friend class TRefArrayIter;
 
 protected:
    TProcessID   *fPID;         //Pointer to Process Unique Identifier
-   UInt_t       *fUIDs;        //[fSize] To store uids of referenced objects
+   TBits         fRefBits;     //Flag to test if pointer is ready to use or must be compured
+   Long_t       *fUIDs;        //[fSize] To store uids of referenced objects
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 
@@ -91,7 +91,7 @@ public:
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TRefArray has to be sorted, -1 == not found !!
 
-   ClassDef(TRefArray,1)  //An array of references to TObjects
+        ClassDef(TRefArray,1)  //An array of references to TObjects
 };
 
 
@@ -138,17 +138,27 @@ inline Bool_t TRefArray::BoundsOk(const char *where, Int_t at) const
 
 inline TObject *&TRefArray::operator[](Int_t at)
 {
-   MayNotUse("operator[]");
+   int j = at-fLowerBound;
+   if (j >= 0 && j < fSize) return (TObject*&)fUIDs[j];
+   BoundsOk("operator[]", at);
+   fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   Error("operator= ","Cannot use this operator");
    return (TObject*&)fUIDs[0];
 }
 
 inline TObject *TRefArray::At(Int_t i) const
 {
    // Return the object at position i. Returns 0 if i is out of bounds.
-   int j = i-fLowerBound;
-   if (j >= 0 && j < fSize) {
+  if (i >= 0 && i < fSize) {
+   TObject *obj = 0;
+      if (!fRefBits.TestBitNumber(i)) return (TObject*)fUIDs[i];
       if (!fPID) return 0;
-      return fPID->GetObjectWithID(fUIDs[j]);
+      obj = fPID->GetObjectWithID(fUIDs[i]-(Long_t)gSystem);
+      if (obj) {
+         ((TBits&)fRefBits).ResetBitNumber(i);
+         fUIDs[i] = (Long_t)obj;
+      }
+      return obj;
    }
    BoundsOk("At", i);
    return 0;

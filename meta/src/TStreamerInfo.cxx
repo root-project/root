@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.118 2002/01/29 07:49:18 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.91 2001/10/03 08:35:00 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -31,13 +31,12 @@
 #include "TArrayS.h"
 #include "TArrayL.h"
 #include "TError.h"
-#include "TProcessID.h"
+#include "TRef.h"
  
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
 Bool_t  TStreamerInfo::fgOptimize  = kTRUE;
 TFile  *TStreamerInfo::fgFile = 0;
-TStreamerElement *TStreamerInfo::fgElement = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
@@ -116,8 +115,7 @@ void TStreamerInfo::Build()
    // one by one the list of data members of the analyzed class.
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
-   //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
-   
+
    fClass->BuildRealData();
 
    fCheckSum = fClass->GetCheckSum();
@@ -133,9 +131,12 @@ void TStreamerInfo::Build()
    while((base = (TBaseClass*)nextb())) {
       clm = gROOT->GetClass(base->GetName());
       if (!clm) {
-         // this case appears with STL collections as base class.
+#ifdef MAYBEINFUTURE
+         // support sor STL collections as base class cannot be implemented
+         // It requires access to the base class offset in the class
+         // try STL container or string
          Streamer_t streamer = 0;
-         offset = base->GetDelta();
+         offset = GetDataMemberOffset(dm,streamer);
          if (offset == kMissing) continue;
          if (strcmp(base->GetName(),"string") == 0) {
             TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
@@ -152,7 +153,8 @@ void TStreamerInfo::Build()
             else delete stl;
             continue;
          }
-         Error("Build","%s, unknown type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+         Error("Build","%s, unknow type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+#endif
          continue;
       }
       clm->GetStreamerInfo();
@@ -210,12 +212,7 @@ void TStreamerInfo::Build()
       if (dt) {  // found a basic type
          Int_t dtype = dt->GetType();
          Int_t dsize = dt->Size();
-         if (!refcount && (strstr(dm->GetFullTypeName(),"char*")
-                        || strstr(dm->GetFullTypeName(),"Char_t*"))) {
-            dtype = kCharStar;
-            dsize = sizeof(char*);
-         }
-         if (dm->IsaPointer() && dtype != kCharStar) {
+         if (dm->IsaPointer()) {
             if (refcount) {
                // data member is pointer to an array of basic types
                element = new TStreamerBasicPointer(dm->GetName(),dm->GetTitle(),offset,dtype,
@@ -339,19 +336,20 @@ void TStreamerInfo::BuildCheck()
    TObjArray *array;
    if (fClass) {
       array = fClass->GetStreamerInfos();
-      TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
-      if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
-      if (fClass->GetListOfDataMembers() 
-         && (fClassVersion == fClass->GetClassVersion()) 
-         && (fCheckSum != fClass->GetCheckSum())) {
-            printf("\nWARNING, the StreamerInfo of class %s read from file %s\n",GetName(),gDirectory->GetFile()->GetName());
-            printf("        has the same version (=%d) as the active class\n",fClassVersion);
+      if (fClassVersion == fClass->GetClassVersion()) {
+         TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
+         if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
+         if (fClass->GetListOfDataMembers() && (fCheckSum != fClass->GetCheckSum())) {
+            printf("\nWARNING, class:%s StreamerInfo read from file:%s\n",GetName(),gDirectory->GetFile()->GetName());
+            printf("        has the same version:%d than the active class\n",fClassVersion);
             printf("        but a different checksum.\n");
             printf("        You should update the version to ClassDef(%s,%d).\n",GetName(),fClassVersion+1);
             printf("        Do not try to write objects with the current class definition,\n");
             printf("        the files will not be readable.\n\n");
-      } else {
-         if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
+            //array->RemoveAt(fClassVersion);
+         } else {
+            if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
+         }
       }
    } else {
       fClass = new TClass(GetName(),fClassVersion,0,0,-1,-1);
@@ -416,7 +414,7 @@ void TStreamerInfo::BuildOld()
 {
    // rebuild the TStreamerInfo structure
 
-   if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+   if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class:%s, version:%d\n",GetName(),fClassVersion);
    TIter next(fElements);
    TStreamerElement *element;
    Int_t offset = 0;
@@ -445,15 +443,22 @@ void TStreamerInfo::BuildOld()
       // may be a fake class
       if (!dm && fClass->GetDeclFileLine() < 0) {
          streamer = 0;
+         element->SetOffset(offset);
          element->Init(fClass);
          element->SetStreamer(streamer);
          Int_t alength = element->GetArrayLength();
          if (alength == 0) alength = 1;
          Int_t asize = element->GetSize();
-         //align the non-basic data types (required on alpha and IRIX!!)
-         if (offset%sp != 0) offset = offset - offset%sp + sp;
-         element->SetOffset(offset);
+         //if (asize == 0) asize = 8;
+         //offset += asize*alength;
          offset += asize;
+         //align to pointer boundaries (important on 64 bit machines)
+         //align only the non-basic data types
+         if (element->GetType() > 30 && offset%sp != 0) offset = offset - offset%sp + sp;
+         if (element->GetType() == kObject || element->GetType() == kTString) {
+            //element->SetOffset(kMissing);
+            //element->SetNewType(-1);
+         }
       } else if (dm && dm->IsPersistent()) {
          TDataType *dt = dm->GetDataType();
          fClass->BuildRealData();
@@ -467,10 +472,8 @@ void TStreamerInfo::BuildOld()
          if (strcmp(element->GetTypeName(),dm->GetFullTypeName())) {
             if (element->IsOldFormat(dm->GetFullTypeName())) continue;
             if (dt) {
-               if (element->GetType() != dt->GetType()) {
-                  element->SetNewType(dt->GetType());
-                  printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
-               }
+               element->SetNewType(dt->GetType());
+               printf("element: %s %s has new type: %s\n",element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
             } else {
                element->SetNewType(-2);
                printf("Cannot convert %s from type:%s to type:%s, skip element\n",
@@ -895,14 +898,6 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
 }
 
 //______________________________________________________________________________
-TStreamerElement *TStreamerInfo::GetCurrentElement()
-{
-   //static function returning a pointer to the current TStreamerElement
-   //fgElement points to the current TStreamerElement being read in ReadBuffer
-   return fgElement;
-}
-
-//______________________________________________________________________________
 TFile *TStreamerInfo::GetCurrentFile()
 {
    //static function returning a pointer to the current file
@@ -915,6 +910,7 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    // Compute data member offset
    // return pointer to the Streamer function if one exists
 
+//printf("GetDataMemberOffset, class:%s, dm=%s\n",fClass->GetName(),dm->GetName());
    TIter nextr(fClass->GetListOfRealData());
    char dmbracket[256];
    sprintf(dmbracket,"%s[",dm->GetName());
@@ -923,11 +919,8 @@ Int_t TStreamerInfo::GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) 
    TRealData *rdm;
    while ((rdm = (TRealData*)nextr())) {
       char *rdmc = (char*)rdm->GetName();
-      //next statement required in case a class and one of its parent class
-      //have data members with the same name
+//printf("rdmc=%s\n",rdmc);
       if (dm->IsaPointer() && rdmc[0] == '*') rdmc++;
-      
-      if (rdm->GetDataMember() != dm) continue;
       if (strcmp(rdmc,dm->GetName()) == 0) {
          offset   = rdm->GetThisOffset();
          streamer = rdm->GetStreamer();
@@ -1134,7 +1127,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
 void TStreamerInfo::ls(Option_t *option) const
 {
 //  List the TStreamerElement list and also the precomputed tables
-   printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
+  printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
 
    if (fElements) fElements->ls(option);
    for (Int_t i=0;i<fNdata;i++) {
@@ -1233,7 +1226,6 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       atype = fType[i];
       aleng = fLength[i];
    }
-   fgElement = (TStreamerElement*)fElem[i];
    switch (atype) {
          // basic types
       case kChar:              {Char_t *val   = (Char_t*)ladd;   printf("%d",*val);  break;}
@@ -1273,12 +1265,6 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
-         // char *
-      case kCharStar: {
-                       char **val = (char**)ladd;
-                       if (*val) printf("%s",*val);
-                       break;
-                     }
          // Class *  derived from TObject with comment field  //->
       case kObjectp: {
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
@@ -1324,10 +1310,14 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetL + kObjectP:
       case kAny:     {
                       printf("printing kAny case (%d)",fType[i]);
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      //TClass *clany = element->GetClassPointer();
+                      //TStreamerInfo *infoany = clany->GetStreamerInfo();
+                      //infoany->PrintValue();
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          //printf("ERROR, Streamer is null\n");
-                         //fgElement->ls();
+                         //element->ls();
                          break;
                       }
                       //(*pstreamer)(b,pointer+fOffset[i],0);
@@ -1336,20 +1326,18 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
          // Base Class
       case kBase:    {
                       printf("printing kBase case (%d)",fType[i]);
-                       //fgElement->ReadBuffer(b,pointer);
+                       //TStreamerBase *element = (TStreamerBase*)fElem[i];
+                       //element->ReadBuffer(b,pointer);
                        break;
                      }
 
-      case kOffsetL + kObject:
-      case kOffsetL + kTString:
-      case kOffsetL + kTObject:
-      case kOffsetL + kTNamed:
       case kStreamer: {
                       printf("printing kStreamer case (%d)",fType[i]);
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          //printf("ERROR, Streamer is null\n");
-                         //fgElement->ls();
+                         //element->ls();
                          break;
                       }
                       //UInt_t start,count;
@@ -1361,10 +1349,11 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
 
       case kStreamLoop: {
                       printf("printing kStreamLoop case (%d)",fType[i]);
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          //printf("ERROR, Streamer is null\n");
-                         //fgElement->ls();
+                         //element->ls();
                          break;
                       }
                       //Int_t *counter = (Int_t*)(pointer+fMethod[i]);
@@ -1384,7 +1373,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 {
 //  print value of element i in a TClonesArray
 
-   if (!clones) {printf(" %-15s = \n",name); return;}
    printf(" %-15s = ",name);
    Int_t nc = clones->GetEntriesFast();
    const Int_t kMaxPrint = 10;
@@ -1392,7 +1380,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 
    Int_t offset = eoffset + fOffset[i];
    Int_t j;
-   fgElement = (TStreamerElement*)fElem[i];
    for (Int_t k=0;k<nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
       char *ladd = pointer+offset;
@@ -1435,12 +1422,6 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
-         // char *
-      case kCharStar: {
-                       char **val = (char**)ladd;
-                       if (*val) printf("%s",*val);
-                       break;
-                     }
          // Class *  derived from TObject with comment field  //->
       case kObjectp: {
                       TObject **obj = (TObject**)ladd;
@@ -1485,14 +1466,15 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetL + kObjectp:
       case kOffsetL + kObjectP:
       case kAny:     {
-                      printf("%s",fgElement->GetTypeName());
-                      //TClass *clany = fgElement->GetClassPointer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      printf("%s",element->GetTypeName());
+                      //TClass *clany = element->GetClassPointer();
                       //TStreamerInfo *infoany = clany->GetStreamerInfo();
                       //infoany->PrintValue();
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          //printf("ERROR, Streamer is null\n");
-                         //fgElement->ls();
+                         //element->ls();
                          break;
                       }
                       //(*pstreamer)(b,pointer+fOffset[i],0);
@@ -1501,20 +1483,18 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
          // Base Class
       case kBase:    {
                       printf("printing kBase case");
-                       //fgElement->ReadBuffer(b,pointer);
+                       //TStreamerBase *element = (TStreamerBase*)fElem[i];
+                       //element->ReadBuffer(b,pointer);
                        break;
                      }
 
-      case kOffsetL + kObject:
-      case kOffsetL + kTString:
-      case kOffsetL + kTObject:
-      case kOffsetL + kTNamed:
       case kStreamer: {
                       printf("printing kStreamer case");
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          //printf("ERROR, Streamer is null\n");
-                         fgElement->ls();
+                         element->ls();
                          break;
                       }
                       //UInt_t start,count;
@@ -1526,10 +1506,11 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
 
       case kStreamLoop: {
                       printf("printing kStreamLoop case");
-                      Streamer_t pstreamer = fgElement->GetStreamer();
+                      TStreamerElement *element = (TStreamerElement*)fElem[i];
+                      Streamer_t pstreamer = element->GetStreamer();
                       if (pstreamer == 0) {
                          printf("ERROR, Streamer is null\n");
-                         fgElement->ls();
+                         element->ls();
                          break;
                       }
                       //Int_t *counter = (Int_t*)(pointer+fMethod[i]);
@@ -1701,10 +1682,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
-      fgElement = (TStreamerElement*)fElem[i];
+      TStreamerElement *element = (TStreamerElement*)fElem[i];
 //#ifdef DEBUG
       if (gDebug > 1) {
-         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),fgElement->GetName(),i,fType[i],fgElement->ClassName(),b.Length(),(Long_t)pointer, fOffset[i]);
+         printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Long_t)pointer, fOffset[i]);
       }
 //#endif
       switch (fType[i]) {
@@ -1744,25 +1725,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUInt:   ReadBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadBasicPointer(ULong_t)
 
-         // char*
-         case kCharStar: {
-                       Int_t nch; b >> nch;
-                       char **f = (char**)(pointer+fOffset[i]);
-                       delete [] *f;
-                      *f = 0; if (nch <=0) break;
-                      *f = new char[nch+1];
-                       b.ReadFastArray(*f,nch); (*f)[nch] = 0;
-                       break;
-                     }
-
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b >> *x;
-                       if ((*x & kIsReferenced) != 0) {
-                          UShort_t pidf;
-                          b >> pidf;
-                          TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);   
-                          if (pid) pid->PutObjectWithID((TObject*)pointer);
-                       }
+                       if ((*x & kIsReferenced) != 0) TRef::ReadRef((TObject*)pointer,b,gFile);
                        break;
                      }
 
@@ -1788,10 +1753,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          // Class*   derived from TObject
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
                           //delete the object or collection
-                          for (Int_t j=0;j<fLength[i];j++) {
-                             if (fgCanDelete) delete obj[j];
-                             b >> obj[j];
-                          }
+                          if (fgCanDelete) delete *obj;
+                          b >> *obj;
                           break;
                         }
 
@@ -1803,22 +1766,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // Class    derived from TObject
          case kObject:  {
-                         TClass *cl = fgElement->GetClassPointer();
+                         TClass *cl = element->GetClassPointer();
                          if (cl->GetClassInfo()) {
                             ((TObject*)(pointer+fOffset[i]))->Streamer(b);
                             break;
                          } else {
-                            UInt_t start,count;
-                            //We assume that the class was written with a standard streamer
-                            //We attempt to recover if a version count was not written
-                            Version_t v = b.ReadVersion(&start,&count);
-                            if (count) {
-                               cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+fOffset[i],-1);
-                               b.CheckByteCount(start,count,cl);
-                            } else {
-                               b.SetBufferOffset(start);
-                               cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
-                            }
+                            cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
                          }
                          break;
                         }
@@ -1832,16 +1785,18 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
          case kAny:     {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
+                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
                             //Note that this does not work if the class has a custom Streamer
                             //with no bytecount
-                            TClass *cle = fgElement->GetClassPointer();
+                            TClass *cle = element->GetClassPointer();
                             if (cle->InheritsFrom(TArray::Class())) {
                                //special case (frequent) with TArray classes
                                //The TArray Streamers not compatible with ReadBuffer
                                // (no byte count)
-                               if (strchr(fgElement->GetTypeName(),'*')) {
+                               if (strchr(element->GetTypeName(),'*')) {
                                   if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b >> *ar; break;}
                                   if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b >> *ar; break;}
                                   if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b >> *ar; break;}
@@ -1857,51 +1812,49 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                                   if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
                                }
                             }
-                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
-                            cle->ReadBuffer(b,pointer+fOffset[i]);
+                           cle->ReadBuffer(b,pointer+fOffset[i]);
                             break;
                          }
                          (*pstreamer)(b,pointer+fOffset[i],0);
                          break;
                         }
          // Base Class
-         case kBase:    { ((TStreamerBase*)fgElement)->ReadBuffer(b,pointer);
+         case kBase:    { TStreamerBase *element = (TStreamerBase*)fElem[i];
+                          element->ReadBuffer(b,pointer);
                           break;
                         }
 
-         case kOffsetL + kObject:
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
          case kStreamer: {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t start,count;
-                         if (fClassVersion != -1) b.ReadVersion(&start, &count);
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             if (gDebug > 0) {
                                printf("ERROR, Streamer is null\n");
-                               fgElement->ls();
+                               element->ls();
                             }
-                         } else {
-                            (*pstreamer)(b,pointer+fOffset[i],0);
+                            break;
                          }
+                         UInt_t start,count;
+                         if (fClassVersion != -1) b.ReadVersion(&start, &count);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
                          if (fClassVersion != -1) b.CheckByteCount(start,count,IsA());
                          break;
                         }
 
          case kStreamLoop: {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t start,count;
-                         b.ReadVersion(&start, &count);
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             if (gDebug > 0) {
                                printf("ERROR, Streamer is null\n");
-                               fgElement->ls();
+                               element->ls();
                             }
-                         } else {
-                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
-                            (*pstreamer)(b,pointer+fOffset[i],*counter);
+                            break;
                          }
+                         Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                         UInt_t start,count;
+                         b.ReadVersion(&start, &count);
+                         (*pstreamer)(b,pointer+fOffset[i],*counter);
                          b.CheckByteCount(start,count,IsA());
                          break;
                         }
@@ -1944,14 +1897,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kSkipP + kUInt:   SkipBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipBasicPointer(ULong_t)
 
-         // skip char*
-         case kSkip + kCharStar: {
-                       Int_t nch; b >> nch;
-                       Int_t l = b.Length();
-                       b.SetBufferOffset(l+4+nch);
-                       break;
-                     }
-
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
                                  UInt_t start, count;
@@ -1963,10 +1908,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          // skip Class*   derived from TObject
          case kSkip + kObjectP: {
                                  UInt_t start, count;
-                                 for (Int_t j=0;j<fLength[i];j++) {
-                                    b.ReadVersion(&start, &count);
-                                    b.SetBufferOffset(start+count+sizeof(UInt_t));
-                                 }
+                                 b.ReadVersion(&start, &count);
+                                 b.SetBufferOffset(start+count+sizeof(UInt_t));
                                  break;
                                 }
 
@@ -2129,9 +2072,9 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    for (Int_t i=first;i<last;i++) {
       leng   = fLength[i];
       offset = eoffset + fOffset[i];
-      fgElement = (TStreamerElement*)fElem[i];
       if (gDebug > 1) {
-         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, offset=%d,  %s, bufpos=%d, nc=%d\n",fClass->GetName(),fgElement->GetName(),i,fType[i],offset,fgElement->ClassName(),b.Length(),nc);
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("ReadBufferClones, class:%s, name=%s, fType[%d]=%d, offset=%d,  %s, bufpos=%d, nc=%d\n",fClass->GetName(),element->GetName(),i,fType[i],offset,element->ClassName(),b.Length(),nc);
       }
       switch (fType[i]) {
          // write basic types
@@ -2170,31 +2113,12 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetP + kUInt:   ReadCBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadCBasicPointer(ULong_t)
 
-         // char*
-         case kCharStar: {
-                   for (Int_t k=0;k<nc;k++) {
-                       pointer = (char*)clones->UncheckedAt(k)+eoffset;
-                       Int_t nch; b >> nch;
-                       char **f = (char**)(pointer+fOffset[i]);
-                       delete [] *f;
-                      *f = 0; if (nch <=0) continue;
-                      *f = new char[nch+1];
-                       b.ReadFastArray(*f,nch); (*f)[nch] = 0;
-                     }
-                     break;
-                  }
-
          // special case for TObject::fBits in case of a referenced object
          case kBits: { 
                for (Int_t k=0;k<nc;k++) {
                   UInt_t *x=(UInt_t*)((char*)clones->UncheckedAt(k)+offset); b >> *x;
                   pointer = (char*)clones->UncheckedAt(k); 
-                  if ((*x & kIsReferenced) != 0) {
-                     UShort_t pidf;
-                     b >> pidf;
-                     TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);   
-                     if (pid) pid->PutObjectWithID((TObject*)pointer);
-                  }
+                  if ((*x & kIsReferenced) != 0) TRef::ReadRef((TObject*)pointer,b,gFile);
                }
             }
             break;
@@ -2218,10 +2142,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k);
                TObject **obj = (TObject**)(pointer+offset);
                //delete the object or collection
-               for (Int_t j=0;j<fLength[i];j++) {
-                  if (fgCanDelete) delete obj[j];
-                  b >> obj[j];
-               }
+               if (fgCanDelete) delete *obj;
+               b >> *obj;
             }
             break;}
 
@@ -2231,33 +2153,27 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                pointer = (char*)clones->UncheckedAt(k);
                Int_t *x=(Int_t*)(pointer+offset);
                b >> *x;
+               //Int_t *counter = (Int_t*)fMethod[i];
+               //*counter = *x;
             }
             break;}
 
          // Class  derived from TObject
          case kObject:  {
-            TClass *cl = fgElement->GetClassPointer();
+            TStreamerElement *element = (TStreamerElement*)fElem[i];
+            TClass *cl = element->GetClassPointer();
             if (cl->GetClassInfo()) {
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
                   ((TObject*)(pointer+offset))->Streamer(b);
                }
             } else {
-               Version_t v;
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k);
-                  //We assume that the class was written with a standard streamer
-                  //We attempt to recover if a version count was not written
-                  v = b.ReadVersion(&start,&count);
-                  if (count) {
-                     cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+fOffset[i],-1);
-                     b.CheckByteCount(start,count,cl);
-                  } else {
-                     b.SetBufferOffset(start);
-                     cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
-                  }
+                  cl->GetStreamerInfo()->ReadBuffer(b,pointer+offset,-1);
                }
             }
+            //((TObject*)(pointer+offset))->Streamer(b);
             break;}
 
          // Special case for TString, TObject, TNamed
@@ -2283,15 +2199,18 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
-         case kAny: {Streamer_t pstreamer = fgElement->GetStreamer();
+         case kAny: {
+                     TStreamerElement *element = (TStreamerElement*)fElem[i];
+                     Streamer_t pstreamer = element->GetStreamer();
                      if (pstreamer == 0) {
-                        TClass *cle = fgElement->GetClassPointer();
+                        if (gDebug > 0) printf("Warning, Streamer is null\n");
+                        TClass *cle = element->GetClassPointer();
                         Int_t kk;
                         if (cle->InheritsFrom(TArray::Class())) {
                            //special case (frequent) with TArray classes
                            //The TArray Streamers not compatible with ReadBuffer
                            // (no byte count)
-                           if (strchr(fgElement->GetTypeName(),'*')) {
+                           if (strchr(element->GetTypeName(),'*')) {
                               for (kk=0;kk<nc;kk++) {
                                  pointer = (char*)clones->UncheckedAt(kk);
                                  if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+offset); b >> *ar;}
@@ -2315,7 +2234,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                               break;
                            }
                         }
-                        if (gDebug > 0) printf("Warning, Streamer is null\n");
                         for (kk=0;kk<nc;kk++) {
                            pointer = (char*)clones->UncheckedAt(kk);
                            cle->ReadBuffer(b,pointer+offset);
@@ -2331,47 +2249,48 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
          // Base Class
          case kBase:    {
-            TClass *clbase = fgElement->GetClassPointer();
-            Int_t clversion = ((TStreamerBase*)fgElement)->GetBaseVersion();
+            TStreamerBase *element = (TStreamerBase*)fElem[i];
+            TClass *clbase = element->GetClassPointer();
+            Int_t clversion = element->GetBaseVersion();
             clbase->GetStreamerInfo(clversion)->ReadBufferClones(b,clones,nc,-1,0);
             //for (Int_t k=0;k<nc;k++) {
             //   pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-            //   fgElement->ReadBuffer(b,pointer);
+            //   element->ReadBuffer(b,pointer);
             //}
             break;}
 
-         case kOffsetL + kObject:
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
-         case kStreamer: {Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t start,count;
-                         b.ReadVersion(&start,&count);
+         case kStreamer: {
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            for (Int_t k=0;k<nc;k++) {
-                               pointer = (char*)clones->UncheckedAt(k);
-                               (*pstreamer)(b,pointer+offset,0);
-                            }
+                            element->ls();
+                            break;
+                         }
+                         UInt_t start,count;
+                         b.ReadVersion(&start,&count);
+                         for (Int_t k=0;k<nc;k++) {
+                            pointer = (char*)clones->UncheckedAt(k);
+                            (*pstreamer)(b,pointer+offset,0);
                          }
                          b.CheckByteCount(start,count,IsA());
                          break;
                         }
 
-         case kStreamLoop: {Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t start,count;
-                         b.ReadVersion(&start,&count);
+         case kStreamLoop: {
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            for (Int_t k=0;k<nc;k++) {
-                               pointer = (char*)clones->UncheckedAt(k)+offset;
-                               Int_t *counter = (Int_t*)(pointer+fMethod[i]);
-                               (*pstreamer)(b,pointer+offset,*counter);
-                            }
+                            element->ls();
+                            break;
+                         }
+                         UInt_t start,count;
+                         b.ReadVersion(&start,&count);
+                         for (Int_t k=0;k<nc;k++) {
+                            pointer = (char*)clones->UncheckedAt(k)+offset;
+                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                            (*pstreamer)(b,pointer+offset,*counter);
                          }
                          b.CheckByteCount(start,count,IsA());
                          break;
@@ -2415,16 +2334,6 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kSkipP + kUInt:   SkipCBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipCBasicPointer(ULong_t)
 
-         // skip char*
-         case kSkip + kCharStar: {
-                    for (Int_t k=0;k<nc;k++) {
-                       Int_t nch; b >> nch;
-                       Int_t l = b.Length();
-                       b.SetBufferOffset(l+4+nch);
-                     }
-                     break;
-                  }
-
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
             for (Int_t k=0;k<nc;k++) {
@@ -2436,10 +2345,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          // skip Class*   derived from TObject
          case kSkip + kObjectP: {
             for (Int_t k=0;k<nc;k++) {
-               for (Int_t j=0;j<fLength[i];j++) {
-                  b.ReadVersion(&start, &count);
-                  b.SetBufferOffset(start+count+sizeof(UInt_t));
-               }
+               b.ReadVersion(&start, &count);
+               b.SetBufferOffset(start+count+sizeof(UInt_t));
             }
             break;}
 
@@ -2613,9 +2520,9 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
-      fgElement = (TStreamerElement*)fElem[i];
       if (gDebug > 1) {
-         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),fgElement->GetName(),i,fType[i],fgElement->ClassName(),b.Length(),(Long_t)pointer,fOffset[i]);
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("WriteBuffer, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, pointer=%lx, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),(Long_t)pointer,fOffset[i]);
       }
       switch (fType[i]) {
          // write basic types
@@ -2654,27 +2561,9 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUInt:   WriteBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteBasicPointer(ULong_t)
 
-         // char*
-         case kCharStar: {
-                       Int_t nch = 0;
-                       char **f = (char**)(pointer+fOffset[i]);
-                       char *af = *f;
-                       if (af) {
-                          nch = strlen(af);
-                          b  << nch;
-                          b.WriteFastArray(af,nch);
-                       } else {
-                          b << nch;
-                       }
-                       break;
-                     }
-
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
-                       if ((*x & kIsReferenced) != 0) {
-                          UShort_t pidf = TProcessID::WriteProcessID(0,gFile);
-                          b << pidf;
-                       }
+                       if ((*x & kIsReferenced) != 0) TRef::SaveRef((TObject*)pointer,b,gFile);
                        break;
                      }
 
@@ -2698,13 +2587,11 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
                           //must write StreamerInfo if pointer is null
                           if (!(*obj)) {
-                             TStreamerObjectPointer *elp = (TStreamerObjectPointer*)fgElement;
-                             TClass *cl = elp->GetClass();
+                             TStreamerObjectPointer *element = (TStreamerObjectPointer*)fElem[i];
+                             TClass *cl = element->GetClass();
                              cl->GetStreamerInfo()->ForceWriteInfo();
                           }
-                          for (Int_t j=0;j<fLength[i];j++) {
-                             b << obj[j];
-                          }
+                          b << *obj;
                           break;
                         }
 
@@ -2728,16 +2615,19 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
-         case kAny:     {Streamer_t pstreamer = fgElement->GetStreamer();
+         case kAny:     {
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
+                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
                             //Note that this does not work if the class has a custom Streamer
                             //with no bytecount
-                            TClass *cle = fgElement->GetClassPointer();
+                            TClass *cle = element->GetClassPointer();
                             if (cle->InheritsFrom(TArray::Class())) {
                                //special case (frequent) with TArray classes
                                //The TArray Streamers not compatible with WriteBuffer
                                // (no byte count)
-                               if (strchr(fgElement->GetTypeName(),'*')) {
+                               if (strchr(element->GetTypeName(),'*')) {
                                   if (cle == TArrayI::Class()) {TArrayI **ar = (TArrayI**)(pointer+fOffset[i]); b << *ar; break;}
                                   if (cle == TArrayF::Class()) {TArrayF **ar = (TArrayF**)(pointer+fOffset[i]); b << *ar; break;}
                                   if (cle == TArrayC::Class()) {TArrayC **ar = (TArrayC**)(pointer+fOffset[i]); b << *ar; break;}
@@ -2753,7 +2643,6 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                                   if (cle == TArrayL::Class()) {TArrayL *ar = (TArrayL*)(pointer+fOffset[i]); ar->Streamer(b); break;}
                                }
                             }
-                            if (gDebug > 0) printf("WARNING, Streamer is null\n");
                             cle->WriteBuffer(b,pointer+fOffset[i],"");
                             break;
                          }
@@ -2761,36 +2650,36 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          break;
                         }
          // Base Class
-         case kBase:    { ((TStreamerBase*)fgElement)->WriteBuffer(b,pointer);
+         case kBase:    { TStreamerBase *element = (TStreamerBase*)fElem[i];
+                          element->WriteBuffer(b,pointer);
                           break;
                         }
 
-         case kOffsetL + kObject:
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
-         case kStreamer: {Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+         case kStreamer: {
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            (*pstreamer)(b,pointer+fOffset[i],0);
+                            element->ls();
+                            break;
                          }
+                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
 
          case kStreamLoop: {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
-                            (*pstreamer)(b,pointer+fOffset[i],*counter);
+                            element->ls();
+                            break;
                          }
+                         Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         (*pstreamer)(b,pointer+fOffset[i],*counter);
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
@@ -2851,9 +2740,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
    if (first < 0) {first = 0; last = fNdata;}
    else            last = first+1;
    for (Int_t i=first;i<last;i++) {
-      fgElement = (TStreamerElement*)fElem[i];
       if (gDebug > 1) {
-         printf("WriteBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, offset=%d\n",fClass->GetName(),fgElement->GetName(),i,fType[i],fgElement->ClassName(),b.Length(),fOffset[i]);
+         TStreamerElement *element = (TStreamerElement*)fElem[i];
+         printf("WriteBufferClones, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d, offset=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length(),fOffset[i]);
       }
       switch (fType[i]) {
          // write basic types
@@ -2892,33 +2781,12 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetP + kUInt:   WriteCBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteCBasicPointer(ULong_t)
 
-         // char*
-         case kCharStar: {
-                    for (Int_t k=0;k<nc;k++) {
-                       pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
-                       Int_t nch = 0;
-                       char **f = (char**)(pointer+fOffset[i]);
-                       char *af = *f;
-                       if (af) {
-                          nch = strlen(af);
-                          b  << nch;
-                          b.WriteFastArray(af,nch);
-                       } else {
-                          b << nch;
-                       }
-                     }
-                     break;
-                  }
-
          // special case for TObject::fBits in case of a referenced object
          case kBits: { 
                for (Int_t k=0;k<nc;k++) {
                   pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
                   UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
-                  if ((*x & kIsReferenced) != 0) {
-                      UShort_t pidf = TProcessID::WriteProcessID(0,gFile);
-                      b << pidf;
-                   }
+                  if ((*x & kIsReferenced) != 0) TRef::SaveRef((TObject*)pointer,b,gFile);
                }
             }
             break;
@@ -2930,8 +2798,9 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                TObject **obj = (TObject**)(pointer+fOffset[i]);
                if (*obj) (*obj)->Streamer(b);
                else {
-                  Error("WriteBufferClones","-> specified but pointer is null");
-                  fgElement->ls();
+                  Error("WriteBufferCones","-> specified but pointer is null");
+                  TStreamerElement *element = (TStreamerElement*)fElem[i];
+                  element->ls();
                }
             }
             break;}
@@ -2941,9 +2810,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                TObject **obj = (TObject**)(pointer+fOffset[i]);
-               for (Int_t j=0;j<fLength[i];j++) {
-                  b << obj[j];
-               }
+               b << *obj;
             }
             break;}
 
@@ -2988,10 +2855,12 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Any Class not derived from TObject
          case kOffsetL + kObjectp:
          case kOffsetL + kObjectP:
-         case kAny: {Streamer_t pstreamer = fgElement->GetStreamer();
+         case kAny: {
+                     TStreamerElement *element = (TStreamerElement*)fElem[i];
+                     Streamer_t pstreamer = element->GetStreamer();
                      if (pstreamer == 0) {
                         printf("ERROR, Streamer is null\n");
-                        fgElement->ls();
+                        element->ls();
                         break;
                      }
                      for (Int_t k=0;k<nc;k++) {
@@ -3002,43 +2871,47 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                     }
 
          // Base Class
-         case kBase: { TClass *clbase = fgElement->GetClassPointer();
+         case kBase: {
+                       TStreamerBase *element = (TStreamerBase*)fElem[i];
+                       //for (Int_t k=0;k<nc;k++) {
+                       //   pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                       //   element->WriteBuffer(b,pointer);
+                       //}
+                       TClass *clbase = element->GetClassPointer();
                        clbase->GetStreamerInfo()->WriteBufferClones(b,clones,nc,-1,0);
                        break;
                      }
 
-         case kOffsetL + kObject:
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
          case kStreamer: {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            for (Int_t k=0;k<nc;k++) {
-                               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-                               (*pstreamer)(b,pointer+fOffset[i],0);
-                            }
+                            element->ls();
+                            break;
+                         }
+                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         for (Int_t k=0;k<nc;k++) {
+                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                            (*pstreamer)(b,pointer+fOffset[i],0);
                          }
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
 
          case kStreamLoop: {
-                         Streamer_t pstreamer = fgElement->GetStreamer();
-                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         TStreamerElement *element = (TStreamerElement*)fElem[i];
+                         Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             printf("ERROR, Streamer is null\n");
-                            fgElement->ls();
-                         } else {
-                            for (Int_t k=0;k<nc;k++) {
-                               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
-                               Int_t *counter = (Int_t*)(pointer+fMethod[i]);
-                               (*pstreamer)(b,pointer+fOffset[i],*counter);
-                            }
+                            element->ls();
+                            break;
+                         }
+                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         for (Int_t k=0;k<nc;k++) {
+                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                            Int_t *counter = (Int_t*)(pointer+fMethod[i]);
+                            (*pstreamer)(b,pointer+fOffset[i],*counter);
                          }
                          b.SetByteCount(pos,kTRUE);
                          break;

@@ -208,11 +208,7 @@ void G__charformatter();
 char *G__strip_quotation(),*G__add_quotation();
 void G__error_clear();
 int G__isvalue();
-#ifndef G__OLDIMPLEMENTATION1616
-int G__fgetc();
-#else
 char G__fgetc();
-#endif
 
 /**************************************************************************
  * error flag
@@ -3540,18 +3536,10 @@ char *temp;
 }
 
 
-#ifndef G__OLDIMPLEMENTATION1616
-int G__fgetc(fp)
-#else
 char G__fgetc(fp)
-#endif
 FILE *fp;
 {
-#ifndef G__OLDIMPLEMENTATION1616
-	int c;
-#else
 	char c;
-#endif
 	c=fgetc(fp);
 	if((G__debug!=0)&&(G__no_exec==0)) {
 		if(c != EOF) fputc(c,stderr);

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.15 2001/11/28 15:00:08 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.10 2000/11/23 10:22:10 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,6 @@
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
 //        TRefArray     *fMuons;             //array of Muon tracks only
 //        TRef           fLastTrack;         //pointer to last track
-//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
 //
 //   The EventHeader class has 3 data members (integers):
@@ -69,7 +68,6 @@
 
 #include "TRandom.h"
 #include "TDirectory.h"
-#include "TProcessID.h"
 
 #include "Event.h"
 
@@ -103,8 +101,6 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
-   fEventName = 0;
-   fWebHistogram.SetAction(this);
 }
 
 //______________________________________________________________________________
@@ -116,58 +112,10 @@ Event::~Event()
    delete fHighPt; fHighPt = 0;
    delete fMuons;  fMuons = 0;
    delete [] fClosestDistance;
-   if (fEventName) delete [] fEventName;
 }
 
 //______________________________________________________________________________
-void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
-  char etype[20];
-  Float_t sigmat, sigmas;
-  gRandom->Rannor(sigmat,sigmas);
-  Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
-  Float_t random = gRandom->Rndm(1);
-
-  //Save current Object count
-  Int_t ObjectNumber = TProcessID::GetObjectCount();
-  Clear();
-  fHighPt->Delete();
-  fMuons->Delete();
-  
-  Int_t nch = 15;
-  if (ev > 100)   nch += 3;
-  if (ev > 10000) nch += 3;
-  if (fEventName) delete [] fEventName;
-  fEventName = new char[nch];
-  sprintf(fEventName,"Event%d_Run%d",ev,200);
-  sprintf(etype,"type%d",ev%5);
-  SetType(etype);
-  SetHeader(ev, 200, 960312, random);
-  SetNseg(Int_t(10*ntrack+20*sigmas));
-  SetNvertex(Int_t(1+20*gRandom->Rndm()));
-  SetFlag(UInt_t(random+0.5));
-  SetTemperature(random+20.);
-
-  for(UChar_t m = 0; m < 10; m++) {
-     SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-  }
-  for(UChar_t i0 = 0; i0 < 4; i0++) {
-    for(UChar_t i1 = 0; i1 < 4; i1++) {
-       SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
-    }
-  }
-
-   //  Create and Fill the Track objects
-  for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
-  //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
-  //object count to what it was at the beginning of the event.
-  TProcessID::SetObjectCount(ObjectNumber);
-}  
-
-//______________________________________________________________________________
-Track *Event::AddTrack(Float_t random, Float_t ptmin)
+Track *Event::AddTrack(Float_t random)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -177,12 +125,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 
    TClonesArray &tracks = *fTracks;
    Track *track = new(tracks[fNtrack++]) Track(random);
-   //Save reference to last Track in the collection of Tracks
    fLastTrack = track;
-   //Save reference in fHighPt if track is a high Pt track
-   if (track->GetPt() > ptmin)   fHighPt->Add(track);
-   //Save reference in fMuons if track is a muon candidate
-   if (track->GetMass2() < 0.11) fMuons->Add(track);
    return track;
 }
 

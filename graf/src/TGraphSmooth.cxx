@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.5 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphSmooth.cxx,v 1.2 2001/10/01 06:55:55 brun Exp $
 // Author: Christian Stratowa 30/09/2001
 
 /******************************************************************************
@@ -20,20 +20,23 @@
 ******************************************************************************/
 
 
-#include "Riostream.h"
+#include <iostream.h>
+#include <fstream.h>
+
 #include "TMath.h"
+
 #include "TGraphSmooth.h"
 #include "TGraphErrors.h"
 
 ClassImp(TGraphSmooth);
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 // TGraphSmooth
 //
 // A helper class to smooth TGraph
 // see examples in $ROOTSYS/tutorials/motorcycle.C and approx.C
 //
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 TGraphSmooth::TGraphSmooth(): TNamed()
 {
 //*-*-*-*-*-*-*-*-*Default GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*
@@ -43,7 +46,7 @@ TGraphSmooth::TGraphSmooth(): TNamed()
    fGout = 0;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 {
 //*-*-*-*-*-*-*-*-*GraphSmooth constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -53,7 +56,7 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
    fGout = 0;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 TGraphSmooth::~TGraphSmooth()
 {
 //*-*-*-*-*-*-*-*-*GraphSmooth destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -64,7 +67,7 @@ TGraphSmooth::~TGraphSmooth()
    fGout = 0;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::Smoothin(TGraph *grin)
 {
 //*-*-*-*-*-*-*-*-*Sort input data points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -97,8 +100,8 @@ void TGraphSmooth::Smoothin(TGraph *grin)
    delete [] yin;
 }
 
-//______________________________________________________________________
-TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
+//----------------------------------------------------------------------//
+TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option, 
                       Double_t bandwidth, Int_t nout, Double_t *xout)
 {
 //*-*-*-*-*-*-*-*-*Smooth data with Kernel smoother*-*-*-*-*-*-*-*-*-*-*
@@ -115,14 +118,14 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
 // nout:      If xout is not specified, interpolation takes place at equally
 //            spaced points spanning the interval [min(x), max(x)], where
 //            nout = max(nout, number of input data).
-// xout:      an optional set of values at which to evaluate the fit
+// xout:      an optional set of values at which to evaluate the fit 
 //
 
    TString opt = option;
    opt.ToLower();
    Int_t kernel = 1;
    if (opt.Contains("normal")) kernel = 2;
-
+   
    Smoothin(grin);
 
    Double_t delta = 0;
@@ -142,16 +145,16 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
       else           fGout->SetPoint(i,xout[index[i]], 0);
    }
 
-   BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
+   TGraphSmooth::BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
                  fGout->GetY(), fNout, kernel, bandwidth);
-
+ 
    if (index) {delete [] index; index = 0;}
 
    return fGout;
 }
 
-//______________________________________________________________________
-void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
+//----------------------------------------------------------------------//
+void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp, 
                    Double_t *yp, Int_t np, Int_t kernel, Double_t bw)
 {
 //*-*-*-*-*-*-*-*-*Smooth data with specified kernel*-*-*-*-*-*-*-*-*-*-*
@@ -200,40 +203,40 @@ void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
 }
 
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 TGraph *TGraphSmooth::SmoothLowess(TGraph *grin, Option_t *option ,
                       Double_t span, Int_t iter, Double_t delta)
 {
 //*-*-*-*-*-*-*-*-*Smooth data with Lowess smoother*-*-*-*-*-*-*-*-*-*-*
 //                 ================================
 //
-// This function performs the computations for the LOWESS smoother
-// (see the reference below). Lowess returns the output points
+// This function performs the computations for the LOWESS smoother 
+// (see the reference below). Lowess returns the output points 
 // x and y which give the coordinates of the smooth.
-//
+// 
 // Arguments:
 // grin:  Input graph
 //
-// span:  the smoother span. This gives the proportion of points in the plot
-//        which influence the smooth at each value.
+// span:  the smoother span. This gives the proportion of points in the plot 
+//        which influence the smooth at each value. 
 //        Larger values give more smoothness.
 // iter:  the number of robustifying iterations which should be performed.
 //        Using smaller values of iter will make lowess run faster.
 // delta: values of x which lie within delta of each other replaced by a
 //        single value in the output from lowess.
 //        For delta = 0, delta will be calculated.
-//
+// 
 // References:
 // Cleveland, W. S. (1979) Robust locally weighted regression and smoothing
 //        scatterplots. J. Amer. Statist. Assoc. 74, 829-836.
-// Cleveland, W. S. (1981) LOWESS: A program for smoothing scatterplots
+// Cleveland, W. S. (1981) LOWESS: A program for smoothing scatterplots 
 //        by robust locally weighted regression.
 //        The American Statistician, 35, 54.
 //                 ==================
 
    TString opt = option;
    opt.ToLower();
-
+   
    Smoothin(grin);
 
    if (delta == 0) {delta = 0.01*(TMath::Abs(fMaxX - fMinX));}
@@ -246,13 +249,13 @@ TGraph *TGraphSmooth::SmoothLowess(TGraph *grin, Option_t *option ,
       fGout->SetPoint(i,fGin->GetX()[i], 0);
    }
 
-   Lowess(fGin->GetX(), fGin->GetY(), fNin, fGout->GetY(), span, iter, delta);
-
+   TGraphSmooth::Lowess(fGin->GetX(), fGin->GetY(), fNin, fGout->GetY(), span, iter, delta);
+ 
    return fGout;
 }
 
-//______________________________________________________________________
-void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
+//----------------------------------------------------------------------//
+void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys, 
                    Double_t span, Int_t iter, Double_t delta)
 {
 //*-*-*-*-*-*-*-*-*Lowess regression smoother*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -281,7 +284,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 
 // at least two, at most n poInt_ts
    ns = TMath::Max(2, TMath::Min(n, (Int_t)(span*n + 1e-7)));
-
+   
 // robustness iterations
    iiter = 1;
    while (iiter <= iter+1) {
@@ -307,7 +310,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 
 	   // fitted value at x[i]
          Bool_t iterg1 = iiter>1;
-         Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
+         TGraphSmooth::Lowest(&x[1], &y[1], n, x[i], ys[i], nleft, nright,
                       res, iterg1, RW, ok);
 	      if (!ok) ys[i] = y[i];
 
@@ -315,7 +318,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
          if (last < i-1) {
 		      denom = x[i]-x[last];
 
-		   // skipped poInt_ts -- Int_terpolate non-zero - proof?
+		   // skipped poInt_ts -- Int_terpolate non-zero - proof? 
             for(j = last+1; j < i; j++) {
 		         alpha = (x[j]-x[last])/denom;
 		         ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
@@ -350,13 +353,13 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
 	   for(i=0 ; i<n ; i++)
 	      RW[i] = TMath::Abs(res[i]);
 
-	// compute cmad := 6 * median(rw[], n)
+	// compute cmad := 6 * median(rw[], n) 
    	m1 = n/2;
 	// partial sort, for m1 & m2
-	   Psort(RW, n, m1);
+	   TGraphSmooth::Psort(RW, n, m1);
 	   if(n % 2 == 0) {
 	      m2 = n-m1-1;
-	      Psort(RW, n, m2);
+	      TGraphSmooth::Psort(RW, n, m2);
 	      cmad = 3.*(RW[m1]+RW[m2]);
 	   } else { /* n odd */
 	      cmad = 6.*RW[m1];
@@ -377,7 +380,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    }
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
                    Double_t &ys, Int_t nleft, Int_t nright, Double_t *w,
                    Bool_t userw, Double_t *rw, Bool_t &ok)
@@ -406,7 +409,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
    a = 0.;
    j = nleft;
    while (j <= n) {
-	// compute weights (pick up all ties on right)
+	// compute weights (pick up all ties on right) 
       w[j] = 0.;
 	   r = TMath::Abs(x[j] - xs);
 	   if (r <= h9) {
@@ -455,7 +458,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
    }
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
         Double_t bass, Double_t span, Bool_t isPeriodic, Double_t *w)
 {
@@ -463,39 +466,39 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
 //                 ===============================
 //
 // Smooth the (x, y) values by Friedman's ``super smoother''.
-//
+// 
 // Arguments:
 // grin: graph for smoothing
 //
 // span: the fraction of the observations in the span of the running lines
 //        smoother, or 0 to choose this by leave-one-out cross-validation.
-// bass: controls the smoothness of the fitted curve.
+// bass: controls the smoothness of the fitted curve. 
 //        Values of up to 10 indicate increasing smoothness.
-// isPeriodic: if TRUE, the x values are assumed to be in [0, 1]
+// isPeriodic: if TRUE, the x values are assumed to be in [0, 1] 
 //        and of period 1.
 // w:     case weights
-//
+// 
 // Details:
-// supsmu is a running lines smoother which chooses between three spans for
-// the lines. The running lines smoothers are symmetric, with k/2 data points
-// each side of the predicted point, and values of k as 0.5 * n, 0.2 * n and
-// 0.05 * n, where n is the number of data points. If span is specified,
+// supsmu is a running lines smoother which chooses between three spans for 
+// the lines. The running lines smoothers are symmetric, with k/2 data points 
+// each side of the predicted point, and values of k as 0.5 * n, 0.2 * n and 
+// 0.05 * n, where n is the number of data points. If span is specified, 
 // a single smoother with span span * n is used.
-//
-// The best of the three smoothers is chosen by cross-validation for each
-// prediction. The best spans are then smoothed by a running lines smoother
-// and the final prediction chosen by linear interpolation.
-//
-// The FORTRAN code says: ``For small samples (n < 40) or if there are
-// substantial serial correlations between observations close in x - value,
-// then a prespecified fixed span smoother (span > 0) should be used.
+// 
+// The best of the three smoothers is chosen by cross-validation for each 
+// prediction. The best spans are then smoothed by a running lines smoother 
+// and the final prediction chosen by linear interpolation. 
+// 
+// The FORTRAN code says: ``For small samples (n < 40) or if there are 
+// substantial serial correlations between observations close in x - value, 
+// then a prespecified fixed span smoother (span > 0) should be used. 
 // Reasonable span values are 0.2 to 0.4.''
-//
+// 
 // References:
 // Friedman, J. H. (1984) SMART User's Guide.
-//           Laboratory for Computational Statistics,
+//           Laboratory for Computational Statistics,  
 //           Stanford University Technical Report No. 1.
-//
+// 
 // Friedman, J. H. (1984) A variable span scatterplot smoother.
 //           Laboratory for Computational Statistics,
 //           Stanford University Technical Report No. 5.
@@ -505,8 +508,8 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
       cout << "Error: Span must be between 0 and 1" << endl;
       return 0;
    }
-
-   Smoothin(grin);
+   
+   TGraphSmooth::Smoothin(grin);
 
    Int_t iper = 1;
    if (isPeriodic) {
@@ -539,15 +542,15 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *option,
       Tmp[i] = 0;
    }
 
-   BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), Tmp);
+   TGraphSmooth::BDRsupsmu(fNin, fGin->GetX(), fGin->GetY(), weight, iper, span, bass, fGout->GetY(), Tmp);
 
-   delete [] Tmp;
-   delete [] weight;
-
+   delete [] Tmp; 
+   delete [] weight; 
+ 
    return fGout;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
      Int_t iper, Double_t span, Double_t alpha, Double_t *smo, Double_t *sc)
 {
@@ -555,20 +558,20 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 //                 ==========================
 //
 //  super smoother (Friedman, 1984).
-//
+// 
 //  version 10/10/84
-//
+// 
 //  coded  and copywrite (c) 1984 by:
-//
+// 
 //                         Jerome H. Friedman
 //                      department of statistics
 //                                and
 //                 stanford linear accelerator center
 //                         stanford university
-//
+// 
 //  all rights reserved.
-//
-//
+// 
+// 
 //  input:
 //     n : number of observations (x,y - pairs).
 //     x(n) : ordered abscissa values.
@@ -587,13 +590,13 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 //    smo(n) : smoothed ordinate (response) values.
 //  scratch:
 //    sc(n,7) : internal working storage.
-//
+// 
 //  note:
 //     for small samples (n < 40) or if there are substantial serial
 //     correlations between observations close in x - value, then
 //     a prespecified fixed span smoother (span > 0) should be
 //     used. reasonable span values are 0.2 to 0.4.
-//
+// 
 // current implementation:
 //   Based on R function supsmu: Translated to C++ by C. Stratowa
 //   (R source file: ppr.f by B.D.Ripley Copyright (C) 1994-97)
@@ -656,16 +659,16 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
       jper = 1;
    }
    if (span > 0.0) {
-      BDRsmooth(n, &x[1], &y[1], &w[1], span, jper, vsmlsq,
+      TGraphSmooth::BDRsmooth(n, &x[1], &y[1], &w[1], span, jper, vsmlsq,
                       &smo[1], &sc[sc_offset]);
       return;
    }
 
    Double_t *h = new Double_t[n+1];
    for (i = 1; i <= 3; ++i) {
-      BDRsmooth(n, &x[1], &y[1], &w[1], spans[i - 1], jper, vsmlsq,
+      TGraphSmooth::BDRsmooth(n, &x[1], &y[1], &w[1], spans[i - 1], jper, vsmlsq, 
                       &sc[((i<<1)-1)*n + 1], &sc[n*7 + 1]);
-      BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq,
+      TGraphSmooth::BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
                       &sc[(i<<1)*n + 1], &h[1]);
    }
 
@@ -686,7 +689,7 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
        }
    }
 
-   BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq,
+   TGraphSmooth::BDRsmooth(n, &x[1], &sc[n*7 + 1], &w[1], spans[1], -jper, vsmlsq, 
                    &sc[(n<<1) + 1], &h[1]);
 
    for (j=1; j<=n; ++j) {
@@ -706,14 +709,14 @@ void TGraphSmooth::BDRsupsmu(Int_t n, Double_t *x, Double_t *y, Double_t *w,
       }
    }
 
-   BDRsmooth(n, &x[1], &sc[(n<<2) + 1], &w[1], spans[0], -jper, vsmlsq,
+   TGraphSmooth::BDRsmooth(n, &x[1], &sc[(n<<2) + 1], &w[1], spans[0], -jper, vsmlsq,
                    &smo[1], &h[1]);
 
    delete [] h;
    return;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
      Double_t span, Int_t iper, Double_t vsmlsq, Double_t *smo, Double_t *acvr)
 {
@@ -884,7 +887,7 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
    return;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
      Double_t &Yhigh, Int_t rule, Int_t iTies)
 {
@@ -906,7 +909,7 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
 // sort/rank input x, y
    Int_t *index = new Int_t[fNin];
    Int_t *rank  = new Int_t[fNin];
-   Rank(fNin, xin, index, rank, kFALSE);
+   TGraphSmooth::Rank(fNin, xin, index, rank, kFALSE);
 
 // input X, Y
    Int_t vNDup = 0;
@@ -979,23 +982,23 @@ void TGraphSmooth::Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow,
    delete [] yin;
 }
 
-//______________________________________________________________________
-TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_t *xout,
+//----------------------------------------------------------------------//
+TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_t *xout, 
         Double_t yleft, Double_t yright, Int_t rule, Double_t f, Option_t *ties)
 {
 //*-*-*-*-*-*-*-*-*Approximate data points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //                 =======================
 //
 // Arguments:
-// grin:  graph giving the coordinates of the points to be interpolated.
-//        Alternatively a single plotting structure can be specified:
+// grin:  graph giving the coordinates of the points to be interpolated. 
+//        Alternatively a single plotting structure can be specified: 
 //
 // option: specifies the interpolation method to be used.
 //        Choices are "linear" (iKind = 1) or "constant" (iKind = 2).
 // nout:  If xout is not specified, interpolation takes place at n equally
 //        spaced points spanning the interval [min(x), max(x)], where
 //        nout = max(nout, number of input data).
-// xout:  an optional set of values specifying where interpolation is to
+// xout:  an optional set of values specifying where interpolation is to 
 //        take place.
 // yleft: the value to be returned when input x values less than min(x).
 //        The default is defined by the value of rule given below.
@@ -1004,33 +1007,33 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 // rule:  an integer describing how interpolation is to take place outside
 //        the interval [min(x), max(x)]. If rule is 0 then the given yleft
 //        and yright values are returned, if it is 1 then 0 is returned
-//        for such points and if it is 2, the value at the closest data
+//        for such points and if it is 2, the value at the closest data 
 //        extreme is used.
-// f:     For method="constant" a number between 0 and 1 inclusive,
+// f:     For method="constant" a number between 0 and 1 inclusive, 
 //        indicating a compromise between left- and right-continuous step
 //        functions. If y0 and y1 are the values to the left and right of
-//        the point then the value is y0*f+y1*(1-f) so that f=0 is
+//        the point then the value is y0*f+y1*(1-f) so that f=0 is 
 //        right-continuous and f=1 is left-continuous
-// ties:  Handling of tied x values. An integer describing a function with
+// ties:  Handling of tied x values. An integer describing a function with 
 //        a single vector argument returning a single number result:
 //        ties = "ordered" (iTies = 0): input x are "ordered"
 //        ties = "mean"    (iTies = 1): function "mean"
 //        ties = "min"     (iTies = 2): function "min"
 //        ties = "max"     (iTies = 3): function "max"
-//
+// 
 // Details:
 // At least two complete (x, y) pairs are required.
-// If there are duplicated (tied) x values and ties is a function it is
-// applied to the y values for each distinct x value. Useful functions in
-// this context include mean, min, and max.
-// If ties="ordered" the x values are assumed to be already ordered. The
-// first y value will be used for interpolation to the left and the last
+// If there are duplicated (tied) x values and ties is a function it is 
+// applied to the y values for each distinct x value. Useful functions in 
+// this context include mean, min, and max. 
+// If ties="ordered" the x values are assumed to be already ordered. The 
+// first y value will be used for interpolation to the left and the last 
 // one for interpolation to the right.
-//
+// 
 // Value:
-// approx returns a graph with components x and y, containing n coordinates
-// which interpolate the given data points according to the method (and rule)
-// desired.
+// approx returns a graph with components x and y, containing n coordinates 
+// which interpolate the given data points according to the method (and rule) 
+// desired. 
 
    TString opt = option;
    opt.ToLower();
@@ -1070,7 +1073,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    if (xout == 0) {
       fNout = TMath::Max(nout, fNin);
       delta = (fMaxX - fMinX)/(fNout - 1);
-   }
+   }  
 
    fGout = new TGraph(fNout);
 
@@ -1078,35 +1081,36 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    for (Int_t i=0;i<fNout;i++) {
       if (xout == 0) x = fMinX + i*delta;
       else           x = xout[i];
-      Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, Ylow, Yhigh);
+      Double_t yout = TGraphSmooth::Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, Ylow, Yhigh);
       fGout->SetPoint(i,x, yout);
    }
-
+    
    return fGout;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
          Int_t n, Int_t iKind, Double_t Ylow, Double_t Yhigh)
 {
 //*-*-*-*-*-*-*-*-*Approximate one data point*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ==========================
 //
-//   Approximate  y(v),  given (x,y)[i], i = 0,..,n-1
+//   Approximate  y(v),  given (x,y)[i], i = 0,..,n-1 
 //   Based on R function approx1: Translated to C++ by Christian Stratowa
 //   (R source file: approx.c by R Development Core Team (C) 1999-2001)
 //
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i = 0;
    Int_t j = n - 1;
 
-// handle out-of-domain points
+// handle out-of-domain points 
    if(v < x[i]) return Ylow;
    if(v > x[j]) return Yhigh;
 
 // find the correct interval by bisection
-   while(i < j - 1) {
-	   Int_t ij = (i + j)/2;
+   while(i < j - 1) { 
+	   Int_t ij = (i + j)/2; 
 	   if(v < x[ij]) j = ij;
 	   else i = ij;
    }
@@ -1117,13 +1121,15 @@ Double_t TGraphSmooth::Approx1(Double_t v, Double_t f, Double_t *x, Double_t *y,
 
    if(iKind == 1) { // linear
 	   return y[i] + (y[j] - y[i]) * ((v - x[i])/(x[j] - x[i]));
-   } else { // 2 : constant
+   } else { // 2 : constant 
 	   return y[i] * (1-f) + y[j] * f;
    }
 }
 
+
+//----------------------------------------------------------------------//
 // helper functions
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 Int_t TGraphSmooth::Rcmp(Double_t x, Double_t y)
 {
 //   static function
@@ -1134,13 +1140,14 @@ Int_t TGraphSmooth::Rcmp(Double_t x, Double_t y)
    return 0;
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
 {
 //   static function
 //   based on R function rPsort: adapted to C++ by Christian Stratowa
 //   (R source file: R_sort.c by R Development Core Team (C) 1999-2001)
 //
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Double_t v, w;
    Int_t L, R, i, j;
@@ -1148,16 +1155,16 @@ void TGraphSmooth::Psort(Double_t *x, Int_t n, Int_t k)
    for (L = 0, R = n - 1; L < R; ) {
 	   v = x[k];
 	   for(i = L, j = R; i <= j;) {
-	      while (TGraphSmooth::Rcmp(x[i], v) < 0) i++;
-	      while (TGraphSmooth::Rcmp(v, x[j]) < 0) j--;
+	      while (TGraphSmooth::Rcmp(x[i], v) < 0) i++;	
+	      while (TGraphSmooth::Rcmp(v, x[j]) < 0) j--;	
 	      if (i <= j) { w = x[i]; x[i++] = x[j]; x[j--] = w; }
 	   }
-	   if (j < k) L = i;
-	   if (k < i) R = j;
+	   if (j < k) L = i;	
+	   if (k < i) R = j;	
    }
 }
 
-//______________________________________________________________________
+//----------------------------------------------------------------------//
 void TGraphSmooth::Rank(Int_t n, Double_t *a, Int_t *index, Int_t *rank, Bool_t down)
 {
 //   static function

@@ -8,7 +8,7 @@
  *  This tool creates Makefile for encapsurating arbitrary C/C++ object
  * into Cint as Dynamic Link Library or archived library
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -118,8 +118,7 @@ void G__printtitle()
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
   printf("#\n");
-  printf("# Copyright(c) 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
-  printf("#                        (cint mailing list 'cint@root.cern.ch')\n");
+  printf("# Copyright(c) 1995~2001 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   printf("################################################################\n");
 }
 
@@ -190,17 +189,12 @@ int *argc;
   int single_quote=0,double_quote=0,back_slash=0;
   
   while((string[i]!='\n')&&
-	(string[i]!='\0')
-#ifdef G__OLDIMPLEMENTATION1616
-	&&(string[i]!=EOF)
-#endif
-	) i++;
+	(string[i]!='\0')&&
+	(string[i]!=EOF)) i++;
   string[i]='\0';
   line[i]='\0';
   lenstring=i;
-#ifdef G__OLDIMPLEMENTATION1616
   if(string[i]==EOF) n_eof=0;
-#endif
   argv[0]=line;
 
   *argc=0;

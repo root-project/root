@@ -680,18 +680,6 @@ extern void (*G__emergencycallback)();
 extern int G__asm_clear_mask;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1593
-extern int G__boolflag;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1599
-extern int G__init;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1600
-extern int G__last_error;
-#endif
-
 #ifndef __CINT__
 #ifdef __cplusplus
 }

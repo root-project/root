@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile to build ROOT for SOLARIS with gcc
 
 PLATFORM      = solaris

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.cxx,v 1.2 2001/05/23 16:41:25 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   21/10/96
 
 /*************************************************************************
@@ -205,16 +205,6 @@ void TWin32BrowserImp::ExecThreadCB(TWin32SendClass *command){
   // FlashWindow(parentwindow,TRUE):
 #endif
 }
-
-//______________________________________________________________________________
-void TWin32BrowserImp::BrowseObj(TObject *obj)
-{
-  if (obj) {
-    TBrowser *b = Browser();
-    if (b) obj->Browse(b);
-  }
-}
-
 //______________________________________________________________________________
 void TWin32BrowserImp::Iconify(){ ; }
 

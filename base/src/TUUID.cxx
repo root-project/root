@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.6 2001/10/08 15:05:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.3 2001/10/03 13:18:04 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -116,34 +116,12 @@
 #else
 #include <unistd.h>
 #include <sys/time.h>
-#if defined(R__LINUX)
+#ifdef R__LINUX
 #include <sys/sysinfo.h>
 #endif
 #endif
 
 #define R__LONGLONG
-
-#ifdef R__LONGLONG  // should go into Rtypes.h
-#ifdef R__B64
-typedef long               Long64_t;    //Signed long integer 8 bytes
-typedef unsigned long      ULong64_t;   //Unsigned long integer 8 bytes
-#else
-#ifdef R__WIN32
-typedef __int64            Long64_t;    //Signed long integer 8 bytes
-typedef unsigned __int64   ULong64_t;   //Unsigned long integer 8 bytes
-#else
-typedef long long          Long64_t;    //Signed long integer 8 bytes
-typedef unsigned long long ULong64_t;   //Unsigned long integer 8 bytes
-#endif
-#endif
-#endif
-
-#ifdef R__WIN32
-#define R__LL(long) long
-#else
-#define R__LL(long) _NAME2_(long,LL)
-#endif
-
 
 
 ClassImp(TUUID)
@@ -256,7 +234,7 @@ void TUUID::Format(UShort_t clockseq, uuid_time_t ts)
    // Make a UUID from timestamp, clockseq and node id.
 
    fTimeLow = ts.low;
-   fTimeMid = (UShort_t)(ts.high & 0xFFFF);
+   fTimeMid = (UShort_t) (ts.high & 0xFFFF);
    fTimeHiAndVersion = (UShort_t)((ts.high >> 16) & 0x0FFF);
    fTimeHiAndVersion |= (1 << 12);
    fClockSeqLow = clockseq & 0xFF;
@@ -343,8 +321,8 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
    // Offset between UUID formatted times and Unix formatted times.
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
-   ULong64_t uuid_time = ((ULong64_t)tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
-                         R__LL(0x01B21DD213814000);
+   unsigned long long uuid_time = (tp.tv_sec * 10000000) + (tp.tv_usec * 10) +
+                                  0x01B21DD213814000LL;
    timestamp->high = (UInt_t) (uuid_time >> 32);
    timestamp->low  = (UInt_t) (uuid_time & 0xFFFFFFFF);
 #else
@@ -408,7 +386,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    GetComputerName(r.hostname, &r.l);
 #else
    struct randomness {
-#if defined(R__LINUX) 
+#ifdef R__LINUX
       struct sysinfo   s;
 #endif
       struct timeval   t;
@@ -416,7 +394,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    };
    randomness r;
 
-#if defined(R__LINUX) 
+#ifdef R__LINUX
    sysinfo(&r.s);
 #endif
    gettimeofday(&r.t, 0);
@@ -532,33 +510,6 @@ TInetAddress TUUID::GetHostAddress() const
       return TInetAddress("????", addr, 0);
    }
    return TInetAddress();
-}
-
-//______________________________________________________________________________
-TDatime TUUID::GetTime() const
-{
-   // Get time from UUID.
-
-   TDatime     dt;
-   uuid_time_t ts;
-
-   ts.low   = fTimeLow;
-   ts.high  = (UInt_t)fTimeMid;
-   ts.high |= (UInt_t)((fTimeHiAndVersion & 0x0FFF) << 16);
-#ifdef R__LONGLONG
-   // Offset between UUID formatted times and Unix formatted times.
-   // UUID UTC base time is October 15, 1582.
-   // Unix base time is January 1, 1970.
-   ULong64_t high = ts.high;
-   ULong64_t uuid_time = (high << 32) + ts.low;
-   uuid_time -= R__LL(0x01B21DD213814000);
-   uuid_time /= R__LL(10000000);
-   UInt_t tt = (UInt_t) uuid_time;
-   dt.Set(tt);
-#else
-   Warning("GetTime", "no long long support, return current time");
-#endif
-   return dt;
 }
 
 //______________________________________________________________________________
