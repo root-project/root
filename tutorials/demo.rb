@@ -43,7 +43,7 @@ bar.AddButton('hsum', 'TRuby::Exec("load \'hsum.rb\'");',
 bar.AddButton('hstack', 'TRuby::Exec("load \'hstack.rb\'");',
     'Using stacked histograms')
 
-bar.AddButton('ntuple', 'TRuby::Exec("load \'ntuple.rb\'");',
+bar.AddButton('ntuple', 'TRuby::Exec("load \'ntuple1.rb\'");',
     'Using ntuples')
 
 bar.AddButton('latex', 'TRuby::Exec("load \'latex.rb\'");',
