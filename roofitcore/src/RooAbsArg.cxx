@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.46 2001/08/23 23:43:41 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.47 2001/09/04 01:37:41 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -676,11 +676,20 @@ RooAbsArg *RooAbsArg::findNewServer(const RooArgSet &newSet, Bool_t nameChange) 
     nameAttrib.Append(GetName()) ;
     RooArgSet* tmp = newSet.selectByAttrib(nameAttrib,kTRUE) ;
     if(0 != tmp) {
-      if(tmp->getSize()!=1) {
-	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, >1 server with " 
+
+      // Check if any match was found
+      if (tmp->getSize()==0) {
+	return 0 ;
+      }
+
+      // Check if match is unique
+      if(tmp->getSize()>1) {
+	cout << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with " 
 	     << nameAttrib << " attribute" << endl ;
+	tmp->Print("v") ;
 	assert(0) ;
       }
+
       // use the unique element in the set
       newServer= tmp->first();
       delete tmp ;

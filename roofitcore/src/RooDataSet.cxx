@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.42 2001/08/24 22:11:56 bevan Exp $
+ *    File: $Id: RooDataSet.cc,v 1.43 2001/08/29 19:14:20 bevan Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -380,7 +380,7 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& newVar)
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*_tree) ;
-  _vars.add(*valHolder) ;
+  _vars.addOwned(*valHolder) ;
 
   // Fill values of of placeholder
   Reset() ;

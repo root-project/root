@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.12 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.13 2001/08/24 21:49:25 chcheng Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -95,6 +95,11 @@ Int_t RooConvolutedPdf::declareBasis(const char* expression, const RooArgSet& pa
 
   // Instantiate resModel x basisFunc convolution
   RooAbsReal* conv = _model->convolution(basisFunc,this) ;
+  if (!conv) {
+    cout << "RooConvolutedPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '" 
+	 << expression << "'" << endl ;
+    return -1 ;
+  }
   _convSet.add(*conv) ;
 
   // WVE must store or delete basisFunc 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.22 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.23 2001/09/04 01:37:41 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -126,6 +126,7 @@ private:
   inline TObject* At(Int_t idx) const { return _list.At(idx); }
   inline void Sort(Bool_t order = kSortAscending) { _list.Sort(order); }
   inline const TCollection &getCollection() const { return _list; }
+  inline void Clear() { cout << "RooArgset::Clear called" << endl ; _list.Clear() ; }
 
   friend class RooConvolutedPdf;     // needs At(), IndexOf()
   friend class RooFitContext;        // needs At(), Sort()

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.cc,v 1.9 2001/08/10 22:22:54 verkerke Exp $
+ *    File: $Id: RooResolutionModel.cc,v 1.10 2001/08/23 01:21:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -66,7 +66,9 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* basis, RooAbs
   // Check that primary variable of basis functions is our convolution variable  
   if (basis->findServer(0) != x.absArg()) {
     cout << "RooResolutionModel::convolution(" << GetName() 
-	 << " convolution parameter of basis function and PDF don't match" << endl ;
+	 << ") convolution parameter of basis function and PDF don't match" << endl ;
+    cout << "basis->findServer(0) = " << basis->findServer(0) << endl ;
+    cout << "x.absArg()           = " << x.absArg() << endl ;
     return 0 ;
   }
 
