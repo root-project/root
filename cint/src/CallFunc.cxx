@@ -266,11 +266,12 @@ void G__CallFunc::Exec(void *pobject)
 #ifndef G__OLDIMPLEMENTATION1035
   G__LockCriticalSection();
 #endif
-#ifndef G__OLDIMPLEMENTATION1591
-  SetFuncType();
-#endif  // Set object address
+  // Set object address
   store_struct_offset = G__store_struct_offset;
   G__store_struct_offset = (long)pobject;
+#ifndef G__OLDIMPLEMENTATION1591
+  SetFuncType();
+#endif
   // Call function
 #ifdef G__ASM_WHOLEFUNC
   if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
