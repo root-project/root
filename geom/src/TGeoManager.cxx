@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.87 2004/09/01 07:48:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.88 2004/09/06 16:42:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1933,15 +1933,61 @@ Int_t TGeoManager::GetTouchedCluster(Int_t start, Double_t *point,
 //_____________________________________________________________________________
 void TGeoManager::DefaultColors()
 {
-// Set default volume colors according to tracking media.
-   if (fPainter) {
-      fPainter->DefaultColors();
-      return;
-   }
-   TIter next(fVolumes);
+// Set default volume colors according to A of material
+   
+   const Int_t nmax = 250;
+   Int_t col[nmax];
+   for (Int_t i=0;i<nmax;i++) col[i] = 18;
+        
+   //here we should create a new TColor with the same rgb as in the default\
+   //ROOT colors used below
+   col[  8] = 15;
+   col[  9] = 16;
+   col[ 10] = 17;
+   col[ 11] = 21;
+   col[ 12] = 20;
+   col[ 13] = 18;
+   col[ 14] = 23;
+   col[ 15] = 24;
+   col[ 16] = 24+100;
+   col[ 17] = 24+150;
+   col[ 18] = 23+150;
+   col[ 19] = 23+100;
+   col[ 20] = 25;
+   col[ 21] = 26;
+   col[ 22] = 26+100;
+   col[ 23] = 26+150;
+   col[ 24] = 27;
+   col[ 25] = 28;
+   col[ 26] = 29;
+   col[ 27] = 30;
+   col[ 28] = 30+100;
+   col[ 29] = 30+150;
+   col[ 30] = 14;
+   col[ 31] = 31;
+   col[ 32] = 31+100;
+   col[ 33] = 31+150;
+   col[ 38] = 33;
+   col[ 39] = 2;
+   col[ 41] = 38;
+   col[ 42] = 40;
+   col[ 45] = 37;
+   col[ 55] = 41;
+   col[ 63] = 42;
+   col[ 64] = 44;
+   col[169] = 45;
+   col[170] = 50;
+   col[207] = 38;
+
    TGeoVolume *vol;
-   while ((vol=(TGeoVolume*)next()))
-      vol->SetLineColor(vol->GetMaterial()->GetDefaultColor());
+   TIter next(fVolumes);
+   while ((vol=(TGeoVolume*)next())) {
+       TGeoMedium *med = vol->GetMedium();
+       if (!med) continue;
+       TGeoMaterial *mat = med->GetMaterial();
+       Int_t A = (Int_t)mat->GetA();
+       vol->SetLineColor(col[A]);
+   }
 }
 
 //_____________________________________________________________________________
