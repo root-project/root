@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.115 2003/11/03 14:51:21 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.116 2003/11/18 18:08:14 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1735,15 +1735,11 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 #ifndef WIN32
          CreateNewText(event,px,py,newcode);
 #else
-#ifndef GDK_WIN32
         {
             if (event == kButton1Down) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewText(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py, newcode));
         }
-#else
-         CreateNewText(event,px,py,newcode);
-#endif
 #endif
          break;
       case kLine:
@@ -1777,14 +1773,12 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kPavesText:
       case kDiamond:
 #ifdef WIN32
-#ifndef GDK_WIN32
          if (newcode == kPaveLabel || newcode == kButton) {
             if (event == kButton1Up) gROOT->SetEditorMode();
             gROOT->ProcessLine(Form("((TPad *)0x%lx)->CreateNewPave(%d,%d,%d,%d);",
                                     (Long_t)this, event, px, py,newcode));
          }
          else
-#endif
 #endif
            CreateNewPave(event,px,py,newcode);
          return;
