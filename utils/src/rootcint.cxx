@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.166 2004/06/15 14:39:34 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.167 2004/06/17 14:47:29 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1304,9 +1304,8 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
             break;
 
          case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 0;
-            fprintf(fp, "            %s = new %s;\n",R__t,objType);
-            fprintf(fp, "            %s->Streamer(R__b);\n",R__t);
+            if (!R__t)  return 1;
+            fprintf(fp, "            %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
             break;
 
          case R__BIT_ISSTRING:
@@ -1356,8 +1355,8 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
             break;
 
          case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
-            if (!R__t)  return 0;
-            fprintf(fp, "            ((%s*)%s)->Streamer(R__b);\n",objType,R__t);
+            if (!R__t)  return 1;
+            fprintf(fp, "            R__b.WriteObjectAny(%s,%s);\n",R__t,tcl);
             break;
 
          case R__BIT_ISSTRING:
