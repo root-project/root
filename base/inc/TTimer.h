@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.5 2002/08/02 11:05:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.6 2004/05/07 16:32:14 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -33,8 +33,8 @@
 //                                                                      //
 //  Signal/slots example:                                               //
 //       TTimer *timer = new TTimer();                                  //
-//       Connect(timer, "Timeout()", "myObjectClassName",               //
-//               myObject, "TimerDone()");                              //
+//       timer->Connect("Timeout()", "myObjectClassName",               //
+//                      myObject, "TimerDone()");                       //
 //       timer->Start(2000, kTRUE);   // 2 seconds single-shot          //
 //                                                                      //
 //    // Timeout signal is emitted repeadetly with minimum timeout      //
