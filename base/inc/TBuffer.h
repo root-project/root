@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.10 2002/02/03 16:13:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.11 2002/02/23 10:15:21 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -119,6 +119,7 @@ public:
    void     SetBufferDisplacement() { fDisplacement = 0; }
    Int_t    GetBufferDisplacement() const { return fDisplacement; }
 
+   Int_t    ReadArray(Bool_t   *&b);
    Int_t    ReadArray(Char_t   *&c);
    Int_t    ReadArray(UChar_t  *&c);
    Int_t    ReadArray(Short_t  *&h);
@@ -130,6 +131,7 @@ public:
    Int_t    ReadArray(Float_t  *&f);
    Int_t    ReadArray(Double_t *&d);
 
+   Int_t    ReadStaticArray(Bool_t   *b);
    Int_t    ReadStaticArray(Char_t   *c);
    Int_t    ReadStaticArray(UChar_t  *c);
    Int_t    ReadStaticArray(Short_t  *h);
@@ -141,6 +143,7 @@ public:
    Int_t    ReadStaticArray(Float_t  *f);
    Int_t    ReadStaticArray(Double_t *d);
 
+   void     WriteArray(const Bool_t   *b, Int_t n);
    void     WriteArray(const Char_t   *c, Int_t n);
    void     WriteArray(const UChar_t  *c, Int_t n);
    void     WriteArray(const Short_t  *h, Int_t n);
@@ -152,6 +155,7 @@ public:
    void     WriteArray(const Float_t  *f, Int_t n);
    void     WriteArray(const Double_t *d, Int_t n);
 
+   void     ReadFastArray(Bool_t   *b, Int_t n);
    void     ReadFastArray(Char_t   *c, Int_t n);
    void     ReadFastArray(UChar_t  *c, Int_t n);
    void     ReadFastArray(Short_t  *h, Int_t n);
@@ -163,6 +167,7 @@ public:
    void     ReadFastArray(Float_t  *f, Int_t n);
    void     ReadFastArray(Double_t *d, Int_t n);
 
+   void     WriteFastArray(const Bool_t   *b, Int_t n);
    void     WriteFastArray(const Char_t   *c, Int_t n);
    void     WriteFastArray(const UChar_t  *c, Int_t n);
    void     WriteFastArray(const Short_t  *h, Int_t n);
@@ -174,9 +179,7 @@ public:
    void     WriteFastArray(const Float_t  *f, Int_t n);
    void     WriteFastArray(const Double_t *d, Int_t n);
 
-#ifdef R__BOOL
    TBuffer  &operator>>(Bool_t   &b);
-#endif
    TBuffer  &operator>>(Char_t   &c);
    TBuffer  &operator>>(UChar_t  &c);
    TBuffer  &operator>>(Short_t  &h);
@@ -189,9 +192,7 @@ public:
    TBuffer  &operator>>(Double_t &d);
    TBuffer  &operator>>(Char_t   *c);
 
-#ifdef R__BOOL
    TBuffer  &operator<<(Bool_t   b);
-#endif
    TBuffer  &operator<<(Char_t   c);
    TBuffer  &operator<<(UChar_t  c);
    TBuffer  &operator<<(Short_t  h);
@@ -218,7 +219,6 @@ public:
 
 //---------------------- TBuffer inlines ---------------------------------------
 
-#ifdef R__BOOL
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(Bool_t b)
 {
@@ -227,7 +227,6 @@ inline TBuffer &TBuffer::operator<<(Bool_t b)
    tobuf(fBufCur, b);
    return *this;
 }
-#endif
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator<<(Char_t c)
@@ -290,14 +289,12 @@ inline TBuffer &TBuffer::operator<<(const Char_t *c)
    return *this;
 }
 
-#ifdef R__BOOL
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(Bool_t &b)
 {
    frombuf(fBufCur, &b);
    return *this;
 }
-#endif
 
 //______________________________________________________________________________
 inline TBuffer &TBuffer::operator>>(Char_t &c)
