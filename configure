@@ -1196,7 +1196,8 @@ if test ! "x$enable_rfio" = "xno" ; then
         case $platform in
            linux*)     shiftlib="$shiftlib -lnsl" ;;
            solarisCC5) shiftlib="$shiftlib -lposix4" ;;
-           win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32" ;;
+           win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32"
+                       shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
         esac
     fi
 fi
@@ -1547,21 +1548,43 @@ fi
 #
 if test ! "x$enable_xml" = "xno" ; then
     # Check for xml include and library
+    keepinc=$xmlincdir
     check_header "libxml/tree.h" "$xmlincdir" $XMLDIR $XMLDIR/include \
         /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
     xmlincdir=$found_dir
 
+    keeplib=$xmllibdir
     check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" $XMLDIR \
         $XMLDIR/lib $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
     xmllib=$found_lib
     xmllibdir=$found_dir
 
-    if test "x$xmlincdir" = "x" || test "x$xmllib" = "x"; then
+    if test "x$platform" = "xwin32"; then
+       check_header "iconv.h" "$keepinc" $ICONVDIR $ICONVDIR/include \
+           $XMLDIR $XMLDIR/include \
+           /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
+       iconvincdir=$found_dir
+
+       check_library "iconv_a" "$enable_shared" "$keeplib" $ICONVDIR \
+           $ICONVDIR/lib $XMLDIR $XMLDIR/lib $XMLDIR/.libs \
+           /opt/libxml2/lib /usr/local/lib /usr/lib
+       iconvlib=$found_lib
+       iconvlibdir=$found_dir
+    else
+       iconvincdir=$xmlincdir
+       iconvlib="-liconv"
+    fi
+
+    if test "x$xmlincdir"   = "x" || test "x$xmllib"    = "x" ||
+       test "x$iconvincdir" = "x" || test "x$iconvlib"  = "x" ; then
+        xmlincdir=""
         enable_xml="no"
     else
         case $platform in
-            linux*|win32gcc) xmllib="$xmllib -lpthread" ;;
-            solaris*)        xmllib="$xmllib -liconv"   ;;
+            linux*|win32gcc) xmllib="$xmllib -lpthread"            ;;
+            solaris*)        xmllib="$xmllib -liconv"              ;;
+            win32)           xmlincdir="$xmlincdir -I$iconvincdir"
+                             xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
         esac
     fi
 fi

@@ -80,13 +80,11 @@ HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
 GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib
-RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
 QTROOTLIBDEP        = $(GQTLIB) $(GUILIB)
 QTROOTLIBEXTRA      = lib/libGQt.lib lib/libGui.lib $(QTLIB)
 QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
 QTGUILIBEXTRA       = lib/libGraf.lib lib/libGpad.lib lib/libGQt.lib \
                       lib/libGui.lib $(QTLIB)
-XMLLIBEXTRA         = iconv_a.lib Ws2_32.lib
 
 else
 
