@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.16 2004/07/06 14:48:42 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.17 2004/07/06 14:57:18 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -438,6 +438,17 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //  thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphasymmerrors
 //            University of Washington
 //            February 3, 2004
+//
+//  NOTE:
+//  1) By using the "effective variance" method a simple linear regression
+//      becomes suddenly a non-linear case , which takes several iterations
+//      instead of 0 as in the linear case .
+//
+//  2) The effective variance technique assumes that there is correlation 
+//      between the x and y coordinate .
+//
+//    The book by Sigmund Brandt (Data  Analysis) contains an interesting
+//    section how to solve the problem when correclations do exist .
 
    Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
@@ -494,7 +505,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
         //"Effective Variance" method introduced by Anna Kreshuk 
         // in version 4.00/08.
 	
-	eux = (exl + exh)*f1->Derivative(x[0], u);
+	eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
 	
 	//Without the "variance method", we had the 3 next lines instead
         // of the line above.
