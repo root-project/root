@@ -46,7 +46,7 @@ bool Classes() {
 
   
   TNormal m;
-  m.s = new TSocket("localhost","telnet");
+  m.s = new TSocket("localhost","ftp");
   TFile file("sock.root","RECREATE");
   m.s->Write();
   m.Write();
