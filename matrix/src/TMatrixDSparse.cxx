@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.16 2004/09/03 13:41:34 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.17 2005/01/06 06:37:14 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1276,8 +1276,8 @@ TMatrixDSparse &TMatrixDSparse::SetSparseIndexAB(const TMatrixDSparse &a,const T
   const Int_t * const pColIndexa = a.GetColIndexArray();
   const Int_t * const pColIndexb = b.GetColIndexArray();
 
-  Int_t nc = 0; 
-  for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
+  Int_t nc = 0, irowc; 
+  for (irowc = 0; irowc < a.GetNrows(); irowc++) {
     const Int_t sIndexa = pRowIndexa[irowc];
     const Int_t eIndexa = pRowIndexa[irowc+1];
     const Int_t sIndexb = pRowIndexb[irowc];
@@ -1309,7 +1309,7 @@ TMatrixDSparse &TMatrixDSparse::SetSparseIndexAB(const TMatrixDSparse &a,const T
 
   nc = 0;
   pRowIndexc[0] = 0;
-  for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
+  for (irowc = 0; irowc < a.GetNrows(); irowc++) {
     const Int_t sIndexa = pRowIndexa[irowc];
     const Int_t eIndexa = pRowIndexa[irowc+1];
     const Int_t sIndexb = pRowIndexb[irowc];
