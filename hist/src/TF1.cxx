@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.76 2003/11/18 08:01:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.77 2003/11/27 11:45:45 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "TPluginManager.h"
 #include "TVirtualUtilPad.h"
 
+Bool_t TF1::fgAbsValue    = kFALSE;
 Bool_t TF1::fgRejectPoint = kFALSE;
 
 ClassImp(TF1)
@@ -542,6 +543,17 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    SetFillStyle(0);
 
    ((TF1&)f1).Copy(*this);
+}
+
+//______________________________________________________________________________
+void TF1::AbsValue(Bool_t flag)
+{
+   // static function: set the fgAbsValue flag.
+   // By default TF1::Integral uses the original function value to compute the integral
+   // However, TF1::Moment, CentralMoment require to compute the integral
+   // using the absolute value of the function.
+   
+   fgAbsValue = flag;
 }
 
 //______________________________________________________________________________
@@ -1614,18 +1626,22 @@ CASE2:
   for (i=0;i<4;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = TMath::Abs(EvalPar(xx,params));
+     f1    = EvalPar(xx,params);
+     if (fgAbsValue) f1 = TMath::Abs(f1);
      xx[0] = c1-u;
-     f2    = TMath::Abs(EvalPar(xx,params));
+     f2    = EvalPar(xx,params);
+     if (fgAbsValue) f2 = TMath::Abs(f2);
      s8   += w[i]*(f1 + f2);
   }
   s16 = 0;
   for (i=4;i<12;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = TMath::Abs(EvalPar(xx,params));
+     f1    = EvalPar(xx,params);
+     if (fgAbsValue) f1 = TMath::Abs(f1);
      xx[0] = c1-u;
-     f2    = TMath::Abs(EvalPar(xx,params));
+     f2    = EvalPar(xx,params);
+     if (fgAbsValue) f2 = TMath::Abs(f2);
      s16  += w[i]*(f1 + f2);
   }
   s16 = c2*s16;
@@ -1833,14 +1849,18 @@ L20:
    sum3   = 0;
    for (j=0;j<n;j++) {
       z[j]    = ctr[j] - xl2*wth[j];
-      f2      = TMath::Abs(EvalPar(z,fParams));
+      if (fgAbsValue) f2 = TMath::Abs(EvalPar(z,fParams));
+      else            f2 = EvalPar(z,fParams);
       z[j]    = ctr[j] + xl2*wth[j];
-      f2     += TMath::Abs(EvalPar(z,fParams));
+      if (fgAbsValue) f2 += TMath::Abs(EvalPar(z,fParams));
+      else            f2 += EvalPar(z,fParams);
       wthl[j] = xl4*wth[j];
       z[j]    = ctr[j] - wthl[j];
-      f3      = TMath::Abs(EvalPar(z,fParams));
+      if (fgAbsValue) f3 = TMath::Abs(EvalPar(z,fParams));
+      else            f3 = EvalPar(z,fParams);
       z[j]    = ctr[j] + wthl[j];
-      f3     += TMath::Abs(EvalPar(z,fParams));
+      if (fgAbsValue) f3 += TMath::Abs(EvalPar(z,fParams));
+      else            f3 += EvalPar(z,fParams);
       sum2   += f2;
       sum3   += f3;
       dif     = TMath::Abs(7*f2-f3-12*sum1);
@@ -1861,7 +1881,8 @@ L20:
             for (m=0;m<2;m++) {
                wthl[k] = -wthl[k];
                z[k]    = ctr[k] + wthl[k];
-               sum4 += TMath::Abs(EvalPar(z,fParams));
+               if (fgAbsValue) sum4 += TMath::Abs(EvalPar(z,fParams));
+               else            sum4 += EvalPar(z,fParams);
             }
          }
          z[k] = ctr[k];
@@ -1875,7 +1896,8 @@ L20:
       z[j] = ctr[j] + wthl[j];
    }
 L90:
-   sum5 += TMath::Abs(EvalPar(z,fParams));
+   if (fgAbsValue) sum5 += TMath::Abs(EvalPar(z,fParams));
+   else            sum5 += EvalPar(z,fParams);
    for (j=0;j<n;j++) {
       wthl[j] = -wthl[j];
       z[j] = ctr[j] + wthl[j];
@@ -2477,14 +2499,18 @@ Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params,
 // See TF1::Integral() for parameter definitions
 //   Author: Gene Van Buren <gene@bnl.gov>
 
+   fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
+      fgAbsValue = kFALSE;
       Error("Moment", "Integral zero over range");
       return 0;
    }
 
    TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
-   return fnc.Integral(a,b,params,epsilon)/norm;
+   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
+   fgAbsValue = kFALSE;
+   return res;
 }
 
 //______________________________________________________________________________
@@ -2495,8 +2521,10 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
 // See TF1::Integral() for parameter definitions
 //   Author: Gene Van Buren <gene@bnl.gov>
 
+   fgAbsValue = kTRUE;
    Double_t norm = Integral(a,b,params,epsilon);
    if (norm == 0) {
+      fgAbsValue = kFALSE;
       Error("CentralMoment", "Integral zero over range");
       return 0;
    }
@@ -2505,7 +2533,9 @@ Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *
    Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
 
    TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
-   return fnc.Integral(a,b,params,epsilon)/norm;
+   Double_t res = fnc.Integral(a,b,params,epsilon)/norm;
+   fgAbsValue = kFALSE;
+   return res;
 }
 
 //--------------------------------------------------------------------
