@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.9 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.10 2003/11/07 22:47:53 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -217,11 +217,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                                  kLHintsExpandY, 4, 0, 0, 0));
 
    fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
-#ifndef GDK_WIN32
                                       kPointerMotionMask);
-#else
-                                      kButtonMotionMask);
-#endif
 
    //--- first check for the existence of some directories...
 

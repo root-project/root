@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.6 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -185,9 +185,7 @@ void TGToolTip::Show(Int_t x, Int_t y)
 
    Move(x, y);
    MapWindow();
-#ifndef GDK_WIN32
    RaiseWindow();
-#endif
 }
 
 //______________________________________________________________________________

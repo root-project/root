@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.10 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.11 2004/02/18 20:13:42 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -173,11 +173,7 @@ TGColorPalette::TGColorPalette(const TGWindow *p, Int_t cols, Int_t rows, Int_t 
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
-#ifndef GDK_WIN32
                          kPointerMotionMask, kNone, kNone);
-#else
-                         kButtonMotionMask, kNone, kNone);
-#endif
 
    AddInput(kKeyPressMask | kEnterWindowMask | kLeaveWindowMask |
             kFocusChangeMask | kStructureNotifyMask);
