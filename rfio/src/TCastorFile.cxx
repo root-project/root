@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.4 2003/11/28 18:02:21 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.5 2003/11/29 01:47:13 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -137,7 +137,9 @@ void TCastorFile::FindServerAndPath()
          if (stage_out_hsm((u_signed64) 0,          // Ebusy is possible...
                            (int) flags,             // open flags
                            (mode_t) 0666,           // open mode (c.f. also umask)
-                           // Note: This is S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH, c.f. fopen(2)
+                           // Note: This is
+                           //       S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
+                           // (c.f. fopen(2))
                            (char *) 0,              // hostname
                            (char *) 0,              // pooluser
                            (int) 1,                 // nstcp_input
@@ -168,7 +170,8 @@ void TCastorFile::FindServerAndPath()
       rfio_parse(stcp_output->ipath, &realhost, &filename);
       if (realhost == 0) {
          serrno = SEINTERNAL;
-         Error("FindServerAndPath", "can't open %s, get disk server hostname from %s error %d (%s)",
+         Error("FindServerAndPath",
+               "can't open %s, get disk server hostname from %s error %d (%s)",
                fUrl.GetFile(), stcp_output->ipath, errno, sstrerror(serrno));
          free(stcp_output);
          return;
@@ -187,9 +190,27 @@ void TCastorFile::FindServerAndPath()
          fWrittenTo = kTRUE;
       }
    }
+   //
+   // Set the protocol prefix for TNetFile.
+   // For the cern.ch domain we set the default authentication
+   // method to UidGid, i.e. as for rfiod; for this we need
+   // the full FQDN or address in "nnn.mmm.iii.jjj" form
+   // (it can be changed by a proper directive in $HOME/.rootauthrc)
+   TString r;
+   TString fqdn;
+   TInetAddress addr = gSystem->GetHostByName(fDiskServer);
+   if (addr.IsValid()) {
+      fqdn = addr.GetHostName();
+      if (fqdn == "UnNamedHost") 
+         fqdn = addr.GetHostAddress();
+      if (fqdn.EndsWith(".cern.ch") || fqdn.BeginsWith("137.138.")) 
+         r = "rootug://";
+      else
+         r = "root://";
+   } else
+      r = "root://";
 
    // Update fUrl with new path
-   TString r = "root://";
    r += fDiskServer + "/";
    r += fInternalPath;
    TUrl rurl(r);
