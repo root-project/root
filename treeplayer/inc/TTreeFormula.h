@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.10 2001/04/18 06:11:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.11 2001/04/20 21:21:38 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -42,7 +42,8 @@ class TTree;
 class TMethodCall;
 class TLeafObject;
 class TDataMember;
-
+class TStreamerElement;
+class TFormLeafInfo;
 class TTreeFormula : public TFormula {
 
 protected:
@@ -51,6 +52,7 @@ protected:
 
    TTree       *fTree;            //! pointer to Tree
    Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
+   Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
    Int_t       fInstance;         //  Instance number for GetValue
@@ -71,7 +73,9 @@ protected:
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
 
+   void        DefineDimensions(Int_t code, TFormLeafInfo *info,  Int_t& virt_dim);
    void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
+   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
@@ -89,8 +93,6 @@ public:
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword. 
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
-   virtual Double_t   GetValueFromMember(Int_t i, TLeaf *leaf) const;
-   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
    virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
