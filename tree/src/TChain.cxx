@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.36 2002/01/18 11:32:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.37 2002/01/18 15:06:07 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -180,14 +180,10 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 //       is called and entry refers to an entry in the 3rd file, for example,
 //       this forces the Tree headers in the first and second file
 //       to be read to find the number of entries in these files.
-//       Note that if one calls TChain::GetEntries() after having created
-//       a chain with this default, GetEntries will return kBigNumber!
-//       One can force the Tree headers of all the files to be read
-//       by calling TChain::GetEntry(bigentry) with bigentry greater than 
-//       the first entry number of the last file, eg 999999999.
-//       To compute the number of entries in a chain built with this option, do:
-//            chain.GetEntry(999999999);
-//            chain.GetEntries();
+//       Note that if one calls TChain::GetEntriesFast() after having created
+//       a chain with this default, GetEntriesFast will return kBigNumber!
+//       TChain::GetEntries will force of the Tree headers in the chain to be
+//       read to read the number of entries in each Tree.
 
    // case with one single file
    if (strchr(name,'*') == 0) {
@@ -259,14 +255,10 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 //       is called and entry refers to an entry in the 3rd file, for example,
 //       this forces the Tree headers in the first and second file
 //       to be read to find the number of entries in these files.
-//       Note that if one calls TChain::GetEntries() after having created
-//       a chain with this default, GetEntries will return kBigNumber!
-//       One can force the Tree headers of all the files to be read
-//       by calling TChain::GetEntry(bigentry) with bigentry greater than 
-//       the first entry number of the last file, eg kBigNumber-1.
-//       To compute the number of entries in a chain built with this option, do:
-//            chain.GetEntry(kBigNumber-1);
-//            chain.GetEntries();
+//       Note that if one calls TChain::GetEntriesFast() after having created
+//       a chain with this default, GetEntriesFast will return kBigNumber!
+//       TChain::GetEntries will force of the Tree headers in the chain to be
+//       read to read the number of entries in each Tree.
    
    TDirectory *cursav = gDirectory;
    char *treename = (char*)GetName();
@@ -502,6 +494,19 @@ Int_t TChain::GetChainEntryNumber(Int_t entry) const
 // the input parameter entry is the entry number in the current Tree of this chain
 
   return entry + fTreeOffset[fTreeNumber];
+}
+
+//______________________________________________________________________________
+Stat_t TChain::GetEntries() const
+{
+// return the total number of entries in the chain.
+// In case the number of entries in each tree is not yet known,
+// the offset table is computed
+   
+   if (fEntries >= (Stat_t)kBigNumber) {
+      ((TChain*)this)->LoadTree(fEntries-1);
+   }
+   return fEntries;
 }
 
 //______________________________________________________________________________
@@ -837,7 +842,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
    Int_t nFiles = 0;
    Int_t treeNumber = -1;
-   Int_t nentries = Int_t(GetEntries());
+   Int_t nentries = Int_t(GetEntriesFast());
    for (Int_t i=0;i<nentries;i++) {
       if (GetEntry(i) <= 0) break;
       if (treeNumber != fTreeNumber) {

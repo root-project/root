@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.81 2002/01/18 11:35:41 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.82 2002/01/18 14:51:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -433,8 +433,8 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *option, Int_t nent
 
    Int_t entry,entryNumber;
    Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry  = (Int_t)fTree->GetEntries() -1;
+   if (lastentry > fTree->GetEntriesFast()-1) {
+      lastentry  = (Int_t)fTree->GetEntriesFast() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2182,7 +2182,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//    fChain->GetEntry(i);  // read all branches\n");
       fprintf(fpc,"//by  b_branchname->GetEntry(i); //read only this branch\n");
       fprintf(fpc,"   if (fChain == 0) return;\n");
-      fprintf(fpc,"\n   Int_t nentries = Int_t(fChain->GetEntries());\n");
+      fprintf(fpc,"\n   Int_t nentries = Int_t(fChain->GetEntriesFast());\n");
       fprintf(fpc,"\n   Int_t nbytes = 0, nb = 0;\n");
       fprintf(fpc,"   for (Int_t jentry=0; jentry<nentries;jentry++) {\n");
       fprintf(fpc,"      Int_t ientry = LoadTree(jentry); //in case of a TChain, ientry is the entry number in the current file\n");

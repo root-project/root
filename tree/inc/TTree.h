@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.35 2001/11/16 14:45:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.36 2002/01/18 11:29:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -176,6 +176,7 @@ public:
             Int_t     GetDebugMin()  const {return fDebugMin;}
     TDirectory       *GetDirectory() const {return fDirectory;}
     virtual Stat_t    GetEntries() const   {return fEntries;}
+    virtual Stat_t    GetEntriesFast() const   {return fEntries;}
     virtual Stat_t    GetEntriesFriend() const;
     virtual Int_t     GetEstimate() const { return fEstimate; }
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);

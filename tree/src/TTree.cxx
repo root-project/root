@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.107 2002/01/15 07:48:31 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.108 2002/01/18 11:29:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1246,9 +1246,9 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
    sprintf(varexp,"%s+%s*1e-9",majorname,minorname);
 
    Int_t oldEstimate = fEstimate;
-   Int_t n = Int_t(fEntries);
+   Int_t n = (Int_t)GetEntries(); //must use GetEntries instead of fEntries in case of a chain
    if (n <= 0) return;
-
+      
    if (n > fEstimate) SetEstimate(n);
 
    Draw(varexp,"","goff");
