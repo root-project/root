@@ -15,7 +15,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 inherit_C.$(DllSuf): inherit.C buildInherit.C
-	$(CMDECHO) root.exe -q -b -l buildInherit.C > buildInherit.log
 
 inheritTest.log: runInherit.C inherit_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runInherit.C > inheritTest.log 2>&1
@@ -24,7 +23,6 @@ inheritTest: inheritTest.log
 	$(CMDECHO) diff -b inheritTest.log inheritTest.ref
 
 header_h.$(DllSuf): header.h buildHeader.C
-	$(CMDECHO) root.exe -q -b -l buildHeader.C > buildHeader.log
 
 headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runHeader.C > headerTest.log 2>&1
@@ -39,10 +37,8 @@ clonesATest: clonesA.log
 	$(CMDECHO) test ! `(grep exception clonesA.log > /dev/null) && echo $?`
 
 Embedded_load_C.$(DllSuf) : buildEmbedded.C Embedded_load.C Embedded_objects.cpp Embedded_objects.h
-	$(CMDECHO) root.exe -q -b -l buildEmbedded.C > EmbeddedTest.build.log
 
 Embedded.root: Embedded_load_C.$(DllSuf) embwrite.C
-	$(CMDECHO) root.exe -q -b -l embwrite.C > EmbeddedTest.write.log
 
 relations_load_C.$(DllSuf) : relations.h
 
@@ -55,6 +51,12 @@ EmbeddedTest.log: Embedded_load_C.$(DllSuf) Embedded.root embread.C
 
 EmbeddedTest: EmbeddedTest.log
 	$(CMDECHO) diff -b EmbeddedTest.log EmbeddedTest.ref
+
+relations_load_C.$(DllSuf) : relations.h
+
+relations_write_C.$(DllSuf) : relations.h
+
+relations_read_C.$(DllSuf) : relations.h
 
 relationsTest.log: relations_load_C.$(DllSuf)  relations_write_C.$(DllSuf)  relations_read_C.$(DllSuf) 
 	$(CMDECHO)  root.exe -q -b -l relationsRun.C > relationsTest.log
