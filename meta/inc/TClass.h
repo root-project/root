@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.25 2002/06/18 07:00:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.26 2002/11/11 11:27:47 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -65,11 +65,11 @@ private:
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    IsAFunc_t          fIsA;             //pointer to the class's IsA function.
-   ROOT::newFunc_t    fNew;             //pointer to a function newing one object.
-   ROOT::newArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
-   ROOT::delFunc_t    fDelete;          //pointer to a function deleting one object.
-   ROOT::delArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
-   ROOT::desFunc_t    fDestructor;      //pointer to a function call an object's destructor.
+   ROOT::NewFunc_t    fNew;             //pointer to a function newing one object.
+   ROOT::NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
+   ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.
+   ROOT::DelArrFunc_t fDeleteArray;     //pointer to a function deleting an array of objects.
+   ROOT::DesFunc_t    fDestructor;      //pointer to a function call an object's destructor.
    
    Bool_t             fVersionUsed;     //!Indicated whether GetClassVersion has been called
    Long_t             fProperty;        //!Property
@@ -123,9 +123,9 @@ public:
    TDataMember       *GetDataMember(const char *datamember);
    const char        *GetDeclFileName() const { return fDeclFileName; }
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
-   ROOT::delFunc_t    GetDelete() const;
-   ROOT::desFunc_t    GetDestructor() const;
-   ROOT::delArrFunc_t GetDeleteArray() const;
+   ROOT::DelFunc_t    GetDelete() const;
+   ROOT::DesFunc_t    GetDestructor() const;
+   ROOT::DelArrFunc_t GetDeleteArray() const;
    G__ClassInfo      *GetClassInfo() const { return fClassInfo; }
    TList             *GetListOfDataMembers();
    TList             *GetListOfBases();
@@ -151,8 +151,8 @@ public:
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
-   ROOT::newFunc_t    GetNew() const;
-   ROOT::newArrFunc_t GetNewArray() const;
+   ROOT::NewFunc_t    GetNew() const;
+   ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
    ShowMembersFunc_t  GetShowMembersWrapper() { return fShowMembers; }
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo;}
@@ -175,11 +175,11 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
-   void               SetDelete(ROOT::delFunc_t deleteFunc);
-   void               SetDeleteArray(ROOT::delArrFunc_t deleteArrayFunc);
-   void               SetDestructor(ROOT::desFunc_t destructorFunc);
-   void               SetNew(ROOT::newFunc_t newFunc);
-   void               SetNewArray(ROOT::newArrFunc_t newArrayFunc);
+   void               SetDelete(ROOT::DelFunc_t deleteFunc);
+   void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
+   void               SetDestructor(ROOT::DesFunc_t destructorFunc);
+   void               SetNew(ROOT::NewFunc_t newFunc);
+   void               SetNewArray(ROOT::NewArrFunc_t newArrayFunc);
    TStreamerInfo     *SetStreamerInfo(Int_t version, const char *info="");
    void               SetUnloaded();
    void               SetStreamer(const char *name, Streamer_t p);

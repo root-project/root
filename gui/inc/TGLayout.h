@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.2 2000/10/20 12:22:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.3 2001/05/02 00:52:07 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
    TGFrame        *fFrame;
    Int_t           fState;
    TGLayoutHints  *fLayout;
+   ClassDef(TGFrameElement, 0); 
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.108 2002/11/01 19:12:10 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.109 2002/11/11 11:27:47 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -426,18 +426,28 @@ bool CheckClassDef(G__ClassInfo &cl)
    // Detect if the class has a ClassDef
    bool hasClassDef = cl.HasMethod("Class_Version");
 
+   /* 
+      The following could be use to detect whether one of the
+      class' parent class has a ClassDef 
 
    long offset;
    const char *proto = "";
    const char *name = "IsA";
    
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
-   bool needClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
+   */
    
-   if (0) fprintf(stderr,"%d %d %s\n",hasClassDef,needClassDef,cl.Fullname());
-   
+   bool inheritsFromTObject = cl.IsBase("TObject");
+
+   bool result = true;
+   if (inheritsFromTObject && !hasClassDef) {
+      Error(cl.Name(),"%s inherits from TObject but does not have its own ClassDef\n",cl.Name());
+      result = false;
+   }
+
    // This check is disabled for now.
-   return true;
+   return result;
 }
 
 //______________________________________________________________________________
@@ -911,7 +921,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       if (HasCustomOperatorNew(cl)) {
         fprintf(fp, "      return  p ? new(p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
       } else {
-        fprintf(fp, "      return  p ? new((ROOT::operatorNewHelper*)p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
+        fprintf(fp, "      return  p ? new((ROOT::TOperatorNewHelper*)p) ::%s : new ::%s;\n",cl.Fullname(),cl.Fullname());
       }
       fprintf(fp, "   }\n");
       
@@ -3478,8 +3488,7 @@ int main(int argc, char **argv)
          if (!res) {
             // has_input_error = true;
          }
-         res = CheckClassDef(cl);
-         
+         has_input_error |= !CheckClassDef(cl);
       }
    }
 

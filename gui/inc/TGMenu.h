@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.10 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.11 2002/07/13 16:38:06 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -94,6 +94,8 @@ public:
    const char    *GetName() const { return fLabel ? fLabel->GetString() : 0; }
    virtual Int_t  GetStatus() const { return fStatus; }
    EMenuEntryType GetType() const { return fType; }
+
+   ClassDef(TGMenuEntry,0);
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.2 2002/11/01 19:12:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.3 2002/11/11 11:27:47 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -182,57 +182,57 @@ namespace ROOT {
       return fIsA;
    }
 
-   void TGenericClassInfo::SetNew(newFunc_t newFunc) 
+   void TGenericClassInfo::SetNew(NewFunc_t newFunc) 
    {
       fNew = newFunc;
       if (fClass) fClass->SetNew(fNew);
    }
    
-   void TGenericClassInfo::SetNewArray(newArrFunc_t newArrayFunc)
+   void TGenericClassInfo::SetNewArray(NewArrFunc_t newArrayFunc)
    {
       fNewArray = newArrayFunc;
       if (fClass) fClass->SetNewArray(fNewArray);
    }
    
-   void TGenericClassInfo::SetDelete(delFunc_t deleteFunc)
+   void TGenericClassInfo::SetDelete(DelFunc_t deleteFunc)
    {
       fDelete = deleteFunc;
       if (fClass) fClass->SetDelete(fDelete);
    }
    
-   void TGenericClassInfo::SetDeleteArray(delArrFunc_t deleteArrayFunc)
+   void TGenericClassInfo::SetDeleteArray(DelArrFunc_t deleteArrayFunc)
    {
       fDeleteArray = deleteArrayFunc;
       if (fClass) fClass->SetDeleteArray(fDeleteArray);
    }
    
-   void TGenericClassInfo::SetDestructor(desFunc_t destructorFunc)
+   void TGenericClassInfo::SetDestructor(DesFunc_t destructorFunc)
    {
       fDestructor = destructorFunc;
       if (fClass) fClass->SetDestructor(fDestructor);
    }   
 
-   newFunc_t TGenericClassInfo::GetNew() const
+   NewFunc_t TGenericClassInfo::GetNew() const
    {
       return fNew;
    }
  
-   newArrFunc_t TGenericClassInfo::GetNewArray() const 
+   NewArrFunc_t TGenericClassInfo::GetNewArray() const 
    {
       return fNewArray;
    }
 
-   delFunc_t TGenericClassInfo::GetDelete() const
+   DelFunc_t TGenericClassInfo::GetDelete() const
    {
       return fDelete;
    }
 
-   delArrFunc_t TGenericClassInfo::GetDeleteArray() const
+   DelArrFunc_t TGenericClassInfo::GetDeleteArray() const
    {
       return fDeleteArray;
    }
 
-   desFunc_t TGenericClassInfo::GetDestructor() const
+   DesFunc_t TGenericClassInfo::GetDestructor() const
    {
       return fDestructor;
    }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.11 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.12 2002/10/07 10:40:49 rdm Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -96,6 +96,8 @@ public:
    Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
+   
+   ClassDef(TAssoc,0);
 };
 
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.89 2002/11/04 17:22:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.90 2002/11/11 11:27:47 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2031,52 +2031,52 @@ void TClass::Streamer(void *object, TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TClass::SetNew(ROOT::newFunc_t newFunc) 
+void TClass::SetNew(ROOT::NewFunc_t newFunc) 
 {
    fNew = newFunc;
 }
    
-void TClass::SetNewArray(ROOT::newArrFunc_t newArrayFunc)
+void TClass::SetNewArray(ROOT::NewArrFunc_t newArrayFunc)
 {
    fNewArray = newArrayFunc;
 }
    
-void TClass::SetDelete(ROOT::delFunc_t deleteFunc)
+void TClass::SetDelete(ROOT::DelFunc_t deleteFunc)
 {
    fDelete = deleteFunc;
 }
    
-void TClass::SetDeleteArray(ROOT::delArrFunc_t deleteArrayFunc)
+void TClass::SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc)
 {
    fDeleteArray = deleteArrayFunc;
 }
    
-void TClass::SetDestructor(ROOT::desFunc_t destructorFunc)
+void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 {
    fDestructor = destructorFunc;
 }
    
-ROOT::newFunc_t TClass::GetNew() const
+ROOT::NewFunc_t TClass::GetNew() const
 {
    return fNew;
 }
  
-ROOT::newArrFunc_t TClass::GetNewArray() const 
+ROOT::NewArrFunc_t TClass::GetNewArray() const 
 {
    return fNewArray;
 }
 
-ROOT::delFunc_t TClass::GetDelete() const
+ROOT::DelFunc_t TClass::GetDelete() const
 {
    return fDelete;
 }
 
-ROOT::delArrFunc_t TClass::GetDeleteArray() const
+ROOT::DelArrFunc_t TClass::GetDeleteArray() const
 {
    return fDeleteArray;
 }
 
-ROOT::desFunc_t TClass::GetDestructor() const
+ROOT::DesFunc_t TClass::GetDestructor() const
 {
    return fDestructor;
 }
