@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.2 2002/02/06 15:55:31 giraudpf Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.3 2002/02/07 17:06:13 giraudpf Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -31,8 +31,10 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
   _nEvents(0),
   _dataPts(0),
   _weights(0),
-  _mirrorLeft( mirror==MirrorLeft || mirror==MirrorBoth ),
-  _mirrorRight( mirror==MirrorRight || mirror==MirrorBoth ),
+  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
+  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
+  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
+  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
   _rho(rho)
 {
   // cache stuff about x
@@ -50,6 +52,7 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   RooAbsPdf(other,name), _x("x",this,other._x), _nEvents(other._nEvents),
   _dataPts(0), _weights(0),
   _mirrorLeft( other._mirrorLeft ), _mirrorRight( other._mirrorRight ),
+  _asymLeft(other._asymLeft), _asymRight(other._asymRight),
   _rho( other._rho ) {
 
   // cache stuff about x
@@ -154,9 +157,17 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
       chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
       y+=exp(-0.5*chi*chi)/_weights[i];
     }
+    if (_asymLeft) {
+      chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
+      y-=exp(-0.5*chi*chi)/_weights[i];
+    }
     if (_mirrorRight) {
       chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
       y+=exp(-0.5*chi*chi)/_weights[i];
+    }
+    if (_asymRight) {
+      chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
+      y-=exp(-0.5*chi*chi)/_weights[i];
     }
   }
   
