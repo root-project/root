@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.24 2003/01/17 17:48:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.25 2003/08/25 17:31:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -82,6 +82,7 @@ public:
     virtual Double_t *GetV1() const   {return fSelector->GetV1();}
     virtual Double_t *GetV2() const   {return fSelector->GetV2();}
     virtual Double_t *GetV3() const   {return fSelector->GetV3();}
+    virtual Double_t *GetV4() const   {return fSelector->GetV4();}
     virtual Double_t *GetW() const    {return fSelector->GetW();}
     virtual Int_t     MakeClass(const char *classname, Option_t *option);
     virtual Int_t     MakeCode(const char *filename);

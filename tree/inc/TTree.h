@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.50 2003/07/27 15:39:10 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.51 2003/08/14 04:44:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -233,6 +233,7 @@ public:
     virtual Double_t *GetV1()   {return GetPlayer()->GetV1();}
     virtual Double_t *GetV2()   {return GetPlayer()->GetV2();}
     virtual Double_t *GetV3()   {return GetPlayer()->GetV3();}
+    virtual Double_t *GetV4()   {return GetPlayer()->GetV4();}
     virtual Double_t *GetW()    {return GetPlayer()->GetW();}
     virtual Double_t  GetWeight() const   {return fWeight;}
     virtual Stat_t    GetZipBytes() const {return fZipBytes;}

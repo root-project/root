@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.6 2003/06/10 19:07:03 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.h,v 1.7 2003/07/22 21:15:30 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -59,10 +59,12 @@ protected:
     Double_t      *fV1;             //[fSelectedRows]Local buffer for variable 1
     Double_t      *fV2;             //[fSelectedRows]Local buffer for variable 2
     Double_t      *fV3;             //[fSelectedRows]Local buffer for variable 3
+    Double_t      *fV4;             //[fSelectedRows]Local buffer for variable 4
     Double_t      *fW;              //[fSelectedRows]Local buffer for weights
     Bool_t         fVar1Multiple;   //  true if var1 has a variable index
     Bool_t         fVar2Multiple;   //  true if var2 has a variable index
     Bool_t         fVar3Multiple;   //  true if var3 has a variable index
+    Bool_t         fVar4Multiple;   //  true if var4 has a variable index
     Bool_t         fSelectMultiple; //  true if selection has a variable index
     Bool_t         fCleanElist;     //  true if original Tree elist must be saved
     Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
@@ -94,6 +96,7 @@ public:
     virtual Double_t *GetV1() const   {return fV1;}
     virtual Double_t *GetV2() const   {return fV2;}
     virtual Double_t *GetV3() const   {return fV3;}
+    virtual Double_t *GetV4() const   {return fV4;}
     virtual Double_t *GetW() const    {return fW;}
     virtual void      MakeIndex(TString &varexp, Int_t *index);
     virtual Bool_t    Notify();

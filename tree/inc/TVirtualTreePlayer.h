@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.16 2003/01/15 18:43:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.17 2003/01/17 17:48:56 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
     virtual Double_t      *GetV1() const = 0;
     virtual Double_t      *GetV2() const = 0;
     virtual Double_t      *GetV3() const = 0; 
+    virtual Double_t      *GetV4() const = 0; 
     virtual Double_t      *GetW() const = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;

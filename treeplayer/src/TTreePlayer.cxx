@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.136 2003/09/23 14:51:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.137 2003/09/23 17:20:06 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -768,7 +768,19 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
             if (fSelector->GetOldHistogram() && draw) fHistogram->Draw(option);
          }
       }
-
+   //*-*- 4-D distribution
+   } else if (fDimension == 4) {
+      if (fSelector->GetVar1()->IsInteger()) fHistogram->LabelsDeflate("Z");
+      if (fSelector->GetVar2()->IsInteger()) fHistogram->LabelsDeflate("Y");
+      if (fSelector->GetVar3()->IsInteger()) fHistogram->LabelsDeflate("X");
+      if (draw) fHistogram->Draw(option);
+      Int_t ncolors  = gStyle->GetNumberOfColors();
+      TObjArray *pms = (TObjArray*)fHistogram->GetListOfFunctions()->FindObject("polymarkers");
+      for (Int_t col=0;col<ncolors;col++) {
+         if (!pms) continue;
+         TPolyMarker3D *pm3d = (TPolyMarker3D*)pms->UncheckedAt(col);
+         pm3d->Draw();
+      }
    }
 
    return fSelectedRows;
