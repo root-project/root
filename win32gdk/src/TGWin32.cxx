@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.85 2004/08/24 12:06:19 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.86 2004/08/26 17:05:23 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -49,7 +49,6 @@
 #include "TGWin32InterpreterProxy.h"
 #include "TWin32SplashThread.h"
 
-
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
 				      GdkGC          *gc,
@@ -96,6 +95,9 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 /////////////////////////////////// globals //////////////////////////////////
 int gdk_debug_level;
+
+//void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos) = 0;
+//unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h) = 0;
 
 GdkAtom gClipboardAtom = GDK_NONE;
 static XWindow_t *gCws;         // gCws: pointer to the current window
@@ -980,6 +982,8 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
       gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
       gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
+   gDrawDIB  = &(TGWin32::DrawDIB);
+   gGetBmBits  = &(TGWin32::GetBmBits);
    TGWin32SetConsoleWindowName();
 }
 
@@ -6996,3 +7000,89 @@ void TGWin32::DeleteImage(Drawable_t img)
 
    gdk_image_unref((GdkImage *)img);
 }
+
+//______________________________________________________________________________
+void TGWin32::DrawDIB(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos)
+{
+   // Draws DIB bitmap (added for libAfterImage on Win32)
+   // bmi        - pointer on bitmap info structure
+   // bmbits     - pointer on bitmap bits array
+   // xpos, ypos - position of bitmap
+
+   HDC hdc;
+   int saved_hdc;
+   BITMAPINFO *lpbmi = (BITMAPINFO *)bmi;
+   HWND hwnd = (HWND) GDK_DRAWABLE_XID(gCws->drawing);
+   if (GDK_DRAWABLE_TYPE(gCws->drawing) == GDK_DRAWABLE_PIXMAP) {
+      hdc = ::CreateCompatibleDC(NULL);
+      saved_hdc = ::SaveDC(hdc);
+      ::SelectObject(hdc, hwnd);
+   }
+   else {
+      hdc = ::GetDC(hwnd);
+      saved_hdc = ::SaveDC(hdc);
+   }
+   ::StretchDIBits( hdc, xpos, ypos, lpbmi->bmiHeader.biWidth, lpbmi->bmiHeader.biHeight, 
+                  0, 0, lpbmi->bmiHeader.biWidth, lpbmi->bmiHeader.biHeight,  
+                  (void *)bmbits, lpbmi, DIB_RGB_COLORS, SRCCOPY );
+   ::RestoreDC(hdc, saved_hdc);
+   if (GDK_DRAWABLE_TYPE(gCws->drawing) == GDK_DRAWABLE_PIXMAP) {
+      ::DeleteDC(hdc);
+   } else {
+      ::ReleaseDC(hwnd, hdc);
+   }
+}
+
+//______________________________________________________________________________
+unsigned char *TGWin32::GetBmBits(Drawable_t wid, Int_t width, Int_t height)
+{
+   // Gets DIB bits (added for libAfterImage on Win32)
+   // width, height - position of bitmap
+   // returns a pointer on bitmap bits array
+   
+   HDC hdc, memdc;
+   BITMAPINFO bmi;
+   HGDIOBJ oldbitmap1, oldbitmap2;
+   BITMAP bm;
+   HBITMAP ximage;
+   VOID  *bmbits;
+
+   if (GDK_DRAWABLE_TYPE(wid) == GDK_DRAWABLE_PIXMAP) {
+      hdc = ::CreateCompatibleDC(NULL);
+      oldbitmap1 = ::SelectObject(hdc, GDK_DRAWABLE_XID(wid));
+      ::GetObject(GDK_DRAWABLE_XID(wid), sizeof(BITMAP), &bm);
+   } else {
+      hdc = ::GetDC((HWND)GDK_DRAWABLE_XID(wid));
+   }
+
+   memdc = ::CreateCompatibleDC(hdc);
+
+   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   bmi.bmiHeader.biWidth = width;
+   bmi.bmiHeader.biHeight = -height;
+   bmi.bmiHeader.biPlanes = 1;
+   bmi.bmiHeader.biBitCount = 32;
+   bmi.bmiHeader.biCompression = BI_RGB;
+   bmi.bmiHeader.biSizeImage = 0;
+   bmi.bmiHeader.biXPelsPerMeter = bmi.bmiHeader.biYPelsPerMeter = 0;
+   bmi.bmiHeader.biClrUsed = 0;
+   bmi.bmiHeader.biClrImportant = 0;
+
+   ximage = ::CreateDIBSection(hdc, (BITMAPINFO *) & bmi, DIB_RGB_COLORS, &bmbits, NULL, 0);
+
+   oldbitmap2 = ::SelectObject(memdc, ximage);
+
+   ::BitBlt(memdc, 0, 0, width, height, hdc, 0, 0, SRCCOPY);
+   ::SelectObject(memdc, oldbitmap2);
+   ::DeleteDC(memdc);
+   if (GDK_DRAWABLE_TYPE(wid) == GDK_DRAWABLE_PIXMAP) {
+      ::SelectObject(hdc, oldbitmap1);
+      ::DeleteDC(hdc);
+   } else {
+      ::ReleaseDC((HWND)GDK_DRAWABLE_XID(wid), hdc);
+   }
+   return (unsigned char *)bmbits;
+}
+
+
+

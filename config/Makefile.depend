@@ -15,6 +15,9 @@ G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
 WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
 WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS) Glu32.lib \
                       Opengl32.lib
+ASIMAGELIBDEP       = $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(GUILIB)
+ASIMAGELIBEXTRA     = lib/libGraf.lib lib/libHist.lib lib/libGpad.lib \
+                      lib/libGui.lib
 GEDLIBDEP           = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(GUILIB) $(TREELIB) \
                       $(TREEPLAYERLIB)
 GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.2 2003/07/05 17:47:33 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.3 2003/07/08 16:39:44 rdm Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -31,9 +31,20 @@
 #include "TFile.h"
 #include "TLine.h"
 
+#ifdef WIN32
+#include "Windows4root.h"
+#endif
+
 extern "C" {
+#ifndef WIN32
 #   include <afterbase.h>
 #   include <afterimage.h>
+#else
+#   include <win32/config.h>
+#   include <win32/afterbase.h>
+#   include <afterimage.h>
+#   include <bmp.h>
+#endif
 }
 
 
@@ -881,6 +892,11 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
    // Actually paint the paletter.
 
+#ifdef WIN32
+   void *bmbits = NULL ;
+   BITMAPINFO *bmi = NULL ;
+#endif
+
    // get geometry of pad
    Int_t to_w = TMath::Abs(gPad->XtoPixel(gPad->GetX2()) -
                            gPad->XtoPixel(gPad->GetX1()));
@@ -908,6 +924,7 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
    delete [] grad.color;
    delete [] grad.offset;
 
+#ifndef WIN32
    Display *dpy = (Display*)gVirtualX->GetDisplay();
    Pixmap pxmap = asimage2pixmap((ASVisual*)TASImage::GetVisual(), DefaultRootWindow(dpy),
                                  grad_im, 0, kTRUE);
@@ -916,6 +933,16 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
    gVirtualX->CopyPixmap(wid, 0, 0);
    gVirtualX->RemoveWindow(wid);
    gVirtualX->DeletePixmap(pxmap);
+#else
+   bmi = ASImage2DBI((ASVisual*)TASImage::GetVisual(), grad_im, 0, 0,
+                     grad_im->width, grad_im->height, &bmbits );
+   gPad->cd();
+   if(gDrawDIB != 0) {
+	   gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, 0, 0);
+      free(bmbits);
+      free(bmi);
+   }
+#endif
    destroy_asimage(&grad_im);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.8 2004/10/18 12:47:28 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.9 2004/10/19 17:13:27 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -46,13 +46,23 @@
 #include "TASPaletteEditor.h"
 #include "TGPicture.h"
 
-#include <X11/Xlib.h>
+#ifndef WIN32
+#   include <X11/Xlib.h>
+#else
+#   include "Windows4root.h"
+#endif
 extern "C" {
+#ifndef WIN32
 #   include <afterbase.h>
 #   include <afterimage.h>
+#else
+#   include <win32/config.h>
+#   include <win32/afterbase.h>
+#   include <afterimage.h>
+#   include <bmp.h>
+#endif
     extern Display *dpy;    // defined in afterbase.c
 }
-
 
 
 ASVisual *TASImage::fgVisual;
@@ -599,7 +609,12 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
                                          : pad->GetPixmapID();
    Window wd = (Window) gVirtualX->GetWindowID(wid);
 
+#ifndef WIN32
    fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, AllPlanes, 0, 0);
+#else
+   unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(wd, w, h) : 0;
+   fImage = bitmap2asimage (bits, w, h, 0);
+#endif
 }
 
 //______________________________________________________________________________
@@ -654,6 +669,11 @@ void TASImage::Draw(Option_t *option)
 void TASImage::Paint(Option_t *option)
 {
    // Paint image in current pad. See Draw() function for drawing options.
+
+#ifdef WIN32
+   void *bmbits = NULL ;
+   BITMAPINFO *bmi = NULL ;
+#endif
 
    if (!fImage) {
       Error("Paint", "no image set");
@@ -789,7 +809,7 @@ void TASImage::Paint(Option_t *option)
       Error("Paint", "image could not be rendered to display");
       return;
    }
-
+#ifndef WIN32
    Pixmap pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                                  image, 0, kTRUE);
    Int_t wid = gVirtualX->AddWindow(pxmap, to_w, to_h);
@@ -798,10 +818,22 @@ void TASImage::Paint(Option_t *option)
                                (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
    gVirtualX->RemoveWindow(wid);
    gVirtualX->DeletePixmap(pxmap);
-
+#else
+   // Convert ASImage into DIB: 
+   bmi = ASImage2DBI( fgVisual, image, 0, 0, image->width, image->height, &bmbits );
+   gPad->cd();
+   if(gDrawDIB != 0) {
+      gDrawDIB((ULong_t)bmi, (ULong_t)bmbits,
+          (int)(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5),  
+          (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
+      free(bmbits);
+      free(bmi);
+   }
+#endif
    gPad->cd();
 
    if (grad_im) {
+#ifndef WIN32
       // draw color bar
       pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                              grad_im, 0, kTRUE);
@@ -811,7 +843,16 @@ void TASImage::Paint(Option_t *option)
       gVirtualX->CopyPixmap(wid, pal_x, pal_y);
       gVirtualX->RemoveWindow(wid);
       gVirtualX->DeletePixmap(pxmap);
-
+#else
+      // Convert ASImage into DIB: 
+      bmi = ASImage2DBI( fgVisual, grad_im, 0, 0, grad_im->width, grad_im->height, &bmbits );
+      gPad->cd();
+      if(gDrawDIB != 0) {
+         gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, pal_x, pal_y);
+         free(bmbits);
+         free(bmi);
+      }
+#endif
       gPad->cd();
 
       // values of palette
@@ -1321,8 +1362,12 @@ Bool_t TASImage::InitVisual()
    Int_t depth   = gVirtualX->GetDepth();
    Visual *vis   = (Visual*) gVirtualX->GetVisual();
    Colormap cmap = (Colormap) gVirtualX->GetColormap();
+#ifndef WIN32
    fgVisual = create_asvisual_for_id(dpy, screen, depth,
                                      XVisualIDFromVisual(vis), cmap, 0);
+#else
+   fgVisual = create_asvisual( NULL, 0, 0, NULL );
+#endif
    return kTRUE;
 }
 
@@ -1384,7 +1429,12 @@ void TASImage::SetImage(Pixmap_t pxm)
    UInt_t w, h;
 
    gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
+#ifndef WIN32
    fImage = pixmap2asimage(fgVisual, pxm, 0, 0, w, h, AllPlanes, 0, 0);
+#else
+   unsigned char *bits = (gGetBmBits != 0) ? gGetBmBits(pxm, w, h) : 0;
+   fImage = bitmap2asimage (bits, w, h, 0);
+#endif
 }
 
 //______________________________________________________________________________
@@ -1397,3 +1447,4 @@ void TASImage::SetImage(const TGPicture *pic)
    SetImage(pic->GetPicture()); 
    SetName(pic->GetName());
 }
+

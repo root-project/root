@@ -55,7 +55,7 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32)
-MODULES      += winnt win32gdk gl
+MODULES      += winnt win32gdk gl asimage
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)

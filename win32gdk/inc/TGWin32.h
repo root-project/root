@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.23 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.24 2004/08/09 15:35:52 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -376,11 +376,13 @@ public:
    void         DeleteImage(Drawable_t img);
    Bool_t       IsCmdThread() const;
 
+   static void         DrawDIB(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos);
+   static unsigned char *GetBmBits(Drawable_t wid, Int_t w, Int_t h);
+
    static void Lock();
    static void Unlock();
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };
-
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.9 2004/07/27 23:02:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.cxx,v 1.10 2004/08/09 15:35:51 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -31,6 +31,9 @@ Atom_t    gROOT_MESSAGE;
 
 TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
 TVirtualX*   (*gPtr2VirtualX)() = 0; // returns pointer to global object
+
+void (*gDrawDIB)(ULong_t bmi, ULong_t bmbits, Int_t xpos, Int_t ypos) = 0;
+unsigned char *(*gGetBmBits)(Drawable_t wid, Int_t w, Int_t h) = 0;
 
 ClassImp(TVirtualX)
 

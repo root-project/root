@@ -16,8 +16,13 @@ ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
 ASTEPDIRI    := $(MODDIRS)/$(ASTEPVERS)
 
 ##### libAfterImage #####
+ifeq ($(PLATFORM),win32)
+ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.lib
+ASTEPLIB     := $(LPATH)/libAfterImage.lib
+else
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
+endif
 
 ##### libASImage #####
 ASIMAGEL     := $(MODDIRI)/LinkDef.h
@@ -51,6 +56,20 @@ $(ASTEPLIB):    $(ASTEPLIBA)
 		fi)
 
 $(ASTEPLIBA):   $(ASTEPDIRS).tar.gz
+ifeq ($(PLATFORM),win32)
+		@(if [ -d $(ASTEPDIRS) ]; then \
+			rm -rf $(ASTEPDIRS); \
+		fi; \
+		echo "*** Building $@..."; \
+		cd $(ASIMAGEDIRS); \
+		if [ ! -d $(ASTEPVERS) ]; then \
+			gunzip -c $(ASTEPVERS).tar.gz | tar xf -; \
+		fi; \
+		cd $(ASTEPVERS); \
+		unset MAKEFLAGS; \
+		nmake -nologo -f libAfterImage.mak \
+		CFG="libAfterImage - Win32 Release")
+else
 		@(if [ -d $(ASTEPDIRS) ]; then \
 			rm -rf $(ASTEPDIRS); \
 		fi; \
@@ -74,19 +93,27 @@ $(ASTEPLIBA):   $(ASTEPDIRS).tar.gz
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
-		--with-ttf=no --with-gif=no --with-afterbase=no \
+		--with-ttf=NO --with-builtin-ungif=no --with-afterbase=no \
 		--with-jpeg-includes=$(ASJPEGINCDIR) \
 		--with-png-includes=$(ASPNGINCDIR) \
 		--with-tiff-includes=$(ASTIFFINCDIR) \
 		--with-gif-includes=$(ASGIFINCDIR); \
 		$(MAKE))
+endif
 
 $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(MAINLIBS) \
                 $(ASIMAGELIBDEP)
+ifeq ($(PLATFORM),win32)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
+		   "$(ASIMAGEO) $(ASIMAGEDO)" \
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB)"
+else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
 		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
+endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
