@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.32 2002/06/16 01:21:25 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.33 2002/07/31 20:04:39 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -58,10 +58,6 @@
 #include <fcntl.h>
 
 const char *kProtocolName   = "tcp";
-
-HANDLE hThread2;
-unsigned thread2ID;
-extern void CreateSplash(DWORD time);
 
 // for testing purpose only !!!
 #ifdef GDK_WIN32
@@ -249,8 +245,6 @@ TWinNTSystem::~TWinNTSystem()
    if (hThread1) CloseHandle(hThread1);
 #endif
 
-   if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
-
    CloseHandle(fhTermInputEvent);
 }
 
@@ -268,16 +262,6 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
     return 0;
 }
 #endif
-
-//______________________________________________________________________________
-unsigned __stdcall HandleSplashThread(void *pArg )
-{
-   // Thread for handling Splash Screen.
-
-    CreateSplash(6);
-    _endthreadex( 0 );
-    return 0;
-}
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -339,9 +323,6 @@ Bool_t TWinNTSystem::Init()
     hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
         &thread1ID );
 #endif
-
-    // Create Thread for Non-Blocking Splash Screen
-    hThread2 = (HANDLE)_beginthreadex( NULL, 0, &HandleSplashThread, 0, 0, &thread2ID );
 
     return kFALSE;
 }
