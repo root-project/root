@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.47 2003/11/20 15:03:44 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.48 2003/12/30 13:16:50 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2856,7 +2856,8 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
    while (*t == ' ')
       t++;
 
-   TClass *cl = gROOT->GetClass(t, load);
+   TClass *cl = 0;
+   if (!strstr(t,"::")) cl = gROOT->GetClass(t, load);
    delete [] name;
    return (cl && cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ? cl : 0);
 }
@@ -3124,7 +3125,8 @@ void THtml::MakeIndex(const char *filter)
 
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
-      
+      if (!classPtr) continue;
+            
       const char *impname=0;
       if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
          impname = classPtr->GetImplFileName();
