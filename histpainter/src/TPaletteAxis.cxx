@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.3 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.4 2003/01/06 08:14:20 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -193,7 +193,7 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wmax = fH->GetMaximum();
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
-   Double_t y1,y2;
+   Double_t y1,y2,w1,w2,zc;
    //if (Hoption.Logz) {
    if (gPad->GetLogz()) {
       wlmin = TMath::Log10(wmin);
@@ -205,14 +205,31 @@ void TPaletteAxis::Paint(Option_t *)
    Int_t theColor,color;
    Double_t scale = ndivz/(wlmax - wlmin);
    for (Int_t i=0;i<ndivz;i++) {
-      Double_t w1 = fH->GetContourLevel(i);
+
+      zc = fH->GetContourLevel(i);
+      if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+         zc = TMath::Log10(zc);
+      w1 = zc;
       if (w1 < wlmin) w1 = wlmin;
-      Double_t w2 = wlmax;
-      if (i < ndivz-1) w2 = fH->GetContourLevel(i+1);
+
+      w2 = wlmax;
+      if (i < ndivz-1) {
+         zc = fH->GetContourLevel(i+1);
+         if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+            zc = TMath::Log10(zc);
+         w2 = zc;
+      }
+
       if (w2 <= wlmin) continue;
       y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
       y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
-      color = Int_t(0.01+(w1-wlmin)*scale);
+
+      if (fH->TestBit(TH1::kUserContour)) {
+         color = i;
+      } else {
+         color = Int_t(0.01+(w1-wlmin)*scale);
+      }
+
       theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
