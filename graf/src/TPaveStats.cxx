@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.16 2003/04/04 16:47:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.17 2003/06/06 16:42:58 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -16,6 +16,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TPaveStats.h"
+#include "TPaveLabel.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TFile.h"
@@ -156,6 +157,7 @@ void TPaveStats::Paint(Option_t *option)
 
    if (!fLines) return;
    Double_t dx = fX2 - fX1;
+   Double_t dy = fY2 - fY1;
    Double_t titlesize=0;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
@@ -295,6 +297,22 @@ void TPaveStats::Paint(Option_t *option)
       }
    }
    SetTextSize(textsave);
+
+   // if a label create & paint a pavetext title
+   if (fLabel.Length() > 0) {
+      Double_t x1,x2;
+	  dy = gPad->GetY2() - gPad->GetY1();
+      x1 = fX1 + 0.25*dx;
+      x2 = fX2 - 0.25*dx;
+      y1 = fY2 - 0.02*dy;
+      y2 = fY2 + 0.02*dy;
+      TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      title->SetFillColor(GetFillColor());
+      title->SetTextColor(GetTextColor());
+      title->SetTextFont(GetTextFont());
+      title->Paint();
+      delete title;
+   }
 }
 
 //______________________________________________________________________________
