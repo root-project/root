@@ -16,10 +16,10 @@ stringPassingTest: passingcint.out passing.out
 		  $(CMDECHO)diff passing.out passing.ref
 
 passingcint.out : t01.C runcint.C
-		  $(CMDECHO)root.exe -q -b -l runcint.C > passingcint.out
+		  $(CMDECHO)root.exe -q -b -l runcint.C > passingcint.out 2>> build.log
 
 passing.out : t01.C run.C
-		  $(CMDECHO)root.exe -q -b -l run.C > passing.out
+		  $(CMDECHO)root.exe -q -b -l run.C > passing.out 2>>build.log
 
 testWithFailure:
 ifeq ($(FAIL),)

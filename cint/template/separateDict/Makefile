@@ -31,26 +31,26 @@ all: sepDictLibs
 
 
 libmaster.so: MyClass.o MasterDict.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
 libslave1.so:  Slave1Dict.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
 libslave2.so:  Slave2Dict.o
-	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
+	$(CMDECHO)$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@
 
 MasterDict.C: MyClass.hh MasterLinkDef.hh
 Slave1Dict.C: MyClass.hh Slave1LinkDef.hh
 Slave2Dict.C: MyClass.hh Slave2LinkDef.hh
 
 %Dict.C:
-	rootcint -f $@ -c $^ 
+	$(CMDECHO)rootcint -f $@ -c $^ 
 
 %Dict.o: %Dict.C	
-	$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@ >& $@_build.log
 
 %.o: %.C	
-	$(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@
+	$(CMDECHO)$(CXX) $(CXXFLAGS) -I. $(ROOTCFLAGS) -c $< -o $@ >& $@_build.log
 
 clean_sepdict:
-	rm -f *.o *.so *Dict*
+	$(CMDECHO)rm -f *.o *.so *Dict*

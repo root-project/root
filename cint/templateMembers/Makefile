@@ -23,35 +23,36 @@ ifeq ($(FAIL),)
 endif
 
 templateConstructorTest.log : constructor_C.$(DllSuf) runConstructor.C
-	$(CMDECHO) root.exe -b -l -q runConstructor.C > templateConstructorTest.log 2>&1
+	$(CMDECHO) root.exe -b -l -q runConstructor.C > templateConstructorTest.log 2>> templateConstructorTest.build.log
 
 templateConstructorTest: templateConstructorTest.log
-	$(CMDECHO) diff -b templateConstructorTest.log templateConstructorTest.ref
+	$(CMDECHO) diff -wb templateConstructorTest.log templateConstructorTest.ref
 
 opdict.cxx: operator.C linkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ -c $^ >& opdict.build.log
 
 operatorTest: opdict.$(ObjSuf)
 
 
 
 templateMembersDict.cxx: templateMembersClasses.h templateMembersLinkdef.h
-	$(CMDECHO) rootcint -v4 -f templateMembersDict.cxx -c templateMembersClasses.h templateMembersLinkdef.h
+	$(CMDECHO) rootcint -v4 -f templateMembersDict.cxx -c templateMembersClasses.h templateMembersLinkdef.h 2>>templateMembers.build.log
 
 templateMembers_C.$(DllSuf): templateMembersDict.cxx
 
+
 templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v Processing > templateMembers.log
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(0)" | grep -v Processing > templateMembers.log 2>>templateMembers.build.log
 
 templateMembers: templateMembers.log  templateMembers.ref
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-	@echo This failures is due to the odd object life time in CINT.
-	$(CMDECHO) diff -b templateMembers.ref templateMembers.log | grep -v ::~ > templateMembers.diff.log && \
-		diff templateMembers.diff.log templateMembers.diff.ref
+	$(CMDECHO)echo This failures is due to the odd object life time in CINT.
+	$(CMDECHO) diff -wb templateMembers.ref templateMembers.log | grep -v ::~ > templateMembers.diff.log && \
+		diff -w templateMembers.diff.log templateMembers.diff.ref
 else
 	$(TestDiff)
 endif
 
 templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templateMembersCode_C.$(DllSuf)
-	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v Processing > templateMembers.ref
+	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v Processing > templateMembers.ref 2>> templateMembers.build.log

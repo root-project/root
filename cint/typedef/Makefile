@@ -15,7 +15,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 typedefAndScope.log: testclass.h
-	$(CMDECHO) root.exe -q -b -l testclass.h+ > typedefAndScope.log
+	$(CMDECHO) root.exe -q -b -l testclass.h+ > typedefAndScope.log 2> typedefAndScope.build.log
 
 typedefAndScope: typedefAndScope.log
 	$(CMDECHO) diff -b typedefAndScope.log typedefAndScope.ref

@@ -19,7 +19,7 @@ sepDictLibs: run.output
 
 run.output: libmaster.so libslave1.so libslave2.so
 	$(CMDECHO) rm -f run.output
-	@root.exe -q -l -b run.C 2>&1 | grep -v tagnum >| run.output
+	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum >| run.output
 
 all: sepDictLibs
 
@@ -44,7 +44,7 @@ Slave1Dict.C: Slave1.hh Master.hh Slave1LinkDef.hh
 Slave2Dict.C: Master.hh Slave2.hh Slave2LinkDef.hh
 
 %Dict.C:
-	rootcint -f $@ -c $^ 
+	$(CMDECHO)rootcint -f $@ -c $^ 
 
 %Dict.o: %Dict.C	
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@

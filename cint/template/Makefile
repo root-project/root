@@ -1,3 +1,9 @@
+#Set the list of files to be delete by clean:
+CLEAN_TARGETS += *.log *.root $(ALL_LIBRARIES)
+
+#Set the list of target to make while testing
+TEST_TARGETS += operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
+
 SHELL = /bin/bash
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -8,36 +14,35 @@ SUBDIRS = $(shell $(ROOTTEST_HOME)scripts/subdirectories .)
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-test: operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
-	true;
+
 
 typenameTest:
-	rootcint -f typenameTestDict.C -c -D__CINT2__ typenameTest.C linkdef.h 
+	$(CMDECHO)rootcint -f typenameTestDict.C -c -D__CINT2__ typenameTest.C linkdef.h 
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 else
-	rootcint -f typenameTestDict.C -c typenameTest.C linkdef.h 
+	$(CMDECHO)rootcint -f typenameTestDict.C -c typenameTest.C linkdef.h 
 endif
 
 operator1:
-	@rm  -f operator1.cint.out operator1.comp.out
-	@(echo '.x smalltest.C' | root.exe -l -b ) > operator1.cint.out 2>&1
-	@(echo '.x smalltest.C++' | root.exe -l -b ) > operator1.comp.out 2>&1
+	$(CMDECHO)rm  -f operator1.cint.out operator1.comp.out
+	$(CMDECHO)(echo '.x smalltest.C' | root.exe -l -b ) > operator1.cint.out 2>&1
+	$(CMDECHO)(echo '.x smalltest.C++' | root.exe -l -b ) > operator1.comp.out 2>&1
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 else
-	@cat operator1.comp.out | grep -v 'not declared' |grep -v 'Info in <ACLiC>:' | diff - operator1.cint.out
+	$(CMDECHO)cat operator1.comp.out | grep -v 'not declared' |grep -v 'Info in <ACLiC>:' | diff - operator1.cint.out
 endif
 
 
 simpleSeparateDict:
-	rootcint -f masterDict.C -c master.h masterLinkDef.h
-	rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
+	$(CMDECHO)rootcint -f masterDict.C -c master.h masterLinkDef.h
+	$(CMDECHO)rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
 
 forwardDecl: forwardDict.C
 
 forwardDict.C: forward.C 
-	rootcint -f forwardDict.C -c forward.C linkdef.h
+	$(CMDECHO)rootcint -f forwardDict.C -c forward.C linkdef.h
 
 
 constructorDict.C: constructor.hh 
