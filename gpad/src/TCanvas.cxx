@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.50 2003/10/06 12:00:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.51 2003/11/05 13:08:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -497,6 +497,12 @@ void TCanvas::Build()
    if (!strcmp(gVirtualX->GetName(), "Win32"))
       gVirtualX->UpdateWindow(1);
 #endif
+}
+
+//______________________________________________________________________________
+TCanvas::TCanvas(const TCanvas &) : TPad()
+{
+   // Intentionally not implemented
 }
 
 //______________________________________________________________________________
