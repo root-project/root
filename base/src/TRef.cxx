@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.9 2001/12/03 10:26:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.10 2002/01/08 11:50:24 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -348,10 +348,11 @@ void TRef::Streamer(TBuffer &R__b)
    // Stream an object of class TRef.
 
    UShort_t pidf;
+   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       TObject::Streamer(R__b);
       R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,gFile);
+      fPID = TProcessID::ReadProcessID(pidf,file);
       //The execid has been saved in the unique id of the TStreamerElement
       //being read by TStreamerElement::Streamer
       //The current element (fgElement) is set as a static global
@@ -361,7 +362,7 @@ void TRef::Streamer(TBuffer &R__b)
    } else {
       TObject::Streamer(R__b);
 
-      pidf = TProcessID::WriteProcessID(fPID,gFile);
+      pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
    }
 }

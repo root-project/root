@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.4 2001/11/28 14:51:43 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.5 2001/12/02 15:20:07 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -308,6 +308,7 @@ void TRefArray::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    Int_t nobjects;
    UShort_t pidf;
+   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
@@ -317,7 +318,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,gFile);
+      fPID = TProcessID::ReadProcessID(pidf,file);
       for (Int_t i = 0; i < nobjects; i++) {
           R__b >> fUIDs[i];
           if (fUIDs[i] != 0) fLast = i;
@@ -331,7 +332,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = TProcessID::WriteProcessID(fPID,gFile);
+      pidf = TProcessID::WriteProcessID(fPID,file);
       R__b << pidf;
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];
