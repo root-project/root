@@ -23,10 +23,11 @@
 
 //////////////////////////////////////////////////////////////////////////
 #if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+// This does not work yet. Don't know why.
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
-
 #elif defined(G__GNUC) && !defined(G__KCC)
+
 #if (G__GNUC_MINOR>=95)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=allocator<T> >

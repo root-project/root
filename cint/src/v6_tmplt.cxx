@@ -1914,6 +1914,9 @@ struct G__Templatearg *def_para;
   int single_quote;
   int double_quote;
   char c;
+#ifndef G__OLDIMPLEMENTATION1901
+  int isconst=0;
+#endif
 
   if (siz_out < 10)
     siz_out = 10;
@@ -1964,8 +1967,27 @@ struct G__Templatearg *def_para;
       str_out = (char*) realloc (str_out, siz_out + 1);
     }
 
+#ifndef G__OLDIMPLEMENTATION1901
+    {
+    int rlen = strlen(reslt);
+    if(isconst && strncmp(reslt,"const ",6)==0 &&
+       rlen>0 && '*'==reslt[rlen-1]) {
+      strcat (str_out, reslt+6);
+      strcat (str_out, " const");
+      iout += lreslt;
+      isconst=0;
+    } 
+    else {
+      strcpy (str_out + iout, reslt);
+      iout += lreslt;
+      if(strcmp(reslt,"const")==0 && ' '==c) isconst=1;
+      else isconst=0;
+    }
+    }
+#else
     strcpy (str_out + iout, reslt);
     iout += lreslt;
+#endif
     str_out[iout++] = c;
   } while (c != '\0');
 

@@ -437,6 +437,10 @@ FILE *fp;
     ++G__tempfilenum;
     G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
     G__srcfile[G__tempfilenum].filename=(char*)NULL;
+#ifndef G__OLDIMPLEMENTATION1899
+    if(G__srcfile[G__tempfilenum].breakpoint)
+      free(G__srcfile[G__tempfilenum].breakpoint);
+#endif
 #else
     ++filenum;
     G__srcfile[filenum].fp = (FILE*)NULL;

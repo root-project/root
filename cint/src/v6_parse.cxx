@@ -2377,7 +2377,14 @@ int breakcontinue; /* 0: continue, 1:break */
   if(G__DOWHILE!=G__ifswitch) {
 #endif
     while(*pmparen) {
+#ifndef G__OLDIMPLEMENTATION1672
+      char c=G__fignorestream("}");
+      if('}'!=c) {
+	G__genericerror("Error: Syntax error, possibly too many parenthesis");
+      }
+#else
       G__fignorestream("}");
+#endif
       --(*pmparen);
     }
 #ifndef G__OLDIMPLEMENTATION1672

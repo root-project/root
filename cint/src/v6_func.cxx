@@ -4607,6 +4607,7 @@ int hash;
 
 #endif /* G__SMALLOBJECT */
   
+#if 0
 #ifdef G__GNUREADLINE
   /*******************************************************************
    * GNU readline 
@@ -4623,6 +4624,7 @@ int hash;
     *result7=G__null;
     return(1);
   }
+#endif
 #endif
 
 

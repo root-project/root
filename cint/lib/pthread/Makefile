@@ -5,12 +5,19 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux_RH7.3_gcc3
-#  Platform dependent information for LINUX 2.4 RedHatH7.3 or later
-#  using gcc-3.0/3.1/3.2
+# platform/cygwin51_gcc3_so
+#  Platform dependent information for Cygwin_NT-5.1
+#  using gcc-3.00
+#  Build libcint.dll instead of G__ci.a. And creates multi-thread safe DLLs.
+#  Based on Christoph Bugel's proposal about multi-threading.
 ############################################################
 
 # Tools
+AS	    = as
+DLLTOOL	    = dlltool
+LDDLL 	    = ld
+#LIBS	    = -lcygwin -lkernel32 -luser32 -lgdi32 -lcomdlg32
+
 RM	    = rm -f
 CP	    = cp
 AR	    = ar
@@ -23,23 +30,23 @@ CPREP       = gcc -E -C
 CPPPREP     = g++ -E -C
 
 # Compiler and linker option
-CCDLLOPT    = -fPIC
+CCDLLOPT    = -DBUILDING_DLL=1
 LDDLLOPT    = -shared
 # gcc-3.00 has a bug in -O2. Use -O instead. -O2 may be OK for later version
-OPTIMIZE    = -O2
-LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic 
-SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK
-OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
+OPTIMIZE    = -O
+LDOPT       = -lm -ltermcap -lreadline
+SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__CYGWIN=51
+OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION $(CCDLLPOST) -DG__GNUREADLINE
 SYSIPATH    =
 
 # libraries
 MAINO	    = $(CINTSYSDIR)/main/G__cppmain.o
-CINTLIB     = $(CINTSYSDIR)/src/G__ci.a
-READLINEA   = /usr/lib/libreadline.a
+CINTLIB     = $(CINTSYSDIR)/libcint.dll
+READLINEA   = 
 APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc.o Typedf.o Apiif.o Token.o
 RANLIB	    = /usr/bin/ranlib
 STDLIBS     = gcc3strm.o stdstrct.o
-PLATFORM    =
+PLATFORM    = $(CINTSYSDIR)/main/G__setup.o
 
 # source code postfix
 CSRCPOST    = .c
@@ -47,7 +54,8 @@ CHDRPOST    = .h
 CPPSRCPOST  = .C
 CPPHDRPOST  = .h
 OBJPOST     = .o
-DLLPOST     = .dl
+DLLPOST     = .dll
+
 
 
 
@@ -67,7 +75,7 @@ INPUTMODELOCK = off
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /home/gotom/src/cint-gcc3.2
+CINTSYSDIR = /home/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = pthread.dll
 OPTION     = $(CCDLLOPT)
@@ -113,8 +121,8 @@ CPPSTUB    =
 CPPSTUBCINT = 
 
 # Link Object #############################################
-$(OBJECT) : $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)
-	$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)
+$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)
+	$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS) -L$(CINTSYSDIR) -lcint
 
 # Compile User C source files ##############################
 

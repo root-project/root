@@ -461,6 +461,18 @@ int noerror;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1683
+  /* handle X<const const Y> */
+  p = strstr(tagname,"const const ");
+  while(p) {
+    char *p1= (p+=6);
+    char *p2=p+6;
+    while(*p2) *p1++ = *p2++;
+    *p1 = 0;
+    p = strstr(p,"const const ");
+  }
+#endif
+
   if(isspace(tagname[0])) strcpy(temp,tagname+1);
   else strcpy(temp,tagname);
   p = G__find_last_scope_operator (temp);

@@ -12,10 +12,10 @@
 /* non ANSI signals */
 #define 	SIGHUP (1)
 #define 	SIGQUIT (3)
-#define 	SIGTSTP (20)
+#define 	SIGTSTP (18)
 #define 	SIGTTIN (21)
 #define 	SIGTTOU (22)
 #define 	SIGALRM (14)
-#define 	SIGUSR1 (10)
-#define 	SIGUSR2 (12)
+#define 	SIGUSR1 (30)
+#define 	SIGUSR2 (31)
 #endif

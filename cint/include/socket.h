@@ -14,6 +14,9 @@
 
 #define AF_INET 2
 #define AF_UNIX 1
+#define AF_ISO 7
+#define AF_NS 6
+#define AF_IMPLINK 3
 #define INADDR_ANY 0
 #define SOCK_STREAM 1
 #define SOCK_DGRAM 2

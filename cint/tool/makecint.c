@@ -8,7 +8,7 @@
  *  This tool creates Makefile for encapsurating arbitrary C/C++ object
  * into Cint as Dynamic Link Library or archived library
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -115,6 +115,8 @@ void G__printtitle()
   printf("################################################################\n");
 #if defined(G__DJGPP)
   printf("# makecint : interpreter-compiler for cint (MS-DOS DJGPP version)\n");
+#elif (G__CYGWIN>=50)
+  printf("# makecint : interpreter-compiler for cint (Windows Cygwin DLL version)\n");
 #elif defined(G__CYGWIN)
   printf("# makecint : interpreter-compiler for cint (Windows Cygwin version)\n");
 #elif defined(G__MINGW)
@@ -1155,8 +1157,17 @@ char **argv;
 #if defined(_AIX)
     fprintf(fp,"$(OBJECT) : $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LDDLL) $(LDDLLOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)\n");
+
+#elif (G__CYGWIN>=50)
+    fprintf(fp,"$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
+    fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS) -L$(CINTSYSDIR) -lcint\n");
+#if 0
+    fprintf(fp,"\t$(DLLTOOL) --as=$(AS) --dllname $(OBJECT) --def %s.def --output-lib %s.lib\n",G__DLLID,G__DLLID);
+#endif
+
 #elif defined(G__CYGWIN)||defined(G__MINGW)
     /* Problem reported by Joseph Canedo 2001/6/7 $(CINTLIB) added for DLL */
+    /* This is not a good fix. Use G__CYGWIN_DLL instead */
     fprintf(fp,"$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(CINTLIB) $(LIBS)\n");
 #else
@@ -1169,6 +1180,10 @@ char **argv;
     fprintf(fp
    ,"$(OBJECT) : $(CINTLIB) $(READLINEA) $(DLFCN) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
     fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#elif (G__CYGWIN>=50)
+    fprintf(fp
+   ,"$(OBJECT) : $(CINTLIB) $(READLINEA) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) $(READLINEA) $(LIBS) $(LDOPT)\n");
 #else
     fprintf(fp
    ,"$(OBJECT) : $(CINTLIB) $(READLINEA) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
@@ -1185,6 +1200,10 @@ char **argv;
     fprintf(fp,"\techo \"#!\" > $(OBJECT).exp ; cat $(OBJECT).nm >> $(OBJECT).exp\n");
     fprintf(fp,"\trm -f $(OBJECT).nm\n");
     fprintf(fp,"\t$(LD) $(OPTIMIZE) -bE:$(OBJECT).exp -bM:SRE  $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(MAINO) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#elif (G__CYGWIN>=50)
+    fprintf(fp
+   ,"$(OBJECT) : G__main.o $(CINTLIB) $(READLINEA) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) G__main.o $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) $(READLINEA) $(LIBS) $(LDOPT)\n");
 #else
     fprintf(fp
    ,"$(OBJECT) : $(MAINO) $(CINTLIB) $(READLINEA) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
@@ -1207,9 +1226,16 @@ char **argv;
    * Compille Initialization routine
    ***************************************************************************/
   if(!G__isDLL) {
+#if (G__CYGWIN>=50)
+    fprintf(fp,"\n");
+    fprintf(fp,"# Compile main function  #################################\n");
+    fprintf(fp,"G__main.o : G__main.cxx\n");
+    fprintf(fp,"\t$(CPP) $(LINKSPEC) $(CINTIPATH) $(OPTIMIZE) $(OPTION) -o G__main.o -c G__main.cxx\n");
+#else
     fprintf(fp,"# Compile dictionary setup routine #######################\n");
     fprintf(fp,"G__setup.o : $(CINTSYSDIR)/main/G__setup.c $(CINTSYSDIR)/G__ci.h\n");
     fprintf(fp,"\t$(CC) $(LINKSPEC) $(CINTIPATH) $(OPTIMIZE) $(OPTION) -o G__setup.o -c $(CINTSYSDIR)/main/G__setup.c\n");
+#endif
   }
   fprintf(fp,"\n");
     
@@ -1270,6 +1296,7 @@ char **argv;
     fprintf(fp,"\n");
   }
 
+
   fprintf(fp,"\n");
   fprintf(fp,"# Clean up #################################################\n");
   fprintf(fp,"clean :\n");
@@ -1279,6 +1306,8 @@ char **argv;
   else {
 #ifdef _AIX
     fprintf(fp,"\t$(RM) $(OBJECT) $(OBJECT).exp $(OBJECT).nm shr.o core $(CIFO) $(CIFC) $(CIFH) $(CPPIFO) $(CPPIFC) $(CPPIFH) $(COFILES) $(CPPOFILES) G__setup.o\n");
+#elif (G__CYGWIN>=50)
+    fprintf(fp,"\t$(RM) $(OBJECT) core $(CIFO) $(CIFC) $(CIFH) $(CPPIFO) $(CPPIFC) $(CPPIFH) $(RMCOFILES) $(RMCPPOFILES) G__main.o\n");
 #else
     fprintf(fp,"\t$(RM) $(OBJECT) core $(CIFO) $(CIFC) $(CIFH) $(CPPIFO) $(CPPIFC) $(CPPIFH) $(RMCOFILES) $(RMCPPOFILES) G__setup.o\n");
 #endif
@@ -1297,6 +1326,66 @@ char **argv;
   fclose(fp);
 }
 
+#if (G__CYGWIN>=50)
+/******************************************************************
+* G__outputmain()
+******************************************************************/
+void G__outputmain()
+{
+  FILE *mainfp;
+  char G__DLLID[10] = "";
+  /*****************************************************************
+  * creating G__main.cxx
+  *****************************************************************/
+  mainfp = fopen("G__main.cxx","w");
+  fprintf(mainfp,"/******************************************************\n");
+  fprintf(mainfp,"* G__main.cxx\n");
+  fprintf(mainfp,"*  automatically generated main() function for cint\n");
+  fprintf(mainfp,"*  Cygwin environment\n");
+  fprintf(mainfp,"******************************************************/\n");
+  fprintf(mainfp,"#include <stdio.h>\n");
+  fprintf(mainfp,"extern \"C\" {\n");
+  fprintf(mainfp,"extern void G__setothermain(int othermain);\n");
+  fprintf(mainfp,"extern int G__main(int argc,char **argv);\n");
+  fprintf(mainfp,"extern void G__set_p2fsetup(void (*p2f)());\n");
+  fprintf(mainfp,"extern void G__free_p2fsetup();\n");
+  if(G__CHDR) fprintf(mainfp,"extern void G__c_setup%s();\n",G__DLLID);
+  if(G__CPPHDR) fprintf(mainfp,"extern void G__cpp_setup%s();\n",G__DLLID);
+  fprintf(mainfp,"}\n");
+  fprintf(mainfp,"\n");
+#ifndef G__OLDIMPLEMENTATION874
+  if(G__ismain) {
+    fprintf(mainfp,"class G__DMYp2fsetup {\n");
+    fprintf(mainfp," public:\n");
+    fprintf(mainfp,"  G__DMYp2fsetup() { \n");
+    if(G__CHDR) fprintf(mainfp,"    G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
+    if(G__CPPHDR) fprintf(mainfp,"    G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
+    fprintf(mainfp,"  }\n");
+    fprintf(mainfp,"} G__DMY;\n");
+  }
+  else {
+#endif
+    fprintf(mainfp,"int main(int argc,char **argv)\n");
+    fprintf(mainfp,"{\n");
+    fprintf(mainfp,"  int result;\n");
+    if(G__CHDR) fprintf(mainfp,"  G__set_p2fsetup(G__c_setup%s);\n",G__DLLID);
+    if(G__CPPHDR) fprintf(mainfp,"  G__set_p2fsetup(G__cpp_setup%s);\n",G__DLLID);
+    fprintf(mainfp,"  G__setothermain(0);\n");
+    fprintf(mainfp,"  result=G__main(argc,argv);\n");
+    fprintf(mainfp,"  G__free_p2fsetup();\n");
+    fprintf(mainfp,"  return(result);\n");
+    fprintf(mainfp,"}\n");
+#ifndef G__OLDIMPLEMENTATION874
+  }
+#endif
+
+  fclose(mainfp);
+  /*****************************************************************
+  * end of creating G__main.cxx
+  *****************************************************************/
+}
+#endif
+
 /******************************************************************
 * G__makecint
 ******************************************************************/
@@ -1313,6 +1402,9 @@ char **argv;
     fprintf(stderr,"!!!makecint aborted!!!  makecint -? for help\n");
     exit(EXIT_FAILURE);
   }
+#if (G__CYGWIN>=50)
+  if(!G__isDLL) G__outputmain();
+#endif
   G__outputmakefile(argc,argv);
   G__cleanup();
   G__displaytodo();

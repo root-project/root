@@ -932,9 +932,12 @@ char *shlfile;
     }
   }
 
-  /* set fine name */
- if (G__ifile.name!=shlfile)
-   strcpy(G__ifile.name,shlfile);
+  /* set file name */
+#ifndef G__OLDIMPLEMENTATION1896
+  if(G__ifile.name!=shlfile) strcpy(G__ifile.name,shlfile);
+#else
+  strcpy(G__ifile.name,shlfile);
+#endif
 
 #ifndef G__OLDIMPLEMENTATION670
 #ifdef G__WIN32

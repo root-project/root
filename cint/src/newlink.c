@@ -91,6 +91,10 @@ static int G__privateaccess = 0;
 #define G__GENWINDEF
 #endif
 
+#if 0 && (G__CYGWIN>=50)
+#define G__GENWINDEF
+#endif
+
 
 #ifdef G__OLDIMPLEMENTATION1231
 /**************************************************************************
@@ -1931,7 +1935,7 @@ static void G__write_windef_header()
   fprintf(fp,"\n");
   fprintf(fp,"DESCRIPTION       '%s'\n",G__PROJNAME);
   fprintf(fp,"\n");
-#ifndef G__VISUAL
+#if !defined(G__VISUAL) && !defined(G__CYGWIN)
   fprintf(fp,"EXETYPE           NT\n");
   fprintf(fp,"\n");
   if(G__isDLL)
