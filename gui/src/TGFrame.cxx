@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.101 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.102 2004/10/26 09:39:23 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -871,6 +871,7 @@ void TGCompositeFrame::Cleanup()
 
    while ((el = (TGFrameElement *) next())) {
       if (el->fFrame) {
+         el->fFrame->SetFrameElement(0);
          delete el->fFrame;
       }
 
@@ -878,6 +879,7 @@ void TGCompositeFrame::Cleanup()
           (el->fLayout->References() > 0)) {
          el->fLayout->RemoveReference();
          if (!el->fLayout->References()) {
+            el->fLayout->fFE = 0;
             delete el->fLayout;
          }
       }

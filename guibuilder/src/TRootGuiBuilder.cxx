@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.8 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.9 2004/10/26 09:39:23 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -1050,7 +1050,9 @@ void TRootGuiBuilder::CloseWindow()
 {
    //
 
-   gApplication->Terminate(0);
+   TGWindow *root = (TGWindow*)fClient->GetRoot();
+   root->SetEditable(kFALSE);
+   if (gDragManager) gDragManager->SetEditable(kFALSE);
 }
 
 //______________________________________________________________________________

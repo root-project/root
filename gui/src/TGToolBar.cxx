@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.12 2004/09/15 17:37:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.13 2004/09/15 19:21:20 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -62,8 +62,11 @@ TGToolBar::~TGToolBar()
 {
    // Delete toolbar and its buttons and layout hints.
 
-   if (fTrash) fTrash->Delete();
+   if (!MustCleanup()) {
+      if (fTrash) fTrash->Delete();
+   }
    delete fTrash;
+   fTrash = 0;
 
    TIter next(fPictures);
    const TGPicture *p;

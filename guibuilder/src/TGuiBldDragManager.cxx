@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.27 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.28 2004/10/25 12:06:50 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -57,7 +57,7 @@ static Window_t GetWindowFromPoint(Int_t x, Int_t y)
 
    dst = src = child = gVirtualX->GetDefaultRootWindow();
 
-   while (child) {
+   while (child && dst) {
       src = dst;
       dst = child;
       gVirtualX->TranslateCoordinates(src, dst, xx, yy, xx, yy, child);
@@ -945,7 +945,6 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
    ev.fType = kMotionNotify;
    ev.fState = 0;
 
-   gVirtualX->Update(1);
    gVirtualX->QueryPointer(gVirtualX->GetDefaultRootWindow(), dum, dum,
                            ev.fXRoot, ev.fYRoot, ev.fX, ev.fY, ev.fState);
 
@@ -956,7 +955,7 @@ Bool_t TGuiBldDragManager::HandleTimer(TTimer *t)
 
    ev.fWindow = GetWindowFromPoint(ev.fXRoot, ev.fYRoot);
 
-   if ((gw == ev.fWindow) && (gstate == ev.fState) &&
+   if (ev.fWindow && (gw == ev.fWindow) && (gstate == ev.fState) &&
        (ev.fYRoot == gy) && (ev.fXRoot == gx)) {
       return kFALSE;
    }
@@ -2402,7 +2401,7 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
             return kFALSE;
          }
 
-         //delete fBuilder;
+         delete fBuilder;
          fBuilder = 0;
          gGuiBuilder = 0;
          fEditor = 0;
@@ -2732,8 +2731,8 @@ void TGuiBldDragManager::ToGrid(Int_t &x, Int_t &y)
    //
 
    UInt_t step = GetGridStep();
-   x = (x/step)*step;
-   y = (y/step)*step;
+   x = x - x%step;
+   y = y - y%step;
 }
 
 //______________________________________________________________________________
@@ -3249,7 +3248,7 @@ void TGuiBldDragManager::ExecuteQuickAction(Event_t *event)
          TGFrame *f = (TGFrame*)win;
          TGDimension sz = f->GetDefaultSize();
          if ((sz.fWidth > 10) && (sz.fHeight > 10)) {
-            Compact(kTRUE);
+            //Compact(kTRUE);
          }
       }
    }

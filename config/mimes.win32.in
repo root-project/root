@@ -60,6 +60,31 @@ pattern = *.x[bp]m
 icon = psp_s.xpm psp_t.xpm
 action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
 
+[image/bmp]
+pattern = *.bmp
+icon = psp_s.xpm psp_t.xpm
+action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+
+[image/ico]
+pattern = *.ico
+icon = psp_s.xpm psp_t.xpm
+action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+
+[image/cur]
+pattern = *.cur
+icon = psp_s.xpm psp_t.xpm
+action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+
+[image/xcf]
+pattern = *.xcf
+icon = psp_s.xpm psp_t.xpm
+action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+
+[image/ppm]
+pattern = *.p[n]m
+icon = psp_s.xpm psp_t.xpm
+action = TGMainFrame *m=0;if(!gClient->IsEditable())m=new TGMainFrame();m->SetWindowName("%s");TGPictureButton *b=new TGPictureButton(m,"%s");b->MapWindow();if(!gClient->IsEditable()){m->AddFrame(b);m->Resize();m->Move(300, 300);m->MapRaised();}
+
 [text/html]
 pattern = *.html
 icon = netscape.xpm

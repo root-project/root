@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.2 2002/08/09 16:43:30 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.cxx,v 1.3 2002/12/02 18:50:02 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -42,6 +42,19 @@
 //  by an application and will be deleted in the destructor of this     //
 //  class.                                                              //
 //                                                                      //
+//  We provide few predifined palettes:                                 //
+//                                                                      //
+//    o gHistPalette - palette used in TH2::Draw("col")                 //
+//                                                                      //
+//    o gWebPalette                                                     //
+//       The web palette is a set of 216 colors that will not dither or //
+//       shift on PCs or Macs. Browsers use this built-in palette when  //
+//       they need to render colors on monitors with only 256 colors    //
+//       (also called 8-bit color monitors).                            //
+//       The 6x6x6 web palette provides very quick color index lookup   //
+//       and can be used for good quality convertion of images into     //
+//       2-D histograms.                                                // 
+//                                                                      //
 //                                                                      //
 //  TPaletteEditor                                                      //
 //                                                                      //
@@ -53,6 +66,12 @@
 #include "TROOT.h"
 #include "TPluginManager.h"
 #include "Riostream.h"
+#include "TColor.h"
+
+
+ClassImp(TPaletteEditor)
+ClassImp(TAttImage)
+ClassImp(TImagePalette)
 
 
 // definition of a default palette
@@ -78,10 +97,133 @@ static UShort_t blueDefault[kNUM_DEFAULT_COLORS] = {
 };
 
 
-ClassImp(TPaletteEditor)
-ClassImp(TAttImage)
-ClassImp(TImagePalette)
+//////////////////////////// Web Palette ////////////////////////////////////
+static UShort_t gWebBase[6] = { 0, 51, 102, 153, 204, 255 };
 
+class TWebPalette : public TImagePalette {
+
+private:
+   Int_t fCLUT[6][6][6];   // Color LookUp Table 
+
+public:
+   TWebPalette() : TImagePalette() {
+      int i = 0;
+      fNumPoints = 216;
+      fPoints = new Double_t[216];
+      fColorRed = new UShort_t[216];
+      fColorBlue = new UShort_t[216];
+      fColorGreen = new UShort_t[216];
+      fColorAlpha = new UShort_t[216];
+
+      for (i = 0; i < 214; i++) {
+         fPoints[i + 1]  =  (double)i/213;
+      }
+      fPoints[0] = 0;
+      fPoints[215] = 1;
+
+      i = 0;
+      for (int r = 0; r < 6; r++) {
+         for (int g = 0; g < 6; g++) {
+            for (int b = 0; b < 6; b++) {
+               fColorRed[i] = gWebBase[r] << 8;
+               fColorGreen[i] = gWebBase[g] << 8;
+               fColorBlue[i] = gWebBase[b] << 8;
+               fColorAlpha[i] = 1 << 16;
+               fCLUT[r][g][b] = i;
+               i++;
+            }
+         }
+      }
+   }
+
+   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) {
+      Int_t ri = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)r);
+      Int_t gi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)g);
+      Int_t bi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)b);
+      return fCLUT[ri][gi][bi];
+   }
+
+   Int_t *GetRootColors() {
+      static Int_t *gRootColors = 0;
+      if (gRootColors) return gRootColors;
+
+      gRootColors = new Int_t[216];
+
+      int i = 0;
+      for (int r = 0; r < 6; r++) {
+         for (int g = 0; g < 6; g++) {
+            for (int b = 0; b < 6; b++) {
+               gRootColors[i] = TColor::GetColor(gWebBase[r], gWebBase[g], gWebBase[b]);
+               i++;
+            }
+         }
+      }
+      return gRootColors;
+   }
+};
+
+TImagePalette *gWebImagePalette = new TWebPalette();
+
+
+////////////////////////////// Hist Palette ////////////////////////////////////
+static Double_t gDefHistP[50] =  { 
+      0.00,0.02,0.04,0.06,0.08,0.10,0.12,0.14,0.16,0.18,0.20,0.22,0.24,0.26,
+      0.28,0.30,0.32,0.34,0.36,0.38,0.40,0.42,0.44,0.46,0.48,0.50,0.52,0.54,
+      0.56,0.58,0.60,0.62,0.64,0.66,0.68,0.70,0.72,0.74,0.76,0.78,0.80,0.82,
+      0.84,0.86,0.88,0.90,0.92,0.94,0.96,0.98 };
+
+static UShort_t gDefHistR[50] = {
+      242,229,204,178,153,127,102,76,192,204,204,193,186,178,183,173,155,135,
+      175,132,89,137,130,173,122, 117,104,109,124,127,170,89,211,221,188,198,
+      191,170,165,147,206,211,255,0,255,255,0,0,53,0 };
+
+static UShort_t gDefHistG[50] = {
+      242,229,204,178,153,127,102,76,182,198,198,191,181,165,163,153,142,102,
+      206,193,211,168,158,188,142,137,130,122,153,127,165,84,206,186,158,153,
+      130,142,119,104,94,89,0,255,0,255,0,255,53,0 };
+
+static UShort_t gDefHistB[50] = {
+      242,229,204,178,153,127,102,76,172,170,170,168,163,150,155,140,130,86,
+      198,163,84,160,140,198,153,145,150,132,209,155,191,216,135,135,130,124,
+      119,147,122,112,96,84,0,255,255,0,255,0,53,0 };
+
+static UShort_t gDefHistA[50] = {
+      255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+      255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+      255,255,255,255,255,255,255,255,255,255,255,255,255,255 };
+
+static Int_t gDefHistRoot[50] = {
+      19,18,17,16,15,14,13,12,11,20,21,22,23,24,25,26,27,28,29,30, 8,
+      31,32,33,34,35,36,37,38,39,40, 9, 41,42,43,44,45,47,48,49,46,50, 2,
+      7, 6, 5, 4, 3, 112,1};
+
+
+class TDefHistImagePalette : public TImagePalette {
+
+public:
+   TDefHistImagePalette() : TImagePalette() {
+      fNumPoints = 50;
+      fPoints = gDefHistP;
+      fColorRed = gDefHistR;
+      fColorGreen = gDefHistG;
+      fColorBlue = gDefHistB;
+      fColorAlpha = gDefHistA;
+
+      for (int i = 0; i<50; i++) {
+         fColorRed[i] = fColorRed[i] << 8;
+         fColorGreen[i] = fColorGreen[i] << 8;
+         fColorBlue[i] = fColorBlue[i] << 8;
+         fColorAlpha[i] = fColorAlpha[i] << 8;
+      }
+   }
+
+   Int_t *GetRootColors() { return gDefHistRoot; }
+};
+
+TImagePalette *gHistImagePalette = new TDefHistImagePalette();
+
+
+///////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
 TPaletteEditor::TPaletteEditor(TAttImage *attImage, UInt_t, UInt_t)
 {
@@ -190,6 +332,43 @@ TImagePalette &TImagePalette::operator=(const TImagePalette &palette)
    return *this;
 }
 
+//______________________________________________________________________________
+Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
+{
+   // returns an index of the closest color
+
+   Int_t ret = 0;
+   UInt_t d = 10000;
+   UInt_t min = 10000;
+
+   for (UInt_t i = 0; i < fNumPoints; i++) {
+      d = TMath::Abs(r - ((fColorRed[i] & 0xff00) >> 8)) + 
+          TMath::Abs(g - ((fColorGreen[i] & 0xff00) >> 8)) + 
+          TMath::Abs(b - ((fColorBlue[i] & 0xff00) >> 8));
+      if (d < min) {
+         min = d;
+         ret = i;
+      }
+   }
+   return ret;
+}
+
+//______________________________________________________________________________
+Int_t *TImagePalette::GetRootColors()
+{
+   // Returns a list of ROOT colors. Could be used to set histogram palette.
+   // See also http://root.cern.ch/root/htmldoc/TStyle.html#TStyle:SetPalette
+
+   static Int_t *gRootColors = 0;
+   if (gRootColors) return gRootColors;
+
+   gRootColors = new Int_t[fNumPoints];
+
+   for (UInt_t i = 0; i < fNumPoints; i++) {
+      gRootColors[i] = TColor::GetColor(fColorRed[i], fColorGreen[i], fColorBlue[i]);
+   }
+   return gRootColors;
+}
 
 
 //______________________________________________________________________________

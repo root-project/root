@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.8 2003/11/26 16:17:07 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef2.h,v 1.9 2004/01/23 23:30:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,5 +32,18 @@
 #pragma link C++ class TPaletteEditor;
 #pragma link C++ class TText-;
 #pragma link C++ class TTF;
+
+#pragma link C++ global gHistImagePalette;
+#pragma link C++ global gWebImagePalette;
+
+#pragma link C++ enum TImage::EImageFileTypes;
+#pragma link C++ enum TImage::EText3DType;
+#pragma link C++ enum TImage::ECharType;
+#pragma link C++ enum TImage::ETileType;
+#pragma link C++ enum TImage::ECoordMode;
+#pragma link C++ enum TImage::EColorChan;
+
+#pragma link C++ function operator+(const TImage&,const TImage&);
+#pragma link C++ function operator/(const TImage&,const TImage&);
 
 #endif

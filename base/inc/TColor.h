@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.8 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.h,v 1.9 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,13 +51,14 @@ private:
    Float_t      fHue;           //Hue
    Float_t      fLight;         //Light
    Float_t      fSaturation;    //Saturation
+   Float_t      fAlpha;         //Alpha (transparency)
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
 
 public:
    TColor();
-   TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name="");
+   TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name="", Float_t a = 1);
    TColor(const TColor &color);
    virtual ~TColor();
    const char   *AsHexString() const;
@@ -72,10 +73,10 @@ public:
    Float_t       GetHue() const { return fHue; }
    Float_t       GetLight() const { return fLight; }
    Float_t       GetSaturation() const { return fSaturation; }
+   Float_t       GetAlpha() const { return fAlpha; }
    virtual void  ls(Option_t *option="") const;
    virtual void  Print(Option_t *option="") const;
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
-
 
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
    static void    HLS2RGB(Int_t h, Int_t l, Int_t s, Int_t &r, Int_t &g, Int_t &b);

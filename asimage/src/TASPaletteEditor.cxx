@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.4 2004/10/20 13:11:38 rdm Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASPaletteEditor.cxx,v 1.5 2004/10/20 22:32:45 brun Exp $
 // Author: Reiner Rohlfs   24/03/2002
 
 /*************************************************************************
@@ -937,7 +937,7 @@ void TASPaletteEditor::PaintPalette::Paint(Option_t *)
                      grad_im->width, grad_im->height, &bmbits );
    gPad->cd();
    if(gDrawDIB != 0) {
-	   gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, 0, 0);
+      gDrawDIB((ULong_t)bmi, (ULong_t)bmbits, 0, 0);
       free(bmbits);
       free(bmi);
    }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.7 2004/09/10 13:34:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.8 2004/10/21 14:25:30 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -52,8 +52,11 @@ TGShutter::~TGShutter()
 
    if (fTimer) delete fTimer;
 
-   if (!MustCleanup()) fTrash->Delete();
+   if (!MustCleanup()) {
+      fTrash->Delete();
+   }
    delete fTrash;
+   fTrash = 0;
 }
 
 //______________________________________________________________________________
@@ -227,11 +230,13 @@ TGShutterItem::~TGShutterItem()
 {
    // Clan up shutter item.
 
-   delete fL1;
-   delete fL2;
-   delete fButton;
-   delete fContainer;
-   delete fCanvas;
+   if (!MustCleanup()) {
+      delete fL1;
+      delete fL2;
+      delete fButton;
+      delete fContainer;
+      delete fCanvas;
+   }
 }
 
 //______________________________________________________________________________

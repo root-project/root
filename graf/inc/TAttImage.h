@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.1 2002/08/09 13:56:00 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TAttImage.h,v 1.2 2002/08/09 16:43:30 rdm Exp $
 // Author: Reiner Rohlfs   24/03/02
 
 /*************************************************************************
@@ -93,6 +93,8 @@ public:
    TImagePalette(const TImagePalette &palette);
    TImagePalette(UInt_t numPoints);
    virtual ~TImagePalette();
+   virtual Int_t FindColor(UShort_t r, UShort_t g, UShort_t b);
+   virtual Int_t *GetRootColors();
 
    TImagePalette &operator=(const TImagePalette &palette);
 
@@ -147,5 +149,11 @@ public:
 
    ClassDef(TAttImage,1)  //Image attributes
 };
+
+
+R__EXTERN TImagePalette  *gHistImagePalette;    // palette used in TH2::Draw("col")
+R__EXTERN TImagePalette  *gWebImagePalette;     // 6x6x6 colors web palette
+
+
 
 #endif

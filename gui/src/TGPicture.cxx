@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.12 2004/08/24 09:46:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.13 2004/10/18 12:47:28 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -52,6 +52,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    // Get a picture from the picture pool. Picture must be freed using
    // TGPicturePool::FreePicture(). If picture is not found 0 is returned.
 
+   TGPicture *pic;
+
    if (!fPicList)
       fPicList = new THashTable(50);
 
@@ -65,12 +67,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       pname = pxname;
       delete [] pxname;
    }
-   if (ext != ".xpm") {
-      TImage *img = TImage::Open(pname.Data());
-      return img->GetPicture();
-   }
-
-   TGPicture *pic;
 
    pic = (TGPicture *)fPicList->FindObject(pname);
    if (pic && !pic->IsScaled()) {
@@ -80,16 +76,26 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return pic;
    }
 
+   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
+   if (!picnam) {
+      return 0;
+   }
+
+   if (ext != ".xpm") {
+      TImage *img = TImage::Open(picnam);
+      if (!img) return 0;
+
+      pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
+      delete [] picnam;
+      delete img;
+      fPicList->Add(pic);
+      return pic;
+   }
+
    pic = new TGPicture(pname);
    pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
-
-   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
-   if (!picnam) {
-      fPicList->Add(pic);
-      return 0;
-   }
 
    if (gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
                                         pic->fPic, pic->fMask,
@@ -103,7 +109,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    }
 
    delete [] picnam;
-
    return pic;
 }
 
@@ -120,7 +125,11 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 
    TString pname = name;
 
-   if (pname.EndsWith(".xpm")) {
+   pname.Strip();
+   TString ext = strrchr(pname.Data(), '.');
+   ext.ToLower();
+
+   if (ext.Length()) { // ".xpm", ".gif" etc
       char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
       pname = pxname;
       delete [] pxname;
@@ -137,18 +146,27 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return pic;
    }
 
+   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
+   if (!picnam) {
+      return 0;
+   }
+
+   if (ext != ".xpm") {
+      TImage *img = TImage::Open(picnam);
+      if (!img) return 0;
+
+      img->Scale(new_width, new_height);
+      pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
+      delete [] picnam;
+      delete img;
+      fPicList->Add(pic);
+      return pic;
+   }
+
    pic = new TGPicture(hname, kTRUE);
    pic->fAttributes.fColormap  = fClient->GetDefaultColormap();
    pic->fAttributes.fCloseness = 40000; // Allow for "similar" colors
    pic->fAttributes.fMask      = kPASize | kPAColormap | kPACloseness;
-
-   char *picnam = gSystem->Which(fPath, pname, kReadPermission);
-   if (!picnam) {
-      pic->fAttributes.fWidth  = new_width;
-      pic->fAttributes.fHeight = new_height;
-      fPicList->Add(pic);
-      return 0;
-   }
 
    Bool_t retc = kFALSE;
    if (!gVirtualX->InheritsFrom("TGX11")) {
@@ -234,7 +252,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 }
 
 //______________________________________________________________________________
-const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap)
+const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap, 
+                                           Pixmap_t mask)
 {
    // ctor
 
@@ -255,7 +274,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, Pixmap_t pxmap)
       return pic;
    }
 
-   pic = new TGPicture(hname, pxmap);
+   pic = new TGPicture(hname, pxmap, mask);
    fPicList->Add(pic);
 
    return pic;
@@ -300,14 +319,14 @@ void TGPicturePool::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-TGPicture::TGPicture(const char *name, Pixmap_t pxmap)
+TGPicture::TGPicture(const char *name, Pixmap_t pxmap, Pixmap_t mask)
 {
    // ctor
 
    fName   = name;
    fScaled = kFALSE;
    fPic    = pxmap;
-   fMask   = 0;   // no mask
+   fMask   = mask;
    Int_t xy;
 
    fAttributes.fColormap  = gClient->GetDefaultColormap();

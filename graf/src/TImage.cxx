@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:$:$Id:$
+// @(#)root/graf:$Name:  $:$Id: TImage.cxx,v 1.1 2002/08/09 13:56:00 rdm Exp $
 // Author: Fons Rademakers   15/10/2001
 
 /*************************************************************************
@@ -23,7 +23,7 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
-
+#include "TH2.h"
 
 ClassImp(TImage)
 
@@ -100,3 +100,8 @@ TImage *TImage::Open(const char *name, const TVectorD &imageData, UInt_t width,
    }
    return img;
 }
+
+
+TImage operator+(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "+"); return ret; }
+TImage operator/(const TImage &i1, const TImage &i2) { TImage ret(i1); ret.Append(&i2, "/"); return ret; }
+

@@ -67,7 +67,7 @@ ifeq ($(PLATFORM),win32)
 		fi; \
 		cd $(ASTEPVERS); \
 		unset MAKEFLAGS; \
-		nmake -nologo -f libAfterImage.mak \
+		nmake FREETYPEDIRI=../../../$(FREETYPEDIRI) -nologo -f libAfterImage.mak \
 		CFG="libAfterImage - Win32 Release")
 else
 		@(if [ -d $(ASTEPDIRS) ]; then \
@@ -109,13 +109,11 @@ else
 		fi; \
 		if [ "$(ASGIFINCDIR)" != "" ]; then \
 			GIFINCDIR="--with-gif-includes=$(ASGIFINCDIR)"; \
-			NOUNGIF="--with-builtin-ungif=no"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
-		--with-ttf=NO --with-afterbase=no \
+		--with-ttf --with-ttf-includes=../../../$(FREETYPEDIRI) --with-ungif --with-builtin-ungif --with-afterbase=no \
 		$$MMX \
-		$$NOUNGIF \
 		$$JPEGINCDIR \
 		$$PNGINCDIR \
 		$$TIFFINCDIR \
@@ -129,12 +127,12 @@ ifeq ($(PLATFORM),win32)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(FREETYPELIBA)"
 else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS) $(FREETYPELIBA)"
 endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)

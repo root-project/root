@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.19 2004/06/14 16:16:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.20 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,10 +51,12 @@ TColor::TColor(): TNamed()
 
    fNumber = -1;
    fRed = fGreen = fBlue = fHue = fLight = fSaturation = -1;
+   fAlpha = 1;
 }
 
 //______________________________________________________________________________
-TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name)
+TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name, 
+               Float_t a)
       : TNamed(name,"")
 {
    // Normal color constructor. Initialize a color structure.
@@ -70,6 +72,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name)
       fBlue   = col->GetBlue();
       fHue    = col->GetHue();
       fLight  = col->GetLight();
+      fAlpha  = col->GetAlpha();
       fSaturation = col->GetSaturation();
       return;
    }
@@ -97,6 +100,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name)
 
    // fill color structure
    SetRGB(r, g, b);
+   fAlpha = a;
 }
 
 //______________________________________________________________________________
@@ -122,12 +126,13 @@ const char *TColor::AsHexString() const
    // to, for example, TGClient::GetColorByName(). String will be reused so
    // copy immediately if needed.
 
-   Int_t r, g, b;
+   Int_t r, g, b, a;
    r = Int_t(fRed   * 255);
    g = Int_t(fGreen * 255);
    b = Int_t(fBlue  * 255);
+   a = Int_t(fAlpha  * 255);
 
-   return Form("#%02x%02x%02x", r, g, b);
+   return (a != 255) ? Form("#%02x%02x%02x%02x", a, r, g, b) : Form("#%02x%02x%02x", r, g, b);
 }
 
 //______________________________________________________________________________
@@ -141,6 +146,7 @@ void TColor::Copy(TObject &obj) const
    ((TColor&)obj).fBlue  = fBlue;
    ((TColor&)obj).fHue   = fHue;
    ((TColor&)obj).fLight = fLight;
+   ((TColor&)obj).fAlpha = fAlpha;
    ((TColor&)obj).fSaturation = fSaturation;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.18 2004/09/13 09:12:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.19 2004/09/13 13:05:46 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -140,7 +140,10 @@ void TGWindow::ReparentWindow(const TGWindow *p, Int_t x, Int_t y)
 
    if (p == fParent) return;
 
-   if (p) gVirtualX->ReparentWindow(fId, p->GetId(), x, y);
+   if (p) {
+      gVirtualX->ReparentWindow(fId, p->GetId(), x, y);
+      gVirtualX->Update(1);
+   }
    fParent = p;
 }
 
