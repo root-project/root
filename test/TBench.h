@@ -3,13 +3,9 @@
    
 #include "TClonesArray.h"
 
-#if defined(R__SGI) && !defined(R__KCC) && !defined(R__GNU)
-#include <vector.h>
-#else
 #include <vector>
-#endif
-#ifdef WIN32
-using namespace std;
+#ifndef R__GLOBALSTL
+using std::vector;
 #endif
       
 //-------------------------------------------------------------
