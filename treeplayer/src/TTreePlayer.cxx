@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.132 2003/08/25 17:31:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.133 2003/09/06 17:15:04 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1949,6 +1949,13 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //   if filename is of the form file.C+, the file file.C will be compiled
 //      and dynamically loaded. At next call, if file.C is older than file.o
 //      and file.so, the file.C is not compiled, only file.so is loaded.
+//
+//  NOTE
+//  It may be more interesting to invoke directly the other Process function
+//  accepting a TSelector* as argument.eg
+//     TSelector *selector = TSelector::GetSelector(filename);
+//     selector->CallSomeFunction(..);
+//     mytree.Process(selector,..);
 
 
    //Get a pointer to the TSelector object

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.159 2003/08/14 04:44:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.160 2003/08/25 22:37:39 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3192,6 +3192,14 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //
 //   The function returns the number of processed entries. It returns -1
 //   in case of an error.
+//
+//  NOTE
+//  It may be more interesting to invoke directly the other Process function
+//  accepting a TSelector* as argument.eg
+//     TSelector *selector = TSelector::GetSelector(filename);
+//     selector->CallSomeFunction(..);
+//     mytree.Process(selector,..);
+
 
    GetPlayer();
    if (fPlayer) return fPlayer->Process(filename,option,nentries,firstentry);
