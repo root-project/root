@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.39 2001/05/19 17:41:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.40 2001/06/05 13:51:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2596,6 +2596,10 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    }
    fX[i] = x;
    fY[i] = y;
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
 }
 
 //______________________________________________________________________________
