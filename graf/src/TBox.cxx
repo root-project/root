@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.14 2003/07/15 12:50:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.15 2003/09/19 14:10:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,7 +53,10 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*Box standard constructor-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
-   fX1=x1; fY1=y1; fX2=x2; fY2=y2;
+   if (x2 >= x1) {fX1  =x1; fX2 = x2;}
+   else          {fX1 = x2; fX2 = x1;}
+   if (y2 >= y1) {fY1  =y1; fY2 = y2;}
+   else          {fY1 = y2; fY2 = y1;}
    fResizing = kFALSE;
    fTip = 0;
 }
