@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.101 2005/02/28 17:28:12 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.102 2005/03/06 15:46:02 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2353,7 +2353,8 @@ int main(int argc, char **argv)
                ErrorInfo("main: no config directory specified using"
                          " ROOTSYS (%s)", confdir.c_str());
          } else {
-            Error(ErrFatal, kErrFatal, "main: no config directory specified");
+            if (gDebug > 0)
+               ErrorInfo("main: no config directory specified");
          }
       }
 #else
