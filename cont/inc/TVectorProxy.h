@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.2 2004/01/16 21:29:27 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.3 2004/01/21 22:20:45 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -39,7 +39,7 @@ namespace ROOT {
       
    public:
       TVirtualCollectionProxy* Generate() const  { return new TVectorProxy<vec>(); }
-      TVectorProxy() : fValueClass(0),fNarr(0), fArr(0) {}
+      TVectorProxy() : fValueClass(0), fNarr(0), fArr(0) {}
       
       void    SetProxy(void *objstart) { fProxied = (vec*)objstart; }
 
@@ -63,15 +63,19 @@ namespace ROOT {
             // Note: heuristic for the increase in size.
             fNarr =  int(n*1.3) + 10;
             fArr  = new void*[fNarr+1];
+            fArr[0] = 0;
+            fArr[n-1] = 0;
+            fArr[n] = 0;
          }
          
-         if (fArr[0]==At(0) && fArr[n-1]==At(n-1)) {
+         if (fArr[0]==At(0) 
+             && fArr[n-1]==At(n-1)) {
             fArr[n]=0;
             return fArr;            
          }
          fArr[0] = At(0);
          Int_t valSize = sizeof(nested);
-         for (unsigned int i=1;i<n;i++)   { fArr[i] = (char*)(fArr[i-1]) + valSize;}
+         for (unsigned int i=1;i<n;i++)   { fArr[i] = (char*)(fArr[i-1]) + valSize; }
          
          fArr[n]=0;
          return fArr;

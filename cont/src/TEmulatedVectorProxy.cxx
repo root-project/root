@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id:  $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.cxx,v 1.1 2004/01/10 10:52:29 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -132,16 +132,9 @@ void TEmulatedVectorProxy::Init()
             
          } else if (P&G__BIT_ISFUNDAMENTAL) {
             
-
-            // the following is a very weird way of find what typical 
-            // type is fObjType!
-            static const char *csilfdb   = "_csilf__d__b";
-
-            TString ts(insideTypename.c_str());
-            ts.ReplaceAll("unsigned ","");
             
-            const char *where = strchr(csilfdb,*ts.Data());
-            if (where) fKind = where - csilfdb;
+            TDataType *fundType = gROOT->GetType( insideTypename.c_str() );
+            fKind = fundType->GetType();
             
             Assert(fKind>0 && fKind<20);
 
@@ -395,9 +388,24 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                case kShort_t:  {R__b.ReadFastArray((Short_t *)arr,R__n);} break;
                case kInt_t:    {R__b.ReadFastArray((Int_t   *)arr,R__n);} break;
                case kLong_t:   {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
+               case kLong64_t: {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
                case kFloat_t:  {R__b.ReadFastArray((Float_t *)arr,R__n);} break;
                case kDouble_t: {R__b.ReadFastArray((Double_t*)arr,R__n);} break;
-               case kBool_t:   {R__b.ReadFastArray((Bool_t  *)arr,R__n);} break;
+
+               // case kBool_t:   
+               case kUChar_t:   {R__b.ReadFastArray((Char_t  *)arr,R__n);} break;
+
+               case kUShort_t:  {R__b.ReadFastArray((Short_t *)arr,R__n);} break;
+               case kUInt_t:    {R__b.ReadFastArray((Int_t   *)arr,R__n);} break;
+               case kULong_t:   {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
+               case kULong64_t: {R__b.ReadFastArray((Long_t  *)arr,R__n);} break;
+
+               case kDouble32_t: {
+                  Double_t *where = (Double_t*)arr;
+                  for(Int_t k=0; k<R__n; ++k) {
+                     Float_t afloat; R__b >> afloat; where[k] = (Double_t)afloat; 
+                   }
+               } break;   
             }
             break;
             
@@ -426,8 +434,10 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
             break;
             
          case R__BIT_ISTSTRING|G__BIT_ISCLASS|G__BIT_ISPOINTER:;
-            DOLOOP {*((void**)arr) = new TString;
-            (**((TString**)arr)).Streamer(R__b);
+            DOLOOP {
+               TString **ptr = (TString**)arr;
+               *ptr = new TString;
+               (**ptr).Streamer(R__b);
             }  break;
 
          default: Assert(0);
@@ -448,9 +458,24 @@ void   TEmulatedVectorProxy::Streamer(TBuffer &R__b)
                case kShort_t:  {R__b.WriteFastArray((Short_t *)arr,R__n);}  break;
                case kInt_t:    {R__b.WriteFastArray((Int_t   *)arr,R__n);}  break;
                case kLong_t:   {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
+               case kLong64_t: {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
                case kFloat_t:  {R__b.WriteFastArray((Float_t *)arr,R__n);}  break;
                case kDouble_t: {R__b.WriteFastArray((Double_t*)arr,R__n);}  break;
-               case kBool_t:   {R__b.WriteFastArray((Bool_t  *)arr,R__n);}  break;
+
+               // case kBool_t:
+               case kUChar_t:   {R__b.WriteFastArray((Char_t  *)arr,R__n);}  break;
+               case kUShort_t:  {R__b.WriteFastArray((Short_t *)arr,R__n);}  break;
+               case kUInt_t:    {R__b.WriteFastArray((Int_t   *)arr,R__n);}  break;
+               case kULong_t:   {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
+               case kULong64_t: {R__b.WriteFastArray((Long_t  *)arr,R__n);}  break;
+                  
+               case kDouble32_t: {
+                  Double_t *where = (Double_t*)arr;
+                  for(int k=0; k<R__n; ++k) {
+                     R__b << Float_t(where[k]); 
+                  }
+                  break;
+               }
             }
             // For simple type we know that the memory is consecutive
             // and we save in only ONE iteration instead of R__n.
