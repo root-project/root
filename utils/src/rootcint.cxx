@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.77 2002/06/11 21:17:03 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.78 2002/06/13 16:24:04 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -315,10 +315,11 @@ int NeedTemplateKeyword(G__ClassInfo &cl) {
          //            class Class2 { .....
          // So until we get a better idea, we use the heuristic that the 2 keywords
          // should be within 3 lines.
-         fprintf(stderr,"temp line %d, cl line %d\ntemp file %s, cl file %s\n",
-             templ->line ,cl.LineNumber(),
-              cl.FileName(), 
-             fileinfo.Name());
+         
+         //fprintf(stderr,"temp line %d, cl line %d\ntemp file %s, cl file %s\n",
+         //        templ->line ,cl.LineNumber(),
+         //        cl.FileName(), 
+         //        fileinfo.Name());
          if (abs(templ->line-cl.LineNumber())<=3 &&
              strcmp(cl.FileName(), fileinfo.Name())==0) {
 
@@ -2157,7 +2158,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                    next = &(name[c+1]);
                    fullyQualifiedName += current;
                    fullyQualifiedName += "< ";
-                   //fprintf(stderr,"will copy1: %s ...acu: %s\n",current,fullyQualifiedName.c_str());
+                   //fprintf(stderr,"will copy1: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
                 }
                 nesting++; break;
       case '>': nesting--; 
@@ -2172,11 +2173,11 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                    } else {
                       fullyQualifiedName += current;
                    }
-                   //fprintf(stderr,"will copy2: %s ...acu: %s\n",current,fullyQualifiedName.c_str());
                    fullyQualifiedName += " >";
+                   //fprintf(stderr,"will copy2: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
                 }
                 break;
-      case ',': if (nesting==0) {
+      case ',': if (nesting==1) {
                    name[c]=0;
                    current = next;
                    next = &(name[c+1]);
@@ -2188,6 +2189,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
                       fullyQualifiedName += current;
                    }
                    fullyQualifiedName += ", ";
+                   //fprintf(stderr,"will copy3: %s ...accu: %s\n",current,fullyQualifiedName.c_str());
                 };
                 break;
       }
@@ -2195,6 +2197,7 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName) {
    if (current == &(name[0]) ) {
       fullyQualifiedName += current;
    }
+   //fprintf(stderr,"Calculated: %s\n",fullyQualifiedName.c_str());
 }
 
 
@@ -2217,23 +2220,17 @@ void WriteShadowClass(G__ClassInfo &cl) {
      string fullname;
 	  GetFullyQualifiedName(cl,fullname);
      fprintf(fp,"      typedef %s %s;\n",fullname.c_str(),classname.c_str());
-     //fprintf(fp,"      typedef %s %s;\n",cl.Fullname(),classname.c_str());
-     // instead of fprintf(fp,"      using ::%s;\n",cl.Fullname());
+
   } else {
 
      if (1) fprintf(stderr, "Class %s: Generating Shadow Class [*** non-instrumented class ***]\n", cl.Fullname());
 
-     //const char * codeGuard = GetCodeGuard(cl);
-     //if (codeGuard) {
-        //     fprintf(fp,"      #undef %s\n",codeGuard);
-        //     fprintf(fp,"      #include \"%s\"\n",cl.FileName());
-     //}
-
      const char *prefix = "";
 
      fprintf(fp,"      #if !(defined(R__ACCESS_IN_SYMBOL) || defined(R__USE_SHADOW_CLASS))\n");
-     fprintf(fp,"      typedef ::%s %s;\n",cl.Fullname(),classname.c_str());
-     // instead of fprintf(fp,"      using ::%s;\n",cl.Fullname());
+     string fullname;
+	  GetFullyQualifiedName(cl,fullname);
+     fprintf(fp,"      typedef %s %s;\n",fullname.c_str(),classname.c_str());
      fprintf(fp,"      #else\n");
 
      fprintf(fp,"      class %s ",classname.c_str());
