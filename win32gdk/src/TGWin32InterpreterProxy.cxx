@@ -38,6 +38,7 @@ TInterpreter *TGWin32InterpreterProxy::RealObject()
 
 RETURN_PROXY_OBJECT(Interpreter)
 VOID_METHOD_ARG1(Interpreter,AddIncludePath,const char*,path,1)
+RETURN_METHOD_ARG1(Interpreter,Int_t,AutoLoad,const char *,classname)
 VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
 VOID_METHOD_ARG0(Interpreter,ClearStack,1)
 VOID_METHOD_ARG0(Interpreter,EndOfLineAction,1)

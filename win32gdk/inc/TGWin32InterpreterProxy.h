@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.7 2004/05/17 12:30:28 brun Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.8 2004/05/29 12:37:29 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -43,6 +43,7 @@ public:
    virtual ~TGWin32InterpreterProxy() {}
 
    void     AddIncludePath(const char *path);
+   Int_t    AutoLoad(const char *classname);
    void     ClearFileBusy();
    void     ClearStack();
    void     EnableAutoLoading();
