@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.90 2004/08/20 08:05:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.91 2004/08/20 10:35:35 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2373,7 +2373,7 @@ void TF1::SavePrimitive(ofstream &out, Option_t *option)
    char quote = '"';
    out<<"   "<<endl;
    if (!fMethodCall) {
-      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
+      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetExpFormula()<<quote<<","<<fXmin<<","<<fXmax<<");"<<endl;
       if (fNpx != 100) {
          out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<endl;
       }
