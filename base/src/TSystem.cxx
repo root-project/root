@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.29 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.30 2002/01/27 15:55:56 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1418,7 +1418,13 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
   // the file name end up in the file produced
   // by rootcint as a variable name so all character need to be valid!
-  dict.ReplaceAll( "-","_" );
+  static const int maxforbidden = 26;
+  static const char *forbidden_chars[maxforbidden] = 
+        { "+","-","*","/","&","%","|","^",">","<","=","~",".",
+          "(",")","[","]","!",",","$"," ",":","'","#","\\","\"" };
+  for( int ic = 0; ic < maxforbidden; ic++ ) {
+     dict.ReplaceAll( forbidden_chars[ic],"_" );
+  }
   if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
   dict.Prepend( build_loc + "/" );
   TString dicth = dict;
