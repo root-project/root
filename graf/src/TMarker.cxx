@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.9 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.10 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -117,8 +117,14 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 //
 
    const Int_t kMaxDiff = 10;
-   Int_t pxm  = gPad->XtoAbsPixel(fX);
-   Int_t pym  = gPad->YtoAbsPixel(fY);
+   Int_t pxm, pym;
+   if (TestBit(kMarkerNDC)) {
+      pxm = gPad->UtoPixel(fX);
+      pym = gPad->VtoPixel(fY);
+   } else {
+      pxm  = gPad->XtoAbsPixel(fX);
+      pym  = gPad->YtoAbsPixel(fY);
+   }
    Int_t dist = (px-pxm)*(px-pxm) + (py-pym)*(py-pym);
 
    if (dist > kMaxDiff) return 9999;
@@ -185,8 +191,18 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      fX = gPad->AbsPixeltoX(px);
-      fY = gPad->AbsPixeltoY(py);
+      Double_t dpx, dpy, xp1,yp1;
+      if (TestBit(kMarkerNDC)) {
+         dpx  = gPad->GetX2() - gPad->GetX1();
+         dpy  = gPad->GetY2() - gPad->GetY1();
+         xp1  = gPad->GetX1();
+         yp1  = gPad->GetY1();
+         fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
+         fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
+      } else {
+         fX = gPad->AbsPixeltoX(px);
+         fY = gPad->AbsPixeltoY(py);
+      }
       gPad->Modified(kTRUE);
       gVirtualX->SetTextColor(-1);
       break;
@@ -207,7 +223,13 @@ void TMarker::Paint(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*Paint this marker with its current attributes*-*-*-*-*-*-*
 //*-*                  =============================================
-   PaintMarker(fX,fY);
+   if (TestBit(kMarkerNDC)) {
+      Double_t u = gPad->GetX1() + fX*(gPad->GetX2()-gPad->GetX1());
+      Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
+      PaintMarker(u,v);
+   } else {
+      PaintMarker(fX,fY);
+   }
 }
 
 //______________________________________________________________________________
@@ -256,6 +278,14 @@ void TMarker::SavePrimitive(ofstream &out, Option_t *)
    SaveMarkerAttributes(out,"marker",1,1,1);
 
    out<<"   marker->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TMarker::SetNDC(Bool_t isNDC)
+{
+    // Set NDC mode on if isNDC = kTRUE, off otherwise
+   ResetBit(kMarkerNDC);
+   if (isNDC) SetBit(kMarkerNDC);
 }
 
 //______________________________________________________________________________

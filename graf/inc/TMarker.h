@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -38,6 +38,9 @@ protected:
         Double_t     fY;           //Y position of marker (left,center,etc..)
 
 public:
+        // TMarker status bits
+        enum { kMarkerNDC = BIT(14) };
+
         TMarker();
         TMarker(Double_t x, Double_t y, Int_t marker);
         TMarker(const TMarker &marker);
@@ -55,6 +58,7 @@ public:
         virtual void     PaintMarkerNDC(Double_t u, Double_t v);
         virtual void     Print(Option_t *option="") const;
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
+        virtual void     SetNDC(Bool_t isNDC=kTRUE);
         virtual void     SetX(Double_t x) { fX = x;} // *MENU*
         virtual void     SetY(Double_t y) { fY = y;} // *MENU*
 
