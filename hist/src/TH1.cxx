@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.147 2003/06/18 05:04:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.148 2003/06/30 08:44:24 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3642,7 +3642,7 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    Int_t  nbinsy = fYaxis.GetNbins();
    Int_t  nbinsz = fZaxis.GetNbins();
    Axis_t range = cxmax-cxmin;
-   Axis_t xmin,xmax;
+   Axis_t xmin=0,xmax=0;
 
     //recompute new axis limits by doubling the current range
    Int_t bin;
