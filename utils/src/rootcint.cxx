@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.20 2000/12/05 10:53:55 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.21 2000/12/11 18:02:08 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1646,6 +1646,7 @@ int main(int argc, char **argv)
       fclose(bundle);
    }
 
+   if (!iv) iv = ic;
    if (!il) {
       GenerateLinkdef(&argc, argv, iv);
       argvv[argcc++] = autold;
