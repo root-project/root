@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.7 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.8 2001/03/07 11:51:34 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -469,6 +469,21 @@ TObject *TList::First() const
    // Return the first object in the list. Returns 0 when list is empty.
 
    if (fFirst) return fFirst->GetObject();
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject **TList::GetObjectRef(TObject *obj) 
+{
+   // Return address of pointer to obj
+
+   TObjLink *lnk = FirstLink();
+
+   while (lnk) {
+      TObject *ob = lnk->GetObject();
+      if (ob->IsEqual(obj)) return lnk->GetObjectRef();
+      lnk = lnk->Next();
+   }
    return 0;
 }
 

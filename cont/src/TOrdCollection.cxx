@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.3 2001/01/09 18:33:59 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -225,6 +225,14 @@ TObject *TOrdCollection::First() const
    // is empty.
 
    return At(0);
+}
+
+//______________________________________________________________________________
+TObject **TOrdCollection::GetObjectRef(TObject *obj)
+{
+   // return address of pointer obj
+   Int_t index = IndexOf(obj);
+   return &fCont[index];
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.5 2000/12/13 16:05:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.6 2000/12/13 17:49:28 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -28,9 +28,10 @@
 #ifndef ROOT_TCollection
 #include "TCollection.h"
 #endif
+#ifndef ROOT_THashTable
+#include "THashTable.h"
+#endif
 
-
-class THashTable;
 class THashTableIter;
 class TMapIter;
 class TBrowser;
@@ -56,6 +57,7 @@ public:
    void              DeleteAll();
    TObject          *FindObject(const char *keyname) const;
    TObject          *FindObject(const TObject *key) const;
+   TObject         **GetObjectRef(TObject *obj) {return fTable->GetObjectRef(obj);}
    TObject          *GetValue(TObject *key) const;
    TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.3 2000/11/21 16:44:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.4 2001/01/09 18:33:59 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    Int_t            GetEntries() const;
    Int_t            GetEntriesFast() const {return GetAbsLast()+1;}  //only OK when no gaps
    Int_t            GetLast() const;
+   TObject        **GetObjectRef(TObject *obj);
    Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
 

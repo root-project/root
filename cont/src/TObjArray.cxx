@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.4 2000/10/31 11:18:45 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.5 2001/01/09 18:33:59 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -403,6 +403,14 @@ Int_t TObjArray::GetLast() const
    // array is empty.
 
    return fLowerBound+GetAbsLast();
+}
+
+//______________________________________________________________________________
+TObject **TObjArray::GetObjectRef(TObject *obj)
+{
+   // return address of pointer obj
+   Int_t index = IndexOf(obj);
+   return &fCont[index];
 }
 
 //______________________________________________________________________________
