@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.25 2003/06/27 11:02:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.26 2003/09/23 14:51:16 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -176,6 +176,8 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    fOutput = 0; delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
+   Int_t version = fSelector->Version();
+
    if ( !fSelector ) {
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
@@ -190,27 +192,35 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    fEvIter = TEventIter::Create(dset, fSelector, first, nentries);
 
-   PDB(kLoop,1) Info("Process","Call Begin(0)");
 
-   if (gProof != 0 && !gProof->IsMaster()) {
+   if (version == 0) {
+      PDB(kLoop,1) Info("Process","Call Begin(0)");
       fSelector->Begin(0);
+   } else {
+      if (gProof != 0 && !gProof->IsMaster()) {
+         // on client (for local run)
+         PDB(kLoop,1) Info("Process","Call Begin(0)");
+         fSelector->Begin(0);
+      }
+      PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
+      fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
    }
-   fSelector->SlaveBegin(0);  // Init is called explicitly from GetNextEvent()
 
    PDB(kLoop,1) Info("Process","Looping over Process()");
 
    // Loop over range
-   Bool_t useFillCut = fSelector->Version() == 0;
    Long64_t entry;
    while ((entry = fEvIter->GetNextEvent()) >= 0) {
 
-      PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
 
-      if(useFillCut) {
+      if(version == 0) {
+         PDB(kLoop,3)Info("Process","Call ProcessCut(%lld)", entry);
          if(fSelector->ProcessCut(entry)) {
+            PDB(kLoop,3)Info("Process","Call ProcessFill(%lld)", entry);
             fSelector->ProcessFill(entry);
          }
       } else {
+         PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
          fSelector->Process(entry);
       }
 
@@ -223,11 +233,17 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    delete fEvIter; fEvIter = 0;
 
    // Finalize
-   PDB(kLoop,1) Info("Process","Call Terminate");
 
-   fSelector->SlaveTerminate();
-   if (gProof != 0 && !gProof->IsMaster()) {
+   if (version == 0) {
+      PDB(kLoop,1) Info("Process","Call Terminate()");
       fSelector->Terminate();
+   } else {
+      PDB(kLoop,1) Info("Process","Call SlaveTerminate()");
+      fSelector->SlaveTerminate();
+      if (gProof != 0 && !gProof->IsMaster()) {
+         PDB(kLoop,1) Info("Process","Call Terminate()");
+         fSelector->Terminate();
+      }
    }
 
    fOutput = fSelector->GetOutputList();
