@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.17 2003/08/07 21:05:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.18 2003/08/22 15:13:18 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -419,9 +419,13 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
       G__TypedefInfo type(gInterpreter->TypeName(func->GetReturnTypeName()));
       const char *name = type.TrueName();
 
+      Bool_t isEnum = kFALSE;
       if (!strcmp("(unknown)",name)) {
          G__TypeInfo type(func->GetReturnTypeName());
          name = type.TrueName();
+         if (type.Property()&kIsEnum) {
+            isEnum = kTRUE;
+         }
       }
 
       if ((nstar==1) &&
@@ -450,7 +454,10 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
       else if (!strcmp("float", name)   || !strcmp("double", name)    ||
                !strcmp("Float_t", name) || !strcmp("Double_t", name))
          fRetType = kDouble;
-      else fRetType = kOther;
+      else if (isEnum)
+          fRetType = kLong;
+      else 
+          fRetType = kOther;
    }
    return fRetType;
 }
