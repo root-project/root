@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.122 2004/03/18 13:52:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.123 2004/03/19 14:24:42 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -218,7 +218,7 @@ TGraph::TGraph(const TGraph &gr)
        : TNamed(gr), TAttLine(gr), TAttFill(gr), TAttMarker(gr)
 {
    // Copy constructor for this graph
-   
+
    fNpoints = gr.fNpoints;
    if (fFunctions) fFunctions = (TList*)fFunctions->Clone();
    else fFunctions = new TList;
@@ -466,7 +466,7 @@ TGraph::~TGraph()
    delete [] fY;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      //special logic to support the case where the same object is 
+      //special logic to support the case where the same object is
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
       //drawing modes
@@ -517,7 +517,7 @@ Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right) {
 
 //______________________________________________________________________________
 Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right) {
-// return kTRUE if point number "left"'s distance to origin is bigger than 
+// return kTRUE if point number "left"'s distance to origin is bigger than
 // that of point number "right". Can be used by Sort.
    return gr->fX[left]*gr->fX[left]+gr->fY[left]*gr->fY[left]
       >gr->fX[right]*gr->fX[right]+gr->fY[right]*gr->fY[right];
@@ -682,7 +682,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 //   and the interpolated value from the spline is returned.
 //   the internally created spline is deleted on return.
 //  -if spline is specified, it is used to return the interpolated value.
-   
+
    if (!spline) {
       TString opt = option;
       opt.ToLower();
@@ -707,7 +707,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
       return spline->Eval(x);
    }
 }
-      
+
 //______________________________________________________________________________
 void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -1121,7 +1121,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grFitter->SetUserFunc(f1);
    grFitter->SetFitOption(fitOption);
-   
+
    if (!f1) { Printf("Function is a null pointer"); return 0; }
    npar = f1->GetNpar();
    if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
@@ -1426,7 +1426,7 @@ TH1F *TGraph::GetHistogram() const
   maximum  = rwymax + dy;
   if (fMinimum != -1111) minimum = fMinimum;
   if (fMaximum != -1111) maximum = fMaximum;
-  
+
       // the graph is created with at least as many channels as there are points
       // to permit zooming on the full range
   if (uxmin < 0 && rwxmin >= 0) {
@@ -2504,7 +2504,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   else            {wmin = y[0];   wmax = y[1];}
 
   if (!OptionBins) delta = (wmax - wmin)/ Double_t(nbins);
-  
+
   Int_t fwidth = gPad->GetFrameLineWidth();
   TFrame *frame = gPad->GetFrame();
   if (frame) fwidth = frame->GetLineWidth();
@@ -2515,7 +2515,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   Double_t vymin = gPad->GetUymin() + dyframe; //y already in log scale
   vxmin = TMath::Max(vxmin,wmin);
   vxmax = TMath::Min(vxmax,wmax);
-  
+
 //*-*-           Draw the histogram with a fill area
 
   gxwork  = new Double_t[2*npoints+10];
@@ -2535,7 +2535,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               gxwork[npt-1]   = gxwork[npt-2];
               gxwork[npt]     = wmin+((j-first+1)*delta);
               if (gxwork[npt] < gxwork[0]) gxwork[npt] = gxwork[0];
-              
+
            }
            else {
               xj1 = x[j];      xj  = x[j-1];
@@ -2558,7 +2558,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               //take into account the frame linewidth
               if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
               if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
-              
+
               //transform to log ?
               ComputeLogs(npt, OptionZ);
               gPad->PaintFillArea(npt,gxworkl,gyworkl);
@@ -3344,6 +3344,14 @@ void TGraph::Set(Int_t n)
 }
 
 //______________________________________________________________________________
+Bool_t TGraph::GetEditable() const
+{
+   // Return kTRUE if kNotEditable bit is not set, kFALSE otherwise.
+
+   return TestBit(kNotEditable) ? kFALSE : kTRUE;
+}
+
+//______________________________________________________________________________
 void TGraph::SetEditable(Bool_t editable)
 {
 // if editable=kFALSE, the graph cannot be modified with the mouse
@@ -3901,22 +3909,22 @@ L390:
 }
 
 //______________________________________________________________________________
-void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/, 
+void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::CompareX()*/,
 		  Bool_t ascending /*=kTRUE*/, Int_t low /* =0 */, Int_t high /* =-1111 */) {
 // Sorts the points of this TGraph using in-place quicksort (see e.g. older glibc).
-// To compare two points the function parameter greater is used (see TGraph::CompareX for an 
-// example of such a method, which is also the default comparison function for Sort). After 
-// the sort, greater(this, i, j) will return kTRUE for all i>j if ascending == kTRUE, and 
+// To compare two points the function parameter greater is used (see TGraph::CompareX for an
+// example of such a method, which is also the default comparison function for Sort). After
+// the sort, greater(this, i, j) will return kTRUE for all i>j if ascending == kTRUE, and
 // kFALSE otherwise.
 //
 // The last two parameters are used for the recursive quick sort, stating the range to be sorted
 //
 // Examples:
 //   // sort points along x axis
-//   graph->Sort(); 
+//   graph->Sort();
 //   // sort points along their distance to origin
-//   graph->Sort(&TGraph::CompareRadius); 
-//   
+//   graph->Sort(&TGraph::CompareRadius);
+//
 //   Bool_t CompareErrors(const TGraph* gr, Int_t i, Int_t j) {
 //     const TGraphErrors* ge=(const TGraphErrors*)gr;
 //     return (ge->GetEY()[i]>ge->GetEY()[j]); }
@@ -3931,17 +3939,17 @@ void TGraph::Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t) /*=TGraph::Comp
    left = low; // low is the pivot element
    right = high;
    while (left < right) {
-      // move left while item < pivot 
-      while(left <= high && greater(this, left, low) != ascending) 
+      // move left while item < pivot
+      while(left <= high && greater(this, left, low) != ascending)
 	 left++;
       // move right while item > pivot
-      while(right > low && greater(this, right, low) == ascending) 
+      while(right > low && greater(this, right, low) == ascending)
 	 right--;
-      if (left < right && left < high && right > low) 
+      if (left < right && left < high && right > low)
 	 SwapPoints(left, right);
    }
    // right is final position for the pivot
-   if (right > low) 
+   if (right > low)
       SwapPoints(low, right);
    Sort( greater, ascending, low, right-1 );
    Sort( greater, ascending, right+1, high );

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.33 2004/03/17 07:52:22 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.34 2004/03/18 13:52:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -67,7 +67,7 @@ public:
         TGraph(const TH1 *h);
         TGraph(const TF1 *f, Option_t *option="");
         TGraph(const char *filename, const char *format="%lg %lg", Option_t *option="");
-        
+
         virtual ~TGraph();
         virtual void     Apply(TF1 *f);
         virtual void     Browse(TBrowser *b);
@@ -89,6 +89,7 @@ public:
         virtual Int_t    Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
         virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
         virtual void     FitPanel(); // *MENU*
+                Bool_t   GetEditable() const;
         virtual Double_t GetErrorX(Int_t bin) const;
         virtual Double_t GetErrorY(Int_t bin) const;
         TF1             *GetFunction(const char *name) const;
@@ -119,7 +120,7 @@ public:
         virtual Int_t    RemovePoint(); // *MENU*
         virtual Int_t    RemovePoint(Int_t ipoint);
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetEditable(Bool_t editable=kTRUE); // *MENU*
+        virtual void     SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
         virtual void     SetHistogram(TH1 *h) {fHistogram = (TH1F*)h;}
         virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
         virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
@@ -127,7 +128,7 @@ public:
         virtual void     SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void     SetTitle(const char *title="");    // *MENU*
                 void     Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
-        virtual void     Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX, 
+        virtual void     Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
         virtual void     UseCurrentStyle();
                 void     Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
