@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.42 2001/02/16 08:48:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.43 2001/02/16 11:53:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -107,8 +107,6 @@ void TStreamerInfo::Build()
    TStreamerElement::Class()->IgnoreTObjectStreamer();
 
    fClass->BuildRealData();
-   
-   if (fClass->CanBypassStreamer()) SetBit(kBypassStreamer);
 
    fCheckSum = fClass->GetCheckSum();
    Int_t i, ndim, offset;
