@@ -42,6 +42,7 @@ LD            = xlC
 LDFLAGS       = $(OPT) -Wl,-bind_at_load -Wl,-flat_namespace
 ifeq ($(MACOSX_MINOR),4)
 MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
+LDFLAGS       = $(OPT) -Wl,-flat_namespace
 SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined dynamic_lookup \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 else
