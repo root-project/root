@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.11 2003/08/08 17:28:29 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.12 2003/09/19 07:56:29 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,11 +12,14 @@
 #include "TFitter.h"
 #include "TH1.h"
 #include "TF1.h"
+#include "TF2.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 
 extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 ClassImp(TFitter)
 
@@ -235,6 +238,7 @@ void TFitter::SetFitMethod(const char *name)
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquare);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
    if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquare);
+   if (!strcmp(name,"Graph2DFitChisquare")) SetFCN(Graph2DFitChisquare);
 }
       
 //______________________________________________________________________________
@@ -480,3 +484,65 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    f1->SetNumberFitPoints(npfits);
 }
 
+
+//______________________________________________________________________________
+void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
+                       Double_t *u, Int_t /*flag*/)
+{
+//*-*-*-*-*Minimization function for 2D Graphs using a Chisquare method*-*-*-*-*
+//*-*      ============================================================
+
+///   Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
+   Double_t cu,fu,fsum;
+   Double_t x[2];
+///   Double_t xm,xp;
+   Int_t bin, npfits=0;
+
+   TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
+   TGraph2D *gr     = (TGraph2D*)grFitter->GetObjectFit();
+   TF2 *f2   = (TF2*)grFitter->GetUserFunc();
+   Foption_t Foption = grFitter->GetFitOption();
+   
+   Int_t n        = gr->GetN();
+   Double_t *gx   = gr->GetX();
+   Double_t *gy   = gr->GetY();
+   Double_t *gz   = gr->GetZ();
+///   Double_t fxmin = f2->GetXmin();
+///   Double_t fxmax = f2->GetXmax();
+   npar           = f2->GetNpar();
+
+   f2->InitArgs(x,u);
+   f      = 0;
+   for (bin=0;bin<n;bin++) {
+      x[0] = gx[bin];
+      x[1] = gy[bin];
+      if (!f2->IsInside(x)) continue;
+      cu   = gz[bin];
+      TF2::RejectPoint(kFALSE);
+      fu   = f2->EvalPar(x,u);
+      if (TF2::RejectedPoint()) continue;
+      fsum = (cu-fu);
+      npfits++;
+      if (Foption.W1) {
+         f += fsum*fsum;
+         continue;
+      }
+///      ex  = gr->GetErrorX(bin);
+///      ey  = gr->GetErrorY(bin);
+///      if (ex < 0) ex = 0;
+///      if (ey < 0) ey = 0;
+///      if (ex > 0) {
+///        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+///        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+///        x[0] = xm; fm = f2->EvalPar(x,u);
+///        x[0] = xp; fp = f2->EvalPar(x,u);
+///        eux = 0.5*(fp-fm);
+///      } else
+///        eux = 0.;
+///      eu = ey*ey+eux*eux;
+///      if (eu <= 0) eu = 1;
+///      f += fsum*fsum/eu;
+      f += fsum*fsum;
+   }
+   f2->SetNumberFitPoints(npfits);
+}

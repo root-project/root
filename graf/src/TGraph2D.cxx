@@ -17,6 +17,7 @@
 #include "TPolyLine.h"
 #include "TPolyMarker.h"
 #include "TVirtualPad.h"
+#include "TVirtualFitter.h"
 #include "TView.h"
 
 ClassImp(TGraph2D)
@@ -91,7 +92,15 @@ ClassImp(TGraph2D)
 <img src="gif/graph2d.gif">
 */
 //End_Html
-
+//
+// A more complete example can be find in $ROOTSYS/tutorial/graph2dfit.C. It
+// produces the following output:
+//
+//Begin_Html
+/*
+<img src="gif/graph2dfit.gif">
+*/
+//End_Html
 
 
 const Int_t kMaxStored    = 2500;
@@ -99,12 +108,13 @@ const Int_t kMaxNTris2Try = 100000;
 
 
 //______________________________________________________________________________
-TGraph2D::TGraph2D(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
+TGraph2D::TGraph2D()
+         : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
-   // Graph default constructor
+   // Graph2D default constructor
 
-   fNp = 0;
-   Initialise(10);
+   fNpoints = 0;
+   Initialise(100);
 }
 
 
@@ -112,16 +122,15 @@ TGraph2D::TGraph2D(): TNamed(), TAttLine(), TAttFill(1,1001), TAttMarker()
 TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
          : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
-   // Produce a 2D histogram of z values linearly interpolated from the
-   // vectors rx, ry, rz using Delaunay triangulation.
+   // Graph2D constructor with three vectors of doubles as input.
 
-   fNp = n;
+   fNpoints = n;
    Initialise(n);
 
    // Copy the input vectors into local arrays
 
    Int_t N;
-   for (N=0; N<fNp; N++) {
+   for (N=0; N<fNpoints; N++) {
       fX[N] = x[N];
       fY[N] = y[N];
       fZ[N] = z[N];
@@ -133,11 +142,40 @@ TGraph2D::TGraph2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *)
 TGraph2D::TGraph2D(Int_t n, Option_t *)
          : TNamed("Graph2D","Graph2D"), TAttLine(), TAttFill(1,1001), TAttMarker()
 {
-   // Create a TGraph2D. The arrays fX, fY and fZ should be filled via
+   // Graph2D constructor. The arrays fX, fY and fZ should be filled via
    // calls to SetPoint
 
-   fNp = 0;
+   fNpoints = 0;
    Initialise(n);
+}
+
+
+//______________________________________________________________________________
+TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *)
+         : TNamed("Graph2D",filename), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+   // Graph2D constructor reading input from filename
+   // filename is assumed to contain at least three columns of numbers
+   
+   fNpoints = 0;
+   Initialise(100);
+  
+   Double_t x,y,z;
+   FILE *fp = fopen(filename,"r");
+   if (!fp) {
+      MakeZombie();   
+      Error("TGraph2D", "Cannot open file: %s, TGraph2D is Zombie",filename);
+      return;
+   }
+   char line[80];
+   Int_t np = 0;
+   while (fgets(line,80,fp)) {
+      sscanf(&line[0],format,&x, &y, &z);
+      SetPoint(np,x,y,z);
+      np++;
+   }
+   
+   fclose(fp);
 }
 
 
@@ -146,16 +184,21 @@ TGraph2D::~TGraph2D()
 {
    // TGraph2D destructor.
 
-   if (fX)          delete [] fX;
-   if (fY)          delete [] fY;
-   if (fZ)          delete [] fZ;
-   if (fTried)      delete [] fTried;
-   if (fHullPoints) delete [] fHullPoints;
-   if (fOrder)      delete [] fOrder;   
-   if (fDist)       delete [] fDist;
-   if (fHistogram) {
-      delete fHistogram;
-      fHistogram = 0;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   if (fZ) delete [] fZ;
+   if (fHistogram)  {delete fHistogram; fHistogram = 0;}
+   if (fTried)      {delete [] fTried; fTried = 0;}
+   if (fHullPoints) {delete [] fHullPoints; fHullPoints = 0;}
+   if (fOrder)      {delete [] fOrder; fOrder = 0;}
+   if (fDist)       {delete [] fDist; fDist = 0;}
+   if (fXN)         {delete [] fXN; fXN = 0;}
+   if (fYN)         {delete [] fYN; fYN = 0;}
+   if (fFunctions) {
+      fFunctions->SetBit(kInvalidObject);
+      fFunctions->Delete();
+      delete fFunctions;
+      fFunctions = 0;
    }
 }
 
@@ -163,7 +206,7 @@ TGraph2D::~TGraph2D()
 //______________________________________________________________________________
 Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 {
-   // Find the Delaunay triangle that the point (xx,yy) sits in (if any) and 
+   // Finds the Delaunay triangle that the point (xx,yy) sits in (if any) and 
    // calculate a z-value for it by linearly interpolating the z-values that 
    // make up that triangle.
 
@@ -182,8 +225,8 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
 
    // create vectors needed for sorting
    if (!fOrder) {
-      fOrder = new Int_t[fNp];
-      fDist  = new Double_t[fNp];
+      fOrder = new Int_t[fNpoints];
+      fDist  = new Double_t[fNpoints];
    }
 
    // the input point will be point zero.
@@ -210,7 +253,7 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
          // enclose the point?
          if (Enclose(P,N,M,0)) {
             // yes, we have the triangle
-            thevalue = Interpolate(P,N,M,0);
+            thevalue = InterpolateOnPlane(P,N,M,0);
             return thevalue;
          }
       } else {
@@ -225,19 +268,19 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
    // it must be in a Delaunay triangle - find it...
 
    // order mass points by distance in mass plane from desired point
-   for (N=1; N<=fNp; N++) {
+   for (N=1; N<=fNpoints; N++) {
       vxN = fXN[N];
       vyN = fYN[N];
       fDist[N-1] = TMath::Sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
    }
 
    // sort array 'dist' to find closest points
-   TMath::Sort(fNp, fDist, fOrder, kFALSE);
-   for (N=1; N<=fNp; N++) fOrder[N-1]++;
+   TMath::Sort(fNpoints, fDist, fOrder, kFALSE);
+   for (N=1; N<=fNpoints; N++) fOrder[N-1]++;
 
    // loop over triplets of close points to try to find a triangle that 
    // encloses the point.
-   for (K=3; K<=fNp; K++) {
+   for (K=3; K<=fNpoints; K++) {
       M = fOrder[K-1];
       for (J=2; J<=K-1; J++) {
          N = fOrder[J-1];
@@ -273,7 +316,7 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
                   } else {
                      Error("ComputeZ", "Positive non-Delaunay triangle ? %g %g %d %d %d",
                            xx,yy,IT,fNxt,fNdt);
-                     thevalue  = Interpolate(P,N,M,0);
+                     thevalue  = InterpolateOnPlane(P,N,M,0);
                      return thevalue;
                   }
                }
@@ -286,14 +329,14 @@ Double_t TGraph2D::ComputeZ(Double_t xx, Double_t yy)
             // loop over all other points testing each to see if it's 
             // inside the triangle's circle
             ndegen = 0;
-            for ( Z=1; Z<=fNp; Z++) {
+            for ( Z=1; Z<=fNpoints; Z++) {
                if ((Z==P) || (Z==N) || (Z==M)) goto L50;
                // An easy first check is to see if point Z is inside the triangle 
                // (if it's in the triangle it's also in the circle)
 
                // point Z cannot be inside the triangle if it's further from (xx,yy) 
                // than the furthest pointing making up the triangle - test this
-               for (L=1; L<=fNp; L++) {
+               for (L=1; L<=fNpoints; L++) {
                   if (fOrder[L-1] == Z) {
                      if ((L<I) || (L<J) || (L<K)) {
                         // point Z is nearer to (xx,yy) than M, N or P - it could be in the 
@@ -505,7 +548,7 @@ L50:
                T3 = M;
             }
             // do the interpolation
-            thevalue = Interpolate(T1,T2,T3,0);
+            thevalue = InterpolateOnPlane(T1,T2,T3,0);
             return thevalue;
 L90:
             continue;
@@ -522,71 +565,9 @@ L90:
 
 
 //______________________________________________________________________________
-void TGraph2D::CreateHistogram()
-{
-   // Book the 2D histogram fHistogram with a margin around the hull.
-   // Call ComputeZ at each bin centre to build up interpolated 2D histogram
-
-   Double_t Xoffset, Yoffset, ScaleFactor;
-   Double_t x, y, z, sx, sy;
-   Int_t N;
-   Double_t xmax  = GetXmax();
-   Double_t ymax  = GetYmax();
-   Double_t xmin  = GetXmin();
-   Double_t ymin  = GetYmin();
-   Double_t hxmax = xmax+fMargin*(xmax-xmin);
-   Double_t hymax = ymax+fMargin*(ymax-ymin);
-   Double_t hxmin = xmin-fMargin*(xmax-xmin);
-   Double_t hymin = ymin-fMargin*(ymax-ymin);
-
-   fHistogram = new TH2D(GetName(),GetTitle(),fNpx ,hxmin, hxmax,
-                                              fNpy, hymin, hymax);
-
-   Xoffset     = -(xmax+xmin)/2.;
-   Yoffset     = -(ymax+ymin)/2.;
-   ScaleFactor = 2./((xmax-xmin)+(ymax-ymin));
-
-   // Offset fX and fY so they average zero,
-   // and scale so the average of the X and Y ranges is one.
-   fXNmax = (xmax+Xoffset)*ScaleFactor;
-   fXNmin = (xmin+Xoffset)*ScaleFactor;
-   fYNmax = (ymax+Yoffset)*ScaleFactor;
-   fYNmin = (ymin+Yoffset)*ScaleFactor;
-
-   // Normalize fX and fY. The normalized version of the vectors is used
-   // in ComputeZ.
-   fXN = new Double_t[fNp+1];
-   fYN = new Double_t[fNp+1];
-   for (N=0; N<fNp; N++) {
-      fXN[N+1] = (fX[N]+Xoffset)*ScaleFactor;
-      fYN[N+1] = (fY[N]+Yoffset)*ScaleFactor;
-   }
-
-   FindHull();
-
-   Double_t dx = (hxmax-hxmin)/fNpx;
-   Double_t dy = (hymax-hymin)/fNpy;
-
-   for (Int_t ix=1; ix<=fNpx; ix++) {
-      x  = hxmin+(ix-0.5)*dx;
-      sx = (x+Xoffset)*ScaleFactor;
-      for (Int_t iy=1; iy<=fNpy; iy++) {
-         y  = hymin+(iy-0.5)*dy;
-         sy = (y+Yoffset)*ScaleFactor;
-         z  = ComputeZ(sx, sy);
-         fHistogram->Fill(x, y, z);
-      }
-   }
-
-   delete [] fXN;
-   delete [] fYN;
-}
-
-
-//______________________________________________________________________________
 Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a graph
+   // Computes distance from point px,py to a graph
 
    Int_t distance = 9999;
    if (fHistogram) distance = fHistogram->DistancetoPrimitive(px,py);
@@ -666,7 +647,7 @@ Bool_t TGraph2D::Enclose(Int_t T1, Int_t T2, Int_t T3, Int_t Ex) const
 //______________________________________________________________________________
 void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {   
-   // Execute action corresponding to one event
+   // Executes action corresponding to one event
 
    if (fHistogram) fHistogram->ExecuteEvent(event, px, py);
 }
@@ -675,7 +656,7 @@ void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //______________________________________________________________________________
 void TGraph2D::FileIt(Int_t tri)
 {
-   // File the triangle 'tri' in the fTried array. Delaunay triangles 
+   // Files the triangle 'tri' in the fTried array. Delaunay triangles 
    // (tri>0) are stored sequentially from fTried[0] onwards. Non-Delaunay 
    // triangles are stored sequentially from fTried[kMaxStored-1] backwards. 
    // If the array cannot hold all the triangles, Delaunay triangles get 
@@ -711,23 +692,19 @@ void TGraph2D::FileIt(Int_t tri)
 //______________________________________________________________________________
 void TGraph2D::FindHull()
 {
-   //
-   // Author: Luke Jones (Royal Holloway, University of London), April 2002
-   //
-   // Find those points which make up the convex hull of the set. If the xy
+   // Finds those points which make up the convex hull of the set. If the xy
    // plane were a sheet of wood, and the points were nails hammered into it
    // at the respective coordinates, then if an elastic band were stretched
    // over all the nails it would form the shape of the convex hull. Those
    // nails in contact with it are the points that make up the hull.
-   //
 
    Int_t N,nhull_tmp;
    Bool_t in;
 
-   if (!fHullPoints) fHullPoints = new Int_t[fNp];
+   if (!fHullPoints) fHullPoints = new Int_t[fNpoints];
 
    nhull_tmp = 0;
-   for(N=1; N<=fNp; N++) {
+   for(N=1; N<=fNpoints; N++) {
       // if the point is not inside the hull of the set of all points 
       // bar it, then it is part of the hull of the set of all points 
       // including it
@@ -746,11 +723,7 @@ void TGraph2D::FindHull()
 //______________________________________________________________________________
 Bool_t TGraph2D::InHull(Int_t E, Int_t X) const
 {
-   //
-   // Author: Luke Jones (Royal Holloway, University of London), April 2002
-   //
    // Is point E inside the hull defined by all points apart from X ?
-   //
 
    Int_t n1,n2,N,M,Ntry;
    Double_t lastdphi,dd1,dd2,dx1,dx2,dx3,dy1,dy2,dy3;
@@ -767,7 +740,7 @@ Bool_t TGraph2D::InHull(Int_t E, Int_t X) const
       Ntry = fNhull;
    } else {
       //  The hull has not yet been found, will have to try every point
-      Ntry = fNp;
+      Ntry = fNpoints;
    }
 
    //  N1 and N2 will represent the two points most separated by angle
@@ -857,7 +830,7 @@ L999:
 //______________________________________________________________________________
 void TGraph2D::Initialise(Int_t n)
 {
-   // Initialise the data structures needed to compute the Delaunay triangles
+   // Initialises the data structures needed to compute the Delaunay triangles
 
    fSize   = n,
    fMargin = 0.;
@@ -868,23 +841,59 @@ void TGraph2D::Initialise(Int_t n)
    fNdt        = 0;
    fNxt        = 0;
    fNhull      = 0;
+   fFunctions  = 0;
    fHistogram  = 0;
+   fMaximum    = -1111;
+   fMinimum    = -1111;
    fHullPoints = 0;
+   fXN         = 0;
+   fYN         = 0;
    fOrder      = 0;
    fDist       = 0;
 
    fTried = new Int_t[kMaxStored];
-
+   
    fX = new Double_t[fSize];
    fY = new Double_t[fSize];
    fZ = new Double_t[fSize];
+
+   fFunctions = new TList;
 }
 
+//______________________________________________________________________________
+Double_t TGraph2D::Interpolate(Double_t x, Double_t y) const
+{
+   // Finds the z value at the position (x,y) thanks to 
+   // the Delaunay interpolation.
+
+   if (!fXN) {
+      Double_t xmax = GetXmax();
+      Double_t ymax = GetYmax();
+      Double_t xmin = GetXmin();
+      Double_t ymin = GetYmin();
+      ((TGraph2D*)this)->fXoffset = -(xmax+xmin)/2.;
+      ((TGraph2D*)this)->fYoffset = -(ymax+ymin)/2.;
+      ((TGraph2D*)this)->fScaleFactor = 2./((xmax-xmin)+(ymax-ymin));
+      ((TGraph2D*)this)->fXNmax = (xmax+fXoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fXNmin = (xmin+fXoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fYNmax = (ymax+fYoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fYNmin = (ymin+fYoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fXN    = new Double_t[fNpoints+1];
+      ((TGraph2D*)this)->fYN    = new Double_t[fNpoints+1];
+      for (Int_t N=0; N<fNpoints; N++) {
+         fXN[N+1] = (fX[N]+fXoffset)*fScaleFactor;
+         fYN[N+1] = (fY[N]+fYoffset)*fScaleFactor;
+      }
+   }
+   Double_t sx = (x+fXoffset)*fScaleFactor;
+   Double_t sy = (y+fYoffset)*fScaleFactor;
+   return ((TGraph2D*)this)->ComputeZ(sx, sy);
+}
 
 //______________________________________________________________________________
-Double_t TGraph2D::Interpolate(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const
+Double_t TGraph2D::InterpolateOnPlane(Int_t TI1, Int_t TI2, Int_t TI3, Int_t E) const
 {
-   // Find the z-value at point E given that it lies 
+   // Finds the z-value at point E given that it lies 
    // on the plane defined by T1,T2,T3
 
    Int_t tmp;
@@ -919,9 +928,411 @@ L1:
 
 
 //______________________________________________________________________________
+TObject *TGraph2D::FindObject(const char *name) const
+{
+   // search object named name in the list of functions
+
+   if (fFunctions) return fFunctions->FindObject(name);
+   return 0;
+}
+
+
+//______________________________________________________________________________
+TObject *TGraph2D::FindObject(const TObject *obj) const
+{
+   // search object obj in the list of functions 
+
+   if (fFunctions) return fFunctions->FindObject(obj);
+   return 0;
+}
+
+
+//______________________________________________________________________________
+Int_t TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
+{
+   // Fits this graph with function with name fname
+
+   TF2 *f2 = (TF2*)gROOT->GetFunction(fname);
+   if (!f2) {
+      Error("Fit","Unknown function: %s",fname);
+      return -1;
+   }
+   return Fit(f2,option,"");
+}
+
+
+//______________________________________________________________________________
+Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
+{
+   // Fits this 2D graph with function f2
+   //
+   //  f2 is an already predefined function created by TF2.
+   //  Predefined functions such as gaus, expo and poln are automatically
+   //  created by ROOT.
+   //
+   //  The list of fit options is given in parameter option.
+   //     option = "W"  Set all errors to 1
+   //            = "U" Use a User specified fitting algorithm (via SetFCN)
+   //            = "Q" Quiet mode (minimum printing)
+   //            = "V" Verbose mode (default is between Q and V)
+   //            = "R" Use the Range specified in the function range
+   //            = "N" Do not store the graphics function, do not draw
+   //            = "0" Do not plot the result of the fit. By default the fitted function
+   //                  is drawn unless the option"N" above is specified.
+   //            = "+" Add this new fitted function to the list of fitted functions
+   //                  (by default, any previous function is deleted)
+   //
+   //  In order to use the Range option, one must first create a function
+   //  with the expression to be fitted. For example, if your graph2d
+   //  has a defined range between -4 and 4 and you want to fit a gaussian
+   //  only in the interval 1 to 3, you can do:
+   //       TF2 *f2 = new TF2("f2","gaus",1,3);
+   //       graph2d->Fit("f2","R");
+   //
+   //
+   //  Setting initial conditions
+   //  ==========================
+   //  Parameters must be initialized before invoking the Fit function.
+   //  The setting of the parameter initial values is automatic for the
+   //  predefined functions : poln, expo, gaus. One can however disable
+   //  this automatic computation by specifying the option "B".
+   //  You can specify boundary limits for some or all parameters via
+   //       f2->SetParLimits(p_number, parmin, parmax);
+   //  if parmin>=parmax, the parameter is fixed
+   //  Note that you are not forced to fix the limits for all parameters.
+   //  For example, if you fit a function with 6 parameters, you can do:
+   //    func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
+   //    func->SetParLimits(4,-10,-4);
+   //    func->SetParLimits(5, 1,1);
+   //  With this setup, parameters 0->3 can vary freely
+   //  Parameter 4 has boundaries [-10,-4] with initial value -8
+   //  Parameter 5 is fixed to 100.
+   //
+   //  Fit range
+   //  =========
+   //  The fit range can be specified in two ways:
+   //    - specify rxmax > rxmin (default is rxmin=rxmax=0)
+   //    - specify the option "R". In this case, the function will be taken
+   //      instead of the full graph range.
+   //
+   //  Changing the fitting function
+   //  =============================
+   //  By default the fitting function Graph2DFitChisquare is used.
+   //  To specify a User defined fitting function, specify option "U" and
+   //  call the following functions:
+   //    TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
+   //  where MyFittingFunction is of type:
+   //  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   //
+   //  Associated functions
+   //  ====================
+   //  One or more object (typically a TF2*) can be added to the list
+   //  of functions (fFunctions) associated to each graph.
+   //  When TGraph::Fit is invoked, the fitted function is added to this list.
+   //  Given a graph gr, one can retrieve an associated function
+   //  with:  TF2 *myfunc = gr->GetFunction("myfunc");
+   //
+   //  Access to the fit results
+   //  =========================
+   //  If the graph is made persistent, the list of
+   //  associated functions is also persistent. Given a pointer (see above)
+   //  to an associated function myfunc, one can retrieve the function/fit
+   //  parameters with calls such as:
+   //    Double_t chi2 = myfunc->GetChisquare();
+   //    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+   //    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+   //
+   //  Fit Statistics
+   //  ==============
+   //  You can change the statistics box to display the fit parameters with
+   //  the TStyle::SetOptFit(mode) method. This mode has four digits.
+   //  mode = pcev  (default = 0111)
+   //    v = 1;  print name/values of parameters
+   //    e = 1;  print errors (if e=1, v must be 1)
+   //    c = 1;  print Chisquare/Number of degress of freedom
+   //    p = 1;  print Probability
+   //
+   //  For example: gStyle->SetOptFit(1011);
+   //  prints the fit probability, parameter names/values, and errors.
+   //  You can change the position of the statistics box with these lines
+   //  (where g is a pointer to the TGraph):
+   //
+   //  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
+   //  Root > st->SetX1NDC(newx1); //new x start position
+   //  Root > st->SetX2NDC(newx2); //new x end position
+   
+   Int_t fitResult = 0;
+   Double_t xmin, xmax, ymin, ymax;
+   Int_t i, npar,nvpar,nparx;
+   Double_t par, we, al, bl;
+   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
+   TF2 *fnew2;
+
+   Double_t *arglist = new Double_t[100];
+
+   // Decode string choptin and fill fitOption structure
+   Foption_t fitOption;
+   fitOption.Quiet   = 0;
+   fitOption.Verbose = 0;
+   fitOption.Bound   = 0;
+   fitOption.Like    = 0;
+   fitOption.W1      = 0;
+   fitOption.Errors  = 0;
+   fitOption.Range   = 0;
+   fitOption.Gradient= 0;
+   fitOption.Nograph = 0;
+   fitOption.Nostore = 0;
+   fitOption.Plus    = 0;
+   fitOption.User    = 0;
+
+   TString opt = option;
+   opt.ToUpper();
+
+   if (opt.Contains("U")) fitOption.User    = 1;
+   if (opt.Contains("Q")) fitOption.Quiet   = 1;
+   if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
+   if (opt.Contains("W")) fitOption.W1      = 1;
+   if (opt.Contains("E")) fitOption.Errors  = 1;
+   if (opt.Contains("R")) fitOption.Range   = 1;
+   if (opt.Contains("N")) fitOption.Nostore = 1;
+   if (opt.Contains("0")) fitOption.Nograph = 1;
+   if (opt.Contains("+")) fitOption.Plus    = 1;
+   if (opt.Contains("B")) fitOption.Bound   = 1;
+
+   xmin    = GetXmin();
+   xmax    = GetXmax();
+   ymin    = GetYmin();
+   ymax    = GetYmax();
+
+///xmin    = fX[0];
+///xmax    = fX[fNpoints-1];
+///ymin    = fY[0];
+///ymax    = fY[fNpoints-1];
+///Double_t err0 = GetErrorX(0);
+///Double_t errn = GetErrorX(fNpoints-1);
+///if (err0 > 0) xmin -= 2*err0;
+///if (errn > 0) xmax += 2*errn;
+///for (i=0;i<fNpoints;i++) {
+///   if (fX[i] < xmin) xmin = fX[i];
+///   if (fX[i] > xmax) xmax = fX[i];
+///   if (fY[i] < ymin) ymin = fY[i];
+///   if (fY[i] > ymax) ymax = fY[i];
+///}
+///if (rxmax > rxmin) {
+///   xmin = rxmin;
+///   xmax = rxmax;
+///}
+
+   // Check if Minuit is initialized and create special functions
+   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this);
+   grFitter->Clear();
+
+
+   // Get pointer to the function by searching in the list of functions in ROOT
+   grFitter->SetUserFunc(f2);
+   grFitter->SetFitOption(fitOption);
+   
+   if (!f2) { Printf("Function is a null pointer"); return 0; }
+   npar = f2->GetNpar();
+   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
+
+   // Check that function has same dimension as histogram
+   if (f2->GetNdim() != 2) {
+      Error("Fit","Function %s is not 1-D",f2->GetName()); 
+      return 0;
+   }
+
+//*-*- Is a Fit range specified?
+///Int_t gxfirst, gxlast;
+///if (fitOption.Range) {
+///   f2->GetRange(xmin, ymin, xmax, ymax);
+///   gxfirst = fNpoints +1;
+///   gxlast  = -1;
+///   for (i=0;i<fNpoints;i++) {
+///      if (fX[i] >= xmin && gxfirst > i) gxfirst = i;
+///      if (fX[i] <= xmax  && gxlast < i) gxlast  = i;
+///   }
+///} else {
+///   f2->SetRange(xmin, ymin, xmax, ymax);
+///   gxfirst = 0;
+///   gxlast  = fNpoints-1;
+///}
+
+   // Some initialisations
+   if (!fitOption.Verbose) {
+      arglist[0] = -1;
+      grFitter->ExecuteCommand("SET PRINT", arglist,1);
+      arglist[0] = 0;
+      grFitter->ExecuteCommand("SET NOW",   arglist,0);
+   }
+
+   // Set error criterion for chisquare
+   arglist[0] = 1;
+   if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
+   fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
+   if (fitResult != 0) {
+     // Abnormal termination, MIGRAD might not have converged on a minimum.
+     if (!fitOption.Quiet) {
+        Warning("Fit","Abnormal termination of minimization.");
+     }
+     return fitResult;
+   }
+
+   // Transfer names and initial values of parameters to Minuit
+   Int_t nfixed = 0;
+   for (i=0;i<npar;i++) {
+      par = f2->GetParameter(i);
+      f2->GetParLimits(i,al,bl);
+      if (al*bl != 0 && al >= bl) {
+         al = bl = 0;
+         arglist[nfixed] = i+1;
+         nfixed++;
+      }
+      we  = 0.3*TMath::Abs(par);
+      if (we <= TMath::Abs(par)*1e-6) we = 1;
+      grFitter->SetParameter(i,f2->GetParName(i),par,we,al,bl);
+   }
+   if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
+
+   // Reset Print level
+   if (fitOption.Verbose) {
+      arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1);
+   }
+
+   // Compute sum of squares of errors in the bin range
+   Bool_t hasErrors = kFALSE;
+   Double_t sumw2=0;
+///Double_t ex, ey, sumw2=0;
+///for (i=gxfirst;i<=gxlast;i++) {
+///   ex = GetErrorX(i);
+///   ey = GetErrorY(i);
+///   if (ex > 0 || ey > 0) hasErrors = kTRUE;
+///   sumw2 += ey*ey;
+///}
+//*-*- Perform minimization
+///if (!InheritsFrom("TGraphErrors")) SetBit(kFitInit);
+   arglist[0] = TVirtualFitter::GetMaxIterations();
+   arglist[1] = sumw2*TVirtualFitter::GetPrecision();
+   grFitter->ExecuteCommand("MIGRAD",arglist,2);
+   if (fitOption.Errors) {
+      grFitter->ExecuteCommand("HESSE",arglist,0);
+      grFitter->ExecuteCommand("MINOS",arglist,0);
+   }
+
+   grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
+   f2->SetChisquare(amin);
+   Int_t ndf = f2->GetNumberFitPoints()-npar+nfixed;
+   f2->SetNDF(ndf);
+
+   // Get return status
+   char parName[50];
+   for (i=0;i<npar;i++) {
+      grFitter->GetParameter(i,parName, par,we,al,bl);
+      if (!fitOption.Errors) werr = we;
+      else {
+         grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
+         if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
+         else                         werr = we;
+      }
+      if (!hasErrors && ndf > 1) werr *= TMath::Sqrt(amin/(ndf-1));
+      f2->SetParameter(i,par);
+      f2->SetParError(i,werr);
+   }
+
+   // Print final values of parameters.
+   if (!fitOption.Quiet) {
+      if (fitOption.Errors) grFitter->PrintResults(4,amin);
+      else                  grFitter->PrintResults(3,amin);
+   }
+   delete [] arglist;
+
+   // Store fitted function in histogram functions list and draw
+   if (!fitOption.Nostore) {
+      if (!fFunctions) fFunctions = new TList;
+      if (!fitOption.Plus) {
+         TIter next(fFunctions, kIterBackward);
+         TObject *obj;
+         while ((obj = next())) {
+            if (obj->InheritsFrom(TF1::Class())) delete obj;
+         }
+      }
+      fnew2 = new TF2();
+      f2->Copy(*fnew2);
+      fFunctions->Add(fnew2);
+      fnew2->SetParent(this);
+      fnew2->Save(xmin,xmax,0,0,0,0);
+      if (fitOption.Nograph) fnew2->SetBit(TF1::kNotDraw);
+      fnew2->SetBit(TFormula::kNotGlobal);
+
+      if (TestBit(kCanDelete)) return fitResult;
+      if (gPad) gPad->Modified();
+   }
+   return fitResult;
+}
+
+
+//______________________________________________________________________________
 TH2D *TGraph2D::GetHistogram() const
 {
-   // Return a pointer to the Delaunay histogram
+   // Returns a pointer to the Delaunay histogram. If fHistogram doesn't exist,
+   // books the 2D histogram fHistogram with a margin around the hull.
+   // Calls ComputeZ at each bin centre to build up interpolated 2D histogram
+
+   if (fHistogram) return fHistogram;
+
+   Double_t x, y, z, sx, sy;
+   Int_t N;
+   Double_t xmax  = GetXmax();
+   Double_t ymax  = GetYmax();
+   Double_t xmin  = GetXmin();
+   Double_t ymin  = GetYmin();
+   Double_t hxmax = xmax+fMargin*(xmax-xmin);
+   Double_t hymax = ymax+fMargin*(ymax-ymin);
+   Double_t hxmin = xmin-fMargin*(xmax-xmin);
+   Double_t hymin = ymin-fMargin*(ymax-ymin);
+
+   ((TGraph2D*)this)->fHistogram = new TH2D(GetName(),GetTitle(),
+                                            fNpx ,hxmin, hxmax,
+                                            fNpy, hymin, hymax);
+
+   ((TGraph2D*)this)->fXoffset     = -(xmax+xmin)/2.;
+   ((TGraph2D*)this)->fYoffset     = -(ymax+ymin)/2.;
+   ((TGraph2D*)this)->fScaleFactor = 2./((xmax-xmin)+(ymax-ymin));
+
+   // Offset fX and fY so they average zero, and scale so the average of the 
+   // X and Y ranges is one. The normalized version of fX and fY used 
+   // in ComputeZ.
+   if (!fXN) {
+      ((TGraph2D*)this)->fXNmax = (xmax+fXoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fXNmin = (xmin+fXoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fYNmax = (ymax+fYoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fYNmin = (ymin+fYoffset)*fScaleFactor;
+      ((TGraph2D*)this)->fXN    = new Double_t[fNpoints+1];
+      ((TGraph2D*)this)->fYN    = new Double_t[fNpoints+1];
+      for (N=0; N<fNpoints; N++) {
+         fXN[N+1] = (fX[N]+fXoffset)*fScaleFactor;
+         fYN[N+1] = (fY[N]+fYoffset)*fScaleFactor;
+      }
+   }
+
+   ((TGraph2D*)this)->FindHull();
+
+   Double_t dx = (hxmax-hxmin)/fNpx;
+   Double_t dy = (hymax-hymin)/fNpy;
+
+   for (Int_t ix=1; ix<=fNpx; ix++) {
+      x  = hxmin+(ix-0.5)*dx;
+      sx = (x+fXoffset)*fScaleFactor;
+      for (Int_t iy=1; iy<=fNpy; iy++) {
+         y  = hymin+(iy-0.5)*dy;
+         sy = (y+fYoffset)*fScaleFactor;
+         z  = ((TGraph2D*)this)->ComputeZ(sx, sy);
+         fHistogram->Fill(x, y, z);
+      }
+   }
+
+   if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
+   if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
 
    return fHistogram;
 }
@@ -930,10 +1341,10 @@ TH2D *TGraph2D::GetHistogram() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetXmax() const
 {
-   // Return the X maximum
+   // Returns the X maximum
 
    Double_t v = fX[0];
-   for (Int_t i=1; i<fNp; i++) if (fX[i]>v) v=fX[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]>v) v=fX[i];
    return v;
 }
 
@@ -941,10 +1352,10 @@ Double_t TGraph2D::GetXmax() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetXmin() const
 {
-   // Return the X minimum
+   // Returns the X minimum
 
    Double_t v = fX[0];
-   for (Int_t i=1; i<fNp; i++) if (fX[i]<v) v=fX[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fX[i]<v) v=fX[i];
    return v;
 }
 
@@ -952,10 +1363,10 @@ Double_t TGraph2D::GetXmin() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetYmax() const
 {
-   // Return the Y maximum
+   // Returns the Y maximum
 
    Double_t v = fY[0];
-   for (Int_t i=1; i<fNp; i++) if (fY[i]>v) v=fY[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]>v) v=fY[i];
    return v;
 }
 
@@ -963,10 +1374,10 @@ Double_t TGraph2D::GetYmax() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetYmin() const
 {
-   // Return the Y minimum
+   // Returns the Y minimum
 
    Double_t v = fY[0];
-   for (Int_t i=1; i<fNp; i++) if (fY[i]<v) v=fY[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fY[i]<v) v=fY[i];
    return v;
 }
 
@@ -974,10 +1385,10 @@ Double_t TGraph2D::GetYmin() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetZmax() const
 {
-   // Return the Z maximum
+   // Returns the Z maximum
 
    Double_t v = fZ[0];
-   for (Int_t i=1; i<fNp; i++) if (fZ[i]>v) v=fZ[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]>v) v=fZ[i];
    return v;
 }
 
@@ -985,10 +1396,10 @@ Double_t TGraph2D::GetZmax() const
 //______________________________________________________________________________
 Double_t TGraph2D::GetZmin() const
 {
-   // Return the Z minimum
+   // Returns the Z minimum
 
    Double_t v = fZ[0];
-   for (Int_t i=1; i<fNp; i++) if (fZ[i]<v) v=fZ[i];
+   for (Int_t i=1; i<fNpoints; i++) if (fZ[i]<v) v=fZ[i];
    return v;
 }
 
@@ -996,14 +1407,28 @@ Double_t TGraph2D::GetZmin() const
 //______________________________________________________________________________
 void TGraph2D::Paint(Option_t *option)
 {
-   // Paint this graph with its current attributes
+   // Paints this 2D graph with its current attributes
 
-   if (strstr(option,"TRI") || strstr(option,"tri")) {
-      if (!fHistogram) CreateHistogram();
+   TString opt = option;
+   opt.ToLower();
+
+   if (opt.Contains("tri")) {
+      GetHistogram();
       PaintTriangles();
+   } else if (opt.Contains("p")) {
+      GetHistogram();
       PaintMarkers();
-   } else{
-      if (!fHistogram) CreateHistogram();
+   } else {
+      GetHistogram();
+      fHistogram->SetBit(TH1::kNoStats);
+      fHistogram->SetLineColor(GetLineColor());
+      fHistogram->SetLineStyle(GetLineStyle());
+      fHistogram->SetLineWidth(GetLineWidth());
+      fHistogram->SetFillColor(GetFillColor());
+      fHistogram->SetFillStyle(GetFillStyle());
+      fHistogram->SetMarkerColor(GetMarkerColor());
+      fHistogram->SetMarkerStyle(GetMarkerStyle());
+      fHistogram->SetMarkerSize(GetMarkerSize());
       fHistogram->Paint(option);
    }
 }
@@ -1012,10 +1437,12 @@ void TGraph2D::Paint(Option_t *option)
 //______________________________________________________________________________
 void TGraph2D::PaintMarkers()
 {
+   // Paints this 2D graph with markers
+
    Double_t temp1[3],temp2[3];
 
-   Double_t *x = new Double_t[fNp]; 
-   Double_t *y = new Double_t[fNp];
+   Double_t *x = new Double_t[fNpoints]; 
+   Double_t *y = new Double_t[fNpoints];
 
    TView *view = gPad->GetView();
 
@@ -1030,7 +1457,7 @@ void TGraph2D::PaintMarkers()
                      fHistogram->GetMaximum());
    }
 
-   for (Int_t N=0; N<fNp; N++) {
+   for (Int_t N=0; N<fNpoints; N++) {
       temp1[0] = fX[N];
       temp1[1] = fY[N];
       temp1[2] = fZ[N];
@@ -1042,11 +1469,11 @@ void TGraph2D::PaintMarkers()
    SetMarkerSize(0.4);
    SetMarkerColor(0);
    TAttMarker::Modify();
-   gPad->PaintPolyMarker(fNp,x,y);
+   gPad->PaintPolyMarker(fNpoints,x,y);
    SetMarkerStyle(24);
    SetMarkerColor(1);
    TAttMarker::Modify();
-   gPad->PaintPolyMarker(fNp,x,y);
+   gPad->PaintPolyMarker(fNpoints,x,y);
 
    delete [] x;
    delete [] y;
@@ -1056,6 +1483,8 @@ void TGraph2D::PaintMarkers()
 //______________________________________________________________________________
 void TGraph2D::PaintTriangles()
 {
+   // Paints this 2D graph with triangles
+
    Double_t x[4];
    Double_t y[4];
    Double_t temp1[3],temp2[3];
@@ -1074,10 +1503,10 @@ void TGraph2D::PaintTriangles()
                      fHistogram->GetMaximum());
    }
 
-   SetFillColor(5);
+   SetFillColor(GetFillColor());
    SetFillStyle(1001);
    TAttFill::Modify();
-   SetLineColor(1);
+   SetLineColor(GetLineColor());
    TAttLine::Modify();
 
    for (Int_t N=0; N<fNdt; N++) {
@@ -1104,7 +1533,7 @@ void TGraph2D::PaintTriangles()
 //______________________________________________________________________________
 TH1 *TGraph2D::Project(Option_t *option) const
 {
-   // Project a 3-d graph into 1 or 2-d histograms depending on the
+   // Projects a 2-d graph into 1 or 2-d histograms depending on the
    // option parameter
    // option may contain a combination of the characters x,y,z
    // option = "x" return the x projection into a TH1D histogram
@@ -1162,7 +1591,7 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
    // Fill the projected histogram
    Double_t entries = 0;
-   for (Int_t N=0; N<fNp; N++) {
+   for (Int_t N=0; N<fNpoints; N++) {
       switch (pcase) {
          case 1:
             // "x"
@@ -1189,9 +1618,40 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
 
 //______________________________________________________________________________
+Int_t TGraph2D::RemovePoint(Int_t ipoint)
+{
+   // Deletes point number ipoint
+
+   if (ipoint < 0) return -1;
+   if (ipoint >= fNpoints) return -1;
+
+   fNpoints--;
+   Double_t *newX = new Double_t[fNpoints];
+   Double_t *newY = new Double_t[fNpoints];
+   Double_t *newZ = new Double_t[fNpoints];
+   Int_t j = -1;
+   for (Int_t i=0;i<fNpoints+1;i++) {
+      if (i == ipoint) continue;
+      j++;
+      newX[j] = fX[i];
+      newY[j] = fY[i];
+      newZ[j] = fZ[i];
+   }
+   delete [] fX;
+   delete [] fY;
+   delete [] fZ;
+   fX = newX;
+   fY = newY;
+   fZ = newZ;
+   Update(1);
+   return ipoint;
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
 {
-   // Save primitive as a C++ statement(s) on output stream out
+   // Saves primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
    out<<"   "<<endl;
@@ -1201,7 +1661,7 @@ void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   TGraph2D *";
    }
 
-   out<<"graph = new TGraph2D("<<fNp<<");"<<endl;
+   out<<"graph = new TGraph2D("<<fNpoints<<");"<<endl;
    out<<"   graph->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    out<<"   graph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
    
@@ -1209,20 +1669,20 @@ void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
    SaveLineAttributes(out,"graph",1,1,1);
    SaveMarkerAttributes(out,"graph",1,1,1);
 
-   for (Int_t i=0;i<fNp;i++) {
+   for (Int_t i=0;i<fNpoints;i++) {
       out<<"   graph->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<","<<fZ[i]<<");"<<endl;
    }
 
    // save list of functions
-///TIter next(fFunctions);
-///TObject *obj;
-///while ((obj=next())) {
-///   obj->SavePrimitive(out,"nodraw");
-///   out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
-///   if (obj->InheritsFrom("TPaveStats")) {
-///      out<<"   ptstats->SetParent(graph->GetListOfFunctions());"<<endl;
-///   }
-///}
+   TIter next(fFunctions);
+   TObject *obj;
+   while ((obj=next())) {
+      obj->SavePrimitive(out,"nodraw");
+      out<<"   graph->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   ptstats->SetParent(graph->GetListOfFunctions());"<<endl;
+      }
+   }
 
    out<<"   graph->Draw("<<quote<<option<<quote<<");"<<endl;
 }
@@ -1231,7 +1691,7 @@ void TGraph2D::SavePrimitive(ofstream &out, Option_t *option)
 //______________________________________________________________________________
 void TGraph2D::SetMargin(Double_t m)
 {
-   // Set the extra space (in %) around interpolated area for the 2D histogram
+   // Sets the extra space (in %) around interpolated area for the 2D histogram
 
    if (m<0 || m>1) {
       Warning("SetMargin","The margin must be >= 0 && <= 1, fMargin set to 0.1");
@@ -1244,9 +1704,25 @@ void TGraph2D::SetMargin(Double_t m)
 
 
 //______________________________________________________________________________
+void TGraph2D::SetMaximum(Double_t maximum)
+{  
+   fMaximum = maximum;   
+   GetHistogram()->SetMaximum(maximum);
+}
+
+   
+//______________________________________________________________________________
+void TGraph2D::SetMinimum(Double_t minimum)
+{
+   fMinimum = minimum;
+   GetHistogram()->SetMinimum(minimum);
+}
+
+
+//______________________________________________________________________________
 void TGraph2D::SetNpx(Int_t npx)
 {
-   // Set the number of bins along X used to draw the function
+   // Sets the number of bins along X used to draw the function
 
    if (npx < 4) {
       Warning("SetNpx","Number of points must be >4 && < 500, fNpx set to 4");
@@ -1264,7 +1740,7 @@ void TGraph2D::SetNpx(Int_t npx)
 //______________________________________________________________________________
 void TGraph2D::SetNpy(Int_t npy)
 {
-   // Set the number of bins along Y used to draw the function
+   // Sets the number of bins along Y used to draw the function
 
    if (npy < 4) {
       Warning("SetNpy","Number of points must be >4 && < 500, fNpy set to 4");
@@ -1282,7 +1758,7 @@ void TGraph2D::SetNpy(Int_t npy)
 //______________________________________________________________________________
 void TGraph2D::SetMarginBinsContent(Double_t z)
 {
-   // Set the histogram bin height for points lying outside the convex hull ie:
+   // Sets the histogram bin height for points lying outside the convex hull ie:
    // the bins in the margin.
 
    fZout = z;
@@ -1292,7 +1768,7 @@ void TGraph2D::SetMarginBinsContent(Double_t z)
 //______________________________________________________________________________
 void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 {  
-   // Set point number n.
+   // Sets point number n.
    // If n is greater than the current size, the arrays are automatically
    // extended.
        
@@ -1324,16 +1800,18 @@ void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
       fZ    = savez;
       fSize = newN;
    }
-   fX[n] = x;
-   fY[n] = y;
-   fZ[n] = z;
-   fNp   = TMath::Max(fNp,n+1);
+   fX[n]    = x;
+   fY[n]    = y;
+   fZ[n]    = z;
+   fNpoints = TMath::Max(fNpoints,n+1);
 }
 
 
 //______________________________________________________________________________
 void TGraph2D::SetTitle(const char* title)
 {
+   // Sets graph title
+
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);
 }
@@ -1342,7 +1820,7 @@ void TGraph2D::SetTitle(const char* title)
 //______________________________________________________________________________
 Int_t TGraph2D::TriEncode(Int_t T1, Int_t T2, Int_t T3) const
 {
-   // Form the point numbers into a single number to represent the triangle
+   // Forms the point numbers into a single number to represent the triangle
 
    Int_t triencode = 0;
    Int_t MinT = T1;
@@ -1367,10 +1845,21 @@ Int_t TGraph2D::TriEncode(Int_t T1, Int_t T2, Int_t T3) const
 
 
 //_______________________________________________________________________
-void TGraph2D::Update()
+void TGraph2D::Update(Int_t level)
 {
    // Called each time fHistogram should be recreated.
+   // level = 0 : it is enough to only delete fHistogram
+   // level = 1 : the data set has changed, the hull and triangles 
+   //             must be recomputed.
 
-   delete fHistogram;
-   fHistogram = 0;
+   if (fHistogram)  {delete fHistogram; fHistogram = 0;}
+   if (level == 0) return;
+   if (fHullPoints) {delete [] fHullPoints; fHullPoints = 0;}
+   if (fOrder)      {delete [] fOrder; fOrder = 0;}
+   if (fDist)       {delete [] fDist; fDist = 0;}
+   if (fXN)         {delete [] fXN; fXN = 0;}
+   if (fYN)         {delete [] fYN; fYN = 0;}
+   fNhull = 0;
+   fNdt   = 0;
+   fNxt   = 0;
 }
