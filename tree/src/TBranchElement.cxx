@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.64 2001/10/14 15:48:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.65 2001/10/15 06:59:52 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1157,11 +1157,11 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
               (elem->IsA() == TStreamerObject::Class()
             || elem->IsA() == TStreamerObjectAny::Class())) {
                clbase = gROOT->GetClass(elem->GetTypeName());
-               if (clbase->Property() & kIsAbstract) {
-                  return -1;
-               }
+               if (clbase->Property() & kIsAbstract) return -1;
+
 //printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
-            unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
+            if (elem->CannotSplit())    unroll = -1;
+            else unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
             if (unroll < 0) {
                branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
                branch->SetParentName(cltop->GetName());
