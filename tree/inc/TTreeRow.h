@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTreeRow.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -34,20 +34,20 @@ class TString;
 class TTreeRow : public TSQLRow {
 
 friend class TTreeResult;
+friend class TTreePlayer;
 
 private:
    Int_t        fColumnCount;  // number of columns in row
    TString     *fFields;       // array containing result strings
    TTreeRow    *fOriginal;     // pointer to original row
 
-   Bool_t  IsValid(Int_t field);
    TTreeRow(TSQLRow *original);
+   Bool_t  IsValid(Int_t field);
+   void    AddField(Int_t field, const char *fieldvalue);
 
 public:
    TTreeRow(Int_t nfields);
    virtual ~TTreeRow();
-
-   void        AddField(Int_t field, const char *fieldvalue);
 
    void        Close(Option_t *option="");
    ULong_t     GetFieldLength(Int_t field);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TTreeResult.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -35,6 +35,8 @@ class TObjArray;
 
 class TTreeResult : public TSQLResult {
 
+friend class TTreePlayer;
+
 private:
    Int_t       fColumnCount;   // number of columns in result
    TString    *fFields;        // array containing field strings
@@ -42,13 +44,12 @@ private:
    Int_t       fNextRow;       // row iterator
 
    Bool_t  IsValid(Int_t field);
+   void    AddField(Int_t field, const char *fieldname);
+   void    AddRow(TSQLRow *row);
 
 public:
    TTreeResult(Int_t nfields);
    virtual ~TTreeResult();
-
-   void        AddField(Int_t field, const char *fieldname);
-   void        AddRow(TSQLRow *row);
 
    void        Close(Option_t *option="");
    Int_t       GetFieldCount();
