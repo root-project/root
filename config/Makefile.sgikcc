@@ -10,6 +10,8 @@
 PLATFORM      = sgi
 SGI_REL      := $(subst .,,$(shell uname -r))
 
+DEBUGFLAGS    = -g -O0 +K0
+OPTFLAGS      = -O1 +K1
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 CXXOPT        = +K0
 OPT           = -g -O0

@@ -7,6 +7,9 @@
 
 PLATFORM      = linux
 
+DEBUGFLAGS    = -g -O0 +K0
+OPTFLAGS      = -O2 +K3 --backend -m486 --backend -malign-loops=4 --backend \
+                -malign-functions=4 --backend -malign-jumps=4
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g -O0
 COPT          =

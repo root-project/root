@@ -4,12 +4,14 @@
 
 PLATFORM      = linux
 
+DEBUGFLAGS    = -g
+# 32MB is not enough memory to compile with -O
+OPTFLAGS      = 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-# 32MB is not enough memory to compile with -O
-OPT           =
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

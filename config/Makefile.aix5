@@ -4,11 +4,13 @@
 
 PLATFORM      = aix5
 
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O -qmaxmem=-1
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-OPT           = -O -qmaxmem=-1
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

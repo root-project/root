@@ -6,6 +6,8 @@ PLATFORM      = alpha
 
 # When changing OPT to -O you can also change +K0 to +K1
 
+DEBUGFLAGS    = -g +K0 -O0
+OPTFLAGS      = -O4 +K3
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 CXXOPT        = +K0 -O0

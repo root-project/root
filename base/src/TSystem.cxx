@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.38 2002/06/26 17:24:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.39 2002/10/17 06:54:10 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -154,10 +154,13 @@ Bool_t TSystem::Init()
 
    fBuildArch     = BUILD_ARCH;
    fBuildNode     = BUILD_NODE;
+   fFlagsDebug    = CXXDEBUG;
+   fFlagsOpt      = CXXOPT;
    fIncludePath   = INCLUDEPATH;
    fLinkedLibs    = LINKEDLIBS;
    fSoExt         = SOEXT;
    fObjExt        = OBJEXT;
+   fAclicMode     = kDefault;
    fMakeSharedLib = MAKESHAREDLIB;
    fMakeExe       = MAKEEXE;
    fCompiled      = new TOrdCollection;
@@ -1231,6 +1234,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // The possible options are:
   //     k : keep the shared library after the session end.
   //     f : force recompilation.
+  //     d : compile with debug symbol
+  //     o : optimized the code (ignore if 'd' is specified)
   //
   // If library_specified is specified, CompileMacro generates the file
   // "library_specified".soext where soext is the shared library extension for
@@ -1325,9 +1330,24 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // ======= Analyze the options
   Bool_t keep = kFALSE;
   Bool_t recompile = kFALSE;
+  EAclicMode mode = fAclicMode;
   if (opt) {
      keep = (strchr(opt,'k')!=0);
      recompile = (strchr(opt,'f')!=0);
+     if (strchr(opt,'o')!=0) {
+       mode = kOpt;
+     }
+     if (strchr(opt,'d')!=0) {
+       mode = kDebug;
+     }
+  }
+  if (mode==kDefault) {
+    TString rootbuild = ROOTBUILD;
+    if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
+      mode=kOpt;
+    } else {
+      mode=kDebug;
+    }
   }
   // if non-zero, build_loc indicates where to build the shared library.
   TString build_loc = "";
@@ -1448,7 +1468,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   dict.Prepend( build_loc + "/" );
   TString dicth = dict;
   TString dictObj = dict;
-  dict += "cxx"; //no need to keep the extention of the original file, any
+  dict += "cxx"; //no need to keep the extention of the original file, any extension will do
   dicth += "h";
   dictObj += fObjExt;
 
@@ -1547,6 +1567,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   cmd.ReplaceAll("$LinkedLibs",GetLibraries("","SDL"));
   cmd.ReplaceAll("$LibName",libname);
   cmd.ReplaceAll("$BuildDir",build_loc);
+  if (mode==kDebug) cmd.ReplaceAll("$Opt",fFlagsDebug);
+  else cmd.ReplaceAll("$Opt",fFlagsOpt);
 
   TString testcmd = fMakeExe;
   TString fakeMain = tmpnam(0);
@@ -1659,6 +1681,30 @@ const char *TSystem::GetBuildNode() const
 }
 
 //______________________________________________________________________________
+const char *TSystem::GetFlagsDebug() const
+{
+   return fFlagsDebug;
+}
+
+//______________________________________________________________________________
+const char *TSystem::GetFlagsOpt() const
+{
+   return fFlagsOpt;
+}
+
+//______________________________________________________________________________
+TSystem::EAclicMode TSystem::GetAclicMode() const 
+{
+   // AclicMode indicates whether the library should be built in
+   // debug mode or optimized.  The values are:
+   // TSystem::kDefault : compile the same as the current ROOT
+   // TSystem::kDebug : compiled in debug mode 
+   // TSystem::kOpt : optimized the library
+
+   return fAclicMode;
+}
+
+//______________________________________________________________________________
 const char *TSystem::GetMakeSharedLib() const
 {
    return fMakeSharedLib;
@@ -1707,6 +1753,36 @@ const char *TSystem::GetObjExt() const
 }
 
 //______________________________________________________________________________
+void TSystem::SetFlagsDebug(const char *flags) 
+{
+   // FlagsDebug should contain the options to pass to the C++ compiler
+   // in order to compile the library in debug mode.
+
+   fFlagsDebug = flags;
+}
+
+//______________________________________________________________________________
+void TSystem::SetFlagsOpt(const char *flags) 
+{
+   // FlagsOpt should contain the options to pass to the C++ compiler
+   // in order to compile the library in optimized mode.
+
+   fFlagsOpt = flags;
+}
+
+//______________________________________________________________________________
+void TSystem::SetAclicMode(EAclicMode mode) 
+{
+   // AclicMode indicates whether the library should be built in
+   // debug mode or optimized.  The values are:
+   // TSystem::kDefault : compile the same as the current ROOT
+   // TSystem::kDebug : compiled in debug mode 
+   // TSystem::kOpt : optimized the library
+
+   fAclicMode = mode;
+}
+
+//______________________________________________________________________________
 void TSystem::SetMakeExe(const char *directives)
 {
    // Directives has the same syntax as the argument of SetMakeSharedLib but is
@@ -1741,20 +1817,23 @@ void TSystem::SetMakeSharedLib(const char *directives)
    //   $LinkedLibs         value of fLinkedLibs
    //   $ObjectFiles        Name of source files to be compiler with
    //                       their extension changed to .o or .obj
+   //   $Opt                location of the optimization/debug options  
+   //                       set fFlagsDebug and fFlagsOpt
+   //  
    // e.g.:
    // gSystem->SetMakeSharedLib(
-   // "KCC -n32 --strict $IncludePath -K0 -O0 -g $SourceFile
+   // "KCC -n32 --strict $IncludePath -K0 \$Opt $SourceFile
    //  --no_exceptions --signed_chars --display_error_number
    //  --diag_suppress 68 -o $SharedLib");
    //
    // gSystem->setMakeSharedLib(
    // "Cxx $IncludePath -c $SourceFile;
    //  ld  -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved
-   //  -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
+   //  \$Opt -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o
    //  -o $SharedLib $ObjectFile -lcxxstd -lcxx -lexc -lots -lc"
    //
    // gSystem->SetMakeSharedLib(
-   // "$HOME/mygcc/bin/g++ -Wall -fPIC $IncludePath $SourceFile
+   // "$HOME/mygcc/bin/g++ \$Opt -Wall -fPIC $IncludePath $SourceFile
    //  -shared -o $SharedLib");
    //
    // gSystem->SetMakeSharedLib(

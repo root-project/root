@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.18 2002/02/26 17:57:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.19 2002/04/11 18:16:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -141,6 +141,8 @@ public:
 
 
 class TSystem : public TNamed {
+public:
+   typedef enum { kDefault, kDebug, kOpt } EAclicMode;
 
 protected:
    TFdSet           fReadmask;         //!Files that should be checked for read events
@@ -170,11 +172,14 @@ protected:
 
    TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
    TString          fBuildNode;        //Detailed information where ROOT was built
+   TString          fFlagsDebug;       //Flags for debug compilation
+   TString          fFlagsOpt;         //Flags for optimized compilation
    TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
    TString          fIncludePath;      //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
    TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
    TString          fSoExt;            //Extension of shared library (.so, .sl, .a, .dll, etc.)
    TString          fObjExt;           //Extension of object files (.o, .obj, etc.)
+   EAclicMode       fAclicMode;         //Whether the compilation should be done debug or opt
    TString          fMakeSharedLib;    //Directive used to build a shared library
    TString          fMakeExe;          //Directive used to build an executable
    TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC
@@ -305,16 +310,22 @@ public:
    virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "");
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildNode() const;
+   virtual const char     *GetFlagsDebug() const;
+   virtual const char     *GetFlagsOpt() const;
    virtual const char     *GetIncludePath();
    virtual const char     *GetLinkedLibs() const;
    virtual const char     *GetLinkdefSuffix() const;
-   virtual const char     *GetMakeSharedLib() const;
+   virtual EAclicMode      GetAclicMode() const;
    virtual const char     *GetMakeExe() const;
+   virtual const char     *GetMakeSharedLib() const;
    virtual const char     *GetSoExt() const;
    virtual const char     *GetObjExt() const;
+   virtual void            SetFlagsDebug(const char *);
+   virtual void            SetFlagsOpt(const char *);
    virtual void            SetIncludePath(const char *includePath);
-   virtual void            SetMakeSharedLib(const char *directives);
    virtual void            SetMakeExe(const char *directives);
+   virtual void            SetAclicMode(EAclicMode mode);
+   virtual void            SetMakeSharedLib(const char *directives);
    virtual void            SetLinkedLibs(const char *linkedLibs);
    virtual void            SetLinkdefSuffix(const char *suffix);
    virtual void            SetSoExt(const char *soExt);

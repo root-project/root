@@ -4,11 +4,13 @@
 
 PLATFORM      = lynxos
 
+DEBUGFLAGS    = -g
+OPTFLAGS      = 
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-OPT           =
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

@@ -5,11 +5,13 @@
 
 PLATFORM      = aix
 
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-OPT           = -O
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

@@ -4,6 +4,8 @@
 
 PLATFORM      = solaris
 
+DEBUGFLAGS    = +K0 -O0 -g
+OPTFLAGS      = -O4 +K1
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 CXXOPT        = +K0 -O0

@@ -7,12 +7,14 @@
 
 COMPILEDATA=$1
 CXX=$2
-OPT=$3
-CXXFLAGS=$4
-SOFLAGS=$5
-LDFLAGS=$6
-SOEXT=$7
-SYSLIBS=$8
+CXXOPT=$3
+CXXDEBUG=$4
+CXXFLAGS=$5
+SOFLAGS=$6
+LDFLAGS=$7
+SOEXT=$8
+SYSLIBS=$9
+shift
 LIBDIR=$9
 shift
 ROOTLIBS=$9
@@ -26,6 +28,8 @@ shift
 CUSTOMEXE=$9
 shift
 ARCH=$9
+shift
+ROOTBUILD=$9
 shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
@@ -43,16 +47,20 @@ echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then 
-   echo "#define  MAKESHAREDLIB \"cd \$BuildDir && cl -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib  \$LinkedLibs libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
+   echo "#define  MAKESHAREDLIB \"cd \$BuildDir && cl \$Opt -nologo -TP -c $CXXFLAGS \$IncludePath  \$SourceFiles && bindexplib \$LibName \$ObjectFiles > \$LibName.def && lib -nologo -MACHINE:IX86 -out:\$LibName.lib \$ObjectFiles -def:\$LibName.def && link -nologo \$ObjectFiles -DLL $LDFLAGS -out:\$LibName.dll \$LibName.exp -LIBPATH:%ROOTSYS%/lib  \$LinkedLibs libCore.lib libCint.lib msvcrt.lib oldnames.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib \" " >> __compiledata
 else
    echo "#define  MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
 
 if [ "$CUSTOMEXE" = "" ]; then 
-   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName \""  >> __compiledata
+   echo "#define MAKEEXE \"cl -nologo -TP -Iinclude -I../include -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles; link -opt:ref $LDFLAGS \$ObjectFiles \$LinkedLibs $SYSLIBS -out:\$ExeName \""  >> __compiledata
 else 
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
+
+echo "#define CXXOPT \"$CXXOPT\"" >> __compiledata
+echo "#define CXXDEBUG \"$CXXDEBUG\"" >> __compiledata
+echo "#define ROOTBUILD \"$ROOTBUILD\"" >> __compiledata
 
 echo "#define LINKEDLIBS \"-LIBPATH:%ROOTSYS% $ROOTLIBS $RINTLIBS \""  >> __compiledata
 

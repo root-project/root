@@ -4,11 +4,13 @@
 
 PLATFORM      = solaris
 
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O2
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-OPT           = -O2
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

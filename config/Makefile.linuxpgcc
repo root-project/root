@@ -5,11 +5,13 @@
 
 PLATFORM      = linux
 
+DEBUGFLAGS    = -g
+OPTFLAGS      = -O6 -mpentiumpro -mstack-align-double -funroll-all-loops
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
-OPT           = -g
+OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
-OPT           = -O6 -mpentiumpro -mstack-align-double -funroll-all-loops
+OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 

@@ -7,12 +7,14 @@
 
 COMPILEDATA=$1
 CXX=$2
-OPT=$3
-CXXFLAGS=$4
-SOFLAGS=$5
-LDFLAGS=$6
-SOEXT=$7
-SYSLIBS=$8
+CXXOPT=$3
+CXXDEBUG=$4
+CXXFLAGS=$5
+SOFLAGS=$6
+LDFLAGS=$7
+SOEXT=$8
+SYSLIBS=$9
+shift
 LIBDIR=$9
 shift
 ROOTLIBS=$9
@@ -26,6 +28,8 @@ shift
 CUSTOMEXE=$9
 shift
 ARCH=$9
+shift
+ROOTBUILD=$9
 shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
@@ -55,9 +59,9 @@ echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
    if [ "$ARCH" = "macosx" ]; then
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles -ldl $SOFLAGS -o \$SharedLib\"" >> __compiledata
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles -ldl $SOFLAGS -o \$SharedLib\"" >> __compiledata
    else
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
    fi
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
@@ -67,6 +71,9 @@ if [ "$CUSTOMEXE" = "" ]; then
 else
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
+echo "#define CXXOPT \"$CXXOPT\"" >> __compiledata
+echo "#define CXXDEBUG \"$CXXDEBUG\"" >> __compiledata
+echo "#define ROOTBUILD \"$ROOTBUILD\"" >> __compiledata
 echo "#define LINKEDLIBS \"-L$LIBDIR $ROOTLIBS $RINTLIBS \""  >> __compiledata
 echo "#define INCLUDEPATH \"-I$INCDIR\"" >> __compiledata
 echo "#define OBJEXT \"o\" " >> __compiledata

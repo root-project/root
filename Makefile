@@ -301,10 +301,11 @@ $(ROOTRC): config/rootrc.in
 	  echo ""; exit 1)
 
 $(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
-	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPT)" "$(CXXFLAGS)" \
-	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
-	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
-	   "$(MAKEEXE)" "$(ARCH)"
+	@$(MAKECOMPDATA) $(COMPILEDATA) "$(CXX)" "$(OPTFLAGS)" "$(DEBUGFLAGS)" \
+	   "$(CXXFLAGS)" "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" \
+	   "$(LIBDIR)" "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
+	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)"
+	   
 
 $(MAKEINFO): config/Makefile.$(ARCH)
 	@$(MAKEMAKEINFO) $(MAKEINFO) "$(CXX)" "$(CC)" "$(CPPPREP)"
