@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.25 2001/01/16 16:19:15 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.26 2001/01/18 09:38:49 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -299,7 +299,7 @@ void TClass::BuildRealData(void *pointer)
 
    fRealData = new TList;
 
-   if (Property() & kIsAbstract) return;
+   if ((!pointer) && (Property() & kIsAbstract)) return;
    
    // Create an instance of this class
    if (!realDataObject) {
@@ -315,7 +315,6 @@ void TClass::BuildRealData(void *pointer)
       TBuildRealData brd(realDataObject, this);
       if (InheritsFrom(TObject::Class())) {
          realDataObject->ShowMembers(brd, parent);
- ////        realDataObject->StreamerInfo();
       } else {
          G__CallFunc func;
          void *address;
