@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.2 2001/08/18 02:13:09 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.3 2001/08/23 01:21:45 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -58,7 +58,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 
 
 
-RooAbsData::RooAbsData(const RooAbsData& other, const char* newname = 0) : 
+RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) : 
   TNamed(newname?newname:GetName(),other.GetTitle()), _vars(other._vars)
 {
   // Copy constructor
