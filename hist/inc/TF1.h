@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.5 2000/12/13 15:13:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.6 2001/01/19 17:28:00 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -70,7 +70,7 @@ protected:
 public:
     // TF1 status bits
     enum {
-       kNotDraw     = BIT(9),  // don't draw the function when in a TH1
+       kNotDraw     = BIT(9)  // don't draw the function when in a TH1
     };
    TF1();
    TF1(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1);
