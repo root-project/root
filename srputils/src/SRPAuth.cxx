@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.2 2000/11/27 10:50:17 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -54,10 +54,10 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    */
 
    // send user name
-   if (user)
+   if (user && user[0])
       usr = StrDup(user);
    else
-      usr = TAuthenticate::GetUser(remote);
+      usr = TAuthenticate::PromptUser(remote);
 
    sock->Send(usr, kROOTD_SRPUSER);
 
@@ -110,10 +110,10 @@ Int_t SRPAuthenticate(TSocket *sock, const char *user, const char *passwd,
    // send A to server
    sock->Send(t_tob64(hexbuf, (char*)A->data, A->len), kROOTD_SRPA);
 
-   if (passwd)
+   if (passwd && passwd[0])
       psswd = StrDup(passwd);
    else {
-      psswd = TAuthenticate::GetPasswd("Secure password: ");
+      psswd = TAuthenticate::PromptPasswd("Secure password: ");
       if (!psswd)
          ::Error("SRPAuthenticate", "password not set");
    }
