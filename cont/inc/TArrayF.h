@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.15 2002/10/30 20:39:50 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayF.h,v 1.16 2003/11/08 12:20:53 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
    void           Adopt(Int_t n, Float_t *array);
    void           AddAt(Float_t c, Int_t i);
    Float_t        At(Int_t i) const ;
-   void           Copy(TArrayF &array) const {array.Set(fN); memcpy(array.fArray,fArray,fN*sizeof(Float_t));}
+   void           Copy(TArrayF &array) const {array.Set(fN,fArray);}
    const Float_t *GetArray() const { return fArray; }
    Float_t       *GetArray() { return fArray; }
    Stat_t         GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}

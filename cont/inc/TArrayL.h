@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.14 2002/10/30 20:39:50 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.h,v 1.15 2003/11/08 12:20:53 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
    void          Adopt(Int_t n, Long_t *array);
    void          AddAt(Long_t c, Int_t i);
    Long_t        At(Int_t i) const;
-   void          Copy(TArrayL &array) const {array.Set(fN); memcpy(array.fArray,fArray,fN*sizeof(Long_t));}
+   void          Copy(TArrayL &array) const {array.Set(fN,fArray);}
    const Long_t *GetArray() const { return fArray; }
    Long_t       *GetArray() { return fArray; }
    Stat_t        GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
