@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -31,11 +31,11 @@ class TDirectory;
 class TEventList : public TNamed {
 
 protected:
-        Int_t            fN;           //Number of elements in the list
-        Int_t            fSize;        //Size of array
-        Int_t            fDelta;       //Increment size
-        Int_t            *fList;       //Array of elements
-        TDirectory       *fDirectory;  //Pointer to directory holding this tree
+        Int_t            fN;           //  Number of elements in the list
+        Int_t            fSize;        //  Size of array
+        Int_t            fDelta;       //  Increment size
+        Int_t            *fList;       //[fN]Array of elements
+        TDirectory       *fDirectory;  //! Pointer to directory holding this tree
 
 public:
         TEventList();
@@ -64,7 +64,7 @@ public:
  friend TEventList  operator+(const TEventList &list1, const TEventList &list2);
  friend TEventList  operator-(const TEventList &list1, const TEventList &list2);
 
-        ClassDef(TEventList,1)  //A list of selected entries in a TTree.
+        ClassDef(TEventList,2)  //A list of selected entries in a TTree.
 };
 
 #endif
