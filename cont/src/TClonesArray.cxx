@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.13 2001/04/12 06:29:47 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.14 2001/05/09 17:53:28 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -409,9 +409,12 @@ void TClonesArray::Streamer(TBuffer &b)
          Expand(nobjects);
       }
       if (cl != fClass) {
-         Error("Streamer", "expecting objects of type %s, finding objects"
-            " of type %s", fClass->GetName(), cl->GetName());
-         return;
+         fClass = cl;
+         //this case may happen when switching from a fake class to the real class
+         //may not be an error. fClass may point to a deleted object
+         //Error("Streamer", "expecting objects of type %s, finding objects"
+         //   " of type %s", fClass->GetName(), cl->GetName());
+         //return;
       }
 
       // make sure there are enough slots in the fKeep array
