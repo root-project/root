@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.2 2003/08/29 17:23:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.3 2003/08/30 18:24:52 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -19,8 +19,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <fcntl.h>

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.5 2002/10/28 14:22:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -22,8 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include <sys/stat.h>

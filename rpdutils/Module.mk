@@ -7,16 +7,16 @@ MODDIR       := rpdutils
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
 
-RPDUTILDIR  := $(MODDIR)
-RPDUTILDIRS := $(RPDUTILDIR)/src
-RPDUTILDIRI := $(RPDUTILDIR)/inc
+RPDUTILDIR   := $(MODDIR)
+RPDUTILDIRS  := $(RPDUTILDIR)/src
+RPDUTILDIRI  := $(RPDUTILDIR)/inc
 
-##### libRPDUtil #####
-RPDUTILH    := $(wildcard $(MODDIRI)/*.h)
-RPDUTILS    := $(wildcard $(MODDIRS)/*.cxx)
-RPDUTILO    := $(RPDUTILS:.cxx=.o)
+##### $(RPDUTILO) #####
+RPDUTILH     := $(wildcard $(MODDIRI)/*.h)
+RPDUTILS     := $(wildcard $(MODDIRS)/*.cxx)
+RPDUTILO     := $(RPDUTILS:.cxx=.o)
 
-RPDUTILDEP  := $(RPDUTILO:.o=.d)
+RPDUTILDEP   := $(RPDUTILO:.o=.d)
 
 ##### Flags used in rootd amd proofd Module.mk #####
 # use shadow passwords for authentication
@@ -57,10 +57,10 @@ AUTHFLAGS     := $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) $(KRB5FLAGS) \
 AUTHLIBS      := $(GLBSLIBS) $(SHADOWLIBS) $(AFSLIBS) $(SRPLIBS) $(KRB5LIBS)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
 
 # include all dependency files
-INCLUDEFILES += $(RPDUTILDEP)
+INCLUDEFILES  += $(RPDUTILDEP)
 
 ##### local rules #####
 include/%.h:    $(RPDUTILDIRI)/%.h
