@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.79 2004/08/02 11:20:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.80 2004/08/11 09:39:16 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3776,46 +3776,47 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 //______________________________________________________________________________
 Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 {
-  //computes the density of Cauchy distribution at point x
-  //by default, standard Cauchy distribution is used (t=0, s=1)
-  //t is the location parameter
-  //s is the scale parameter
-  //The Cauchy distribution, also called Lorentzian distribution,
-  //is a continuous distribution describing resonance behavior
-  //The mean and standard deviation of the Cauchy distribution are undefined. 
-  //The practical meaning of this is that collecting 1,000 data points gives 
-  //no more accurate an estimate of the mean and standard deviation than does a single point. 
-  //the formula was taken from "Engineering Statistics Handbook" on site
-  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda3663.htm
-  //     --implementation by Anna Kreshuk
-  // example:
-  //  TF1* fc = new TF1("fc", "TMath::CauchyDist(x, [0], [1])", -5, 5);
-  //  fc->SetParameters(0, 1);
-  //  fc->Draw();
-  
-  Double_t temp= (x-t)*(x-t)/(s*s);
-  Double_t result = 1/(s*TMath::Pi()*(1+temp));
-  return result;
+   // Computes the density of Cauchy distribution at point x
+   // by default, standard Cauchy distribution is used (t=0, s=1)
+   //    t is the location parameter
+   //    s is the scale parameter
+   // The Cauchy distribution, also called Lorentzian distribution,
+   // is a continuous distribution describing resonance behavior
+   // The mean and standard deviation of the Cauchy distribution are undefined.
+   // The practical meaning of this is that collecting 1,000 data points gives
+   // no more accurate an estimate of the mean and standard deviation than
+   // does a single point.
+   // The formula was taken from "Engineering Statistics Handbook" on site
+   // http://www.itl.nist.gov/div898/handbook/eda/section3/eda3663.htm
+   // Implementation by Anna Kreshuk.
+   // Example:
+   //    TF1* fc = new TF1("fc", "TMath::CauchyDist(x, [0], [1])", -5, 5);
+   //    fc->SetParameters(0, 1);
+   //    fc->Draw();
+
+   Double_t temp= (x-t)*(x-t)/(s*s);
+   Double_t result = 1/(s*TMath::Pi()*(1+temp));
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 {
    // Computes the density function of F-distribution
-   // (probability function, integral of density, is computed in FDistI)
+   // (probability function, integral of density, is computed in FDistI).
    //
-   // parameters N and M stand for degrees of freedom of chi-squares
-   // mentioned above
-   // parameter F is the actual variable x of the density function p(x)
-   // and the point at which the density function is calculated.
+   // Parameters N and M stand for degrees of freedom of chi-squares
+   // mentioned above parameter F is the actual variable x of the
+   // density function p(x) and the point at which the density function
+   // is calculated.
    //
-   //  about F distribution:
+   // About F distribution:
    // F-distribution arises in testing whether two random samples
    // have the same variance. It is the ratio of two chi-square
    // distributions, with N and M degrees of freedom respectively,
    // where each chi-square is first divided by it's number of degrees
    // of freedom.
-   //     --implementation by Anna Kreshuk
+   // Implementation by Anna Kreshuk.
 
    if ((F<0)||(N<1)||(M<1)){
       return 0;
@@ -3829,16 +3830,17 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 //______________________________________________________________________________
 Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 {
-   // Calculates the cumulative distribution function of F-distribution
+   // Calculates the cumulative distribution function of F-distribution,
    // this function occurs in the statistical test of whether two observed
-   // samples have the same variance. For this test a certain statistic F, the ratio of
-   // observed dispersion fo the first sample to that of the second sample,
-   // is calculated. N and M stand for numbers of degrees of freedom in the samples
-   // 1-FDistI() is the significance level at which the hypothesis "1 has smaller
-   // variance than 2" can be rejected. A small numerical value of 1 - FDistI() implies
-   // a very significant rejection, in turn implying high confidence in the hypothesis
+   // samples have the same variance. For this test a certain statistic F,
+   // the ratio of observed dispersion of the first sample to that of the
+   // second sample, is calculated. N and M stand for numbers of degrees
+   // of freedom in the samples 1-FDistI() is the significance level at
+   // which the hypothesis "1 has smaller variance than 2" can be rejected.
+   // A small numerical value of 1 - FDistI() implies a very significant
+   // rejection, in turn implying high confidence in the hypothesis
    // "1 has variance greater than 2".
-   //     --implementation by Anna Kreshuk
+   // Implementation by Anna Kreshuk.
 
    Double_t FI = 1 - BetaIncomplete((M/(M+N*F)), M*0.5, N*0.5);
    return FI;
@@ -3847,56 +3849,55 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 //______________________________________________________________________________
 Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta)
 {
-  //computes the density function of Gamma distribution at point x
-  //gamma - shape parameter
-  //mu - location parameter
-  //beta - scale parameter
-  //the formula was taken from "Engineering Statistics Handbook" on site
-  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
-  //     --implementation by Anna Kreshuk
-//Begin_Html
-/*
-<img src="gif/gammadist.gif">
-*/
-//End_Html
+   // Computes the density function of Gamma distribution at point x.
+   //   gamma - shape parameter
+   //   mu    - location parameter
+   //   beta  - scale parameter
+   // The formula was taken from "Engineering Statistics Handbook" on site
+   // http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
+   // Implementation by Anna Kreshuk.
+   //Begin_Html
+   /*
+   <img src="gif/gammadist.gif">
+   */
+   //End_Html
 
-  if ((x<mu) || (gamma<=0) || (beta <=0)) {
-     Error("GammaDist", "illegal parameter values");
-     return 0;
-  }
-  Double_t temp = (x-mu)/beta;
-  Double_t temp2 = beta * TMath::Gamma(gamma);
-  Double_t result = (TMath::Power(temp, gamma-1) * TMath::Exp(-temp))/temp2;
-  return result;
+   if ((x<mu) || (gamma<=0) || (beta <=0)) {
+      Error("GammaDist", "illegal parameter values");
+      return 0;
+   }
+   Double_t temp = (x-mu)/beta;
+   Double_t temp2 = beta * TMath::Gamma(gamma);
+   Double_t result = (TMath::Power(temp, gamma-1) * TMath::Exp(-temp))/temp2;
+   return result;
 }
-
 
 //______________________________________________________________________________
 Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m)
 {
-  //computes the density of LogNormal distribution at point x
-  //variable X has lognormal distribution if Y=Ln(X) has normal distribution
-  //sigma is the shape parameter
-  //theta is the location parameter
-  //m is the scale parameter
-  //the formula was taken from "Engineering Statistics Handbook" on site
-  //http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
-  //     --implementation by Anna Kreshuk
-//Begin_Html
-/*
-<img src="gif/lognormal.gif">
-*/
-//End_Html
-  
-  if ((x<theta) || (sigma<=0) || (m<=0)){
-     Error("Lognormal", "illegal parameter values");
-    return 0;
-  }
-  Double_t templog2 = TMath::Log((x-theta)/m)*TMath::Log((x-theta)/m);
-  Double_t temp1 = TMath::Exp(-templog2/(2*sigma*sigma));
-  Double_t temp2 = (x-theta)*sigma*TMath::Sqrt(2*TMath::Pi());
+   // Computes the density of LogNormal distribution at point x.
+   // Variable X has lognormal distribution if Y=Ln(X) has normal distribution
+   // sigma is the shape parameter
+   // theta is the location parameter
+   // m is the scale parameter
+   // The formula was taken from "Engineering Statistics Handbook" on site
+   // http://www.itl.nist.gov/div898/handbook/eda/section3/eda3669.htm
+   // Implementation by Anna Kreshuk.
+   //Begin_Html
+   /*
+   <img src="gif/lognormal.gif">
+   */
+   //End_Html
 
-  return temp1/temp2;
+   if ((x<theta) || (sigma<=0) || (m<=0)) {
+      Error("Lognormal", "illegal parameter values");
+      return 0;
+   }
+   Double_t templog2 = TMath::Log((x-theta)/m)*TMath::Log((x-theta)/m);
+   Double_t temp1 = TMath::Exp(-templog2/(2*sigma*sigma));
+   Double_t temp2 = (x-theta)*sigma*TMath::Sqrt(2*TMath::Pi());
+
+   return temp1/temp2;
 }
 
 //______________________________________________________________________________
@@ -3904,10 +3905,10 @@ Bool_t TMath::Permute(Int_t n, Int_t *a)
 {
    // Simple recursive algorithm to find the permutations of
    // n natural numbers, not necessarily all distinct
-   // adapted from CERNLIB routine PERMU
+   // adapted from CERNLIB routine PERMU.
    // The input array has to be initialised with a non descending
    // sequence. The method returns kFALSE when
-   // all combinations are exhausted
+   // all combinations are exhausted.
 
    Int_t i,itmp;
    Int_t i1=-1;
@@ -3948,11 +3949,11 @@ Bool_t TMath::Permute(Int_t n, Int_t *a)
 Double_t TMath::Student(Double_t T, Double_t ndf)
 {
    // Computes density function for Student's t- distribution
-   // (the probability function (integral of density) is computed in StudentI)
+   // (the probability function (integral of density) is computed in StudentI).
    //
    // First parameter stands for x - the actual variable of the
    // density function p(x) and the point at which the density is calculated.
-   // Second parameter stands for number of degrees of freedom
+   // Second parameter stands for number of degrees of freedom.
    //
    // About Student distribution:
    // Student's t-distribution is used for many significance tests, for example,
@@ -3965,14 +3966,14 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
    //
    //   t = (sample_mean - Mu)/(sample_deviation / sqrt(n))
    //
-   // has Student's t-distribution with n-1 degrees of freedom
+   // has Student's t-distribution with n-1 degrees of freedom.
    //
    // NOTE that this function's second argument is number of degrees of freedom,
    // not the sample size.
    //
    // As the number of degrees of freedom grows, t-distribution approaches
    // Normal(0,1) distribution.
-   //     --implementation by Anna Kreshuk
+   // Implementation by Anna Kreshuk.
 
    if (ndf < 1) {
       return 0;
@@ -3988,15 +3989,17 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
 //______________________________________________________________________________
 Double_t TMath::StudentI(Double_t T, Double_t ndf)
 {
-   // Calculates the cumulative distribution function of Student's t-distribution
-   // second parameter stands for number of degrees of freedom, not for the number
-   // of samples
+   // Calculates the cumulative distribution function of Student's
+   // t-distribution second parameter stands for number of degrees of freedom,
+   // not for the number of samples
    // if x has Student's t-distribution, the function returns the probability of
-   // x being less than T
-   //     --implementation by Anna Kreshuk
+   // x being less than T.
+   // Implementation by Anna Kreshuk.
 
    Double_t r = ndf;
 
-   Double_t SI = (T>0) ? (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5)) : 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
+   Double_t SI = (T>0) ?
+                 (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5)) :
+                 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
    return SI;
 }
