@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.58 2002/03/26 16:12:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.59 2002/04/01 17:12:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1019,7 +1019,7 @@ Int_t TFile::Recover()
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
    Seek_t   seekkey,seekpdir;
-   char    *header = new char[kBegin];
+   char     header[1024];
    char    *buffer, *bufread;
    char     nwhc;
    Seek_t   idcur = fBEGIN;
@@ -1036,7 +1036,7 @@ Int_t TFile::Recover()
 
    TKey *key;
    Int_t nrecov = 0;
-   nwheader = 64;
+   nwheader = 1024;
    Int_t nread = nwheader;
 
    while (idcur < fEND) {
@@ -1084,7 +1084,6 @@ Int_t TFile::Recover()
       new TFree(fFree,fEND,2000000000);
       if (nrecov) Write();
    }
-   delete [] header;
    return nrecov;
 }
 
