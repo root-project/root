@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.6 2000/12/15 18:07:08 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.7 2001/02/21 11:50:43 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -145,13 +145,17 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 //*-*- Draw label
    Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t textsize  = GetTextSize();
+   Double_t labelsize, textsize = GetTextSize();
    Int_t automat = 0;
-   if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
-   if (textsize == 0)   { textsize = 0.99; automat = 1;}
-   Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
-   Double_t labelsize = textsize*ypixel/hh;
-   if (wh < hh) labelsize *= hh/wh;
+   if (GetTextFont()%10 > 2) {  // fixed size font specified in pixels
+      labelsize = GetTextSize();
+   } else {
+      if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
+      if (textsize == 0)   { textsize = 0.99; automat = 1;}
+      Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
+      labelsize = textsize*ypixel/hh;
+      if (wh < hh) labelsize *= hh/wh;
+   }
    TLatex latex;
    latex.SetTextAngle(GetTextAngle());
    latex.SetTextFont(GetTextFont());
