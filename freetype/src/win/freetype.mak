@@ -34,19 +34,20 @@ NULL=nul
 OUTDIR=.\..\..\..\objs\release
 INTDIR=.\..\..\..\objs\release
 
-ALL : "..\..\..\objs\freetype213.lib"
+ALL : "..\..\..\objs\freetype219.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -64,7 +65,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213.lib"
+	-@erase "..\..\..\objs\freetype219.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -108,16 +109,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype213.lib" 
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype219.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -135,7 +137,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -145,19 +147,20 @@ LIB32_OBJS= \
 OUTDIR=.\..\..\..\objs\debug
 INTDIR=.\..\..\..\objs\debug
 
-ALL : "..\..\..\objs\freetype213_D.lib"
+ALL : "..\..\..\objs\freetype219_D.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -175,7 +178,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213_D.lib"
+	-@erase "..\..\..\objs\freetype219_D.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -219,16 +222,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype213_D.lib" 
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype219_D.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -246,7 +250,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -256,19 +260,20 @@ LIB32_OBJS= \
 OUTDIR=.\..\..\..\objs\debug_mt
 INTDIR=.\..\..\..\objs\debug_mt
 
-ALL : "..\..\..\objs\freetype213MT_D.lib"
+ALL : "..\..\..\objs\freetype219MT_D.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -286,7 +291,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213MT_D.lib"
+	-@erase "..\..\..\objs\freetype219MT_D.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -330,16 +335,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype213MT_D.lib" 
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype219MT_D.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -357,7 +363,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213MT_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219MT_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -367,19 +373,20 @@ LIB32_OBJS= \
 OUTDIR=.\..\..\..\objs\release_mt
 INTDIR=.\..\..\..\objs\release_mt
 
-ALL : "..\..\..\objs\freetype213MT.lib"
+ALL : "..\..\..\objs\freetype219MT.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -397,7 +404,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213MT.lib"
+	-@erase "..\..\..\objs\freetype219MT.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -441,16 +448,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype213MT.lib" 
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype219MT.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -468,7 +476,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213MT.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219MT.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -478,19 +486,20 @@ LIB32_OBJS= \
 OUTDIR=.\..\..\..\objs\release_st
 INTDIR=.\..\..\..\objs\release_st
 
-ALL : "..\..\..\objs\freetype213ST.lib"
+ALL : "..\..\..\objs\freetype219ST.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -508,7 +517,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213ST.lib"
+	-@erase "..\..\..\objs\freetype219ST.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -552,16 +561,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/out:"..\..\..\objs\freetype213ST.lib" 
+LIB32_FLAGS=/out:"..\..\..\objs\freetype219ST.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -579,7 +589,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213ST.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219ST.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -589,19 +599,20 @@ LIB32_OBJS= \
 OUTDIR=.\..\..\..\objs\debug_st
 INTDIR=.\..\..\..\objs\debug_st
 
-ALL : "..\..\..\objs\freetype213ST_D.lib"
+ALL : "..\..\..\objs\freetype219ST_D.lib"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\autohint.obj"
 	-@erase "$(INTDIR)\bdf.obj"
 	-@erase "$(INTDIR)\cff.obj"
-	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftbase.obj"
 	-@erase "$(INTDIR)\ftcache.obj"
 	-@erase "$(INTDIR)\ftdebug.obj"
 	-@erase "$(INTDIR)\ftglyph.obj"
+	-@erase "$(INTDIR)\ftgzip.obj"
 	-@erase "$(INTDIR)\ftinit.obj"
+	-@erase "$(INTDIR)\ftlzw.obj"
 	-@erase "$(INTDIR)\ftmm.obj"
 	-@erase "$(INTDIR)\ftsystem.obj"
 	-@erase "$(INTDIR)\pcf.obj"
@@ -619,7 +630,7 @@ CLEAN :
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(INTDIR)\vc60.pdb"
 	-@erase "$(INTDIR)\winfnt.obj"
-	-@erase "..\..\..\objs\freetype213ST_D.lib"
+	-@erase "..\..\..\objs\freetype219ST_D.lib"
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -663,16 +674,17 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\freetype.bsc"
 BSC32_SBRS= \
 	
 LIB32=link.exe -lib
-LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype213ST_D.lib" 
+LIB32_FLAGS=/nologo /out:"..\..\..\objs\freetype219ST_D.lib" 
 LIB32_OBJS= \
 	"$(INTDIR)\autohint.obj" \
 	"$(INTDIR)\bdf.obj" \
 	"$(INTDIR)\cff.obj" \
-	"$(INTDIR)\ftgzip.obj" \
 	"$(INTDIR)\ftbase.obj" \
 	"$(INTDIR)\ftcache.obj" \
 	"$(INTDIR)\ftdebug.obj" \
 	"$(INTDIR)\ftglyph.obj" \
+	"$(INTDIR)\ftgzip.obj" \
+	"$(INTDIR)\ftlzw.obj" \
 	"$(INTDIR)\ftinit.obj" \
 	"$(INTDIR)\ftmm.obj" \
 	"$(INTDIR)\ftsystem.obj" \
@@ -690,7 +702,7 @@ LIB32_OBJS= \
 	"$(INTDIR)\type42.obj" \
 	"$(INTDIR)\winfnt.obj"
 
-"..\..\..\objs\freetype213ST_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
+"..\..\..\objs\freetype219ST_D.lib" : "$(OUTDIR)" $(DEF_FILE) $(LIB32_OBJS)
     $(LIB32) @<<
   $(LIB32_FLAGS) $(DEF_FLAGS) $(LIB32_OBJS)
 <<
@@ -899,70 +911,6 @@ CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN3
 
 
 !ENDIF 
-
-SOURCE=..\..\..\src\gzip\ftgzip.c
-
-!IF  "$(CFG)" == "freetype - Win32 Release"
-
-CPP_SWITCHES=/MD /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "freetype - Win32 Debug"
-
-CPP_SWITCHES=/MDd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "freetype - Win32 Debug Multithreaded"
-
-CPP_SWITCHES=/MTd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "freetype - Win32 Release Multithreaded"
-
-CPP_SWITCHES=/MT /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "freetype - Win32 Release Singlethreaded"
-
-CPP_SWITCHES=/ML /Za /W4 /GX /Zi /O2 /I "..\..\..\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ELSEIF  "$(CFG)" == "freetype - Win32 Debug Singlethreaded"
-
-CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "FT_DEBUG_LEVEL_ERROR" /D "FT_DEBUG_LEVEL_TRACE" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /GZ /c 
-
-"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
-
-
-!ENDIF
 
 SOURCE=..\..\..\src\base\ftbase.c
 
@@ -1220,6 +1168,12 @@ CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN3
 
 !ENDIF 
 
+SOURCE=..\..\..\src\gzip\ftgzip.c
+
+"$(INTDIR)\ftgzip.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
 SOURCE=..\..\..\src\base\ftinit.c
 
 !IF  "$(CFG)" == "freetype - Win32 Release"
@@ -1283,6 +1237,12 @@ CPP_SWITCHES=/MLd /Za /W4 /GX /Zi /Od /I "..\..\..\include" /D "_DEBUG" /D "WIN3
 
 
 !ENDIF 
+
+SOURCE=..\..\..\src\lzw\ftlzw.c
+
+"$(INTDIR)\ftlzw.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
 
 SOURCE=..\..\..\src\base\ftmm.c
 
