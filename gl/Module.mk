@@ -49,8 +49,8 @@ GLDEP        := $(GLO:.o=.d)
 GLLIB        := $(LPATH)/libRGL.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
-ALLLIBS     += $(GLLIB)
+ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
+ALLLIBS      += $(GLLIB)
 
 # include all dependency files
 INCLUDEFILES += $(GLDEP)
@@ -59,17 +59,10 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-ifeq ($(ARCH),win32)
-$(GLLIB):       $(GLO) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLDO)" \
-		   "$(GLLIBEXTRA) Glu32.lib Opengl32.lib $(GLLIBS) $(IVLIBS)"
-else
 $(GLLIB):       $(GLO) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(GLLIBS) $(IVLIBS)"
-endif
 
 $(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -78,7 +71,7 @@ $(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
 ifeq ($(ARCH),win32)
 $(GLDO):        $(GLDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(WIN32GDKDIR)/gdk/src \
-		-I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
+		   -I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
 else
 $(GLDO):        $(GLDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
@@ -92,7 +85,7 @@ map-gl:         $(RLIBMAP)
 map::           map-gl
 
 clean-gl:
-		@rm -f $(GLO)
+		@rm -f $(GLO) $(GLDO)
 
 clean::         clean-gl
 
