@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.2 2000/07/06 16:47:54 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: GuiTypes.h,v 1.3 2000/09/29 08:57:05 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -166,6 +166,7 @@ const Mask_t kStructureNotifyMask = BIT(7);
 const Mask_t kEnterWindowMask     = BIT(8);
 const Mask_t kLeaveWindowMask     = BIT(9);
 const Mask_t kFocusChangeMask     = BIT(10);
+const Mask_t kOwnerGrabButtonMask = BIT(11);
 
 // Event structure
 struct Event_t {
@@ -207,7 +208,8 @@ enum EMouseButton { kAnyButton, kButton1, kButton2, kButton3,
 
 // Some magic X notify modes used in TGTextEntry widget.
 // Values must match the ones in /usr/include/X11/X.h Check when porting.
-enum EXMagic { kNotifyNormal = 0, kNotifyPointer = 5 };
+enum EXMagic { kNotifyNormal = 0, kNotifyGrab = 1, kNotifyUngrab = 2,
+               kNotifyPointer = 5 };
 
 // Graphics context structure
 struct GCValues_t {
