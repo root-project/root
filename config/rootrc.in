@@ -33,8 +33,11 @@ Root.MemCheck:           0
 Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
-# When >4 X11 runs in synchronous mode.
 Root.Debug:              0
+
+# Settings for X11 behaviour.
+X11.Sync:                no
+X11.FindBestVisual:      yes
 
 # Default editor
 Unix.*.Editor:           vi

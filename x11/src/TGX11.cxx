@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.18 2002/01/27 16:49:43 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.19 2002/02/21 11:30:17 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TStorage.h"
 #include "TStyle.h"
 #include "TExMap.h"
+#include "TEnv.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -790,9 +791,11 @@ void TGX11::FindBestVisual()
    // DirectColor. Sets fVisual, fDepth, fRootWin, fColormap, fBlackPixel
    // and fWhitePixel.
 
+   Int_t findvis = gEnv->GetValue("X11.FindBestVisual", 1);
+
    Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
-   if ((vis->c_class != TrueColor && vis->c_class != DirectColor) ||
-       DefaultDepth(fDisplay, fScreenNumber) < 15) {
+   if (((vis->c_class != TrueColor && vis->c_class != DirectColor) ||
+       DefaultDepth(fDisplay, fScreenNumber) < 15) && findvis) {
 
       // try to find better visual
       static XVisualInfo templates[] = {

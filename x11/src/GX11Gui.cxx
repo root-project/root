@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.20 2002/01/27 16:49:43 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.21 2002/02/21 11:30:17 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TException.h"
 #include "TClassTable.h"
 #include "KeySymbols.h"
+#include "TEnv.h"
 
 
 //---- MWM Hints stuff
@@ -740,7 +741,7 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
    XSetErrorHandler(RootX11ErrorHandler);
    XSetIOErrorHandler(RootX11IOErrorHandler);
 
-   if (gDebug > 4)
+   if (gEnv->GetValue("X11.Sync", 0))
       XSynchronize(dpy, 1);
 
    // Init the GX11 class, sets a.o. fDisplay.
