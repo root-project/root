@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.40 2003/04/08 10:53:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.41 2003/06/10 20:51:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -458,7 +458,7 @@ TDSetElement *TProofServ::GetNextPacket()
    }
    if (e != 0) {
       fCompute.Start();
-      PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d",
+      PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %lld %lld",
                          e->GetFileName(), e->GetDirectory(),
                          e->GetObjName(), e->GetFirst(),e->GetNum());
    } else {
@@ -639,7 +639,7 @@ void TProofServ::HandleSocketInput()
             entries = TDSet::GetEntries(isTree, filename, dir, objname);
 
             PDB(kGlobal, 2) Info("HandleSocketInput:kPROOF_REPORTSIZE",
-                                 "Found %d %s", entries, isTree ? "entries" : "objects");
+                                 "Found %lld %s", entries, isTree ? "entries" : "objects");
 
             TMessage answ(kPROOF_REPORTSIZE);
             answ << entries;

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.22 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.23 2003/05/06 08:23:43 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -141,14 +141,15 @@ void TProofPlayer::StoreFeedback(TSlave *, TList *)
 //______________________________________________________________________________
 void TProofPlayer::Progress(Long64_t total, Long64_t processed)
 {
-   PDB(kGlobal,1) Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
+   PDB(kGlobal,1)
+      Info("Progress","%2f (%lld/%lld)", 100.*processed/total, processed, total);
 
    Long_t parm[2];
-   parm[0] = total;
-   parm[1] = processed;
+   parm[0] = (Long_t) (&total);
+   parm[1] = (Long_t) (&processed);
    Emit("Progress(Long64_t,Long64_t)", parm);
 
-   gProof->Progress(total,processed);
+   gProof->Progress(total, processed);
 }
 
 //______________________________________________________________________________
@@ -199,7 +200,7 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    Long64_t entry;
    while ((entry = fEvIter->GetNextEvent()) >= 0) {
 
-      PDB(kLoop,3)Info("Process","Call Process(%ld)", entry);
+      PDB(kLoop,3)Info("Process","Call Process(%lld)", entry);
 
       Bool_t stop = fSelector->Process(entry);
       if (stop) {}  // remove unused warning
@@ -655,7 +656,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 
    if ( e != 0 ) {
       PDB(kPacketizer,2)
-         Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %d %d",
+         Info("GetNextPacket","To slave-%d (%s): '%s' '%s' '%s' %lld %lld",
               slave->GetOrdinal(), slave->GetName(), e->GetFileName(),
               e->GetDirectory(), e->GetObjName(), e->GetFirst(), e->GetNum());
    } else {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.17 2003/05/01 17:51:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.18 2003/06/10 20:51:46 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -100,7 +100,7 @@ private:
    TFileNode     *fFileNode;     // corresponding node or 0
    TFileStat     *fCurFile;      // file currently being processed
    TDSetElement  *fCurElem;      // TDSetElement currently being processed
-   Int_t          fProcessed;    // number of entries processed
+   Long64_t       fProcessed;    // number of entries processed
 
 public:
    TSlaveStat(TSlave *slave)
@@ -108,7 +108,7 @@ public:
 
    TFileNode  *GetFileNode() const { return fFileNode; }
    const char *GetName() const { return fSlave->GetName(); }
-   Int_t       GetEntriesProcessed() const { return fProcessed; }
+   Long64_t    GetEntriesProcessed() const { return fProcessed; }
 
    void        SetFileNode(TFileNode *node) { fFileNode = node; }
 };
@@ -302,7 +302,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
                slave->GetOrdinal(), slave->GetName());
          ((TProof*)gProof)->MarkBad(slave);
          fValid = kFALSE;
-         continue;         
+         continue;
       } else if ( reply->What() != kPROOF_REPORTSIZE ) {
          // Help! unexpected message type
          Error("TPacketizer2","unexpected message type (%d) from slave-%d (%s)", reply->What(),
@@ -352,7 +352,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
          workers.Add(slave); // Ready for the next job
       }
    }
-   
+
    ((TProof*)gProof)->ActivateAsyncInput();
 
    if (!done) {
@@ -411,7 +411,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       node->Add( e );
    }
 
-   PDB(kGlobal,1) Info("TPacketizer2","Processing %ld entries in %d files on %d hosts",
+   PDB(kGlobal,1) Info("TPacketizer2","Processing %lld entries in %d files on %d hosts",
                        fTotalEntries, files, fFileNodes->GetSize());
 
    fUnAllocated->AddAll(fFileNodes);
@@ -437,14 +437,14 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    // Heuristic for starting packet size
    fPacketSize = fTotalEntries / (20 * fSlaveStats->GetSize());
    if ( fPacketSize < 1 ) fPacketSize = 1;
-   PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %d", fPacketSize);
+   PDB(kPacketizer,1) Info("TPacketizer2", "Base Packetsize = %lld", fPacketSize);
 
    if ( fValid ) {
       fProgress = new TTimer;
       fProgress->SetObject(this);
       fProgress->Start(500,kFALSE);
    }
-      
+
    PDB(kPacketizer,1) Info("TPacketizer2", "Return");
 }
 
@@ -501,7 +501,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
-      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %d %7.3lf %7.3lf %7.3lf",
+      PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %lld %7.3lf %7.3lf %7.3lf",
                               sl->GetOrdinal(), sl->GetName(),
                               slstat->fCurElem->GetNum(),
                               latency, proctime, proccpu);
