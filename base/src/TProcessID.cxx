@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.4 2001/10/03 16:43:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.5 2001/10/05 16:27:56 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -10,23 +10,9 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProcessID                                                           //
-//                                                                      //
-// ROOT session descriptor (unique in time and space)                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#include "TProcessID.h"
-#include "TROOT.h"
-#include "TFile.h"
-#include "TObjArray.h"
-#include "TSystem.h"
-#include "TUUID.h"
-
-ClassImp(TProcessID)
-
-
+//
+// TProcessID
+// 
 // A TProcessID identifies a ROOT job in a unique way in time and space.
 // The TProcessID title is made of :
 //    - The process pid
@@ -47,6 +33,19 @@ ClassImp(TProcessID)
 // accessible via gROOT->GetListOfProcessIDs() (for all files).
 // When this object is deleted, it is removed from the map via the cleanup
 // mechanism invoked by the TObject destructor.
+// 
+//////////////////////////////////////////////////////////////////////////
+
+#include "TProcessID.h"
+#include "TROOT.h"
+#include "TFile.h"
+#include "TObjArray.h"
+#include "TSystem.h"
+#include "TUUID.h"
+
+ClassImp(TProcessID)
+
+
 //______________________________________________________________________________
 TProcessID::TProcessID()
 {

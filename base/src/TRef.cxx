@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.1 2001/10/03 16:43:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.2 2001/10/05 16:26:44 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -10,22 +10,10 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRef                                                                 //
-//                                                                      //
-// Persistent Reference link to a TObject                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#include "TRef.h"
-#include "TROOT.h"
-#include "TProcessID.h"
-#include "TFile.h"
-#include "TObjArray.h"
-#include "TSystem.h"
-
-ClassImp(TRef)
-
+// 
+// TRef
+//
+// Persistent Reference link to a TObject 
 // A TRef is a lightweight object pointing to any TObject.
 // This object can be used instead of normal C++ pointers in case
 //  - the referenced object R and the pointer P are not written to the same file
@@ -60,7 +48,7 @@ ClassImp(TRef)
 // to the value "obj-gSystem". This uid is in general a small integer, even
 // on a 64 bit system.
 // After having set fRef, one can immediatly return the value of robj
-// with "gSystem + uid" using fRef.GetObject() or the dereferencing operator ->.
+// with "gSystem + uid" using fRef.GetObject().
 //
 // When the TRef is written, the process id number pidf  (see TProcessID)
 // is written as well as the uid.
@@ -93,6 +81,16 @@ ClassImp(TRef)
 // Suppose a TRefArray *muons containing pointers to the muon tracks in mytracks.
 // The 3 arrays mytracks,pions and muons may be written separately.
 //
+//////////////////////////////////////////////////////////////////////////
+
+#include "TRef.h"
+#include "TROOT.h"
+#include "TProcessID.h"
+#include "TFile.h"
+#include "TObjArray.h"
+#include "TSystem.h"
+
+ClassImp(TRef)
 
 //______________________________________________________________________________
 TRef::TRef(TObject *obj)
