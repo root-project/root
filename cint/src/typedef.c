@@ -1291,7 +1291,7 @@ char *typename;
 
   len=strlen(temp);
 
-  if(temp[len-1]=='*') {
+  if(len > 0 && temp[len-1]=='*') {
     temp[--len]='\0';
     ispointer = 'A' - 'a';
   }
