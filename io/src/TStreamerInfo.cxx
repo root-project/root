@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.199 2004/05/07 13:29:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.200 2004/05/08 05:53:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -909,6 +909,7 @@ void TStreamerInfo::Compile()
           && (element->GetType() > 0)
           && (element->GetArrayDim() == 0)
           && (fType[keep] < kObject)
+          && (fType[keep] != kCharStar) /* do not optimize char* */
           && (element->GetType() == (fType[keep]%kRegrouped))
           && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)) {
          if (fLength[keep] == 0) fLength[keep]++;
