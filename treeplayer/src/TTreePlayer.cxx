@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.172 2004/10/13 05:36:23 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.173 2004/10/13 10:06:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2339,6 +2339,17 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    // Loop on Tree and print entries passing selection. If varexp is 0 (or "")
    // then print only first 8 columns. If varexp = "*" print all columns.
    // Otherwise a columns selection can be made using "var1:var2:var3".
+   //
+   // By default 50 rows are shown and you are asked for <CR>
+   // to see the next 50 rows.
+   // You can change the default number of rows to be shown before <CR>
+   // via  mytree->SetScanfield(maxrows) where maxrows is 50 by default.
+   // if maxrows is set to 0 all rows of the Tree are shown.
+   // This option is interesting when dumping the contents of a Tree to 
+   // an ascii file, eg from the command line
+   //   tree->setScanField(0);
+   //   tree->Scan("*"); >tree.log
+   //  will create a file tree.log
    //
    // Arrays (within an entry) are printed in their linear forms.
    // If several arrays with multiple dimensions are printed together,
