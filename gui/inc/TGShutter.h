@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.2 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.3 2003/10/02 10:12:43 brun Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -57,7 +57,7 @@ public:
                  UInt_t options = 0);
    virtual ~TGShutterItem();
 
-   TGButton *GetButton() const { return fButton; } 
+   TGButton *GetButton() const { return fButton; }
    TGFrame  *GetContainer() const { return fCanvas->GetContainer(); }
 
    ClassDef(TGShutterItem,0)  // Shutter widget item
@@ -85,6 +85,8 @@ public:
    virtual void   AddItem(TGShutterItem *item);
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   Layout();
+   TGShutterItem *GetSelectedItem() const { return fSelectedItem; }
+   virtual void   SetSelectedItem(TGShutterItem *item);
 
    virtual Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2);
 

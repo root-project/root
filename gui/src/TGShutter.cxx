@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.3 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.cxx,v 1.4 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -168,6 +168,15 @@ void TGShutter::Layout()
          y += bh;
       }
    }
+}
+
+//______________________________________________________________________________
+void TGShutter::SetSelectedItem(TGShutterItem *item)
+{
+   // Set item to be the currently open shutter item.
+
+   fSelectedItem = item;
+   Layout();
 }
 
 //______________________________________________________________________________
