@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.12 2004/10/21 15:11:50 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.13 2004/10/21 16:58:39 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -79,7 +79,7 @@ void TGLRender::Traverse()
 {
    if (!fDList) {
       if (!(fDList = glGenLists(1))) {
-         Error("TGLRender::Travesre", "Could not create gl list\n");
+         Error("TGLRender::Traverse", "could not create gl list");
          return;
       }
       BuildGLList();
@@ -146,7 +146,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    Int_t hits = glRenderMode(GL_RENDER);
 
    if (hits < 0) {
-      Error("TGLRender::SelectObject", "selection buffer overflow\n");
+      Error("TGLRender::SelectObject", "selection buffer overflow");
    } else if (hits > 0) {
       objNames.resize(hits);
       for (Int_t i = 0; i < hits; ++i) {
@@ -210,7 +210,7 @@ void TGLRender::EndMovement()
       fIsPicking = kFALSE;
       glDeleteLists(fDList, 1);
       if (!(fDList = glGenLists(1))) {
-         Error("TGLSceneGraph::EndMovement", " Could not create display list\n");
+         Error("TGLSceneGraph::EndMovement", "could not create display list");
          return;
       }
       fFirstT = 0;
@@ -260,7 +260,7 @@ void TGLRender::Invalidate()
    if(fDList)
       glDeleteLists(fDList, 1);
    if (!(fDList = glGenLists(1))) {
-      Error("TGLSceneGraph::EndMovement", " Could not create display list\n");
+      Error("TGLSceneGraph::EndMovement", "could not create display list");
       return;
    }
    fFirstT = 0;

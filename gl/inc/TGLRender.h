@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.6 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.7 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -43,7 +43,7 @@ private:
    Bool_t         fAxes;
    //temporary
    Bool_t         fPxs;
-   typedef std::pair<Double_t, Double_t>PDD_t;
+   typedef std::pair<Double_t, Double_t> PDD_t;
    PDD_t          fAxeD[3];
 
 public:
