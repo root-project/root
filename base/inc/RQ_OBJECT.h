@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.11 2003/09/20 14:39:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.12 2005/03/13 15:05:31 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -63,7 +63,7 @@
 // slot has been connected to it, so it disappears into hyperspace.
 //
 
-#define RQ_OBJECT(sender_class)\
+#define RQ_OBJECT1(sender_class)\
 private:\
 TQObjSender fQObject;\
 public:\
@@ -78,7 +78,9 @@ void Emit(const char *signal){fQObject.Emit(signal);}\
 void Emit(const char *signal,const char *params){fQObject.Emit(signal,params);}\
 void Emit(const char *signal,Long_t *paramArr){fQObject.Emit(signal,paramArr);}\
 void Emit(const char *signal,Double_t param){fQObject.Emit(signal,param);}\
-void Emit(const char *signal,Long_t param){fQObject.Emit(signal,param);}\
+void Emit(const char *signal,Long_t param){fQObject.Emit(signal,param);}
+
+#define RQ_OBJECT2(sender_class)\
 void Emit(const char *signal,Long64_t param){fQObject.Emit(signal,param);}\
 void Emit(const char *signal,ULong64_t param){fQObject.Emit(signal,param);}\
 void Emit(const char *signal,Bool_t param){Emit(signal,(Long_t)param);}\
@@ -95,11 +97,27 @@ void ChangedBy(const char *method){Emit("ChangedBy(char*)",method);}\
 void Message(const char *msg){Emit("Message(char*)",msg);}\
 private:
 
+#define RQ_OBJECT(sender_class)\
+   RQ_OBJECT1(sender_class)\
+   RQ_OBJECT2(sender_class)
+
+
+//--- Only used in TQObject::Load_RQ_OBJECT()
+
 #define _QUOTE2_(string)\
    _QUOTE_(string)
 
+#define RQ_OBJECT_STRING1\
+   _QUOTE_(#define RQ_OBJECT1(sender_class))\
+   _QUOTE2_(RQ_OBJECT1(sender_class))
+
+#define RQ_OBJECT_STRING2\
+   _QUOTE_(#define RQ_OBJECT2(sender_class))\
+   _QUOTE2_(RQ_OBJECT2(sender_class))
+
 #define RQ_OBJECT_STRING\
-   _QUOTE_(#define RQ_OBJECT(sender_class))\
-   _QUOTE2_(RQ_OBJECT(sender_class))
+   _QUOTE_(#define RQ_OBJECT(sender_class)\
+           RQ_OBJECT1(sender_class)\
+           RQ_OBJECT2(sender_class))
 
 #endif
