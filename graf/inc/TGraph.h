@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.4 2000/08/31 17:00:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.5 2000/11/21 20:23:14 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
         virtual void     DrawPanel(); // *MENU*
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual void     Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
+        virtual void     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
         virtual void     FitPanel(); // *MENU*
         virtual Double_t GetErrorX(Int_t bin);
         virtual Double_t GetErrorY(Int_t bin);
