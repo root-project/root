@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGenProdProj.rdl,v 1.1 2003/04/28 20:42:39 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,8 @@ public:
 protected:
 
   RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet) ;
+
+  virtual void operModeHook() ;
 
   Double_t evaluate() const;
   RooArgSet* _compSetOwnedN ; // Owner of numerator components 

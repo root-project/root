@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.39 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.40 2003/05/14 06:15:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -367,6 +367,15 @@ RooArgList* RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* i
       }      
     }
 
+    if (nset && nset->getSize()>0 && term->getSize()>1) {
+      // Composite term needs normalized integration
+      const char* name = makeRGPPName("PROJ_",*term,termISet,termNSet) ;
+      RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
+      partInt->setOperMode(operMode()) ;
+      partIntList->addOwned(*partInt) ;
+      continue ;
+    }
+
     // Add pdfs in term straight    
     pIter = term->createIterator() ;
     while(pdf=(RooAbsPdf*)pIter->Next()) {
@@ -670,8 +679,13 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
       RooAbsArg* arg ;
       RooAbsCollection* newPdfServerList = newServerList.selectCommon(_pdfList) ;
       while(arg=(RooAbsArg*)iter->Next()) {
-	ret |= arg->recursiveRedirectServers(*newPdfServerList,kFALSE,nameChange) ;
-	ret |= arg->redirectServers(newServerList,mustReplaceAll,nameChange) ;
+
+	if (dynamic_cast<RooRealIntegral*>(arg)) {
+           ret |= arg->recursiveRedirectServers(*newPdfServerList,kFALSE,nameChange) ;
+	   ret |= arg->redirectServers(newServerList,mustReplaceAll,nameChange) ;
+        } else {
+  	  ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+        }
       }
       delete iter ;
       delete newPdfServerList ;

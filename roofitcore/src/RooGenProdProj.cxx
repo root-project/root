@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.1 2003/04/28 20:42:38 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.2 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,6 +86,18 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetOwnedD = (RooArgSet*) other._compSetD.snapshot() ;
   _compSetD.add(*_compSetOwnedD) ;
 
+  RooAbsArg* arg ;
+  TIterator* nIter = _compSetOwnedN->createIterator() ;  
+  while(arg=(RooAbsArg*)nIter->Next()) {
+    arg->setOperMode(_operMode) ;
+  }
+  delete nIter ;
+  TIterator* dIter = _compSetOwnedD->createIterator() ;
+  while(arg=(RooAbsArg*)dIter->Next()) {
+    arg->setOperMode(_operMode) ;
+  }
+  delete dIter ;
+
   // Fill _intList
   _intList.add(*_compSetN.find(other._intList.at(0)->GetName())) ;
   _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;
@@ -135,6 +147,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       if (code!=0) {
 	// Analytical integral, create integral object
 	RooAbsReal* pai = pdf->createIntegral(anaSet) ;
+	pai->setOperMode(_operMode) ;
 
 	// Add to integral to product
 	prodSet.add(*pai) ;
@@ -156,12 +169,14 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
   // Create product of (partial) analytical integrals
   RooProduct* prod = new RooProduct(Form("%s_%s",GetName(),name),"product",prodSet) ;
+  prod->setOperMode(_operMode) ;
 
   // Declare owndership of product
   saveSet.addOwned(*prod) ;
 
   // Create integral performing remaining numeric integration over (partial) analytic product
   RooAbsReal* ret = prod->createIntegral(numIntSet) ;
+  ret->setOperMode(_operMode) ;
   saveSet.addOwned(*ret) ;
 
   delete compIter ;
@@ -173,10 +188,35 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
 
 Double_t RooGenProdProj::evaluate() const 
-{
+{  
   Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
   Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+  //cout << "RooGenProdProj::eval(" << GetName() << ") ret = " << nom << " / " << den << endl ;
+
   return nom / den ;
 }
+
+
+void RooGenProdProj::operModeHook() 
+{
+  RooAbsArg* arg ;
+  TIterator* nIter = _compSetOwnedN->createIterator() ;  
+  while(arg=(RooAbsArg*)nIter->Next()) {
+    arg->setOperMode(_operMode) ;
+  }
+  delete nIter ;
+  TIterator* dIter = _compSetOwnedD->createIterator() ;
+  while(arg=(RooAbsArg*)dIter->Next()) {
+    arg->setOperMode(_operMode) ;
+  }
+  delete dIter ;
+
+  _intList.at(0)->setOperMode(_operMode) ;
+  _intList.at(1)->setOperMode(_operMode) ;
+}
+
+
+
+
 
 
