@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.2 2002/07/04 16:12:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.cxx,v 1.3 2002/09/11 08:50:07 brun Exp $
 // Author: Rene Brun   14/01/2002
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -47,10 +47,12 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 // The axis parameters are replaced by the optimized parameters
       
    Int_t newbins;
-   
-   if (xmin >= xmax) {xmin -= 1; xmax += 1;}
-   
    TAxis *xaxis = h->GetXaxis();
+   
+   if (xmin >= xmax) {
+      if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
+      else                    {xmin -= 1; xmax += 1;}
+   }   
    
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbins,xmin,xmax,
@@ -69,16 +71,21 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ym
 // The axis parameters are replaced by the optimized parameters
 
    Int_t newbinsx,newbinsy;
-   
-   if (xmin >= xmax) {xmin -= 1; xmax += 1;}
-   if (ymin >= ymax) {ymin -= 1; ymax += 1;}
-   
    TAxis *xaxis = h->GetXaxis();
+   TAxis *yaxis = h->GetYaxis();
+   
+   if (xmin >= xmax) {
+      if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
+      else                    {xmin -= 1; xmax += 1;}
+   }   
+   if (ymin >= ymax) {
+      if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
+      else                    {ymin -= 1; ymax += 1;}
+   }      
    
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbinsx,xmin,xmax,
                                   xaxis->TestBit(TAxis::kIsInteger));
-   TAxis *yaxis = h->GetYaxis();
    
    THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
                                   newbinsy,ymin,ymax,
@@ -96,23 +103,30 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ym
 // The axis parameters are replaced by the optimized parameters
 
    Int_t newbinsx,newbinsy,newbinsz;
-   
-   if (xmin >= xmax) {xmin -= 1; xmax += 1;}
-   if (ymin >= ymax) {ymin -= 1; ymax += 1;}
-   if (zmin >= zmax) {zmin -= 1; zmax += 1;}
-   
    TAxis *xaxis = h->GetXaxis();
+   TAxis *yaxis = h->GetYaxis();
+   TAxis *zaxis = h->GetZaxis();
+   
+   if (xmin >= xmax) {
+      if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
+      else                    {xmin -= 1; xmax += 1;}
+   }   
+   if (ymin >= ymax) {
+      if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
+      else                    {ymin -= 1; ymax += 1;}
+   }      
+   if (zmin >= zmax) {
+      if (zaxis->GetLabels()) {zmin  = 0; zmax  = zmin +zaxis->GetNbins();}
+      else                    {zmin -= 1; zmax += 1;}
+   }         
    
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbinsx,xmin,xmax,
                                   xaxis->TestBit(TAxis::kIsInteger));
-   TAxis *yaxis = h->GetYaxis();
    
    THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
                                   newbinsy,ymin,ymax,
                                   yaxis->TestBit(TAxis::kIsInteger));
-
-   TAxis *zaxis = h->GetZaxis();
    
    THLimitsFinder::OptimizeLimits(zaxis->GetNbins(),
                                   newbinsz,zmin,zmax,
