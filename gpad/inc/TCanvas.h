@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.27 2004/06/18 15:48:13 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.28 2004/07/30 01:13:50 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -79,6 +79,7 @@ protected:
    TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
    TContextMenu   *fContextMenu;   //!Context menu pointer
    Bool_t        fBatch;           //!True when in batchmode
+   Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
    Bool_t        fShowEventStatus; //Show event status panel
    Bool_t        fAutoExec;        //To auto exec the list of pad TExecs

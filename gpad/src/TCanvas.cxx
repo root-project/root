@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.82 2004/11/17 17:04:16 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.83 2004/12/07 16:55:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -143,6 +143,7 @@ void TCanvas::Constructor()
    fCanvasID  = -1;
    fCanvasImp = 0;
    fBatch     = kTRUE;
+   fUpdating  = kFALSE;
 
    fContextMenu = 0;
    fSelected    = 0;
@@ -171,6 +172,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fCh           = wh +28;
    fMenuBar      = kFALSE;
    fBatch        = kFALSE;
+   fUpdating     = kFALSE;
 
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
@@ -407,6 +409,7 @@ void TCanvas::Init()
    fYsizeReal = kDefaultCanvasSize;
 
    fDISPLAY         = "$DISPLAY";
+   fUpdating        = kFALSE;
    fRetained        = kTRUE;
    fSelected        = 0;
    fSelectedX       = 0;
@@ -1820,6 +1823,9 @@ void TCanvas::Update()
 {
    // Update canvas pad buffers
 
+   if (fUpdating) return;
+   fUpdating = kTRUE;
+
    if (gThreadXAR) {
       void *arr[2];
       arr[1] = this;
@@ -1838,6 +1844,7 @@ void TCanvas::Update()
    Flush();                   // Copy all pad pixmaps to the screen
 
    SetCursor(kCross);
+   fUpdating = kFALSE;
 }
 
 //______________________________________________________________________________
