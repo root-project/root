@@ -29,3 +29,4 @@ tc.Update
 tc.GetFrame.SetFillColor(21)
 tc.GetFrame.SetBorderSize(12)
 tc.Modified
+gApplication.Run

@@ -47,3 +47,4 @@ h1f.FillRandom("sqroot",10000)
 h1f.Draw
 c1.Update
     
+gApplication.Run

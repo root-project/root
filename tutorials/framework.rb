@@ -37,3 +37,4 @@ anal.AddText("Analysis")
 anal.Draw()
 
 c1.Update()
+gApplication.Run

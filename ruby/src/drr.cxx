@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.2 2004/05/31 16:44:25 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.3 2004/06/03 06:49:12 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -34,6 +34,11 @@
 
 /* ROOT's global enums.  */
 #include "rrenums.h"
+
+/* Special for Unixes */
+#if defined(linux) || defined(sun)
+  #include "dlfcn.h"
+#endif
 
 VALUE cTObject;
 
@@ -887,15 +892,19 @@ void Init_libRuby() {
     gApplication = new TApplication("ruby root app", NULL, NULL);
 
     /* In order to have the most frequently used dictionaries
-     * loaded by default.  */
-    gSystem->Load("libMatrix");
-    gSystem->Load("libHist");
-    gSystem->Load("libGraf");
-    gSystem->Load("libGpad");
-    gSystem->Load("libTree");
-    gSystem->Load("libGraf3d");
-    gSystem->Load("libGeom");
-
+     * loaded by default. THIS MUST BE REPLACED BY PORTABLE CODE  */
+#if defined(linux) || defined(sun)
+   dlopen( "libCint.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libCore.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libGpad.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libGraf.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libMatrix.so", RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libHist.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libTree.so",   RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libGraf3d.so", RTLD_GLOBAL | RTLD_LAZY );
+   dlopen( "libGeom.so",   RTLD_GLOBAL | RTLD_LAZY );
+#endif
+   
     drrAbstractClass = rb_define_class("DRRAbstractClass", rb_cObject);
     rb_define_method(drrAbstractClass, "initialize", VALUEFUNC(drr_init), -1);
     rb_define_method(drrAbstractClass, "method_missing", VALUEFUNC(drr_method_missing), -1);

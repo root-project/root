@@ -6,8 +6,6 @@
 # Example of stacked histograms: class THStack
 # Author: Rene Brun
 
-#tapp = TApplication.new("rr: hstack.rb")
-
 hs = THStack.new("hs","test stacked histograms")
 
 #create three 1-d histograms
@@ -82,4 +80,4 @@ a.Add(h2a)
 a.Add(h2b)
 a.Draw
 
-#tapp.Run
+gApplication.Run

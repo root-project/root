@@ -2,8 +2,6 @@
 # port of the original $ROOT/latex.C tutorial
 # (12/01/2004)  --elathan  <elathan@phys.uoa.gr>
 
-#tapp = TApplication.new("rr: latex.rb")
-
 c1 = TCanvas.new("c1","test",600,700)
 
 # write formulas
@@ -18,4 +16,4 @@ l = TLatex.new
 
 c1.Draw # Print("latex.ps")
 
-#tapp.Run
+gApplication.Run

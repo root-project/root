@@ -3,8 +3,6 @@
 # port of the original $ROOT/ntuple.C tutorial
 # (20/01/2004)  --elathan  <elathan@phys.uoa.gr>
 
-#tapp = TApplication.new("rr: ntuple1.rb")
-
 gBenchmark = TBenchmark.new.Start("ntuple1")
 
 # Connect ROOT histogram/ntuple demonstration file
@@ -106,5 +104,5 @@ gStyle.SetStatColor(19)
 
 gBenchmark.Show("ntuple1")
 
-#tapp.Run
+gApplication.Run
 

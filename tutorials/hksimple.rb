@@ -57,4 +57,4 @@ hpx = []
     end
   
     padRefresh(c1)
-
+gApplication.Run

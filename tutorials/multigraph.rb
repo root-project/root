@@ -53,4 +53,4 @@ mg.Draw "ap"
     stats1.SetX1NDC(0.12); stats1.SetX2NDC(0.32); stats1.SetY1NDC(0.75);
     stats2.SetX1NDC(0.72); stats2.SetX2NDC(0.92); stats2.SetY1NDC(0.78);
     c1.Modified
-
+gApplication.Run

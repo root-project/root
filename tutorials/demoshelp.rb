@@ -30,3 +30,4 @@ hdemo.SetAllWith( "....", "size", 0.04 )
 
 hdemo.Draw()
 c1.Update()
+gApplication.Run

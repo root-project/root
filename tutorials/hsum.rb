@@ -63,4 +63,4 @@ slider.SetRange(0,1)
 total.Draw("sameaxis") # to redraw axis hidden by the fill area
 c1.Modified
 gBenchmark.Show("hsum")
-
+gApplication.Run

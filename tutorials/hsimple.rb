@@ -67,5 +67,5 @@ hfile.Write
 hpx.SetFillColor(48)
 c1.Modified
 c1.Update
-  
+gApplication.Run  
 

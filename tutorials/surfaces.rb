@@ -35,5 +35,5 @@ pad2.SetTheta(25)
 pad2.SetPhi(-110)
 pad2.SetLogz
 f2.Draw("surf1")
-
+gApplication.Run
 
