@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.2 2004/05/30 23:14:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPerfStats.cxx,v 1.1 2004/06/13 16:26:36 rdm Exp $
 // Author: Kristjan Gulbrandsen   11/05/04
 
 /*************************************************************************
@@ -27,21 +27,22 @@ ClassImp(TVirtualPerfStats)
 
 TVirtualPerfStats *gPerfStats = 0;
 
-static char *EventTypeNames[] = {
-	"UnDefined",
-	"Packet",
-	"Start",
-	"Stop",
-	"File",
-	"FileOpen",
-	"FileRead",
+static const char *kEventTypeNames[] = {
+   "UnDefined",
+   "Packet",
+   "Start",
+   "Stop",
+   "File",
+   "FileOpen",
+   "FileRead"
 };
 
+//______________________________________________________________________________
 const char *TVirtualPerfStats::EventType(EEventType type)
 {
    if (type < kUnDefined || type >= kNumEventType) {
       return "Illegal EEventType";
    } else {
-      return EventTypeNames[type];
+      return kEventTypeNames[type];
    }
 }
