@@ -37,13 +37,12 @@
    g3    = new TF1("g3","gaus",110,121);
    total = new TF1("total","gaus(0)+gaus(3)+gaus(6)",85,125);
    total->SetLineColor(2);
-   h->Fit(g1,"R0");
-   h->Fit(g2,"R0+");
-   h->Fit(g3,"R0+");
+   h->Fit(g1,"R");
+   h->Fit(g2,"R+");
+   h->Fit(g3,"R+");
    g1->GetParameters(&par[0]);
    g2->GetParameters(&par[3]);
    g3->GetParameters(&par[6]);
    total->SetParameters(par);
-   h->Fit(total,"R0+");
-   h->Draw();
+   h->Fit(total,"R+");
 }
