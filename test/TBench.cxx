@@ -13,7 +13,7 @@ THit hit;
 #ifdef R__WIN32
  const char *demofile = "$TMP/bench.root";
 #else
- const char *demofile = "/tmp/bench.root";
+ const char *demofile = "/tmp/bench.root";
 #endif
 
 //-------------------------------------------------------------
