@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.29 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.30 2005/03/10 22:26:15 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -185,10 +185,10 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, const Float_t *color,
                                UInt_t glName, TObject *obj) :
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fColor(),
+   fIsSelected(kFALSE),
    fGLName(glName),
    fNextT(0),
-   fRealObject(obj),
-   fIsSelected(kFALSE)
+   fRealObject(obj)
 {
    SetColor(color, kTRUE);
    fColor[3] = 1.f - buffer.fTransparency / 100.f;
@@ -200,10 +200,10 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
                                const Float_t *color, UInt_t glName, TObject *obj) :
    fVertices(verticesReserve, 0.),
    fColor(),
+   fIsSelected(kFALSE),
    fGLName(glName),
    fNextT(0),
-   fRealObject(obj),
-   fIsSelected(kFALSE)
+   fRealObject(obj)
 {
    SetColor(color, kTRUE);
    fColor[3] = 1.f - buffer.fTransparency / 100.f;
