@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.rdl,v 1.1 2001/08/25 22:25:43 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.rdl,v 1.2 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -27,7 +27,7 @@ public:
   Roo2DHistPdf(const char * name, const char *title,
              RooAbsReal& x, RooAbsReal &y, const char * rootFile, const char * histName, TString options);
   Roo2DHistPdf(const char * name, const char *title,
-             RooAbsReal& x, RooAbsReal &y, RooDataSet & data, TString options);
+             RooAbsRealLValue& x, RooAbsRealLValue &y, RooDataSet & data, TString options);
   Roo2DHistPdf(const char *name, const char *title,
              RooAbsReal& x, RooAbsReal &y, TH2F * hist, TString options);
   Roo2DHistPdf(const char *name, const char *title,
