@@ -66,7 +66,7 @@ multidim.log: NtpLib_C.$(DllSuf)
 multidim: multidim.log
 	$(TestDiff)
 
-scanString.log: ScanStrinc_C.$(DllSuf)
+scanString.log: ScanString_C.$(DllSuf)
 
 ScanString: ScanString.log
 	$(TestDiff)
