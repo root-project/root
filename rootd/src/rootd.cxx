@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.96 2004/12/16 19:39:11 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.97 2005/01/14 17:09:27 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2084,6 +2084,29 @@ int main(int argc, char **argv)
    // Init syslog
    ErrorInit(argv[0]);
 
+   // Output to syslog ... 
+   RpdSetSysLogFlag(1);
+
+   // ... unless we are running in the foreground and we are
+   // attached to terminal; make also sure that "-i" and "-f"
+   // are not simultaneously specified
+   int i = 1;
+   for (i = 1; i < argc; i++) {
+      if (!strncmp(argv[i],"-f",2))
+         foregroundflag = 1;
+      if (!strncmp(argv[i],"-i",2))
+         gInetdFlag = 1;
+   }
+   if (foregroundflag) {
+      if (isatty(0) && isatty(1)) {
+         RpdSetSysLogFlag(0);
+         ErrorInfo("main: running in foreground mode:"
+                   " sending output to stderr");
+      }
+      if (gInetdFlag)
+         Error(ErrFatal,-1,"-i and -f options are incompatible");
+   }
+
    // To terminate correctly ... maybe not needed
    signal(SIGTERM, RootdTerm);
    signal(SIGINT, RootdTerm);
@@ -2112,9 +2135,6 @@ int main(int argc, char **argv)
 
             case 'b':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-b requires a buffersize in bytes as"
-                                    " argument\n");
                   Error(ErrFatal,kErrFatal,"-b requires a buffersize in bytes"
                                     " as argument");
                }
@@ -2123,9 +2143,6 @@ int main(int argc, char **argv)
 #ifdef R__GLBS
             case 'C':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-C requires a file name for the"
-                                    " host certificates file location\n");
                   Error(ErrFatal, kErrFatal,"-C requires a file name for"
                                     " the host certificates file location");
                }
@@ -2134,8 +2151,6 @@ int main(int argc, char **argv)
 #endif
             case 'd':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-d requires a debug level as argument\n");
                   Error(ErrFatal,kErrFatal,"-d requires a debug level as"
                                     " argument");
                }
@@ -2144,9 +2159,6 @@ int main(int argc, char **argv)
 
             case 'D':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-D requires a file path name for the"
-                                    " file defining access rules\n");
                   Error(ErrFatal, kErrFatal,"-D requires a file path name"
                                     "  for the file defining access rules");
                }
@@ -2154,19 +2166,20 @@ int main(int argc, char **argv)
                break;
 
             case 'E':
-               fprintf(stderr,"Option '-E' is now dummy - ignored (see proofd"
-                              "/src/proofd.cxx for additional details)\n");
+               Error(ErrFatal, kErrFatal,"Option '-E' is now dummy "
+                          "- ignored (see proofd/src/proofd.cxx for"
+                          " additional details)");
                break;
 
             case 'f':
+               if (gInetdFlag) {
+                  Error(ErrFatal,-1,"-i and -f options are incompatible");
+               }
                foregroundflag = 1;
                break;
 #ifdef R__GLBS
             case 'G':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-G requires a file name for the"
-                                    " gridmap file\n");
                   Error(ErrFatal,kErrFatal,"-G requires a file name for"
                                     " the gridmap file");
                }
@@ -2174,6 +2187,9 @@ int main(int argc, char **argv)
                break;
 #endif
             case 'i':
+               if (foregroundflag) {
+                  Error(ErrFatal,-1,"-i and -f options are incompatible");
+               }
                gInetdFlag = 1;
                break;
 
@@ -2186,8 +2202,6 @@ int main(int argc, char **argv)
 
             case 'p':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-p requires a port number as argument\n");
                   Error(ErrFatal,kErrFatal,"-p requires a port number as"
                                     " argument");
                }
@@ -2198,9 +2212,6 @@ int main(int argc, char **argv)
                else if (*p == '\0')
                   port2 = port1;
                if (*p != '\0' || port2 < port1 || port2 < 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"invalid port number or range: %s\n",
-                                     *argv);
                   Error(ErrFatal,kErrFatal,"invalid port number or range: %s",
                                      *argv);
                }
@@ -2208,9 +2219,6 @@ int main(int argc, char **argv)
 
             case 'P':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-P requires a file name for SRP password"
-                                    " file\n");
                   Error(ErrFatal,kErrFatal,"-P requires a file name for SRP"
                                     " password file");
                }
@@ -2223,9 +2231,6 @@ int main(int argc, char **argv)
 
             case 'R':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-R requires a hex bit mask as"
-                                    " argument\n");
                   Error(ErrFatal,kErrFatal,"-R requires a hex but mask as"
                                     " argument");
                }
@@ -2234,9 +2239,6 @@ int main(int argc, char **argv)
 
             case 's':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-s requires as argument a port number"
-                                    " for the sshd daemon\n");
                   Error(ErrFatal,kErrFatal,"-s requires as argument a port"
                                     " number for the sshd daemon");
                }
@@ -2245,8 +2247,6 @@ int main(int argc, char **argv)
 #ifdef R__KRB5
             case 'S':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-S requires a path to your keytab\n");
                   Error(ErrFatal,kErrFatal,"-S requires a path to your"
                                     " keytab\n");
                }
@@ -2255,9 +2255,6 @@ int main(int argc, char **argv)
 #endif
             case 'T':
                if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-T requires a dir path for temporary"
-                                    " files [/usr/tmp]\n");
                   Error(ErrFatal, kErrFatal,"-T requires a dir path for"
                                     " temporary files [/usr/tmp]");
                }
@@ -2269,8 +2266,6 @@ int main(int argc, char **argv)
                break;
 
             default:
-               if (!gInetdFlag)
-                  fprintf(stderr,"unknown command line option: %c\n", *s);
                Error(ErrFatal,kErrFatal,"unknown command line option: %c",*s);
          }
 
@@ -2295,8 +2290,6 @@ int main(int argc, char **argv)
                ErrorInfo("main: no config directory specified using"
                          " ROOTSYS (%s)", confdir.c_str());
          } else {
-            if (!gInetdFlag)
-               fprintf(stderr,"rootd: no config directory specified\n");
             Error(ErrFatal, kErrFatal, "main: no config directory specified");
          }
       }
@@ -2374,7 +2367,6 @@ int main(int argc, char **argv)
 
    // Generate Local RSA keys for the session
    if (RpdGenRSAKeys(0)) {
-      fprintf(stderr, "rootd: unable to generate local RSA keys\n");
       Error(Err, -1, "rootd: unable to generate local RSA keys");
    }
 
