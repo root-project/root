@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.11 2004/05/20 14:50:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.12 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -224,7 +224,8 @@ void TMatrixDSparse::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t co
   
   Invalidate();
   
-  if (no_rows <= 0 || no_cols <= 0 || nr_nonzeros < 0)
+  if ( (nr_nonzeros > 0 && (no_rows == 0 || no_cols == 0)) ||
+       (no_rows < 0 || no_cols < 0 || nr_nonzeros < 0) )
   { 
     Error("Allocate","no_rows=%d no_cols=%d non_zeros=%d",no_rows,no_cols,nr_nonzeros);
     return;

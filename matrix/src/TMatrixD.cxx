@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.62 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.63 2004/06/09 09:59:31 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -298,7 +298,7 @@ void TMatrixD::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
 
   Invalidate();
 
-  if (no_rows <= 0 || no_cols <= 0)
+  if (no_rows < 0 || no_cols < 0)
   {
     Error("Allocate","no_rows=%d no_cols=%d",no_rows,no_cols);
     return;
@@ -313,9 +313,12 @@ void TMatrixD::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
   fIsOwner = kTRUE;
   fTol     = DBL_EPSILON;
 
-  fElements = New_m(fNelems);
-  if (init)
-    memset(fElements,0,fNelems*sizeof(Double_t));
+  if (fNelems > 0) {
+    fElements = New_m(fNelems);
+    if (init)
+      memset(fElements,0,fNelems*sizeof(Double_t));
+  } else
+    fElements = 0;
 }
 
 //______________________________________________________________________________

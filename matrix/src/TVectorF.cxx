@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.19 2004/05/27 06:39:53 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.20 2004/06/08 08:20:36 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -94,7 +94,7 @@ void TVectorF::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
   // lowerbound (0 default).
 
   Invalidate();
-  Assert(nrows > 0);
+  Assert(nrows >= 0);
 
   SetBit(TMatrixFBase::kStatus);
   fNrows   = nrows;
