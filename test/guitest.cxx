@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.43 2004/09/13 14:21:43 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.44 2004/09/14 09:23:53 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -2344,16 +2344,8 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
    MapSubwindows();
    Resize();   // resize to default size
 
-   // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
    // editor covers right half of parent window
-   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        0,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
-   Move((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
-   SetWMPosition((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
+   CenterOnParent(kTRUE, TGTransientFrame::kRight);
 }
 
 Editor::~Editor()

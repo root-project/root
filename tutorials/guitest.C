@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.43 2004/09/13 14:21:43 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.44 2004/09/14 09:23:53 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -2406,16 +2406,8 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
 
    fMain->Resize();
 
-   // position relative to the parent's window
-   Window_t wdum;
-   int ax, ay;
    // editor covers right half of parent window
-   gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-             0,
-             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-             ax, ay, wdum);
-   fMain->Move((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
-   fMain->SetWMPosition((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
+   fMain->CenterOnParent(kTRUE, TGTransientFrame::kRight);
 }
 
 Editor::~Editor()
