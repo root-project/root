@@ -300,6 +300,12 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
+    if(strcmp(casttype,"long double")==0) {
+      type='d'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
     break;
   case 12:
     if(strcmp(casttype,"unsignedchar")==0) {
@@ -314,9 +320,35 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
+    if(strcmp(casttype,"unsigned int")==0) {
+      type='h'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
     break;
   case 13:
+    if(strcmp(casttype,"unsigned char")==0) {
+      type='b'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    if(strcmp(casttype,"unsigned long")==0) {
+      type='k'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
     if(strcmp(casttype,"unsignedshort")==0) {
+      type='r'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    break;
+  case 14:
+    if(strcmp(casttype,"unsigned short")==0) {
       type='r'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
