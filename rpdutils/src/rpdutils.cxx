@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.63 2004/11/19 12:33:51 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.64 2004/12/08 14:52:26 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -5602,6 +5602,15 @@ int RpdAuthenticate()
          gClientOld = 0;
       }
 
+      // If this is a rootd contacted via a TXNetFile we need to
+      // receive again the buffer
+      if (gService == kROOTD && kind == kROOTD_PROTOCOL) {
+         if (NetRecv(buf, kMAXRECVBUF, kind) < 0) {
+            Error(gErr, -1, "RpdAuthenticate: error receiving message");
+            return auth;
+         }
+      }
+
       // Decode the method ...
       meth = RpdGetAuthMethod(kind);
 
@@ -5770,11 +5779,14 @@ int RpdProtocol(int ServType)
    // if kind is {kROOTD_PROTOCOL, kROOTD_CLEANUP, kROOTD_SSH}
    // receive the rest
    kind = (EMessageTypes) ntohl(lbuf[1]);
+   int len = ntohl(lbuf[0]);
+   ErrorInfo("RpdProtocol: kind: %d %d",kind,len);
    if (kind == kROOTD_PROTOCOL || kind == kROOTD_CLEANUP ||
        kind == kROOTD_SSH) {
       // Receive the rest
       char *buf = 0;
-      int len = ntohl(lbuf[0]) - sizeof(int);
+      len -= sizeof(int);
+      ErrorInfo("RpdProtocol: len: %d",len);
       if (len) {
          buf = new char[len];
          if (NetRecvRaw(buf, len) < 0) {
@@ -5788,7 +5800,40 @@ int RpdProtocol(int ServType)
          // Empty buffer
          proto[0] = '\0';
       }
+      ErrorInfo("RpdProtocol: proto buff: %s",buf);
       // Copy buffer for later use
+      readbuf = 0;
+      if (buf) delete[] buf;
+   } else if (ServType == kROOTD && kind == 0 && len == 0) {
+      // TNetFile via TXNetFile: receive client protocol
+      // read first next 12 bytes and discard them
+      int llen = 12;
+      char *buf = new char[llen];
+      if (NetRecvRaw(buf, llen) < 0) {
+         NetSend(kErrFatal, kROOTD_ERR);
+         ErrorInfo("RpdProtocol: error receiving message");
+         if (buf) delete[] buf;
+         return -1;
+      }
+      if (buf) delete[] buf;
+      // Send back the 'type'
+      int type = htonl(8);
+      if (NetSendRaw(&type,sizeof(type)) < 0) {
+         NetSend(kErrFatal, kROOTD_ERR);
+         ErrorInfo("RpdProtocol: error sending type to TXNetFile");
+         return -1;
+      }
+      // Now read the client protocol
+      llen = 4;
+      buf = new char[llen];
+      if (NetRecvRaw(buf,llen) < 0) {
+         NetSend(kErrFatal, kROOTD_ERR);
+         ErrorInfo("RpdProtocol: error receiving message");
+         if (buf) delete[] buf;
+         return -1;
+      }
+      strcpy(proto,buf);
+      kind = kROOTD_PROTOCOL;
       readbuf = 0;
       if (buf) delete[] buf;
    } else {

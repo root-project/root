@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.94 2004/10/15 16:55:07 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.95 2004/10/15 17:44:01 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -195,6 +195,7 @@
 // 11 -> 12: added support for stat functionality (access,opendir,...) (cfr.TNetSystem)
 //           and support for OpenSSL keys for encryption
 // 12 -> 13: changed return message of RootdFstat()
+// 13 -> 14: support for TNetFile setup via TXNetFile
 
 #include "config.h"
 #include "RConfig.h"
@@ -337,7 +338,7 @@ static std::string gDaemonrc;
 static std::string gRootdTab;     // keeps track of open files
 static std::string gRpdAuthTab;   // keeps track of authentication info
 static EService gService         = kROOTD;
-static int gProtocol             = 13;      // increase when protocol changes
+static int gProtocol             = 14;      // increase when protocol changes
 static int gClientProtocol       = -1;      // Determined by RpdInitSession
 static int gAnon                 = 0;       // anonymous user flag
 static double gBytesRead         = 0;
