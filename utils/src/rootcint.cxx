@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.99 2002/09/12 16:25:01 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.100 2002/09/16 16:19:41 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -836,7 +836,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
    string stlType;
    stlType = ShortTypeName(m.Type()->Name());
    string stlName;
-   stlName = stlName,ShortTypeName(m.Name());
+   stlName = ShortTypeName(m.Name());
 
    string fulName1,fulName2;
    const char *tcl1=0,*tcl2=0;
