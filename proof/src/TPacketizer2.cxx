@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.3 2002/09/16 10:57:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.4 2002/09/19 13:59:48 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -126,13 +126,15 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    // Split into per host entries
    dset->Reset();
    TDSetElement *e;
-   for( e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
+   while ((e = (TDSetElement*)dset->Next())) {
       TUrl url = e->GetFileName();
 
       // TODO: Names must be in rootd URL format, check where?
-      if ( !url.IsValid() || !strncmp(url.GetProtocol(),"root", 4) == 0 ) {
-         Error("TPacketizer2","Filename not in rootd URL format (%s)",
-                e->GetFileName() );
+      if ( !url.IsValid() ||
+          (strncmp(url.GetProtocol(),"root", 4) &&
+           strncmp(url.GetProtocol(),"rfio", 4)) ) {
+         Error("TPacketizer2","Filename not in rootd or rfio URL format (%s)",
+               e->GetFileName() );
          fValid = kFALSE;
          return;
       }
@@ -160,15 +162,16 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    TIter nodes(fFileNodes);
    TFileNode *node;
    while ( (node = (TFileNode*) nodes.Next()) != 0 ) {
-         node->fFileIter = new TIter(node->fFiles);
-         node->fActiveNext = node->fActive->First();
+      node->fFileIter = new TIter(node->fFiles);
+      node->fActiveNext = node->fActive->First();
    }
 
    fSlaveStats = new TMap;
    fSlaveStats->SetOwner(kFALSE);
 
+   TSlave *slave;
    TIter si(slaves);
-   for( TSlave *slave = (TSlave*)si.Next(); slave ; slave = (TSlave*)si.Next() ) {
+   while ((slave = (TSlave*) si.Next())) {
       TSlaveStat *slstat = new TSlaveStat(slave);
       fSlaveStats->Add( slave, slstat );
       slstat->SetFileNode((TFileNode*) fFileNodes->FindObject(slstat->GetName()));
@@ -176,30 +179,31 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    // Check existence of file/dir/tree an get number of entries
 
-   TList *workers = new TList;
-   workers->AddAll( slaves );
    TMap     slaves_by_sock;
    TMonitor mon;
+   TList    workers;
+   workers.AddAll( slaves );
 
    // Setup the communication infrastructure
    si.Reset();
-   for (TSlave *s = (TSlave*) si.Next(); s ; s = (TSlave*) si.Next()) {
-      PDB(kPacketizer,3) Info("TPacketizer2","Socket added to monitor: %p", s->GetSocket());
-      mon.Add(s->GetSocket());
-      slaves_by_sock.Add(s->GetSocket(),s);
+   while ((slave = (TSlave*) si.Next())) {
+      PDB(kPacketizer,3) Info("TPacketizer2","Socket added to monitor: %p (%s)",
+          slave->GetSocket(), slave->GetName());
+      mon.Add(slave->GetSocket());
+      slaves_by_sock.Add(slave->GetSocket(),slave);
    }
 
    mon.DeActivateAll();
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
-   while(kTRUE) {
-      Bool_t   done = kFALSE;
+   while (kTRUE) {
+      Bool_t done = kFALSE;
 
       // send work
-      while( TSlave *s = (TSlave*) workers->First() ) {
+      while( TSlave *s = (TSlave*) workers.First() ) {
 
-         workers->Remove(s);
+         workers.Remove(s);
 
          // find a file
 
@@ -241,18 +245,30 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
             s->GetSocket()->Send( m );
             mon.Activate(s->GetSocket());
-            PDB(kPacketizer,2) Info("TPacketizer2","sent via %p (%s) reportsize on %s %s %s %s",
-                s->GetSocket(), s->GetName(), dset->IsTree() ? "tree" : "not tree",
+            PDB(kPacketizer,2) Info("TPacketizer2","sent to slave-%d (%s) via %p reportsize on %s %s %s %s",
+                s->GetOrdinal(), s->GetName(), s->GetSocket(), dset->IsTree() ? "tree" : "objects",
                 elem->GetFileName(), elem->GetDirectory(), elem->GetObjName());
          } else {
             // Done
             done = kTRUE;
-            workers->Clear();
+            workers.Clear();
          }
 
       }
 
       if ( mon.GetActive() == 0 ) break; // nothing to wait for anymore
+
+      PDB(kPacketizer,3) {
+         Info("TPacketizer2", "waiting for %d slaves:", mon.GetActive());
+         TList *act = mon.GetListOfActives();
+         TIter next(act);
+         while (TSocket *s = (TSocket*) next()) {
+            TSlave *sl = (TSlave *) slaves_by_sock.GetValue(s);
+            if (sl)
+               Info("TPacketizer2", "   slave-%d (%s)", sl->GetOrdinal(), sl->GetName());
+         }
+         delete act;
+      }
 
       TSocket *sock = mon.Select();
       mon.DeActivate(sock);
@@ -310,7 +326,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       }
 
       if ( !done ) {
-         workers->Add(slave); // Ready for the next job
+         workers.Add(slave); // Ready for the next job
       }
    }
 
@@ -326,7 +342,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
    dset->Reset();
    Long64_t cur = 0;
-   for( e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
+   while (( e = (TDSetElement*)dset->Next())) {
       TUrl url = e->GetFileName();
 
       if ( cur + e->GetNum() < first ) {
