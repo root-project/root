@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Canvas.cxx,v 1.2 2001/03/14 21:43:06 brun Exp $
 // Author: Valery Fine   05/01/96
 
 #include "TWin32Canvas.h"
@@ -253,7 +253,10 @@ Int_t  TWin32Canvas::InitWindow(){
 
 //______________________________________________________________________________
 void   TWin32Canvas::SetCanvasSize(UInt_t w, UInt_t h){
-      SetCanvas(0,0,w,h);
+   if (fCanvasImpID==-1)
+     SetCanvas(0,0,w,h);
+   else
+     gVirtualX->RescaleWindow(fCanvasImpID, w, h);
 }
 //______________________________________________________________________________
 void   TWin32Canvas::ShowMenuBar(Bool_t show)
