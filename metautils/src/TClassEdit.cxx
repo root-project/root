@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.11 2004/04/15 06:41:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.12 2004/05/10 17:18:31 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -19,11 +19,14 @@ int   TClassEdit::STLKind(const char *type)
 {
 //      Converts STL container name to number. vector -> 1, etc..
 
+   unsigned char offset = 0;
+   if (strncmp(type,"std::",5)==0) { offset = 5; }
+
    static const char *stls[] =                  //container names
    {"any","vector","list","deque","map","multimap","set","multiset",0};
 
 //              kind of stl container
-   for(int k=1;stls[k];k++) {if (strcmp(type,stls[k])==0) return k;}
+   for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return k;}
    return 0;
 }
 

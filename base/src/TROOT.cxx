@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.133 2004/08/04 20:55:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.134 2004/08/09 15:35:51 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -825,6 +825,11 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       string long64name = TClassEdit::GetLong64_Name( name );
       if ( long64name != name ) return FindSTLClass( long64name.c_str(), load);
    }
+   if (cl == 0 && (strncmp(name,"std::",5)==0)) {
+      // CINT sometime ignores the std namespace for stl containers,
+      // so let's try without it.
+      cl = FindSTLClass(name+5,load);
+   }
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
@@ -917,8 +922,10 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
    static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (strcmp(name,full_string_name)==0) { return gROOT->GetClass("string"); }
-
+   if (strcmp(name,full_string_name)==0
+      || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
+      return gROOT->GetClass("string"); 
+   }
    if (TClassEdit::IsSTLCont(name)) {
 
       return FindSTLClass(name,kTRUE);
