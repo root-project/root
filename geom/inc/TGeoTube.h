@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.5 2002/10/08 16:17:48 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -53,6 +53,7 @@ public:
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
+   static  void          DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta);
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
