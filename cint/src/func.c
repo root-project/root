@@ -996,7 +996,7 @@ int *known3;
 char* result7;
 char* funcname;
 {
-  G__value result3;
+  G__value result3 = G__null;
   struct G__param fpara;
   int ig15=0;
   int ig35=0;
@@ -2333,7 +2333,7 @@ char *item;
 int *known3;
 int memfunc_flag;
 {
-  G__value result3;
+  G__value result3 = G__null;
   char funcname[G__LONGLINE];
 #ifndef G__OLDIMPLEMENTATION1340
   int overflowflag=0;
@@ -3502,7 +3502,11 @@ int memfunc_flag;
      * search for interpreted global function
      *
      ***************************************************************/
-    if( G__interpret_func(&result3,funcname,&fpara,hash,G__p_ifunc
+    if(
+#ifndef G__OLDIMPLEMENTATION2071
+	memfunc_flag!=G__CALLSTATICMEMFUNC &&
+#endif
+	G__interpret_func(&result3,funcname,&fpara,hash,G__p_ifunc
 			  ,funcmatch,G__TRYNORMAL)==1 ) {
 #ifdef G__DUMPFILE
       if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
@@ -3549,7 +3553,11 @@ int memfunc_flag;
      * search for compiled(archived) function
      *
      ***************************************************************/
-    if( G__compiled_func(&result3,funcname,&fpara,hash)==1 ) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2071
+	memfunc_flag!=G__CALLSTATICMEMFUNC &&
+#endif
+	G__compiled_func(&result3,funcname,&fpara,hash)==1 ) {
       
 #ifdef G__ASM
       if(G__asm_noverflow) {
@@ -4174,6 +4182,10 @@ char *funcname;
 struct G__param *libp;
 int hash;
 {
+
+#ifndef G__OLDIMPLEMENTATION2068
+  *result7 = G__null;
+#endif
 
   if((hash==656)&&(strcmp(funcname,"sizeof")==0)) {
     if(libp->paran>1) {
@@ -5912,8 +5924,10 @@ char *result;
   char onefmt[G__LONGLINE],fmt[G__LONGLINE];
   char pformat[G__LONGLINE];
   short dig=0;
+#ifndef G__OLDIMPLEMENTATION2083
   int usedpara = 0;
-
+#endif
+  
   strcpy(pformat,(char *)G__int(libp->para[ifmt]));
   result[0]='\0';
   ipara=ifmt+1;
@@ -5933,15 +5947,28 @@ char *result;
 	onefmt[ionefmt]='\0';
 #ifndef G__OLDIMPLEMENTATION827
 	if(libp->para[ipara].obj.i) {
+#ifndef G__OLDIMPLEMENTATION2083
 	  G__PRINTF_ERROR(strlen(onefmt)+strlen(result)+
 	     strlen((char*)G__int(libp->para[usedpara]))>=G__LONGLINE)
+#else
+	  G__PRINTF_ERROR(strlen(onefmt)+strlen(result)+
+	     strlen((char*)G__int(libp->para[ipara]))>=G__LONGLINE)
+#endif
 	  sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION2083
 	  sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[usedpara]));
+#else
+	  sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[ipara]));
+#endif
 	  strcpy(result,onefmt);
         }
 #else
 	sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION2083
 	sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[usedpara]));
+#else
+	sprintf(onefmt,fmt,result ,(char *)G__int(libp->para[ipara]));
+#endif
 	strcpy(result,onefmt);
 #endif
 	ipara++;
@@ -5954,7 +5981,11 @@ char *result;
       if(fmtflag==1) {
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION2083
 	sprintf(onefmt,fmt,result ,(char)G__int(libp->para[usedpara]));
+#else
+	sprintf(onefmt,fmt,result ,(char)G__int(libp->para[ipara]));
+#endif
 	strcpy(result,onefmt);
 	ipara++;
 	ionefmt=0;
@@ -5967,9 +5998,13 @@ char *result;
 	onefmt[ionefmt-1]='s';
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
+#ifndef G__OLDIMPLEMENTATION2083
 	G__logicstring(libp->para[usedpara],dig,onefmt);
+	ipara++;
+#else
+	G__logicstring(libp->para[ipara++],dig,onefmt);
+#endif
 	sprintf(result,fmt,result,onefmt);
-   ipara++;
 	ionefmt=0;
       }
       break;
@@ -5987,9 +6022,19 @@ char *result;
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
 #ifndef G__OLDIMPLEMENTATION1739
-	if('u'==libp->para[usedpara].type) {
+	if(
+#ifndef G__OLDIMPLEMENTATION2083
+	    'u'==libp->para[usedpara].type
+#else
+	    'u'==libp->para[ipara].type
+#endif
+	    ) {
 	  char llbuf[100];
+#ifndef G__OLDIMPLEMENTATION2083
 	  G__value *pval = &libp->para[usedpara]; ipara++;
+#else
+	  G__value *pval = &libp->para[ipara++];
+#endif
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longlong")==0) {
 	    sprintf(llbuf
 	    ,"G__printformatll((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
@@ -6005,16 +6050,28 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
+#ifndef G__OLDIMPLEMENTATION2083
 	    sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
+#else
+	    sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+#endif
 	    strcpy(result,onefmt);
 	  }
 	}
 	else {
+#ifndef G__OLDIMPLEMENTATION2083
 	  sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
+#else
+	  sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+#endif
 	  strcpy(result,onefmt);
 	}
 #else
+#ifndef G__OLDIMPLEMENTATION2083
 	sprintf(onefmt,fmt ,result,G__int(libp->para[usedpara])); ipara++;
+#else
+	sprintf(onefmt,fmt ,result,G__int(libp->para[ipara++]));
+#endif
 	strcpy(result,onefmt);
 #endif
 	ionefmt=0;
@@ -6031,9 +6088,19 @@ char *result;
 	onefmt[ionefmt]='\0';
 	sprintf(fmt,"%%s%s",onefmt);
 #ifndef G__OLDIMPLEMENTATION1913
-	if('u'==libp->para[usedpara].type) {
+	if(
+#ifndef G__OLDIMPLEMENTATION2083
+           'u'==libp->para[usedpara].type
+#else
+           'u'==libp->para[ipara].type
+#endif
+            ) {
 	  char llbuf[100];
+#ifndef G__OLDIMPLEMENTATION2083
 	  G__value *pval = &libp->para[usedpara]; ipara++;
+#else
+	  G__value *pval = &libp->para[ipara++];
+#endif
 	  if(strcmp(G__struct.name[pval->tagnum],"G__longdouble")==0) {
 	    sprintf(llbuf
 	    ,"G__printformatld((char*)(%ld),(const char*)(%ld),(void*)(%ld))"
@@ -6042,16 +6109,28 @@ char *result;
 	    strcat(result,fmt);
 	  }
 	  else {
-	    sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
+#ifndef G__OLDIMPLEMENTATION2083
+	    sprintf(onefmt,fmt,result,G__double(libp->para[usedpara]));ipara++;
+#else
+	    sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+#endif
 	    strcpy(result,onefmt);
 	  }
 	}
 	else {
+#ifndef G__OLDIMPLEMENTATION2083
 	  sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
+#else
+	  sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+#endif
 	  strcpy(result,onefmt);
 	}
 #else
+#ifndef G__OLDIMPLEMENTATION2083
 	sprintf(onefmt,fmt ,result,G__double(libp->para[usedpara])); ipara++;
+#else
+	sprintf(onefmt,fmt ,result,G__double(libp->para[ipara++]));
+#endif
 	strcpy(result,onefmt);
 #endif
 	ionefmt=0;
@@ -6078,19 +6157,28 @@ char *result;
       onefmt[ionefmt++]=pformat[ichar];
       break;
     case '%':
+#ifndef G__OLDIMPLEMENTATION2083
       if(fmtflag==0) {
         usedpara = ipara;
         fmtflag=1;
       } else {
         fmtflag=0;
       }
+#else
+      if(fmtflag==0) fmtflag=1;
+      else           fmtflag=0;
+#endif
       onefmt[ionefmt++]=pformat[ichar];
       dig=0;
       break;
 #ifndef G__OLDIMPLEMENTATION1237
     case '*': /* printf("%*s",4,"*"); */
       if(fmtflag==1) {
+#ifndef G__OLDIMPLEMENTATION2083
 	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[usedpara])); ipara++;
+#else
+	sprintf(onefmt+ionefmt,"%ld",G__int(libp->para[ipara++]));
+#endif
 	ionefmt = strlen(onefmt);
       }
       else {
@@ -6098,6 +6186,7 @@ char *result;
       }
       break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2083
     case '$':
       if (fmtflag && dig) {
          usedpara = dig + ifmt;
@@ -6108,10 +6197,12 @@ char *result;
          /* rewind the digit already printed */
          while( ionefmt>=0 && isdigit(onefmt[ionefmt-1])) --ionefmt; 
          dig=0;
-      } else {
+      } 
+      else {
          onefmt[ionefmt++]=pformat[ichar];
       }
       break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1615
     case ' ':
     case '\t' : /* tab */

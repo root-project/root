@@ -5518,7 +5518,7 @@ int isrecursive;
   char *ptmplt;
 #endif
 #ifndef G__OLDIMPLEMENTATION1727
-  char *pexplicitarg;
+  char *pexplicitarg=(char*)NULL;
 #endif
 #ifndef G__OLDIMPLEMENTATION2061
   int templatedConstructor = 0;

@@ -8821,12 +8821,14 @@ int link_stub;
     struct G__ifunc_table *x_ifunc = &G__ifunc;
 #endif
 #ifndef G__OLDIMPLEMENTATION828
+#ifdef G__OLDIMPLEMENTATION2088
 #ifndef G__OLDIMPLEMENTATION1309
     char *cx;
 #endif
 #ifndef G__OLDIMPLEMENTATION1523
     char *cy;
 #endif
+#endif /* 2088 */
     fpos_t pos;
     int store_line = G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
@@ -8835,6 +8837,30 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1730
     if(G__CPPLINK==globalcomp) globalcomp=G__METHODLINK;
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2088
+    if(('<'==c || '>'==c) 
+       &&(strcmp(buf,"operator")==0||strstr(buf,"::operator"))) {
+      int len=strlen(buf);
+      buf[len++]=c;
+      store_line = G__ifile.line_number;
+      fgetpos(G__ifile.fp,&pos);
+      buf[len] = G__fgetc();
+      if(buf[len]==c||'='==buf[len]) c=G__fgetstream_template(buf+10,";\n\r");
+      else {
+	fsetpos(G__ifile.fp,&pos);
+	G__ifile.line_number = store_line;
+	if(G__dispsource) G__disp_mask = 1;
+	c = G__fgetstream_template(buf+len,";\n\r");
+      }
+    }
+    else {
+      fsetpos(G__ifile.fp,&pos);
+      G__ifile.line_number = store_line;
+      c = G__fgetstream_template(buf,";\n\r");
+    }
+
+#else /* 2088 */
 
 #ifndef G__OLDIMPLEMENTATION1309
 #ifndef G__OLDIMPLEMENTATION1523
@@ -8848,6 +8874,7 @@ int link_stub;
 #else
     cx = G__strrstr(buf,"::");
 #endif
+
     if(cx) {
       int tagnum;
       char tmpbuf[G__ONELINE];
@@ -8862,22 +8889,24 @@ int link_stub;
       strcpy(buf,tmpbuf);
     }
 #endif
-    if(('<'==c || '>'==c)&&strcmp(buf,"operator")==0) {
-      buf[8]=c;
+    if(('<'==c || '>'==c)
+       &&(strcmp(buf,"operator")==0||strstr(buf,"::operator"))) {
+      int len=strlen(buf);
+      buf[len++]=c;
       store_line = G__ifile.line_number;
       fgetpos(G__ifile.fp,&pos);
-      buf[9] = G__fgetc();
+      buf[len] = G__fgetc();
 #ifndef G__OLDIMPLEMENTATION1000
-      if(buf[9]==c||'='==buf[9]) c = G__fgetstream_template(buf+10,";\n\r");
+      if(buf[len]==c||'='==buf[len]) c=G__fgetstream_template(buf+10,";\n\r");
 #else
-      if(buf[9]==c) c = G__fgetstream_template(buf+10,";\n\r");
+      if(buf[len]==c) c = G__fgetstream_template(buf+len+1,";\n\r");
 #endif
       else {
 	fsetpos(G__ifile.fp,&pos);
 	G__ifile.line_number = store_line;
 	if(G__dispsource) G__disp_mask = 1;
 #ifndef G__OLDIMPLEMENTATION1000
-	c = G__fgetstream_template(buf+9,";\n\r");
+	c = G__fgetstream_template(buf+len,";\n\r");
 #else
 	c = G__fgetstream_template(buf,";\n\r");
 #endif
@@ -8888,13 +8917,23 @@ int link_stub;
       G__ifile.line_number = store_line;
       c = G__fgetstream_template(buf,";\n\r");
     }
-#else
+#endif /* 2088 */
+
+#else /* 828 */
     c = G__fgetstream_template(buf,";\n\r");
-#endif
+#endif /* 828 */
+
 
     /* if the function is specified with paramters */
     p = strchr(buf,'(');
+#ifndef G__OLDIMPLEMENTATION2088
+    if(p && strstr(buf,"operator()")==0) {
+      if(strncmp(p,")(",2)==0) p+=2;
+      else if(strcmp(p,")")==0) p=0;
+    }
+#else /* 2088 */
     /* operator()(...) is always member function, hence never happen */
+#endif /* 2088 */
     if(p) {
       char funcname[G__LONGLINE];
       char param[G__LONGLINE];

@@ -1220,7 +1220,7 @@ char *expression;
   int iscastexpr = 0; /* whether this expression start with a cast */
 #endif
 
-  G__value defined;
+  G__value defined = G__null;
   int store_var_type = G__var_type;
   int explicitdtor = 0;
   int inew=0; /* ON994 */

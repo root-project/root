@@ -153,10 +153,12 @@ class map {
     reverse_iterator operator--(int a);
    private:
   };
+#ifndef G__INTEL_COMPILER
   friend bool operator==(const map::reverse_iterator& x
                         ,const map::reverse_iterator& y) const;
   friend bool operator!=(const map::reverse_iterator& x
                         ,const map::reverse_iterator& y) const;
+#endif
 
   typedef const iterator const_iterator;
   typedef const reverse_iterator const_reverse_iterator;
