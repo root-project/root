@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.42 2004/12/15 17:24:36 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.43 2004/12/16 13:48:16 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -623,7 +623,7 @@ void TSelectorDraw::Begin(TTree *tree)
             if (xmin < xmax && ymin < ymax && zmin < zmax) CanRebin = kFALSE;
          }
       }
-      if (profile || opt.Contains("prof")) {
+      if ((fDimension == 3) && (profile || opt.Contains("prof"))) {
          TProfile2D *hp;
          if (fOldHistogram) {
             fAction = 23;
@@ -658,7 +658,7 @@ void TSelectorDraw::Begin(TTree *tree)
          fVar2->SetAxis(hp->GetYaxis());
          fVar3->SetAxis(hp->GetXaxis());
          fObject = hp;
-      } else if (opt.Contains("col")) {
+      } else if (fDimension == 3 && opt.Contains("col")) {
          TH2F *h2;
          if (fOldHistogram) {
             h2 = (TH2F*)fOldHistogram;
@@ -739,6 +739,9 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fV4 && fVar4)   fV4 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
+
+   fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
+   fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
 }
 
 //______________________________________________________________________________
@@ -1256,6 +1259,11 @@ void TSelectorDraw::TakeEstimate()
 
    Int_t i;
    Double_t rmin[3],rmax[3];
+   Double_t vminOld[4], vmaxOld[4];
+   for (Int_t i = 0; i < 4; i++) {
+      vminOld[i] = fVmin[i];
+      vmaxOld[i] = fVmax[i];
+   }
    fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX; //in float.h
    fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
    //__________________________1-D histogram_______________________
@@ -1344,14 +1352,23 @@ void TSelectorDraw::TakeEstimate()
    //__________________________3D scatter plot with option col_______________________
    } else if (fAction == 33) {
       TH2 *h2 = (TH2*)fObject;
+      bool process2 = kFALSE;
       if (h2->TestBit(TH1::kCanRebin)) {
+         if (vminOld[2] == FLT_MAX)
+            process2 = kTRUE;
+         for (i = 0; i < 4; i++) {
+            fVmin[i] = vminOld[i];
+            fVmax[i] = vmaxOld[i];
+         }
          for (i=0;i<fNfill;i++) {
             if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
             if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
             if (fVmin[1] > fV2[i]) fVmin[1] = fV2[i];
             if (fVmax[1] < fV2[i]) fVmax[1] = fV2[i];
-            if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
-            if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+            if (process2) {
+               if (fVmin[2] > fV3[i]) fVmin[2] = fV3[i];
+               if (fVmax[2] < fV3[i]) fVmax[2] = fV3[i];
+            }
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2,fVmin[1],fVmax[1],fVmin[0],fVmax[0]);
       }
@@ -1409,6 +1426,10 @@ void TSelectorDraw::TakeEstimate()
    } else if (fAction == 40) {
       TH3 *h3 = (TH3*)fObject;
       if (fObject->TestBit(TH1::kCanRebin)) {
+         for (i = 0; i < 4; i++) {
+            fVmin[i] = vminOld[i];
+            fVmax[i] = vmaxOld[i];
+         }
          for (i=0;i<fNfill;i++) {
             if (fVmin[0] > fV1[i]) fVmin[0] = fV1[i];
             if (fVmax[0] < fV1[i]) fVmax[0] = fV1[i];
