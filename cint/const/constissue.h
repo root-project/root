@@ -11,9 +11,8 @@ template<class T> void get_histogram(T const & t, char const * name);
 class TriggerCharacterizer {
  public:
   TriggerCharacterizer() {}
- private:
   typedef std::map<char const*, unsigned long> trigger_counting_map;
-
+ private:
   trigger_counting_map m_map; 
 };
 
