@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.14 2001/05/11 12:53:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.15 2001/06/30 07:11:21 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -189,7 +189,7 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
          if (branch) nbytes += branch->GetEntry(entry, getall);
       }
    } else {
-      nbytes = TBranch::GetEntry(entry);
+      nbytes = TBranch::GetEntry(entry, getall);
    }
    return nbytes;
 }
