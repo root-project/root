@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.11 2000/08/15 12:49:34 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.12 2000/11/21 20:46:00 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -24,6 +24,7 @@
 // The standard test with 1000 events will create several files.
 // The size of all files is around 100 Mbytes.
 // The test with 30 events only require around  20 Mbytes
+// NB: The test must be run with more than 10 events
 //
 // The tests runs sequentially 16 tests. Each test will produce
 // one line (Test OK or Test failed) with some result parameters.
@@ -136,6 +137,7 @@ void stress(Int_t nevent)
 {
    //Main control function invoking all test programs
 
+   if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
    gROOT->GetListOfFunctions()->Delete();
    gROOT->GetList()->Delete();
@@ -829,7 +831,7 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
    Double_t rms2  = h2->GetRMS();
    Float_t xrange = h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
    if (TMath::Abs((mean1-mean2)/xrange) > 0.001*xrange) return -1;
-   if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001) return -2;
+   if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001)    return -2;
    return n1-n2;
 }
 
