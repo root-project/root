@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.9 2002/12/03 16:01:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.10 2002/12/11 17:10:20 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -500,9 +500,10 @@ void TGeoCacheDummy::CdUp()
 Int_t TGeoCacheDummy::GetNodeId() const
 {
 // Get unique node id.
-   Int_t id=0;
-   for (Int_t level=0;level<fLevel+1; level++) id += (Int_t)fNodeBranch[level];
-   return id;
+   Long_t id=0;
+   for (Int_t level=0;level<fLevel+1; level++)
+      id += (Long_t)fNodeBranch[level];
+   return (Int_t)id;
 }
 
 //-----------------------------------------------------------------------------
