@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.1 2001/01/12 11:24:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.1 2001/02/08 16:58:22 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //______________________________________________________________________________
@@ -90,7 +90,7 @@ void TBits::Compact()
 }
 
 //______________________________________________________________________________
-Int_t TBits::CountBits()
+Int_t TBits::CountBits() const
 {
    // Return number of bits set to 1
    
@@ -114,7 +114,7 @@ void TBits::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TBits::Print(Option_t *option) 
+void TBits::Print(Option_t *option) const
 {
    // Print the list of active bits
    
@@ -162,7 +162,7 @@ void TBits::SetBitNumber(Int_t bitnumber, Bool_t value)
 }
 
 //______________________________________________________________________________
-Bool_t TBits::TestBitNumber(Int_t bitnumber) 
+Bool_t TBits::TestBitNumber(Int_t bitnumber) const
 {
    // Return the current value of the bit
 

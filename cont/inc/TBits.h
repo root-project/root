@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.1 2001/01/12 11:24:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.h,v 1.1 2001/02/08 16:58:21 brun Exp $
 // Author: Philippe Canal 05/02/01
 
 /*************************************************************************
@@ -55,16 +55,16 @@ public:
    void   ResetAllBits(Int_t value=kFALSE);  // if value=1 set all bits to 1
    void   ResetBitNumber(Int_t bitnumber) { SetBitNumber(bitnumber,kFALSE); }
    void   SetBitNumber(Int_t bitnumber, Bool_t value = kTRUE);
-   Bool_t TestBitNumber(Int_t bitnumber);
+   Bool_t TestBitNumber(Int_t bitnumber) const;
 
    //----- Utilities
    void   Compact();                         // Reduce the space used.
-   Int_t  CountBits();                       // return number of bits set to 1
+   Int_t  CountBits() const ;                       // return number of bits set to 1
    Int_t  GetNbits() { return fNbits; }
    Int_t  GetNbytes() { return fNbytes; }
 
    void   Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
-   void   Print(Option_t *option="");        // to show the list of active bits
+   void   Print(Option_t *option="") const;        // to show the list of active bits
 
 
    ClassDef(TBits,1)        // Bit container
