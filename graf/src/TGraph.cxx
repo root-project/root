@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.61 2002/03/29 07:20:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.62 2002/03/31 16:33:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -92,13 +92,17 @@ TGraph::TGraph(Int_t n)
 // constructor with only the number of points set
 // the arrsys x and y will be set later
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
       return;
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -118,13 +122,17 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with ints-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
       return;
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -145,13 +153,17 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
 //*-*-*-*-*-*-*-*-*-*-*Graph normal constructor with floats-*-*-*-*-*-*-*-*-*
 //*-*                  ====================================
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
       return;
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -173,13 +185,17 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
 //*-*                  ========================
 //
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    if (n <= 0) {
       Error("TGraph", "illegal number of points (%d)", n);
       return;
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -202,6 +218,11 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    Int_t n  = vx.GetNrows();
    Int_t ny = vy.GetNrows();
    if (ny < n) n = ny;
@@ -211,7 +232,6 @@ TGraph::TGraph(const TVector &vx, const TVector &vy)
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -233,6 +253,11 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
 // The number of points in the graph is the minimum of number of points
 // in vx and vy.
 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
    Int_t n  = vx.GetNrows();
    Int_t ny = vy.GetNrows();
    if (ny < n) n = ny;
@@ -242,7 +267,6 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
    }
 
    fFunctions = new TList;
-   fHistogram = 0;
    fNpoints   = n;
    fX         = new Double_t[n];
    fY         = new Double_t[n];
@@ -255,6 +279,52 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
    }
 }
 
+//______________________________________________________________________________
+TGraph::TGraph(const TH1 *h)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor importing its parameters from the TH1 object passed as argument
+ 
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
+   if (!h) {
+      Error("TGraph", "Pointer to histogram is null");
+      return;
+   }
+   if (h->GetDimension() != 1) {
+      Error("TGraph", "Histogram must be 1-D; h %s is %d-D",h->GetName(),h->GetDimension());
+      return;
+   }
+   TAxis *xaxis = ((TH1*)h)->GetXaxis();
+   fFunctions = new TList;
+   fNpoints   = xaxis->GetNbins();
+   fX         = new Double_t[fNpoints];
+   fY         = new Double_t[fNpoints];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   for (Int_t i=0;i<fNpoints;i++) {
+      fX[i] = xaxis->GetBinCenter(i+1);
+      fY[i] = h->GetBinContent(i+1);
+   }
+   SetLineColor(h->GetLineColor());;
+   SetLineWidth(h->GetLineWidth());
+   SetLineStyle(h->GetLineStyle());
+   SetFillColor(h->GetFillColor());
+   SetFillStyle(h->GetFillStyle());
+   SetMarkerStyle(h->GetMarkerStyle());
+   SetMarkerColor(h->GetMarkerColor());
+   SetMarkerSize(h->GetMarkerSize());
+   SetMaximum(h->GetMaximumStored());
+   SetMinimum(h->GetMinimumStored());
+   
+   SetName(h->GetName());
+   SetTitle(h->GetTitle());   
+}
+         
 //______________________________________________________________________________
 TGraph::~TGraph()
 {

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.21 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.22 2002/02/25 23:10:33 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 #include "TF1.h"
+#include "TStyle.h"
 
 ClassImp(TGraphErrors)
 
@@ -144,6 +145,21 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
    }
 }
 
+//______________________________________________________________________________
+TGraphErrors::TGraphErrors(const TH1 *h)
+       : TGraph(h)
+{
+// TGraphErrors constructor importing its parameters from the TH1 object passed as argument
+
+   if (fNpoints <= 0) return;
+   fEX       = new Double_t[fNpoints];
+   fEY       = new Double_t[fNpoints];
+
+   for (Int_t i=0;i<fNpoints;i++) {
+      fEX[i] = h->GetBinWidth(i+1)*gStyle->GetErrorX();
+      fEY[i] = h->GetBinError(i+1);
+   }
+}   
 //______________________________________________________________________________
 TGraphErrors::~TGraphErrors()
 {
