@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.17 2000/08/11 20:39:28 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.18 2000/08/17 09:47:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2258,10 +2258,14 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
    //Get a pointer to the TSelector object
    static TSelector *selector = 0;
    delete selector; //delete previous selector if any
-   selector = TSelector::GetSelector(filename);
+   // This might reloads the script and delete your option
+   // string! so let copy it first:
+   TString opt(option);
+   TString file(filename);   
+   selector = TSelector::GetSelector(file);
    if (!selector) return -1;
    
-   Int_t nsel = Process(selector,option,nentries,firstentry);
+   Int_t nsel = Process(selector,opt,nentries,firstentry);
    return nsel;
 }
 
