@@ -49,7 +49,7 @@ $(DICTS) : %dict.C : %.h %linkdef.h
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" $@ $@ "$^" "$(ROOTLIBS)" > $*.build.log
+		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log
 
 #ifeq ($(ARCH),aix)
 #		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
