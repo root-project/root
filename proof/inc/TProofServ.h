@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.8 2002/02/12 17:53:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.9 2002/03/13 01:52:20 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -67,7 +67,6 @@ private:
    void        Setup();
    void        RedirectOutput();
    Int_t       CatMotd();
-   void        Info(const char *method, const char *msgfmt, ...) const; // should be in TObject
 
 public:
    TProofServ(int *argc, char **argv);

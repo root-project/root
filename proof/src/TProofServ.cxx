@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.17 2002/03/13 01:52:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.18 2002/03/15 17:23:40 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -21,8 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #ifdef WIN32
-#include <io.h>
-typedef long off_t;
+   #include <io.h>
+   typedef long off_t;
 #endif
 #include <errno.h>
 #include <time.h>
@@ -87,13 +87,16 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
       type = "Fatal";
    }
 
+   TString node = gProofServ->IsMaster() ? "master" : "slave ";
+   if (node != "master") node += gProofServ->GetOrdinal();
    char *bp;
+
    if (!location || strlen(location) == 0) {
-      fprintf(stderr, "%s: %s\n", type, msg);
-      bp = Form("%s:%s:%s", gProofServ->GetUser(), type, msg);
+      fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);
+      bp = Form("%s:%s:%s:%s", gProofServ->GetUser(), node.Data(), type, msg);
    } else {
-      fprintf(stderr, "%s in <%s>: %s\n", type, location, msg);
-      bp = Form("%s:%s:<%s>:%s", gProofServ->GetUser(), type, location, msg);
+      fprintf(stderr, "%s in <%s> on %s: %s\n", type, location, node.Data(), msg);
+      bp = Form("%s:%s:%s:<%s>:%s", gProofServ->GetUser(), node.Data(), type, location, msg);
    }
    fflush(stderr);
    gSystem->Syslog(loglevel, bp);
@@ -450,14 +453,10 @@ void TProofServ::HandleSocketInput()
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
          if (IsMaster() && IsParallel()) {
-            fProof->SendCommand(str);
+            fProof->Exec(str);
          } else {
-            if (fLogLevel > 1) {
-               if (IsMaster())
-                  Info("HandleSocketInput", "master processing: %s...", str);
-               else
-                  Info("HandleSocketInput", "slave %d processing: %s...", fOrdinal, str);
-            }
+            if (fLogLevel > 1)
+               Info("HandleSocketInput", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -577,11 +576,11 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             if (md5local && md5 == (*md5local)) {
                fSocket->Send(kPROOF_CHECKFILE);
                if (fLogLevel > 1)
-                  Info("HandleSocketInput","file %s already on node %d", filenam.Data(), fOrdinal);
+                  Info("HandleSocketInput","file %s already on node", filenam.Data());
             } else {
                fSocket->Send(kPROOF_FATAL);
                if (fLogLevel > 1)
-                  Info("HandleSocketInput","file %s not yet on node %d", filenam.Data(), fOrdinal);
+                  Info("HandleSocketInput","file %s not yet on node", filenam.Data());
             }
             delete md5local;
          }
@@ -698,10 +697,7 @@ void TProofServ::HandleUrgentData()
    switch (oob_byte) {
 
       case TProof::kHardInterrupt:
-         if (IsMaster())
-            Info("HandleUrgentData", "*** Master: Hard Interrupt");
-         else
-            Info("HandleUrgentData", "*** Slave %d: Hard Interrupt", fOrdinal);
+         Info("HandleUrgentData", "*** Hard Interrupt");
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
@@ -740,10 +736,7 @@ void TProofServ::HandleUrgentData()
          break;
 
       case TProof::kSoftInterrupt:
-         if (IsMaster())
-            Info("HandleUrgentData", "Master: Soft Interrupt");
-         else
-            Info("HandleUrgentData", "Slave %d: Soft Interrupt", fOrdinal);
+         Info("HandleUrgentData", "Soft Interrupt");
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
@@ -759,10 +752,7 @@ void TProofServ::HandleUrgentData()
          break;
 
       case TProof::kShutdownInterrupt:
-         if (IsMaster())
-            Info("HandleUrgentData", "Master: Shutdown Interrupt");
-         else
-            Info("HandleUrgentData", "Slave %d: Shutdown Interrupt", fOrdinal);
+         Info("HandleUrgentData", "Shutdown Interrupt");
 
          // If master server, propagate interrupt to slaves
          if (IsMaster())
@@ -790,28 +780,15 @@ void TProofServ::HandleSigPipe()
       // Check if we are here because client is closed. Try to ping client,
       // if that works it we are here because some slave died
       if (fSocket->Send(kPROOF_PING | kMESS_ACK) < 0) {
-         Info("HandleSigPipe", "Master: KeepAlive probe failed");
+         Info("HandleSigPipe", "keepAlive probe failed");
          // Tell slaves we are going to close since there is no client anymore
          fProof->Interrupt(TProof::kShutdownInterrupt);
          Terminate(0);
       }
    } else {
-      Info("HandleSigPipe", "Slave %d: KeepAlive probe failed", fOrdinal);
+      Info("HandleSigPipe", "keepAlive probe failed");
       Terminate(0);  // will not return from here....
    }
-}
-
-//______________________________________________________________________________
-void TProofServ::Info(const char *location, const char *va_(fmt), ...) const
-{
-   // Issue informational message. Use "location" to specify the method
-   // where the info was issued. Accepts standard printf formatting arguments.
-   // Should be moved into TObject.
-
-   va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kInfo, location, va_(fmt), ap);
-   va_end(ap);
 }
 
 //______________________________________________________________________________
