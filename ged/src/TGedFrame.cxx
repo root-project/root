@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.cxx,v 1.3 2004/08/16 15:05:52 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include "TG3DLine.h"
 #include "TCanvas.h"
 #include "TGLabel.h"
+#include "TGTab.h"
 #include <snprintf.h>
 
 
@@ -40,6 +41,7 @@ TGedFrame::TGedFrame(const TGWindow *p, Int_t id, Int_t width,
    fInit   = kTRUE;
    
    Associate(p);
+   fTab = (TGTab*)p->GetParent()->GetParent();
    
 //   gROOT->GetListOfCleanups()->Add(this);
 }
@@ -91,7 +93,13 @@ void TGedFrame::SetActive(Bool_t active)
    else
       ((TGCompositeFrame*)GetParent())->HideFrame(this);
 
-  ((TGMainFrame*)GetMainFrame())->Layout();
+   ((TGMainFrame*)GetMainFrame())->Layout();
+   
+   // to avoid that the user changes options on a deactivated Tab
+   if (fTab->IsEnabled(fTab->GetCurrent())) 
+      fTab->SetTab(fTab->GetCurrent());
+   else 
+      fTab->SetTab(0);
 }
 
 //______________________________________________________________________________
@@ -174,7 +182,6 @@ TGedNameFrame::TGedNameFrame(const TGWindow *p, Int_t id, Int_t width,
       if (!strcmp(el->fFrame->ClassName(), "TGCompositeFrame"))
          ((TGCompositeFrame *)el->fFrame)->Cleanup();
    }
-
    Cleanup();
 }
 
@@ -201,5 +208,6 @@ void TGedNameFrame::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    gClient->GetColorByName("#ff0000", color);
    fLabel->SetTextColor(color, kTRUE);
    fLabel->SetText(new TGString(string));
+   
    SetActive();
 }

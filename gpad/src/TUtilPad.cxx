@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.2 2004/07/02 13:46:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TUtilPad.cxx,v 1.3 2004/07/20 07:23:34 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 
 #include "TUtilPad.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TFitPanelGraph.h"
@@ -47,10 +48,10 @@ void TUtilPad::DrawPanel(const TVirtualPad *pad, const TObject *obj)
 {
 // interface to the TDrawPanelHist
    
-   if (fgPanelVersion > 0) {
-      //new DrawPanel by Marek Biskup
-      gROOT->ProcessLine(Form("TGedDrawPanel::ShowPanel((TObject*)0x%x,(TPad*)0x%x);",
-                          obj,pad));
+   const char *editor = gEnv->GetValue("Plugin.TVirtualPadEditor","");
+   if (fgPanelVersion == 0 && strstr(editor,"TGedEditor")) {
+      //new interface by Carsten Hof
+      gROOT->ProcessLine(Form("TVirtualPadEditor::ShowEditor();"));
       return;
    }
    

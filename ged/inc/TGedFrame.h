@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.2 2004/06/25 17:13:23 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedFrame.h,v 1.3 2004/08/16 15:05:52 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -31,6 +31,7 @@ class TVirtualPad;
 class TCanvas;
 class TGLabel;
 class TList;
+class TGTab;
 
 
 class TGedFrame : public TGCompositeFrame, public TGWidget {
@@ -38,7 +39,7 @@ protected:
           TObject      *fModel;       // selected object, if exists
           TVirtualPad  *fPad;         // selected pad, if exists
           Bool_t        fInit;        // init flag for setting signals/slots
-          
+          TGTab        *fTab;         // Pointer to the parent tab          
    virtual void MakeTitle(const char *title);
    
 public:
@@ -78,6 +79,7 @@ class TGedNameFrame : public TGedFrame {
 protected:
    TGLabel          *fLabel;      //label of attribute frame
    TGCompositeFrame *f1, *f2;
+
 public:
    TGedNameFrame(const TGWindow *p, Int_t id,
                  Int_t width = 140, Int_t height = 30,
