@@ -103,7 +103,7 @@ extern void seekdir(DIR* dir,off_t loc);
 
 extern int seekdir(DIR *, long);
 
-#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
+#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNUC)||defined(__GNUC__))
 extern void seekdir( DIR *, off_t );
 
 #elif defined(G__AIX)
@@ -173,7 +173,7 @@ int uname(struct utsname *buf);
  * unistd.h
  ********************************************************************/
 extern int close(int fd);
-#if defined(G__ALPHA) && !defined(G__GNU)
+#if defined(G__ALPHA) && !defined(G__GNUC)
 extern int     read();
 extern int     write();
 #else
@@ -256,11 +256,11 @@ extern char *getwd(char *buf);
 
 #if defined(G__SUN) || defined(__sun)
 extern long setpgrp(void);
-#elif defined(G__FBSD) || defined(__FreeBSD__) || (defined(G__ALPHA)&&defined(G__GNU))
+#elif defined(G__FBSD) || defined(__FreeBSD__) || (defined(G__ALPHA)&&defined(G__GNUC))
 extern int setpgrp(pid_t _pid, pid_t _pgrp);
 #elif defined(G__KCC) || defined(__KCC)
 extern pid_t setpgrp(void);
-#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNU)||defined(__GNUC__))
+#elif (defined(G__SGI) || defined(__sgi)) && !(defined(G__GNUC)||defined(__GNUC__))
 extern pid_t setpgrp(void);
 #else
 extern int setpgrp(void);
