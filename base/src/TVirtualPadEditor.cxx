@@ -87,7 +87,7 @@ void TVirtualPadEditor::SetPadEditorName(const char *name)
 //______________________________________________________________________________
 void TVirtualPadEditor::ShowEditor()
 {
-   // static: show the pad editor
+   // Show the pad editor. Static method.
 
    if (!fgPadEditor) GetPadEditor();
 
@@ -97,7 +97,7 @@ void TVirtualPadEditor::ShowEditor()
 //______________________________________________________________________________
 void TVirtualPadEditor::HideEditor()
 {
-   // static: hide the pad editor
+   //  Hide the pad editor. Static method.
 
    if (fgPadEditor)
       fgPadEditor->Hide();
@@ -107,8 +107,6 @@ void TVirtualPadEditor::HideEditor()
 void TVirtualPadEditor::UpdateFillAttributes(Int_t color, Int_t style)
 {
    // Update fill attributes via the pad editor
-
-   if (!fgPadEditor) GetPadEditor();
 
    ShowEditor();
 
@@ -121,8 +119,6 @@ void TVirtualPadEditor::UpdateTextAttributes(Int_t align, Float_t angle,
 {
    // Update text attributes via the pad editor
 
-   if (!fgPadEditor) GetPadEditor();
-
    ShowEditor();
 
    fgPadEditor->TextAttributes(align, angle, col, font, tsize);
@@ -134,8 +130,6 @@ void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style,
 {
    // Update line attributes via the pad editor
 
-   if (!fgPadEditor) GetPadEditor();
-
    ShowEditor();
 
    fgPadEditor->LineAttributes(color, style, width);
@@ -146,8 +140,6 @@ void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style,
                                                Float_t msize)
 {
    // Update marker attributes via the pad editor
-
-   if (!fgPadEditor) GetPadEditor();
 
    ShowEditor();
 

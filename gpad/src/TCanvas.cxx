@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.56 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.57 2004/03/08 08:04:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1239,7 +1239,7 @@ void TCanvas::Picked(TPad *pad, TObject *obj, Int_t event)
 //______________________________________________________________________________
 void TCanvas::Selected(TPad *pad, TObject *obj, Int_t event)
 {
-   // Emit Picked() signal.
+   // Emit Selected() signal.
 
    Long_t args[3];
 
