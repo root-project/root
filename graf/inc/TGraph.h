@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.16 2001/11/30 15:46:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.17 2001/12/19 14:21:54 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -44,8 +44,6 @@ protected:
     Double_t    fMinimum;    //Minimum value for plotting along y
     Double_t    fMaximum;    //Maximum value for plotting along y
 
-    virtual void    LeastSquareFit(Int_t n, Int_t m, Double_t *a);
-    virtual void    LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
     
 public:
     // TGraph status bits
@@ -96,6 +94,8 @@ public:
         virtual void     InitGaus();
         virtual void     InitPolynom();
         virtual Int_t    InsertPoint(); // *MENU*
+        virtual void     LeastSquareFit(Int_t n, Int_t m, Double_t *a);
+        virtual void     LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
         virtual void     Paint(Option_t *chopt="");
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");
