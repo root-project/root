@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.34 2004/07/02 21:50:20 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.35 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1099,10 +1099,19 @@ void TSelectorDraw::TakeAction()
       pm->SetFillColor(fTree->GetFillColor());
       pm->SetFillStyle(fTree->GetFillStyle());
 
-   if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
-      else                                          pm->Draw(fOption.Data());
+      if (!fDraw && !strstr(fOption.Data(),"goff")) {
+         if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
+         else                                             pm->Draw(fOption.Data());
+      }
       TH2 *h2 = (TH2*)fObject;
-      for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+      if (!h2->TestBit(kCanDelete)) {
+         for (i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
+      }
+      //if (fOption.Length() == 0 || fOption == "same")  pm->Draw("p");
+      //else                                             pm->Draw(fOption.Data());
+      //if (!h2->TestBit(kCanDelete)) {
+      //TH2 *h2 = (TH2*)fObject;
+      //for(i=0;i<fNfill;i++) h2->Fill(fV2[i],fV1[i],fW[i]);
    }
    //__________________________3D scatter plot_______________________
    else if (fAction ==  3) {
