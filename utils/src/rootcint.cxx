@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.47 2001/07/04 09:13:36 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.48 2001/07/31 13:08:19 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -209,6 +209,13 @@ const char *help =
 
 #else
 #include <ertti.h>
+#endif
+
+#ifdef _WIN32
+#ifdef system
+#undef system
+#endif
+#include <process.h>
 #endif
 
 #ifdef __MWERKS__
