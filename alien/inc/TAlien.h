@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.2 2002/05/23 14:04:23 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.3 2002/05/27 18:13:55 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -42,6 +42,8 @@ class TAlien : public TGrid {
 private:
    Alien_t    fAlien;    // connection to AliEn server
 
+   TString    MakeLfn(const char *lfn) const;
+
 public:
    TAlien(const char *grid, const char *uid = 0, const char *pw = 0);
    ~TAlien();
@@ -65,9 +67,9 @@ public:
    TGridResult *GetAttributes(const char *lfn);
 
    //--- catalog navigation & browsing
-   const char  *Pwd();
-   Int_t        Cd(const char *dir);
-   TGridResult *Ls(const char *dir, const char *options = 0);
+   const char  *Pwd() const;
+   Int_t        Cd(const char *dir = 0) const;
+   TGridResult *Ls(const char *dir = 0, const char *options = 0) const;
    void         Browse(TBrowser *b);
 
    //--- status and info

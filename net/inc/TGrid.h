@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.1 2002/05/13 10:35:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.2 2002/05/23 14:04:23 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -72,10 +72,15 @@ public:
    virtual TGridResult *GetAttributes(const char *lfn) = 0;
 
    //--- catalog navigation & browsing
-   virtual const char  *Pwd() = 0;
-   virtual Int_t        Cd(const char *dir) = 0;
-   virtual TGridResult *Ls(const char *dir, const char *options = 0) = 0;
+   virtual const char  *Pwd() const = 0;
+   virtual Int_t        Cd(const char *dir = 0) const = 0;
+   virtual TGridResult *Ls(const char *dir = 0, const char *options = 0) const = 0;
    virtual void         Browse(TBrowser *b) = 0;
+
+   void                 pwd() const;
+   void                 cd(const char *dir = 0) const;
+   void                 ls(const char *dir, const char *options) const;
+   void                 ls(const char *dir = 0) const { ls(dir, 0); }
 
    //--- status and info
    virtual const char  *GetInfo() = 0;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TGrid.cxx,v 1.1 2002/05/13 10:35:19 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGrid.h"
+#include "TGridResult.h"
 #include "TROOT.h"
 #include "TPluginManager.h"
 
@@ -59,4 +60,39 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw)
    return g;
 }
 
+//______________________________________________________________________________
+void TGrid::pwd() const
+{
+   // Print current working directory.
 
+   const char *p = Pwd();
+   if (p && strlen(p) > 0)
+      printf("%s\n", p);
+}
+
+//______________________________________________________________________________
+void TGrid::cd(const char *dir) const
+{
+   // Change working directory.
+
+   Cd(dir);
+}
+
+//______________________________________________________________________________
+void TGrid::ls(const char *dir, const char *options) const
+{
+   // List content of current directory.
+   // Supported options:
+   //  "l": long listing format
+   //  "a": list all entries
+   //  "d": list only directories
+
+   TGridResult *r = Ls(dir, options);
+
+   if (r) {
+      while (r->Next()) {
+         printf("%s\n", r->GetValue());
+      }
+      delete r;
+   }
+}

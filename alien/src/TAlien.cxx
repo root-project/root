@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.3 2002/05/27 15:46:56 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.4 2002/05/27 18:13:55 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -72,7 +72,11 @@ TAlien::TAlien(const char *grid, const char *uid, const char *pw)
       host = url.GetHost();
    }
 
-   if (AlienConnect(uid, pw) == -1) {
+   const char *user = "";
+   if (uid)
+      user = uid;
+
+   if (AlienConnect(user, pw) == -1) {
       if (host.IsNull())
          Error("TAlien", "connection to AliEn failed");
       else
@@ -89,7 +93,8 @@ TAlien::~TAlien()
 {
    // Clenaup AliEn object, closes connection to AliEn.
 
-   Close();
+   if (IsConnected())
+      Close();
 }
 
 //______________________________________________________________________________
@@ -133,9 +138,11 @@ Int_t TAlien::AddFile(const char *lfn, const char *pfn, Int_t size)
    // Example lfn: "lfn://[alien.cern.ch]/alice/cern.ch/user/r/rdm/aap.root"
    // Example pfn: "rfio:/castor/cern.ch/user/r/rdm/noot.root"
 
-   if (AlienAddFile(lfn, pfn, size) == -1) {
+   TString slfn = MakeLfn(lfn);
+
+   if (AlienAddFile(slfn, pfn, size) == -1) {
       Error("AddFile", "error adding pfn %s with lfn %s (size %d)",
-            pfn, lfn, size);
+            pfn, slfn.Data(), size);
       return -1;
    }
    return 0;
@@ -147,8 +154,10 @@ Int_t TAlien::DeleteFile(const char *lfn)
    // Delete logical file from AliEn. Does not delete associated pfn's.
    // Returns -1 on error, 0 otherwise.
 
-   if (AlienDeleteFile(lfn) == -1) {
-      Error("DeleteFile", "error deleting lfn %s", lfn);
+   TString slfn = MakeLfn(lfn);
+
+   if (AlienDeleteFile(slfn) == -1) {
+      Error("DeleteFile", "error deleting lfn %s", slfn.Data());
       return -1;
    }
    return 0;
@@ -163,12 +172,14 @@ Int_t TAlien::Mkdir(const char *dir, const char *options)
    //  "p": make all directories
    //  "s": silent mode
 
+   TString sdir = MakeLfn(dir);
+
    const char *opt = "";
    if (options)
       opt = options;
 
-   if (AlienMkDir(dir, opt) == -1) {
-      Error("Mkdir", "error creating directory %s", dir);
+   if (AlienMkDir(sdir, opt) == -1) {
+      Error("Mkdir", "error creating directory %s", sdir.Data());
       return -1;
    }
    return 0;
@@ -182,12 +193,14 @@ Int_t TAlien::Rmdir(const char *dir, const char *options)
    // Supported options:
    //  "s": silent mode
 
+   TString sdir = MakeLfn(dir);
+
    const char *opt = "";
    if (options)
       opt = options;
 
-   if (AlienRmDir(dir, opt) == -1) {
-      Error("Rmdir", "error deleting directory %s", dir);
+   if (AlienRmDir(sdir, opt) == -1) {
+      Error("Rmdir", "error deleting directory %s", sdir.Data());
       return -1;
    }
 
@@ -201,9 +214,15 @@ char *TAlien::GetPhysicalFileName(const char *lfn)
    // Returns 0 in case of error. Returned value must be deleted
    // using delete[].
 
-   char *pfn = AlienGetPhysicalFileName(lfn);
+   TString slfn = MakeLfn(lfn);
 
-   if (!pfn) return 0;
+   char *pfn = AlienGetPhysicalFileName(slfn);
+
+   if (!pfn) {
+      Error("GetPhysicalFileName", "no physical file name found for lfn %s",
+            slfn.Data());
+      return 0;
+   }
 
    char *pfn2 = new char [strlen(pfn) + 1];
    strcpy(pfn2, pfn);
@@ -219,9 +238,15 @@ TGridResult *TAlien::GetPhysicalFileNames(const char *lfn)
    // Returns list of physical file names associated with logical file name.
    // Returns 0 in case of error. Returned result must be deleted by user.
 
-   AlienResult_t *ar = AlienGetPhysicalFileNames(lfn);
+   TString slfn = MakeLfn(lfn);
 
-   if (!ar) return 0;
+   AlienResult_t *ar = AlienGetPhysicalFileNames(slfn);
+
+   if (!ar) {
+      Error("GetPhysicalFileNames", "no physical file names found for lfn %s",
+            slfn.Data());
+      return 0;
+   }
 
    return new TAlienResult(ar);
 }
@@ -233,10 +258,12 @@ Int_t TAlien::AddAttribute(const char *lfn, const char *attrname,
    // Add attribute attrname with value attrval to specified logical
    // file name. Returns -1 on error, 0 otherwise.
 
+   TString slfn = MakeLfn(lfn);
+
    // assume "standard" tag exists
-   if (AlienAddAttribute(lfn, "standard", attrname, attrval) == -1) {
+   if (AlienAddAttribute(slfn, "standard", attrname, attrval) == -1) {
       Error("AddAttribute", "error adding attribute %s with value %s to lfn %s",
-            attrname, attrval, lfn);
+            attrname, attrval, slfn.Data());
       return -1;
    }
 
@@ -249,17 +276,19 @@ Int_t TAlien::DeleteAttribute(const char *lfn, const char *attrname)
    // Delete specified attribute from logical file name. If attribute
    // is 0 delete all attributes. Returns -1 on error, 0 otherwise.
 
+   TString slfn = MakeLfn(lfn);
+
    const char *attr = "";
    if (attrname)
       attr = attrname;
 
-   if (AlienDeleteAttribute(lfn, "standard", attr) == -1) {
+   if (AlienDeleteAttribute(slfn, "standard", attr) == -1) {
       if (strlen(attr) > 0)
          Error("DeleteAttribute", "error deleting attribute %s from lfn %s",
-               attr, lfn);
+               attr, slfn.Data());
       else
          Error("DeleteAttribute", "error deleting all attributes from lfn %s",
-               lfn);
+               slfn.Data());
       return -1;
    }
 
@@ -272,16 +301,21 @@ TGridResult *TAlien::GetAttributes(const char *lfn)
    // Return attributes associated with lfn. Returns 0 in case of error.
    // Returned result must be deleted by user.
 
-   // assume "standard" tag
-   AlienAttr_t *at = AlienGetAttributes(lfn, "standard");
+   TString slfn = MakeLfn(lfn);
 
-   if (!at) return 0;
+   // assume "standard" tag
+   AlienAttr_t *at = AlienGetAttributes(slfn, "standard");
+
+   if (!at) {
+      // Don't print error message
+      return 0;
+   }
 
    return new TAlienAttrResult(at);
 }
 
 //______________________________________________________________________________
-const char *TAlien::Pwd()
+const char *TAlien::Pwd() const
 {
    // Returns current working directory in the AliEn file catalog.
 
@@ -289,7 +323,7 @@ const char *TAlien::Pwd()
 }
 
 //______________________________________________________________________________
-Int_t TAlien::Cd(const char *dir)
+Int_t TAlien::Cd(const char *dir) const
 {
    // Change directory in the AliEn file catalog. If dir is not specified,
    // it goes to the home directory. Returns -1 in case of failure,
@@ -299,8 +333,10 @@ Int_t TAlien::Cd(const char *dir)
    if (dir)
       d = dir;
 
-   if (AlienCd(d) == -1) {
-      Error("Cd", "error making %s the current working directory", dir);
+   TString sdir = MakeLfn(d);
+
+   if (AlienCd(sdir) == -1) {
+      Error("Cd", "error making %s the current working directory", sdir.Data());
       return -1;
    }
 
@@ -308,7 +344,7 @@ Int_t TAlien::Cd(const char *dir)
 }
 
 //______________________________________________________________________________
-TGridResult *TAlien::Ls(const char *dir, const char *options)
+TGridResult *TAlien::Ls(const char *dir, const char *options) const
 {
    // Returns contents of a directory in the AliEn file catalog.
    // Returns 0 in case of error. Returned result must be deleted by user.
@@ -321,11 +357,17 @@ TGridResult *TAlien::Ls(const char *dir, const char *options)
    //  "a": list all entries
    //  "d": list only directories
 
+   const char *d = Pwd();
+   if (dir)
+      d = dir;
+
+   TString sdir = MakeLfn(d);
+
    const char *opt = "";
    if (options)
       opt = options;
 
-   AlienResult_t *ar = AlienLs(dir, opt);
+   AlienResult_t *ar = AlienLs(sdir, opt);
 
    if (!ar) return 0;
 
@@ -355,4 +397,38 @@ const char *TAlien::GetInfo()
    // Returns AliEn version string.
 
    return AlienGetInfo();
+}
+
+//______________________________________________________________________________
+TString TAlien::MakeLfn(const char *lfn) const
+{
+   // Make sure that an lfn has a valid format. If lfn:// is missing add it.
+   // If it is not absolute add the Pwd() in front of it.
+
+   TString s;
+
+   if (!lfn || !strlen(lfn))
+      return s;
+
+   if (!strncmp(lfn, "lfn://", 6))
+      return TString(lfn);
+
+   if (!strncmp(lfn, "lfn:/", 5)) {
+      s = "lfn://";
+      if (lfn+5)
+         s += lfn+5;
+      return s;
+   }
+
+   if (lfn[0] == '/') {
+      s = "lfn://";
+      s += lfn;
+      return s;
+   }
+
+   s = "lfn://";
+   s += Pwd();
+   s += lfn;
+
+   return s;
 }
