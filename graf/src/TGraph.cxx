@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.5 2000/06/06 08:59:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.6 2000/06/13 10:57:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1779,7 +1779,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
            }
            ywork[npt-1] = y[j-1];
            ywork[npt]   = y[j-1];
-           if (xwork[npt-1] >= uxmin && xwork[npt] <= uxmax+rounding) npt += 2;
+           if (xwork[npt-1] >= uxmin-rounding && xwork[npt] <= uxmax+rounding) npt += 2;
            else xwork[npt-2] = TMath::Min(xwork[npt], uxmax);
            if (j == last) {
               xwork[npt-1] = xwork[npt-2];
@@ -1828,7 +1828,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
               ywork[npt-1] = y[j-1];       ywork[npt] = y[j];
            }
            xwork[npt-1] = x[j-1];      xwork[npt] = x[j-1];
-           if (xwork[npt-1] >= uxmin && xwork[npt] <= uxmax+rounding) npt += 2;
+           if (xwork[npt-1] >= uxmin-rounding && xwork[npt] <= uxmax+rounding) npt += 2;
            if (j == last) {
               ywork[npt-1] = ywork[npt-2];
               xwork[npt-1] = xwork[0];
@@ -1885,7 +1885,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
            }
            ywork[npt-1] = y[i-1];
            ywork[npt]   = y[i-1];
-           if (xwork[npt-1] >= uxmin && xwork[npt] <= uxmax+rounding) npt += 2;
+           if (xwork[npt-1] >= uxmin-rounding && xwork[npt] <= uxmax+rounding) npt += 2;
            else xwork[npt-2] = TMath::Min(xwork[npt], uxmax);
            if (i == last) {
               xwork[npt-1] = xwork[npt-2];
@@ -1923,7 +1923,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
               ywork[npt-1] = y[i-1];      ywork[npt] = y[i];
            }
            xwork[npt-1] = x[i-1];      xwork[npt] = x[i-1];
-           if (xwork[npt-1] >= uxmin && xwork[npt] <= uxmax+rounding) npt += 2;
+           if (xwork[npt-1] >= uxmin-rounding && xwork[npt] <= uxmax+rounding) npt += 2;
            if (i == last) {
               ywork[npt-1] = ywork[npt-2];
               xwork[npt-1] = xwmin;
