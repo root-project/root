@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.5 2003/01/17 17:48:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.6 2003/01/24 07:04:29 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -926,7 +926,7 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
          TClass *cl = fVar1->EvalClass();
          if (cl==TBits::Class()) {
 
-            void *obj = fVar1->EvalObject();
+            void *obj = fVar1->EvalObject(i);
 
             TBits *bits = (TBits*)obj;
             Int_t nbits = bits->GetNbits();
@@ -940,6 +940,12 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
                fNfill++;
             }
             
+         } else {
+
+           Warning("ProcessFillObject",
+                   "Not implemented for %s",
+                   cl?cl->GetName():"unknown class");
+
          }
       }
    }

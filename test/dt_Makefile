@@ -8,7 +8,8 @@ action=1
 
 include ./Makefile
 
-DATAFILES = Event.new.split0.root Event.new.split1.root Event.new.split9.root \
+DATAFILES = Event.new.split0.root Event.new.split1.root \
+	Event.new.split2.root  Event.new.split9.root \
 	Event.old.streamed.root Event.old.split.root
 
 REFFILE=dt_reference.root
@@ -25,6 +26,11 @@ Event.new.split0.root : Event$(ExeSuf) libEvent.$(DllSuf)
 Event.new.split1.root : Event$(ExeSuf) libEvent.$(DllSuf)
 	@./Event $(size) $(comp) 1 $(action) $(tracks) $(OUTPUT)  && \
 	mv Event.root Event.new.split1.root && \
+	echo  "$@ made"
+
+Event.new.split2.root : Event$(ExeSuf) libEvent.$(DllSuf)
+	@./Event $(size) $(comp) 2 $(action) $(tracks) $(OUTPUT)  && \
+	mv Event.root Event.new.split2.root && \
 	echo  "$@ made"
 
 Event.new.split9.root : Event$(ExeSuf) libEvent.$(DllSuf)
@@ -52,7 +58,7 @@ Streamer="Event::Streamer not available,"
 
 
 dt_RunDrawTest_C.$(DllSuf) : dt_RunDrawTest.C dt_DrawTest.C
-	@root -l -b -q 'gSystem->Exit(!gSystem->CompileMacro("dt_RunDrawTest.C","kf"));' |  $(OUTPUT) && \
+	@root -l -b -q dt_build.C $(OUTPUT) && \
 	echo "$@ made"
 
 #Windows does not like piping 

@@ -101,6 +101,13 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    TH1F *refPxBx = RefClone(where,"hPxBx");
    TH1F *refPxBxWeight =  RefClone(where,"hPxBxWeight");
 
+   TH1F *refTriggerBits = RefClone(where,"hTriggerBits");
+   TH1F *refTriggerBitsFunc = RefClone(where,"hTriggerBitsFunc");
+   TH1F *refFiltTriggerBits = RefClone(where,"hFiltTriggerBits");
+
+   TH1F *refTrackTrigger = RefClone(where,"hTrackTrigger");
+   TH1F *refFiltTrackTrigger = RefClone(where,"hFiltTrackTrigger");
+
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
@@ -151,6 +158,20 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       }
       refCellMatrix->Fill(event->GetMatrix(2,2));
 
+      TBits bits = event->GetTriggerBits();
+      Int_t nbits = bits.GetNbits();
+      Int_t ncx = refTriggerBits->GetXaxis()->GetNbins();
+      Int_t nextbit = -1;
+      while(1) {
+         nextbit = bits->FirstSetBit(nextbit+1);
+         if (nextbit >= nbits) break;
+         if (nextbit > ncx) refTriggerBits->Fill(ncx+1);
+         else               refTriggerBits->Fill(nextbit);
+         if (nextbit > ncx) refTriggerBitsFunc->Fill(ncx+1);
+         else               refTriggerBitsFunc->Fill(nextbit);
+      }
+      if (bits.TestBitNumber(10)) refFiltTriggerBits->Fill(nbits);
+
       ntracks = event->GetNtrack();
       if ( 5 < ntracks ) {
          t = (Track*)tracks->UncheckedAt(5);
@@ -200,8 +221,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          float Bx,By;
          Bx = t->GetBx();
          By = t->GetBy();
-         if ((Bx>.25) || (By<=-.25)) refPxBx->Fill(t->GetPx());
-         double weight = Bx*Bx*(Bx>.25) + By*By*(By<=-.25);
+         if ((Bx>.15) || (By<=-.15)) refPxBx->Fill(t->GetPx());
+         double weight = Bx*Bx*(Bx>.15) + By*By*(By<=-.15);
          if (weight) refPxBxWeight->Fill(t->GetPx(),weight);
 
          if (i<4) {
@@ -215,6 +236,18 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          for(i1=0; i1<t->GetN(); i1++) {
             refPointValue->Fill( t->GetPointValue(i1) );
          }
+         TBits bits = t->GetTriggerBits();
+         Int_t nbits = bits.GetNbits();
+         Int_t ncx = refTrackTrigger->GetXaxis()->GetNbins();
+         Int_t nextbit = -1;
+         while(1) {
+            nextbit = bits->FirstSetBit(nextbit+1);
+            if (nextbit >= nbits) break;
+            if (nextbit > ncx) refTrackTrigger->Fill(ncx+1);
+            else               refTrackTrigger->Fill(nextbit);
+         }
+         if (bits.TestBitNumber(5)) refFiltTrackTrigger->Fill(t->GetPx());
+
       }
    }
 

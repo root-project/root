@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.107 2003/01/17 17:48:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.108 2003/01/24 07:04:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1973,7 +1973,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       strcat(right,&cname[i]);
    }
 
-   if (!final && branch) { // NOTE: should we add && !leaf ???
+   if (!final && branch && !leaf) { // NOTE: should we add && !leaf ???
       leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
       if (!leaf) return -1;
       final = leaf->IsOnTerminalBranch();
@@ -2114,8 +2114,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             }
             break;
          }
-         // If we have a got a class object, we need to verify whether it is on a split TClonesArray
-         // sub branch.
+         // If we got a class object, we need to verify whether it is on a
+         // split TClonesArray sub branch.
          if (cl && BranchEl->GetBranchCount()) {
            if (BranchEl->GetType()==31) {
               // This is inside a TClonesArray.
@@ -2144,6 +2144,20 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
               maininfo->fNext = previnfo;
 
            }
+         } else if (BranchEl->GetType()==3) {
+
+            TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, &gFakeClonesElem, kTRUE);
+            // The dimension needs to be handled!
+            numberOfVarDim += RegisterDimensions(code,clonesinfo);
+              
+            maininfo = clonesinfo;
+            previnfo = maininfo;
+
+         } else if (strlen(right)==0 && cl && element && !element->IsaPointer() && final) {
+           
+            maininfo = new TFormLeafInfoDirect(BranchEl); 
+            previnfo = maininfo;
+
          }
       }
       if (cl) {
@@ -3021,7 +3035,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
 }
 
 //______________________________________________________________________________
-TClass* TTreeFormula::EvalClass()
+TClass* TTreeFormula::EvalClass() const
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate the class of this treeformula*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
@@ -3037,8 +3051,11 @@ TClass* TTreeFormula::EvalClass()
          if (leaf->IsA()==TLeafObject::Class()) {
             return ((TLeafObject*)leaf)->GetClass();
          } else if ( leaf->IsA()==TLeafElement::Class()) {
-            TBranchElement * br = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
-            return gROOT->GetClass( br->GetTypeName() );
+            TBranchElement * branch = (TBranchElement*)((TLeafElement*)leaf)->GetBranch();
+            TStreamerInfo * info = branch->GetInfo();
+            Int_t id = branch->GetID();
+            TStreamerElement* elem = (TStreamerElement*)info->GetElements()->At(id);
+            return gROOT->GetClass( elem->GetTypeName() );
          } else {
             return 0;
          }
@@ -3086,7 +3103,7 @@ void* TTreeFormula::EvalObject(int instance)
    switch(fLookupType[0]) {
       case kDirect: {
         if (real_instance) {
-          Warning("EvalObject","Not yet implement for kDirect and arrays.\nPlease contact the developers (%s)\n",GetName());
+          Warning("EvalObject","Not yet implement for kDirect and arrays (for %s).\nPlease contact the developers \n",GetName());
         }
         return leaf->GetValuePointer();
       }
@@ -3494,6 +3511,8 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
            return kFALSE;
       }
    }
+   
+   if (EvalClass()==TBits::Class()) return kTRUE;
 
    TLeaf *leaf = (TLeaf*)fLeaves.At(code);
    if (!leaf) return kFALSE;

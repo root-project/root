@@ -21,7 +21,8 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
 // Compare histograms h1 and h2
 // Check number of entries, mean and rms
 // if means differ by more than 1/1000 of the range return -1
-// if rms differs in percent by more than 1/1000 return -2
+// if means differ by more than 1/100 of the original mean return -2
+// if rms differs in percent by more than 1/1000 return -3
 // Otherwise return difference of number of entries
 
    Int_t n1       = (Int_t)ref->GetEntries();
@@ -38,9 +39,10 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
    }
 
    Float_t xrange = ref->GetXaxis()->GetXmax() - ref->GetXaxis()->GetXmin();
-   if (xrange==0) fprintf(stderr,"no range for %s\n",ref->GetName());
-   if (TMath::Abs((mean1-mean2)/xrange) > 0.001*xrange) return -1;
-   if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001)    return -2;
+   if (xrange==0) { fprintf(stderr,"no range for %s\n",ref->GetName()); return -4; }
+   if (xrange>0.0001 && TMath::Abs((mean1-mean2)/xrange) > 0.001)  return -1;
+   if (mean2> 0.0001 && TMath::Abs((mean1-mean2)/mean2) > 0.01)    return -2;
+   if (rms1 > 0.0001 && TMath::Abs((rms1-rms2)/rms1) > 0.0001)     return -3;
    return n1*factor-n2;
 }
 
@@ -53,6 +55,7 @@ Int_t Compare(TDirectory* from) {
    Int_t comp;
    Int_t fail = 0;
    TKey* key;
+
    while ((key=(TKey*)next())) {
       if (strcmp(key->GetClassName(),"TH1F")
           && strcmp(key->GetClassName(),"TH2F") ) 
@@ -169,7 +172,7 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
    // cerr << "Branch style is " << gBranchStyle << endl;
 
    if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
-   TDirectory* where = GenerateDrawHist(tree,1,gQuietLevel);
+   TDirectory* where = GenerateDrawHist(tree,2,gQuietLevel);
  
    if (gQuietLevel<2) cout << "Comparing histograms" << endl;
    if (Compare(where)>0) {

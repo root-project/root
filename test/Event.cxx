@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.18 2002/08/07 13:55:45 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.19 2002/08/20 15:21:42 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,11 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
     }
   }
 
-   //  Create and Fill the Track objects
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+  fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+
+  //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
   
   //Restore Object count 
@@ -234,7 +238,47 @@ void Event::SetRandomVertex() {
 }
 
 //______________________________________________________________________________
-Track::Track(Float_t random) : TObject()
+Track::Track(const Track &orig) : TObject(orig)
+{
+   // Copy a track object
+
+   fPx = orig.fPx;
+   fPy = orig.fPy;
+   fPz = orig.fPx; 
+   fRandom = orig.fRandom;
+   fMass2 = orig.fMass2;
+   fBx = orig.fBx;
+   fBy = orig.fBy;
+   fMeanCharge = orig.fMeanCharge;
+   fXfirst = orig.fXfirst;
+   fXlast  = orig.fXlast;
+   fYfirst = orig.fYfirst;
+   fYlast  = orig.fYlast;
+   fZfirst = orig.fZfirst;
+   fZlast  = orig.fZlast;
+   fCharge = orig.fCharge;
+
+   fVertex[0] = orig.fVertex[0];
+   fVertex[1] = orig.fVertex[1];
+   fVertex[2] = orig.fVertex[2];
+   fNpoint = orig.fNpoint;
+   fNsp = orig.fNsp;
+   if (fNsp) {
+      fPointValue = new Float_t[fNsp];
+      for(int i=0; i<fNsp; i++) {
+         fPointValue[i] = orig.fPointValue[i];
+      }
+   } else {
+      fPointValue = 0;
+   }
+   fValid  = orig.fValid;
+
+   fTriggerBits = orig.fTriggerBits;
+
+}
+
+//______________________________________________________________________________
+Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 {
    // Create a track object.
    // Note that in this example, data members do not have any physical meaning.
@@ -264,6 +308,11 @@ Track::Track(Float_t random) : TObject()
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
    fCharge = Float_t(Int_t(3*gRandom->Rndm(1)) - 1);
+
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+   fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
+
    fVertex[0] = gRandom->Gaus(0,0.1);
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);

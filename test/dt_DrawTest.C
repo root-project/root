@@ -7,27 +7,31 @@ int gHasLibrary = kFALSE;
 int gBranchStyle = 1;
 TList gSkipped;
 
-void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t skip) {
+void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw) {
   //cerr << "Doing " << what << " which is " << skip << endl;
-  if (skip) gSkipped.Add(new TNamed(where,where));
-  else {
+  if (draw) {
     TString cut = what;
     cut.Append(">>");
     cut.Append(where);
     tree->Draw(cut.Data(),"","goff");
+
+  } else {
+    gSkipped.Add(new TNamed(where,where));
   }
+  
 };
 
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
-                   const char* where, Bool_t skip) {
-  //cerr << "Doing " << what << " which is " << skip << endl;
-  if (skip) gSkipped.Add(new TNamed(where,where));
-  else {
-    TString cut = what;
-    cut.Append(">>");
-    cut.Append(where);
-    tree->Draw(cut.Data(),cond,"goff");
-  }
+                   const char* where, Bool_t draw) {
+   //cerr << "Doing " << what << " which is " << skip << endl;
+   if (draw) { 
+      TString cut = what;
+      cut.Append(">>");
+      cut.Append(where);
+      tree->Draw(cut.Data(),cond,"goff");
+   } else {
+     gSkipped.Add(new TNamed(where,where));
+   }
 };
 
 // Rootmarks for fcdflnx1 is 153.4
@@ -50,7 +54,7 @@ void DrawMarks() {
 
 
 //_______________________________________________________________
-TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
+TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
 {
 // Test selections via TreeFormula
 // tree is a TTree when called by stress9
@@ -66,7 +70,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
    gBenchmark->Start("DrawTest");
    
    // Each tree->Draw generates an histogram
-   DrawSkippable(tree,"GetNtrack()","hGetNtrack",!(level>0 && gHasLibrary));
+   DrawSkippable(tree,"GetNtrack()","hGetNtrack",(level>0 && gHasLibrary));
 
    //gBenchmark->Show("DrawTest");  gBenchmark->Start("DrawTest");
 
@@ -77,12 +81,12 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
    tree->Draw("fH.GetMean()>>hHmean","","goff");
    if (level>0) tree->Draw("fH.fXaxis.fXmax>>hHAxisMax","","goff");
    if (level>0) tree->Draw("fH.fXaxis.GetXmax()>>hHAxisGetMax","","goff");
-   DrawSkippable(tree,"fH.GetXaxis().GetXmax()","hHGetAxisGetMax",!(level>0));
-   DrawSkippable(tree,"fH.GetXaxis().fXmax","hHGetAxisMax",!(level>0));
+   DrawSkippable(tree,"fH.GetXaxis().GetXmax()","hHGetAxisGetMax",(level>0));
+   DrawSkippable(tree,"fH.GetXaxis().fXmax","hHGetAxisMax",(level>0));
    DrawSkippable(tree,"GetHistogram().GetXaxis().GetXmax()","hGetHGetAxisMax",
-                 !(level>0&&gHasLibrary));
+                 (level>0&&gHasLibrary));
    DrawSkippable(tree,"event.GetHistogram().GetXaxis().GetXmax()",
-                 "hGetRefHGetAxisMax",!(level>0&&gHasLibrary));
+                 "hGetRefHGetAxisMax",(level>0&&gHasLibrary));
 
    tree->Draw("fTracks.fPx>>hPx","fEvtHdr.fEvtNum%10 == 0","goff");
    tree->Draw("fTracks.fPy>>hPy","fEvtHdr.fEvtNum%10 == 0","goff");
@@ -100,7 +104,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
    tree->Draw("fCharge>>hCharge","fPx < 0","goff");
    tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
    tree->Draw("fValid>>hValid",  "fPx < 0","goff");
-   DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle==0);
+   DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle!=0);
 
    tree->Draw("fMatrix>>hFullMatrix","","goff");
    tree->Draw("fMatrix[][0]>>hColMatrix","","goff");
@@ -124,28 +128,44 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 1, int quietLevel = 0)
 
    // Test variable indexing
    DrawSkippable(tree,"fClosestDistance[fNvertex/2]","hClosestDistanceIndex",
-                 !(level>0));
-   DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",!(level>0));
+                 (level>0));
+   DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",(level>0));
 
    // Test of simple function calls
-   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",!(level>0));   
+   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));   
 
    // Test string operations
-   DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",!(level>0));
-   DrawSkippable(tree,"fEvtHdr.fEvtNum","strstr(fType,\"1\") ","+hString",!(level>0));
+   DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",(level>0));
+   DrawSkippable(tree,"fEvtHdr.fEvtNum","strstr(fType,\"1\") ","+hString",(level>0));
 
    // Test binary operators
-   DrawSkippable(tree,"fValid<<4","hShiftValid",!(level>0));
-   DrawSkippable(tree,"((fValid<<4)>>2)","+hShiftValid",!(level>0));
+   DrawSkippable(tree,"fValid<<4","hShiftValid",(level>0));
+   DrawSkippable(tree,"((fValid<<4)>>2)","+hShiftValid",(level>0));
    DrawSkippable(tree,"fValid&0x1","(fNvertex>10) && (fNseg<=6000)"
-                 ,"hAndValid",!(level>0));
+                 ,"hAndValid",(level>0));
 
    // Test weight
-   DrawSkippable(tree,"fPx","(fBx>.25) || (fBy<=-.25)","hPxBx",!(level>0));
-   DrawSkippable(tree,"fPx","fBx*fBx*(fBx>.25) + fBy*fBy*(fBy<=-.25)",
-                 "hPxBxWeight",!(level>0));
-  
-   if (quietLevel<2) gBenchmark->Show("DrawTest");  
+   DrawSkippable(tree,"fPx","(fBx>.15) || (fBy<=-.15)","hPxBx",(level>0));
+   DrawSkippable(tree,"fPx","fBx*fBx*(fBx>.15) + fBy*fBy*(fBy<=-.15)",
+                 "hPxBxWeight",(level>0));
+
+   DrawSkippable(tree,"event.fTriggerBits",
+                 "hTriggerBits",level>1 && gBranchStyle!=0);
+   DrawSkippable(tree,"event.fTriggerBits.fNbits",
+                 "event.fTriggerBits.TestBitNumber(10)",
+                 "hFiltTriggerBits",level>1 && gBranchStyle!=0);
+
+   DrawSkippable(tree,"event.GetTriggerBits()",
+                 "hTriggerBitsFunc",level>1 && gBranchStyle!=0 && gHasLibrary );
+
+   DrawSkippable(tree,"fTracks.fTriggerBits",
+                 "hTrackTrigger", level>1 && gBranchStyle!=0);
+   DrawSkippable(tree,"fPx",
+                 "fTracks.fTriggerBits.TestBitNumber(5)",
+                 "hFiltTrackTrigger", level>1 && gBranchStyle!=0);
+
+
+   if (quietLevel<2) gBenchmark->Show("DrawTest");   
    else gBenchmark->Stop("DrawTest");  
    gBenchmark->Start("DrawTest");
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.25 2002/08/01 21:33:48 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.26 2003/01/24 07:04:29 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -110,7 +110,7 @@ public:
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
    virtual Int_t      DefinedVariable(TString &variable);
-   virtual TClass*    EvalClass();
+   virtual TClass*    EvalClass() const;
    virtual Double_t   EvalInstance(Int_t i=0);
    virtual void*      EvalObject(Int_t i=0);
    // EvalInstance should be const.  See comment on GetNdata()
