@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.10 2004/02/11 13:14:20 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.11 2004/02/11 13:23:30 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ extern "C" void type_of_call pyhepc(int *mconv);
 extern "C" void type_of_call pylist(int *flag);
 extern "C" int  type_of_call pychge(int *kf);
 extern "C" int  type_of_call pycomp(int *kf);
-extern "C" int  type_of_call pymass(int *kf);
+extern "C" double  type_of_call pymass(int *kf);
 extern "C" void type_of_call pyname(int *kf, char *name, Long_t l_name);
 extern "C" int  type_of_call pyr(int *dummy);
 extern "C" int  type_of_call pyrget(int *lun, int *move);
