@@ -111,11 +111,11 @@ QPRANDOMO     = QpRandomDriver.$(ObjSuf)
 QPRANDOMS     = QpRandomDriver.$(SrcSuf)
 QPRANDOM      = QpRandomDriver$(ExeSuf)
 
-
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) $(CTORTUREO) $(QPRANDOMO)
+                $(TCOLLBMO) $(STRESSGEOMO) $(STRESSLO) $(TESTBITSO) \
+                $(CTORTUREO) $(QPRANDOMO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
@@ -213,11 +213,7 @@ $(TESTBITS):    $(TESTBITSO)
 		@echo "$@ done"
 
 $(QPRANDOM):    $(QPRANDOMO)
-ifeq ($(ARCH),win32)
-		$(LD) $(LDFLAGS) $^ $(LIBS) ../lib/libQuadp.lib $(OutPutOpt)$@
-else
-		$(LD) $(LDFLAGS) $^ $(LIBS) -lQuadp $(OutPutOpt)$@
-endif
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(GUITEST):     $(GUITESTO)
