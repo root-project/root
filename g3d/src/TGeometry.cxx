@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -185,6 +185,25 @@ void TGeometry::Draw(Option_t *option)
    if (node1) node1->Draw(option);
 
 }
+
+//______________________________________________________________________________
+TObject *TGeometry::FindObject(TObject *) const
+{
+// find object in a geometry node, material, etc
+   
+   Error("FindObject","Not yet implemented");
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TGeometry::FindObject(const char *name) const
+{
+// search object identified by name in the geometry tree
+
+   TObjArray *loc = TGeometry::Get(name);
+   if (loc) return loc->At(0);
+   return 0;
+}     
 
 //______________________________________________________________________________
 TObjArray *TGeometry::Get(const char *name)
