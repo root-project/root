@@ -58,10 +58,8 @@ public:
    virtual void   DoAngle();
    virtual void   DoOption(Int_t id);
    virtual void   DoSize();
-   virtual void   DoStartPointX();
-   virtual void   DoEndPointX();
-   virtual void   DoStartPointY();
-   virtual void   DoEndPointY();
+   virtual void   DoStartPoint();
+   virtual void   DoEndPoint();
 
    ClassDef(TArrowEditor,0)  // GUI for editing arrow attributes
 };
