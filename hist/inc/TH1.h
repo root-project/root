@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.58 2004/08/11 13:08:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.59 2004/09/13 10:03:08 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -162,7 +162,7 @@ public:
     virtual Int_t    Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
     virtual void     FitPanel(); // *MENU*
     TH1             *GetAsymmetry(TH1* h2, Double_t c2=1, Double_t dc2=0);
-    Int_t            GetBufferLength() const {return (Int_t)fBuffer[0];}
+    Int_t            GetBufferLength() const {return fBuffer ? (Int_t)fBuffer[0] : 0;}
     Int_t            GetBufferSize  () const {return fBufferSize;}
     const   Double_t *GetBuffer() const {return fBuffer;}
     static  Int_t    GetDefaultBufferSize();
