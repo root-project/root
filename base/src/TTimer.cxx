@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -13,15 +13,28 @@
 //                                                                      //
 // TTimer                                                               //
 //                                                                      //
-// Handles synchronous and a-synchronous timer events. To make use of   //
-// this class one can use one of the three cases:                       //
-//   - Sub-class TTimer and implement Notify() and Remove() (if timer   //
-//     has not been added to the gSystem timer list).                   //
-//   - Give a pointer of an object to be notified.                      //
-//   - Specify a command string to be executed by the interpreter.      //
-// Without sub-classing one can also use the HasTimedOut() method.      //
-// Use Reset() to reset the timer after expiration. To disable a timer  //
-// remove it using Remove() or destroy it.                              //
+// Handles synchronous and a-synchronous timer events. You can use      //
+// this class in one of the following ways:                             //
+//    - Sub-class TTimer and override the Notify() method.              //
+//    - Re-implement the TObject::HandleTimer() method in your class    //
+//      and pass a pointer to this object to timer, see the SetObject() //
+//      method.                                                         //
+//    - Pass an interpreter command to timer, see SetCommand() method.  //
+//    - Create a TTimer, connect its Timeout() signal to the            //
+//      appropriate methods. Then when the time is up it will emit a    //
+//      Timeout() signal and call connected slots.                      //
+//                                                                      //
+//  Minimum timeout interval is defined in TSystem::ESysConstants as    //
+//  kItimerResolution (currently 10 ms).                                //
+//                                                                      //
+//  Signal/slots example:                                               //
+//       TTimer *timer = new TTimer();                                  //
+//       Connect(timer, "Timeout()", "myObjectClassName",               //
+//               myObject, "TimerDone()");                              //
+//       timer->Start(2000, kTRUE);   // 2 seconds single-shot          //
+//                                                                      //
+//    // Timeout signal is emitted repeadetly with minimum timeout      //
+//    // timer->Start(0, kFALSE);                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +50,10 @@ TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
    // Create timer that times out in ms milliseconds. If mode == kTRUE then
    // the timer is synchronous else a-synchronous. The default is synchronous.
    // Add a timer to the system eventloop by calling TurnOn().
+   // Set command to be executed from Notify() or set the object whose
+   // HandleTimer() method will be called via Notify(), derive from TTimer
+   // and override Notify() or connect slots to the signals Timeout(),
+   // TurnOn() and TurnOff().
 
    fObject  = 0;
    fCommand = "";
@@ -91,12 +108,14 @@ Bool_t TTimer::Notify()
    // Notify when timer times out. When a command string is executed
    // the timer is implicitely reset. To stop the timer in that case
    // call TurnOff(). When an object's HandleTimer() is called the timer
-   // has to be reset in that method.
+   // has to be reset or turned off in that method.
 
+   Timeout();       // emit Timeout() signal
    if (fObject) return fObject->HandleTimer(this);
    if (fCommand && strlen(fCommand)) {
       gROOT->ProcessLine(fCommand);
       Reset();
+      return kTRUE;
    }
    return kFALSE;
 }
@@ -117,7 +136,8 @@ void TTimer::Reset()
 //______________________________________________________________________________
 void TTimer::SetCommand(const char *command)
 {
-   // Set the interpreter command to be executed at time out.
+   // Set the interpreter command to be executed at time out. Removes the
+   // object to be notified (if it was set).
 
    fObject  = 0;
    fCommand = command;
@@ -126,10 +146,28 @@ void TTimer::SetCommand(const char *command)
 //______________________________________________________________________________
 void TTimer::SetObject(TObject *object)
 {
-   // Set the object to be notified  at time out.
+   // Set the object to be notified  at time out. Removes the command to
+   // be executed (if it was set).
 
    fObject  = object;
    fCommand = "";
+}
+
+//___________________________________________________________________
+void TTimer::Start(Int_t milliSec, Bool_t singleShot)
+{
+   // Starts the timer with a milliSec timeout.
+   // If singleShot is kTRUE, the timer will be activated only once,
+   // otherwise it will continue until it is stopped.
+   // See also TurnOn(), Stop(), TurnOff().
+
+   SetTime(milliSec);
+   Reset();
+   TurnOn();
+   if (singleShot)
+      Connect(this, "Timeout()", "TTimer", this, "TurnOff()");
+   else
+      Disconnect(this, "Timeout()", this, "TurnOff()");
 }
 
 //______________________________________________________________________________
@@ -141,7 +179,8 @@ void TTimer::TurnOff()
    // remove the timer from the correct list.
 
    if (gSystem)
-      gSystem->RemoveTimer(this);
+      if (gSystem->RemoveTimer(this))
+         Emit("TurnOff()");
 }
 
 //______________________________________________________________________________
@@ -151,6 +190,28 @@ void TTimer::TurnOn()
    // placed on another list, override TurnOn() to add the timer to the correct
    // list.
 
-   if (gSystem)
+   // might have been set in a previous Start()
+   Disconnect(this, "Timeout()", this, "TurnOff()");
+
+   if (gSystem) {
       gSystem->AddTimer(this);
+      Emit("TurnOn()");
+   }
+}
+
+//______________________________________________________________________________
+void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
+                        void *receiver, const char *method)
+{
+   // This static function calls a slot after a given time interval.
+   // Created internal timer will be deleted after that.
+
+   TTimer *singleShotTimer = new TTimer(milliSec);
+   TQObject::Connect(singleShotTimer, "Timeout()",
+                     receiver_class, receiver, method);
+
+   TQObject::Connect(singleShotTimer, "Timeout()",
+                     "TTimer", singleShotTimer, "Delete()");
+
+   singleShotTimer->Start(milliSec, kTRUE);
 }

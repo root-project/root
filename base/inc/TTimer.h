@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TTimer.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -17,17 +17,36 @@
 //                                                                      //
 // TTimer                                                               //
 //                                                                      //
-// Handles synchronous and a-synchronous timer events. To make use of   //
-// this class one has to sub-class TTimer and implement Notify() and    //
-// Remove() (if timer has not been added to the gSystem timer list).    //
-// Without sub-classing one can use the HasTimedOut() method.           //
-// Use Reset() to reset the timer after expiration. To disable a timer  //
-// remove it using Remove() or destroy it.                              //
+// Handles synchronous and a-synchronous timer events. You can use      //
+// this class in one of the following ways:                             //
+//    - Sub-class TTimer and override the Notify() method.              //
+//    - Re-implement the TObject::HandleTimer() method in your class    //
+//      and pass a pointer to this object to timer, see the SetObject() //
+//      method.                                                         //
+//    - Pass an interpreter command to timer, see SetCommand() method.  //
+//    - Create a TTimer, connect its Timeout() signal to the            //
+//      appropriate methods. Then when the time is up it will emit a    //
+//      Timeout() signal and call connected slots.                      //
+//                                                                      //
+//  Minimum timeout interval is defined in TSystem::ESysConstants as    //
+//  kItimerResolution (currently 10 ms).                                //
+//                                                                      //
+//  Signal/slots example:                                               //
+//       TTimer *timer = new TTimer();                                  //
+//       Connect(timer, "Timeout()", "myObjectClassName",               //
+//               myObject, "TimerDone()");                              //
+//       timer->Start(2000, kTRUE);   // 2 seconds single-shot          //
+//                                                                      //
+//    // Timeout signal is emitted repeadetly with minimum timeout      //
+//    // timer->Start(0, kFALSE);                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
+#endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
 #endif
 #ifndef ROOT_TTime
 #include "TTime.h"
@@ -38,7 +57,7 @@
 
 
 
-class TTimer : public TSysEvtHandler {
+class TTimer : public TSysEvtHandler, public TQObject {
 
 protected:
    TTime     fTime;      // time out time in ms
@@ -59,7 +78,7 @@ public:
    const char    *GetCommand() const { return fCommand.Data(); }
    TObject       *GetObject() { return fObject; }
    TTime          GetTime() const { return fTime; }
-   UInt_t         GetTimerID(){ return fTimeID;}
+   UInt_t         GetTimerID() { return fTimeID;}
    TTime          GetAbsTime() const { return fAbsTime; }
    Bool_t         HasTimedOut() const { return fTimeout; }
    Bool_t         IsSync() const { return fSync; }
@@ -71,8 +90,14 @@ public:
    void           SetObject(TObject *object);
    void           SetTime(Long_t milliSec) { fTime = milliSec; }
    void           SetTimerID(UInt_t id = 0) { fTimeID = id; }
-   virtual void   TurnOn();
-   virtual void   TurnOff();
+   virtual void   Start(Int_t milliSec, Bool_t singleShot = kFALSE);
+   virtual void   Stop() { TurnOff(); }
+   virtual void   TurnOn();                         //*SIGNAL*
+   virtual void   TurnOff();                        //*SIGNAL*
+   virtual void   Timeout() { Emit("Timeout()"); }  //*SIGNAL*
+
+   static void    SingleShot(Int_t milliSec, const char *receiver_class,
+                             void *receiver, const char *method);
 
    ClassDef(TTimer,0)  //Handle timer event
 };
