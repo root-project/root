@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.4 2000/08/16 16:49:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.5 2000/08/17 09:25:00 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -267,6 +267,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gPad           = 0;
    gRandom        = new TRandom;
 
+   //set name of graphical cut class for the graphics editor
+   SetCutClassName("TCutG");
+   
    // Create a default MessageHandler
    new TMessageHandler((TClass*)0);
 

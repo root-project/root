@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@ protected:
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TList           *fBrowsables;          //List of browsables
    TString         fDefCanvasName;        //Name of default canvas
+   TString         fCutClassName;         //Name of default CutG class in graphics editor
 
    static VoidFuncPtr_t fgMakeDefCanvas;  //Pointer to default canvas constructor
 
@@ -118,6 +119,7 @@ public:
    TApplication     *GetApplication() {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE);
    TColor           *GetColor(Int_t color);
+   const char       *GetCutClassName() const {return fCutClassName.Data();}
    const char       *GetDefCanvasName() const {return fDefCanvasName.Data();}
    Bool_t            GetEditHistograms() {return fEditHistograms;}
    Int_t             GetEditorMode() {return fEditorMode;}
@@ -178,6 +180,7 @@ public:
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    void              SetBatch(Bool_t batch=kTRUE) { fBatch = batch; }
+   void              SetCutClassName(const char *name="TCutG") {fCutClassName = name;}
    void              SetDefCanvasName(const char *name="c1") {fDefCanvasName = name;}
    void              SetEditHistograms(Bool_t flag=kTRUE) {fEditHistograms=flag;}
    void              SetEditorMode(const char *mode="");
