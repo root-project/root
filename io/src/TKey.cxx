@@ -430,9 +430,9 @@ TObject *TKey::ReadObj()
        return 0;
    }
    // Create an instance of this class
-   gROOT->SetReadingObject(kTRUE);
+
    obj = (TObject*)cl->New();
-   gROOT->SetReadingObject(kFALSE);
+
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;

@@ -25,7 +25,6 @@
 #include "TClass.h"
 #include "TStorage.h"
 #include "TMath.h"
-#include "TROOT.h"
 #include "TError.h"
 
 #if defined(__linux) && defined(__i386__)
@@ -1308,9 +1307,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    } else {
 
       // allocate a new object based on the class found
-      gROOT->SetReadingObject(kTRUE);
       obj = (TObject *)clRef->New();
-      gROOT->SetReadingObject(kFALSE);
       if (!obj) {
          Error("ReadObject", "could not create object of class %s", clRef->GetName());
          // exception
