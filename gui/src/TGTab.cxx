@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.10 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.11 2003/11/06 10:44:00 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -293,9 +293,10 @@ void TGTab::RemoveTab(Int_t tabIndex)
 
       if (count == tabIndex) {
          elCont->fFrame->UnmapWindow();   // will be destroyed later
+         TGFrame *frame = elTab->fFrame;
          RemoveFrame(elTab->fFrame);
-         elTab->fFrame->DestroyWindow();
-         delete elTab->fFrame;
+         frame->DestroyWindow();
+         delete frame;
          fRemoved->Add(elCont->fFrame);   // delete only in dtor
          RemoveFrame(elCont->fFrame);
          if (tabIndex == fCurrent) {
