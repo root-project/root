@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.2 2000/09/04 10:43:12 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.3 2000/10/15 01:27:45 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,6 +14,9 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ global gTQSender;
+#pragma link C++ global gTQSlotParams;
+
 #pragma link C++ enum EAccessMode;
 
 #pragma link C++ function operator+(const TTime&,const TTime&);
@@ -27,6 +30,8 @@
 #pragma link C++ function operator<=(const TTime&,const TTime&);
 #pragma link C++ function operator>(const TTime&,const TTime&);
 #pragma link C++ function operator>=(const TTime&,const TTime&);
+
+#pragma link C++ function ConnectCINT(TQObject*,char*,char*);
 
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
@@ -61,5 +66,9 @@
 #pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;
+#pragma link C++ class TQObject;
+#pragma link C++ class TQObjSender;
+#pragma link C++ class TQClass;
+#pragma link C++ class TQConnection;
 
 #endif
