@@ -2,7 +2,7 @@
 #include "set_problem.h"
 
 
-void run() {
+int run() {
    // create a ROOT file with object SetProblem
    TFile * file = new TFile("set_problem.root", "RECREATE");
 
@@ -22,11 +22,12 @@ void run() {
 
    delete file;
    delete pr;
+   return 0;
 }
 
 #ifndef __CINT__
-main()
+int main()
 {
-run();
+return run();
 }
 #endif
