@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.75 2002/05/09 20:22:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.76 2002/05/30 19:43:07 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1711,7 +1711,7 @@ TStreamerInfo *TClass::SetStreamerInfo(Int_t version, const char *info)
 }
 
 //______________________________________________________________________________
-UInt_t TClass::GetCheckSum() const
+UInt_t TClass::GetCheckSum(UInt_t code) const
 {
 //   Compute and/or return the class check sum.
 //  The class ckecksum is used by the automatic schema evolution algorithm
@@ -1719,10 +1719,13 @@ UInt_t TClass::GetCheckSum() const
 //  The check sum is built from the names/types of base classes and
 //  data members
 //  Algorithm from Victor Perevovchikov (perev@bnl.gov)
-
+//
+//  if code==1 data members of type enum are not counted in the checksum
+   
    int il;
 
    UInt_t id = fCheckSum;
+   if (code == 1) id = 0;
    if (id) return id;
 
    TString name = GetName();
@@ -1756,7 +1759,7 @@ UInt_t TClass::GetCheckSum() const
 
        if ( prop&kIsStatic)             continue;
        name = tdm->GetName(); il = name.Length();
-       if ( prop&kIsEnum) id = id*3 + 1;
+       if ( (code != 1) && prop&kIsEnum) id = id*3 + 1;
 
        int i;
        for (i=0; i<il; i++) id = id*3+name[i];
@@ -1765,7 +1768,9 @@ UInt_t TClass::GetCheckSum() const
 
        int dim = tdm->GetArrayDim();
        if (prop&kIsArray) {
-         for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);}
+          for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);
+       }
+         
      }/*EndMembLoop*/
    }
    ((TClass*)this)->fCheckSum =id;
