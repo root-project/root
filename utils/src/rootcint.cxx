@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.130 2003/02/05 15:08:33 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.131 2003/02/07 16:16:43 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -125,6 +125,7 @@
 #include "config.h"
 #endif
 
+#include "RConfig.h"
 #include "Api.h"
 
 extern "C" {
@@ -3532,6 +3533,10 @@ int main(int argc, char **argv)
 #ifdef __ia64__
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
+#endif
+#ifdef R__B64
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-DR__B64"); argcc++;
 #endif
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
