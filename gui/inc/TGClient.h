@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.13 2004/04/06 21:12:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.14 2004/07/08 08:07:22 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -128,7 +128,7 @@ public:
    Colormap_t   GetDefaultColormap() const { return fDefaultColormap; }
    TGMimeTypes *GetMimeTypeList() const { return fMimeTypeList; }
 
-   TList           *GetListOfWindows() const { return fWlist; }
+   THashList       *GetListOfWindows() const { return fWlist; }
    TList           *GetListOfPopups() const { return fPlist; }
 
    ClassDef(TGClient,0)  // Class making connection to display server
