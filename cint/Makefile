@@ -1,7 +1,7 @@
 all: tests
 
 
-SUBDIRS = specialobj template other typedef_global
+SUBDIRS = specialobj template other typedef_global const
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 
