@@ -124,10 +124,7 @@ template <class T>
 Int_t TStreamerInfo__ReadBufferSkipImp(TStreamerInfo* This,
                                        TBuffer &b, const T &arr, Int_t i, Int_t kase,
                                        TStreamerElement *aElement, Int_t narr,
-                                       Int_t eoffset,
-                                       ULong_t *fMethod, ULong_t * /*fElem*/,Int_t *fLength,
-                                       TClass *fClass, Int_t * /*fOffset*/, Int_t * /*fNewType*/,
-                                       Int_t /*fNdata*/, Int_t * /*fType*/, TStreamerElement *& /*fgElement*/,
+                                       Int_t eoffset, ULong_t *fMethod,Int_t *fLength,
                                        TStreamerInfo::CompInfo * fComp,
                                        Version_t &fOldVersion) 
 {
@@ -1087,17 +1084,15 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, char** const &arr, Int_t i, Int_
                                     Int_t eoffset)
 {
   return TStreamerInfo__ReadBufferSkipImp(this,b,arr,i,kase,aElement,narr,eoffset,
-                                          fMethod,fElem,fLength,fClass,fOffset,fNewType,
-                                          fNdata,fType,fgElement,fComp,fOldVersion);
+                                          fMethod,fLength,fComp,fOldVersion);
 }
 
 Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t i, Int_t kase,
                                     TStreamerElement *aElement, Int_t narr,
                                     Int_t eoffset)
 {
-  return TStreamerInfo__ReadBufferSkipImp(this, b,arr,i,kase,aElement,narr,eoffset,fMethod,
-                                          fElem,fLength,fClass,fOffset,fNewType,
-                                          fNdata,fType,fgElement,fComp,fOldVersion);
+  return TStreamerInfo__ReadBufferSkipImp(this, b,arr,i,kase,aElement,narr,eoffset,
+                                          fMethod,fLength,fComp,fOldVersion);
 }
 
 Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char** const &arr,  Int_t i, Int_t kase,
