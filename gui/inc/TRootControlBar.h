@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -47,6 +47,8 @@ public:
    void Create();
    void Hide();
    void Show();
+
+   TList *GetWidgets() const { return fWidgets; }
 
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void   CloseWindow();
