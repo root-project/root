@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.71 2001/05/11 09:31:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.72 2001/05/11 12:52:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -972,9 +972,6 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       Error("Bronch","Cannot find class:%s",classname);
       return 0;
    }
-   //build the StreamerInfo if first time for the class
-   //if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
-   TStreamerInfo::Optimize(kFALSE);
 
    Bool_t delobj = kFALSE;
    char **ppointer = (char**)add;
@@ -997,8 +994,10 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       *ppointer = objadd;
       delobj = kTRUE;
    }
+   //build the StreamerInfo if first time for the class
+   if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
    TStreamerInfo *sinfo = BuildStreamerInfo(cl,objadd);
-
+   TStreamerInfo::Optimize(kTRUE);
 
    // create a dummy top level  branch object
    Int_t id = -1;
