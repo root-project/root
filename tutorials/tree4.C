@@ -5,6 +5,11 @@
 #include "TRandom.h"
 #include "TClassTable.h"
 #include "TSystem.h"
+#if defined(__CINT__) && !defined(__MAKECINT__) 
+#include "../test/libEvent.so"
+#else 
+#include "../test/Event.h"
+#endif
 
 // This example writes a tree with objects of the class Event. 
 // It is a simplified version of $ROOTSYS/test/MainEvent.cxx to 
@@ -34,6 +39,8 @@
 //  way1:  .x tree4.C    using the CINT interpreter
 //  way2:  .L tree4.C
 //          tree4()
+//  way3:  .L ../test/libEvent.so
+//         .x tree4.C++   using ACLIC
 // One can also run the write and read parts in two separate sessions.
 // For example following one of the sessions above, one can start the session:
 //   .L tree4.C
@@ -41,11 +48,6 @@
 
 void tree4w()
 {
-   // check to see if the event class is in the dictionary
-   // if it is not load the definition in libEvent.so
-   if (!TClassTable::GetDict("Event")) {
-     gSystem->Load("$ROOTSYS/test/libEvent.so");
-   }    
  
   //create a Tree file tree4.root
   TFile f("tree4.root","RECREATE");
@@ -130,7 +132,7 @@ void tree4r()
   TBranch *branch  = t4->GetBranch("event_split");
   branch->SetAddress(&event);
    
-  Int_t nevent = t4->GetEntries();
+  Int_t nevent = (Int_t)t4->GetEntries();
   Int_t nselected = 0;
   Int_t nb = 0;
   for (Int_t i=0;i<nevent;i++) {    
