@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.8 2003/05/28 11:55:32 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.9 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -24,7 +24,7 @@
 //                                                                      //
 // TGSlider, TGVSlider and TGHSlider                                    //
 //                                                                      //
-// Slider widgets allow easy selection out of a range.                  //
+// Slider widgets allow easy selection of a range.                      //
 // Sliders can be either horizontal or vertical oriented and there is   //
 // a choice of two different slider types and three different types     //
 // of tick marks.                                                       //

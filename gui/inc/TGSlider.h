@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.h,v 1.5 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -17,7 +17,7 @@
 //                                                                      //
 // TGSlider, TGVSlider and TGHSlider                                    //
 //                                                                      //
-// Slider widgets allow easy selection out of a range.                  //
+// Slider widgets allow easy selection of a range.                      //
 // Sliders can be either horizontal or vertical oriented and there is   //
 // a choice of two different slider types and three different types     //
 // of tick marks.                                                       //
@@ -122,6 +122,8 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(kSliderWidth, fHeight); }
+   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h+16); }
+   virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVSlider,0)  // Vertical slider widget
@@ -145,6 +147,8 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual TGDimension GetDefaultSize() const
                      { return TGDimension(fWidth, kSliderHeight); }
+   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w+16, h); }
+   virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHSlider,0)  // Horizontal slider widget
