@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.150 2003/12/16 22:42:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.151 2003/12/17 15:20:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -609,6 +609,27 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  		   entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
+//
+//  Alt$(primary,alternate) : return the value of "primary" if it is available
+//                 for the current iteration otherwise return the value of "alternate".
+//                 For example, with arr1[3] and arr2[2]
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
+//                 Or with a variable size array arr3
+//    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
+//                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+//                 As a comparison
+//    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
+//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 actual_size_of_arr3 is greater or equal to 3.
+//                 Note that the array in 'primary' is flatened/linearilized thus using
+//                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
+//                 to yield the expected results.  To visualize a bit more what elements
+//                 would be matched by TTree::Draw, TTree::Scan can be used:
+//    tree->Scan("arr1:Alt$(arr2,0)");
+//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 matched by
+//    tree->Draw("arr1-Alt$(arr2,0)");
 //
 //     Making a Profile histogram
 //     ==========================
@@ -2411,7 +2432,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
             onerow += Form("* %8d ",inst);
          }
          for (i=0;i<ncols;i++) {
-            onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
+            if (var[i]->GetNdim()) onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
+            else onerow += "*           ";
          }
          fSelectedRows++;
          if (fScanRedirect)

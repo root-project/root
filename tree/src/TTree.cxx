@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.169 2003/12/16 09:01:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.170 2003/12/16 17:02:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2008,6 +2008,27 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  		   entry (==TTreeFormula::GetNdata())
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
+//
+//  Alt$(primary,alternate) : return the value of "primary" if it is available
+//                 for the current iteration otherwise return the value of "alternate".
+//                 For example, with arr1[3] and arr2[2]
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
+//                 Or with a variable size array arr3
+//    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
+//                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+//                 As a comparison
+//    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
+//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 actual_size_of_arr3 is greater or equal to 3.
+//                 Note that the array in 'primary' is flatened/linearilized thus using
+//                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
+//                 to yield the expected results.  To visualize a bit more what elements
+//                 would be matched by TTree::Draw, TTree::Scan can be used:
+//    tree->Scan("arr1:Alt$(arr2,0)");
+//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 matched by
+//    tree->Draw("arr1-Alt$(arr2,0)");
 //
 //     Making a Profile histogram
 //     ==========================

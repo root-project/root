@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.32 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.33 2003/12/16 18:55:49 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -56,8 +56,10 @@ protected:
    enum { kIsCharacter = BIT(12) };
    enum { kDirect, kDataMember, kMethod, 
           kIndexOfEntry, kEntries, kLength, kIteration };
-   enum { kAlias = TFormula::kVariable+10000+1,
-          kAliasString = kAlias+1
+   enum { kAlias           = TFormula::kVariable+10000+1,
+          kAliasString     =  kAlias+1,
+          kAlternate       = kAlias+2,
+          kAlternateString = kAliasString+2
    };
 
    TTree       *fTree;            //! pointer to Tree

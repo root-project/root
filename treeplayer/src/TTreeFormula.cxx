@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.129 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.130 2003/12/16 18:55:49 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1486,6 +1486,10 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
       Assert(subform);
       if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
+   } else if (fNoper==2 && fOper[0]==kAlternateString) {
+      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      Assert(subform);
+      if (subform->TestBit(kIsCharacter)) SetBit(kIsCharacter);
    }
 
    fManager->Sync(); 
@@ -1849,6 +1853,66 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       fCodes[code] = 0;
       fLookupType[code] = kLength;
       return code;
+   }
+   static const char *altfunc = "Alt$(";
+   if (   strncmp(cname,altfunc,strlen(altfunc))==0
+       && cname[strlen(cname)-1]==')'
+       ) {
+      TString full = cname;
+      TString part1;
+      TString part2;
+      int paran = 0;
+      int instr = 0;
+      int brack = 0;
+      for(unsigned int i=strlen(altfunc);i<strlen(cname);++i) {
+         switch (cname[i]) {
+            case '(': paran++; break;
+            case ')': paran--; break;
+            case '"': instr = instr ? 0 : 1; break;
+            case '[': brack++; break;
+            case ']': brack--; break;
+         };
+         if (cname[i]==',' && paran==0 && instr==0 && brack==0) {
+            part1 = full( strlen(altfunc), i-strlen(altfunc) );
+            part2 = full( i+1, full.Length() -1 - (i+1) );
+            break; // out of the for loop
+         }
+      }
+      if (part1.Length() && part2.Length()) {
+         TTreeFormula *primary = new TTreeFormula("primary",part1,fTree);
+         TTreeFormula *alternate = new TTreeFormula("alternate",part2,fTree);
+//          TFormula *alt = new TFormula("alt",part2);
+
+         if (alternate->GetManager()->GetMultiplicity() != 0 ) {
+            Error("DefinedVariable","The 2nd arguments in %s can not be an array (%s,%d)!",
+                  name.Data(),alternate->GetTitle(),alternate->GetManager()->GetMultiplicity());
+            return -1;
+         }
+         
+         // Should check whether we have strings.
+
+         char isstring = 0;
+         if (primary->IsString()) {
+            if (!alternate->IsString()) {
+               Error("DefinedVariable","The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
+                     name.Data());
+               return -1;
+            }
+            isstring = 1;
+         } else if (alternate->IsString()) {
+            Error("DefinedVariable","The 2nd arguments in %s has to return the same type as the 1st argument (numerical type)!",
+                  name.Data());
+            return -1;
+         }
+         
+         fAliases.AddAtAndExpand(primary,fNoper);
+         fExpr[fNoper] = "";
+         fOper[fNoper] = kAlternate + isstring; // if isstring=1 then it is kAlternateString
+         ++fNoper;
+         
+         fAliases.AddAtAndExpand(alternate,fNoper);
+         return kAlias + isstring - kVariable; // need to compensate for the TFormula induced offset
+      }
    }
 
    for (i=0, current = &(work[0]); i<=nchname && !final;i++ ) {
@@ -3514,27 +3578,71 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          }
          haveSeenBooleanOptimization = kTRUE;
          continue;
-    }
-//*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
-      if (action == kAlias) {
-         int aliasN = i;
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-         Assert(subform);
-
-         Double_t param = subform->EvalInstance(instance);
-
-         tab[pos] = param; pos++;
-         continue;
       }
-//*-*- a TTree Variable Alias String (i.e. a sub-TTreeFormula)
-      if (action == kAliasString) {
-         int aliasN = i;
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
-         Assert(subform);
+      switch (action) {
 
-         pos2++;
-         stringStack[pos2-1] = subform->EvalStringInstance(instance);
-         continue;
+//*-*- a TTree Variable Alias (i.e. a sub-TTreeFormula)
+         case kAlias: {
+            int aliasN = i;
+            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+            Assert(subform);
+            
+            Double_t param = subform->EvalInstance(instance);
+            
+            tab[pos] = param; pos++;
+            continue;
+         }
+//*-*- a TTree Variable Alias String (i.e. a sub-TTreeFormula)
+         case kAliasString: {
+            int aliasN = i;
+            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
+            Assert(subform);
+            
+            pos2++;
+            stringStack[pos2-1] = subform->EvalStringInstance(instance);
+            continue;
+         }
+//*-*- a TTree Variable Alternate (i.e. a sub-TTreeFormula)
+         case kAlternate: {
+            int alternateN = i;
+            TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+            
+            // First check whether we are in range for the primary formula
+            if (instance < primary->GetNdata()) {
+               
+               Double_t param = primary->EvalInstance(instance);
+               
+               ++i; // skip the alternate value.
+               
+               tab[pos] = param; pos++;
+            } else {
+               // The primary is not in rancge, we will calculate the alternate value
+               // via the next operation (which will be a kAlias).
+            
+               // intentional no operations
+            }
+            continue;
+         }
+         case kAlternateString: {
+            int alternateN = i;
+            TTreeFormula *primary = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
+            
+            // First check whether we are in range for the primary formula
+            if (instance < primary->GetNdata()) {
+               
+               pos2++;
+               stringStack[pos2-1] = primary->EvalStringInstance(instance);
+               
+               ++i; // skip the alternate value.
+               
+            } else {
+               // The primary is not in rancge, we will calculate the alternate value
+               // via the next operation (which will be a kAlias).
+            
+               // intentional no operations
+            }
+            continue;
+         }
       }
 //*-*- a tree string
       if (action >= 105000) {
@@ -3870,6 +3978,12 @@ Bool_t TTreeFormula::IsInteger() const
    // When a leaf is of type integer, the generated histogram is forced
    // to have an integer bin width
 
+   if (fNoper==2 && fOper[0]==kAlternate) {
+      TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+      Assert(subform);
+      return subform->IsInteger();
+   }
+
    if (fNoper > 1) return kFALSE;
 
    if (fOper[0]==kAlias) {
@@ -3950,6 +4064,7 @@ Bool_t TTreeFormula::IsString(Int_t oper) const
    if (TFormula::IsString(oper)) return kTRUE;
    if (fOper[oper]>=105000 && fOper[oper]<110000) return kTRUE;
    if (fOper[oper]==kAliasString) return kTRUE;
+   if (fOper[oper]==kAlternateString) return kTRUE;
    return kFALSE;
 }
 
@@ -4094,6 +4209,10 @@ void TTreeFormula::SetAxis(TAxis *axis)
          TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
          Assert(subform); 
          subform->SetAxis(axis);
+      } else if (fNoper==2 && fOper[0]==kAlternateString){
+         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(0));
+         Assert(subform); 
+         subform->SetAxis(axis);
       }
    }
    if (IsInteger()) axis->SetBit(TAxis::kIsInteger);
@@ -4170,10 +4289,18 @@ void TTreeFormula::UpdateFormulaLeaves()
       }
    }
    for(Int_t k=0;k<fNoper;k++) {
-      if (fOper[k]==kAlias || (fOper[k]==kAliasString) ) {
-         TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
-         Assert(subform);
-         subform->UpdateFormulaLeaves();
+      switch(fOper[k]) {
+         case kAlias:
+         case kAliasString:
+         case kAlternate:
+         case kAlternateString:  {
+            TTreeFormula *subform = dynamic_cast<TTreeFormula*>(fAliases.UncheckedAt(k));
+            Assert(subform);
+            subform->UpdateFormulaLeaves();
+            break;
+         }
+         default:
+            break;
       }
    }
 }

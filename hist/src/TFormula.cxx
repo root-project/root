@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.59 2003/11/25 17:07:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.60 2003/12/11 23:30:35 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2397,63 +2397,72 @@ TString TFormula::GetExpFormula() const
 //*-*   the string returned by GetExpFormula() doesn't depend on other
 //*-*   TFormula object names
 
-  if(fNoper>0){
-  TString* tab=new TString[fNoper];
-  Bool_t* ismulti=new Bool_t[fNoper];
-  Int_t spos=0;
+   if (fNoper>0) {
+      TString* tab=new TString[fNoper];
+      Bool_t* ismulti=new Bool_t[fNoper];
+      Int_t spos=0;
+      
+      ismulti[0]=kFALSE;
+      Int_t optype;
+      Int_t j;
+      for(Int_t i=0;i<fNoper;i++){
+         optype=GetOperType(fOper[i]);
 
-  ismulti[0]=kFALSE;
-  Int_t optype;
-  Int_t j;
-  for(Int_t i=0;i<fNoper;i++){
-    optype=GetOperType(fOper[i]);
-    //Sign inversion
-    if(optype==-100){
-      tab[spos-1]="-"+tab[spos-1];
-      i++;
-      continue;
-    }
-    //Simple name (paramteter,pol0,landau, etc)
-    if(optype>=0){
-      tab[spos]=fExpr[i];
-      ismulti[spos]=kFALSE;
-      spos++;
-      continue;
-    }
-    //Basic operators (+,-,*,/,==,^,etc)
-    if(optype==-20){
-      if(ismulti[spos-2]){
-	tab[spos-2]="("+tab[spos-2]+")";
+         // Boolean optimization breakpoint
+         if (optype==-3) {
+            continue;
+         }
+
+         //Sign inversion
+         if (optype==-100) {
+            tab[spos-1]="-"+tab[spos-1];
+            i++;
+            continue;
+         }
+
+         //Simple name (paramteter,pol0,landau, etc)
+         if (optype>=0) {
+            tab[spos]=fExpr[i];
+            ismulti[spos]=kFALSE;
+            spos++;
+            continue;
+         }
+
+         //Basic operators (+,-,*,/,==,^,etc)
+         if(optype==-20 && spos>=2){
+            if(ismulti[spos-2]){
+               tab[spos-2]="("+tab[spos-2]+")";
+            }
+            if(ismulti[spos-1]){
+               tab[spos-2]+=fExpr[i]+("("+tab[spos-1]+")");
+            }else{
+               tab[spos-2]+=fExpr[i]+tab[spos-1];
+            }
+            ismulti[spos-2]=kTRUE;
+            spos--;
+            continue;
+         }
+
+         //Functions
+         if (optype<0 && (spos+optype>=0)) {
+            tab[spos+optype]=fExpr[i]+("("+tab[spos+optype]);
+            for (j=optype+1; j<0; j++){
+               tab[spos+optype]+=","+tab[spos+j];
+            }
+            tab[spos+optype]+=")";
+            ismulti[spos+optype]=kFALSE;
+            spos+=optype+1;
+            continue;
+         }
       }
-      if(ismulti[spos-1]){
-	tab[spos-2]+=fExpr[i]+("("+tab[spos-1]+")");
-      }else{
-	tab[spos-2]+=fExpr[i]+tab[spos-1];
-      }
-      ismulti[spos-2]=kTRUE;
-      spos--;
-      continue;
-    }
-    //Functions
-    if(optype<0){
-      tab[spos+optype]=fExpr[i]+("("+tab[spos+optype]);
-      for(j=optype+1;j<0;j++){
-	tab[spos+optype]+=","+tab[spos+j];
-      }
-      tab[spos+optype]+=")";
-      ismulti[spos+optype]=kFALSE;
-      spos+=optype+1;
-      continue;
-    }
-  }
-  TString ret=tab[spos-1];
-  delete[] tab;
-  delete[] ismulti;
-  return ret;
-  }else{
-    TString ret="";
-    return ret;
-  }
+      TString ret = spos ? tab[spos-1] : "";
+      delete[] tab;
+      delete[] ismulti;
+      return ret;
+   } else{
+      TString ret="";
+      return ret;
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -2476,6 +2485,8 @@ Int_t TFormula::GetOperType(Int_t oper) const
   if(oper>15 && oper<20 ||
      oper>22 && oper<26) return -2;    //Functions with the format func(x,y)
 
+  if(kBoolOptimize<oper && oper<kFunctionCall) return -3;
+  
   return 0;
 
 }

@@ -171,8 +171,11 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 2, int quietLevel = 0)
    DrawSkippable(tree,"TMath::BreitWigner(fPx,3,2)",
                  "",
                  "hBreit", level>1 && gBranchStyle!=0);
-   
 
+   // Test on alternate value
+   DrawSkippable(tree,"fMatrix-Alt$(fClosestDistance,0)",
+                 "",
+                 "hAlt", level>1 && gBranchStyle!=0);
 
    if (quietLevel<2) gBenchmark->Show("DrawTest");   
    else gBenchmark->Stop("DrawTest");  
