@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.92 2002/07/31 22:05:16 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.93 2002/08/07 10:59:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -539,6 +539,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.FrontBox    = 1;
    Hoption.BackBox     = 1;
    Hoption.System      = kCARTESIAN;
+   
+   Hoption.HighRes     = 0;
 
    //check for graphical cuts
    MakeCuts(chopt);
@@ -649,6 +651,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"E2")) Hoption.Error =12;
    if (strstr(chopt,"E3")) Hoption.Error =13;
    if (strstr(chopt,"E4")) Hoption.Error =14;
+   
+   if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
    if (Hoption.Surf == 14 && Hoption.System != kCARTESIAN) {
       Hoption.System = kCARTESIAN;
@@ -799,6 +803,10 @@ void THistPainter::Paint(Option_t *option)
 //    "LF2"    : Draw histogram like with option "L" but with a fill area.
 //             : Note that "L" draws also a fill area if the hist fillcolor is set
 //             : but the fill area corresponds to the histogram contour.
+//    "9"      : Force histogram to be drawn in high resolution mode.
+//             : By default, the histogram is drawn in low resolution
+//             : in case the number of bins is greater than the number of pixels
+//             : in the current pad.
 //
 //
 //  The following options are supported for 2-D types:
@@ -2799,7 +2807,8 @@ void THistPainter::PaintHist(Option_t *)
          else        { strcpy(chopth,"HN");  strcpy(choptg,"HN  "); }
       }
    }
-   if (Hoption.Fill == 2) strcat(chopth,"2");
+   if (Hoption.Fill == 2)    strcat(chopth,"2");
+   if (Hoption.HighRes != 0) strcat(chopth,"9");
 
 //         Option LOGX
 

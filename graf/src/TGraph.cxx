@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.77 2002/07/28 06:38:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.78 2002/08/07 16:10:31 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2255,6 +2255,11 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 //  chopt='B' :  A Bar chart with equidistant bins is drawn as fill
 //               areas (Contours are drawn).
 //
+//  chopt='9' :  Force graph to be drawn in high resolution mode.
+//               By default, the graph is drawn in low resolution
+//               in case the number of points is greater than the number of pixels
+//               in the current pad.
+//
 //
 
    const char *where = "PaintGraphHist";
@@ -2670,7 +2675,8 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
     if (3*nrPix < last-first+1) {
       lowRes = 1;
     }
-    if (OptionFill2) lowRes = 0;
+    if (OptionFill2)       lowRes = 0;
+    if (opt.Contains("9")) lowRes = 0;
     if (lowRes) {
       Double_t *minPix   = new Double_t[nrPix];
       Double_t *maxPix   = new Double_t[nrPix];
