@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.48 2005/02/22 20:29:09 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.50 2005/03/06 16:45:46 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -67,7 +67,7 @@ TCanvas  *TQtWidget::Canvas()
 
 //_____________________________________________________________________________
 TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):QWidget(parent,name,f)
-          ,fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
+          ,fBits(0),fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
           ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
   setFocusPolicy(QWidget::WheelFocus);
@@ -84,7 +84,8 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     }
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
-    fCanvas = new TCanvas(name, 4, 4, TGQt::iwid(this));
+    TGQt::RegisterWid(this);
+    fCanvas = new TCanvas(name, 4, 4, TGQt::RegisterWid(this));
     // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable());
     gROOT->SetBatch(batch);
     connect(this, SIGNAL(destroyed()),SLOT(Disconnect()));
@@ -110,6 +111,7 @@ TQtWidget::~TQtWidget()
 {
   qApp->lock();
   fCanvas =0;
+  TGQt::UnRegisterWid(this);
   qApp->unlock();
 }
 
@@ -254,7 +256,7 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
       };
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
-         e->accept(); return;
+         e->accept(); EmitSignal(kMousePressEvent); return;
       }
    }
    QWidget::mousePressEvent(e);
@@ -271,7 +273,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    if (c){
       if (e->state() & LeftButton) { rootButton = kButton1Motion; }
       c->HandleInput(rootButton, e->x(), e->y());
-      e->accept(); return;
+      e->accept();  EmitSignal(kMouseMoveEvent); return;
    }
    QWidget::mouseMoveEvent(e);
 }
@@ -294,7 +296,7 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
          gPad->Modified();
-         e->accept(); return;
+         e->accept(); EmitSignal(kMouseReleaseEvent);return;
       }
    }
    QWidget::mouseReleaseEvent(e);
@@ -317,7 +319,7 @@ void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
       };
       if (rootButton != kNoEvent) {
          c->HandleInput(rootButton, e->x(), e->y());
-         e->accept(); return;
+         e->accept(); EmitSignal(kMouseDoubleClickEvent);return;
       }
    }
    QWidget::mouseDoubleClickEvent(e);
@@ -330,6 +332,7 @@ void TQtWidget::keyPressEvent(QKeyEvent * e)
    TCanvas *c = Canvas();
    if (c){
       c->HandleInput(kKeyPress, e->ascii(), e->key());
+      EmitSignal(kKeyPressEvent);
    }
    QWidget::keyPressEvent(e);
 }
@@ -348,7 +351,8 @@ void TQtWidget::enterEvent(QEvent *e)
    TCanvas *c = Canvas();
    if (c){
       c->HandleInput(kMouseEnter, 0, 0);
-   }
+      EmitSignal(kEnterEvent);
+  }
    QWidget::enterEvent(e);
 }
 //_____________________________________________________________________________
@@ -359,6 +363,7 @@ void TQtWidget::leaveEvent (QEvent *e)
    TCanvas *c = Canvas();
    if (c){
       c->HandleInput(kMouseLeave, 0, 0);
+      EmitSignal(kLeaveEvent);
    }
    QWidget::leaveEvent(e);
 }
@@ -552,7 +557,6 @@ void TQtWidget::SetSizeHint (const QSize &size) {
    //  sets the preferred size of the widget.
    fSizeHint = size;
 }
-
 //____________________________________________________________________________
 QSize TQtWidget::sizeHint () const{
    //  returns the preferred size of the widget.
@@ -567,4 +571,22 @@ QSize TQtWidget::minimumSizeHint () const{
 QSizePolicy TQtWidget::sizePolicy () const{
    //  returns a QSizePolicy; a value describing the space requirements
    return QWidget::sizePolicy ();
+}
+//____________________________________________________________________________
+void  TQtWidget::EmitTestedSignal() 
+{
+   TCanvas *c        = GetCanvas();
+   TObject *selected = GetSelected();
+   UInt_t event      = GetEvent();
+   emit RootEventProcessed(selected, event, c);
+}
+//____________________________________________________________________________
+void  TQtWidget::SetBit(UInt_t f, Bool_t set)
+{
+   // Set or unset the user status bits as specified in f.
+
+   if (set)
+      SetBit(f);
+   else
+      ResetBit(f);
 }

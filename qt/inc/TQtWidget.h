@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.8 2005/02/08 07:36:08 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.h,v 1.9 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -10,7 +10,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_TQtWidget
 #define ROOT_TQtWidget
 
@@ -19,6 +18,7 @@
 
 #include <assert.h>
 #include "Rtypes.h"
+#include "TCanvas.h"
 
 #ifndef __CINT__
 #  include <qwidget.h>
@@ -39,14 +39,21 @@
   class QEvent;
   class QSizePolicy;
 #endif
-
-class TCanvas;
 //
 // TQtWidget is a custom QWidget to back ROOT TCanvas.
 //
 // It can be used within Qt-based program and with Qt Designer as a "regular"
 // Qt QWidget to create the Qt widget wihe builtin TCanvas'
 //
+enum EEventTrackingBits {
+       kMousePressEvent       = BIT(0), // emit signal as soon as TCanvas processed mousePressEvent       QMouseEvent
+       kMouseMoveEvent        = BIT(1), // emit signal as soon as TCanvas processed mouseMoveEvent        QMouseEvent
+       kMouseReleaseEvent     = BIT(2), // emit signal as soon as TCanvas processed mouseReleaseEvent     QMouseEvent
+       kMouseDoubleClickEvent = BIT(3), // emit signal as soon as TCanvas processed mouseDoubleClickEvent QMouseEvent
+       kKeyPressEvent         = BIT(4), // emit signal as soon as TCanvas processed keyPressEvent         QKeyEvent
+       kEnterEvent            = BIT(5), // emit signal as soon as TCanvas processed enterEvent            QEvent
+       kLeaveEvent            = BIT(6)  // emit signal as soon as TCanvas processed leaveEvent            QEvent
+};
 
 //___________________________________________________________________
 class TQtWidgetBuffer : public QPixmap
@@ -68,6 +75,11 @@ private:
       void operator=(const TQtWidget&) const {}
       void operator=(const TQtWidget&) {}
       TQtWidget(const TQtWidget&) :QWidget() {}
+   //----- Private bits, clients can only test but not change them
+   UInt_t         fBits;       //bit field status word
+   enum {
+      kBitMask       = 0x00ffffff
+   };
 public:
    enum {
       kEXITSIZEMOVE,
@@ -131,33 +143,58 @@ protected:
    //  Layout methods:
    virtual void        SetSizeHint (const QSize &size);
 public:
-   virtual QSize       sizeHint () const;        //  returns the preferred size of the widget.
+   virtual QSize       sizeHint () const;        // returns the preferred size of the widget.
    virtual QSize       minimumSizeHint () const; // returns the smallest size the widget can have.
-   virtual QSizePolicy sizePolicy () const;      //  returns a QSizePolicy; a value describing the space requirements of the
+   virtual QSizePolicy sizePolicy () const;      // returns a QSizePolicy; a value describing the space requirements of the
 protected:
    // -- A special event handler
    virtual void exitSizeEvent ();
    virtual void stretchWidget(QResizeEvent *e);
+   //----- bit manipulation (a'la TObject )
+   void     SetBit     (UInt_t f, Bool_t set);
+   void     SetBit     (UInt_t f);
+   void     ResetBit   (UInt_t f);
+   Bool_t   TestBit    (UInt_t f) const;
+   Int_t    TestBits   (UInt_t f) const;
+   void     InvertBit  (UInt_t f);
+   void     EmitSignal (UInt_t f);
+   void     EmitTestedSignal();
+public:
+   //  Proxy methods to access the TCanvas selected TObject 
+   //  and last processed ROOT TCanvas event
+   Int_t             GetEvent()       const;
+   Int_t             GetEventX()      const;
+   Int_t             GetEventY()      const;
+   TObject          *GetSelected()    const;
+   Int_t             GetSelectedX()   const;
+   Int_t             GetSelectedY()   const;
+   TVirtualPad      *GetSelectedPad() const;
 
+   //----- bit Qt signal emitting the Qt signal to track mouse movement
+   void     EnableSignalEvents  (UInt_t f);
+   void     DisableSignalEvents (UInt_t f);
+   Bool_t   IsSignalEventEnabled(UInt_t f) const;
+     
 public slots:
    virtual void cd();
    virtual void cd(int subpadnumber);
    void Disconnect();
    void Refresh();
    virtual bool Save(const QString &fileName) const;
-   virtual bool Save(const char *fileName) const;
+   virtual bool Save(const char    *fileName) const;
    virtual bool Save(const QString &fileName,const char *format,int quality=60) const;
-   virtual bool Save(const char *fileName,const char *format,int quality=60) const;
+   virtual bool Save(const char    *fileName,const char *format,int quality=60) const;
 signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
-   void CanvasPainted();  // Signal the TCanvas has been oainted ionto the screen
-   void Saved(bool ok); // Signal the TCanvas has been saved into the file
-    virtual void polish();
+   void CanvasPainted();  // Signal the TCanvas has been painted onto the screen
+   void Saved(bool ok);   // Signal the TCanvas has been saved into the file
+   virtual void polish();
+   void  RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
 //MOC_SKIP_BEGIN  
    ClassDef(TQtWidget,0) // QWidget to back ROOT TCanvas (Can be used with Qt designer)
 //MOC_SKIP_END
 };
-
+   
 //______________________________________________________________________________
 inline void TQtWidget::AdjustBufferSize()
    {  if (fPixmapID.size() != size() ) fPixmapID.resize(size()); }
@@ -170,5 +207,36 @@ inline bool TQtWidget::paintingActive () const {
 inline void TQtWidget::SetRootID(QWidget *wrapper) { fWrapper = wrapper;}
 //______________________________________________________________________________
 inline QWidget *TQtWidget::GetRootID() const { return fWrapper;}
+
+//______________________________________________________________________________
+//
+//  Proxy methods to access the TCanvas selected TObject
+//  and last processed event
+//______________________________________________________________________________
+inline Int_t        TQtWidget::GetEvent()       const { return GetCanvas()->GetEvent();       }
+//______________________________________________________________________________
+inline Int_t        TQtWidget::GetEventX()      const { return GetCanvas()->GetEventX();      }
+//______________________________________________________________________________
+inline Int_t        TQtWidget::GetEventY()      const { return GetCanvas()->GetEventY();      }
+//______________________________________________________________________________
+inline TObject     *TQtWidget::GetSelected()    const { return GetCanvas()->GetSelected();    }
+//______________________________________________________________________________
+inline Int_t        TQtWidget::GetSelectedX()   const { return GetCanvas()->GetSelectedX();   }
+//______________________________________________________________________________
+inline Int_t        TQtWidget::GetSelectedY()   const { return GetCanvas()->GetSelectedY();   }
+//______________________________________________________________________________
+inline TVirtualPad *TQtWidget::GetSelectedPad() const { return GetCanvas()->GetSelectedPad(); }
+
+//----- bit manipulation
+inline void   TQtWidget::SetBit(UInt_t f)         { fBits |= f & kBitMask;              }
+inline void   TQtWidget::ResetBit(UInt_t f)       { fBits &= ~(f & kBitMask);           }
+inline Bool_t TQtWidget::TestBit(UInt_t f) const  { return (Bool_t) ((fBits & f) != 0); }
+inline Int_t  TQtWidget::TestBits(UInt_t f) const { return (Int_t) (fBits & f);         }
+inline void   TQtWidget::InvertBit(UInt_t f)      { fBits ^= f & kBitMask;              }
+   
+inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
+inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
+inline Bool_t TQtWidget::IsSignalEventEnabled(UInt_t f) const { return TestBit (f); }
+inline void   TQtWidget::EmitSignal(UInt_t f)  {if (IsSignalEventEnabled(f)) EmitTestedSignal();};
 
 #endif

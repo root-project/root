@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.6 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.7 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -493,7 +493,7 @@ Window_t TGQt::GetWindowID(Int_t id) {
    if (! (client = (TQtClientWidget  *)canvasWidget->GetRootID() )  ) {
       //   QWidget *canvasWidget = (QWidget *)wid(id);
       QWidget *parent  = canvasWidget->parentWidget();
-      client  = (TQtClientWidget  *)wid(CreateWindow(iwid(parent)
+      client  = (TQtClientWidget  *)wid(CreateWindow(rootwid(parent)
          ,0,0,canvasWidget->width(),canvasWidget->height()
          ,0,0,0,0,0,0));
       // reparent the canvas
@@ -1231,7 +1231,7 @@ Bool_t       TGQt::CreatePictureFromFile( Drawable_t /*id*/, const char *filenam
       // Create the new pixmap
       pixmap = fQPixmapGuard.Create(QString(filename));
       // pixmap = new QPixmap (QString(filename));
-      pict = Pixmap_t(iwid(pixmap));
+      pict = Pixmap_t(rootwid(pixmap));
    } else {
       // reload the old one
       pixmap->load(QString(filename));

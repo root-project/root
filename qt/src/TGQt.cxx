@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.11 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TGQt.cxx,v 1.12 2005/03/04 07:11:54 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -191,6 +191,7 @@ TQWidgetCollection *fWidgetArray = 0;
 //______________________________________________________________________________
 QPaintDevice *TGQt::iwid(Window_t wid)
 {
+   // Convert ROOT Widget Id to the Qt QPaintDevice pointer
    QPaintDevice *topDevice = 0;
    if ( wid != kNone )   {
        topDevice = (wid == kDefault) ?
@@ -206,20 +207,16 @@ Int_t         TGQt::iwid(QPaintDevice *wid)
 {
    // method to provide the ROOT "cast" from (QPaintDevice*) to ROOT windows "id"
    Int_t intWid = kNone;
-#ifdef OLDWIDGET	
-   QPaintDevice *topDevice = (QPaintDevice *)QApplication::desktop();
-   if (wid == topDevice) intWid = kDefault;
-   else if (wid)
-      intWid = Int_t(wid);
-#else	
        // look up the widget
    if ((ULong_t) wid == (ULong_t) -1) intWid = -1;
    else {
       intWid = fWidgetArray->find(wid);
-      // assert(intWid != -1);
-      if (intWid == -1 )  intWid = Int_t(wid);
+      //assert(intWid != -1);
+      if (intWid == -1) {
+         //printf("error intWid = %d\n",intWid);
+         intWid = Int_t(wid);
+      }
    }
-#endif	
    return intWid;
 }
 
@@ -228,19 +225,12 @@ QPaintDevice *TGQt::iwid(Int_t wid)
 {
    // method to restore (cast) the QPaintDevice object pointer from  ROOT windows "id"
    QPaintDevice *topDevice = 0;
-#ifdef OLDWIDGET
-   if ( wid == Int_t(kNone) )    return 0;
-   if ( wid == Int_t(kDefault) ) topDevice = (QPaintDevice *)QApplication::desktop();
-   else
- 	   topDevice = (QPaintDevice *)wid;
-#else	
       if (0 <= wid && wid <= int(fWidgetArray->MaxId()) )
          topDevice = (*fWidgetArray)[wid];
 	   else {
          assert(0);
-         topDevice = (QPaintDevice *)wid;
+         // topDevice = (QPaintDevice *)wid;
       }
-#endif	
    return topDevice;
 }
 
@@ -615,7 +605,7 @@ Bool_t TGQt::Init(void* /*display*/)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*Qt GUI initialization-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                        ========================                      *-*
-   fprintf(stderr,"** $Id: TGQt.cxx,v 1.87 2005/03/03 20:47:32 fine Exp $ this=%p\n",this);
+   fprintf(stderr,"** $Id: TGQt.cxx,v 1.91 2005/03/06 16:45:46 fine Exp $ this=%p\n",this);
 
    if(fDisplayOpened)   return fDisplayOpened;
    fSelectedBuffer = fSelectedWindow = fPrevWindow = NoOperation;
@@ -695,7 +685,6 @@ Bool_t TGQt::Init(void* /*display*/)
    QString fontName(default_font);
    fFontTextCode = fontName.section('-',13).upper();
    if  ( fFontTextCode.isEmpty() ) fFontTextCode = "ISO8859-1";
-
    // Check whether "Symbol" font is available
     QFontDatabase fdb;
     QStringList families = fdb.families();
@@ -713,7 +702,6 @@ Bool_t TGQt::Init(void* /*display*/)
         // create a custom codec
         new QSymbolCodec();
     }
-
    //  printf(" TGQt::Init finsihed\n");
    // Install filter for the desktop
    // QApplication::desktop()->installEventFilter(QClientFilter());
@@ -730,7 +718,20 @@ Int_t TGQt::CreatROOTThread()
 //*-*
   return 0;
 }
-
+//______________________________________________________________________________
+Int_t  TGQt::RegisterWid(QPaintDevice *wid)
+{
+ // register QWidget for the embedded TCanvas
+   Int_t id = fWidgetArray->find(wid);
+   if (id == -1) id = fWidgetArray->GetFreeId(wid);
+   return id;
+}
+//______________________________________________________________________________
+void  TGQt::UnRegisterWid(QPaintDevice *wid)
+{
+   // unregister QWidget to the TCanvas
+   fWidgetArray->RemoveByPointer(wid);
+}
 //______________________________________________________________________________
 Int_t TGQt::InitWindow(ULong_t window)
 {
@@ -859,34 +860,34 @@ void  TGQt::ClearWindow()
 //______________________________________________________________________________
 void  TGQt::ClosePixmap()
 {
-   // Delete current pixmap.
+   // Delete the current pixmap.
    DeleteSelectedObj();
 }
 
 //______________________________________________________________________________
 void  TGQt::CloseWindow()
 {
-   // Delete current window.
+   // Delete the current window.
    DeleteSelectedObj();
 }
 
 //______________________________________________________________________________
 void  TGQt::DeleteSelectedObj()
 {
-    // Delete current Qt object
+    // Delete the current Qt object
   End();
   if (fSelectedWindow->devType() == QInternal::Widget) {
-      TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(fSelectedWindow);
-       QWidget *wrapper = 0;
-       if (canvasWidget && (wrapper=canvasWidget->GetRootID())) {
-            wrapper->hide();
-            DestroyWindow(iwid( wrapper) );
-       } else {
-         ((QWidget *)fSelectedWindow)->hide();
-         ((QWidget *)fSelectedWindow)->close(true);
-       }
+     TQtWidget *canvasWidget = dynamic_cast<TQtWidget *>(fSelectedWindow);
+     QWidget *wrapper = 0;
+     if (canvasWidget && (wrapper=canvasWidget->GetRootID())) {
+        wrapper->hide();
+        DestroyWindow(rootwid(wrapper) );
+     } else {
+        ((QWidget *)fSelectedWindow)->hide();
+        ((QWidget *)fSelectedWindow)->close(true);
+     }
   } else {
-     fWidgetArray->RemoveByPointer(fSelectedWindow);
+     UnRegisterWid(fSelectedWindow);
      delete  fSelectedWindow;
   }
   fSelectedBuffer = fSelectedWindow = 0;
@@ -1351,7 +1352,7 @@ void  TGQt::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
             }
             devSize.moveTopLeft(thisWidget.mapToGlobal(thisWidget.pos()));
          } else {
-            devSize = GetQRect(*(QPaintDevice *)wid);
+            devSize = GetQRect(*dev);
          }
       }
    }

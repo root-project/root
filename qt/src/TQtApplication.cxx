@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.4 2004/08/02 08:14:43 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtApplication.cxx,v 1.5 2005/03/01 07:24:01 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -58,11 +58,17 @@ TQtApplication::~TQtApplication()
 //______________________________________________________________________________
 void TQtApplication::CreateQApplication(int argc, char ** argv, bool GUIenabled)
 {
+  //  Initialize the Qt package
+  //  Check the QT_BATCH environment variable to disactivate Qt GUI mode
+   
   // QApplication must be created in the proper "GUI" thread
   // It may be called from TQtApplicationThread::Run
    if (!qApp) {
       // QApplication::setColorSpec( QApplication::NormalColor );
        QApplication::setColorSpec( QApplication::ManyColor );
+       QString display = gSystem->Getenv("DISPLAY");
+       // check the QT_BATCH option
+       if (display.contains("QT_BATCH")) GUIenabled = false;
        qApp = new QApplication (argc, argv, GUIenabled );
        // The string must be one of the QStyleFactory::keys(),
        // typically one of

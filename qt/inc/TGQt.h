@@ -1,5 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.6 2005/03/01 07:24:01 brun Exp $
-// Author: Valeri Fine   21/01/2002
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.7 2005/03/04 07:11:54 brun Exp $
+ // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -131,7 +131,7 @@ protected:
    TQTCLIPMAP fClipMap;
 
 //
-//*-*-  Colors staff
+//  Colors staff
 //
 
 //   QMemArray<QColor> fPallete;
@@ -149,7 +149,7 @@ protected:
 
 
 //
-//*-*- Text management
+//   Text management
 //
 
    //Qt::AlignmentFlags fTextAlign;
@@ -158,7 +158,7 @@ protected:
    Int_t CreatROOTThread();
    void  DeleteSelectedObj();
 
-// Qt methods
+//  Qt methods
    static QRect GetQRect(QPaintDevice &dev);
    void Begin();
    void End();
@@ -170,6 +170,8 @@ protected:
    QPaintDevice *GetDoubleBuffer(QPaintDevice *dev);
 
 #endif
+   static Int_t   RegisterWid(QPaintDevice *wid);   // register QWidget for the embedded TCanvas
+   static void    UnRegisterWid(QPaintDevice *wid); // unregister QWidget of the TCanvas
 private:
    TGQt& operator=(const TGQt&);
 public:
@@ -198,11 +200,11 @@ public:
 
 
    // static methods:
+   static TQtApplication *CreateQtApplicationImp();
    static Int_t          iwid(QPaintDevice *wid);
    static QPaintDevice  *iwid(Int_t wid);
    static QPaintDevice  *iwid(Window_t wid);
    static QPixmap       *MakeIcon(Int_t indx);
-   static TQtApplication *CreateQtApplicationImp();
    static TVirtualX     *GetVirtualX();
    static QWidget       *winid(Window_t id);
    static QWidget       *wid(Window_t id);
