@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.38 2001/04/20 12:28:21 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.39 2001/05/14 06:42:57 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -114,7 +114,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
    Double_t x  = gPad->AbsPixeltoX(px);
    Double_t x1 = gPad->AbsPixeltoX(px+1);
-   
+
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
@@ -168,9 +168,9 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          if (TMath::Abs(px-xzaxis) < kMaxDiff) {
             gPad->SetSelected(fZaxis);
             return 0;
-         }   
-      }   
-   }    
+         }
+      }
+   }
 //*-*- if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
@@ -494,9 +494,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
-   
+
    l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
-   
+
    l = strstr(chopt,"CONT");
    if (l) {
       Hoption.Scat = 0;
@@ -581,40 +581,40 @@ void THistPainter::Paint(Option_t *option)
 //*-*-*-*-*-*-*-*-*Control routine to paint any kind of histograms*-*-*-*-*-*-*
 //*-*              ===============================================
 //
-// When you call the Draw method of a histogram for the first time (TH1::Draw), 
-// it creates a THistPainter object and saves a pointer to painter as a 
-// data member of the histogram. 
-// The THistPainter class specializes in the drawing of histograms. It is 
-// separate from the histogram so that one can have histograms without 
-// the graphics overhead, for example in a batch program. The choice 
-// to give each histogram have its own painter rather than a central 
-// singleton painter, allows two histograms to be drawn in two threads 
+// When you call the Draw method of a histogram for the first time (TH1::Draw),
+// it creates a THistPainter object and saves a pointer to painter as a
+// data member of the histogram.
+// The THistPainter class specializes in the drawing of histograms. It is
+// separate from the histogram so that one can have histograms without
+// the graphics overhead, for example in a batch program. The choice
+// to give each histogram have its own painter rather than a central
+// singleton painter, allows two histograms to be drawn in two threads
 // without overwriting the painter's values.
 //
-// When a displayed histogram is filled again you do not have to call the Draw 
-// method again. The image is refreshed the next time the pad is updated. 
+// When a displayed histogram is filled again you do not have to call the Draw
+// method again. The image is refreshed the next time the pad is updated.
 // A pad is updated after one of these three actions:
-//   - a carriage control on the ROOT command line 
+//   - a carriage control on the ROOT command line
 //   - a click inside the pad
 //   - a call to TPad::Update
 //
 // By default a call to TH1::Draw clears the pad of all objects before drawing the
 // new image of the histogram. You can use the "SAME" option to leave the previous
-// display intact and superimpose the new histogram. The same histogram can be 
+// display intact and superimpose the new histogram. The same histogram can be
 // drawn with different graphics options in different pads.
 //
 // When a displayed histogram is deleted, its image is automatically removed from the pad.
 //
-// To create a copy of the histogram when drawing it, you can use TH1::DrawClone. This 
-// will clone the histogram and allow you to change and delete the original one 
+// To create a copy of the histogram when drawing it, you can use TH1::DrawClone. This
+// will clone the histogram and allow you to change and delete the original one
 // without affecting the clone.
 //
 // Setting the Style
 // =================
-// Histograms use the current style (gStyle). When you change the current style and 
+// Histograms use the current style (gStyle). When you change the current style and
 // would like to propagate the change to the histogram you can call TH1::UseCurrentStyle.
 // You will need to call UseCurrentStyle on each histogram.
-// When reading many histograms from a file and you wish to update them to the current 
+// When reading many histograms from a file and you wish to update them to the current
 // style you can use gROOT::ForceStyle and all histograms read after this call
 // will be updated to use the current style.
 //
@@ -673,13 +673,13 @@ void THistPainter::Paint(Option_t *option)
 // The options are not case sensitive:
 //	h->Draw("e1same");
 //
-// The options "BOX", "COL" or "COLZ", use the color palette 
+// The options "BOX", "COL" or "COLZ", use the color palette
 // defined in the current style (see TStyle::SetPalette)
 //
 // The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
 // levels, you can change the number of levels with TH1::SetContour.
 //
-// You can also set the default drawing option with TH1::SetOption. To see the current 
+// You can also set the default drawing option with TH1::SetOption. To see the current
 // option use TH1::GetOption.
 //
 // Setting line, fill, marker, and text attributes
@@ -691,20 +691,20 @@ void THistPainter::Paint(Option_t *option)
 //
 //  Setting Tick marks on the histogram axis
 //  ========================================
-// The TPad::SetTicks method specifies the type of tick marks on the axis. 
-// 
-// Assume tx = gPad->GetTickx() and ty = gPad->GetTicky(). 
+// The TPad::SetTicks method specifies the type of tick marks on the axis.
+//
+// Assume tx = gPad->GetTickx() and ty = gPad->GetTicky().
 //
 //    tx = 1 ;  tick marks on top side are drawn (inside)
 //    tx = 2;   tick marks and labels on top side are drawn
 //    ty = 1;   tick marks on right side are drawn (inside)
 //    ty = 2;   tick marks and labels on right side are drawn
 // By default only the left Y axis and X bottom axis are drawn (tx = ty = 0)
-//       
+//
 // Use TPad::SetTicks(tx,ty) to set these options
 // See also The TAxis functions to set specific axis attributes.
 //
-//  In case multiple collor filled histograms are drawn on the same pad, the fill 
+//  In case multiple collor filled histograms are drawn on the same pad, the fill
 //  area may hide the axis tick marks. One can force a redraw of the axis
 //  over all the histograms by calling:
 //    gPad->RedrawAxis();
@@ -717,14 +717,14 @@ void THistPainter::Paint(Option_t *option)
 //  The histogram title and the axis titles can be any TLatex string.
 //  The titles are part of the persistent histogram.
 //
-//  
+//
 //  Superimposing two histograms with different scales in the same pad
 //  ==================================================================
 //  The following script creates two histograms, the second histogram is
 //  the bins integral of the first one. It shows a procedure to
 //  draw the two histograms in the same pad and it draws the scale of
 //  the second histogram using a new vertical axis on the right side.
-//   
+//
 //   void twoscales() {
 //    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
 //
@@ -734,13 +734,13 @@ void THistPainter::Paint(Option_t *option)
 //     Int_t i;
 //     for (i=0;i<10000;i++) h1->Fill(gRandom->Gaus(0,1));
 //     h1->Draw();
-//     c1->Update();  
-//    
+//     c1->Update();
+//
 //     //create hint1 filled with the bins integral of h1
 //     TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
 //     Float_t sum = 0;
 //     for (i=1;i<=100;i++) {
-//        sum += h1->GetBinContent(i); 
+//        sum += h1->GetBinContent(i);
 //        hint1->SetBinContent(i,sum);
 //     }
 //
@@ -750,7 +750,7 @@ void THistPainter::Paint(Option_t *option)
 //     hint1->SetLineColor(kRed);
 //     hint1->Scale(scale);
 //     hint1->Draw("same");
-//   
+//
 //     //draw an axis on the right side
 //     TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
 //           gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
@@ -770,7 +770,7 @@ void THistPainter::Paint(Option_t *option)
 // The type of information shown in the histogram statistics box
 //  can be selected with gStyle->SetOptStat(mode).
 //
-//  The mode has up to seven digits that can be set to on(1) or off(0). 
+//  The mode has up to seven digits that can be set to on(1) or off(0).
 //
 //  mode = iourmen  (default = 0001111)
 //    n = 1;  name of histogram is printed
@@ -784,10 +784,10 @@ void THistPainter::Paint(Option_t *option)
 // When trailing digits is left out, they are assumed to be 0.
 // For example: gStyle->SetOptStat(11);
 // displays only the name of histogram and the number of entries.
-// 
-//When the option "same", the statistic box is not redrawn, and hence 
-// the statistics from the previously drawn hostgram will still show. 
-// With the option "sames", you can rename a previous "stats" box 
+//
+//When the option "same", the statistic box is not redrawn, and hence
+// the statistics from the previously drawn hostgram will still show.
+// With the option "sames", you can rename a previous "stats" box
 // and/or change its position with these lines:
 //
 //  Root > TPaveStats *st = (TPaveStats*)gPad->FindObject("stats")
@@ -805,7 +805,7 @@ void THistPainter::Paint(Option_t *option)
 //    e = 1;  print errors (if e=1, v must be 1)
 //    c = 1;  print Chisquare/Number of degress of freedom
 //    p = 1;  print Probability
-//  
+//
 // For example: gStyle->SetOptFit(1011);
 // prints the fit probability, parameter names/values, and errors.
 //
@@ -818,7 +818,7 @@ void THistPainter::Paint(Option_t *option)
 //   'E3' A filled area is drawn through the end points of the vertical error bars.
 //   '4' A smoothed filled area is drawn through the end points of the
 //       vertical error bars.
-//   'E0' Draw also bins with null contents.  
+//   'E0' Draw also bins with null contents.
 //Begin_Html
 /*
 <img src="gif/PaintErrors.gif">
@@ -858,7 +858,7 @@ void THistPainter::Paint(Option_t *option)
 //
 //
 //  The TEXT Option
-//  =============== 
+//  ===============
 //    For each cell (i,j) the cell content is printed.
 //    The text attributes are:
 //      - text font = current TStyle font
@@ -880,7 +880,7 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT2"  : Draw a contour plot using the same line style for all contours
 //    "CONT3"  : Draw a contour plot using fill area colors
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
-// 
+//
 //  The default number of contour levels is 20 equidistant levels and can
 //  be changed with TH1::SetContour.
 //
@@ -888,17 +888,17 @@ void THistPainter::Paint(Option_t *option)
 //  the points used to draw the contours are saved in the TGraph object
 //  and are accessible in the following way:
 //
-//     TObjArray *contours = 
+//     TObjArray *contours =
 //           gROOT->GetListOfSpecials()->FindObject("contours")
 //     Int_t ncontours = contours->GetSize();
-//     TList *list = (TList*)contours->At(i); 
+//     TList *list = (TList*)contours->At(i);
 //
-// Where i is a contour number, and list contains a list of TGraph objects. 
-// For one given contour, more than one disjoint polyline may be generated. 
-// The number of TGraphs per countour is given by list->GetSize(). 
+// Where i is a contour number, and list contains a list of TGraph objects.
+// For one given contour, more than one disjoint polyline may be generated.
+// The number of TGraphs per countour is given by list->GetSize().
 // Here we show only the case to access the first graph in the list.
 //    TGraph *gr1 = (TGraph*)list->First();
-// 
+//
 //Begin_Html
 /*
 <img src="gif/h2_cont.gif">
@@ -967,7 +967,7 @@ void THistPainter::Paint(Option_t *option)
 // The attributes used to display the palette axis values are taken from
 // the Z axis of the object. For example, you can set the labels size
 // on the palette axis via hist->GetZaxis()->SetLabelSize().
-//  
+//
 //  Setting the color palette
 //  =========================
 // You can set the color palette with TStyle::SetPalette, eg
@@ -975,7 +975,7 @@ void THistPainter::Paint(Option_t *option)
 //      gStyle->SetPalette(ncolors,colors);
 //
 // For example the option "COL" draws a 2-D histogram with cells
-// represented by a box filled with a color index which is a function 
+// represented by a box filled with a color index which is a function
 // of the cell content.
 // If the cell content is N, the color index used will be the color number
 // in colors[N],etc. If the maximum cell content is > ncolors, all
@@ -984,7 +984,7 @@ void THistPainter::Paint(Option_t *option)
 // if ncolors <= 0, a default palette (see below) of 50 colors is defined.
 // This palette is recommended for pads, labels
 //
-// if ncolors == 1 && colors == 0, a pretty palette with a violet to red 
+// if ncolors == 1 && colors == 0, a pretty palette with a violet to red
 // spectrum is created. We recommend you use this palette when drawing legos,
 // surfaces or contours.
 //
@@ -992,7 +992,7 @@ void THistPainter::Paint(Option_t *option)
 // with a maximum of ncolors.
 //
 // The default palette defines:
-//   index  0  to  9 : shades of grey 
+//   index  0  to  9 : shades of grey
 //   index 10  to 19 : shades of brown
 //   index 20  to 29 : shades of blue
 //   index 30  to 39 : shades of red
@@ -1540,17 +1540,17 @@ void THistPainter::PaintContour()
 //*-*  When option "List" is specified together with option "cont",
 //*-*  the points used to draw the contours are saved in the TGraph format
 //*-*  and are accessible in the following way:
-//*-* TObjArray *contours = 
+//*-* TObjArray *contours =
 //*-*           gROOT->GetListOfSpecials()->FindObject("contours")
 //*-* Int_t ncontours = contours->GetSize();
-//*-* TList *list = (TList*)contours->At(i); //where i is a contour number   
-//*-* list contains a list of TGraph objects. For one given contour, more than 
-//*-* one disjoint polyline may be generated. The number of TGraphs per 
-//*-* countour is given by list->GetSize(). 
+//*-* TList *list = (TList*)contours->At(i); //where i is a contour number
+//*-* list contains a list of TGraph objects. For one given contour, more than
+//*-* one disjoint polyline may be generated. The number of TGraphs per
+//*-* countour is given by list->GetSize().
 //*-* Here we show only the case to access the first graph in the list.
 //*-*    TGraph *gr1 = (TGraph*)list->First();
-//*-* 
-//*-*   
+//*-*
+//*-*
 //Begin_Html
 /*
 <img src="gif/PaintContour1.gif">
@@ -1581,7 +1581,7 @@ void THistPainter::PaintContour()
    Double_t *xarr    = new Double_t[kMAXCONTOUR];
    Double_t *yarr    = new Double_t[kMAXCONTOUR];
    Int_t  *itarr     = new Int_t[kMAXCONTOUR];
-   
+
    Int_t npmax = 0;
    for (i=0;i<kMAXCONTOUR;i++) itarr[i] = 0;
 
@@ -1603,7 +1603,7 @@ void THistPainter::PaintContour()
    if (Hoption.Contour == 13) {
       fH->TAttLine::Modify();
    }
-   
+
    TPolyLine **polys = 0;
    TPolyLine *poly=0, *polynew=0;
    TObjArray *contours = 0;
@@ -1639,7 +1639,7 @@ void THistPainter::PaintContour()
    Int_t theColor;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz   = TMath::Abs(ncontour);
-   
+
    Int_t k,ipoly;
    for (j=Hparam.yfirst; j<Hparam.ylast; j++) {
       y[0] = fYaxis->GetBinCenter(j);
@@ -1762,7 +1762,7 @@ void THistPainter::PaintContour()
    Int_t first = 0;
    Int_t *polysort = 0;
    if (Hoption.Contour != 1) goto theEND;
-   
+
    //The 2 points line generated above are now sorted/merged to generate
    //a list of consecutive points.
    // If the option "List" has been specified, the list of points is saved
@@ -1835,7 +1835,7 @@ void THistPainter::PaintContour()
                break;
             }
          }
-         if (istart == 0) break;              
+         if (istart == 0) break;
       }
    }
    if (Hoption.Zscale) PaintPalette();
@@ -2910,7 +2910,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
        Error("PaintLegoAxis", "no TView in current pad");
        return;
     }
-    
+
     // in polar coordinates, draw a short line going from the external circle
     // corresponding to r = 1 up to r = 1.1
     if (Hoption.System == kPOLAR) {
@@ -2925,13 +2925,13 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
        gPad->PaintLine(x1[0],x1[1],x2[0],x2[1]);
        return ;
     }
-    
+
     if (Hoption.System != kCARTESIAN) return ;
 
     rad = TMath::ATan(1.) * 4. /180.;
     cosa = TMath::Cos(ang*rad);
     sina = TMath::Sin(ang*rad);
-	
+
     view->AxisVertex(ang, av, ix1, ix2, iy1, iy2, iz1, iz2);
     for (i = 1; i <= 8; ++i) {
 	r[i*3 - 3] = av[i*3 - 3] + av[i*3 - 2]*cosa;
@@ -3352,6 +3352,8 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       stats->SetFillStyle(gStyle->GetStatStyle());
       stats->SetBorderSize(gStyle->GetStatBorderSize());
       stats->SetTextFont(gStyle->GetStatFont());
+      if (gStyle->GetStatFont()%10 > 2)
+         stats->SetTextSize(gStyle->GetStatFontSize());
       stats->SetFitFormat(gStyle->GetFitFormat());
       stats->SetStatFormat(gStyle->GetStatFormat());
       stats->SetName("stats");
@@ -3832,7 +3834,7 @@ void THistPainter::PaintSurface()
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
 
    if (Hoption.Zscale) PaintPalette();  // MOD MWH
-   
+
    fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
@@ -3949,9 +3951,10 @@ void THistPainter::PaintTitle()
    ptitle->SetFillStyle(gStyle->GetTitleStyle());
    ptitle->SetName("title");
    ptitle->SetBorderSize(gStyle->GetTitleBorderSize());
-//   ptitle->SetTextSize(0.85*ht);
    ptitle->SetTextColor(gStyle->GetTitleTextColor());
    ptitle->SetTextFont(gStyle->GetTitleFont());
+   if (gStyle->GetTitleFont()%10 > 2)
+      ptitle->SetTextSize(gStyle->GetTitleFontSize());
    ptitle->AddText(fH->GetTitle());
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
