@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.19 2001/09/20 17:07:23 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.20 2001/09/26 06:52:46 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1385,7 +1385,8 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
 
    if (!name && !quiet)
       Error("DynamicPathName",
-      "dll does not exist or wrong file extension (.dll)", lib);
+            "%s does not exist in %s,\nor has wrong file extension (.dll)", lib,
+            GetDynamicPath());
 
    return name;
 }
