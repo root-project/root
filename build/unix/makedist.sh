@@ -13,7 +13,7 @@ TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 rm -f ../${TARFILE}.gz
 
-if [ "x`which gtar 2>/dev/null | awk '{if ($$1~/gtar/) print $$1;}'`" != "x" ]
+if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]
 then
    TAR="gtar zcvf"
    TARFILE=$TARFILE".gz"
