@@ -868,7 +868,7 @@ fi
 if test ! "$platform" = "win32"; then
     check_library "libX11" "yes" "$x11libdir" \
 	/usr/lib /usr/X11R6/lib /usr/lib/X11 /usr/openwin/lib \
-	/usr/local/lib /usr/local/lib/X11 /use/local/X11R6/lib \
+	/usr/local/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
 	/usr/X11/lib /usr/lib/X11R5
     x11libdir=$found_dir
 
@@ -877,9 +877,9 @@ if test ! "$platform" = "win32"; then
         exit 1
     fi
 
-    check_header "X11/Xlib.h" \
+    check_header "X11/Xlib.h" "" \
 	/usr/include /usr/X11R6/include /usr/include/X11 /usr/openwin/include \
-	/usr/local/include /usr/local/include/X11 /use/local/X11R6/include \
+	/usr/local/include /usr/local/include/X11 /usr/local/X11R6/include \
 	/usr/X11/include /usr/include/X11R5
 
     if test "x$found_dir" = "x" ; then
@@ -889,7 +889,7 @@ if test ! "$platform" = "win32"; then
 
     check_library "libXpm" "$enable_shared" "$xpmlibdir" \
 	$XPM $XPM/lib /usr/lib /usr/local/lib /usr/lib/X11 \
-	/usr/local/lib/X11 /usr/X11R6/lib /use/local/X11R6/lib \
+	/usr/local/lib/X11 /usr/X11R6/lib /usr/local/X11R6/lib \
 	/usr/X11/lib
     xpmlib=$found_lib
     xpmlibdir=$found_dir
