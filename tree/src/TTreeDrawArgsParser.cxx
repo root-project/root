@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.4 2005/03/11 11:51:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.cxx,v 1.1 2005/03/17 10:43:30 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -41,6 +41,13 @@ TTreeDrawArgsParser::TTreeDrawArgsParser()
 TTreeDrawArgsParser::~TTreeDrawArgsParser()
 {
    // Destructor.
+}
+
+//______________________________________________________________________________
+Int_t TTreeDrawArgsParser::GetMaxDimension()
+{
+   // return fgMaxDimension (cannot be inline)
+   return fgMaxDimension;
 }
 
 //______________________________________________________________________________

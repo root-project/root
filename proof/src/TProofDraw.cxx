@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.9 2005/03/14 22:19:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.10 2005/03/17 10:43:30 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -138,7 +138,7 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
    PDB(kDraw,3) Info("ProcessSingle","w[%d] = %f", i, w);
 
    if (w != 0.0) {
-      Assert(fDimension <= TTreeDrawArgsParser::fgMaxDimension);
+      Assert(fDimension <= TTreeDrawArgsParser::GetMaxDimension());
       for (int j = 0; j < fDimension; j++)
          v[j] = fVar[j]->EvalInstance(i);
       if (fDimension >= 1);

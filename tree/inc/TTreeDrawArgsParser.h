@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.4 2005/03/11 11:51:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeDrawArgsParser.h,v 1.1 2005/03/17 10:43:30 rdm Exp $
 // Author: Marek Biskup   24/01/2005
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
    Bool_t         IsSpecified(int num) const;
    void           SetObjectName(const char *s) { fName = s; }
    void           SetOriginal(TObject *o) { fOriginal = o; }
-
+   static Int_t   GetMaxDimension();
 
    ClassDef(TTreeDrawArgsParser,0)
 };
