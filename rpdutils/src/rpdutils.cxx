@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.53 2004/06/28 08:59:56 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.54 2004/07/04 17:48:43 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3120,7 +3120,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
 
    // Ok, now use ruserok to find out if {host,ruser,user}
    // is trusted
-#if defined(__sgi) || defined(_AIX)
+#if defined(__sgi) || defined(_AIX) || defined(__alpha)
    if (ruserok((char*)host,rootuser,(char*)ruser,(char*)user) == 0) {
 #else
    if (ruserok(host,rootuser,ruser,user) == 0) {
