@@ -1601,7 +1601,7 @@ if test ! "x$enable_ruby" = "xno" ; then
     if test "x$arch" != "xwin32gcc"; then
         check_library_options="libruby-static msvcrt-ruby18.lib msvcrt-ruby18-static.lib"
     else
-        check_library_options="libruby.dll.a"
+        check_library_options="libruby"
     fi
     check_library $check_library_options \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
@@ -1660,6 +1660,9 @@ if test ! "x$enable_xml" = "xno" ; then
         xmlincdir=""
         enable_xml="no"
     else
+        case $arch in
+            win32gcc)  xmllib="$xmllib -liconv"              ;;
+        esac
         case $platform in
             linux)     xmllib="$xmllib -lpthread"            ;;
             solaris)   xmllib="$xmllib -liconv"              ;;
