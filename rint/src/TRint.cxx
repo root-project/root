@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.4 2001/02/22 13:32:00 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.5 2001/03/05 15:29:51 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 #include "TObjectTable.h"
 #include "TClassTable.h"
 #include "TStopwatch.h"
-#include "TCanvas.h"
 #include "TBenchmark.h"
 #include "TRint.h"
 #include "TSystem.h"
