@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -74,6 +74,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 //            = RECREATE        create a new file, if the file already
 //                              exists it will be overwritten.
 //            = UPDATE          open an existing file for writing.
+//                              if no file exists, it is created.
 //            = READ            open an existing file for reading.
 //  Use IsOpen() to check if the file is opened successfuly.
 //
@@ -224,10 +225,10 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }
