@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.2 2005/03/04 09:14:26 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TLinearFitter.cxx,v 1.3 2005/03/04 09:21:07 brun Exp $
 // Author: Anna Kreshuk 04/03/2005
 
 /*************************************************************************
@@ -835,7 +835,7 @@ void TLinearFitter::SetFormula(const char *formula)
    replacement = "[2]";
    sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
    //check in order not to replace the x in exp
-   fstring = strchr(sstring.Data(), 'x');
+   fstring = (char*)strchr(sstring.Data(), 'x');
    while (fstring){
       replacement="[0]";
       Int_t offset = fstring - sstring.Data();
@@ -843,7 +843,7 @@ void TLinearFitter::SetFormula(const char *formula)
 	 sstring.Replace(fstring - sstring.Data(), 1, replacement,3);
       else
 	 offset++;
-      fstring = strchr(sstring.Data()+offset, 'x');   
+      fstring = (char*)strchr(sstring.Data()+offset, 'x');   
    }
 
    
