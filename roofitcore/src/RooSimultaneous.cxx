@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.23 2001/11/14 18:42:38 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.24 2001/11/19 07:24:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -301,9 +301,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 				 ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet) const 
 {
   // See RooAbsPdf::plotOn() for description. Because a RooSimultaneous PDF cannot project out
-  // its index category, plotOn() will abort if this is requested without providing a projection
-  // dataset
-
+  // its index category via integration, plotOn() will abort if this is requested without 
+  // providing a projection dataset
 
   // Make list of variables to be projected
   RooArgSet projectedVars ;
@@ -312,16 +311,68 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   } else {
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
-  
-  // If it turns out we're projecting over the index category, require it be in projData
+
   if (projectedVars.find(_indexCat.arg().GetName())) {
-    if (!projData || !projData->get()->find(_indexCat.arg().GetName())) {
+    // *** Error checking for a fundamental index category ***
+  
+    // Check if we have a projection dataset
+    if (!projData) {
       cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
-	   << "requested, but index category is not provided in projected data set" << endl ;
+	   << "requested, but no projection data set provided" << endl ;
       return frame ;
     }
-  }
-  
+    
+    // Check that the provided projection dataset contains our index variable
+    if (!projData->get()->find(_indexCat.arg().GetName())) {
+      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
+	   << "requested, but projection data set doesn't contain index category" << endl ;
+      return frame ;
+    }
+
+  } else if (_indexCat.arg().isDerived()) {
+    // *** Error checking for a composite index category ***
+
+    // Determine if any servers of the index category are in the projectedVars
+    TIterator* sIter = _indexCat.arg().serverIterator() ;
+    RooAbsArg* server ;
+    RooArgSet projIdxServers ;
+    Bool_t anyServers(kFALSE) ;
+    while(server=(RooAbsArg*)sIter->Next()) {
+      if (projectedVars.find(server->GetName())) {
+	anyServers=kTRUE ;
+	projIdxServers.add(*server) ;
+      }
+    }
+    delete sIter ;
+
+    // If we project out any of the servers, we must have a projection dataset
+    if (anyServers && !projData) {
+      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over derived index category "
+	   << "requested, but no projection dataset is provided" << endl ;
+      return frame ;      
+    }
+
+    // Now check that the projection dataset contains all the 
+    // index category components we're projecting over
+
+    // Determine if all projected servers of the index category are in the projection dataset
+    sIter = projIdxServers.createIterator() ;
+    Bool_t allServers(kTRUE) ;
+    while(server=(RooAbsArg*)sIter->Next()) {
+      if (!projData->get()->find(server->GetName())) {
+	allServers=kFALSE ;
+      }
+    }
+    delete sIter ;
+    
+    if (!allServers) {      
+      cout << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over derived index category "
+	   << "requested, but projection dataset doesn't contain complete set of index category dependents" << endl ;
+      return frame ;
+    }
+
+  } 
+      
   // If OK, forward to RooAbsPf
   return RooAbsPdf::plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
 }
@@ -431,6 +482,65 @@ RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const Ro
 }
 
 
+
+
+RooPlot* RooSimultaneous::plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, const RooArgSet& sliceSet,
+					  Option_t* drawOptions, Double_t scaleFactor, ScaleType stype) const
+{
+  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
+  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
+  // by plotOn().
+
+  RooArgSet projectedVars ;
+  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  
+  // Take out the sliced variables
+  TIterator* iter = sliceSet.createIterator() ;
+  RooAbsArg* sliceArg ;
+  while(sliceArg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+    if (arg) {
+      projectedVars.remove(*arg) ;
+    } else {
+      cout << "RooSimultaneous::plotCompSliceOn(" << GetName() << ") slice variable " 
+	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+    }
+  }
+  delete iter ;
+
+  return plotCompOn(frame,wdata,compSet,drawOptions,scaleFactor,stype,&projectedVars) ;  
+}
+
+
+RooPlot* RooSimultaneous::plotCompSliceOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, const RooArgSet& sliceSet,
+					  Option_t* drawOptions,Double_t scaleFactor, ScaleType stype) const
+{
+  // Plot ourselves on given frame, as done in plotOn(), except that the variables 
+  // listed in 'sliceSet' are taken out from the default list of projected dimensions created
+  // by plotOn().
+
+  RooArgSet projectedVars ;
+  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  
+  // Take out the sliced variables
+  TIterator* iter = sliceSet.createIterator() ;
+  RooAbsArg* sliceArg ;
+  while(sliceArg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+    if (arg) {
+      projectedVars.remove(*arg) ;
+    } else {
+      cout << "RooSimultaneous::plotCompSliceOn(" << GetName() << ") slice variable " 
+	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+    }
+  }
+  delete iter ;
+
+  return plotCompOn(frame,wdata,indexLabelList,drawOptions,scaleFactor,stype,&projectedVars) ;  
+}
+
+
+
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
 					const RooDataSet *prototype, Bool_t verbose) const 
 {
@@ -445,9 +555,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars,
     RooAbsArg* server ;
     Bool_t anyServer(kFALSE), allServers(kTRUE) ;
     while(server=(RooAbsArg*)sIter->Next()) {
-      cout << "processing server " << server->GetName() << endl ;
       if (prototype->get()->find(server->GetName())) {
-	cout << "found server " << server->GetName() << endl ;
 	anyServer=kTRUE ;
       } else {
 	allServers=kFALSE ;
