@@ -91,20 +91,16 @@ PyObject* PyROOT::PropertyHolder::get( PyObject* args, PyObject* ) {
       return PyFloat_FromDouble( *((double*)((int)obj+offset)) );
    }
    case Utility::kIntPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-         *((int**)((int)obj+offset)), 1 );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((int**)((int)obj+offset)) );
    }
    case Utility::kLongPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-         *((long**)((int)obj+offset)), 1 );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((long**)((int)obj+offset)) );
    }
    case Utility::kFloatPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-         *((float**)((int)obj+offset)), 1 );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((float**)((int)obj+offset)) );
    }
    case Utility::kDoublePtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
-         *((double**)((int)obj+offset)), 1 );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((double**)((int)obj+offset)) );
    }
    default:
       PyErr_SetString( PyExc_RuntimeError, "sorry this is experimental ... stay tuned" );

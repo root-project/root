@@ -1,9 +1,12 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.3 2004/08/04 20:46:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.cxx,v 1.4 2004/08/04 21:02:39 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "PyBufferFactory.h"
+
+// Standard
+#include <limits.h>
 
 
 //- data ------------------------------------------------------------------------
@@ -26,8 +29,14 @@ namespace {
    }
 
    PyObject* long_buffer_item( PyObject* self, int idx ) {
+      if ( idx < 0 || idx >= long_buffer_length( self ) ) {
+         PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
+         return 0;
+      }
+
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
+
       return PyLong_FromLong( *((long*)buf + idx) );
    }
 
@@ -36,8 +45,14 @@ namespace {
    }
 
    PyObject* int_buffer_item( PyObject* self, int idx ) {
+      if ( idx < 0 || idx >= int_buffer_length( self ) ) {
+         PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
+         return 0;
+      }
+
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
+
       return PyInt_FromLong( *((int*)buf + idx) );
    }
 
@@ -46,8 +61,14 @@ namespace {
    }
 
    PyObject* double_buffer_item( PyObject* self, int idx ) {
+      if ( idx < 0 || idx >= double_buffer_length( self ) ) {
+         PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
+         return 0;
+      }
+
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
+
       return PyFloat_FromDouble( *((double*)buf + idx) );
    }
 
@@ -56,8 +77,14 @@ namespace {
    }
 
    PyObject* float_buffer_item( PyObject* self, int idx ) {
+      if ( idx < 0 || idx >= float_buffer_length( self ) ) {
+         PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
+         return 0;
+      }
+
       const char* buf = 0;
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
+
       return PyFloat_FromDouble( *((float*)buf + idx) );
    }
 
@@ -103,28 +130,32 @@ PyROOT::PyBufferFactory::~PyBufferFactory() {
 
 //- public members --------------------------------------------------------------
 PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( long* address, int size ) {
-   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size*sizeof(long) );
+   size = size < 0 ? int(INT_MAX/double(sizeof(long)))*sizeof(long) : size*sizeof(long);
+   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyLongBuffer_Type );
    buf->ob_type = &PyLongBuffer_Type;
    return buf;
 }
 
 PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( int* address, int size ) {
-   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size*sizeof(int) );
+   size = size < 0 ? int(INT_MAX/double(sizeof(int)))*sizeof(int) : size*sizeof(int);
+   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyIntBuffer_Type );
    buf->ob_type = &PyIntBuffer_Type;
    return buf;
 }
 
 PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( double* address, int size ) {
-   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size*sizeof(double) );
+   size = size < 0 ? int(INT_MAX/double(sizeof(double)))*sizeof(double) : size*sizeof(double);
+   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyDoubleBuffer_Type );
    buf->ob_type = &PyDoubleBuffer_Type;
    return buf;
 }
 
 PyObject* PyROOT::PyBufferFactory::PyBuffer_FromMemory( float* address, int size ) {
-   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size*sizeof(float) );
+   size = size < 0 ? int(INT_MAX/double(sizeof(float)))*sizeof(float) : size*sizeof(float);
+   PyObject* buf = PyBuffer_FromReadWriteMemory( (void*)address, size );
    Py_INCREF( &PyFloatBuffer_Type );
    buf->ob_type = &PyFloatBuffer_Type;
    return buf;

@@ -1,8 +1,9 @@
-// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: PyBufferFactory.h,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_PYBUFFERFACTORY_H
 #define PYROOT_PYBUFFERFACTORY_H
+
 
 namespace PyROOT {
 
@@ -16,10 +17,10 @@ class PyBufferFactory {
 public:
    static PyBufferFactory* getInstance();
 
-   PyObject* PyBuffer_FromMemory( long* buf, int size );
-   PyObject* PyBuffer_FromMemory( int* buf, int size );
-   PyObject* PyBuffer_FromMemory( double* buf, int size );
-   PyObject* PyBuffer_FromMemory( float* buf, int size );
+   PyObject* PyBuffer_FromMemory( long* buf, int size = -1 );
+   PyObject* PyBuffer_FromMemory( int* buf, int size = -1 );
+   PyObject* PyBuffer_FromMemory( double* buf, int size = -1 );
+   PyObject* PyBuffer_FromMemory( float* buf, int size = -1 );
 
 protected:
    PyBufferFactory();

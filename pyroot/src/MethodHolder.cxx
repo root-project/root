@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.17 2004/08/11 20:12:03 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.18 2004/08/12 20:55:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -44,6 +44,24 @@ namespace {
       func->SetArg( PyLong_AsLong( obj ) );
       if ( PyErr_Occurred() )
          return false;
+      return true;
+   }
+
+   bool longlong_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
+   // get value
+      long long ll = PyLong_AsLongLong(	obj );
+      if ( PyErr_Occurred() )
+         return false;
+
+   // create memory if necessary
+      if ( ! buf )
+         buf = reinterpret_cast< void* >( new long long( 0 ) );
+
+   // copy new value
+      *(reinterpret_cast< long long* >( buf )) = ll;
+
+   // set value and declare success
+      func->SetArg( (long) buf );
       return true;
    }
 
@@ -224,7 +242,7 @@ namespace {
       ncp_t( "unsigned int",       &long_convert                      ),
       ncp_t( "long",               &long_convert                      ),
       ncp_t( "unsigned long",      &long_convert                      ),
-      ncp_t( "long long",          &long_convert                      ),
+      ncp_t( "long long",          &longlong_convert                  ),
       ncp_t( "float",              &double_convert                    ),
       ncp_t( "double",             &double_convert                    ),
       ncp_t( "void",               &void_convert                      ),
@@ -537,11 +555,15 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
    case Utility::kInt:
    case Utility::kUInt:
    case Utility::kLong:
-   case Utility::kULong:
-   case Utility::kLongLong: {
+   case Utility::kULong: {
       long returnValue = 0;
       execute( self, returnValue );
       return PyLong_FromLong( returnValue );
+   }
+   case Utility::kLongLong: {
+      long returnValue = 0;
+      execute( self, returnValue );
+      return PyLong_FromLongLong( *(reinterpret_cast< long long* >( returnValue )) );
    }
    case Utility::kVoid: {
       execute( self );
@@ -607,19 +629,19 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
       if ( address ) {
          switch ( m_returnType ) {
          case Utility::kLongPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (long*)address, 1 );
+            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (long*)address );
          }
          case Utility::kIntPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (int*)address, 1 );
+            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (int*)address );
          }
          case Utility::kDoublePtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (double*)address, 1 );
+            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (double*)address );
          }
          case Utility::kFloatPtr: {
-            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (float*)address, 1 );
+            return PyBufferFactory::getInstance()->PyBuffer_FromMemory( (float*)address );
          }
          case Utility::kVoidPtr: {
-            return PyInt_FromLong( address );
+            return PyLong_FromVoidPtr( (void*) address );
          }
          default:
             break;

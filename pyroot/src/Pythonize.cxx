@@ -473,7 +473,7 @@ namespace {
 
       if ( PyTuple_GET_SIZE( aTuple ) == 1 ) {
       // no specialized sort, use ROOT one
-         return PyObject_CallMethod( PyTuple_GET_ITEM( aTuple, 0 ), "Sort", "" );
+         return PyObject_CallMethod( self, "Sort", "" );
       }
       else {
       // sort in a python list copy
@@ -575,29 +575,90 @@ namespace {
    }
 
 
+//- TTree behaviour ------------------------------------------------------------
+   PyObject* treeGetAttr( PyObject* /* None */, PyObject* aTuple ) {
+      if ( checkNArgs( aTuple, 2, "__getattr__" ) == false )
+         return 0;
+
+   // allow access to leaves as if they are data members
+      PyObject* self = PyTuple_GET_ITEM( aTuple, 0 );
+      PyObject* name = PyTuple_GET_ITEM( aTuple, 1 );
+
+      PyObject* leaf = PyObject_CallMethod( self, "GetLeaf", "O", name );
+      if ( ! leaf )
+         return 0;
+
+      if ( leaf != Py_None ) {
+         PyObject* value = 0;
+
+      // found a leaf, extract value if just one, or wrap buffer if more
+         PyObject* lcount = PyObject_CallMethod( leaf, "GetLeafCount", "" );
+
+         if ( lcount == Py_None ) {
+            value = PyObject_CallMethod( leaf, "GetValue", "" );
+         }
+         else {
+            PyObject* len = PyObject_CallMethod( leaf, "GetNdata", "" );
+            int nlen = PyInt_AsLong( len );
+            Py_DECREF( len );
+
+            PyObject* ptr = PyObject_CallMethod( leaf, "GetValuePointer", "" );
+            void* arr = PyLong_AsVoidPtr( ptr );
+            Py_DECREF( ptr );
+
+            PyObject* tname = PyObject_CallMethod( leaf, "GetTypeName", "" );
+            std::string stname( PyString_AS_STRING( tname ) );
+
+            Utility::EDataType eType = Utility::effectiveType( stname );
+            if ( eType == Utility::kLong )
+               value = PyBufferFactory::getInstance()->PyBuffer_FromMemory( (long*) arr, nlen );
+            if ( eType == Utility::kInt )
+               value = PyBufferFactory::getInstance()->PyBuffer_FromMemory( (int*) arr, nlen );
+            if ( eType == Utility::kDouble )
+               value = PyBufferFactory::getInstance()->PyBuffer_FromMemory( (double*) arr, nlen );
+            if ( eType == Utility::kFloat )
+               value = PyBufferFactory::getInstance()->PyBuffer_FromMemory( (float*) arr, nlen );
+         }
+
+         Py_DECREF( lcount );
+         Py_DECREF( leaf );
+
+         PyObject_SetAttr( self, name, value );
+         return value;
+      }
+
+   // confused
+      Py_DECREF( leaf );
+      char txt[ 256 ];
+      sprintf( txt, "no such attribute \'%s\'", PyString_AsString( name ) );
+      PyErr_SetString( PyExc_AttributeError, txt );
+      return 0;
+   }
+
+
 //- TF1 behaviour --------------------------------------------------------------
    std::map< int, std::pair< PyObject*, int > > s_PyObjectCallbacks;
 
    int pyFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash ) {
+   // retrieve function information
       std::pair< PyObject*, int > info = s_PyObjectCallbacks[ res->tagnum ];
       PyObject* pyfunc = info.first;
 
-      PyObject* arg1 = PyTuple_New( 4 );
-      double* buf = (double*)G__int(libp->para[0]);
-      for ( int i = 0; i < 4; ++i ) {
-         PyTuple_SET_ITEM( arg1, i, PyFloat_FromDouble( buf[i] ) );
-      }
+   // prepare arguments
+      PyObject* arg1 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         (double*)G__int(libp->para[0]), 4 );
 
-      PyObject* arg2 = PyTuple_New( info.second );
-      buf = (double*)G__int(libp->para[1]);
-      for ( int i = 0; i < info.second; ++i ) {
-         PyTuple_SET_ITEM( arg2, i, PyFloat_FromDouble( buf[i] ) );
-      }
+      PyObject* arg2 = PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         (double*)G__int(libp->para[1]), info.second );
 
+   // actual call
       PyObject* result = PyObject_CallFunction( pyfunc, "OO", arg1, arg2 );
+
+   // destroy argument buffer wrappers
       Py_DECREF( arg1 );
       Py_DECREF( arg2 );
 
+   // translate result, throw if an error has occurred
       double d = 0.;
       if ( ! result ) {
          PyErr_Print();
@@ -772,6 +833,11 @@ bool PyROOT::pythonize( PyObject* pyclass, const std::string& name ) {
       Utility::addToClass( "next",     iterNext, pyclass );
 
       return true;
+   }
+
+   if ( name == "TTree" ) {
+   // allow direct browsing of the tree
+      Utility::addToClass( "__getattr__", treeGetAttr, pyclass );
    }
 
    if ( name == "TF1" ) {
