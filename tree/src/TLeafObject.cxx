@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.9 2001/04/11 17:26:44 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.10 2001/04/27 17:29:36 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -160,7 +160,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
       } else {
          //fake class has no Streamer
          if (!TestBit(kWarn)) {
-            Warning("TLeafObject::ReadBasket","%s::Streamer not available, using TClass::ReadBuffer instead",fClass->GetName());
+            Warning("ReadBasket","%s::Streamer not available, using TClass::ReadBuffer instead",fClass->GetName());
             SetBit(kWarn);
          }
          fClass->ReadBuffer(b,object);

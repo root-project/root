@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.42 2001/04/24 14:31:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.43 2001/04/24 14:40:31 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -858,7 +858,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         m = c->GetClassMethod(faddr);
+         m = c->GetMethod(method,params);
          if (m) return m;
       }
    }
@@ -894,7 +894,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto)
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         m = c->GetClassMethod(faddr);
+         m = c->GetMethodWithPrototype(method,proto);
          if (m) return m;
       }
    }

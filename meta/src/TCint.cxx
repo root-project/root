@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.14 2001/04/10 08:24:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.15 2001/04/20 17:41:04 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -701,7 +701,7 @@ const char *TCint::TypeName(const char *typeDesc)
    }
 
    int l = strlen(t);
-   while (l > 0 && t[l-1] == '*') t[--l] = 0;
+   while (l > 0 && (t[l-1] == '*' || t[l-1] == '&') ) t[--l] = 0;
 
    return t;
 }
