@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.60 2004/09/22 14:33:04 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.61 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -194,6 +194,14 @@ extern "C" {
    #include "rsadef.h"
    #include "rsalib.h"
 }
+//
+// To improve error logging for UsrPwd on the client side
+static ERootdErrors kUsrPwdErr[4][4] = {
+   {kErrNoPasswd, kErrNoPassHEquNoFiles, kErrNoPassHEquBadFiles, kErrNoPassHEquFailed},
+   {kErrBadPasswd, kErrBadPassHEquNoFiles, kErrBadPassHEquBadFiles, kErrBadPassHEquFailed},
+   {kErrBadRtag, kErrBadRtagHEquNoFiles, kErrBadRtagHEquBadFiles, kErrBadRtagHEquFailed},
+   {kErrBadPwdFile, kErrBadPwdFileHEquNoFiles, kErrBadPwdFileHEquBadFiles,
+    kErrBadPwdFileHEquFailed}};
 
 //--- Machine specific routines ------------------------------------------------
 
@@ -452,12 +460,12 @@ char *rpdcrypt(const char *pw, const char *sa)
 
    int i = 0;
    for (i=0; i<np; i++) {
-      // We use in turn all the salt bits; and re-use 
-      // if they are not enough 
+      // We use in turn all the salt bits; and re-use
+      // if they are not enough
       int ks = i%ns;
       tbuf[i] = pw[i]^sa[ks];
       // Convert the result in two hexs: the first ...
-      int j = 0xF & tbuf[i];      
+      int j = 0xF & tbuf[i];
       if (j < 10)
          c = 48 + j;
       else
@@ -465,7 +473,7 @@ char *rpdcrypt(const char *pw, const char *sa)
       int k = 2*i;
       buf[k] = c;
       // .. the second
-      j = (0xF0 & tbuf[i]) >> 4;      
+      j = (0xF0 & tbuf[i]) >> 4;
       if (j < 10)
          c = 48 + j;
       else
@@ -509,7 +517,7 @@ void RpdSetMethInitFlag(int methinit)
 const char *RpdGetKeyRoot()
 {
    // Return pointer to the root string for key files
-   // Used by proofd. 
+   // Used by proofd.
    return (const char *)gRpdKeyRoot.c_str();
 }
 
@@ -835,7 +843,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
       int rs = 0;
       while ((rs = RpdSavePubKey(gPubKey, retval, gUser)) == 2 && ntry--) {
          // We are here if a file with the same name exists already
-         // and can not be deleted: we shift the offset with a 
+         // and can not be deleted: we shift the offset with a
          // dummy entry
          char ltmp[256];
          SPrintf(ltmp, 256,
@@ -868,7 +876,7 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
             ErrorInfo("RpdUpdateAuthTab: token: '%s'", CryptToken);
          // Save it for later use in kSOCKD servers
          gCryptToken = std::string(CryptToken);
-         
+
          // adds line
          while (write(itab, fbuf, strlen(fbuf)) < 0 && GetErrno() == EINTR)
             ResetErrno();
@@ -901,11 +909,11 @@ int RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck)
 int RpdCleanupAuthTab(const char *crypttoken)
 {
    // De-activates entry related to token with crypt crypttoken.
-   // Returns: 0 if successful 
+   // Returns: 0 if successful
    //         -4 if entry not found or inactive
    //         -1 problems opening auth tab file
    //         -2 problems locking auth tab file
-   //         -3 auth tab file does not exists 
+   //         -3 auth tab file does not exists
 
    int retval = -4;
 
@@ -953,7 +961,7 @@ int RpdCleanupAuthTab(const char *crypttoken)
          ErrorInfo("RpdCleanupAuthTab: pr:%d pw:%d (line:%s) (pId:%d)",
                     pr, pw, line, gParentId);
 
-      char dum1[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN], 
+      char dum1[kMAXPATHLEN], host[kMAXUSERLEN], user[kMAXUSERLEN],
            ctkn[30], dum2[30];
       nw = sscanf(line, "%d %d %d %d %s %s %s %s %s", &lsec, &act, &pkey,
                   &remid, host, user, ctkn, dum1, dum2);
@@ -979,7 +987,7 @@ int RpdCleanupAuthTab(const char *crypttoken)
             RpdDeleteKeyFile(pw);
 
 #ifdef R__GLBS
-            if (lsec == 3) { 
+            if (lsec == 3) {
                int shmid = atoi(ctkn);
                struct shmid_ds shm_ds;
                if (shmctl(shmid, IPC_RMID, &shm_ds) == -1) {
@@ -1744,7 +1752,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
       // Open file
       FILE *ftab = fopen(theDaemonRc.c_str(), "r");
       if (ftab == 0) {
-         if (GetErrno() == ENOENT) 
+         if (GetErrno() == ENOENT)
             ErrorInfo("RpdCheckAuthAllow: file %s does not exist",
                       theDaemonRc.c_str());
          else
@@ -2240,7 +2248,7 @@ int RpdSshAuth(const char *sstr)
                ErrorInfo("RpdSshAuth: failure notification may have"
                          " failed ");
          } else {
-            if (GetErrno() == ENOENT) 
+            if (GetErrno() == ENOENT)
                ErrorInfo("RpdSshAuth: pipe file %s does not exists",
                           PipeFile.c_str());
             else
@@ -2508,7 +2516,7 @@ int RpdSshAuth(const char *sstr)
             if (GetErrno() != ENOENT)
                ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                          AuthFile,GetErrno());
-         if (AuthFile) 
+         if (AuthFile)
             delete[] AuthFile;
          // Set to Auth failed
          auth = 0;
@@ -2520,7 +2528,7 @@ int RpdSshAuth(const char *sstr)
             if (GetErrno() != ENOENT)
                ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                          AuthFile,GetErrno());
-         if (AuthFile) 
+         if (AuthFile)
             delete[] AuthFile;
          // Set to Auth failed
          auth = 0;
@@ -2587,7 +2595,7 @@ int RpdSshAuth(const char *sstr)
                if (GetErrno() != ENOENT)
                   ErrorInfo("RpdSshAuth: cannot unlink file %s (errno: %d)",
                             AuthFile,GetErrno());
-            if (AuthFile) 
+            if (AuthFile)
                delete[] AuthFile;
             return auth;
          }
@@ -3337,33 +3345,49 @@ int RpdSRPUser(const char *sstr)
 }
 
 //______________________________________________________________________________
-int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
+int RpdCheckHostsEquiv(const char *host, const char *ruser,
+                       const char *user, int &errout)
 {
    // Check if the requesting {host,user} can be granted immediate
-   // login on the base of the information found in /etc/hosts.equiv .
-   // and $HOME/.rhosts. The two files must trustable, i.e. owned and
-   // modifiable only by 'root' and by 'user', respectively.
-   // Returns 1 in case access can be granted, 0 in any other case.
+   // login on the base of the information found in /etc/hosts.equiv
+   // and/or $HOME/.rhosts. The two files must be trustable, i.e. owned
+   // and modifiable only by 'root' and by 'user', respectively (0600).
+   // Returns 1 in case access can be granted, 0 in any other case
+   // (errout contains a code for error logging on the client side)
+   //
+   // NB: entries granting access in one of the two files cannot be
+   //     overriden in the other file; so, system admins cannot close
+   //     access from a host and user cannot stop access to their
+   //     account if the administrator has decided so; as an example,
+   //     if this entry is found in /etc/hosts.equiv
+   //
+   //     remote.host.dom auser
+   //
+   //     (allowing user named 'auser' from host 'remote.host.dom' to
+   //     login to any non-root local account without specifying a
+   //     password) the following entries in $home/.rhosts are ignored
+   //
+   //     remote.host.dom -auser
+   //     -remote.host.dom
+   //
+   //     and access to 'auser' is always granted. This is a "feature"
+   //     of ruserok.
+   //
 
    int rc = 0;
-   int irhsv = 0;
-   int ihesv = 0;
-
-   char hostsequiv[20] = { "/etc/hosts.equiv" };
-   char hostsequsv[20] = { "/etc/hosts.equiv.sv" };
-
-   // Local file
-   char rhosts[kMAXPATHLEN];
-   char rhossv[kMAXPATHLEN];
-   struct passwd *pw = getpwnam(user);
-   sprintf(rhosts, "%s/.rhosts", pw->pw_dir);
 
    // Effective uid
    int rootuser = 0;
    if (!geteuid() && !getegid())
       rootuser = 1;
 
-   // Check /etc/hosts.equiv if non-root
+   // Check the files only if i) at least one exists; ii) those existing
+   // have the right permission settings
+   bool badfiles = 0;
+   int  nfiles = 0;
+
+   // Check system file /etc/hosts.equiv if non-root
+   char hostsequiv[20] = { "/etc/hosts.equiv" };
    if (!rootuser) {
 
       // Get info about the file ...
@@ -3372,10 +3396,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
          if (GetErrno() != ENOENT) {
             ErrorInfo("RpdCheckHostsEquiv: cannot stat /etc/hosts.equiv"
                       " (errno: %d)",GetErrno());
-            if (rename(hostsequiv,hostsequsv) == -1)
-               ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s",
-                      " (errno: %d)",hostsequiv,hostsequsv,GetErrno());
-            ihesv = 1;
+            badfiles = 1;
          } else
             if (gDebug > 1)
                ErrorInfo("RpdCheckHostsEquiv: %s does not exist",
@@ -3387,9 +3408,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
             if (gDebug > 0)
                ErrorInfo("RpdCheckHostsEquiv: /etc/hosts.equiv not owned by"
                          " system (uid: %d, gid: %d)",st.st_uid,st.st_gid);
-            rename(hostsequiv,hostsequsv);
-            ihesv = 1;
-
+            badfiles = 1;
          } else {
 
             // Require WRITE permission only for owner
@@ -3399,45 +3418,75 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
                             " permission on /etc/hosts.equiv: do not trust"
                             " it (g: %d, o: %d)",
                             (st.st_mode & S_IWGRP),(st.st_mode & S_IWOTH));
-               if (rename(hostsequiv,hostsequsv) == -1)
-                  ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s",
-                            " (errno: %d)",hostsequiv,hostsequsv,GetErrno());
-               ihesv = 1;
-            }
+               badfiles = 1;
+            } else
+               // Good file
+               nfiles++;
          }
       }
    }
 
-   // Check the $HOME/.rhosts file ... ownership and protections
-   struct stat st;
-   if (stat(rhosts,&st) == -1) {
-      if (GetErrno() != ENOENT) {
-         ErrorInfo("RpdCheckHostsEquiv: cannot stat $HOME/.rhosts"
-                " (errno: %d)",GetErrno());
-         sprintf(rhossv, "%s.sv", rhosts);
-         if (rename(rhosts,rhossv) == -1)
-            ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s"
-                " (errno: %d)",rhosts,rhossv,GetErrno());
-         irhsv = 1;
-      } else 
-         ErrorInfo("RpdCheckHostsEquiv: %s/.rhosts does not exist",
-                   pw->pw_dir);
+   // Check local file
+   char rhosts[kMAXPATHLEN] = {0};
+   if (!badfiles) {
 
-   } else {
-
-      // Only use file when its access rights are 0600
-      if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
-          (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+      struct passwd *pw = getpwnam(user);
+      if (pw) {
+         int ldir = strlen(pw->pw_dir);
+         ldir = (ldir > kMAXPATHLEN - 9) ? (kMAXPATHLEN - 9) : ldir;
+         memcpy(rhosts,pw->pw_dir,ldir);
+         memcpy(rhosts+ldir,"/.rhosts",8);
+         rhosts[ldir+8] = 0;
+         if (gDebug > 2)
+            ErrorInfo("RpdCheckHostsEquiv: checking for user file %s ...",rhosts);
+      } else {
          if (gDebug > 0)
-            ErrorInfo("RpdCheckHostsEquiv: unsecure permission setting found"
-                      " for $HOME/.rhosts: cannot use it (mode: 0%o)",
-                      (st.st_mode & 0777));
-         if (rename(rhosts,rhossv) == -1)
-            ErrorInfo("RpdCheckHostsEquiv: error renaming %s to %s"
-                " (errno: %d)",rhosts,rhossv,GetErrno());
-         irhsv = 1;
-
+            ErrorInfo("RpdCheckHostsEquiv: cannot get user info with getpwnam"
+                   " (errno: %d)",GetErrno());
+         badfiles = 1;
       }
+
+      if (!badfiles) {
+         // Check the $HOME/.rhosts file ... ownership and protections
+         struct stat st;
+         if (stat(rhosts,&st) == -1) {
+            if (GetErrno() != ENOENT) {
+               ErrorInfo("RpdCheckHostsEquiv: cannot stat $HOME/.rhosts"
+                      " (errno: %d)",GetErrno());
+               badfiles = 1;
+            } else
+               ErrorInfo("RpdCheckHostsEquiv: %s/.rhosts does not exist",
+                         pw->pw_dir);
+         } else {
+
+            // Only use file when its access rights are 0600
+            if (!S_ISREG(st.st_mode) || S_ISDIR(st.st_mode) ||
+                (st.st_mode & 0777) != (S_IRUSR | S_IWUSR)) {
+               if (gDebug > 0)
+                  ErrorInfo("RpdCheckHostsEquiv: unsecure permission setting"
+                            " found for $HOME/.rhosts: 0%o (must be 0600)",
+                            (st.st_mode & 0777));
+               badfiles = 1;
+            } else
+               // Good file
+               nfiles++;
+         }
+      }
+   }
+
+   // if files are not available or have wrong permissions or are
+   // not accessible, give up
+   if (!nfiles) {
+      if (gDebug > 0)
+         ErrorInfo("RpdCheckHostsEquiv: no files to check");
+      errout = 1;
+      if (badfiles) {
+         if (gDebug > 0)
+            ErrorInfo("RpdCheckHostsEquiv: config files cannot be used"
+                      " (check permissions)");
+         errout = 2;
+      }
+      return rc;
    }
 
    // Ok, now use ruserok to find out if {host,ruser,user}
@@ -3451,16 +3500,12 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser, const char *user)
          ErrorInfo("RpdCheckHostsEquiv: remote user %s authorized to"
                    " access %s's area",ruser,user);
       rc = 1;
-   } else
+   } else {
       if (gDebug > 0)
          ErrorInfo("RpdCheckHostsEquiv: access denied on the base of"
                    " %s or %s content",hostsequiv,rhosts);
-
-   // restore original files
-   if (ihesv)
-      rename(hostsequsv,hostsequiv);
-   if (irhsv)
-      rename(rhossv,rhosts);
+      errout = 3;
+   }
 
    return rc;
 }
@@ -3541,7 +3586,7 @@ int RpdCheckSpecialPass(const char *passwd)
 }
 
 //______________________________________________________________________________
-int RpdPass(const char *pass)
+int RpdPass(const char *pass, int errheq)
 {
    // Check user's password.
 
@@ -3561,30 +3606,30 @@ int RpdPass(const char *pass)
       ErrorInfo("RpdPass: Enter");
 
    int auth = 0;
+   errheq = (errheq > -1 && errheq < 4) ? errheq : 0;
    if (!*gUser) {
-      NetSend(kErrFatal, kROOTD_ERR);
+      NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: user needs to be specified first");
       return auth;
    }
 
    if (!pass) {
-      NetSend(kErrFatal, kROOTD_ERR);
+      NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: no password specified");
       return auth;
    }
-
    int n = strlen(pass);
    // Passwd length should be in the correct range ...
    if (!n) {
-      NetSend(kErrBadPasswd, kROOTD_ERR);
+      NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: null passwd not allowed");
       return auth;
    }
    if (n > (int) sizeof(passwd)) {
-      NetSend(kErrBadPasswd, kROOTD_ERR);
+      NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: passwd too long");
       return auth;
@@ -3653,9 +3698,8 @@ int RpdPass(const char *pass)
       pass_crypt = passwd;
 #endif
       n = strlen(passw);
-
       if (strncmp(pass_crypt, passw, n + 1) != 0) {
-         NetSend(kErrBadPasswd, kROOTD_ERR);
+         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
          if (gDebug > 0)
             ErrorInfo("RpdPass: invalid password for user %s", gUser);
          return auth;
@@ -4488,8 +4532,9 @@ int RpdUser(const char *sstr)
    }
 
    // Check /etc/hosts.equiv and/or $HOME/.rhosts
+   int errheq = 0;
    if (gCheckHostsEquiv && ruser && strlen(ruser)) {
-      if (RpdCheckHostsEquiv(gOpenHost.c_str(),ruser,user)) {
+      if (RpdCheckHostsEquiv(gOpenHost.c_str(),ruser,user,errheq)) {
          auth = 3;
          strcpy(gUser, user);
          return auth;
@@ -4509,6 +4554,7 @@ int RpdUser(const char *sstr)
    // we cannot authenticate users ...)
    //   char *passw = 0;
    char *passw = specpass;
+   int errrdp = 0;
    if (gAnon == 0) {
 
       // Try if special password is given via .rootdpass
@@ -4526,11 +4572,13 @@ int RpdUser(const char *sstr)
                     passw = specpass;
                 close(fid);
              }
-         } else
+         } else {
             if (gDebug > 0)
                ErrorInfo("RpdUser: pass file %s:"
                          " wrong permissions 0%o (should be 0600)",
                           rootdpass, (st.st_mode & 0777));
+            errrdp = 3;
+         }
       } else
          if (gDebug > 0)
             ErrorInfo("RpdUser: cannot stat pass file"
@@ -4557,7 +4605,7 @@ int RpdUser(const char *sstr)
 #endif
          // Check if successful
          if (strlen(passw) == 0 || !strcmp(passw, "x")) {
-            NetSend(kErrNotAllowed, kROOTD_ERR);
+            NetSend(kUsrPwdErr[errrdp][errheq], kROOTD_ERR);
             ErrorInfo("RpdUser: passwd hash not available for user %s", user);
             ErrorInfo
                 ("RpdUser: user %s cannot be authenticated with this method",
@@ -4685,17 +4733,16 @@ int RpdUser(const char *sstr)
 
          // Check first that there is enough space for the tag
          int plen = lpwd;
-         if (plen > 9) {
-            if (passwd[plen-1] == '#' && passwd[plen-10] == '#') {
-               if (strncmp(ctag,&passwd[plen-10],10)) {
-                  // The tag does not match; failure
-                  NetSend(kErrBadRtag, kROOTD_ERR);
-                  ErrorInfo("RpdUser: rndm tag mis-match"
-                            " (%s vs %s) - Failure",&passwd[plen-10],ctag);
-                  if (passwd)
-                     delete[] passwd;
-                  return auth;
-               }
+         if (plen > 9 &&
+             passwd[plen-1] == '#' && passwd[plen-10] == '#') {
+            if (strncmp(ctag,&passwd[plen-10],10)) {
+               // The tag does not match; failure
+               NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+               ErrorInfo("RpdUser: rndm tag mis-match"
+                         " (%s vs %s) - Failure",&passwd[plen-10],ctag);
+               if (passwd)
+                  delete[] passwd;
+               return auth;
             }
 
             // Tag ok: drop it
@@ -4704,7 +4751,7 @@ int RpdUser(const char *sstr)
 
          } else {
             // The tag is not there or incomplete; failure
-            NetSend(kErrBadRtag, kROOTD_ERR);
+            NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
             ErrorInfo("RpdUser: rndm tag missing or incomplete"
                       " (pw length: %d) - Failure", plen);
             if (passwd)
@@ -4736,7 +4783,7 @@ int RpdUser(const char *sstr)
    }
 
    // Check the passwd and login if ok ...
-   auth = RpdPass(passwd);
+   auth = RpdPass(passwd,errheq);
 
    // Erase memory used for password
    passwd = (char *)rpdmemset((volatile void *)passwd,0,lpwd);
@@ -4920,7 +4967,7 @@ int RpdGetRSAKeys(const char *pubkey, int Opt)
       keytype = gRSAKey;
 
       // The format of keytype 1 is #<hex_n>#<hex_d>#
-      char *pd1 = 0, *pd2 = 0, *pd3 = 0; 
+      char *pd1 = 0, *pd2 = 0, *pd3 = 0;
       pd1 = strstr(theKey, "#");
       if (pd1) pd2 = strstr(pd1 + 1, "#");
       if (pd2) pd3 = strstr(pd2 + 1, "#");
@@ -5008,7 +5055,7 @@ int RpdSavePubKey(const char *PubKey, int OffSet, char *user)
          return 2;
    }
 
-   // Create file 
+   // Create file
    int ipuk = -1;
    ipuk = open(pukfile.c_str(), O_WRONLY | O_CREAT, 0600);
    if (ipuk == -1) {
@@ -6046,7 +6093,7 @@ int RpdInitSession(int servtype, std::string &user,
       // Notify authentication to client ...
       NetSend(auth, kROOTD_AUTH);
       // Send also new offset if it changed ...
-      if (auth == 2) 
+      if (auth == 2)
          NetSend(gOffSet, kROOTD_AUTH);
       if (gDebug > 0)
          ErrorInfo("RpdInitSession: User '%s' authenticated", gUser);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.63 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.64 2004/10/15 17:08:10 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -100,6 +100,7 @@ SecureAuth_t   TAuthenticate::fgSecAuthHook;
 Bool_t         TAuthenticate::fgSRPPwd;
 TString        TAuthenticate::fgUser;
 Bool_t         TAuthenticate::fgUsrPwdCrypt;
+Int_t          TAuthenticate::fgLastError = -1;
 
 // Protocol changes (this was in TNetFile before)
 // 6 -> 7: added support for ReOpen(), kROOTD_BYE and kROOTD_PROTOCOL2
@@ -578,6 +579,7 @@ Bool_t TAuthenticate::Authenticate()
                  NoSupport);
          Info("Authenticate",
               "failure: list of attempted methods: %s", TriedMeth);
+         AuthError("Authenticate",-1);
          fSocket->Send("0", kROOTD_BYE);
          return kFALSE;
       } else {
@@ -594,6 +596,7 @@ Bool_t TAuthenticate::Authenticate()
                     NoSupport);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            AuthError("Authenticate",-1);
             fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          }
@@ -604,10 +607,10 @@ Bool_t TAuthenticate::Authenticate()
             Info("Authenticate",
                  "after failed attempt: kind= %d, stat= %d", kind, stat);
          if (kind == kROOTD_ERR) {
-            if (gDebug > 0)
-               AuthError("Authenticate", stat);
+            AuthError("Authenticate", stat);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            AuthError("Authenticate",-1);
             fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          } else if (kind == kROOTD_NEGOTIA) {
@@ -637,6 +640,7 @@ Bool_t TAuthenticate::Authenticate()
                        " by remote server version",NoSupport);
                Info("Authenticate",
                     "failure: list of attempted methods: %s", TriedMeth);
+               AuthError("Authenticate",-1);
                return kFALSE;
             }
             // If no more local methods, exit
@@ -647,6 +651,7 @@ Bool_t TAuthenticate::Authenticate()
                        " by remote server version",NoSupport);
                Info("Authenticate",
                     "failure: list of attempted methods: %s", TriedMeth);
+               AuthError("Authenticate",-1);
                fSocket->Send("0", kROOTD_BYE);
                return kFALSE;
             }
@@ -673,15 +678,17 @@ Bool_t TAuthenticate::Authenticate()
                     " remote server version",NoSupport);
             Info("Authenticate",
                  "failure: list of attempted methods: %s", TriedMeth);
+            AuthError("Authenticate",-1);
             fSocket->Send("0", kROOTD_BYE);
             return kFALSE;
          } else                 // unknown message code at this stage
-         if (strlen(NoSupport) > 0)
+         if (strlen(NoSupport) > 0) 
             Info("Authenticate",
                  "attempted methods %s are not supported by remote server version",
                  NoSupport);
-            Info("Authenticate",
-                 "failure: list of attempted methods: %s", TriedMeth);
+         Info("Authenticate",
+              "failure: list of attempted methods: %s", TriedMeth);
+         AuthError("Authenticate",-1);
          return kFALSE;
       }
    }
@@ -1356,7 +1363,27 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   ::Error(Form("TAuthenticate::%s", where), gRootdErrStr[err]);
+   Int_t erc = err;
+   Bool_t forceprint = kFALSE;
+   TString lasterr = "";
+   if (err == -1) {
+      forceprint = kTRUE;
+      erc = fgLastError;
+      lasterr = "(last error only; re-run with gDebug > 0 for more details)";
+   }
+
+   if (erc > -1)
+      if (gDebug > 0 || forceprint)
+         if (gRootdErrStr[erc])
+            ::Error(Form("TAuthenticate::%s", where), "%s %s", 
+                    gRootdErrStr[erc], lasterr.Data());
+         else
+            ::Error(Form("TAuthenticate::%s", where), 
+               "unknown error code: server must be running a newer ROOT version %s",
+               lasterr.Data());
+
+   // Update last error code
+   fgLastError = err;
 }
 
 //______________________________________________________________________________
@@ -1843,10 +1870,8 @@ Int_t TAuthenticate::SshAuth(TString &User)
          SafeDelete(newsock);
          // Receive error message
          if (fSocket->Recv(retval, kind) >= 0) {  // for consistency
-            if (kind == kROOTD_ERR) {
-               if (gDebug > 0)
-                  AuthError("SshAuth", retval);
-            }
+            if (kind == kROOTD_ERR)
+               AuthError("SshAuth", retval);
          }
       }
       return 0;
@@ -1872,8 +1897,7 @@ Int_t TAuthenticate::SshAuth(TString &User)
 
    // Check if an error occured
    if (kind == kROOTD_ERR) {
-      if (gDebug > 0)
-         AuthError("SshAuth", retval);
+      AuthError("SshAuth", retval);
       return 0;
    }
 
@@ -2121,8 +2145,7 @@ Int_t TAuthenticate::RfioAuth(TString &User)
                      TAuthenticate::fgAuthMeth[5].Data(),
                      fUser.Data(),gSystem->HostName());
             } else {
-              if (gDebug > 0)
-                 AuthError("RfioAuth", stat);
+               AuthError("RfioAuth", stat);
             }
             delete pw;
             return 0;
@@ -2221,9 +2244,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          // Check that we got the right thing ..
          if (kind != kROOTD_RSAKEY || stat < 1 || stat > 2 ) {
             // Check for errors
-            if (kind == kROOTD_ERR) {
-               AuthError("ClearAuth", stat);
-            } else {
+            if (kind != kROOTD_ERR) {
                Warning("ClearAuth",
                        "problems recvn RSA key flag: got message %d, flag: %d",
                        kind, stat);
@@ -2409,8 +2430,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
       // Check for errors
       if (kind == kROOTD_ERR) {
-         if (gDebug > 0)
-            AuthError("ClearAuth", stat);
+         AuthError("ClearAuth", stat);
          fgPasswd = "";
          return 0;
       }
@@ -2491,8 +2511,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
       } else {
          fgPasswd = "";
          if (kind == kROOTD_ERR)
-            if (gDebug > 0)
-               AuthError("ClearAuth", stat);
+            AuthError("ClearAuth", stat);
          return 0;
       }
 
@@ -2536,10 +2555,8 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
                   Server.Data(),fRemote.Data(),
                   TAuthenticate::fgAuthMeth[0].Data(),
                   fUser.Data(),gSystem->HostName());
-         } else {
-           if (gDebug > 0)
-              AuthError("ClearAuth", stat);
-         }
+         } else
+            AuthError("ClearAuth", stat);
          return 0;
       }
       // Prepare Passwd to send
@@ -2586,8 +2603,7 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
          return 1;
       } else {
          if (kind == kROOTD_ERR)
-            if (gDebug > 0)
-               AuthError("ClearAuth", stat);
+            AuthError("ClearAuth", stat);
          return 0;
       }
    }
@@ -3092,10 +3108,9 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
                  "%s@%s does not accept %s authentication from %s@%s",
                  Server.Data(),fRemote.Data(), fgAuthMeth[Method].Data(),
                  fUser.Data(),gSystem->HostName());
-      } else {
-        if (gDebug > 0)
-           AuthError("AuthExists", stat);
-      }
+      } else
+         AuthError("AuthExists", stat);
+
       // If the sec context was not valid, deactivate it ...
       if (SecCtx)
          SecCtx->DeActivate("");

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.4 2004/05/19 15:32:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.5 2004/10/11 12:34:34 rdm Exp $
 // Author: Fons Rademakers   28/08/2003
 
 /*************************************************************************
@@ -50,5 +50,18 @@ const char *gRootdErrStr[] = {
    "failure: authenticated user not the same as requested login username",
    "remote host cannot create file to store internal socket address",
    "cannot change remote file permissions",
-   "Unique random tag missing, incomplete or wrong"
+   "unique random tag missing, incomplete or wrong",
+   "can't get passwd info (host equivalence: no files found)",
+   "can't get passwd info (host equivalence: files have wrong permissions)",
+   "can't get passwd info (host equivalence: passwd-free access not allowed)",
+   "wrong passwd (host equivalence: no files found)",
+   "wrong passwd (host equivalence: files have wrong permissions)",
+   "wrong passwd (host equivalence: passwd-free access not allowed)",
+   "unique random tag missing, incomplete or wrong (host equivalence: no files found)",
+   "unique random tag missing, incomplete or wrong (host equivalence: files have wrong permissions)",
+   "unique random tag missing, incomplete or wrong (host equivalence: passwd-free access not allowed)",
+   "can't get passwd info, .rootdpass perms not 0600",
+   "can't get passwd info, .rootdpass perms not 0600 (host equivalence: no files found)",
+   "can't get passwd info, .rootdpass perms not 0600 (host equivalence: files have wrong permissions)",
+   "can't get passwd info, .rootdpass perms not 0600 (host equivalence: passwd-free access not allowed)"
 };

@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.16 2004/05/10 16:00:02 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.17 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -108,10 +108,8 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
                  Server.Data(),auth->GetRemoteHost(),
                  TAuthenticate::GetAuthMethod(1),
                  auth->GetUser(),gSystem->HostName());
-        } else {
-          if (gDebug > 0)
-             TAuthenticate::AuthError("SRPAuthenticate", stat);
-        }
+        } else
+           TAuthenticate::AuthError("SRPAuthenticate", stat);
         return 0;
      }
 
@@ -125,8 +123,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
         return 2;
 
      if (kind == kROOTD_ERR) {
-        if (gDebug > 0)
-           TAuthenticate::AuthError("SRPAuthenticate", stat);
+        TAuthenticate::AuthError("SRPAuthenticate", stat);
         return 0;
      }
 
@@ -203,7 +200,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      // Receive result of the overall process
      sock->Recv(stat, kind);
      if (kind == kROOTD_ERR) {
-       if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+       TAuthenticate::AuthError("SRPAuthenticate", stat);
        goto out;
      }
 
@@ -228,7 +225,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        // Receive result of the overall process
        sock->Recv(stat, kind);
        if (kind == kROOTD_ERR)
-          if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+          TAuthenticate::AuthError("SRPAuthenticate", stat);
      }
 
      if (kind == kROOTD_SRPUSER && stat == 1)
@@ -290,7 +287,7 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      sock->Recv(stat, kind);
 
      if (kind == kROOTD_ERR)
-       if (gDebug > 0) TAuthenticate::AuthError("SRPAuthenticate", stat);
+        TAuthenticate::AuthError("SRPAuthenticate", stat);
 
      if (kind == kROOTD_AUTH && stat == 1) {
         // Get a SecContext for the record and avoid problems

@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.24 2004/05/18 22:20:49 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.25 2004/06/25 16:49:09 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -396,10 +396,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                   Server.Data(),auth->GetRemoteHost(),
                   TAuthenticate::GetAuthMethod(2),
                   auth->GetUser(),gSystem->HostName());
-         } else {
-           if (gDebug > 0)
-              TAuthenticate::AuthError("Krb5Authenticate", retval);
-         }
+         } else
+            TAuthenticate::AuthError("Krb5Authenticate", retval);
          return 0;
       }
 
@@ -587,8 +585,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    Nrec = sock->Recv(answer, 100, type);
 
    if (type == kROOTD_ERR) {
-      if (gDebug > 0)
-         TAuthenticate::AuthError("Krb5Authenticate", kErrNoHome);
+      TAuthenticate::AuthError("Krb5Authenticate", kErrNoHome);
       return 0;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.24 2004/06/25 16:49:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.25 2004/09/22 16:29:48 brun Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -101,32 +101,33 @@ private:
 
    static TList         *fgAuthInfo;
    static TString        fgAuthMeth[kMAXSEC];
-   static Bool_t         fgAuthReUse;    // kTRUE is ReUse required
-   static Int_t          fgClientProtocol;  // client protocol level
-   static TString        fgDefaultUser;  // Default user information
-   static TDatime        fgExpDate;      // Expiring date for new security contexts
+   static Bool_t         fgAuthReUse;      // kTRUE is ReUse required
+   static Int_t          fgClientProtocol; // client protocol level
+   static TString        fgDefaultUser;    // Default user information
+   static TDatime        fgExpDate;        // Expiring date for new security contexts
    static GlobusAuth_t   fgGlobusAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
-   static TString        fgKrb5Principal; // Principal for Krb5 ticket
-   static TDatime        fgLastAuthrc;    // Time of last reading of fgRootAuthrc
+   static TString        fgKrb5Principal;  // Principal for Krb5 ticket
+   static TDatime        fgLastAuthrc;     // Time of last reading of fgRootAuthrc
    static TString        fgPasswd;
-   static Bool_t         fgPromptUser;   // kTRUE if user prompt required
+   static Bool_t         fgPromptUser;     // kTRUE if user prompt required
    static TList         *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
-   static Bool_t         fgPwHash;      // kTRUE if fgPasswd is a passwd hash
+   static Bool_t         fgPwHash;         // kTRUE if fgPasswd is a passwd hash
    static Bool_t         fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
-   static TString        fgRootAuthrc;    // Path to last rootauthrc-like file read
-   static Int_t          fgRSAKey;      // Default type of RSA key to be tried
+   static TString        fgRootAuthrc;     // Path to last rootauthrc-like file read
+   static Int_t          fgRSAKey;         // Default type of RSA key to be tried
    static Int_t          fgRSAInit;
    static rsa_KEY        fgRSAPriKey;
    static rsa_KEY        fgRSAPubKey;
    static rsa_KEY_export fgRSAPubExport[2];
 #ifdef R__SSL
-   static BF_KEY         fgBFKey;       // Blowfish symmetric key
+   static BF_KEY         fgBFKey;          // Blowfish symmetric key
 #endif
    static SecureAuth_t   fgSecAuthHook;
-   static Bool_t         fgSRPPwd;      // kTRUE if fgPasswd is a SRP passwd
+   static Bool_t         fgSRPPwd;         // kTRUE if fgPasswd is a SRP passwd
    static TString        fgUser;
-   static Bool_t         fgUsrPwdCrypt;  // kTRUE if encryption for UsrPwd is required
+   static Bool_t         fgUsrPwdCrypt;    // kTRUE if encryption for UsrPwd is required
+   static Int_t          fgLastError;      // kTRUE if encryption for UsrPwd is required
 
    static Bool_t         CheckHost(const char *Host, const char *host);
    static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);
