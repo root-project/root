@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.22 2000/12/13 15:13:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.23 2000/12/18 15:12:17 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1228,12 +1228,12 @@ void THistPainter::PaintAxis()
    if (Hoption.Logx) {
       strcat(chopt, "G");
       ndiv =TMath::Abs(ndivx);
-      umin = TMath::Power(10,Hparam.xmin);
-      umax = TMath::Power(10,Hparam.xmax);
+      umin = TMath::Power(10,axmin);
+      umax = TMath::Power(10,axmax);
    } else {
       ndiv =TMath::Abs(ndivx);
-      umin = Hparam.xmin;
-      umax = Hparam.xmax;
+      umin = axmin;
+      umax = axmax;
    }
 
 //   Display axis as time
@@ -1247,16 +1247,16 @@ void THistPainter::PaintAxis()
    umaxsave = umax;
    ndivsave = ndiv;
    axis.SetOption(chopt);
-   axis.PaintAxis(Hparam.xmin, Hparam.ymin,
-                  Hparam.xmax, Hparam.ymin,
+   axis.PaintAxis(axmin, aymin,
+                  axmax, aymin,
                   umin, umax,  ndiv, chopt, gridl);
    if (gPad->GetTickx()) {
       strcat(chopt, "-");
       if (gPad->GetTickx() < 2) strcat(chopt, "U");
       if ((cw=strstr(chopt,"W"))) *cw='z';
       axis.SetTitle("");
-      axis.PaintAxis(Hparam.xmin, Hparam.ymax,
-                     Hparam.xmax, Hparam.ymax,
+      axis.PaintAxis(axmin, aymax,
+                     axmax, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl);
    }
 //*-*- Y axis
@@ -1290,12 +1290,12 @@ void THistPainter::PaintAxis()
    if (Hoption.Logy) {
       strcat(chopt, "G");
       ndiv =TMath::Abs(ndivy);
-      umin = TMath::Power(10,Hparam.ymin);
-      umax = TMath::Power(10,Hparam.ymax);
+      umin = TMath::Power(10,aymin);
+      umax = TMath::Power(10,aymax);
    } else {
       ndiv =TMath::Abs(ndivy);
-      umin = Hparam.ymin;
-      umax = Hparam.ymax;
+      umin = aymin;
+      umax = aymax;
    }
 
 //   Display axis as time
@@ -1309,8 +1309,8 @@ void THistPainter::PaintAxis()
    umaxsave = umax;
    ndivsave = ndiv;
    axis.SetOption(chopt);
-   axis.PaintAxis(Hparam.xmin, Hparam.ymin,
-                  Hparam.xmin, Hparam.ymax,
+   axis.PaintAxis(axmin, aymin,
+                  axmin, aymax,
                   umin, umax,  ndiv, chopt, gridl);
    if (gPad->GetTicky()) {
       if (gPad->GetTicky() < 2) {
@@ -1321,8 +1321,8 @@ void THistPainter::PaintAxis()
       }
       if ((cw=strstr(chopt,"W"))) *cw='z';
       axis.SetTitle("");
-      axis.PaintAxis(Hparam.xmax, Hparam.ymin,
-                     Hparam.xmax, Hparam.ymax,
+      axis.PaintAxis(axmax, aymin,
+                     axmax, aymax,
                      uminsave, umaxsave,  ndivsave, chopt, gridl);
    }
 }
