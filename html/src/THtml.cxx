@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.24 2002/07/08 20:49:22 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.25 2002/07/09 06:20:40 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -3247,8 +3247,7 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
        && (strlen(addHeader) == 0
            || addHeader[strlen(addHeader) - 1] == '+')) {
       TDatime date;
-
-      out << "<!DOCTYPE HTML PUBLIC \"-// IETF/DTD HTML 2.0// EN\">" <<
+      out << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">" <<
           endl;
       out << "<html>" << endl;
       out << "<!--                                             -->" <<
@@ -3262,6 +3261,8 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
       out << "<!--                                             -->" <<
           endl;
       out << "<head>" << endl;
+      out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">" <<
+          endl;
       out << "<title>";
       ReplaceSpecialChars(out, title);
       out << "</title>" << endl;
@@ -3499,8 +3500,8 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
             } else {
                cLink = strchr(ptr, '<');	// look for link start tag
                if (cLink) {
-                  ptr = cLink;
                   out << "<a href=\"";
+                  ptr = cLink-1;
                   for (cLink++; *cLink != 0 && *cLink != '>'; cLink++)
                      if (*cLink != ' ')
                         out << *cLink;
@@ -3548,6 +3549,13 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
                   bBlank = kTRUE;
             }
             out << "</a>";
+            while (ptr && *ptr==' ') ptr++;
+            if (ptr && *ptr=='<') {
+               // skip link
+               while (*ptr && *ptr!='>') ptr++;
+               if (ptr && *ptr=='>') ptr++;
+            }
+            while (ptr && *ptr==' ') ptr++;
             if (ptr && *ptr)
                out << ' ' << ptr;
 
@@ -3568,9 +3576,9 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
 
       // this is a menu
       out << "<br>" << endl;
-      out << "<address>" << endl;
       out << "<hr>" << endl;
       out << "<center>" << endl;
+      out << "<address>" << endl;
 
       // link to the ROOT home page
       out <<
@@ -3596,11 +3604,13 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
 
       // link to the top of the page
       out << "<a href=\"#TopOfPage\">Top of the page</a><br>" << endl;
+      out << "</address>" << endl;
 
       out << "</center>" << endl;
 
-      out <<
-          "<hr>This page has been automatically generated. If you have any comments or suggestions ";
+      out << "<hr>" << endl;
+      out << "<address>" << endl;
+      out << "This page has been automatically generated. If you have any comments or suggestions ";
       out <<
           "about the page layout send a mail to <a href=\"mailto:rootdev@root.cern.ch\">ROOT support</a>, or ";
       out <<
