@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.57 2005/03/14 17:40:00 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.58 2005/03/16 17:18:12 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -894,8 +894,8 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
       vol->GetShape()->Paint(option);
       vol->SetLineColor(color);
       vol->SetTransparency(transparency);
-      gGeoManager->SetMatrixReflection(node2->GetMatrix()->IsReflection());
       node2 = overlap->GetNode(1);
+      gGeoManager->SetMatrixReflection(node2->GetMatrix()->IsReflection());
       vol = node2->GetVolume();
       *hmat = node2->GetMatrix();
       if (!fVisLock) fVisVolumes->Add(vol);
