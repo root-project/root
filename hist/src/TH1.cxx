@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.6 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.7 2000/06/16 07:37:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2863,6 +2863,170 @@ Stat_t TH1::Integral(Int_t binx1, Int_t binx2)
    }
    return integral;
 }
+        
+//______________________________________________________________________________
+Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
+{
+//  Statistical test of compatibility in shape between
+//  THIS histogram and h2, using Kolmogorov test.
+//     Default: Ignore under- and overflow bins in comparison
+//
+//     option is a character string to specify options
+//         "U" include Underflows in test  (also for 2-dim)
+//         "O" include Overflows     (also valid for 2-dim)
+//         "N" include comparison of normalizations
+//         "D" Put out a line of "Debug" printout
+//
+//   The returned function value is the probability of test
+//       (much less than one means NOT compatible)
+//
+//  Code adapted by Rene Brun from original HBOOK routine HDIFF
+
+   TString opt = option;
+   opt.ToUpper();
+   
+   Double_t prb = 0;
+   TH1 *h1 = this;
+   if (h2 == 0) return 0;
+   TAxis *axis1 = h1->GetXaxis();
+   TAxis *axis2 = h2->GetXaxis();
+   Int_t ncx1   = axis1->GetNbins();
+   Int_t ncx2   = axis2->GetNbins();
+
+     // Check consistency of dimensions
+   if (h1->GetDimension() != 1 || h2->GetDimension() != 1) {
+      Error("KolmogorovTest","Histograms must be 1-D\n");
+      return 0;
+   }
+
+     // Check consistency in number of channels
+   if (ncx1 != ncx2) {
+      Error("KolmogorovTest","Number of channels is different, %d and %d\n",ncx1,ncx2);
+      return 0;
+   }
+    
+     // Check consistency in channel edges
+   Double_t difprec = 1e-5;
+   Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
+   Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning");
+      return 0;
+   }
+   
+   Bool_t afunc1 = kFALSE;
+   Bool_t afunc2 = kFALSE;
+   Double_t sum1 = 0, sum2 = 0;    
+   Int_t bin;
+   for (bin=1;bin<=ncx1;bin++) {
+      sum1 += h1->GetBinContent(bin);
+      sum2 += h2->GetBinContent(bin);
+   } 
+   if (sum1 == 0) {
+      Error("KolmogorovTest","Histogram1 %s integral is zero\n",h1->GetName());
+      return 0;
+   }
+   if (sum2 == 0) {
+      Error("KolmogorovTest","Histogram2 %s integral is zero\n",h2->GetName());
+      return 0;
+   }
+   Double_t tsum1 = sum1;
+   Double_t tsum2 = sum2;
+   if (opt.Contains("U")) {
+      tsum1 += h1->GetBinContent(0);
+      tsum2 += h2->GetBinContent(0);
+   }
+   if (opt.Contains("O")) {
+      tsum1 += h1->GetBinContent(ncx1+1);
+      tsum2 += h2->GetBinContent(ncx1+1);
+   }
+
+     // Check if histograms are weighted.
+     // If number of entries = number of channels, probably histograms were
+     // not filled via Fill(), but via SetBinContent()
+   Double_t ne1 = h1->GetEntries();
+   Double_t ne2 = h2->GetEntries();
+     // look at first histogram
+   Double_t difsum1 = (ne1-tsum1)/tsum1;
+   Double_t esum1 = sum1;
+   if (difsum1 > difprec && Int_t(ne1) != ncx1) {
+      if (opt.Contains("U") || opt.Contains("O")) {
+         Error("KolmogorovTest","U/O option with weighted events for hist:%s\n",h1->GetName());
+         return 0;
+      }
+      if (h1->GetSumw2N() == 0) {
+         Error("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h1->GetName());
+         return 0;
+      } else {
+         esum1 = h1->GetSumOfWeights();
+      }
+   }
+     // look at second histogram
+   Double_t difsum2 = (ne2-tsum2)/tsum2;
+   Double_t esum2   = sum2;
+   if (difsum2 > difprec && Int_t(ne2) != ncx1) {
+      if (opt.Contains("U") || opt.Contains("O")) {
+         Error("KolmogorovTest","U/O option with weighted events for hist:%s\n",h2->GetName());
+         return 0;
+      }
+      if (h2->GetSumw2N() == 0) {
+         Error("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
+         return 0;
+      } else {
+         esum1 = h2->GetSumOfWeights();
+      }
+   }
+ 
+   Double_t s1 = 1/sum1;
+   Double_t s2 = 1/sum2;
+
+      // Find largest difference for Kolmogorov Test
+   Double_t dfmax =0, rsum1 = 0, rsum2 = 0;
+
+   Int_t first = 1;
+   Int_t last  = ncx1;
+   if (opt.Contains("U")) first = 0;
+   if (opt.Contains("O")) last  = ncx1+1;
+   for (bin=first;bin<=last;bin++) {
+      rsum1 += s1*h1->GetBinContent(bin);
+      rsum2 += s2*h2->GetBinContent(bin);
+      dfmax = TMath::Max(dfmax,TMath::Abs(rsum1-rsum2));
+   }
+
+      // Get Kolmogorov probability
+   Double_t z, prb1=0, prb2=0;
+   if (afunc1)      z = dfmax*TMath::Sqrt(esum2);
+   else if (afunc2) z = dfmax*TMath::Sqrt(esum1);
+   else             z = dfmax*TMath::Sqrt(esum1*esum2/(esum1+esum2));
+   
+   prb = TMath::KolmogorovProb(z);
+      
+   if (opt.Contains("N")) {
+      // Combine probabilities for shape and normalization,
+      prb1 = prb;
+      Double_t resum1 = esum1;  if (afunc1) resum1 = 0;
+      Double_t resum2 = esum2;  if (afunc2) resum2 = 0;
+      Double_t d12    = esum1-esum2;
+      Double_t chi2   = d12*d12/(resum1+resum2);
+      prb2 = TMath::Prob(chi2,1);
+      // see Eadie et al., section 11.6.2
+      if (prb > 0 && prb2 > 0) prb *= prb2*(1-TMath::Log(prb*prb2));
+      else                     prb = 0;
+   }
+      // debug printout
+   if (opt.Contains("D")) {
+      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+      printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
+      printf(" Kolmo Max Dist = %g\n",dfmax);
+      if (opt.Contains("N")) 
+      printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+   }
+      // This numerical error condition should never occur:
+   if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
+   if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+
+   return prb;
+}  
 
 //______________________________________________________________________________
 void TH1::SetContent(Stat_t *content)

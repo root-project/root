@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.2 2000/06/14 13:52:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.3 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -467,6 +467,50 @@ Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t b
    }
    return integral;
 }
+        
+//______________________________________________________________________________
+Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option)
+{
+//  Statistical test of compatibility in shape between
+//  THIS histogram and h2, using Kolmogorov test.
+//     Default: Ignore under- and overflow bins in comparison
+//
+//     option is a character string to specify options
+//         "U" include Underflows in test
+//         "O" include Overflows 
+//         "N" include comparison of normalizations
+//         "D" Put out a line of "Debug" printout
+//         "L"=Left:   include x-underflows
+//         "R"=Right:  include x-overflows
+//         "T"=Top:    include y-overflows
+//         "B"=Bottom: include y-underflows
+//   for example: "OB" means x- and y-overflows and y-underflows !!
+//
+//   The returned function value is the probability of test
+//       (much less than one means NOT compatible)
+//
+//  Code adapted by Rene Brun from original HBOOK routine HDIFF
+
+   TString opt = option;
+   opt.ToUpper();
+   
+   Double_t prb = 0;
+   TH1 *h1 = this;
+   if (h2 == 0) return 0;
+   TAxis *axis1 = h1->GetXaxis();
+   TAxis *axis2 = h2->GetXaxis();
+   Int_t ncx1   = axis1->GetNbins();
+   Int_t ncx2   = axis2->GetNbins();
+
+     // Check consistency of dimensions
+   if (h1->GetDimension() != 3 || h2->GetDimension() != 3) {
+      Error("KolmogorovTest","Histograms must be 2-D\n");
+      return 0;
+   }
+
+   printf(" NOT YET IMPLEMENTED\n");
+   return 0;
+}   
 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.3 2000/06/14 13:39:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.4 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -672,7 +672,51 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
    }
    return integral;
 }
+        
+//______________________________________________________________________________
+Double_t TH2::KolmogorovTest(TH1 *h2, Option_t *option)
+{
+//  Statistical test of compatibility in shape between
+//  THIS histogram and h2, using Kolmogorov test.
+//     Default: Ignore under- and overflow bins in comparison
+//
+//     option is a character string to specify options
+//         "U" include Underflows in test
+//         "O" include Overflows 
+//         "N" include comparison of normalizations
+//         "D" Put out a line of "Debug" printout
+//         "L"=Left:   include x-underflows
+//         "R"=Right:  include x-overflows
+//         "T"=Top:    include y-overflows
+//         "B"=Bottom: include y-underflows
+//   for example: "OB" means x- and y-overflows and y-underflows !!
+//
+//   The returned function value is the probability of test
+//       (much less than one means NOT compatible)
+//
+//  Code adapted by Rene Brun from original HBOOK routine HDIFF
 
+   TString opt = option;
+   opt.ToUpper();
+   
+   Double_t prb = 0;
+   TH1 *h1 = this;
+   if (h2 == 0) return 0;
+   TAxis *axis1 = h1->GetXaxis();
+   TAxis *axis2 = h2->GetXaxis();
+   Int_t ncx1   = axis1->GetNbins();
+   Int_t ncx2   = axis2->GetNbins();
+
+     // Check consistency of dimensions
+   if (h1->GetDimension() != 2 || h2->GetDimension() != 2) {
+      Error("KolmogorovTest","Histograms must be 2-D\n");
+      return 0;
+   }
+
+   printf(" NOT YET IMPLEMENTED\n");
+   return 0;
+}   
+   
 //______________________________________________________________________________
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option)
 {

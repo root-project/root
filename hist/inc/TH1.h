@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.2 2000/06/13 10:35:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.3 2000/06/15 06:51:49 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -194,6 +194,7 @@ public:
     virtual Stat_t   Integral(Int_t binx1, Int_t binx2);
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t) {return 0;}
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) {return 0;}
+    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Paint(Option_t *option="");
