@@ -957,6 +957,10 @@ int type;
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(G__struct.memvar[i],0,sizeof(struct G__var_array));
 #endif
+#ifndef G__OLDIMPLEMENTATION2038
+    G__struct.memvar[i]->enclosing_scope = (struct G__var_array*)NULL;
+    G__struct.memvar[i]->inner_scope = (struct G__var_array**)NULL;
+#endif
 #ifndef G__OLDIMPLEMENTATION1866
     G__struct.memvar[i]->ifunc = (struct G__ifunc_table*)NULL;
 #endif
@@ -1009,6 +1013,20 @@ int type;
     G__struct.memfunc[i]->pentry[0] = &G__struct.memfunc[i]->entry[0];
     G__struct.memfunc[i]->pentry[0]->bytecode=(struct G__bytecodefunc*)NULL;
     G__struct.memfunc[i]->friendtag[0]=(struct G__friendtag*)NULL;
+#ifndef G__OLDIMPLEMENTATION2039
+    G__struct.memfunc[i]->pentry[0]->size = 0; 
+    G__struct.memfunc[i]->pentry[0]->filenum = 0; 
+    G__struct.memfunc[i]->pentry[0]->line_number = 0; 
+    G__struct.memfunc[i]->ispurevirtual[0] = 0;
+    G__struct.memfunc[i]->access[0] = G__PUBLIC;
+    G__struct.memfunc[i]->ansi[0] = 1; 
+    G__struct.memfunc[i]->isconst[0] = 0; 
+    G__struct.memfunc[i]->reftype[0] = 0; 
+    G__struct.memfunc[i]->type[0] = 0; 
+    G__struct.memfunc[i]->p_tagtable[0] = -1; 
+    G__struct.memfunc[i]->p_typetable[0] = -1; 
+    G__struct.memfunc[i]->staticalloc[0] = 0; 
+#endif
 
     G__struct.memfunc[i]->allifunc = 1;
 #endif
@@ -1120,6 +1138,10 @@ int *pig15;
     var->next = (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(var->next,0,sizeof(struct G__var_array));
+#endif
+#ifndef G__OLDIMPLEMENTATION2038
+    var->next->enclosing_scope = (struct G__var_array*)NULL;
+    var->next->inner_scope = (struct G__var_array**)NULL;
 #endif
 #ifndef G__OLDIMPLEMENTATION1866
     var->next->ifunc = (struct G__ifunc_table*)NULL;
@@ -1771,6 +1793,11 @@ char type;
 
       if (baseclass->property[ivb]&G__ISDIRECTINHERIT)
         lastdirect = ivb;
+
+#ifndef G__OLDIMPLEMENTATION2037
+      /* insure the loading of the memfunc */
+      G__incsetup_memfunc(baseclass->basetagnum[ivb]); 
+#endif
 
       itab = G__struct.memfunc[baseclass->basetagnum[ivb]];
       while (itab) {

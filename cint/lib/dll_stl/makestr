@@ -73,7 +73,7 @@ INPUTMODELOCK = off
 # Set variables ############################################
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)
-CINTSYSDIR = /cygdrive/c/usr/src/cint
+CINTSYSDIR = /cygdrive/d/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = string.dll
 OPTION     = $(CCDLLOPT)

@@ -254,6 +254,12 @@ void G__scratch_all()
   G__SystemIncludeDir = (struct G__ConstStringList*)NULL;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2034
+  /* This implementation is premature in a sense that macro can not be 
+   * rewound to file position */
+  G__init_replacesymbol();
+#endif
+
   /*************************************************************
    * Initialize cint body global variables
    *************************************************************/
@@ -471,6 +477,18 @@ int isglobal;
   int cpplink;
   int i,size;
   long address;
+
+#ifndef G__OLDIMPLEMENTATION2038
+  var->enclosing_scope = (struct G__var_array*)NULL;
+  if(var->inner_scope) {
+    i=0;
+    while(var->inner_scope[i]) {
+      G__destroy(var->inner_scope[i],isglobal);
+      free((void*)var->inner_scope[i]);
+      ++i;
+    }
+  }
+#endif
   
   /*******************************************
    * If there are any sub var array list,

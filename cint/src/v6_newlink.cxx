@@ -74,8 +74,14 @@ static int G__privateaccess = 0;
 **************************************************************************/
 /* #define G__BUILTIN */
 
+#ifndef G__OLDIMPLEMENTATION2040
+#if !defined(G__DECCXX) && !defined(G__BUILTIN) && !defined(__hpux)
+#define G__DEFAULTASSIGNOPR
+#endif
+#else
 #if !defined(G__DECCXX) && !defined(G__BUILTIN) && !defined(__hpux) && !defined(G__ROOT)
 #define G__DEFAULTASSIGNOPR
+#endif
 #endif
 
 #if !defined(G__DECCXX) && !defined(G__BUILTIN)
@@ -2774,6 +2780,9 @@ FILE *hfp;
 	    if(G__ONLYMETHODLINK==G__struct.globalcomp[i]&&
 	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
 #endif
+#ifndef G__OLDIMPLEMENTATION2039
+	    if(0==ifunc->hash[j]) continue;
+#endif
 #ifndef G__OLDIMPLEMENTATION1656
 #ifndef G__OLDIMPLEMENTATION2012
 	    if(ifunc->pentry[j]->size<0) continue; /* already precompiled */
@@ -2819,9 +2828,21 @@ FILE *hfp;
 #endif
 	      continue;
 	    }
+#ifndef G__OLDIMPLEMENTATION2039
+	    else if('\0'==ifunc->funcname[j][0] && j==0) {
+	      // this must be the place holder for the destructor.
+	      // let's skip it!
+	      continue;
+	    }
+#endif
 	    else {
 #ifdef G__DEFAULTASSIGNOPR
-	      if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	      if(strcmp(ifunc->funcname[j],"operator=")==0
+#ifndef G__OLDIMPLEMENTATION2036
+		 && 'u'==ifunc->para_type[j][0] 
+		 && i==ifunc->para_p_tagtable[j][0]
+#endif
+		  ) {
 		++isassignmentoperator;
 	      }
 #endif
@@ -2850,7 +2871,12 @@ FILE *hfp;
 	    }
 #endif
 #ifdef G__DEFAULTASSIGNOPR
-	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0
+#ifndef G__OLDIMPLEMENTATION2036
+		    && 'u'==ifunc->para_type[j][0] 
+		    && i==ifunc->para_p_tagtable[j][0]
+#endif
+		) {
 	      ++isassignmentoperator;
 	    }
 #endif
@@ -3733,7 +3759,12 @@ int tagnum;
   do {
     for(ifn=0;ifn<ifunc->allifunc;ifn++) {
       if(strcmp("operator=",ifunc->funcname[ifn])==0) {
-	if(G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn]) {
+	if((G__PRIVATE==ifunc->access[ifn]||G__PROTECTED==ifunc->access[ifn])
+#ifndef G__OLDIMPLEMENTATION2036
+	   && 'u'==ifunc->para_type[ifn][0] 
+           && tagnum==ifunc->para_p_tagtable[ifn][0]
+#endif
+	    ) {
 	  return(1);
 	}
       }
@@ -3771,7 +3802,13 @@ int tagnum;
       }
 #ifndef G__OLDIMPLEMENTATION1682
       if(G__PARAREFERENCE==var->reftype[ig15] && 
-	 G__LOCALSTATIC!=var->statictype[ig15]) {
+	G__LOCALSTATIC!=var->statictype[ig15]) {
+	return(1);
+      }
+#endif
+#ifndef G__OLDIMPLEMENTATION2036
+      if(var->constvar[ig15] &&
+        G__LOCALSTATIC!=var->statictype[ig15]) {
 	return(1);
       }
 #endif
@@ -6224,6 +6261,9 @@ FILE *fp;
 	    if(G__ONLYMETHODLINK==G__struct.globalcomp[i]&&
 	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
 #endif
+#ifndef G__OLDIMPLEMENTATION2039
+	    if(0==ifunc->hash[j]) continue;
+#endif
 #ifndef G__OLDIMPLEMENTATION1656
 #ifndef G__OLDIMPLEMENTATION2012
 	    if(ifunc->pentry[j]->size<0) continue; /* already precompiled */
@@ -6285,7 +6325,12 @@ FILE *fp;
 	      continue;
 	    }
 #ifdef G__DEFAULTASSIGNOPR
-	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0
+#ifndef G__OLDIMPLEMENTATION2036
+		    && 'u'==ifunc->para_type[j][0] 
+		    && i==ifunc->para_p_tagtable[j][0]
+#endif
+                    ) {
 	      ++isassignmentoperator;
 	    }
 #endif
@@ -6494,7 +6539,12 @@ FILE *fp;
 	      ++isdestructor;
 	    }
 #ifdef G__DEFAULTASSIGNOPR
-	    else if(strcmp(ifunc->funcname[j],"operator=")==0) {
+	    else if(strcmp(ifunc->funcname[j],"operator=")==0
+#ifndef G__OLDIMPLEMENTATION2036
+		    && 'u'==ifunc->para_type[j][0] 
+		    && i==ifunc->para_p_tagtable[j][0]
+#endif
+		    ) {
 	      ++isassignmentoperator;
 	    }
 #endif
@@ -7626,8 +7676,8 @@ int isvirtual;
 {
 #ifndef G__SMALLOBJECT
 #ifndef G__OLDIMPLEMENTATION2027
-  int store_func_now;
-  struct G__ifunc_table *store_p_ifunc;
+  int store_func_now = -1;
+  struct G__ifunc_table *store_p_ifunc = 0;
   int dtorflag=0;
 #endif
 
@@ -7636,7 +7686,7 @@ int isvirtual;
 #ifndef G__OLDIMPLEMENTATION2027
   if('~'==funcname[0] && 0==G__struct.memfunc[G__p_ifunc->tagnum]->hash[0]) {
     store_func_now = G__func_now;
-    store_p_ifunc = G__p_ifunc;
+    store_p_ifunc = G__p_ifunc; 
     G__p_ifunc = G__struct.memfunc[G__p_ifunc->tagnum];
     G__func_now = 0;
     dtorflag=1;

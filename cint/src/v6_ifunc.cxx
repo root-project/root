@@ -6098,6 +6098,11 @@ int memfunc_flag;
   int store_memberfunc_tagnum;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2038
+  G_local.enclosing_scope = (struct G__var_array*)NULL;
+  G_local.inner_scope = (struct G__var_array**)NULL;
+#endif
+
 #ifdef G__NEWINHERIT
   store_inherit_offset = G__store_struct_offset;
   store_inherit_tagnum = G__tagnum;
@@ -6743,6 +6748,10 @@ asm_ifunc_start:   /* loop compilation execution label */
     localvar = (struct G__var_array*)malloc(sizeof(struct G__var_array));
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(localvar,0,sizeof(struct G__var_array));
+#endif
+#ifndef G__OLDIMPLEMENTATION2038
+    localvar->enclosing_scope = (struct G__var_array*)NULL;
+    localvar->inner_scope = (struct G__var_array**)NULL;
 #endif
 
     localvar->prev_local = G__p_local;

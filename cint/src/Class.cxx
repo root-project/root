@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  ************************************************************************
  * Author                  Masaharu Goto 
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -610,7 +610,13 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 #endif
 			      );
 
-  if(ifunc && -1==ifunc->pentry[index]->line_number) {
+  if(
+#ifndef G__OLDIMPLEMENTATION2035
+     ifunc && -1==ifunc->pentry[index]->size
+#else
+     ifunc && -1==ifunc->pentry[index]->filenum
+#endif
+     ) {
     return((G__InterfaceMethod)ifunc->pentry[index]->p);
   }
   else {

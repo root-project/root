@@ -827,6 +827,13 @@ int G__callfunc0 G__P((G__value *result,struct G__ifunc_table *ifunc,int ifn,str
 int G__calldtor G__P((void* p,int tagnum,int isheap));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2034
+void G__init_replacesymbol G__P(());
+void G__add_replacesymbol G__P((const char* s1,const char* s2));
+const char* G__replacesymbol G__P((const char* s));
+int G__display_replacesymbol G__P((FILE *fout,const char* name));
+#endif
+
 #ifdef __cplusplus
 }
 #endif

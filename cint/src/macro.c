@@ -319,9 +319,19 @@ char *oldtype,*newtype;
 #endif
   }
   else {
+#ifndef G__OLDIMPLEMENTATION2034
+    G__add_replacesymbol(newtype,oldtype);
+#if G__NEVER
+    if(G__dispmsg>=G__DISPNOTE) {
+      G__fprinterr(G__serr,"Note: #define %s %s",newtype,oldtype);
+      G__printlinenum();
+    }
+#endif
+#else
     G__fprinterr(G__serr,"Limitation: can not handle macro %s %s" ,newtype,oldtype);
     if(0==G__cpp) G__fprinterr(G__serr," Use +P or -p option");
     G__genericerror((char*)NULL);
+#endif
   }
 
   return(0);

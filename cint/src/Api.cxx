@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -607,4 +607,80 @@ extern "C" void G__initcxx()
 #endif
   */
 }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2034
+#include <map>
+#include <string>
+#if (!defined(__hpux) && !defined(_MSC_VER)) || __HP_aCC >= 53000
+using namespace std;
+#endif
+map<string,string> G__symbolmacro;
+/******************************************************************
+* void G__init_replacesymbol_body()
+******************************************************************/
+void G__init_replacesymbol_body() {
+  G__symbolmacro.clear();
+}
+
+/******************************************************************
+* void G__init_replacesymbol()
+******************************************************************/
+extern "C" void G__init_replacesymbol() {
+  G__init_replacesymbol_body();
+}
+
+/******************************************************************
+* void G__add_replacesymbol_body()
+******************************************************************/
+void G__add_replacesymbol_body(const char* s1,const char* s2) {
+  map<string,string>::value_type x(s1,s2);
+  G__symbolmacro.insert(x);
+}
+/******************************************************************
+* void G__add_replacesymbol()
+******************************************************************/
+extern "C" void G__add_replacesymbol(const char* s1,const char* s2) {
+  return(G__add_replacesymbol_body(s1,s2));
+}
+
+/******************************************************************
+* char* G__replacesymbol_body()
+******************************************************************/
+const char* G__replacesymbol_body(const char* s) {
+  map<string,string>::iterator pos = G__symbolmacro.find(s);
+  if(pos!=G__symbolmacro.end()) return((*pos).second.c_str());
+  else                          return(s);
+}
+
+/******************************************************************
+* char* G__replacesymbol()
+******************************************************************/
+extern "C" const char* G__replacesymbol(const char* s) {
+  return(G__replacesymbol_body(s));
+}
+
+/******************************************************************
+* void G__display_replacesymbol_body()
+******************************************************************/
+int G__display_replacesymbol_body(FILE *fout,const char* name) {
+  map<string,string>::iterator i;
+  char msg[G__LONGLINE];
+  for(i=G__symbolmacro.begin();i!=G__symbolmacro.end();++i) {
+    if(!name || !name[0] || strcmp(name,(*i).first.c_str())==0) {
+      sprintf(msg,"#define %s %s\n",(*i).first.c_str(),(*i).second.c_str());
+      G__more(fout,msg);
+      if(name && name[0]) return(1);
+    }
+  }
+  return(0);
+}
+
+/******************************************************************
+* void G__init_replacesymbol()
+******************************************************************/
+extern "C" int G__display_replacesymbol(FILE *fout,const char* name) {
+  return(G__display_replacesymbol_body(fout,name));
+}
+
 #endif

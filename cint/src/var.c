@@ -1324,6 +1324,9 @@ int isdecl;
 #ifndef G__OLDIMPLEMENTATION1059
   int save_scope_tagnum;
 #endif
+#ifndef G__OLDIMPLEMENTATION2038
+  struct G__var_array *enclosing_scope=NULL;
+#endif
 
 #ifdef G__ROOT
 #ifndef G__OLDIMPLEMENTATION481
@@ -1387,6 +1390,9 @@ int isdecl;
 	*pstore_struct_offset = G__ASM_VARLOCAL;
 #endif
 	var=varlocal;
+#ifndef G__OLDIMPLEMENTATION2038
+	if(var->enclosing_scope) enclosing_scope = var->enclosing_scope;
+#endif
 	if(varglobal&&0==isdecl) {
 #ifndef G__OLDIMPLEMENTATION1366
 	  if(G__exec_memberfunc||(-1!=G__tagdefining&&-1!=scope_tagnum)) {
@@ -1483,6 +1489,14 @@ int isdecl;
 	}
 	var=var->next;
       }
+#ifndef G__OLDIMPLEMENTATION2038
+      /* enclosing local scope */
+      if(enclosing_scope) {
+	var=enclosing_scope;
+	enclosing_scope = var->enclosing_scope;
+	goto next_base;
+      }
+#endif
       /* next base class if searching for class member */
 #ifndef G__OLDIMPLEMENTATION1889
       if(isbase &&
@@ -6223,6 +6237,11 @@ int parameter00;
       (struct G__var_array *)malloc(sizeof(struct G__var_array)) ;
 #ifdef G__OLDIMPLEMENTATION1776_YET
     memset(var->next,0,sizeof(struct G__var_array));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2038
+    var->next->enclosing_scope = (struct G__var_array*)NULL;
+    var->next->inner_scope = (struct G__var_array**)NULL;
 #endif
     
     /***************************************

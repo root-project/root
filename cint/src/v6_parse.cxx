@@ -1685,6 +1685,21 @@ char *macro;
     if(stat>=0) return(1);
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION2041
+  /* search symbol macro table */
+  if(macro!=G__replacesymbol(macro)) return(1);
+  /* search  function macro table */
+  {
+    struct G__Deffuncmacro *deffuncmacro;
+    deffuncmacro = &G__deffuncmacro;
+    while(deffuncmacro->next) {
+      if(deffuncmacro->name && strcmp(macro,deffuncmacro->name)==0) {
+	return(1);
+      }
+      deffuncmacro=deffuncmacro->next;
+    }
+  }
+#endif
   return(0); /* not found */
 }
 
@@ -3631,6 +3646,10 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
       }
       else {
+#ifndef G__OLDIMPLEMENTATION2034
+      after_replacement:
+#endif
+	
 #ifndef G__PHILIPPE33
         if (!fake_space) discard_space = 1;
 #endif
@@ -4483,6 +4502,16 @@ G__value G__exec_statement()
 #endif
               spaceflag = 0;	    
             }
+          }
+#endif
+#ifndef G__OLDIMPLEMENTATION2034
+          {
+	    char* replace = (char*)G__replacesymbol(statement);
+	    if(replace!=statement) {
+	      strcpy(statement,replace);
+	      iout = strlen(statement);
+	      goto after_replacement;
+	    }
           }
 #endif
 	  ++spaceflag;

@@ -1402,7 +1402,36 @@ char *name;
   struct G__Charlist *charlist;
   int i=0;
 
+#ifndef G__OLDIMPLEMENTATION2034
+  struct G__var_array *var = &G__global;
+  int ig15;
+  char msg[G__LONGLINE];
   while(name[i]&&isspace(name[i])) i++;
+
+  while(var) {
+    for(ig15=0;ig15<var->allvar;ig15++) {
+      if(name && name[i] && strcmp(name+i,var->varnamebuf[ig15])!=0) continue;
+      if('p'==var->type[ig15]) {
+	sprintf(msg,"#define %s %d\n",var->varnamebuf[ig15]
+		,*(int*)var->p[ig15]);
+	G__more(fout,msg);
+      }
+      else if('T'==var->type[ig15]) {
+	sprintf(msg,"#define %s \"%s\"\n",var->varnamebuf[ig15]
+		,*(char**)var->p[ig15]);
+	G__more(fout,msg);
+      }
+      if(name && name[i]) return(0);
+    }
+    var=var->next;
+  }
+
+  if(G__display_replacesymbol(fout,name+i)) return(0);
+
+#else
+  while(name[i]&&isspace(name[i])) i++;
+#endif
+
   if(name[i]) {
     deffuncmacro = &G__deffuncmacro;
     while(deffuncmacro->next) {

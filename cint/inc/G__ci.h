@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150130
-#define G__CINTVERSIONSTR  "5.15.130, Mar 30 2004"
+#define G__CINTVERSION      50150131
+#define G__CINTVERSIONSTR  "5.15.131, Apr 6 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -1369,6 +1369,12 @@ struct G__var_array {
 #ifdef G__FONS_COMMENT
   struct G__comment_info comment[G__MEMDEPTH];
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2038
+  struct G__var_array *enclosing_scope;
+  struct G__var_array **inner_scope;
+#endif
+
 } ;
 
 

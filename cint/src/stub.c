@@ -453,6 +453,9 @@ FILE *fp;
 	for(j=0;j<ifunc->allifunc;j++) {
 	  
 	  if(-1==ifunc->pentry[j]->line_number
+#ifndef G__OLDIMPLEMENTATION2039
+	     &&ifunc->hash[j]!=0 
+#endif
 	     &&0==ifunc->ispurevirtual[j] && ifunc->hash[j] &&
 	     (G__CPPSTUB==ifunc->globalcomp[j]||
 	      G__CSTUB==ifunc->globalcomp[j])) {
