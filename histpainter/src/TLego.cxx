@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.3 2000/11/21 12:30:39 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.4 2000/11/21 20:37:38 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TROOT.h"
 #include "TLego.h"
 #include "TVirtualPad.h"
+#include "THistPainter.h"
 #include "TH1.h"
 #include "TView.h"
 #include "TVirtualX.h"
@@ -2219,9 +2220,11 @@ void TLego::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 
 //*-*-          D R A W   S T A C K   O F   L E G O - P L O T S
 
+    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
 	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
-	    (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
+	    if (!painter->IsInside(ix,iy)) continue;
+            (this->*fLegoFunction)(ix, iy, nv, xy, v, tt);
 	    if (nv < 2 || nv > 20) continue;
 	    icodes[0] = ix;
 	    icodes[1] = iy;
@@ -3439,8 +3442,10 @@ void TLego::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt
 
 //*-*-          D R A W   S U R F A C E
 
+    THistPainter *painter = (THistPainter*)gCurrentHist->GetPainter();
     for (iy = iy1; incry < 0 ? iy >= iy2 : iy <= iy2; iy += incry) {
 	for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
+	    if (!painter->IsInside(ix,iy)) continue;
 	    (this->*fSurfaceFunction)(ix, iy, f, tt);
 	    for (i = 1; i <= 4; ++i) {
 		xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;

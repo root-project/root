@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.42 2001/07/10 16:59:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.43 2001/07/17 09:07:43 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -81,6 +81,7 @@ THistPainter::THistPainter()
    fNIDS  = 0;
    fXbuf  = new Double_t[kNMAX];
    fYbuf  = new Double_t[kNMAX];
+   fNcuts = 0;
 }
 
 //______________________________________________________________________________
@@ -430,16 +431,47 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 }
 
 //______________________________________________________________________________
+Bool_t THistPainter::IsInside(Int_t ix, Int_t iy)
+{
+   // return kTRUE if the cell ix, iy is inside one of the graphical cuts
+   
+   for (Int_t i=0;i<fNcuts;i++) {
+      Double_t x = fXaxis->GetBinCenter(ix);
+      Double_t y = fYaxis->GetBinCenter(iy);
+      if (fCutsOpt[i] > 0) {
+         if (!fCuts[i]->IsInside(x,y)) return kFALSE;
+      } else {
+         if (fCuts[i]->IsInside(x,y))  return kFALSE;
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t THistPainter::IsInside(Double_t x, Double_t y)
+{
+   // return kTRUE if the point x,y is inside one of the graphical cuts
+   
+   for (Int_t i=0;i<fNcuts;i++) {
+      if (fCutsOpt[i] > 0) {
+         if (!fCuts[i]->IsInside(x,y)) return kFALSE;
+      } else {
+         if (fCuts[i]->IsInside(x,y))  return kFALSE;
+      }
+   }
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Int_t THistPainter::MakeChopt(Option_t *choptin)
 {
 //*-*-*-*-*-*-*-*-*Decode string chopt and fill Hoption structure*-*-*-*-*-*-*
 //*-*              ==============================================
 
    char *l;
-   static char chopt[33];
+   char chopt[128];
    Int_t nch = strlen(choptin);
-   for (Int_t i=0;i<nch;i++) chopt[i] = toupper(choptin[i]);
-   chopt[nch] = 0;
+   strcpy(chopt,choptin);
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
@@ -455,6 +487,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.BackBox     = 1;
    Hoption.System      = kCARTESIAN;
 
+   //check for graphical cuts
+   MakeCuts(chopt);
+   
+   for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
    if (fH->GetDimension() > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
    if (fH->GetSumw2N()) Hoption.Error = 1;
@@ -573,6 +609,45 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       }
    }
    return 1;
+}
+
+//______________________________________________________________________________
+Int_t THistPainter::MakeCuts(char *choptin)
+{
+//*-*-*-*-*-*-*-*-*Decode string chopt and fill Graphical cuts structure
+//*-*              =====================================================
+
+   fNcuts = 0;
+   char *left = (char*)strchr(choptin,'[');
+   if (!left) return 0;
+   char *right = (char*)strchr(choptin,']');
+   if (!right) return 0;
+   Int_t nch = right-left;
+   if (nch < 2) return 0;
+   char *cuts = left+1;
+   *right = 0;
+   char *comma, *minus;
+   Int_t i;
+   while(1) {
+      comma = strchr(cuts,',');
+      if (comma) *comma = 0;
+      minus = strchr(cuts,'-');
+      if (minus) cuts = minus+1;
+      while (*cuts == ' ') cuts++;
+      Int_t nc = strlen(cuts);
+      while (cuts[nc-1] == ' ') {cuts[nc-1] = 0; nc--;}
+      TCutG *cut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(cuts);
+      if (cut) {
+         fCuts[fNcuts] = cut;
+         fCutsOpt[fNcuts] = 1;
+         if (minus) fCutsOpt[fNcuts] = -1;
+         fNcuts++;
+      }
+      if (!comma) break;
+      cuts = comma+1;
+   }
+   for (i=0;i<=nch;i++) left[i] = ' ';
+   return fNcuts;
 }
 
 //______________________________________________________________________________
@@ -1401,6 +1476,7 @@ void THistPainter::PaintBoxes()
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
+         if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          xcent = 0.5*xstep;
          z     = fH->GetBinContent(bin);
          if (Hoption.Logz) {
@@ -1483,6 +1559,7 @@ void THistPainter::PaintColorLevels()
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
+         if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
          if (Hoption.Logz) {
             if (z != 0) z = TMath::Log10(z);
@@ -3219,6 +3296,7 @@ void THistPainter::PaintScatterPlot()
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
+         if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
          if (z < zmin) z = zmin;
          if (z > zmax) z = zmax;
@@ -3910,6 +3988,7 @@ void THistPainter::PaintText()
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          x    = fXaxis->GetBinCenter(i);
+         if (!IsInside(x,y)) continue;
          z     = fH->GetBinContent(bin);
          if (z <= Hparam.zmin) continue;
          sprintf(value,"%g",z);
