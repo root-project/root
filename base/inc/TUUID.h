@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.3 2001/10/03 14:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.4 2001/10/06 13:12:15 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -37,10 +37,10 @@
 #include "TDatime.h"
 #endif
 
-
 class TUUID {
 
-private:
+protected:
+   UInt_t    fUUIDNumber;            //!entry number in the list of UUIDs in TProcessUUID
    UInt_t    fTimeLow;               // 60 bit time, lower 32 bits
    UShort_t  fTimeMid;               // middle 16 time bits
    UShort_t  fTimeHiAndVersion;      // high 12 time bits + 4 UUID version bits
@@ -64,16 +64,23 @@ private:
 public:
    TUUID();
    TUUID(const char *uuid_str);
+   virtual ~TUUID();
 
    const char  *AsString() const;
    Int_t        Compare(const TUUID &u) const;
+   void         FillBuffer(char *&buffer);
    UShort_t     Hash() const;
    void         Print() const;
    TInetAddress GetHostAddress() const;
    TDatime      GetTime() const;
    void         GetUUID(UChar_t uuid[16]) const;
+   UInt_t       GetUUIDNumber() const {return fUUIDNumber;}
+   void         ReadBuffer(char *&buffer);
    void         SetUUID(const char *uuid_str);
-
+   void         SetUUIDNumber(UInt_t number) {fUUIDNumber = number;}
+   Int_t        Sizeof() const {return 16;}
+   
+    
    ClassDef(TUUID,1)  // Universally Unique IDentifier
 };
 
