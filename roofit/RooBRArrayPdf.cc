@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBRArrayPdf.cc,v 1.3 2001/08/23 01:23:34 verkerke Exp $
+ *    File: $Id: RooBRArrayPdf.cc,v 1.4 2001/08/24 17:29:36 david Exp $
  * Authors:
  *   JB, John Back, Queen Mary College, Univ London, jback@slac.stanford.edu
  * History:
@@ -45,8 +45,8 @@ RooBRArrayPdf::RooBRArrayPdf(const char *name, const char *title,
 {
   // add the parameters and dependents of all PDFs
   Int_t i(0);
-  Int_t numberOfPdfs = pdfArray.getSize();
-  Int_t numberOfCoeffs = coefArray.getSize();
+  Int_t numberOfPdfs = pdfArray.GetSize();
+  Int_t numberOfCoeffs = coefArray.GetSize();
 
   if (numberOfPdfs != numberOfCoeffs) {
     cout<<"Error. Number of Pdfs != number of coeffs. Aborting."<<endl;
