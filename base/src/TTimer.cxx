@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimer.cxx,v 1.2 2000/10/17 12:26:32 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -105,19 +105,16 @@ Bool_t TTimer::CheckTimer(const TTime &now)
 //______________________________________________________________________________
 Bool_t TTimer::Notify()
 {
-   // Notify when timer times out. When a command string is executed
-   // the timer is implicitely reset. To stop the timer in that case
-   // call TurnOff(). When an object's HandleTimer() is called the timer
-   // has to be reset or turned off in that method.
+   // Notify when timer times out. The timer is always reset. To stop
+   // the timer call TurnOff().
 
    Timeout();       // emit Timeout() signal
-   if (fObject) return fObject->HandleTimer(this);
-   if (fCommand && strlen(fCommand)) {
+   if (fObject) fObject->HandleTimer(this);
+   if (fCommand && strlen(fCommand))
       gROOT->ProcessLine(fCommand);
-      Reset();
-      return kTRUE;
-   }
-   return kFALSE;
+
+   Reset();
+   return kTRUE;
 }
 
 //______________________________________________________________________________
