@@ -59,7 +59,7 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 $(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) -o $@ -c $<
+		$(CXX) $(NOOPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-graf:       $(GRAFLIB)
 
@@ -75,10 +75,10 @@ distclean::     distclean-graf
 
 ##### extra rules ######
 graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPELIB)
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
 
 graf/src/TText.o: graf/src/TText.cxx $(FREETYPELIB)
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
 
 graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPELIB)
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<

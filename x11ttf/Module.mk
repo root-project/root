@@ -46,7 +46,7 @@ $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
 
 $(X11TTFDO):    $(X11TTFDS) $(FREETYPELIB)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) -o $@ -c $<
+		$(CXX) $(NOOPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-x11ttf:     $(X11TTFLIB)
 
@@ -62,4 +62,4 @@ distclean::     distclean-x11ttf
 
 ##### extra rules ######
 $(X11TTFO): %.o: %.cxx $(FREETYPELIB)
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+	$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
