@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.20 2004/03/19 11:03:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.21 2004/06/01 08:56:37 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -177,6 +177,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
 
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
    gPad->Range(-1, -1, 1, 1);
+   fAutoRange      = kFALSE;
 
    Int_t i;
    for (i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
@@ -239,6 +240,7 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
 
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
    gPad->Range(-1, -1, 1, 1);
+   fAutoRange      = kFALSE;
 
    Int_t i;
    for (i = 0; i < 3; fRmin[i] = rmin[i], fRmax[i] = rmax[i], i++);
