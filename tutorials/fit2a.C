@@ -49,11 +49,14 @@ void fit2a() {
    cutg->SetPoint(2, 2, 2);
    cutg->SetPoint(3,-7, 2);
    cutg->SetPoint(4,-7,-7);
+   h2->SetMaximum(800);
    h2->Draw("lego2");
    h2->SetFillColor(38);
    f2->SetNpx(80);
    f2->SetNpy(80);
+   //f2->GetHistogram()->SetMaximum(h2->GetMaximum());
+   //f2->GetHistogram()->SetMinimum(h2->GetMinimum());
+   f2->SetMaximum(h2->GetMaximum());
+   f2->SetMinimum(h2->GetMinimum());
    f2->Draw("surf1 same [cutg]");
-   f2->GetHistogram()->SetMaximum(h2->GetMaximum());
-   f2->GetHistogram()->SetMinimum(h2->GetMinimum());
 }
