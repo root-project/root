@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.23 2004/01/10 10:52:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.24 2004/01/12 16:08:45 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -34,6 +34,8 @@
 #endif
 
 const Int_t kMAXFOUND = 200;
+const Int_t kTFOperMask = 0x7fffff;
+const UChar_t kTFOperShift = 23;
 
 class TFormula : public TNamed {
 
@@ -48,23 +50,29 @@ protected:
    Int_t      fNstring;         //Number of different constants character strings
    TString   *fExpr;            //[fNoper] List of expressions
 private:
-   Int_t      fNoldOper;        //Helper size to be backward compatible
-   Int_t     *fOper;            //[fNoldOper] List of operators
+   Int_t     *fOper;            //[fNoper] List of operators. (See documentation for changes made at version 7)
 protected:
-   Short_t   *fActions;         //[fNoper] List of operators
-   Short_t   *fActionParams;    //[fNoper] List of operators
    Double_t  *fConst;           //[fNconst] Array of fNconst formula constants
    Double_t  *fParams;          //[fNpar] Array of fNpar parameters
    TString   *fNames;           //[fNpar] Array of parameter names
    TObjArray  fFunctions;       //Array of function calls to make
    TBits      fAlreadyFound;    //! cache for information
 
+   inline Int_t     *GetOper() const { return fOper; }
+   inline Short_t    GetAction(Int_t code) const { return fOper[code] >> kTFOperShift; }
+   inline Int_t      GetActionParam(Int_t code) const { return fOper[code] & kTFOperMask; }
+
+   inline void       SetAction(Int_t code, Int_t value, Int_t param = 0) { 
+      fOper[code]  = (value) << kTFOperShift; 
+      fOper[code] += param;
+   }
+
            void    ClearFormula(Option_t *option="");
    virtual Bool_t  IsString(Int_t oper) const;
 
-   virtual void    Convert(UInt_t fromVersion, Int_t *oldOper);
+   virtual void    Convert(UInt_t fromVersion);
 
-   // Version 6 and above actions
+   // Action code for Version 6 and above.
    enum {
       kEnd      = 0,
       kAdd      = 1, kSubstract = 2, 
@@ -111,27 +119,16 @@ protected:
       kpol    = 130 , kxpol    = 130, kypol    = 131, kzpol    = 132,
 
       kParameter       = 140,
-      kNewConstant     = 141,
-      kNewBoolOptimize = 142,
+      kConstant     = 141,
+      kBoolOptimize = 142,
       kStringConst     = 143,
-      kNewVariable     = 144,
-      kNewFunctionCall = 145,
+      kVariable     = 144,
+      kFunctionCall = 145,
 
-      kNewDefinedVariable = 150,
-      kNewDefinedString   = 151
+      kDefinedVariable = 150,
+      kDefinedString   = 151
 
    };
-
-#if 0
-   enum {
-      kConstants    =  50000,
-      kStrings      =  80000,
-      kVariable     = 100000,
-      kFormulaVar   = 110000,
-      kBoolOptimize = 120000, 
-      kFunctionCall = 200000
-   };
-#endif
 
 public:
    // TFormula status bits
@@ -182,7 +179,7 @@ public:
                                    *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
    virtual void        Update() {;}
 
-   ClassDef(TFormula,6)  //The formula base class  f(x,y,z,par)
+   ClassDef(TFormula,7)  //The formula base class  f(x,y,z,par)
 };
 
 #endif

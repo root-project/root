@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.34 2003/12/18 13:21:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.35 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -56,15 +56,10 @@ protected:
    enum { kIsCharacter = BIT(12) };
    enum { kDirect, kDataMember, kMethod, 
           kIndexOfEntry, kEntries, kLength, kIteration };
-/*    enum { kAlias           = TFormula::kVariable+10000+1, */
-/*           kAliasString     = kAlias+1, */
-/*           kAlternate       = kAlias+2, */
-/*           kAlternateString = kAliasString+2 */
-/*    }; */
-   enum { kNewAlias           = 200,
-          kNewAliasString     = 201,
-          kNewAlternate       = 202,
-          kNewAlternateString = 203
+   enum { kAlias           = 200,
+          kAliasString     = 201,
+          kAlternate       = 202,
+          kAlternateString = 203
    };
 
    TTree       *fTree;            //! pointer to Tree
@@ -121,7 +116,7 @@ protected:
    virtual Bool_t     IsString(Int_t oper) const;
    virtual Bool_t     IsLeafString(Int_t code) const;
 
-   void  Convert(UInt_t fromVersion, Int_t *oldOper);
+   void  Convert(UInt_t fromVersion);
 
 private:
    // Not implemented yet
