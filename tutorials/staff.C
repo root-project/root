@@ -41,4 +41,6 @@ void staff() {
    tree->Write();
 
    fclose(fp);
+   delete tree;
+   delete f;
 }
