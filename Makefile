@@ -406,6 +406,7 @@ distclean:: clean
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog build/dummy.d
 	-@cd test && $(MAKE) distclean
+	-@cd test/RootShower && $(MAKE) distclean
 
 maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
