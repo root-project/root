@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.21 2002/03/30 21:12:16 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.22 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -451,7 +451,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
       if (i>=0 && i<ybinM) {
 	realY->setFitBin(i) ;
 	yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder,correctForBinSize) ;	
-	xarr[i-ybinLo] = realY->getVal() ;
+ 	xarr[i-ybinLo] = realY->getVal() ;
       } else {
 	yarr[i-ybinLo] = 0. ;
 	if (i>=ybinM) {
@@ -461,7 +461,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 	}
       }
     }
-    wInt = RooMath::interpolate(yarr,xarr,intOrder+1,yval) ;
+    wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
 
   } else {
 

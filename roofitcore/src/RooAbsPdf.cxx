@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.63 2002/04/03 23:37:23 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.64 2002/04/08 22:08:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -159,7 +159,7 @@ RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
 {
   // Copy constructor
   resetErrorCounters() ;
-  setTraceCounter(0) ;
+  setTraceCounter(other._traceCount) ;
 
   if (other._specNormIntConfig) {
     _specNormIntConfig = new RooIntegratorConfig(*other._specNormIntConfig) ;
@@ -194,7 +194,9 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     Double_t val = evaluate() ;
     Bool_t error = traceEvalPdf(val) ;
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
-    return error?0:val ;
+
+    if (error) return 0 ;
+    return val ;
   }
 
   // Process change in last data set used
@@ -219,6 +221,14 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
     clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
+  }
+
+  if (_traceCount>0) {
+    cout << "[" << _traceCount << "] " ;
+    Int_t tmp = _traceCount ;
+    _traceCount = 0 ;
+    Print() ;
+    _traceCount = tmp-1  ;
   }
 
   return _value ;
@@ -257,15 +267,12 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
   Bool_t error= isnan(value) || (value < 0);
 
   // do nothing if we are no longer tracing evaluations and there was no error
-  if(!error && _traceCount <= 0) return error ;
+  if(!error) return error ;
 
   // otherwise, print out this evaluations input values and result
-  if(error && ++_errorCount <= 10) {
+  if(++_errorCount <= 10) {
     cout << "*** Evaluation Error " << _errorCount << " ";
     if(_errorCount == 10) cout << "(no more will be printed) ";
-  }
-  else if(_traceCount > 0) {
-    cout << '[' << _traceCount-- << "] ";
   }
   else {
     return error  ;
@@ -476,11 +483,25 @@ void RooAbsPdf::resetErrorCounters(Int_t resetValue)
 
 
 
-void RooAbsPdf::setTraceCounter(Int_t value)
+void RooAbsPdf::setTraceCounter(Int_t value, Bool_t allNodes)
 {
   // Reset trace counter to given value, limiting the
   // number of future trace messages for this pdf to 'value'
-  _traceCount = value ;
+  if (!allNodes) {
+    _traceCount = value ;
+    return ; 
+  } else {
+    RooArgList branchList ;
+    branchNodeServerList(&branchList) ;
+    TIterator* iter = branchList.createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+      if (pdf) pdf->setTraceCounter(value,kFALSE) ;
+    }
+    delete iter ;
+  }
+
 }
 
 

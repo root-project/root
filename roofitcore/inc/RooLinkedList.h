@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.rdl,v 1.4 2002/04/03 23:37:25 verkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.5 2002/04/08 20:20:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -63,6 +63,7 @@ public:
       // Fill hash table with existing entries
       RooLinkedListElem* ptr = _first ;
       while(ptr) {
+// 	cout << "setHashTableSize:: filling arg " << ptr->_arg << endl ;
 	_htable->add(ptr->_arg) ;
 	ptr = ptr->_next ;
       }      
@@ -73,12 +74,15 @@ public:
   // Destructor
   virtual ~RooLinkedList() {
     Clear() ;
-    if (_htable) delete _htable ;
+    if (_htable) {
+      delete _htable ;
+    }
   }
 
   Int_t GetSize() const { return _size ; }
 
   void Add(RooAbsArg* arg) {
+//     cout << "RLL::Add " << arg->GetName() ;
     if (!arg) return ;
 
     // Add to hash table 
@@ -93,6 +97,7 @@ public:
       _first=_last ;
     }
     _size++ ;
+//     cout << "... size now" << _size << endl ;
   }
 
 
@@ -149,6 +154,12 @@ public:
     _first = 0 ;
     _last = 0 ;
     _size = 0 ;
+    
+    if (_htable) {
+      Int_t hsize = _htable->size() ;
+      delete _htable ;
+      _htable = new RooHashTable(hsize) ;   
+    }
   }
 
   void Delete(Option_t *o=0) {
