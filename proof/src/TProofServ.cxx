@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.43 2003/06/20 17:53:07 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.44 2003/06/27 11:02:33 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -908,6 +908,13 @@ void TProofServ::HandleSocketInput()
                   }
 
                   gSystem->ChangeDirectory(ocwd);
+
+                  // create link to package in working directory
+                  gSystem->Symlink(pdir, package);
+
+                  // add package to list of include directories to be searched
+                  // by ACliC
+                  gSystem->AddIncludePath(TString("-I") + package);
 
                   // if successful add to list and propagate to slaves
                   if (!status) {

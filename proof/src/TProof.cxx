@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.47 2003/06/17 15:20:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.48 2003/06/27 11:02:33 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -223,7 +223,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
       PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
 
       Bool_t staticSlaves = gEnv->GetValue("Proofd.StaticSlaves", kTRUE);
-      Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
+      PDB(kGlobal,1) Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
 
       if (staticSlaves) {
          FILE *pconf;
@@ -2006,7 +2006,7 @@ void TProof::Feedback(TList *objs)
 
    PDB(kGlobal,1) Info("Feedback","%d Objects", objs->GetSize());
    PDB(kFeedback,1) {
-     Info("Feedback","%d Objects", objs->GetSize());
+      Info("Feedback","%d objects", objs->GetSize());
       objs->ls();
    }
 
