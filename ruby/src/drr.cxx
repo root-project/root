@@ -1,4 +1,4 @@
-// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.1 2004/05/30 18:17:00 brun Exp $
+// @(#)root/ruby:$Name:  $:$Id: drr.cxx,v 1.2 2004/05/31 16:44:25 brun Exp $
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  dynamic ruby-root
@@ -16,19 +16,14 @@
 */
 
 
+#include "TROOT.h"
 #include "TApplication.h"
-#include "TFunction.h"
 #include "TSystem.h"
 #include "TRandom.h"
-#include "TF1.h"
 #include "TF2.h"
 #include "TBenchmark.h"
-#include "TROOT.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TStyle.h"
-
-#include "TList.h"
-#include "TCollection.h"
 
 #include "CallFunc.h"
 #include "Class.h"
@@ -887,6 +882,20 @@ static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self)
 extern "C"
 void Init_libRuby() {
 
+    /* Create a new ROOT Application if it doesn't already exist.  */
+    if (!gApplication)
+    gApplication = new TApplication("ruby root app", NULL, NULL);
+
+    /* In order to have the most frequently used dictionaries
+     * loaded by default.  */
+    gSystem->Load("libMatrix");
+    gSystem->Load("libHist");
+    gSystem->Load("libGraf");
+    gSystem->Load("libGpad");
+    gSystem->Load("libTree");
+    gSystem->Load("libGraf3d");
+    gSystem->Load("libGeom");
+
     drrAbstractClass = rb_define_class("DRRAbstractClass", rb_cObject);
     rb_define_method(drrAbstractClass, "initialize", VALUEFUNC(drr_init), -1);
     rb_define_method(drrAbstractClass, "method_missing", VALUEFUNC(drr_method_missing), -1);
@@ -910,8 +919,4 @@ void Init_libRuby() {
 
     /* enums */
     init_global_enums();
-
-    /* Create a new ROOT Application if it doesn't already exist.  */
-    if (!gApplication)
-    gApplication = new TApplication("ruby root app", NULL, NULL);
 }
