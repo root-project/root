@@ -7,7 +7,7 @@
  * Description:
  *  Define macro
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -666,6 +666,162 @@ int (*sharedlib_func)();
 	  ,G__CREATEDLLREV);
 }
 
+#ifndef G__OLDIMPLEMENTATION1525
+/**************************************************************************
+ * G__show_dllrev
+ **************************************************************************/
+typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
+	void*,void*,void*,void*,void*,void*,void*));
+
+/**************************************************************************
+* G__SetCIntApiPointers
+*
+**************************************************************************/
+void G__SetCintApiPointers(pslhandle,fname)
+G__SHLHANDLE *pslhandle;
+char *fname;
+{
+  G__SetCintApiPointers_t SetCintApi;
+  SetCintApi = (G__SetCintApiPointers_t)
+    G__shl_findsym(pslhandle,fname,TYPE_PROCEDURE);
+  if(SetCintApi)
+    (*SetCintApi)(
+	G__main,
+	G__setothermain,
+	G__getnumbaseclass,
+	G__setnewtype,
+	G__setnewtypeindex,
+	G__resetplocal,
+	G__getgvp,
+	G__resetglobalenv,
+	G__lastifuncposition,
+	G__resetifuncposition,
+	G__setnull,
+	G__getstructoffset,
+	G__getaryconstruct,
+	G__gettempbufpointer,
+	G__setsizep2memfunc,
+	G__getsizep2memfunc,
+	G__get_linked_tagnum,
+	G__tagtable_setup,
+	G__search_tagname,
+	G__search_typename,
+	G__defined_typename,
+	G__tag_memvar_setup,
+	G__memvar_setup,
+	G__tag_memvar_reset,
+	G__tag_memfunc_setup,
+	G__memfunc_setup,
+	G__memfunc_next,
+	G__memfunc_para_setup,
+	G__tag_memfunc_reset,
+	G__letint,
+	G__letdouble,
+	G__store_tempobject,
+	G__inheritance_setup,
+	G__add_compiledheader,
+	G__add_ipath,
+	G__add_macro,
+	G__check_setup_version,
+	G__int,
+	G__double,
+	G__calc,
+	G__loadfile,
+	G__unloadfile,
+	G__init_cint,
+	G__scratch_all,
+	G__setdouble,
+	G__setint,
+	G__stubstoreenv,
+	G__stubrestoreenv,
+	G__getstream,
+	G__type2string,
+	G__alloc_tempobject,
+	G__set_p2fsetup,
+	G__free_p2fsetup,
+	G__genericerror,
+	G__tmpnam,
+	G__setTMPDIR,
+	G__setPrerun,
+	G__readline,
+	G__getFuncNow,
+	G__getIfileFp,
+	G__incIfileLineNumber,
+	G__setReturn,
+	G__getPrerun,
+	G__getDispsource,
+	G__getSerr,
+	G__getIsMain,
+	G__setIsMain,
+	G__setStep,
+	G__getStepTrace,
+	G__setDebug,
+	G__getDebugTrace,
+	G__set_asm_noverflow,
+	G__get_no_exec,
+	G__get_no_exec_compile,
+	G__setdebugcond,
+	G__init_process_cmd,
+	G__process_cmd,
+	G__pause,
+	G__input,
+	G__split,
+	G__getIfileLineNumber,
+	G__addpragma,
+	G__add_setup_func,
+	G__remove_setup_func,
+	G__setgvp,
+	G__set_stdio_handle,
+	G__setautoconsole,
+	G__AllocConsole,
+	G__FreeConsole,
+	G__getcintready,
+	G__security_recover,
+	G__breakkey,
+	G__stepmode,
+	G__tracemode,
+	G__getstepmode,
+	G__gettracemode,
+	G__printlinenum,
+	G__search_typename2,
+	G__set_atpause,
+	G__set_aterror,
+	G__p2f_void_void,
+	G__setglobalcomp,
+	G__getmakeinfo,
+	G__get_security_error,
+	G__map_cpp_name,
+	G__Charref,
+	G__Shortref,
+	G__Intref,
+	G__Longref,
+	G__UCharref,
+	G__UShortref,
+	G__UIntref,
+	G__ULongref,
+	G__Floatref,
+	G__Doubleref,
+	G__loadsystemfile,
+	G__set_ignoreinclude,
+	G__exec_tempfile,
+	G__exec_text,
+	G__lasterror_filename,
+	G__lasterror_linenum,
+	G__va_arg_put);
+}
+
+#endif
+
 /**************************************************************************
 * G__shl_load()
 *
@@ -694,6 +850,16 @@ char *shlfile;
   else ++G__allsl;
 
   G__sl_handle[allsl] = G__dlopen(shlfile);
+
+#ifndef G__OLDIMPLEMENTATION1525
+#ifdef G__DLL_SYM_UNDERSCORE
+  G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCCintApiPointers");
+  G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCppCintApiPointers");
+#else
+  G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCCintApiPointers");
+  G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCppCintApiPointers");
+#endif
+#endif
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {

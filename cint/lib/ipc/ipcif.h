@@ -61,7 +61,7 @@ struct msqid_ds;
 union semun;
 
 struct sembuf;
-struct msgbuf;
+struct msgbuf; /* does not exist in RH7.0 */
 
 /**************************************************************************
  * convert a pathname and a project id to a System V IPC Key
@@ -187,7 +187,7 @@ int semop(int semid,struct sembuf *sops,unsigned int nsops);
  **************************************************************************/
 struct msgbuf {
   long mtype;
-  char mtext[80];
+  char mtext[80];  /* This is dummy */
 };
 
 struct msqid_ds;
@@ -198,6 +198,7 @@ int msgrcv(int msgid,struct msgbuf *msgp,int msgsz,long msgtyp,int msgflg);
 int msgctl(int msgid, int cmd,struct msqid_ds *buf);
 
 
+#pragma link off struct msgbuf;
 #endif /* __MAKECINT__ */
 
 #endif /* G__IPC_H */

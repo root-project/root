@@ -7,7 +7,7 @@
  * Description:
  *  New style compiled object linkage
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -930,11 +930,18 @@ int flag;
 void G__clink_header(fp)
 FILE *fp;
 {
+#ifndef G__OLDIMPLEMENTATION1525
+  int i;
+#endif
   fprintf(fp,"#include <stddef.h>\n");
   fprintf(fp,"#include <stdio.h>\n");
   fprintf(fp,"#include <stdlib.h>\n");
   fprintf(fp,"#include <math.h>\n");
   fprintf(fp,"#include <string.h>\n");
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) 
+    fprintf(fp,"#define G__MULTITHREADLIBCINTC\n");
+#endif
   fprintf(fp,"#define G__ANSIHEADER\n");
 #ifdef G__VAARG_COPYFUNC
   fprintf(fp,"#define G__DICTIONARY\n");
@@ -944,6 +951,10 @@ FILE *fp;
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
+#endif
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) 
+    fprintf(fp,"#undef G__MULTITHREADLIBCINTC\n");
 #endif
 
 #ifdef G__BORLAND
@@ -955,6 +966,16 @@ FILE *fp;
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup_global%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__c_setup%s();\n",G__DLLID);
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) {
+    fprintf(fp,"extern G__DLLEXPORT void G__SetCCintApiPointers G__P((\n");
+    for(i=0;i<122;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=121) fprintf(fp,",\n");
+    }
+    fprintf(fp,"));\n");
+  }
+#endif
 #else
   fprintf(fp,"extern void G__c_setup_tagtable%s();\n",G__DLLID);
   fprintf(fp,"extern void G__c_setup_typetable%s();\n",G__DLLID);
@@ -962,7 +983,18 @@ FILE *fp;
   fprintf(fp,"extern void G__c_setup_global%s();\n",G__DLLID);
   fprintf(fp,"extern void G__c_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern void G__set_c_environment%s();\n",G__DLLID);
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) {
+    fprintf(fp,"extern void G__SetCCintApiPointers G__P((\n");
+    for(i=0;i<122;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=121) fprintf(fp,",\n");
+    }
+    fprintf(fp,"));\n");
+  }
 #endif
+#endif
+
 
   fprintf(fp,"\n");
   fprintf(fp,"\n");
@@ -975,6 +1007,9 @@ FILE *fp;
 void G__cpplink_header(fp)
 FILE *fp;
 {
+#ifndef G__OLDIMPLEMENTATION1525
+  int i;
+#endif
   fprintf(fp,"#include <stddef.h>\n");
   fprintf(fp,"#include <stdio.h>\n");
   fprintf(fp,"#include <stdlib.h>\n");
@@ -982,6 +1017,10 @@ FILE *fp;
   fprintf(fp,"#include <string.h>\n");
 #ifdef G__OLDIMPLEMENTATION1193
   fprintf(fp,"extern \"C\" {\n");
+#endif
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) 
+    fprintf(fp,"#define G__MULTITHREADLIBCINTCPP\n");
 #endif
   fprintf(fp,"#define G__ANSIHEADER\n");
 #ifdef G__VAARG_COPYFUNC
@@ -992,6 +1031,10 @@ FILE *fp;
   fprintf(fp,"#include \"%s%sG__ci.h\"\n",G__cintsysdir,G__psep);
 #else
   fprintf(fp,"#include \"G__ci.h\"\n");
+#endif
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) 
+    fprintf(fp,"#undef G__MULTITHREADLIBCINTCPP\n");
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1193
@@ -1009,6 +1052,16 @@ FILE *fp;
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup_memfunc%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern G__DLLEXPORT void G__cpp_setup%s();\n",G__DLLID);
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) {
+    fprintf(fp,"extern G__DLLEXPORT void G__SetCppCintApiPointers G__P((\n");
+    for(i=0;i<122;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=121) fprintf(fp,",\n");
+    }
+    fprintf(fp,"));\n");
+  }
+#endif
 #else
   fprintf(fp,"extern void G__cpp_setup_tagtable%s();\n",G__DLLID);
   fprintf(fp,"extern void G__cpp_setup_inheritance%s();\n",G__DLLID);
@@ -1018,7 +1071,18 @@ FILE *fp;
   fprintf(fp,"extern void G__cpp_setup_memfunc%s();\n",G__DLLID);
   fprintf(fp,"extern void G__cpp_setup_func%s();\n",G__DLLID);
   fprintf(fp,"extern void G__set_cpp_environment%s();\n",G__DLLID);
+#ifndef G__OLDIMPLEMENTATION1525
+  if(G__multithreadlibcint) {
+    fprintf(fp,"extern void G__SetCppCintApiPointers G__P((\n");
+    for(i=0;i<122;i++) {
+      fprintf(fp,"\tvoid*");
+      if(i!=121) fprintf(fp,",\n");
+    }
+    fprintf(fp,"));\n");
+  }
 #endif
+#endif
+
 
   fprintf(fp,"}\n");
   fprintf(fp,"\n");
@@ -1565,6 +1629,10 @@ static void G__write_windef_header()
     fprintf(fp,"        G__cpp_setup_global%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__cpp_setup_func%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__cpp_setup%s @%d\n",G__DLLID,++G__nexports);
+#ifndef G__OLDIMPLEMENTATION1525
+    if(G__multithreadlibcint) 
+      fprintf(fp,"        G__SetCppCintApiPointers @%d\n",++G__nexports);
+#endif
   }
   else {
     fprintf(fp,"        G__c_dllrev%s @%d\n",G__DLLID,++G__nexports);
@@ -1575,6 +1643,10 @@ static void G__write_windef_header()
     fprintf(fp,"        G__c_setup_global%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__c_setup_func%s @%d\n",G__DLLID,++G__nexports);
     fprintf(fp,"        G__c_setup%s @%d\n",G__DLLID,++G__nexports);
+#ifndef G__OLDIMPLEMENTATION1525
+    if(G__multithreadlibcint) 
+      fprintf(fp,"        G__SetCCintApiPointers @%d\n",++G__nexports);
+#endif
   }
 }
 #endif /* G__GENWINDEF */
@@ -7284,6 +7356,12 @@ int link_stub;
       for(i=0;i<G__newtype.alltype;i++) {
 	if(0==regexec(&re,G__newtype.name[i],(size_t)0,(regmatch_t*)NULL,0)){
 	  G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1527
+	  if(-1!=G__newtype.tagnum[i] && 
+	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
+	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7299,6 +7377,12 @@ int link_stub;
       for(i=0;i<G__newtype.alltype;i++) {
 	if(0!=regex(re,G__newtype.name[i])){
 	  G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1527
+	  if(-1!=G__newtype.tagnum[i] && 
+	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
+	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7311,6 +7395,12 @@ int link_stub;
       for(i=0;i<G__newtype.alltype;i++) {
 	if(strncmp(buf,G__newtype.name[i],hash)==0) {
 	  G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1527
+	  if(-1!=G__newtype.tagnum[i] && 
+	     '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
+	    G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7322,6 +7412,12 @@ int link_stub;
       i = G__defined_typename(buf);
       if(-1!=i) {
 	G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1527
+	if(-1!=G__newtype.tagnum[i] && 
+	   '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
+	  G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	}
+#endif
 #ifndef G__OLDIMPLEMENTATION1138
 	  ++done;
 #endif
@@ -7522,7 +7618,15 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION528
     else if(strncmp(buf,"typedef",3)==0) {
-      for(i=0;i<G__newtype.alltype;i++) G__newtype.globalcomp[i] = globalcomp;
+      for(i=0;i<G__newtype.alltype;i++) {
+	G__newtype.globalcomp[i] = globalcomp;
+#ifndef G__OLDIMPLEMENTATION1527
+	if(-1!=G__newtype.tagnum[i] && 
+	   '$'==G__struct.name[G__newtype.tagnum[i]][0]) {
+	  G__struct.globalcomp[G__newtype.tagnum[i]] = globalcomp;
+	}
+#endif
+      }
     }
 #endif /* ON528 */
 #ifndef G__OLDIMPLEMENTATION606

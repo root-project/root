@@ -202,12 +202,16 @@ char *new_name;
     }
     else if(strcmp(new_name,"int&")==0) {
       cin=G__fgetvarname(new_name,",;=():");
+#ifdef G__OLDIMPLEMENTATION1526
       G__var_type = toupper(G__var_type);
+#endif
       G__reftype=G__PARAREFERENCE;
     }
     else if(strcmp(new_name,"double&")==0) {
       cin=G__fgetvarname(new_name,",;=():");
+#ifdef G__OLDIMPLEMENTATION1526
       G__var_type='D';
+#endif
       G__reftype=G__PARAREFERENCE;
     }
 

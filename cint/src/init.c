@@ -719,9 +719,15 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gikl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
+
+#ifndef G__OLDIMPLEMENTATION1525
+    case 'j':
+      G__multithreadlibcint = atoi(optarg);
+      break;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1480
     case 'm':
@@ -1075,6 +1081,9 @@ char *argv[] ;
       G__more(G__sout,"  -G [tracedmp] : dump exec trace into file\n");
       G__more(G__sout,"  -i : interactively return undefined symbol value\n");
       G__more(G__sout,"  -I [includepath] : set include file search path\n");
+#ifndef G__OLDIMPLEMENTATION1525
+      G__more(G__sout,"* -j [0|1]: Create multi-thread safe DLL(experimental)\n");
+#endif
       /* G__more(G__sout,"  -k : function key on\n"); */
       G__more(G__sout,"  -K : C mode\n");
 #ifdef G__SHAREDLIB

@@ -1258,7 +1258,19 @@ char *funcheader;   /* funcheader = 'funcname(' */
     cin=G__fignorestream(")");
   }
   
+#ifndef G__OLDIMPLEMENTATION1529
+  cin=G__fgetstream_template(paraname,",;{(");
+  if('('==cin) {
+    int len = strlen(paraname);
+    paraname[len++] = cin;
+    cin=G__fgetstream(paraname+len,")");
+    len = strlen(paraname);
+    paraname[len++] = cin;
+    cin=G__fgetstream_template(paraname+len,",;{");
+  }
+#else
   cin=G__fgetstream_template(paraname,",;{");
+#endif
   
   /****************************************************************
    * if header ignore following headers
@@ -1404,7 +1416,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
 
   else if(G__def_struct_member && 
-	  ('}'==cin || (';'==cin && '\0'!=paraname[0]))) {
+	  ('}'==cin || (';'==cin && '\0'!=paraname[0]
+#ifndef G__OLDIMPLEMENTATION1528
+			&& ':'!=paraname[0]
+#endif
+			)
+	   )) {
     /* Function macro as member declaration */
     /* restore file position
      *   func(   int   a   ,  double   b )

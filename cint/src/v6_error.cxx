@@ -24,12 +24,6 @@
 #ifndef G__OLDIMPLEMENTATION1103
 int G__const_noerror=0;
 /******************************************************************
-* G__const_whatnoerror()
-******************************************************************/
-int G__const_whatnoerror() {
-  return(G__const_noerror);
-}
-/******************************************************************
 * G__const_setnoerror()
 ******************************************************************/
 int G__const_setnoerror() {
@@ -41,6 +35,15 @@ int G__const_setnoerror() {
 ******************************************************************/
 int G__const_resetnoerror() {
   G__const_noerror = 0;
+  return(G__const_noerror);
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1528
+/******************************************************************
+* G__const_whatnoerror()
+******************************************************************/
+int G__const_whatnoerror() {
   return(G__const_noerror);
 }
 #endif

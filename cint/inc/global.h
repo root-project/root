@@ -668,6 +668,10 @@ extern struct G__ConstStringList* G__SystemIncludeDir;
 extern int G__command_eval ;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1525
+extern int G__multithreadlibcint ;
+#endif
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

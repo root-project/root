@@ -451,6 +451,14 @@ struct G__ConstStringList* G__SystemIncludeDir=0;
 int G__command_eval=0 ;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1525
+#ifdef G__MULTITHREADLIBCINT
+int G__multithreadlibcint = 1;
+#else
+int G__multithreadlibcint = 0;
+#endif
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

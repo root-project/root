@@ -21,12 +21,16 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014088
-#define G__CINTVERSIONSTR  "5.14.88, May 13 2001"
+#define G__CINTVERSION      5014089
+#define G__CINTVERSIONSTR  "5.14.89, May 20 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* Define following macro to enable multi-thread safe libcint and DLL
+ * features. */
+/* #define G__MULTITHREADLIBCINT */
 
 /* Disable G__fprinterr */
 #ifndef G__ERRORCALLBACK
@@ -1448,65 +1452,10 @@ extern void (*G__aterror)();
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1169
-extern G__EXPORT char* G__Charref G__P((G__value *buf));
-extern G__EXPORT short* G__Shortref G__P((G__value *buf));
-extern G__EXPORT int* G__Intref G__P((G__value *buf));
-extern G__EXPORT long* G__Longref G__P((G__value *buf));
-extern G__EXPORT unsigned char* G__UCharref G__P((G__value *buf));
-extern G__EXPORT unsigned int* G__UIntref G__P((G__value *buf));
-extern G__EXPORT unsigned short* G__UShortref G__P((G__value *buf));
-extern G__EXPORT unsigned long* G__ULongref G__P((G__value *buf));
-extern G__EXPORT float* G__Floatref G__P((G__value *buf));
-extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
 #endif
-extern G__EXPORT int G__get_security_error G__P((void));
-extern G__EXPORT char* G__map_cpp_name G__P((char *in));
-extern G__EXPORT int G__genericerror G__P((char *message));
-extern G__EXPORT char* G__tmpnam G__P((char* name));
-extern G__EXPORT int G__setTMPDIR G__P((char* badname));
-extern G__EXPORT void G__setPrerun G__P((int prerun));
-extern G__EXPORT int G__getFuncNow G__P((void));
-extern FILE* G__getIfileFp G__P((void));
-extern G__EXPORT void G__incIfileLineNumber G__P((void));
-extern G__EXPORT int G__getIfileLineNumber G__P((void));
-extern G__EXPORT void G__setReturn G__P((int rtn));
-extern G__EXPORT int G__getPrerun G__P((void));
-extern G__EXPORT short G__getDispsource G__P((void));
-extern G__EXPORT FILE* G__getSerr G__P((void));
-extern G__EXPORT int G__getIsMain G__P((void));
-extern G__EXPORT void G__setIsMain G__P((int ismain));
-extern G__EXPORT void G__setStep G__P((int step));
-extern G__EXPORT int G__getStepTrace G__P((void));
-extern G__EXPORT void G__setDebug G__P((int dbg));
-extern G__EXPORT int G__getDebugTrace G__P((void));
-extern G__EXPORT void G__set_asm_noverflow G__P((int novfl));
-extern G__EXPORT int G__get_no_exec G__P((void));
-extern G__EXPORT int G__get_no_exec_compile G__P((void));
-extern G__EXPORT void G__setdebugcond G__P((void));
-extern G__EXPORT int G__init_process_cmd G__P((void));
-extern G__EXPORT int G__process_cmd G__P((char *line,char *prompt,int *more,int *err,G__value *rslt));
-extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
-extern G__EXPORT G__value G__exec_text G__P((char *text));
-extern G__EXPORT void G__setothermain G__P((int othermain));
-extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
-extern G__EXPORT int G__main G__P((int argc,char **argv));
-extern G__EXPORT int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
 extern int G__fgetline G__P((char *string));
-extern G__EXPORT int G__split G__P((char *line,char *string,int *argc,char **argv));
-extern G__EXPORT void G__addpragma G__P((char* comname,void (*p2f) G__P((char*)) ));
-extern G__EXPORT G__value G__calc G__P((char *expr));
-extern G__EXPORT void G__scratch_all G__P((void));
-extern G__EXPORT int G__init_cint G__P((char *command));
-extern G__EXPORT void G__set_stdio_handle G__P((FILE* sout,FILE* serr,FILE* sin));
 extern int G__load G__P((char *commandfile));
-extern G__EXPORT char* G__input G__P((char* prompt));
-extern G__EXPORT int G__pause G__P((void));
-extern G__EXPORT double G__double G__P((G__value buf));
 /* extern float G__float G__P((G__value buf));*/
-extern G__EXPORT long G__int G__P((G__value buf));
-extern G__EXPORT int  G__loadfile G__P((char *filename));
-extern G__EXPORT int  G__unloadfile G__P((char *filename));
-extern G__EXPORT char *G__getmakeinfo G__P((char *item));
 #if !defined(G__OLDIMPLEMENTATION481)
 extern G__value (*G__GetSpecialObject) G__P((char *name,void **ptr,void** ppdict));
 #elif !defined(G__OLDIMPLEMENTATION455)
@@ -1514,9 +1463,6 @@ extern G__value (*G__GetSpecialObject) G__P((char *name,void *ptr));
 #else
 extern G__value (*G__GetSpecialObject) G__P((char *name));
 #endif
-int G__security_recover G__P((FILE *fout));
-extern G__EXPORT void G__add_setup_func G__P((G__CONST char *libname, G__incsetup func));
-extern G__EXPORT void G__remove_setup_func G__P((G__CONST char *libname));
 extern int  G__call_setup_funcs G__P((void));
 extern void G__reset_setup_funcs G__P((void));
 extern char *G__cint_version G__P((void));
@@ -1537,27 +1483,17 @@ struct G__var_array *G__searchvariable G__P((char *varname,int varhash
 				       ,long *pstore_struct_offset
 				       ,int *pig15
 				       ,int isdecl));
-extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
-extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
-extern G__EXPORT void G__stubstoreenv G__P((struct G__StoreEnv *env,void* p,int tagnum));
-extern G__EXPORT void G__stubrestoreenv G__P((struct G__StoreEnv *env));
-extern G__EXPORT void G__alloc_tempobject G__P((int tagnum,int typenum));
 
-extern G__EXPORT int G__getstream G__P((char *source,int *isrc,char *string,char *endmark));
-extern G__EXPORT char *G__type2string G__P((int type,int tagnum,int typenum,int reftype
-			   ,int isconst));
 
 struct G__ifunc_table* G__p2f2funchandle G__P((void* p2f,struct G__ifunc_table* p_ifunc,int* pindex));
 char* G__p2f2funcname G__P((void *p2f));
 int G__isinterpretedp2f G__P((void* p2f));
 int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
-extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
-extern G__EXPORT void G__free_p2fsetup G__P((void));
-extern G__EXPORT int G__printlinenum G__P((void));
 #ifndef G__OLDIMPLEMENTATION1485
 extern G__EXPORT void G__set_errmsgcallback G__P((void *p));
 #endif
+
 
 #ifndef G__OLDIMPLEMENTATION1473
 /**************************************************************************
@@ -1594,7 +1530,6 @@ struct G__va_list_para {
 
 void G__va_arg_setalign G__P((int n));
 void G__va_arg_copyvalue G__P((int t,void* p,G__value* pval,int objsize));
-void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
 
 #endif /* 1473 */
 
@@ -1618,86 +1553,19 @@ extern G__EXPORT void G__RegisterScriptCompiler G__P((int(*p2f)(G__CONST char*,G
 /*************************************************************************
 * Pointer to function evaluation function
 *************************************************************************/
-extern G__EXPORT void G__p2f_void_void G__P((void* p2f));
 
 /*************************************************************************
 * G__atpause, G__aterror API
 *************************************************************************/
-extern G__EXPORT void G__set_atpause G__P((void (*p2f)()));
-extern G__EXPORT void G__set_aterror G__P((void (*p2f)()));
 
 /*************************************************************************
 * interface method setup functions
 *************************************************************************/
-extern G__EXPORT int G__getnumbaseclass G__P((int tagnum));
-extern G__EXPORT void G__setnewtype G__P((int globalcomp,G__CONST char* comment,int nindex));
-extern G__EXPORT void G__setnewtypeindex G__P((int j,int index));
-extern G__EXPORT void G__resetplocal G__P(());
-extern G__EXPORT long G__getgvp G__P(());
-extern G__EXPORT void G__setgvp G__P((long gvp));
-extern G__EXPORT void G__resetglobalenv G__P(());
-extern G__EXPORT void G__lastifuncposition G__P(());
-extern G__EXPORT void G__resetifuncposition G__P(());
-extern G__EXPORT void G__setnull G__P((G__value* result));
-extern G__EXPORT long G__getstructoffset G__P(());
-extern G__EXPORT int G__getaryconstruct G__P(());
-extern G__EXPORT long G__gettempbufpointer G__P(());
-extern G__EXPORT void G__setsizep2memfunc G__P((int sizep2memfunc));
-extern G__EXPORT int G__getsizep2memfunc G__P(());
 
-extern G__EXPORT int G__get_linked_tagnum G__P((G__linked_taginfo *p));
-extern G__EXPORT int G__tagtable_setup G__P((int tagnum,int size,int cpplink,int isabstract,G__CONST char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc));
-extern G__EXPORT int G__search_tagname G__P((G__CONST char *tagname,int type));
-extern G__EXPORT int G__search_typename G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype));
-extern G__EXPORT int G__search_typename2 G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype,int parent_tagnum));
 extern int G__defined_tagname G__P((G__CONST char* tagname,int noerror));
-extern G__EXPORT int G__defined_typename G__P((G__CONST char* typenamein));
-extern G__EXPORT int G__tag_memvar_setup G__P((int tagnum));
-extern G__EXPORT int G__memvar_setup G__P((void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment));
-extern G__EXPORT int G__tag_memvar_reset G__P(());
-extern G__EXPORT int G__tag_memfunc_setup G__P((int tagnum));
 
-#ifndef G__OLDIMPLEMENTATION1231
-#ifdef G__TRUEP2F
-extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
-#else /* G__TRUEP2F */
-extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
-#endif /* G__TRUEP2F */
-#else /* 1231 */
-#ifdef G__TRUEP2F
-extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
-#else /* G__TRUEP2F */
-extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
-,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
-#endif /* G__TRUEP2F */
-#endif /* 1231 */
-
-extern G__EXPORT int G__memfunc_next G__P(());
-extern G__EXPORT int G__memfunc_para_setup G__P((int ifn,int type,int tagnum,int typenum,int reftype,G__value *para_default,char *para_def,char *para_name));
-extern G__EXPORT int G__tag_memfunc_reset G__P(());
-extern G__EXPORT void G__letint G__P((G__value *buf,int type,long value));
-extern G__EXPORT void G__letdouble G__P((G__value *buf,int type,double value));
-extern G__EXPORT void G__store_tempobject G__P((G__value reg));
-extern G__EXPORT int G__inheritance_setup G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property));
-extern G__EXPORT void G__add_compiledheader G__P((G__CONST char *headerfile));
-extern G__EXPORT void G__add_ipath G__P((G__CONST char *ipath));
-extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
-extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 int G__deleteglobal G__P((void* p));
 int G__deletevariable G__P((G__CONST char* varname));
-extern G__EXPORT void G__setautoconsole G__P((int autoconsole));
-extern G__EXPORT int G__AllocConsole G__P(());
-extern G__EXPORT int G__FreeConsole G__P(());
-extern G__EXPORT int G__getcintready G__P(());
-extern G__EXPORT int G__security_recover G__P((FILE* fout));
-extern G__EXPORT void G__breakkey G__P((int signame));
-extern G__EXPORT int G__tracemode G__P((int tracemode));
-extern G__EXPORT int G__stepmode G__P((int stepmode));
-extern G__EXPORT int G__gettracemode G__P(());
-extern G__EXPORT int G__getstepmode G__P(());
 #ifndef G__OLDIMPLEMENTATION1142
 extern G__EXPORT int G__optimizemode G__P((int optimizemode));
 extern G__EXPORT int G__getoptimizemode G__P(());
@@ -1713,12 +1581,9 @@ extern G__EXPORT void G__SetCriticalSectionEnv G__P(());
 
 #ifndef G__OLDIMPLEMENTATION1198
 extern G__EXPORT void G__storelasterror G__P(());
-extern G__EXPORT char* G__lasterror_filename G__P(());
-extern G__EXPORT int G__lasterror_linenum G__P(());
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1207
-extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1207
@@ -1727,7 +1592,6 @@ extern G__EXPORT void G__set_smartunload G__P((int smartunload));
 
 #ifndef G__OLDIMPLEMENTATION1210
 typedef int (*G__IgnoreInclude) G__P((const char* fname,const char* expandedfname));
-extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1423
@@ -1745,6 +1609,554 @@ extern G__EXPORT void G__operator_delete_ary G__P((void *p)) ;
 **************************************************************************/
 extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash));
 #endif
+
+
+/**************************************************************************
+ * Exported Cint API functions
+ **************************************************************************/
+extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
+extern G__EXPORT int G__setmasksignal G__P((int));
+
+#if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
+
+extern G__EXPORT int G__main G__P((int argc,char **argv));
+extern G__EXPORT void G__setothermain G__P((int othermain));
+extern G__EXPORT int G__getnumbaseclass G__P((int tagnum));
+extern G__EXPORT void G__setnewtype G__P((int globalcomp,G__CONST char* comment,int nindex));
+extern G__EXPORT void G__setnewtypeindex G__P((int j,int index));
+extern G__EXPORT void G__resetplocal G__P(());
+extern G__EXPORT long G__getgvp G__P(());
+extern G__EXPORT void G__resetglobalenv G__P(());
+extern G__EXPORT void G__lastifuncposition G__P(());
+extern G__EXPORT void G__resetifuncposition G__P(());
+extern G__EXPORT void G__setnull G__P((G__value* result));
+extern G__EXPORT long G__getstructoffset G__P(());
+extern G__EXPORT int G__getaryconstruct G__P(());
+extern G__EXPORT long G__gettempbufpointer G__P(());
+extern G__EXPORT void G__setsizep2memfunc G__P((int sizep2memfunc));
+extern G__EXPORT int G__getsizep2memfunc G__P(());
+extern G__EXPORT int G__get_linked_tagnum G__P((G__linked_taginfo *p));
+extern G__EXPORT int G__tagtable_setup G__P((int tagnum,int size,int cpplink,int isabstract,G__CONST char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc));
+extern G__EXPORT int G__search_tagname G__P((G__CONST char *tagname,int type));
+extern G__EXPORT int G__search_typename G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype));
+extern G__EXPORT int G__defined_typename G__P((G__CONST char* typenamein));
+extern G__EXPORT int G__tag_memvar_setup G__P((int tagnum));
+extern G__EXPORT int G__memvar_setup G__P((void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment));
+extern G__EXPORT int G__tag_memvar_reset G__P(());
+extern G__EXPORT int G__tag_memfunc_setup G__P((int tagnum));
+
+#ifdef G__TRUEP2F
+extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
+#else /* G__TRUEP2F */
+extern G__EXPORT int G__memfunc_setup G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
+#endif /* G__TRUEP2F */
+
+extern G__EXPORT int G__memfunc_next G__P(());
+extern G__EXPORT int G__memfunc_para_setup G__P((int ifn,int type,int tagnum,int typenum,int reftype,G__value *para_default,char *para_def,char *para_name));
+extern G__EXPORT int G__tag_memfunc_reset G__P(());
+extern G__EXPORT void G__letint G__P((G__value *buf,int type,long value));
+extern G__EXPORT void G__letdouble G__P((G__value *buf,int type,double value));
+extern G__EXPORT void G__store_tempobject G__P((G__value reg));
+extern G__EXPORT int G__inheritance_setup G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property));
+extern G__EXPORT void G__add_compiledheader G__P((G__CONST char *headerfile));
+extern G__EXPORT void G__add_ipath G__P((G__CONST char *ipath));
+extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
+extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
+extern G__EXPORT long G__int G__P((G__value buf));
+extern G__EXPORT double G__double G__P((G__value buf));
+extern G__EXPORT G__value G__calc G__P((char *expr));
+extern G__EXPORT int  G__loadfile G__P((char *filename));
+extern G__EXPORT int  G__unloadfile G__P((char *filename));
+extern G__EXPORT int G__init_cint G__P((char *command));
+extern G__EXPORT void G__scratch_all G__P((void));
+extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
+extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
+extern G__EXPORT void G__stubstoreenv G__P((struct G__StoreEnv *env,void* p,int tagnum));
+extern G__EXPORT void G__stubrestoreenv G__P((struct G__StoreEnv *env));
+extern G__EXPORT int G__getstream G__P((char *source,int *isrc,char *string,char *endmark));
+extern G__EXPORT char *G__type2string G__P((int type,int tagnum,int typenum,int reftype,int isconst));
+extern G__EXPORT void G__alloc_tempobject G__P((int tagnum,int typenum));
+extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
+extern G__EXPORT void G__free_p2fsetup G__P((void));
+extern G__EXPORT int G__genericerror G__P((char *message));
+extern G__EXPORT char* G__tmpnam G__P((char* name));
+extern G__EXPORT int G__setTMPDIR G__P((char* badname));
+extern G__EXPORT void G__setPrerun G__P((int prerun));
+extern G__EXPORT int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
+extern G__EXPORT int G__getFuncNow G__P((void));
+extern FILE* G__getIfileFp G__P((void));
+extern G__EXPORT void G__incIfileLineNumber G__P((void));
+extern G__EXPORT void G__setReturn G__P((int rtn));
+extern G__EXPORT int G__getPrerun G__P((void));
+extern G__EXPORT short G__getDispsource G__P((void));
+extern G__EXPORT FILE* G__getSerr G__P((void));
+extern G__EXPORT int G__getIsMain G__P((void));
+extern G__EXPORT void G__setIsMain G__P((int ismain));
+extern G__EXPORT void G__setStep G__P((int step));
+extern G__EXPORT int G__getStepTrace G__P((void));
+extern G__EXPORT void G__setDebug G__P((int dbg));
+extern G__EXPORT int G__getDebugTrace G__P((void));
+extern G__EXPORT void G__set_asm_noverflow G__P((int novfl));
+extern G__EXPORT int G__get_no_exec G__P((void));
+extern G__EXPORT int G__get_no_exec_compile G__P((void));
+extern G__EXPORT void G__setdebugcond G__P((void));
+extern G__EXPORT int G__init_process_cmd G__P((void));
+extern G__EXPORT int G__process_cmd G__P((char *line,char *prompt,int *more,int *err,G__value *rslt));
+extern G__EXPORT int G__pause G__P((void));
+extern G__EXPORT char* G__input G__P((char* prompt));
+extern G__EXPORT int G__split G__P((char *line,char *string,int *argc,char **argv));
+extern G__EXPORT int G__getIfileLineNumber G__P((void));
+extern G__EXPORT void G__addpragma G__P((char* comname,void (*p2f) G__P((char*)) ));
+extern G__EXPORT void G__add_setup_func G__P((G__CONST char *libname, G__incsetup func));
+extern G__EXPORT void G__remove_setup_func G__P((G__CONST char *libname));
+extern G__EXPORT void G__setgvp G__P((long gvp));
+extern G__EXPORT void G__set_stdio_handle G__P((FILE* sout,FILE* serr,FILE* sin));
+extern G__EXPORT void G__setautoconsole G__P((int autoconsole));
+extern G__EXPORT int G__AllocConsole G__P(());
+extern G__EXPORT int G__FreeConsole G__P(());
+extern G__EXPORT int G__getcintready G__P(());
+extern G__EXPORT int G__security_recover G__P((FILE* fout));
+extern G__EXPORT void G__breakkey G__P((int signame));
+extern G__EXPORT int G__stepmode G__P((int stepmode));
+extern G__EXPORT int G__tracemode G__P((int tracemode));
+extern G__EXPORT int G__getstepmode G__P(());
+extern G__EXPORT int G__gettracemode G__P(());
+extern G__EXPORT int G__printlinenum G__P((void));
+extern G__EXPORT int G__search_typename2 G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype,int parent_tagnum));
+extern G__EXPORT void G__set_atpause G__P((void (*p2f)()));
+extern G__EXPORT void G__set_aterror G__P((void (*p2f)()));
+extern G__EXPORT void G__p2f_void_void G__P((void* p2f));
+extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
+extern G__EXPORT char *G__getmakeinfo G__P((char *item));
+extern G__EXPORT int G__get_security_error G__P((void));
+extern G__EXPORT char* G__map_cpp_name G__P((char *in));
+extern G__EXPORT char* G__Charref G__P((G__value *buf));
+extern G__EXPORT short* G__Shortref G__P((G__value *buf));
+extern G__EXPORT int* G__Intref G__P((G__value *buf));
+extern G__EXPORT long* G__Longref G__P((G__value *buf));
+extern G__EXPORT unsigned char* G__UCharref G__P((G__value *buf));
+extern G__EXPORT unsigned short* G__UShortref G__P((G__value *buf));
+extern G__EXPORT unsigned int* G__UIntref G__P((G__value *buf));
+extern G__EXPORT unsigned long* G__ULongref G__P((G__value *buf));
+extern G__EXPORT float* G__Floatref G__P((G__value *buf));
+extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
+extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
+extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
+extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
+extern G__EXPORT G__value G__exec_text G__P((char *text));
+extern G__EXPORT char* G__lasterror_filename G__P(());
+extern G__EXPORT int G__lasterror_linenum G__P(());
+extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+
+#else /* G__MULTITHREADLIBCINT */
+
+static int (*G__main) G__P((int argc,char **argv));
+static void (*G__setothermain) G__P((int othermain));
+static int (*G__getnumbaseclass) G__P((int tagnum));
+static void (*G__setnewtype) G__P((int globalcomp,G__CONST char* comment,int nindex));
+static void (*G__setnewtypeindex) G__P((int j,int index));
+static void (*G__resetplocal) G__P(());
+static long (*G__getgvp) G__P(());
+static void (*G__resetglobalenv) G__P(());
+static void (*G__lastifuncposition) G__P(());
+static void (*G__resetifuncposition) G__P(());
+static void (*G__setnull) G__P((G__value* result));
+static long (*G__getstructoffset) G__P(());
+static int (*G__getaryconstruct) G__P(());
+static long (*G__gettempbufpointer) G__P(());
+static void (*G__setsizep2memfunc) G__P((int sizep2memfunc));
+static int (*G__getsizep2memfunc) G__P(());
+static int (*G__get_linked_tagnum) G__P((G__linked_taginfo *p));
+static int (*G__tagtable_setup) G__P((int tagnum,int size,int cpplink,int isabstract,G__CONST char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc));
+static int (*G__search_tagname) G__P((G__CONST char *tagname,int type));
+static int (*G__search_typename) G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype));
+static int (*G__defined_typename) G__P((G__CONST char* typenamein));
+static int (*G__tag_memvar_setup) G__P((int tagnum));
+static int (*G__memvar_setup) G__P((void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment));
+static int (*G__tag_memvar_reset) G__P(());
+static int (*G__tag_memfunc_setup) G__P((int tagnum));
+
+#ifndef G__OLDIMPLEMENTATION1231
+#ifdef G__TRUEP2F
+static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
+#else /* G__TRUEP2F */
+static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
+#endif /* G__TRUEP2F */
+#else /* 1231 */
+#ifdef G__TRUEP2F
+static int (*G__memfunc_setup) G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual));
+#else /* G__TRUEP2F */
+static int (*G__memfunc_setup*) G__P((G__CONST char *funcname,int hash,int (*funcp)(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash),int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment));
+#endif /* G__TRUEP2F */
+#endif /* 1231 */
+
+static int (*G__memfunc_next) G__P(());
+static int (*G__memfunc_para_setup) G__P((int ifn,int type,int tagnum,int typenum,int reftype,G__value *para_default,char *para_def,char *para_name));
+static int (*G__tag_memfunc_reset) G__P(());
+static void (*G__letint) G__P((G__value *buf,int type,long value));
+static void (*G__letdouble) G__P((G__value *buf,int type,double value));
+static void (*G__store_tempobject) G__P((G__value reg));
+static int (*G__inheritance_setup) G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property));
+static void (*G__add_compiledheader) G__P((G__CONST char *headerfile));
+static void (*G__add_ipath) G__P((G__CONST char *ipath));
+static void (*G__add_macro) G__P((G__CONST char *macro));
+static void (*G__check_setup_version) G__P((int version,G__CONST char *func));
+static long (*G__int) G__P((G__value buf));
+static double (*G__double) G__P((G__value buf));
+static G__value (*G__calc) G__P((char *expr));
+static int  (*G__loadfile) G__P((char *filename));
+static int  (*G__unloadfile) G__P((char *filename));
+static int (*G__init_cint) G__P((char *command));
+static void (*G__scratch_all) G__P((void));
+static void (*G__setdouble) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
+static void (*G__setint) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
+static void (*G__stubstoreenv) G__P((struct G__StoreEnv *env,void* p,int tagnum));
+static void (*G__stubrestoreenv) G__P((struct G__StoreEnv *env));
+static int (*G__getstream) G__P((char *source,int *isrc,char *string,char *endmark));
+static char* (*G__type2string) G__P((int type,int tagnum,int typenum,int reftype,int isconst));
+static void (*G__alloc_tempobject) G__P((int tagnum,int typenum));
+static void (*G__set_p2fsetup) G__P((void (*p2f)()));
+static void (*G__free_p2fsetup) G__P((void));
+static int (*G__genericerror) G__P((char *message));
+static char* (*G__tmpnam) G__P((char* name));
+static int (*G__setTMPDIR) G__P((char* badname));
+static void (*G__setPrerun) G__P((int prerun));
+static int (*G__readline) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[]));
+static int (*G__getFuncNow) G__P((void));
+static FILE* (*G__getIfileFp) G__P((void));
+static void (*G__incIfileLineNumber) G__P((void));
+static void (*G__setReturn) G__P((int rtn));
+static int (*G__getPrerun) G__P((void));
+static short (*G__getDispsource) G__P((void));
+static FILE* (*G__getSerr) G__P((void));
+static int (*G__getIsMain) G__P((void));
+static void (*G__setIsMain) G__P((int ismain));
+static void (*G__setStep) G__P((int step));
+static int (*G__getStepTrace) G__P((void));
+static void (*G__setDebug) G__P((int dbg));
+static int (*G__getDebugTrace) G__P((void));
+static void (*G__set_asm_noverflow) G__P((int novfl));
+static int (*G__get_no_exec) G__P((void));
+static int (*G__get_no_exec_compile) G__P((void));
+static void (*G__setdebugcond) G__P((void));
+static int (*G__init_process_cmd) G__P((void));
+static int (*G__process_cmd) G__P((char *line,char *prompt,int *more,int *err,G__value *rslt));
+static int (*G__pause) G__P((void));
+static char* (*G__input) G__P((char* prompt));
+static int (*G__split) G__P((char *line,char *string,int *argc,char **argv));
+static int (*G__getIfileLineNumber) G__P((void));
+static void (*G__addpragma) G__P((char* comname,void (*p2f) G__P((char*)) ));
+static void (*G__add_setup_func) G__P((G__CONST char *libname,G__incsetup func));
+static void (*G__remove_setup_func) G__P((G__CONST char *libname));
+static void (*G__setgvp) G__P((long gvp));
+static void (*G__set_stdio_handle) G__P((FILE* sout,FILE* serr,FILE* sin));
+static void (*G__setautoconsole) G__P((int autoconsole));
+static int (*G__AllocConsole) G__P(());
+static int (*G__FreeConsole) G__P(());
+static int (*G__getcintready) G__P(());
+static int (*G__security_recover) G__P((FILE* fout));
+static void (*G__breakkey) G__P((int signame));
+static int (*G__stepmode) G__P((int stepmode));
+static int (*G__tracemode) G__P((int tracemode));
+static int (*G__getstepmode) G__P(());
+static int (*G__gettracemode) G__P(());
+static int (*G__printlinenum) G__P((void));
+static int (*G__search_typename2) G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype,int parent_tagnum));
+static void (*G__set_atpause) G__P((void (*p2f)()));
+static void (*G__set_aterror) G__P((void (*p2f)()));
+static void (*G__p2f_void_void) G__P((void* p2f));
+static void (*G__setglobalcomp) G__P((int globalcomp));
+static char* (*G__getmakeinfo) G__P((char *item));
+static int (*G__get_security_error) G__P((void));
+static char* (*G__map_cpp_name) G__P((char *in));
+static char* (*G__Charref) G__P((G__value *buf));
+static short* (*G__Shortref) G__P((G__value *buf));
+static int* (*G__Intref) G__P((G__value *buf));
+static long* (*G__Longref) G__P((G__value *buf));
+static unsigned char* (*G__UCharref) G__P((G__value *buf));
+static unsigned short* (*G__UShortref) G__P((G__value *buf));
+static unsigned int* (*G__UIntref) G__P((G__value *buf));
+static unsigned long* (*G__ULongref) G__P((G__value *buf));
+static float* (*G__Floatref) G__P((G__value *buf));
+static double* (*G__Doubleref) G__P((G__value *buf));
+static int (*G__loadsystemfile) G__P((G__CONST char* filename));
+static void (*G__set_ignoreinclude) G__P((G__IgnoreInclude ignoreinclude));
+static G__value (*G__exec_tempfile) G__P((char *file));
+static G__value (*G__exec_text) G__P((char *text));
+static char* (*G__lasterror_filename) G__P(());
+static int (*G__lasterror_linenum) G__P(());
+static void (*G__va_arg_put) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
+
+#ifdef G__MULTITHREADLIBCINTC
+G__EXPORT void G__SetCCintApiPointers(
+#else
+G__EXPORT void G__SetCppCintApiPointers(
+#endif
+		void* a1,
+		void* a2,
+		void* a3,
+		void* a4,
+		void* a5,
+		void* a6,
+		void* a7,
+		void* a8,
+		void* a9,
+		void* a10,
+		void* a11,
+		void* a12,
+		void* a13,
+		void* a14,
+		void* a15,
+		void* a16,
+		void* a17,
+		void* a18,
+		void* a19,
+		void* a20,
+		void* a21,
+		void* a22,
+		void* a23,
+		void* a24,
+		void* a25,
+		void* a26,
+		void* a27,
+		void* a28,
+		void* a29,
+		void* a30,
+		void* a31,
+		void* a32,
+		void* a33,
+		void* a34,
+		void* a35,
+		void* a36,
+		void* a37,
+		void* a38,
+		void* a39,
+		void* a40,
+		void* a41,
+		void* a42,
+		void* a43,
+		void* a44,
+		void* a45,
+		void* a46,
+		void* a47,
+		void* a48,
+		void* a49,
+		void* a50,
+		void* a51,
+		void* a52,
+		void* a53,
+		void* a54,
+		void* a55,
+		void* a56,
+		void* a57,
+		void* a58,
+		void* a59,
+		void* a60,
+		void* a61,
+		void* a62,
+		void* a63,
+		void* a64,
+		void* a65,
+		void* a66,
+		void* a67,
+		void* a68,
+		void* a69,
+		void* a70,
+		void* a71,
+		void* a72,
+		void* a73,
+		void* a74,
+		void* a75,
+		void* a76,
+		void* a77,
+		void* a78,
+		void* a79,
+		void* a80,
+		void* a81,
+		void* a82,
+		void* a83,
+		void* a84,
+		void* a85,
+		void* a86,
+		void* a87,
+		void* a88,
+		void* a89,
+		void* a90,
+		void* a91,
+		void* a92,
+		void* a93,
+		void* a94,
+		void* a95,
+		void* a96,
+		void* a97,
+		void* a100,
+		void* a101,
+		void* a102,
+		void* a103,
+		void* a104,
+		void* a105,
+		void* a106,
+		void* a107,
+		void* a108,
+		void* a109,
+		void* a110,
+		void* a111,
+		void* a112,
+		void* a113,
+		void* a114,
+		void* a115,
+		void* a116,
+		void* a117,
+		void* a118,
+		void* a119,
+		void* a120,
+		void* a121,
+		void* a122,
+		void* a123,
+		void* a124)
+{
+  G__main = (int (*) G__P((int argc,char **argv)) ) a1;
+  G__setothermain = (void (*) G__P((int othermain)) ) a2;
+  G__getnumbaseclass = (int (*) G__P((int tagnum)) ) a3;
+  G__setnewtype = (void (*) G__P((int globalcomp,G__CONST char* comment,int nindex)) ) a4;
+  G__setnewtypeindex = (void (*) G__P((int j,int index)) ) a5;
+  G__resetplocal = (void (*) G__P(()) ) a6;
+  G__getgvp = (long (*) G__P(()) ) a7;
+  G__resetglobalenv = (void (*) G__P(()) ) a8;
+  G__lastifuncposition = (void (*) G__P(()) ) a9;
+  G__resetifuncposition = (void (*) G__P(()) ) a10;
+  G__setnull = (void (*) G__P((G__value* result)) ) a11;
+  G__getstructoffset = (long (*) G__P(()) ) a12;
+  G__getaryconstruct = (int (*) G__P(()) ) a13;
+  G__gettempbufpointer = (long (*) G__P(()) ) a14;
+  G__setsizep2memfunc = (void (*) G__P((int sizep2memfunc)) ) a15;
+  G__getsizep2memfunc = (int (*) G__P(()) ) a16;
+  G__get_linked_tagnum = (int (*) G__P((G__linked_taginfo *p)) ) a17;
+  G__tagtable_setup = (int (*) G__P((int tagnum,int size,int cpplink,int isabstract,G__CONST char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc)) ) a18;
+  G__search_tagname = (int (*) G__P((G__CONST char *tagname,int type)) ) a19;
+  G__search_typename = (int (*) G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype)) ) a20;
+  G__defined_typename = (int (*) G__P((G__CONST char* typenamein)) ) a21;
+  G__tag_memvar_setup = (int (*) G__P((int tagnum)) ) a22;
+  G__memvar_setup = (int (*) G__P((void *p,int type,int reftype,int constvar,int tagnum,int typenum,int statictype,int access,G__CONST char *expr,int definemacro,G__CONST char *comment)) ) a23;
+  G__tag_memvar_reset = (int (*) G__P(()) ) a24;
+  G__tag_memfunc_setup = (int (*) G__P((int tagnum)) ) a25;
+
+#ifdef G__TRUEP2F
+  G__memfunc_setup = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type 
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment,void* tp2f,int isvirtual))  ) a26;
+#else /* G__TRUEP2F */
+  G__memfunc_setup = (int (*) G__P((G__CONST char *funcname,int hash,G__InterfaceMethod funcp,int type
+,int tagnum,int typenum,int reftype,int para_nu,int ansi,int access,int isconst,G__CONST char *paras,G__CONST char *comment)) )  a26;
+#endif /* G__TRUEP2F */
+
+  G__memfunc_next = (int (*) G__P(()) ) a27;
+  G__memfunc_para_setup = (int (*) G__P((int ifn,int type,int tagnum,int typenum,int reftype,G__value *para_default,char *para_def,char *para_name)) ) a28;
+  G__tag_memfunc_reset = (int (*) G__P(()) ) a29;
+  G__letint = (void (*) G__P((G__value *buf,int type,long value)) ) a30;
+  G__letdouble = (void (*) G__P((G__value *buf,int type,double value)) ) a31;
+  G__store_tempobject = (void (*) G__P((G__value reg)) ) a32;
+  G__inheritance_setup = (int (*) G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property)) ) a33;
+  G__add_compiledheader = (void (*) G__P((G__CONST char *headerfile)) ) a34;
+  G__add_ipath = (void (*) G__P((G__CONST char *ipath)) ) a35;
+  G__add_macro = (void (*) G__P((G__CONST char *macro)) ) a36;
+  G__check_setup_version = (void (*) G__P((int version,G__CONST char *func)) ) a37;
+  G__int = (long (*) G__P((G__value buf)) ) a38;
+  G__double = (double (*) G__P((G__value buf)) ) a39;
+  G__calc = (G__value (*) G__P((char *expr)) ) a40;
+  G__loadfile = (int (*) G__P((char *filename)) ) a41;
+  G__unloadfile = (int (*) G__P((char *filename)) ) a42;
+  G__init_cint = (int (*) G__P((char *command)) ) a43;
+  G__scratch_all = (void (*) G__P((void)) ) a44;
+  G__setdouble = (void (*) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a45;
+  G__setint = (void (*) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a46;
+  G__stubstoreenv = (void (*) G__P((struct G__StoreEnv *env,void* p,int tagnum)) ) a47;
+  G__stubrestoreenv = (void (*) G__P((struct G__StoreEnv *env)) ) a48;
+  G__getstream = (int (*) G__P((char *source,int *isrc,char *string,char *endmark)) ) a49;
+  G__type2string = (char* (*) G__P((int type,int tagnum,int typenum,int reftype,int isconst)) ) a50;
+  G__alloc_tempobject = (void (*) G__P((int tagnum,int typenum)) ) a51;
+  G__set_p2fsetup = (void (*) G__P((void (*p2f)())) ) a52;
+  G__free_p2fsetup = (void (*) G__P((void)) ) a53;
+  G__genericerror = (int (*) G__P((char *message)) ) a54;
+  G__tmpnam = (char* (*) G__P((char* name)) ) a55;
+  G__setTMPDIR = (int (*) G__P((char* badname)) ) a56;
+  G__setPrerun = (void (*) G__P((int prerun)) ) a57;
+  G__readline = (int (*) G__P((FILE *fp,char *line,char *argbuf,int *argn,char *arg[])) ) a58;
+  G__getFuncNow = (int (*) G__P((void)) ) a59;
+  G__getIfileFp = (FILE* (*) G__P((void)) ) a60;
+  G__incIfileLineNumber = (void (*) G__P((void)) ) a61;
+  G__setReturn = (void (*) G__P((int rtn)) ) a62;
+  G__getPrerun = (int (*) G__P((void)) ) a63;
+  G__getDispsource = (short (*) G__P((void)) ) a64;
+  G__getSerr = (FILE* (*) G__P((void)) ) a65;
+  G__getIsMain = (int (*) G__P((void)) ) a66;
+  G__setIsMain = (void (*) G__P((int ismain)) ) a67;
+  G__setStep = (void (*) G__P((int step)) ) a68;
+  G__getStepTrace = (int (*) G__P((void)) ) a69;
+  G__setDebug = (void (*) G__P((int dbg)) ) a70;
+  G__getDebugTrace = (int (*) G__P((void)) ) a71;
+  G__set_asm_noverflow = (void (*) G__P((int novfl)) ) a72;
+  G__get_no_exec = (int (*) G__P((void)) ) a73;
+  G__get_no_exec_compile = (int (*) G__P((void)) ) a74;
+  G__setdebugcond = (void (*) G__P((void)) ) a75;
+  G__init_process_cmd = (int (*) G__P((void)) ) a76;
+  G__process_cmd = (int (*) G__P((char *line,char *prompt,int *more,int *err,G__value *rslt)) ) a77;
+  G__pause = (int (*) G__P((void)) ) a78;
+  G__input = (char* (*) G__P((char* prompt)) ) a79;
+  G__split = (int (*) G__P((char *line,char *string,int *argc,char **argv)) ) a80;
+  G__getIfileLineNumber = (int (*) G__P((void)) ) a81;
+  G__addpragma = (void (*) G__P((char* comname,void (*p2f) G__P((char*)) )) ) a82;
+  G__add_setup_func = (void (*) G__P((G__CONST char *libname,G__incsetup func)) ) a83;
+  G__remove_setup_func = (void (*) G__P((G__CONST char *libname)) ) a84;
+  G__setgvp = (void (*) G__P((long gvp)) ) a85;
+  G__set_stdio_handle = (void (*) G__P((FILE* sout,FILE* serr,FILE* sin)) ) a86;
+  G__setautoconsole = (void (*) G__P((int autoconsole)) ) a87;
+  G__AllocConsole = (int (*) G__P(()) ) a88;
+  G__FreeConsole = (int (*) G__P(()) ) a89;
+  G__getcintready = (int (*) G__P(()) ) a90;
+  G__security_recover = (int (*) G__P((FILE* fout)) ) a91;
+  G__breakkey = (void (*) G__P((int signame)) ) a92;
+  G__stepmode = (int (*) G__P((int stepmode)) ) a93;
+  G__tracemode = (int (*) G__P((int tracemode)) ) a94;
+  G__getstepmode = (int (*) G__P(()) ) a95;
+  G__gettracemode = (int (*) G__P(()) ) a96;
+  G__printlinenum = (int (*) G__P((void)) ) a97;
+  G__search_typename2 = (int (*) G__P((G__CONST char *typenamein,int typein,int tagnum,int reftype,int parent_tagnum)) ) a100;
+  G__set_atpause = (void (*) G__P((void (*p2f)())) ) a101;
+  G__set_aterror = (void (*) G__P((void (*p2f)())) ) a102;
+  G__p2f_void_void = (void (*) G__P((void* p2f)) ) a103;
+  G__setglobalcomp = (void (*) G__P((int globalcomp)) ) a104;
+  G__getmakeinfo = (char* (*) G__P((char *item)) ) a105;
+  G__get_security_error = (int (*) G__P((void)) ) a106;
+  G__map_cpp_name = (char* (*) G__P((char *in)) ) a107;
+  G__Charref = (char* (*) G__P((G__value *buf)) ) a108;
+  G__Shortref = (short* (*) G__P((G__value *buf)) ) a109;
+  G__Intref = (int* (*) G__P((G__value *buf)) ) a110;
+  G__Longref = (long* (*) G__P((G__value *buf)) ) a111;
+  G__UCharref = (unsigned char* (*) G__P((G__value *buf)) ) a112;
+  G__UShortref = (unsigned short* (*) G__P((G__value *buf)) ) a113;
+  G__UIntref = (unsigned int* (*) G__P((G__value *buf)) ) a114;
+  G__ULongref = (unsigned long* (*) G__P((G__value *buf)) ) a115;
+  G__Floatref = (float* (*) G__P((G__value *buf)) ) a116;
+  G__Doubleref = (double* (*) G__P((G__value *buf)) ) a117;
+  G__loadsystemfile = (int (*) G__P((G__CONST char* filename)) ) a118;
+  G__set_ignoreinclude = (void (*) G__P((G__IgnoreInclude ignoreinclude)) ) a119;
+  G__exec_tempfile = (G__value (*) G__P((char *file)) ) a120;
+  G__exec_text = (G__value (*) G__P((char *text)) ) a121;
+  G__lasterror_filename = (char* (*) G__P(()) ) a122;
+  G__lasterror_linenum = (int (*) G__P(()) ) a123;
+  G__va_arg_put = (void (*) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n)) ) a124;
+}
+
+#endif /* G__MULTITHREADLIBCINT */
+/**************************************************************************
+ * end of Exported Cint API functions
+ **************************************************************************/
 
 #endif /* __CINT__ */
 
@@ -1793,7 +2205,6 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
 #define system  G__system
 
 int G__printf G__P((char* fmt,...));
-extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 int G__fputc G__P((int character,FILE *fp));
 int G__putchar G__P((int character));
 int G__fputs G__P((char *string,FILE *fp));
@@ -1819,7 +2230,6 @@ int G__system G__P((char *com));
 #define alarm(time)        NULL
 typedef void (*G__signaltype)(int,void (*)(int));
 G__signaltype G__signal G__P((int sgnl,void (*f)(int)));
-extern G__EXPORT int G__setmasksignal G__P((int));
 #endif /* ON614 */
 
 #endif /* G__SPECIALSTDIO */

@@ -15,6 +15,7 @@
 #pragma preprocessor on
 #endif
 
+/* C preprocessor is used for GL.h before Cint reads it */
 #include "GL.h"
 
 #ifdef __MAKECINT__
@@ -27,6 +28,8 @@
  * undefined symbols
  *********************************************************************/
 #ifdef __MAKECINT__
+/* Following pragmas are needed to eliminate errors compiling dictionary.
+ * They are needed to fix the mismatch between header and actual library. */
 #pragma link off class GLUquadric;
 #pragma link off class GLUnurbs;
 #pragma link off class GLUtesselator;
@@ -37,6 +40,7 @@
 #pragma link off function gluBuild3DMipmaps;
 #pragma link off function gluBuild2DMipmapLevels;
 #pragma link off function gluBuild1DMipmapLevels;
+#pragma link off function XMesaMakeCurrent2;
 #endif
 
 
@@ -44,6 +48,8 @@
  * define macros
  *********************************************************************/
 #ifdef __MAKECINT__
+/* Because preprocessor is used to process those header files,
+ * macros must be defined here again for Cint. */
 
 /* gl.h */
 #define GL_VERSION_1_1   1
