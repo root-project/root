@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.58 2003/08/06 07:26:35 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.59 2003/08/06 14:17:18 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -91,6 +91,16 @@ Bool_t TStreamerElement::CannotSplit() const
    if (cl->InheritsFrom("TRef"))      return kTRUE;
    if (cl->InheritsFrom("TRefArray")) return kTRUE;
    if (cl->InheritsFrom("TArray"))    return kTRUE;
+
+   switch(fType) {
+      case TStreamerInfo::kAny    +TStreamerInfo::kOffsetL:
+      case TStreamerInfo::kObject +TStreamerInfo::kOffsetL:
+      case TStreamerInfo::kTObject+TStreamerInfo::kOffsetL:
+      case TStreamerInfo::kTString+TStreamerInfo::kOffsetL:
+      case TStreamerInfo::kTNamed +TStreamerInfo::kOffsetL:
+         return kTRUE;
+   }
+   
    
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
@@ -1144,6 +1154,7 @@ TStreamerSTL::TStreamerSTL()
 
 }
 
+#include "Api.h"
 //______________________________________________________________________________
 TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, const char *typeName, const char *trueType,Bool_t dmPointer)
         : TStreamerElement(name,title,offset,kSTL,typeName)
@@ -1202,20 +1213,25 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
       sclose = star - 1;
    }
    while (*sclose == ' ') {*sclose = 0; sclose--;}
-   
-   
+
+
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
    if (dt) {
       fCtype = dt->GetType();
       if (isPointer) fCtype += TStreamerInfo::kOffsetP;
    } else {
+      // this could also be a nested enums ... which should work ... be let's see.
+      G__ClassInfo info(sopen);
+      if (info.IsValid() && info.Property()&G__BIT_ISENUM) {
+         if (isPointer) fCtype += TStreamerInfo::kOffsetP;
+      } else {      
       TClass *cl = gROOT->GetClass(sopen);
       if (cl) {
          if (isPointer) fCtype = TStreamerInfo::kObjectp;
          else           fCtype = TStreamerInfo::kObject;
       } else {
          if(strcmp(sopen,"string")) printf ("UNKNOW type, sopen=%s\n",sopen);
-      }
+      }}
    }
    delete [] s;
    

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.124 2003/08/19 16:32:35 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.125 2003/08/25 22:37:39 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -143,7 +143,11 @@ public:
    virtual Int_t GetArrayLength() {
       Int_t len = 1;
       if (fNext) len = fNext->GetArrayLength();
-      if (fElement) len *= fElement->GetArrayLength();
+      if (fElement) {
+         Int_t elen = fElement->GetArrayLength();
+         if (elen || fElement->IsA() == TStreamerBasicPointer::Class() ) 
+            len *= fElement->GetArrayLength();
+      }
       return len;
    }
 
@@ -764,7 +768,7 @@ Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
 
    if (fNext==0) return 0;
    Int_t len,index,sub_instance;
-   len = fNext->fElement->GetArrayLength();
+   len = fNext->GetArrayLength();
    if (len) {
       index = instance / len;
       sub_instance = instance % len;
@@ -810,7 +814,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance) {
 
    if (fNext==0) return 0;
    Int_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
+   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
    Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
@@ -838,7 +842,7 @@ void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance) {
    if (fNext) {
      // Same as in TFormLeafInfoClones::GetValue
      Int_t len,index,sub_instance;
-     len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
+     len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
      if (len) {
        index = instance / len;
        sub_instance = instance % len;
@@ -860,7 +864,7 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance) {
    if (fNext) {
      // Same as in TFormLeafInfoClones::GetValue
      Int_t len,index,sub_instance;
-     len = (fNext->fElement==0)? 0 : fNext->fElement->GetArrayLength();
+     len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
      if (len) {
        index = instance / len;
        sub_instance = instance % len;
@@ -2252,6 +2256,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       TClass * cl = 0;
       TFormLeafInfo *maininfo = 0;
       TFormLeafInfo *previnfo = 0;
+
       if (leaf->InheritsFrom("TLeafObject") ) {
          TBranchObject *bobj = (TBranchObject*)leaf->GetBranch();
          cl = gROOT->GetClass(bobj->GetClassName());
@@ -2303,9 +2308,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                  return -1;
               }
               TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
+
+              // The following code was commmented out because in THIS case
+              // the dimension are actually handled by parsing the title and name of the leaf
+              // and branch (see a little further)
               // The dimension needs to be handled!
-              numberOfVarDim += RegisterDimensions(code,clonesinfo);
-              
+              // numberOfVarDim += RegisterDimensions(code,clonesinfo);
+
               maininfo = clonesinfo;
 
               // We skip some cases because we can assume we have an object.
@@ -2331,7 +2340,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, &gFakeClonesElem, kTRUE);
             // The dimension needs to be handled!
             numberOfVarDim += RegisterDimensions(code,clonesinfo);
-              
+
             maininfo = clonesinfo;
             previnfo = maininfo;
 
@@ -2344,7 +2353,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       }
       
       // Treat the dimension information in the leaf name, title and 2nd branch count
-      numberOfVarDim += RegisterDimensions(code,leaf);      
+      numberOfVarDim += RegisterDimensions(code,leaf);
 
       if (cl) {
          Int_t offset;
@@ -2609,10 +2618,19 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
                         TClonesArray * clones;
                         leaf->GetBranch()->GetEntry(readentry);
-                        clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
+
+                        if (previnfo) {
+                           previnfo->fNext = clonesinfo;
+                           clones = (TClonesArray*)maininfo->GetValuePointer(leaf,0);
+                           previnfo->fNext = 0;
+                        } else {
+                           clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
+                        }
+
                         TClass *sub_cl = clones->GetClass();
                         element = sub_cl->GetStreamerInfo()->GetStreamerElement(work,offset);
                         delete clonesinfo;
+
                         if (element) {
                            leafinfo = new TFormLeafInfoClones(cl,clones_offset,curelem);
                            numberOfVarDim += RegisterDimensions(code,leafinfo);
@@ -2674,7 +2692,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         // leafinfo->fOffset += offset;
                         leafinfo->AddOffset(offset,element);
                      } else {
-                        leafinfo = new TFormLeafInfo(cl,offset,element);
+                         if (element->GetClassPointer() ==  TClonesArray::Class()) {
+                            leafinfo = new TFormLeafInfoClones(cl,offset,element);
+                            mustderef = kTRUE;
+                         } else {
+                            leafinfo = new TFormLeafInfo(cl,offset,element);
+                         }
                      }
                   } else if (type == TStreamerInfo::kOffsetL + TStreamerInfo::kAny ||
                              type == TStreamerInfo::kOffsetL + TStreamerInfo::kObject) {
