@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -32,8 +32,8 @@ protected:
     Int_t         fNPackets;        //Number of packets
     Int_t         fPacketSize;      //Number of events in one packet for parallel root
     Int_t         fStatus;          //branch status when used as a branch
-    void         *fBaddress;        //branch address when used as a branch
-    char         *fPackets;         //Packet descriptor string
+    void         *fBaddress;        //!branch address when used as a branch
+    char         *fPackets;         //!Packet descriptor string
 
 public:
         TChainElement();
