@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.38 2003/04/24 06:25:30 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.39 2003/04/28 05:23:15 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -52,7 +52,7 @@ enum EFileType { kSource, kInclude, kTree };
 // appropriate for representing information from a wide range of domains.
 //
 // The THtml class is designed to provide an easy way for converting ROOT
-// classes, and files as well, into HTML documents. Here is the few rules and
+// classes, and files as well, into HTML documents. Here are the few rules and
 // suggestions for a configuration, coding and usage.
 //
 //
@@ -175,6 +175,17 @@ enum EFileType { kSource, kInclude, kTree };
 //       Root.Html.SearchEngine: http://root.cern.ch/root/Search.phtml
 //
 //
+// (vii) HTML Charset
+//
+// HTML 4.01 transitional recommends the specification of the charset in the 
+// content type meta tag (see e.g. BEGIN_HTML<a href="http://www.w3.org/TR/REC-html40/charset.html">http://www.w3.org/TR/REC-html40/charset.html</a>END_HTML). 
+// THtml generates it for the HTML output files. It defaults to ISO-8859-1, and 
+// can be changed using Root.Html.Charset.
+// 
+// Example:
+//       Root.Html.Charset:      EUC-JP
+//
+//
 //
 //
 // Coding rules:
@@ -260,18 +271,19 @@ enum EFileType { kSource, kInclude, kTree };
 // Environment variables:
 // ---------------------
 //
-//   Root.Html.OutputDir    ( default: htmldoc)
-//   Root.Html.SourceDir    ( default: .:src/:include/)
-//   Root.Html.Author       ( default: // Author:) - start tag for authors
-//   Root.Html.LastUpdate   ( default: // @(#)) - start tag for last update
-//   Root.Html.Copyright    ( default:  * Copyright) - start tag for copyright notice
-//   Root.Html.Description  ( default: //____________________ ) - start tag for class descr
-//   Root.Html.HomePage     ( default: ) - URL to the user defined home page
-//   Root.Html.Header       ( default: ) - location of user defined header
-//   Root.Html.Footer       ( default: ) - location of user defined footer
-//   Root.Html.Root         ( default: ) - URL of Root's class documentation
-//   Root.Html.SearchEngine ( default: ) - link to the search engine
-//   Root.Html.XWho         ( default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
+//   Root.Html.OutputDir    (default: htmldoc)
+//   Root.Html.SourceDir    (default: .:src/:include/)
+//   Root.Html.Author       (default: // Author:) - start tag for authors
+//   Root.Html.LastUpdate   (default: // @(#)) - start tag for last update
+//   Root.Html.Copyright    (default:  * Copyright) - start tag for copyright notice
+//   Root.Html.Description  (default: //____________________ ) - start tag for class descr
+//   Root.Html.HomePage     (default: ) - URL to the user defined home page
+//   Root.Html.Header       (default: ) - location of user defined header
+//   Root.Html.Footer       (default: ) - location of user defined footer
+//   Root.Html.Root         (default: ) - URL of Root's class documentation
+//   Root.Html.SearchEngine (default: ) - link to the search engine
+//   Root.Html.XWho         (default: http://consult.cern.ch/xwho/people?) - URL stem of CERN's xWho system
+//   Root.Html.Charset      (default: ISO-8859-1) - HTML character set
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3321,6 +3333,8 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
 // will be replaced by the value of this method's parameter "title" before written to the output file
 
    const char *addHeader = gEnv->GetValue("Root.Html.Header", "");
+   const char *charset = gEnv->GetValue("Root.Html.Charset", "ISO-8859-1");
+
    // standard header output if Root.Html.Header is not set, or it's set and it ends with a "+".
    if (addHeader
        && (strlen(addHeader) == 0
@@ -3340,7 +3354,8 @@ void THtml::WriteHtmlHeader(ofstream & out, const char *title)
       out << "<!--                                             -->" <<
           endl;
       out << "<head>" << endl;
-      out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">" <<
+      out << "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=" <<
+	  charset << "\">" <<
           endl;
       out << "<title>";
       ReplaceSpecialChars(out, title);
