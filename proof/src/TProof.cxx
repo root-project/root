@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.17 2002/03/13 01:52:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.18 2002/03/15 17:23:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1332,8 +1332,8 @@ Int_t TProof::Exec(const char *cmd, ESlaves list)
       char *fn = gSystem->Which(TROOT::GetMacroPath(), file, kReadPermission);
       if (fn) {
          if (GetNumberOfUniqueSlaves() > 0) {
-            if (SendFile(fn, kFALSE, kUnique) < 0) {
-               Error("Exec", "file %s could not be transfered to PROOF", fn);
+            if (SendFile(fn, kFALSE) < 0) {
+               Error("Exec", "file %s could not be transfered", fn);
                delete [] fn;
                return -1;
             }
@@ -1482,26 +1482,30 @@ Long_t TProof::CheckFile(const char *file, TList *slaves, TList *sendto)
 }
 
 //______________________________________________________________________________
-Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
+Int_t TProof::SendFile(const char *file, Bool_t bin)
 {
-   // Send a file to master or slave servers. Returns number of slaves
+   // Send a file to master or unique slave servers. Returns number of slaves
    // the file was sent to, maybe 0 in case master and slaves have the same
    // file system image, -1 in case of error. If bin is true binary
    // file transfer is used, otherwise ASCII mode.
 
-   TList *slaves = 0;
-   if (list == kAll)    slaves = fSlaves;
-   if (list == kActive) slaves = fActiveSlaves;
-   if (list == kUnique) slaves = fUniqueSlaves;
+   TList *slaves = fUniqueSlaves;
 
    if (slaves->GetSize() == 0) return 0;
 
    TList sendto;
    Long_t size = CheckFile(file, slaves, &sendto);
-   if (size <= 0)
+   if (size < 0)
       return size;
+   if (IsMaster() && size == 0)
+      return 0;
+   // if on client and size==0 broadcast anyway the kPROOF_SENDFILE command
+   // to the master so that the master can propagate the file to possibly
+   // newly added unique slaves
+   if (size == 0)
+      sendto.AddAll(slaves);
 
-   if (fLogLevel > 2) {
+   if (fLogLevel > 2 && size > 0) {
       Info("SendFile", "sending file to:");
       TIter next(&sendto);
       TSlave *sl;
@@ -1527,6 +1531,10 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
       close(fd);
       return -1;
    }
+   if (size == 0) {
+      close(fd);
+      return 0;
+   }
 
    Int_t len, n;
    do {
@@ -1535,7 +1543,7 @@ Int_t TProof::SendFile(const char *file, Bool_t bin, ESlaves list)
 
       if (len < 0) {
          SysError("SendFile", "error reading from file %s", file);
-         Interrupt(kSoftInterrupt, list);
+         Interrupt(kSoftInterrupt, kUnique);
          close(fd);
          return -1;
       }

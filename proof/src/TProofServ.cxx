@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.18 2002/03/15 17:23:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.19 2002/03/16 18:36:52 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -453,7 +453,7 @@ void TProofServ::HandleSocketInput()
       case kMESS_CINT:
          mess->ReadString(str, sizeof(str));
          if (IsMaster() && IsParallel()) {
-            fProof->Exec(str);
+            fProof->SendCommand(str);
          } else {
             if (fLogLevel > 1)
                Info("HandleSocketInput", "processing: %s...", str);
@@ -576,11 +576,11 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             if (md5local && md5 == (*md5local)) {
                fSocket->Send(kPROOF_CHECKFILE);
                if (fLogLevel > 1)
-                  Info("HandleSocketInput","file %s already on node", filenam.Data());
+                  Info("HandleSocketInput", "file %s already on node", filenam.Data());
             } else {
                fSocket->Send(kPROOF_FATAL);
                if (fLogLevel > 1)
-                  Info("HandleSocketInput","file %s not yet on node", filenam.Data());
+                  Info("HandleSocketInput", "file %s not yet on node", filenam.Data());
             }
             delete md5local;
          }
@@ -591,9 +591,11 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
          {
             Long_t size;
             Int_t  bin;
-            char  name[512];
+            char  name[1024];
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
+            if (IsMaster())
+               fProof->SendFile(name, bin);
          }
          break;
 
@@ -880,6 +882,8 @@ Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long_t size)
    // If bin is true it is a binary file, other wise it is an ASCII
    // file and we need to check for Windows \r tokens. Returns -1 in
    // case of error, 0 otherwise.
+
+   if (size <= 0) return 0;
 
    // open file, overwrite already existing file
    int fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0600);
