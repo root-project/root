@@ -16,7 +16,7 @@
 //  For all possible draw options (there are a few which are not imple- //
 //  mentable in graphical user interface) see THistPainter::Paint in    //
 //  root/histpainter/THistPainter.cxx                                   //
-
+//
 //Begin_Html
 /*
 <img src="gif/TH1Editor_1.gif">
@@ -27,7 +27,7 @@
 <img src="gif/TH1Editor_2.gif">
 */
 //End_Html
-
+//
 //  These changes can be made via the TH1Editor:                        //
 //    Style Tab:                                                        //
 //      'Line'     : change Line attributes (color, thickness)          //
@@ -63,7 +63,7 @@
 //      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
 //                  Spheric) see THistPainter::Paint                    //
 //      'Error'   : see 2D plot                                         //
-//    'Bar'       : change the bar attributes                           //
+//      'Bar'     : change the bar attributes                           //
 //            'W' : change Bar Width                                    //
 //            'O' : change Bar Offset                                   //
 //      'Percentage': specifies the percentage of the bar which is drawn//
@@ -111,7 +111,7 @@
 //                activated if the redrawing of the histogram is too    //
 //                time consuming.                                       //
 //////////////////////////////////////////////////////////////////////////
-
+//
 //Begin_Html
 /*
 <img src="gif/TH1Editor1_1.gif">
