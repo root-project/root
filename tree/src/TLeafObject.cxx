@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.2 2000/05/29 06:19:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.3 2000/11/21 20:50:38 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -94,12 +94,15 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
 //*-*   If list of params is omitted, () is assumed;
 //*-*
 
-   char *params = strchr(name,'(');
+   char *namecpy = new char[strlen(name)+1];
+   strcpy(namecpy,name);
+   char *params = strchr(namecpy,'(');
    if (params) { *params = 0; params++; }
    else params = ")";
 
    if (!fClass) fClass      = gROOT->GetClass(GetTitle());
-   TMethodCall *m = new TMethodCall(fClass, name, params);
+   TMethodCall *m = new TMethodCall(fClass, namecpy, params);
+   delete [] namecpy;
    if (m->GetMethod()) return m;
    Error("GetMethodCall","Unknown method:%s",name);
    delete m;
