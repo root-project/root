@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.43 2002/02/28 17:07:07 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.44 2002/03/28 15:34:51 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -936,6 +936,9 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //______________________________________________________________________________
 void TChain::Print(Option_t *option) const
 {
+   // Print the header information of each Tree in the chain.
+   // see TTree::Print for a list of options
+   
    TIter next(fFiles);
    TChainElement *element;
    while ((element = (TChainElement*)next())) {
