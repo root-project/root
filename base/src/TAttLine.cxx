@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttLine.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -26,7 +26,7 @@ ClassImp(TAttLine)
 //*-*                      =====================
 //*-*  Line attributes are:
 //*-*    Line Color (see TAttFill for the list of colors)
-//*-*    Line Style 1=solid, 2=dash, 3=dash-dot, 4=dot-dot
+//*-*    Line Style 1=solid, 2=dash, 3=dot-dot, 4=dash-dot
 //*-*    Line Width expressed in pixel units
 //*-*
 //*-*  This class is used (in general by secondary inheritance)
