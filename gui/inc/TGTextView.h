@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.10 2002/10/31 07:27:35 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.h,v 1.11 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -98,6 +98,8 @@ public:
    virtual void SetText(TGText *text);
    virtual void AddText(TGText *text);
    virtual void AddLine(const char *string);
+   virtual void AddLineFast(const char *string);
+   virtual void Update();
    TGText      *GetText() const { return fText; }
 
    virtual void DataChanged() { Emit("DataChanged()"); }  //*SIGNAL*

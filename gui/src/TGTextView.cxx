@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.17 2004/04/20 14:48:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextView.cxx,v 1.18 2004/05/24 14:31:11 brun Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -148,12 +148,29 @@ void TGTextView::AddLine(const char *string)
 {
    // Add a line of text to the view widget.
 
-   TGLongPosition pos;
-   pos.fX = 0;
-   pos.fY = fText->RowCount();
-   fText->InsText(pos, string);
-   Layout();
-   DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
+   AddLineFast(string);
+   Update();
+}
+
+//______________________________________________________________________________
+void TGTextView::AddLineFast(const char *string)
+{
+   // Add a line of text to the view widget.
+   // Fast version. Use it if you are going to add
+   //  several lines, than call Update().
+
+    TGLongPosition pos;
+    pos.fX = 0;
+    pos.fY = fText->RowCount();
+    fText->InsText(pos, string);
+}
+
+//______________________________________________________________________________
+void TGTextView::Update ()
+{
+   // Call this function after AddLineFast()
+    Layout();
+    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 
 //______________________________________________________________________________
