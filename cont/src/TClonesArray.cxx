@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.36 2003/02/22 13:25:52 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.37 2003/04/10 20:29:59 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -83,6 +83,10 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    //          TObject::SetDtorOnly(0);
    //    }
    //
+   // The second argument s indicates an approximate number of objects
+   // that will be entered in the array. If more than s objects are entered,
+   // the array will be automatically expanded.
+   //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
    //
@@ -129,6 +133,10 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    //       else
    //          TObject::SetDtorOnly(0);
    //    }
+   //
+   // The second argument s indicates an approximate number of objects
+   // that will be entered in the array. If more than s objects are entered,
+   // the array will be automatically expanded.
    //
    // The third argument is not used anymore and only there for backward
    // compatibility reasons.
