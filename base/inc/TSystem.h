@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.2 2000/06/28 15:30:43 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.3 2000/12/06 07:17:43 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -109,6 +109,7 @@ R__EXTERN const char  *gProgPath;
 class TProcessEventTimer : public TTimer {
 public:
    TProcessEventTimer(Long_t delay);
+   Bool_t Notify() { return kTRUE; }
    Bool_t ProcessEvents();
    ClassDef(TProcessEventTimer,0)  // Process pending events at fixed time intervals
 };
