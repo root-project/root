@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.3 2000/08/14 11:29:29 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.4 2000/08/18 06:27:32 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
