@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.7 2000/07/17 10:26:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.8 2000/08/15 08:56:00 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -31,15 +31,15 @@ class TBrowser;
 class TChain : public TTree {
 
 protected:
-    Int_t       fTreeOffsetLen;     //Current size of fTreeOffset array
-    Int_t       fNtrees;            //Number of Trees
-    Int_t       fTreeNumber;        //Current Tree number in fTreeOffset table
-    Int_t       *fTreeOffset;       //Array of variables
-    TTree       *fTree;             //Pointer to current tree
-    TFile       *fFile;             //Pointer to current file
-    TObjArray   *fFiles;            //List of file names containing the Trees
-    TList       *fStatus;           //List of active/inactive branches
-    TObject     *fNotify;           //Object to be notified when loading a new file
+    Int_t       fTreeOffsetLen;     //  Current size of fTreeOffset array
+    Int_t       fNtrees;            //  Number of Trees
+    Int_t       fTreeNumber;        //! Current Tree number in fTreeOffset table
+    Int_t       *fTreeOffset;       //[fTreeOffsetLen]Array of variables
+    TTree       *fTree;             //! Pointer to current tree
+    TFile       *fFile;             //! Pointer to current file
+    TObjArray   *fFiles;            //->  List of file names containing the Trees
+    TList       *fStatus;           //->  List of active/inactive branches
+    TObject     *fNotify;           //! Object to be notified when loading a new file
 
 public:
     TChain();
@@ -85,7 +85,7 @@ public:
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
-    ClassDef(TChain,2)  //A chain of TTrees
+    ClassDef(TChain,3)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)
