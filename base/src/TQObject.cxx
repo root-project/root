@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.38 2004/04/13 17:41:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.39 2004/06/22 08:39:45 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -428,6 +428,7 @@ public:
    Int_t  GetNargs() const { return fSignalArgs; }
    void   ls(Option_t *option = "") const;
    void   Print(Option_t *option = "") const;
+   void   Print(Option_t *, Option_t *option) const { Print(option); }
 };
 
 //______________________________________________________________________________

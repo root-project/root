@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TQCommand.h,v 1.2 2004/04/27 07:30:35 rdm Exp $
 // Author: Valeriy Onuchin   04/27/2004
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #endif
 
 class TQCommand : public TList, public TQObject {
+
 friend class TQUndoManager;
 
 protected:
@@ -82,6 +83,7 @@ public:
    virtual void   SetName(const char *name);
    virtual void   SetTitle(const char *title);
    virtual void   Print(Option_t *option="") const;
+   virtual void   Print(Option_t *, Option_t *option) const { Print(option); }
    virtual void   ls(Option_t *option="") const;
    virtual void   Add(TObject *obj, Option_t *opt);
    virtual void   Add(TObject *obj) { Add(obj, 0); }
@@ -122,6 +124,7 @@ public:
    virtual void   SetLimit(UInt_t limit);
    virtual void   CurrentChanged(TQCommand *c); //*SIGNAL*
    virtual void   Print(Option_t *option="") const;
+   virtual void   Print(Option_t *, Option_t *option) const { Print(option); }
    virtual void   ls(Option_t *option="") const;
 
    ClassDef(TQUndoManager,0) // recorder of operations for undo and redo
