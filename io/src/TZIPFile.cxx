@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.1 2004/07/07 23:25:33 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TZIPFile.cxx,v 1.2 2004/07/08 00:19:59 rdm Exp $
 // Author: Fons Rademakers and Lassi Tuura  30/6/04
 
 /*************************************************************************
@@ -379,7 +379,7 @@ Int_t TZIPFile::SetCurrentMember()
 //______________________________________________________________________________
 UInt_t TZIPFile::Get(const void *buffer, Int_t bytes)
 {
-   // Read a "bytes" long little-endian integer value form "buffer".
+   // Read a "bytes" long little-endian integer value from "buffer".
 
    UInt_t value = 0;
 #ifdef R__BYTESWAP
