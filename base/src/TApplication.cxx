@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.38 2002/10/20 16:08:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.39 2002/10/25 10:40:16 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -603,26 +603,30 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       char postfix[4];
       postfix[0] = 0;
       int len = strlen(fn);
-      char *mode = 0;
-      if (len>1) {
-         if (strcmp(fn+len-1,"g")==0) mode = "g";
-         else if (strcmp(fn+len-1,"O")==0) mode = "O";
-         if (mode) len--;
+      const char *mode = 0;
+      if (len > 1) {
+         if (strcmp(fn+len-1, "g") == 0)
+            mode = "g";
+         else if (strcmp(fn+len-1, "O") == 0)
+            mode = "O";
+         if (mode)
+            len--;
       }
-      Bool_t compile = !strncmp(fn+len-1,"+",1);
-      Bool_t remove  = !strncmp(fn+len-2,"++",2);
+      Bool_t compile = !strncmp(fn+len-1, "+", 1);
+      Bool_t remove  = !strncmp(fn+len-2, "++", 2);
       if (compile) {
          if (mode) {
            fn[len] = 0;
          }
          if (remove) {
             fn[strlen(fn)-2] = 0;
-            strcpy(postfix,"++");
+            strcpy(postfix, "++");
          } else {
             fn[strlen(fn)-1] = 0;
-            strcpy(postfix,"+");
+            strcpy(postfix, "+");
          }
-         if (mode) strcat(postfix,mode);
+         if (mode)
+            strcat(postfix, mode);
       }
       char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
       if (!mac)
