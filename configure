@@ -1086,16 +1086,17 @@ fi
 #
 ### echo %%% dCache Support - Third party libraries
 #
-# (See http://www-dcache.desy.de)
+# (See http://www.dcache.org)
 #
 # Check for libdcap
 #
 if test ! "x$enable_dcache" = "xno" ; then
-    check_header "dcap.h" "$dcapincdir" /products/dcache/include \
-	/opt/dcache/include /usr/include /usr/local/include
+    check_header "dcap.h" "$dcapincdir" $DCACHE $DCACHE/include \
+        /products/dcache/include \
+        /opt/dcache/include /usr/include /usr/local/include
     dcapincdir=$found_dir
 
-    check_library "libdcap" "$enable_shared" "$dcaplibdir" \
+    check_library "libdcap" "$enable_shared" "$dcaplibdir" $DCACHE $DCACHE/lib \
 	/products/dcache/lib /opt/dcache/lib /usr/lib /usr/local/lib
     dcaplib=$found_lib
     dcaplibdir=$found_dir
