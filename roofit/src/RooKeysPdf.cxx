@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.3 2002/02/07 17:06:13 giraudpf Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.4 2002/02/11 21:20:55 giraudpf Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -57,10 +57,9 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
 
   // cache stuff about x
   sprintf(_varName, "%s", other._varName );
-  RooRealVar real= (RooRealVar&)(_x.arg());
-  _lo = real.getFitMin();
-  _hi = real.getFitMax();
-  _binWidth = (_hi-_lo)/(_nPoints-1);
+  _lo = other._lo;
+  _hi = other._hi;
+  _binWidth = other._binWidth;
 
   // copy over data and weights... not necessary, commented out for speed
 //    _dataPts = new Double_t[_nEvents];
