@@ -143,6 +143,7 @@ void Event::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TObject::Streamer(R__b);
+      R__b.ReadFastArray(fType,20);
       R__b >> fNtrack;
       R__b >> fNseg;
       R__b >> fNvertex;
@@ -156,6 +157,7 @@ void Event::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteVersion(Event::IsA());
       TObject::Streamer(R__b);
+      R__b.WriteFastArray(fType,20);
       R__b << fNtrack;
       R__b << fNseg;
       R__b << fNvertex;

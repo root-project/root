@@ -42,6 +42,7 @@ public:
 class Event : public TObject {
 
 private:
+   char           fType[20];
    Int_t          fNtrack;
    Int_t          fNseg;
    Int_t          fNvertex;
@@ -65,10 +66,11 @@ public:
    void          SetNvertex(Int_t n) { fNvertex = n; }
    void          SetFlag(UInt_t f) { fFlag = f; }
    void          SetTemperature(Float_t t) { fTemperature = t; }
-
+   void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
    void          AddTrack(Float_t random);
 
+   char         *GetType() {return fType;}
    Int_t         GetNtrack() const { return fNtrack; }
    Int_t         GetNseg() const { return fNseg; }
    Int_t         GetNvertex() const { return fNvertex; }

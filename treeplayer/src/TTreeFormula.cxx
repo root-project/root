@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -204,7 +204,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (scanindex) fIndex[code] = index;
             else           fIndex[code] = -1;
             if (ref) printf("Cannot process reference to array index=%s[%s]\n",lname,ref);
-            if (leaf->InheritsFrom("TLeafC")) return 5000+code;
+            if (leaf->InheritsFrom("TLeafC"))                   return 5000+code;
+            if (leaf->InheritsFrom("TLeafB") && scanindex == 0) return 5000+code;
             return code;
          }
       }
@@ -295,14 +296,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
     Int_t action = fOper[i];
 //*-*- a tree string
     if (action >= 105000) {
-//       if (!precalculated_str) {
-//          precalculated_str=1;
-//          for (i=0;i<fNstring;i++) string_calc[i]=DefinedString(i);
-//       }
-       TLeafC *leafc = (TLeafC*)GetLeaf(action-105000);
+       TLeaf *leafc = GetLeaf(action-105000);
        leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
-       pos2++; tab2[pos2-1] = leafc->GetValueString();
-//       pos2++; tab2[pos2-1] = string_calc[action-105000];
+       pos2++; tab2[pos2-1] = (char*)leafc->GetValuePointer();
        continue;
     }
 //*-*- a tree variable
