@@ -43,99 +43,127 @@ ENABLETHREAD   := @enable_thread@
 OSTHREADLIBDIR := @threadlibdir@
 OSTHREADLIB    := @threadlib@
 
+BUILTINFREETYPE:= @builtinfreetype@
+
+BUILDGL        := @buildgl@
 OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
-OPENGLINCDIR   := @openglincdir@
+OPENGLINCDIR   := $(filter-out /usr/include, @openglincdir@)
 
+BUILDHBOOK     := @buildhbook@
 CERNLIBDIR     := @cernlibdir@
 CERNLIBS       := @cernlibs@
 
+BUILDLDAP      := @buildldap@
 LDAPLIBDIR     := @ldaplibdir@
 LDAPCLILIB     := @ldaplib@
-LDAPINCDIR     := @ldapincdir@
+LDAPINCDIR     := $(filter-out /usr/include, @ldapincdir@)
 
+BUILDMYSQL     := @buildmysql@
 MYSQLLIBDIR    := @mysqllibdir@
 MYSQLCLILIB    := @mysqllib@
-MYSQLINCDIR    := @mysqlincdir@
+MYSQLINCDIR    := $(filter-out /usr/include, @mysqlincdir@)
 
+BUILDORACLE    := @buildoracle@
 ORACLELIBDIR   := @oraclelibdir@
 ORACLECLILIB   := @oraclelib@
-ORACLEINCDIR   := @oracleincdir@
+ORACLEINCDIR   := $(filter-out /usr/include, @oracleincdir@)
 
+BUILDPGSQL     := @buildpgsql@
 PGSQLLIBDIR    := @pgsqllibdir@
 PGSQLCLILIB    := @pgsqllib@
-PGSQLINCDIR    := @pgsqlincdir@
+PGSQLINCDIR    := $(filter-out /usr/include, @pgsqlincdir@)
 
+BUILDSAPDB     := @buildsapdb@
 SAPDBLIBDIR    := @sapdblibdir@
 SAPDBCLILIB    := @sapdblib@
-SAPDBINCDIR    := @sapdbincdir@
+SAPDBINCDIR    := $(filter-out /usr/include, @sapdbincdir@)
 
+BUILDQT        := @buildqt@
 QTLIBDIR       := @qtlibdir@
 QTLIB          := @qtlib@
-QTINCDIR       := @qtincdir@
+QTINCDIR       := $(filter-out /usr/include, @qtincdir@)
+QTMOCEXE       := @qtmocexe@
 
-SHIFTINCDIR    := @shiftincdir@
+BUILDSHIFT     := @buildshift@
+SHIFTINCDIR    := $(filter-out /usr/include, @shiftincdir@)
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 
+BUILDDCAP      := @builddcap@
 DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
-DCAPINCDIR     := @dcapincdir@
+DCAPINCDIR     := $(filter-out /usr/include, @dcapincdir@)
 
+BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
 CHIRPCLILIB    := @chirplib@
-CHIRPINCDIR    := @chirpincdir@
+CHIRPINCDIR    := $(filter-out /usr/include, @chirpincdir@)
 
+BUILDALIEN     := @buildalien@
 ALIENLIBDIR    := @alienlibdir@
 ALIENCLILIB    := @alienlib@
-ALIENINCDIR    := @alienincdir@
+ALIENINCDIR    := $(filter-out /usr/include, @alienincdir@)
 
 BUILDASIMAGE   := @buildasimage@
+BUILTINASIMAGE := @builtinafterimage@
 ASEXTRALIB     := @asextralib@
 ASEXTRALIBDIR  := @asextralibdir@
-ASJPEGINCDIR   := @asjpegincdir@
-ASPNGINCDIR    := @aspngincdir@
-ASTIFFINCDIR   := @astiffincdir@
-ASGIFINCDIR    := @asgifincdir@
+ASJPEGINCDIR   := $(filter-out /usr/include, @asjpegincdir@)
+ASPNGINCDIR    := $(filter-out /usr/include, @aspngincdir@)
+ASTIFFINCDIR   := $(filter-out /usr/include, @astiffincdir@)
+ASGIFINCDIR    := $(filter-out /usr/include, @asgifincdir@)
+ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
+ASLIB          := @asimagelib@
+ASLIBDIR       := @asimagelibdir@
 
+BUILDFPYTHIA   := @buildpythia@
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
 
+BUILDFPYTHIA6  := @buildpythia6@
 FPYTHIA6LIBDIR := @pythia6libdir@
 FPYTHIA6LIB    := @pythia6lib@
 
+BUILDFVENUS    := @buildvenus@
 FVENUSLIBDIR   := @venuslibdir@
 FVENUSLIB      := @venuslib@
 
+BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
-PYTHONINCDIR   := @pythonincdir@
+PYTHONINCDIR   := $(filter-out /usr/include, @pythonincdir@)
 PYTHONLIBFLAGS := @pythonlibflags@
 
+BUILDRUBY      := @buildruby@
 RUBYLIBDIR     := @rubylibdir@
 RUBYLIB        := @rubylib@
-RUBYINCDIR     := @rubyincdir@
+RUBYINCDIR     := $(filter-out /usr/include, @rubyincdir@)
 
+BUILDXML       := @buildxml@
 XMLLIBDIR      := @xmllibdir@
 XMLCLILIB      := @xmllib@
-XMLINCDIR      := @xmlincdir@
+XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
 
 BUILDXRD       := @buildxrd@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@
-SRPINCDIR      := @srpincdir@
+SRPINCDIR      := $(filter-out /usr/include, @srpincdir@)
+
+BUILDSRPUTIL   := @buildsrputil@
 SRPUTILLIBDIR  := @srputillibdir@
 SRPUTILLIB     := @srputillib@
-SRPUTILINCDIR  := @srputilincdir@
+SRPUTILINCDIR  := $(filter-out /usr/include, @srputilincdir@)
 
 AFSLIB         := @afslib@
 AFSLIBDIR      := @afslibdir@
 
+BUILDKRB5      := @buildkrb5@
 KRB5LIB        := @krb5lib@
 KRB5LIBDIR     := @krb5libdir@
-KRB5INCDIR     := @krb5incdir@
+KRB5INCDIR     := $(filter-out /usr/include, @krb5incdir@)
 
 COMERRLIB      := @comerrlib@
 COMERRLIBDIR   := @comerrlibdir@
@@ -145,21 +173,23 @@ RESOLVLIB      := @resolvlib@
 CRYPTOLIB      := @cryptolib@
 CRYPTOLIBDIR   := @cryptolibdir@
 
+BUILDGLOBUS    := @buildglobus@
 GLOBUSLIB      := @globuslib@
 GLOBUSLIBDIR   := @globuslibdir@
-GLOBUSINCDIR   := @globusincdir@
+GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
 
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@
-SSLINCDIR      := @sslincdir@
+SSLINCDIR      := $(filter-out /usr/include, @sslincdir@)
 
 SHADOWFLAGS    := @shadowpw@
 SHADOWLIB      :=
 SHADOWLIBDIR   :=
 
-TABLE          := @enable_table@
+BUILDTABLE     := @buildtable@
 
-CLARENSINC     := @clarensinc@
+BUILDCLARENS   := @buildclarens@
+CLARENSINC     := $(filter-out -I/usr/include, @clarensincdir@)
 CLARENSLIBS    := @clarenslibs@
 
 BUILDPEAC      := @buildpeac@

@@ -46,7 +46,7 @@ $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(ALIENH) $(ALIENL)
 
 $(ALIENDO):     $(ALIENDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ALIENINCDIR) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(ALIENINCDIR:%=-I%) -I. -o $@ -c $<
 
 all-alien:      $(ALIENLIB)
 
@@ -68,4 +68,4 @@ distclean::     distclean-alien
 
 ##### extra rules ######
 $(ALIENO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(ALIENINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(ALIENINCDIR:%=-I%) -o $@ -c $<

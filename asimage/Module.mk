@@ -11,17 +11,30 @@ ASIMAGEDIR   := $(MODDIR)
 ASIMAGEDIRS  := $(ASIMAGEDIR)/src
 ASIMAGEDIRI  := $(ASIMAGEDIR)/inc
 
+ifeq ($(BUILTINASIMAGE), yes)
 ASTEPVERS    := libAfterImage
 ASTEPDIRS    := $(MODDIRS)/$(ASTEPVERS)
-ASTEPDIRI    := $(MODDIRS)/$(ASTEPVERS)
+ASTEPDIRI    := -I$(MODDIRS)/$(ASTEPVERS)
+else
+ASTEPDIRI    := $(ASINCDIR:%=-I%)
+ASTEPDIRS    :=
+ASTEPVERS    :=
+endif
 
 ##### libAfterImage #####
+ifeq ($(BUILTINASIMAGE), yes)
 ifeq ($(PLATFORM),win32)
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.lib
 ASTEPLIB     := $(LPATH)/libAfterImage.lib
 else
 ASTEPLIBA    := $(ASTEPDIRS)/libAfterImage.a
 ASTEPLIB     := $(LPATH)/libAfterImage.a
+endif
+ASTEPDEP     := $(ASTEPLIB)
+else
+ASTEPLIBA    := $(ASLIBDIR) $(ASLIB)
+ASTEPLIB     := $(ASLIBDIR) $(ASLIB)
+ASTEPDEP     :=
 endif
 
 ##### libASImage #####
@@ -49,6 +62,7 @@ INCLUDEFILES += $(ASIMAGEDEP)
 include/%.h:    $(ASIMAGEDIRI)/%.h
 		cp $< $@
 
+ifeq ($(BUILTINASIMAGE), yes)
 $(ASTEPLIB):    $(ASTEPLIBA)
 		cp $< $@
 		@(if [ $(PLATFORM) = "macosx" ]; then \
@@ -126,19 +140,20 @@ else
 		$$GIFINCDIR; \
 		$(MAKE))
 endif
+endif
 
-$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPLIB) $(FREETYPELIB) \
+$(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPELIB) \
                 $(MAINLIBS) $(ASIMAGELIBDEP)
 ifeq ($(PLATFORM),win32)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(FREETYPELIB)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 else
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libASImage.$(SOEXT) $@ \
 		   "$(ASIMAGEO) $(ASIMAGEDO)" \
-		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS) $(FREETYPELIB)"
+		   "$(ASIMAGELIBEXTRA) $(ASTEPLIB) $(ASEXTRALIBDIR) $(ASEXTRALIB) $(XLIBS) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 endif
 
 $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
@@ -146,7 +161,7 @@ $(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(ASIMAGEH) $(ASIMAGEL)
 
 $(ASIMAGEDO):   $(ASIMAGEDS) $(ASTEPLIB)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(ASTEPDIRI) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(ASTEPDIRI) -I. -o $@ -c $<
 
 all-asimage:    $(ASIMAGELIB)
 
@@ -158,6 +173,7 @@ map::           map-asimage
 
 clean-asimage:
 		@rm -f $(ASIMAGEO) $(ASIMAGEDO)
+ifeq ($(BUILTINASIMAGE), yes)
 ifeq ($(PLATFORM),win32)
 		-@(if [ -d $(ASTEPDIRS) ]; then \
 			cd $(ASTEPDIRS); \
@@ -171,15 +187,19 @@ else
 			$(MAKE) clean; \
 		fi)
 endif
+endif
 
 clean::         clean-asimage
 
 distclean-asimage: clean-asimage
 		@rm -f $(ASIMAGEDEP) $(ASIMAGEDS) $(ASIMAGEDH) $(ASIMAGELIB)
-		@rm -rf $(ASTEPLIB) $(ASTEPDIRS)
+ifeq ($(BUILTINASIMAGE), yes)
+		@rm -rf $(ASTEPLIB)
+endif
+		@rm -rf $(ASTEPDIRS)
 
 distclean::     distclean-asimage
 
 ##### extra rules ######
 $(ASIMAGEO): %.o: %.cxx $(ASTEPLIB)
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(ASTEPDIRI) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(ASTEPDIRI) -o $@ -c $<

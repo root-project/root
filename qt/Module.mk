@@ -11,9 +11,6 @@ GQTDIR        := $(MODDIR)
 GQTDIRS       := $(GQTDIR)/src
 GQTDIRI       := $(GQTDIR)/inc
 
-# better detect directly in ./configure
-QTMOCEXE      := $(QTINCDIR)/../bin/moc
-
 ##### libGQt #####
 GQTL          := $(MODDIRI)/LinkDef.h
 GQTDS         := $(MODDIRS)/G__GQt.cxx
@@ -35,7 +32,7 @@ GQTMOCO       := $(GQTMOC:.cxx=.o)
 
 GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
 
-GQTCXXFLAGS   := -DQT_DLL -DQT_THREAD_SUPPORT -I. -I$(QTINCDIR)
+GQTCXXFLAGS   := -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 

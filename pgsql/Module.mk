@@ -46,7 +46,7 @@ $(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(PGSQLH) $(PGSQLL)
 
 $(PGSQLDO):     $(PGSQLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(PGSQLINCDIR) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(PGSQLINCDIR:%=-I%) -I. -o $@ -c $<
 
 all-pgsql:      $(PGSQLLIB)
 
@@ -68,4 +68,4 @@ distclean::     distclean-pgsql
 
 ##### extra rules ######
 $(PGSQLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(PGSQLINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(PGSQLINCDIR:%=-I%) -o $@ -c $<

@@ -1,7 +1,8 @@
+dnl -*- mode: autoconf -*- 
 dnl
-dnl $Id: root.m4,v 1.1 2002/01/20 14:23:51 rdm Exp $
+dnl $Id: root.m4,v 1.2 2002/07/31 20:45:09 rdm Exp $
 dnl $Author: rdm $
-dnl $Date: 2002/01/20 14:23:51 $
+dnl $Date: 2002/07/31 20:45:09 $
 dnl
 dnl Autoconf macro to check for existence or ROOT on the system
 dnl Synopsis:
@@ -31,7 +32,7 @@ dnl The macro will fail if root-config and rootcint isn't found.
 dnl
 dnl Christian Holm Christensen <cholm@nbi.dk>
 dnl
-AC_DEFUN(ROOT_PATH,
+AC_DEFUN([ROOT_PATH],
 [
   AC_ARG_WITH(rootsys,
   [  --with-rootsys          top of the ROOT installation directory],

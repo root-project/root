@@ -21,42 +21,44 @@ show_pkglist=no
 noact="no"
 nohowto="no"
 
-options="                 \
-   enable_afs             \
-   enable_alien           \
-   enable_asimage         \
-   enable_cern            \
-   enable_chirp           \
-   enable_clarens         \
-   enable_dcache          \
-   enable_exceptions      \
-   enable_explicitlink    \
-   enable_globus          \
-   enable_krb5            \
-   enable_ldap            \
-   enable_mysql           \
-   enable_opengl          \
-   enable_oracle          \
-   enable_peac            \
-   enable_pgsql           \
-   enable_pythia          \
-   enable_pythia6         \
-   enable_python          \
-   enable_qt              \
-   enable_ruby            \
-   enable_rfio            \
-   enable_rpath           \
-   enable_sapdb           \
-   enable_shadowpw        \
-   enable_shared          \
-   enable_soversion       \
-   enable_srp             \
-   enable_ssl             \
-   enable_table           \
-   enable_thread          \
-   enable_venus           \
-   enable_xml             \
-   enable_xrootd          \
+options="                    \
+   enable_afs                \
+   enable_alien              \
+   enable_asimage            \
+   enable_builtin_afterimage \
+   enable_builtin_freetype   \
+   enable_cern               \
+   enable_chirp              \
+   enable_clarens            \
+   enable_dcache             \
+   enable_exceptions         \
+   enable_explicitlink       \
+   enable_globus             \
+   enable_krb5               \
+   enable_ldap               \
+   enable_mysql              \
+   enable_opengl             \
+   enable_oracle             \
+   enable_peac               \
+   enable_pgsql              \
+   enable_pythia             \
+   enable_pythia6            \
+   enable_python             \
+   enable_qt                 \
+   enable_ruby               \
+   enable_rfio               \
+   enable_rpath              \
+   enable_sapdb              \
+   enable_shadowpw           \
+   enable_shared             \
+   enable_soversion          \
+   enable_srp                \
+   enable_ssl                \
+   enable_table              \
+   enable_thread             \
+   enable_venus              \
+   enable_xml                \
+   enable_xrootd             \
 "
 
 #
@@ -368,9 +370,9 @@ check_header()  {
     fi
 
     # Avoid inclusion of /usr/include, which is always included anyway
-    if test "x$found_dir" = "x/usr/include" ; then
-	found_dir="include"
-    fi
+    #if test "x$found_dir" = "x/usr/include" ; then
+	# found_dir="include"
+    #fi
 
     # Correct path for win32
     if test "x$platform" = "xwin32"; then
@@ -438,7 +440,7 @@ check_symbol() {
        return 1
     fi
 
-    symbol_in_lib=`nm $symbolfile | grep $symbol > /dev/null 2>&1`
+    symbol_in_lib=`nm $symbolfile 2> /dev/stdout | grep $symbol > /dev/null 2>&1`
     if test $? -eq 0 ; then
         found_symbol=1
     else
@@ -576,90 +578,92 @@ ROOT will be compiled with static directory names, and you should not set
 the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
-   afs             AFS support, requires AFS libs and objects
-   alien           AliEn support, requires libAliEnAPI++ from ALICE
-   asimage         Image processing support, requires libAfterImage
-   cern            CERNLIB usage, build h2root and g2root
-   chirp           Chirp support (Condor remote I/O), requires libchirp_client
-   clarens         Clarens RPC support, optionally used by PROOF
-   dcache          dCache support, requires libdcap from DESY
-   exceptions      Turn on compiler exception handling capability
-   explicitlink    Explicitly link with all dependent libraries
-   globus          Globus authentication support, requires Globus toolkit
-   krb5            Kerberos5 support, requires Kerberos libs
-   ldap            LDAP support, requires (Open)LDAP libs
-   mysql           MySQL support, requires libmysqlclient
-   opengl          OpenGL support, requires libGL and libGLU
-   oracle          Oracle support, requires libclntsh
-   peac            PEAC, PROOF Enabled Analysis Center, requires Clarens
-   pgsql           PostgreSQL support, requires libpq
-   pythia          Pythia5 EG support, requires libPythia
-   pythia6         Pythia6 EG support, requires libPythia6
-   python          Python ROOT bindings, requires python >= 2.1
-   qt              Qt graphics backend, requires libqt >= 3
-   rfio            CASTOR support, requires libshift from CASTOR
-   rpath           Set run-time library load path on executables
-   ruby            Ruby ROOT bindings, requires ruby >= 1.8
-   sapdb           SapDB support, requires libsqlod and libsqlrte
-   shadowpw        Shadow password support
-   shared          Use shared 3rd party libraries if possible
-   soversion       Set version number in sonames (recommended)
-   srp             SRP support, requires SRP source tree
-   ssl             SSL encryption support, requires openssl
-   table           Build libTable contrib library
-   thread          Thread support
-   venus           Venus EG support, requires libVenus
-   xml             XML parser interface
-   xrootd          Build xrootd file server and its client (if supported)
+  afs                AFS support, requires AFS libs and objects
+  alien              AliEn support, requires libAliEnAPI++ from ALICE
+  asimage            Image processing support, requires libAfterImage
+  builtin-afterimage Built included libAfterImage, or use system libAfterImage
+  builtin-freetype   Built included libfreetype, or use system libfreetype
+  cern               CERNLIB usage, build h2root and g2root
+  chirp              Chirp support (Condor remote I/O), requires libchirp_client
+  clarens            Clarens RPC support, optionally used by PROOF
+  dcache             dCache support, requires libdcap from DESY
+  exceptions         Turn on compiler exception handling capability
+  explicitlink       Explicitly link with all dependent libraries
+  globus             Globus authentication support, requires Globus toolkit
+  krb5               Kerberos5 support, requires Kerberos libs
+  ldap               LDAP support, requires (Open)LDAP libs
+  mysql              MySQL support, requires libmysqlclient
+  opengl             OpenGL support, requires libGL and libGLU
+  oracle             Oracle support, requires libclntsh
+  peac               PEAC, PROOF Enabled Analysis Center, requires Clarens
+  pgsql              PostgreSQL support, requires libpq
+  pythia             Pythia5 EG support, requires libPythia
+  pythia6            Pythia6 EG support, requires libPythia6
+  python             Python ROOT bindings, requires python >= 2.1
+  qt                 Qt graphics backend, requires libqt >= 3
+  rfio               CASTOR support, requires libshift from CASTOR
+  rpath              Set run-time library load path on executables
+  ruby               Ruby ROOT bindings, requires ruby >= 1.8
+  sapdb              SapDB support, requires libsqlod and libsqlrte
+  shadowpw           Shadow password support
+  shared             Use shared 3rd party libraries if possible
+  soversion          Set version number in sonames (recommended)
+  srp                SRP support, requires SRP source tree
+  ssl                SSL encryption support, requires openssl
+  table              Build libTable contrib library
+  thread             Thread support
+  venus              Venus EG support, requires libVenus
+  xml                XML parser interface
+  xrootd             Build xrootd file server and its client (if supported)
 
 with options, prefix with --with-, enables corresponding support
 
-   afs             AFS support, location of AFS distribution
-   alien-incdir    AliEn support, location of AliEnAPI++.h
-   alien-libdir    AliEn support, location of libAliEnAPI++
-   cern-libdir     HBOOK converter, location of CERNLIB libraries
-   chirp-incdir    Chirp support, location of chirp_client.h
-   chirp-libdir    Chirp support, location of libchirp_client
-   dcap-incdir     dCache support, location of dcap.h
-   dcap-libdir     dCache support, location of libdcap
-   globus          Globus support, path to what should be GLOBUS_LOCATION
-   krb5            Kerberos5 support, location of Kerberos distribution
-   krb5-incdir     Kerberos5 support, location of krb5.h
-   krb5-libdir     Kerberos5 support, location of libkrb5
-   ldap-incdir     LDAP support, location of ldap.h
-   ldap-libdir     LDAP support, location of libldap
-   mysql-incdir    MySQL support, location of mysql.h
-   mysql-libdir    MySQL support, location of libmysqlclient
-   opengl-incdir   OpenGL support, location of GL/gl.h
-   opengl-libdir   OpenGL support, location of libGL
-   oracle-incdir   Oracle support, location of occi.h
-   oracle-libdir   Oracle support, location of libclntsh
-   pgsql-incdir    PostgreSQL support, location of libpq-fe.h
-   pgsql-libdir    PostgreSQL support, location of libpq
-   pythia-libdir   PYHTIA support, location of libPythia
-   pythia6-libdir  PYHTIA6 support, location of libPythia6
-   python-incdir   Python support, location of Python.h
-   python-libdir   Python support, location of libpython
-   qt-incdir       Qt support, location of qt.h
-   qt-libdir       Qt support, location of libqt-mt or libqt
-   ruby-incdir     Ruby support, location of ruby.h
-   ruby-libdir     Ruby support, location of libruby
-   sapdb-incdir    SapDB support, location of sql.h
-   sapdb-libdir    SapDB support, location of libsqlod
-   shift-incdir    CASTOR support, location of rfio_api.h
-   shift-libdir    CASTOR support, location of libshift
-   srp             Secure Remote Passwd support, location of SRP distribution
-   srp-incdir      SRP support, location header of t_server.h
-   srp-libdir      SRP support, location header of libsrp.a
-   ssl-incdir      OpenSSL support, location of openssl headers
-   ssl-libdir      OpenSSL support, location of libssl
-   sys-iconpath    Extra icon path
-   thread-libdir   Thread support, path to libpthread
-   venus-libdir    VENUS support, location of libVenus
-   xml-incdir      XML support, location of libxml/tree.h
-   xml-libdir      XML support, location of libxml2
-   x11-libdir      X11 support, path to libX11
-   xpm-libdir      XPM support, path to libXpm
+  afs                AFS support, location of AFS distribution
+  alien-incdir       AliEn support, location of AliEnAPI++.h
+  alien-libdir       AliEn support, location of libAliEnAPI++
+  cern-libdir        HBOOK converter, location of CERNLIB libraries
+  chirp-incdir       Chirp support, location of chirp_client.h
+  chirp-libdir       Chirp support, location of libchirp_client
+  dcap-incdir        dCache support, location of dcap.h
+  dcap-libdir        dCache support, location of libdcap
+  globus             Globus support, path to what should be GLOBUS_LOCATION
+  krb5               Kerberos5 support, location of Kerberos distribution
+  krb5-incdir        Kerberos5 support, location of krb5.h
+  krb5-libdir        Kerberos5 support, location of libkrb5
+  ldap-incdir        LDAP support, location of ldap.h
+  ldap-libdir        LDAP support, location of libldap
+  mysql-incdir       MySQL support, location of mysql.h
+  mysql-libdir       MySQL support, location of libmysqlclient
+  opengl-incdir      OpenGL support, location of GL/gl.h
+  opengl-libdir      OpenGL support, location of libGL
+  oracle-incdir      Oracle support, location of occi.h
+  oracle-libdir      Oracle support, location of libclntsh
+  pgsql-incdir       PostgreSQL support, location of libpq-fe.h
+  pgsql-libdir       PostgreSQL support, location of libpq
+  pythia-libdir      PYHTIA support, location of libPythia
+  pythia6-libdir     PYHTIA6 support, location of libPythia6
+  python-incdir      Python support, location of Python.h
+  python-libdir      Python support, location of libpython
+  qt-incdir          Qt support, location of qt.h
+  qt-libdir          Qt support, location of libqt-mt or libqt
+  ruby-incdir        Ruby support, location of ruby.h
+  ruby-libdir        Ruby support, location of libruby
+  sapdb-incdir       SapDB support, location of sql.h
+  sapdb-libdir       SapDB support, location of libsqlod
+  shift-incdir       CASTOR support, location of rfio_api.h
+  shift-libdir       CASTOR support, location of libshift
+  srp                Secure Remote Passwd support, location of SRP distribution
+  srp-incdir         SRP support, location header of t_server.h
+  srp-libdir         SRP support, location header of libsrp.a
+  ssl-incdir         OpenSSL support, location of openssl headers
+  ssl-libdir         OpenSSL support, location of libssl
+  sys-iconpath       Extra icon path
+  thread-libdir      Thread support, path to libpthread
+  venus-libdir       VENUS support, location of libVenus
+  xml-incdir         XML support, location of libxml/tree.h
+  xml-libdir         XML support, location of libxml2
+  x11-libdir         X11 support, path to libX11
+  xpm-libdir         XPM support, path to libXpm
 
 Supported Architectures:
 
@@ -730,7 +734,8 @@ fi
 ### echo %%% Some clean up
 #
 trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
-      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp; exit 1" 1 2 3 15
+      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp \
+      conftest.c conftest; exit 1" 1 2 3 15
 
 ######################################################################
 #
@@ -754,6 +759,8 @@ if test $# -gt 0 ; then
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
+      --with-afterimage-incdir=*) afterimageincdir=$optarg; enable_builtin_afterimage=no ;;
+      --with-afterimage-libdir=*) afterimagelibdir=$optarg; enable_builtin_afterimage=no ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-chirp-incdir=*)   chirpincdir=$optarg   ; enable_chirp="yes"   ;;
       --with-chirp-libdir=*)   chirplibdir=$optarg   ; enable_chirp="yes"   ;;
@@ -803,7 +810,7 @@ if test $# -gt 0 ; then
       # features
       #
       --enable-*)
-	f=`echo $1 | sed -e 's/--//' -e 's/-/_/'`
+	f=`echo $1 | sed -e 's/--//' -e 's/-/_/g'`
 	eval $f=yes
 	for c in $options ; do
 	   if test "x$c" = "x$f" ; then
@@ -815,7 +822,8 @@ if test $# -gt 0 ; then
 	fi
 	;;
       --disable-*)
-	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/'`
+	f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g'`
+	echo "Disabling $f"
 	eval $f=no
 	for c in $options ; do
 	   if test "x$c" = "x$f" ; then
@@ -997,6 +1005,41 @@ fi
 
 ######################################################################
 #
+### echo %%% libfreetype (builtin or system) - Mandatory lib on Unix
+#
+# Mandatory test, must succeed
+#
+if test "x$enable_builtin_freetype" = "x" || \
+    test "x$enable_builtin_freetype" = "xno" ; then
+
+    message "Checking for freetype-config"
+    if which freetype-config > /dev/null 2>&1 ; then
+      echo "`which freetype-config`"
+
+      message "Checking for libfreetype version >= 9.3.0"
+      ttf2_version=`freetype-config --version | \
+          tr '.' ' ' | \
+           awk 'BEGIN { FS = " "; } \
+              { printf "%d", ($''1 * 1000 + $''2) * 1000 + $''3;}'`
+      # First good version is 9.3.0
+      if test $ttf2_version -lt 9003000 ; then
+          echo "no (`freetype-config --version`)"
+          enable_builtin_freetype="yes"
+      else
+          echo "ok"
+          enable_builtin_freetype="no"
+      fi
+    else
+      enable_builtin_freetype="no"
+      echo "not found"
+    fi
+fi
+message "Checking whether to build included libfreetype6"
+echo "$enable_builtin_freetype"
+
+
+######################################################################
+#
 ### echo %%% OpenGL Support - Third party libraries
 #
 # (see mesa3d.org)
@@ -1105,13 +1148,14 @@ if test ! "x$enable_oracle" = "xno"; then
     # Check for oracle include and library
     check_header "occi.h" "$oracleincdir" \
         $ORACLE $ORACLE/include $ORACLEINCDIR /usr/local/include \
-        /usr/include
+        /usr/include /usr/include/oracle/*/client
     oracleinc=$found_hdr
     oracleincdir=$found_dir
 
     keeplibdir=$oraclelibdir
     check_library "libclntsh" "$enable_shared" "$oraclelibdir" \
-       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib
+       $ORACLE $ORACLE/lib $ORACLELIBDIR /usr/local/lib /usr/lib \
+	/usr/lib/oracle/*/client/lib
     oraclelib=$found_lib
     oraclelibdir=$found_dir
 
@@ -1202,7 +1246,7 @@ if test ! "x$enable_qt" = "xno"; then
     # Check for Qt include and library
     check_header "qt.h" "$qtincdir" $QTDIR $QTDIR/include \
         /usr/local/include  /usr/local/qt/include /usr/include \
-        /usr/include/qt
+        /usr/include/qt /usr/include/qt3
     qtinc=$found_hdr
     qtincdir=$found_dir
 
@@ -1212,7 +1256,24 @@ if test ! "x$enable_qt" = "xno"; then
     qtlib=$found_lib
     qtlibdir=$found_dir
 
-    if test "x$qtincdir" = "x" || test "x$qtlib" = "x"; then
+    message "Checking for moc or moc.exe"
+    qtmocexe=`which moc`
+    if test $? -ne 0 ; then
+       for i in $QTDIR $QTDIR/bin /usr/local/bin /usr/local/qt/bin /usr/bin \
+           /usr/qt3/bin ; do
+	  if test -x $i/moc ; then
+	      qtmocexe=$i/moc
+	      break
+	  elif  test -x $i/moc.exe ; then
+	      qtmocexe=$i/moc.exe
+	      break
+	  fi
+       done
+    fi
+    echo "$qtmocexe"
+
+    if test "x$qtincdir" = "x" || test "x$qtlib" = "x" || \
+	test "x$qtmocexe" = "x"; then
         enable_qt="no"
     fi
 fi
@@ -1258,9 +1319,16 @@ if test ! "x$enable_rfio" = "xno" ; then
         enable_rfio="no"
     else
         case $platform in
-           linux)      shiftlib="$shiftlib -lnsl" ;;
+           linux)      shiftlib="$shiftlib -lnsl"
+		for i in "" -ladns ; do
+		    echo "extern rfio_fchmod(); int main() { rfio_fchmod(); return 0; }" > conftest.c
+		    gcc conftest.c $shiftlibdir $shiftlib $i -o conftest > /dev/null 2>&1
+		    if test $? -eq 0 ; then shiftlib="$shiftlib $i" ; break ; fi
+		done
+		rm -f conftest.c conftest
+		;;
            solaris)    shiftlib="$shiftlib -lposix4" ;;
-           win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32"
+           win32)      shiftincdir="$shiftincdir $shiftincdir/../win32"
                        shiftlib="$shiftlib WSock32.lib Ws2_32.lib" ;;
         esac
     fi
@@ -1454,7 +1522,7 @@ if test ! "x$enable_alien" = "xno" ; then
     alienincdir=$found_dir
 
     if test ! "x$alienincdir" = "x" ; then
-       alienincdir="$alienincdir -I$alienincdir/soap"
+       alienincdir="$alienincdir $alienincdir/soap"
     fi
 
     check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
@@ -1477,6 +1545,57 @@ fi
 # Check for graphics libraries used by libAfterImage, like libjpeg, etc.
 #
 if test ! "x$enable_asimage" = "xno" ; then
+   if test "x$enable_builtin_afterimage" = "xno" ||
+      test "x$enable_builtin_afterimage" = "" ; then
+      # Figure out if libAfterImage is on the system, and if so, if it usable
+      asimage_libdirs="$ASIMAGE $ASIMAGE/include \
+            /usr/lib               /usr/local/lib               \
+            /usr/lib/libAfterImage /usr/local/lib/libAfterImage \
+            /usr/lib/libAfterBase  /usr/local/lib/libAfterBase  \
+            /usr/lib/afterstep     /usr/local/lib/afterstep     \
+            /usr/lib/libAfter      /usr/local/lib/libAfter      \
+            /opt/libAfter"
+      asimage_incdirs="$ASIMAGE $ASIMAGE/include \
+            /usr/include               /usr/local/include               \
+            /usr/include/libAfterImage /usr/local/include/libAfterImage \
+            /usr/include/libAfterBase  /usr/local/include/libAfterBase  \
+            /usr/include/afterstep     /usr/local/include/afterstep     \
+            /usr/include/libAfter      /usr/local/include/libAfter      \
+            /opt/libAfter"
+
+      asimageincdirtmp=$asimageincdir
+      check_header "astypes.h" "$asimageincdirtmp" $asimage_incdirs
+      asimageincdir=$found_dir
+      asimagetypes=$found_hdr
+      check_header "afterimage.h" "$asimageincdirtmp" $asimage_incdirs
+      asimageincdir="$asimageincdir $found_dir"
+      asimageimage=$found_hdr
+
+      asimagelibdirtmp=$asimagelibdir
+      check_library "libAfterBase" "$enable_shared" "$asimagelibdirtmp" \
+          $asimage_libdirs
+      asimagelib=$found_lib
+      asimagelibdir=$found_dir
+
+      check_library "libAfterImage" "$enable_shared" "$asimagelibdirtmp" \
+          $asimage_libdirs
+      asimagelib="$asimagelib $found_lib"
+      asimagelibdir="$asimagelibdir $found_dir"
+
+      if test "x$asimageincdir" = "x" \
+ 	  || test "x$asimagelib" = "x" \
+ 	  || test "x$asimagetypes" = "x" \
+ 	  || test "x$asimageimage" = "x" ; then
+         asimagelib=
+         asimagelibdir=
+         asimageincdir=
+         enable_builtin_afterimage="yes"
+       fi
+       unset asimagelibdirtmp
+    fi
+    # If we didn't ind the system libAfterImage, or the user didn't ask
+    # for a system library, then see if we have various headers needed.
+    if test "x$enable_builtin_afterimage" = "xyes" ; then
     check_header "jpeglib.h" "" $ASIMAGE $ASIMAGE/include \
        /usr/local/include /usr/include /opt/include $finkdir/include
     asjpegincdir=$found_dir
@@ -1524,6 +1643,9 @@ if test ! "x$enable_asimage" = "xno" ; then
         asextralib="$asextralib $found_libz"
         asextralibdir="$asextralibdir $found_dirz"
     fi
+fi
+   message "Checking whether to build libAfterImage"
+   echo "$enable_builtin_afterimage"
 fi
 
 ######################################################################
@@ -1633,12 +1755,13 @@ if test ! "x$enable_ruby" = "xno" ; then
     rubyinc=$found_hdr
     rubyincdir=$found_dir
 
-    if test "x$arch" != "xwin32gcc"; then
-        check_library_options="libruby-static"
+    if test "x$arch" = "xwin32" || \
+       test "x$enable_shared" = "xno" ; then
+        check_library_options="libruby-static libruby1.8-static"
     else
-        check_library_options="libruby"
+        check_library_options="libruby libruby1.8"
     fi
-    check_library $check_library_options \
+    check_library "$check_library_options" \
         "$enable_shared" "$rubylibdir" $RUBYDIR $RUBYDIR/lib \
         $rubysyslibdir
     rubylib=$found_lib
@@ -1701,7 +1824,7 @@ if test ! "x$enable_xml" = "xno" ; then
         case $platform in
             linux)     xmllib="$xmllib -lpthread"            ;;
             solaris)   xmllib="$xmllib -liconv"              ;;
-            win32)     xmlincdir="$xmlincdir -I$iconvincdir"
+            win32)     xmlincdir="$xmlincdir $iconvincdir"
                        xmllib="$xmllib $iconvlib Ws2_32.lib" ;;
         esac
     fi
@@ -1819,9 +1942,7 @@ if test "x$enable_globus" = "xyes"; then
         else
             for k in $globusincdir ; do
                 if test "x$k" != "x$found_dir" ; then
-                    if test "x$k" != "x-I$found_dir" ; then
-                        globusincdir="$found_dir -I$globusincdir"
-                    fi
+		    globusincdir="$found_dir $globusincdir"
                  fi
             done
         fi
@@ -1841,9 +1962,7 @@ if test "x$enable_globus" = "xyes"; then
        else
            for k in $globusincdir ; do
                if test "x$k" != "x$found_dir" ; then
-                   if test "x$k" != "x-I$found_dir" ; then
-                       globusincdir="$found_dir -I$globusincdir"
-                   fi
+		   globusincdir="$found_dir $globusincdir"
                 fi
            done
        fi
@@ -1859,9 +1978,7 @@ if test "x$enable_globus" = "xyes"; then
           else
              for k in $globusincdir ; do
                  if test "x$k" != "x$found_dir" ; then
-                    if test "x$k" != "x-I$found_dir" ; then
-                       globusincdir="$found_dir -I$globusincdir"
-                    fi
+		     globusincdir="$found_dir $globusincdir"
                  fi
              done
           fi
@@ -2060,12 +2177,12 @@ if test "x$enable_globus" = "xyes"; then
             echo "Checking for $i ... $dirtmp"
             add="yes"
             for k in $glbpatchcflags ; do
-               if test "x$k" = "x-I$dirtmp" ; then
+               if test "x$k" = "x$dirtmp" ; then
                   add="no"
                fi
             done
             if test "x$add" = "xyes" ; then
-               glbpatchcflags="$glbpatchcflags -I$dirtmp"
+               glbpatchcflags="$glbpatchcflags $dirtmp"
             fi
          else
             echo "Checking for $i ... no (globus patch not applied)"
@@ -2084,7 +2201,7 @@ if test "x$enable_globus" = "xyes"; then
       # copy patched file in the globusauth/src directory
       cp -rp $globuspatchdir/$tobepatched.c globusauth/src/$tobepatched.c
 
-      glbpatchcflags="$glbpatchcflags -I$globuspatchdir/include"
+      glbpatchcflags="$glbpatchcflags $globuspatchdir/include"
 
       if test ! "x$glbpatchcflags" = "x" ; then
          echo "Applying experimental patch to $tobepatched.c"
@@ -2153,9 +2270,7 @@ if test "x$enable_ssl" = "xyes" ; then
         else
             for i in $ssl_incdir ; do
                 if test "x$i" != "x$found_dir" ; then
-                    if test "x$i" != "x-I$found_dir" ; then
-                        ssl_incdir="$found_dir -I$ssl_incdir"
-                    fi
+		    ssl_incdir="$found_dir $ssl_incdir"
                 fi
             done
         fi
@@ -2500,7 +2615,7 @@ echo $enable_shadowpw
 #
 message "Checking whether to build libTable"
 if test "x$enable_table" = "xyes" || test ! "x$TABLE" = "x"; then
-    enable_table="1"
+    enable_table="yes"
     echo "yes"
 else
     enable_table=""
@@ -2511,7 +2626,7 @@ fi
 #
 ### echo %%% Clarens Support - Third party libraries
 #
-# (See http://www.clarens.org)
+# (See http://clarens.sourceforge.net/)
 #
 
 checking_msg "Clarens support"
@@ -2520,13 +2635,17 @@ if test ! "x$enable_clarens" = "xno" ; then
 
     myxmlrpc=`which xmlrpc-c-config 2> /dev/null`
     if test ! "x$myxmlrpc" = "x" && test -x $myxmlrpc ; then
-        clarensinc=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
+        clarensincdir=`xmlrpc-c-config curl-client --cflags 2> /dev/null`
         clarenslibs=`xmlrpc-c-config curl-client --ldadd 2> /dev/null`
+	if test "x$clarensincdir" = "x" ; then
+	    clarensincdir=`xmlrpc-c-config --cflags 2> /dev/null`
+	    clarenslibdir=`xmlrpc-c-config --ldadd 2> /dev/null`
+	fi
     else
-        clarensinc=""
+        clarensincdir=""
         clarenslibs=""
     fi
-    if test "x$clarensinc" = "x" || test "x$clarenslibs" = "x"; then
+    if test "x$clarensincdir" = "x" || test "x$clarenslibs" = "x"; then
         enable_clarens="no"
     fi
 fi
@@ -2570,17 +2689,33 @@ echo "$buildpeac"
 # system.
 #
 if test "x$show_pkglist" = "xyes" ; then
-    pkglist="root-daemon"
-    test "x$enable_cern" = "xyes" && pkglist="$pkglist root-zebra"
-    test "x$enable_opengl" = "xyes" && pkglist="$pkglist root-gl"
-    test "x$enable_mysql" = "xyes" && pkglist="$pkglist root-mysql"
-    test "x$enable_pgsql" = "xyes" && pkglist="$pkglist root-pgsql"
-    test "x$enable_sapdb" = "xyes" && pkglist="$pkglist root-sapdb"
-    test "x$enable_pythia" = "xyes" && test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-pythia"
-    test "x$enable_rfio" = "xyes" && pkglist="$pkglist root-shift"
-    test "x$enable_srputil" = "xyes" && pkglist="$pkglist root-srp"
+    test "x$enable_alien"   = "xyes" && pkglist="$pkglist root-plugin-alien"
+    test "x$enable_asimage" = "xyes" && pkglist="$pkglist root-plugin-asimage"
+    test "x$enable_cern"    = "xyes" && pkglist="$pkglist root-plugin-hbook"
+    test "x$enable_chirp"   = "xyes" && pkglist="$pkglist root-plugin-chirp"
+    test "x$enable_clarens" = "xyes" && pkglist="$pkglist root-plugin-clarens"
+    test "x$enable_dcache"  = "xyes" && pkglist="$pkglist root-plugin-dcache"
+    test "x$enable_globus"  = "xyes" && pkglist="$pkglist root-plugin-globus"
+    test "x$enable_krb5"    = "xyes" && pkglist="$pkglist root-plugin-krb5"
+    test "x$enable_ldap"    = "xyes" && pkglist="$pkglist root-plugin-ldap"
+    test "x$enable_mysql"   = "xyes" && pkglist="$pkglist root-plugin-mysql"
+    test "x$enable_opengl"  = "xyes" && pkglist="$pkglist root-plugin-gl"
+    test "x$enable_oracle"  = "xyes" && pkglist="$pkglist root-plugin-oracle"
+    test "x$enable_peac"    = "xyes" && pkglist="$pkglist root-plugin-peac"
+    test "x$enable_pgsql"   = "xyes" && pkglist="$pkglist root-plugin-pgsql"
+    test "x$enable_pythia"  = "xyes" && pkglist="$pkglist root-plugin-pythia5"
+    test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-plugin-pythia6"
+    test "x$enable_python"  = "xyes" && pkglist="$pkglist root-plugin-python"
+    test "x$enable_qt"      = "xyes" && pkglist="$pkglist root-plugin-qt"
+    test "x$enable_ruby"    = "xyes" && pkglist="$pkglist root-plugin-ruby"
+    test "x$enable_rfio"    = "xyes" && pkglist="$pkglist root-plugin-castor"
+    test "x$enable_sapdb"   = "xyes" && pkglist="$pkglist root-plugin-sapdb"
+    test "x$enable_srp"     = "xyes" && pkglist="$pkglist root-plugin-srp"
+    test "x$enable_venus"   = "xyes" && pkglist="$pkglist root-plugin-venus"
+    test "x$enable_xml"     = "xyes" && pkglist="$pkglist root-plugin-xml"
+    test "x$enable_xrootd"  = "xyes" && pkglist="$pkglist root-xrootd"
 
-    pkglist="$pkglist root-cint root-doc libroot-dev root-bin libroot"
+    pkglist="$pkglist root-plugin-fumili root-plugin-minuit root-plugin-mlp root-plugin-netx root-plugin-proof root-proofd root-plugin-quadp root-rootd root-cint root-doc libroot-dev root-bin libroot ttf-root ttf-root-installer"
     # If we're called from the package preparation script, then
     # print out the package list and exit
     echo "packages: $pkglist"
@@ -2785,8 +2920,13 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@aspngincdir@|$aspngincdir|"          \
     -e "s|@astiffincdir@|$astiffincdir|"        \
     -e "s|@asgifincdir@|$asgifincdir|"          \
+    -e "s|@asimageincdir@|$asimageincdir|"      \
+    -e "s|@asimagelib@|$asimagelib|"            \
+    -e "s|@asimagelibdir@|$asimagelibdir|"      \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
+    -e "s|@builtinafterimage@|$enable_builtin_afterimage|"  \
+    -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
     -e "s|@buildpeac@|$buildpeac|"              \
     -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
@@ -2794,7 +2934,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@chirpincdir@|$chirpincdir|"          \
     -e "s|@chirplib@|$chirplib|"                \
     -e "s|@chirplibdir@|$chirplibdir|"          \
-    -e "s|@clarensinc@|$clarensinc|"            \
+    -e "s|@clarensincdir@|$clarensincdir|"      \
     -e "s|@clarenslibs@|$clarenslibs|"          \
     -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@datadir@|$datadir|"                  \
@@ -2807,7 +2947,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@docdir@|$docdir|"                    \
     -e "s|@elispdir@|$elispdir|"                \
-    -e "s|@enable_table@|$enable_table|"        \
+    -e "s|@buildtable@|$enable_table|"          \
     -e "s|@enable_thread@|$enable_thread|"      \
     -e "s|@etcdir@|$etcdir|"                    \
     -e "s|@exceptions@|$enable_exceptions|"     \
@@ -2862,6 +3002,7 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@qtincdir@|$qtincdir|"                \
     -e "s|@qtlib@|$qtlib|"                      \
     -e "s|@qtlibdir@|$qtlibdir|"                \
+    -e "s|@qtmocexe@|$qtmocexe|"                \
     -e "s|@resolvlib@|$resolvlib|"              \
     -e "s|@rootbuild@|$rootbuild|"              \
     -e "s|@sapdbincdir@|$sapdbincdir|"          \
@@ -2896,6 +3037,31 @@ sed -e "s|@ldflags@||"                          \
     -e "s|@x11libdir@|$x11libdir|"              \
     -e "s|@xpmlib@|$xpmlib|"                    \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
+    -e "s|@buildgl@|$enable_opengl|"            \
+    -e "s|@buildhbook@|$enable_cern|"           \
+    -e "s|@buildldap@|$enable_ldap|"            \
+    -e "s|@buildmysql@|$enable_mysql|"          \
+    -e "s|@buildpgsql@|$enable_pgsql|"          \
+    -e "s|@buildoracle@|$enable_oracle|"        \
+    -e "s|@buildsapdb@|$enable_sapdb|"          \
+    -e "s|@buildqt@|$enable_qt|"                \
+    -e "s|@buildshift@|$enable_rfio|"           \
+    -e "s|@builddcap@|$enable_dcache|"          \
+    -e "s|@buildchirp@|$enable_chirp|"          \
+    -e "s|@buildalien@|$enable_alien|"          \
+    -e "s|@buildasimage@|$enable_asimage|"      \
+    -e "s|@buildpythia@|$enable_pythia|"        \
+    -e "s|@buildpythia6@|$enable_pythia6|"      \
+    -e "s|@buildvenus@|$enable_venus|"          \
+    -e "s|@buildpython@|$enable_python|"        \
+    -e "s|@buildruby@|$enable_ruby|"            \
+    -e "s|@buildxml@|$enable_xml|"              \
+    -e "s|@buildxrd@|$enable_xrd|"              \
+    -e "s|@buildsrputil@|$enable_srputil|"      \
+    -e "s|@buildkrb5@|$enable_krb5|"            \
+    -e "s|@buildglobus@|$enable_globus|"        \
+    -e "s|@buildclarens@|$enable_clarens|"      \
+    -e "s|@buildpeac@|$enable_peac|"            \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 

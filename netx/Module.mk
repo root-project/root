@@ -34,7 +34,7 @@ ALLLIBS      += $(NETXLIB)
 INCLUDEFILES += $(NETXDEP)
 
 # Xrootd includes
-NETXINCEXTRA := -I$(XROOTDDIRI)
+NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 
 ##### local rules #####
 include/%.h:    $(NETXDIRI)/%.h

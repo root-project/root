@@ -46,7 +46,7 @@ $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(SAPDBH) $(SAPDBL)
 
 $(SAPDBDO):     $(SAPDBDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(SAPDBINCDIR) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(SAPDBINCDIR:%=-I%) -I. -o $@ -c $<
 
 all-sapdb:      $(SAPDBLIB)
 
@@ -68,4 +68,4 @@ distclean::     distclean-sapdb
 
 ##### extra rules ######
 $(SAPDBO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(SAPDBINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(SAPDBINCDIR:%=-I%) -o $@ -c $<

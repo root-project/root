@@ -73,52 +73,32 @@ SYSTEMDO      = $(UNIXDO)
 endif
 endif
 endif
-ifneq ($(OPENGLINCDIR),)
-ifneq ($(OPENGLULIB),)
-ifneq ($(OPENGLLIB),)
+ifeq ($(BUILDGL),yes)
 MODULES      += gl
 endif
-endif
-endif
-ifneq ($(MYSQLINCDIR),)
-ifneq ($(MYSQLCLILIB),)
+ifeq ($(BUILDMYSQL),yes)
 MODULES      += mysql
 endif
-endif
-ifneq ($(ORACLEINCDIR),)
-ifneq ($(ORACLECLILIB),)
+ifeq ($(BUILDORACLE),yes)
 MODULES      += oracle
 endif
-endif
-ifneq ($(PGSQLINCDIR),)
-ifneq ($(PGSQLCLILIB),)
+ifeq ($(BUILDPGSQL),yes)
 MODULES      += pgsql
 endif
-endif
-ifneq ($(SAPDBINCDIR),)
-ifneq ($(SAPDBCLILIB),)
+ifeq ($(BUILDSAPDB),yes)
 MODULES      += sapdb
 endif
-endif
-ifneq ($(SHIFTINCDIR),)
-ifneq ($(SHIFTLIB),)
+ifeq ($(BUILDSHIFT),yes)
 MODULES      += rfio
 endif
-endif
-ifneq ($(DCAPINCDIR),)
-ifneq ($(DCAPLIB),)
+ifeq ($(BUILDDCAP),yes)
 MODULES      += dcache
 endif
-endif
-ifneq ($(CHIRPINCDIR),)
-ifneq ($(CHIRPCLILIB),)
+ifeq ($(BUILDCHIRP),yes)
 MODULES      += chirp
 endif
-endif
-ifneq ($(ALIENINCDIR),)
-ifneq ($(ALIENCLILIB),)
+ifeq ($(BUILDALIEN),yes)
 MODULES      += alien
-endif
 endif
 ifeq ($(BUILDASIMAGE),yes)
 MODULES      += asimage
@@ -126,62 +106,50 @@ endif
 ifeq ($(ENABLETHREAD),yes)
 MODULES      += thread
 endif
-ifneq ($(FPYTHIALIB),)
+ifeq ($(BUILDFPYTHIA),yes)
 MODULES      += pythia
 endif
-ifneq ($(FPYTHIA6LIB),)
+ifeq ($(BUILDFPYTHIA6),yes)
 MODULES      += pythia6
 endif
-ifneq ($(FVENUSLIB),)
+ifeq ($(BUILDFVENUS),yes)
 MODULES      += venus
 endif
-ifneq ($(PYTHONINCDIR),)
-ifneq ($(PYTHONLIB),)
+ifeq ($(BUILDPYTHON),yes)
 MODULES      += pyroot
 endif
-endif
-ifneq ($(RUBYINCDIR),)
-ifneq ($(RUBYLIB),)
+ifeq ($(BUILDRUBY),yes)
 MODULES      += ruby
 endif
-endif
-ifneq ($(XMLINCDIR),)
-ifneq ($(XMLCLILIB),)
+ifeq ($(BUILDXML),yes)
 MODULES      += xmlparser
 endif
-endif
-ifneq ($(QTINCDIR),)
-ifneq ($(QTLIB),)
+ifeq ($(BUILDQT),yes)
 MODULES      += qt qtroot
 endif
-endif
-ifneq ($(TABLE),)
+ifeq ($(BUILDTABLE),yes)
 MODULES      += table
 endif
-ifneq ($(SRPUTILLIB),)
+ifeq ($(BUILDSRPUTIL),yes)
 MODULES      += srputils
 endif
-ifneq ($(KRB5LIB),)
+ifeq ($(BUILDKRB5),yes)
 MODULES      += krb5auth
 endif
-ifneq ($(LDAPINCDIR),)
-ifneq ($(LDAPCLILIB),)
+ifeq ($(BUILDLDAP),yes)
 MODULES      += ldap
 endif
-endif
-ifneq ($(GLOBUSLIB),)
+ifeq ($(BUILDGLOBUS),yes)
 MODULES      += globusauth
 endif
-ifneq ($(CERNLIBS),)
+ifeq ($(BUILDHBOOK),yes)
 MODULES      += hbook
 endif
 ifeq ($(BUILDXRD),yes)
 MODULES      += xrootd netx
 endif
-ifneq ($(CLARENSINC),)
-ifneq ($(CLARENSLIBS),)
+ifeq ($(BUILDCLARENS),yes)
 MODULES      += clarens
-endif
 endif
 ifeq ($(BUILDPEAC),yes)
 MODULES      += peac
@@ -405,7 +373,7 @@ config config/Makefile.:
 config/Makefile.config include/config.h etc/system.rootauthrc \
   etc/system.rootdaemonrc etc/root.mimes $(ROOTRC) bin/root-config: Makefile
 
-ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
+ifeq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean debian redhat),)
 Makefile: configure config/rootrc.in config/config.in config/Makefile.in \
   config/root-config.in config/rootauthrc.in config/rootdaemonrc.in \
   config/mimes.unix.in config/mimes.win32.in
@@ -468,9 +436,9 @@ rebase: $(ALLLIBS) $(ALLEXECS)
 	@echo done.
 
 debian:
-	@if [ ! -x `which debuild` ] || [ ! -x `which dh_testdir` ]; then \
-	   echo "You must have debuild and debhelper installed to"; \
-	   echo "make the Debian GNU/Linux package"; exit 1; fi
+	@if [ ! -x `which dpkg-buildpackage` ] || [ ! -x `which dh_testdir` ]; then \
+	   echo "You must have debhelper installed to make the "; \
+	   echo "Debian GNU/Linux packages"; exit 1; fi
 	@echo "OK, you're on a Debian GNU/Linux system - cool"
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
 	  dirvers=`basename $$PWD | sed 's|root-\(.*\)|\1|'` ; \
@@ -478,9 +446,10 @@ debian:
 	    echo "Must have ROOT source tree in root-$$vers" ; \
 	    echo "Please rename this directory to `basename $$PWD` to"; \
 	    echo "root-$$vers and try again"; exit 1 ; fi
-	build/package/lib/makedebclean.sh
+	rm -rf debian 
 	build/package/lib/makedebdir.sh
-	debuild -rfakeroot -us -uc -i"G__|^debian|\.d$$"
+	fakeroot debian/rules debian/control 
+	dpkg-buildpackage -rfakeroot -us -uc -i"G__|^debian|\.d$$"
 	@echo "Debian GNU/Linux packages done. They are put in '../'"
 
 redhat:
@@ -488,7 +457,6 @@ redhat:
 	   echo "You must have rpm installed to make the Redhat package"; \
 	   exit 1; fi
 	@echo "OK, you have RPM on your system - good"
-	build/package/lib/makerpmclean.sh
 	build/package/lib/makerpmspec.sh
 	@echo "To build the packages, make a gzipped tar ball of the sources"
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
@@ -612,8 +580,8 @@ endif
 	-@mv -f rootd/misc/rootd.rc.dd rootd/misc/rootd.rc.d
 	-@cd test && $(MAKE) distclean
 
+
 maintainer-clean:: distclean
-	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
 	   $(ROOTRC) etc/system.rootauthrc etc/system.rootdaemonrc \
@@ -624,9 +592,9 @@ version: $(CINTTMP)
 	@$(MAKEVERSION)
 
 cintdlls: $(CINTTMP)
-	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(MAKELIB)" "$(CXX)" \
-	   "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
-	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
+	@$(MAKECINTDLLS) $(PLATFORM) "$(CINTTMP)" "$(ROOTCINTTMP)" \
+	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
+	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)"
 
 static: rootlibs
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \

@@ -1,5 +1,5 @@
 .\"
-.\" $Id: proofd.1,v 1.1 2000/12/08 17:41:00 rdm Exp $
+.\" $Id: proofd.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
 .\"
 .TH PROOFD 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -64,7 +64,7 @@ On each node, add to \fI/etc/inetd.conf\fR the lines:
 .nf
 
   proofd stream tcp nowait root <\fIbindir\fR>/proofd proofd <\fIproofdir\fR>/proof
-  rootd stream tcp nowait root <\fIbindir\fR>/rootd rootd -i
+  rootd stream tcp nowait root <\fIbindir\fR>/rootd rootd \-i
 
 .fi
 You can substitute the <\fIproofdir\fR> with any directory that holds
@@ -77,7 +77,7 @@ the cluster.
 Restart \fBinetd\fR or force it to re-read the config file:
 .nf  
 
-  kill -1 <\fIinetd pid\fR>
+  kill \-1 <\fIinetd pid\fR>
 
 .fi
 If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probaly just do
@@ -135,7 +135,7 @@ Create an empty <\fIproofdir\fR>/log/proof.log:
 Restart syslogd or force it to re-read the config file:
 .nf
  
-  kill -1 <\fIsyslogd pid\fR>.
+  kill \-1 <\fIsyslogd pid\fR>.
 
 .fi
 If you use \fBSYSV\fR \fIinit\fR(8) scripts, you can probaly just do
@@ -160,7 +160,7 @@ If you're running \fBLinux\fR, Steps 5 to 7 can be somewhat automated
 using the script \fIproof-facility\fR in <\fIproofdir\fR> of your
 distribution. This script uses \fIsyslog-facility\fR(1), from the
 \fBLinux\fR \fIsyslog\fR(1) distribution, and may run on other
-platforms as well - but no warrenties mind you!
+platforms as well \- but no warrenties mind you!
 .PP
 Step 9 is completly up to the user.  
 .SH "EXAMPLE"
@@ -261,6 +261,10 @@ This manual page was written by Christian Holm Christensen
 others). 
 .\"
 .\" $Log: proofd.1,v $
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
 .\" Revision 1.1  2000/12/08 17:41:00  rdm
 .\" man pages of all ROOT executables provided by Christian Holm.
 .\"

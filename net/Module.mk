@@ -32,7 +32,7 @@ DAEMONUTILSO := $(MODDIRS)/DaemonUtils.o
 
 # Add SSL flags, if required
 ifneq ($(SSLLIB),)
-SSLFLAGS     := -I$(SSLINCDIR)
+SSLFLAGS     := $(SSLINCDIR:%=-I%)
 ifneq ($(CRYPTLIBS),)
 CRYPTLIBS    += $(SSLLIBDIR) $(SSLLIB)
 else

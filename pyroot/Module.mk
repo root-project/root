@@ -86,4 +86,4 @@ distclean::     distclean-pyroot
 
 ##### extra rules ######
 $(PYROOTO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(PYTHONINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(PYTHONINCDIR:%=-I%) -o $@ -c $<

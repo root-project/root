@@ -68,4 +68,4 @@ distclean::     distclean-ldap
 
 ##### extra rules ######
 $(LDAPO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(LDAPINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(LDAPINCDIR:%=-I%) -o $@ -c $<

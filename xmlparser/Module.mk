@@ -70,4 +70,4 @@ distclean::     distclean-xmlparser
 
 ##### extra rules ######
 $(XMLPARSERO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(XMLINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(XMLINCDIR:%=-I%) -o $@ -c $<

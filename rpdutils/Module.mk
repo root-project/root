@@ -38,19 +38,19 @@ endif
 
 # use SRP for authentication
 ifneq ($(SRPLIB),)
-SRPFLAGS     := -I$(SRPINCDIR)
+SRPFLAGS     := $(SRPINCDIR:%=-I%)
 SRPLIBS      := $(SRPLIBDIR) $(SRPLIB)
 endif
 
 # use krb5 for authentication
 ifneq ($(KRB5LIB),)
-KRB5FLAGS     := -I$(KRB5INCDIR)
+KRB5FLAGS     := $(KRB5INCDIR:%=-I%)
 KRB5LIBS      := $(KRB5LIBDIR) $(KRB5LIB)
 endif
 
 # use Globus for authentication
 ifneq ($(GLOBUSLIB),)
-GLBSFLAGS     := -I$(GLOBUSINCDIR)
+GLBSFLAGS     := $(GLOBUSINCDIR:%=-I%)
 GLBSLIBS      := $(GLOBUSLIBDIR) $(GLOBUSLIB)
 SRVAUTHS      += $(MODDIRS)/globus.cxx
 SRVAUTHO      += $(MODDIRS)/globus.o

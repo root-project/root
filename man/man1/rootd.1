@@ -1,5 +1,5 @@
 .\" 
-.\" $Id: rootd.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\" $Id: rootd.1,v 1.2 2004/12/15 12:37:43 rdm Exp $
 .\"
 .TH ROOTD 1 "Version 4" "ROOT" 
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -36,7 +36,7 @@ If the system uses inetd, add the following line to \fI/etc/inetd.conf\fR:
 .sp 1
 .RS
 .nf
-rootd stream tcp nowait root <\fIbindir\fR>/rootd rootd -i
+rootd stream tcp nowait root <\fIbindir\fR>/rootd rootd \-i
 .fi
 .RE
 .sp 1
@@ -47,7 +47,7 @@ The \fIinetd\fR(8) daemon must re-read its configuration file to become aware of
 .sp 1
 .RS
 .nf
-kill -HUP <pid inetd>
+kill \-HUP <pid inetd>
 .fi
 .RE
 .sp 1
@@ -76,7 +76,7 @@ service rootd
      wait            = no
      user            = root
      server          = <\fIbindir\fR>/rootd
-     server_args     = -i
+     server_args     = \-i
 }
 .fi
 .RE
@@ -104,7 +104,7 @@ listening on port 5151 just type:
 .sp 1
 .RS
 .nf
-rootd -p 5151
+rootd \-p 5151
 .fi
 .RE
 .sp 1
@@ -115,7 +115,7 @@ itself.
 ftp). To setup \fIrootd\fR to accept anonymous logins do the following
 (while being logged in as root): 
 .TP 
-.Bl -enum
+.Bl \-enum
 .It 
 Add the following line to /etc/passwd:
 .sp 1
@@ -201,7 +201,7 @@ In system using shadow passwords, full access to the password field of the user 
 .sp 1
 .RS
 .nf
-perl -e '$pw = crypt("<secretpasswd>","salt"); print "$pw\n"'
+perl \-e '$pw = crypt("<secretpasswd>","salt"); print "$pw\n"'
 .fi
 .RE
 .sp 1
@@ -295,6 +295,53 @@ It has been modified by G. Ganis <g.ganis@cern.ch> to document new features
 included in ROOT version 4.
 .\" 
 .\" $Log: rootd.1,v $
+.\" Revision 1.2  2004/12/15 12:37:43  rdm
+.\" From Gerri:
+.\" 1) New files:
+.\"  .1 build/package/rpm/root-rootd.spec.in
+.\"
+.\"     skeleton for the rootd RPM specs file
+.\"
+.\"  .2 build/package/common/root-rootd.dscr
+.\"
+.\"     short and long descriptions used in the previous file
+.\"
+.\"  .3 config/rootd.in
+.\"
+.\"     Skeleton for the startup script to be created under etc; the
+.\"     variable which depends on the configuration directives is
+.\"     the location of the executable to run (i.e the installation
+.\"     prefix). This file is to be moved to /etc/rc.d/init.d/ on RH
+.\"     (or equivalent position on other versions of Linux).
+.\"
+.\"  .4 man/man1/system.rootdaemonrc.1
+.\"
+.\"     man page for system.rootdaemonrc and related files
+.\"
+.\"
+.\" 2) Patched files:
+.\"
+.\"  .1 Makefile
+.\"
+.\"     add new target 'rootdrpm' with the rules to create the specs file
+.\"
+.\"  .2 configure
+.\"
+.\"     add creation of etc/rootd from the skeleton in config/rootd.in
+.\"
+.\"  .3 config/Makefile.in
+.\"
+.\"     add variable ROOTDRPMREL with the RPM release version (default 1);
+.\"     this can be changed on command line whn creating the spec file
+.\"
+.\"  .4 config/rootdaemonrc.in
+.\"
+.\"     update fir 'sockd' and correct a few typos
+.\"
+.\"  .5 man/man1/rootd.1
+.\"
+.\"     significant updates; typo corrections
+.\"
 .\" Revision 1.1  2001/08/15 13:30:48  rdm
 .\" move man files to new subdir man1. This makes it possible to add
 .\" $ROOTSYS/man to MANPATH and have "man root" work.

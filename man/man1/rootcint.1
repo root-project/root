@@ -1,5 +1,5 @@
 .\"
-.\" $Id: rootcint.1,v 1.1 2000/12/08 17:41:01 rdm Exp $
+.\" $Id: rootcint.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
 .\"
 .TH ROOTCINT 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -8,8 +8,8 @@
 rootcint \- ROOT Dictionary generator 
 .SH SYNOPSIS
 .nf
-\fBrootcint \fIheader_file\fR[+][-][!] ... [LinkDef.h] > \fIdict_file\fR 
-\fBrootcint \fR[-f] \fIdict_file \fR[-c] \fIheader_file\fR[+][-][!] ... [LinkDef.h]
+\fBrootcint \fIheader_file\fR[+][\-][!] ... [LinkDef.h] > \fIdict_file\fR 
+\fBrootcint \fR[\-f] \fIdict_file \fR[\-c] \fIheader_file\fR[+][\-][!] ... [LinkDef.h]
 .fi
 .SH "DESCRIPTION" 
 The 
@@ -78,7 +78,7 @@ directories to be searched and preprocessor defines, like:
 .sp 1 
 .RS
 .nf
-.B -I$../include -DDebug
+.B \-I$../include -DDebug
 .fi
 .RE
 .sp 1
@@ -113,7 +113,7 @@ looks like:
 This file tells 
 .B rootcint 
 for which classes the method interface stubs should be generated. A
-trailing `-' in the class name tells 
+trailing `\-' in the class name tells 
 .B rootcint 
 to not generate the 
 .B Streamer() 
@@ -199,6 +199,10 @@ This manual page was written by Christian Holm Christensen
 others). 
 .\"
 .\" $Log: rootcint.1,v $
+.\" Revision 1.1  2001/08/15 13:30:48  rdm
+.\" move man files to new subdir man1. This makes it possible to add
+.\" $ROOTSYS/man to MANPATH and have "man root" work.
+.\"
 .\" Revision 1.1  2000/12/08 17:41:01  rdm
 .\" man pages of all ROOT executables provided by Christian Holm.
 .\"

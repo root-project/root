@@ -81,15 +81,15 @@ $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPELIB) $(GDKLIB) $(GDKDLL) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libWin32gdk.$(SOEXT) $@ \
 		   "$(WIN32GDKO) $(WIN32GDKDO)" \
-		   "$(FREETYPELIB) $(GDKLIB) $(WIN32GDKLIBEXTRA)"
+		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GDKLIB) $(WIN32GDKLIBEXTRA)"
 
 $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(WIN32GDKH1) $(WIN32GDKL)
 
 $(WIN32GDKDO):  $(WIN32GDKDS) $(FREETYPELIB)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) \
-		   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) -I$(GLIBDIRI) \
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(FREETYPEINC) \
+		   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
 		   -o $@ -c $<
 
 all-win32gdk:   $(WIN32GDKLIB)
@@ -117,6 +117,6 @@ distclean::     distclean-win32gdk
 
 ##### extra rules #####
 $(WIN32GDKO1): %.o: %.cxx $(FREETYPELIB)
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) \
-	   -I$(WIN32GDKDIR)/gdk/src -I$(GDKDIRI) -I$(GLIBDIRI) \
+	$(CXX) $(OPT) $(CXXFLAGS) $(FREETYPEINC) \
+	   -I$(WIN32GDKDIR)/gdk/src $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) \
 	   -o $@ -c $<

@@ -29,7 +29,7 @@ XROOTDA    := $(XROOTDDIRD)/bin/xrootd
 XOLBD      := bin/olbd
 XROOTD     := bin/xrootd
 
-ALLEXECS   += $(XROOTD)
+ALLEXECS   += $(XROOTD) $(XOLBD)
 
 ##### local rules #####
 $(XROOTD): $(XROOTDA)

@@ -47,7 +47,8 @@ include/%.h:    $(GRAFDIRI)/%.h
 $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPELIB) $(MAINLIBS) $(GRAFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
-		   "$(GRAFO) $(GRAFDO)" "$(FREETYPELIB) $(GRAFLIBEXTRA)"
+		   "$(GRAFO) $(GRAFDO)" \
+		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA)"
 
 $(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
@@ -59,7 +60,7 @@ $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 $(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
-		$(CXX) $(NOOPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-graf:       $(GRAFLIB)
 
@@ -81,14 +82,14 @@ distclean::     distclean-graf
 
 ##### extra rules ######
 graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPELIB)
-		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 
 graf/src/TText.o: graf/src/TText.cxx $(FREETYPELIB)
-		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 
 graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPELIB)
 ifneq ($(PLATFORM),win32)
-		$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 else
-		$(CXX) $(DEBUGFLAGS) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+		$(CXX) $(DEBUGFLAGS) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<
 endif

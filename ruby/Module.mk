@@ -69,4 +69,4 @@ distclean::     distclean-ruby
 
 ##### extra rules ######
 $(RUBYROOTO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(RUBYINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(RUBYINCDIR:%=-I%) -o $@ -c $<

@@ -5,24 +5,21 @@
 #
 # Author: Fons Rademakers, 27/7/2000
 
-PLATFORM=$1
+PLATFORM=$1 ; shift
 if [ $PLATFORM != "clean" ]; then
-   CINT=$2
-   MAKELIB=$3
-   CXX=$4
-   CC=$5
-   LD=$6
-   OPT=$7
-   CINTCXXFLAGS=$8
-   CINTCFLAGS=$9
-   shift
-   LDFLAGS=$9
-   shift
-   SOFLAGS=$9
-   shift
-   SOEXT=$9
-   shift
-   COMPILER=$9
+   CINT=$1          ; shift
+   ROOTCINT=$1      ; shift
+   MAKELIB=$1       ; shift
+   CXX=$1           ; shift
+   CC=$1            ; shift
+   LD=$1            ; shift
+   OPT=$1           ; shift
+   CINTCXXFLAGS=$1  ; shift
+   CINTCFLAGS=$1    ; shift
+   LDFLAGS=$1       ; shift 
+   SOFLAGS=$1       ; shift 
+   SOEXT=$1         ; shift
+   COMPILER=$1      ; shift
 fi
 if [ $PLATFORM = "macosx" ]; then
    SOEXT=so
@@ -47,27 +44,27 @@ CINTDIRI=cint/include
 CINTDIRS=cint/stl
 
 clean() {
-   rm -f $CINTDIRI/stdfunc.dll
-   rm -f $CINTDIRI/stdcxxfunc.dll
-   rm -f $CINTDIRI/posix.dll
+   rm -f $CINTDIRI/stdfunc.dll          $CINTDIRI/stdfunc.so.*
+   rm -f $CINTDIRI/stdcxxfunc.dll       $CINTDIRI/stdcxxfunc.so.*
+   rm -f $CINTDIRI/posix.dll            $CINTDIRI/posix.so.*
    rm -f $CINTDIRI/systypes.h
    rm -f $CINTDIRI/sys/types.h
-   rm -f $CINTDIRI/sys/ipc.dll
-   rm -f $CINTDIRS/string.dll
-   rm -f $CINTDIRS/vector.dll
-   rm -f $CINTDIRS/list.dll
-   rm -f $CINTDIRS/deque.dll
-   rm -f $CINTDIRS/map.dll
-   rm -f $CINTDIRS/map2.dll
-   rm -f $CINTDIRS/set.dll
-   rm -f $CINTDIRS/multimap.dll
-   rm -f $CINTDIRS/multimap2.dll
-   rm -f $CINTDIRS/multiset.dll
-   rm -f $CINTDIRS/stack.dll
-   rm -f $CINTDIRS/queue.dll
-   rm -f $CINTDIRS/valarray.dll
-   rm -f $CINTDIRS/exception.dll
-   rm -f $CINTDIRS/complex.dll
+   rm -f $CINTDIRI/sys/ipc.dll          $CINTDIRI/sys/ipc.so.*
+   rm -f $CINTDIRS/string.dll           $CINTDIRS/string.so.*
+   rm -f $CINTDIRS/vector.dll           $CINTDIRS/vector.so.*
+   rm -f $CINTDIRS/list.dll             $CINTDIRS/list.so.*
+   rm -f $CINTDIRS/deque.dll            $CINTDIRS/deque.so.*
+   rm -f $CINTDIRS/map.dll              $CINTDIRS/map.so.*
+   rm -f $CINTDIRS/map2.dll             $CINTDIRS/map2.so.*
+   rm -f $CINTDIRS/set.dll              $CINTDIRS/set.so.*
+   rm -f $CINTDIRS/multimap.dll         $CINTDIRS/multimap.so.*
+   rm -f $CINTDIRS/multimap2.dll        $CINTDIRS/multimap2.so.*
+   rm -f $CINTDIRS/multiset.dll         $CINTDIRS/multiset.so.*
+   rm -f $CINTDIRS/stack.dll            $CINTDIRS/stack.so.*
+   rm -f $CINTDIRS/queue.dll            $CINTDIRS/queue.so.*
+   rm -f $CINTDIRS/valarray.dll         $CINTDIRS/valarray.so.*
+   rm -f $CINTDIRS/exception.dll        $CINTDIRS/exception.so.*
+   rm -f $CINTDIRS/complex.dll          $CINTDIRS/complex.so.*
 }
 
 execute() {
@@ -199,7 +196,7 @@ execute "$CINT -w1 -zvector -n$STLDIR/G__cpp_vector.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A -Z0 $STLDIR/vec.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_vector.o
          -c $STLDIR/G__cpp_vector.cxx"
-execute "rootcint -f $STLDIR/rootcint_vector.cxx -c vector \
+execute "$ROOTCINT -f $STLDIR/rootcint_vector.cxx -c vector \
          $LINKDEFDIR/vectorLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_vector.o  \
          -c $STLDIR/rootcint_vector.cxx"
@@ -215,7 +212,7 @@ execute "$CINT -w1 -zlist -n$STLDIR/G__cpp_list.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/lst.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_list.o \
          -c $STLDIR/G__cpp_list.cxx"
-execute "rootcint -f $STLDIR/rootcint_list.cxx -c list \
+execute "$ROOTCINT -f $STLDIR/rootcint_list.cxx -c list \
          $LINKDEFDIR/listLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_list.o \
          -c $STLDIR/rootcint_list.cxx"
@@ -231,7 +228,7 @@ execute "$CINT -w1 -zdeque -n$STLDIR/G__cpp_deque.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/dqu.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_deque.o \
          -c $STLDIR/G__cpp_deque.cxx"
-execute "rootcint -f $STLDIR/rootcint_deque.cxx -c deque \
+execute "$ROOTCINT -f $STLDIR/rootcint_deque.cxx -c deque \
          $LINKDEFDIR/dequeLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_deque.o \
          -c $STLDIR/rootcint_deque.cxx"
@@ -247,7 +244,7 @@ execute "$CINT -w1 -zmap -n$STLDIR/G__cpp_map.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/mp.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_map.o \
          -c $STLDIR/G__cpp_map.cxx"
-execute "rootcint -f $STLDIR/rootcint_map.cxx -c map $LINKDEFDIR/mapLinkdef.h"
+execute "$ROOTCINT -f $STLDIR/rootcint_map.cxx -c map $LINKDEFDIR/mapLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_map.o \
          -c $STLDIR/rootcint_map.cxx"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -DWHAT=\"map\" \
@@ -262,7 +259,7 @@ execute "$CINT -w1 -zmap2 -n$STLDIR/G__cpp_map2.cxx -D__MAKECINT__ \
          -DG__MAKECINT -DG__MAP2 -I$STLDIR -c-1 -A  -Z0 $STLDIR/mp.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_map2.o \
          -c $STLDIR/G__cpp_map2.cxx"
-execute "rootcint -f $STLDIR/rootcint_map2.cxx -c -DG__MAP2 map \
+execute "$ROOTCINT -f $STLDIR/rootcint_map2.cxx -c -DG__MAP2 map \
          $LINKDEFDIR/mapLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_map2.o \
          -c $STLDIR/rootcint_map2.cxx"
@@ -278,7 +275,7 @@ execute "$CINT -w1 -zset -n$STLDIR/G__cpp_set.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/st.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_set.o \
          -c $STLDIR/G__cpp_set.cxx"
-execute "rootcint -f $STLDIR/rootcint_set.cxx -c set $LINKDEFDIR/setLinkdef.h"
+execute "$ROOTCINT -f $STLDIR/rootcint_set.cxx -c set $LINKDEFDIR/setLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_set.o \
          -c $STLDIR/rootcint_set.cxx"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -DWHAT=\"set\" \
@@ -293,7 +290,7 @@ execute "$CINT -w1 -zmultimap -n$STLDIR/G__cpp_multimap.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/multmp.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_multimap.o \
          -c $STLDIR/G__cpp_multimap.cxx"
-execute "rootcint -f $STLDIR/rootcint_multimap.cxx -c map \
+execute "$ROOTCINT -f $STLDIR/rootcint_multimap.cxx -c map \
          $LINKDEFDIR/multimapLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_multimap.o \
          -c $STLDIR/rootcint_multimap.cxx"
@@ -310,7 +307,7 @@ execute "$CINT -w1 -zmultimap2 -n$STLDIR/G__cpp_multimap2.cxx -D__MAKECINT__ \
          -DG__MAKECINT -DG__MAP2 -I$STLDIR -c-1 -A  -Z0 $STLDIR/multmp.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_multimap2.o \
          -c $STLDIR/G__cpp_multimap2.cxx"
-execute "rootcint -f $STLDIR/rootcint_multimap2.cxx -c -DG__MAP2 map \
+execute "$ROOTCINT -f $STLDIR/rootcint_multimap2.cxx -c -DG__MAP2 map \
          $LINKDEFDIR/multimapLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_multimap2.o \
          -c $STLDIR/rootcint_multimap2.cxx"
@@ -327,7 +324,7 @@ execute "$CINT -w1 -zmultiset -n$STLDIR/G__cpp_multiset.cxx -D__MAKECINT__ \
          -DG__MAKECINT -I$STLDIR -c-1 -A  -Z0 $STLDIR/multst.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/G__cpp_multiset.o \
          -c $STLDIR/G__cpp_multiset.cxx"
-execute "rootcint -f $STLDIR/rootcint_multiset.cxx -c set \
+execute "$ROOTCINT -f $STLDIR/rootcint_multiset.cxx -c set \
          $LINKDEFDIR/multisetLinkdef.h"
 execute "$CXX $OPT $CINTCXXFLAGS $INCDIRS -o $STLDIR/rootcint_multiset.o \
          -c $STLDIR/rootcint_multiset.cxx"

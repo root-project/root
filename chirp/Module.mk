@@ -45,7 +45,7 @@ $(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(CHIRPH) $(CHIRPL)
 
 $(CHIRPDO):     $(CHIRPDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(CHIRPINCDIR) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(CHIRPINCDIR:%=-I%) -I. -o $@ -c $<
 
 all-chirp:      $(CHIRPLIB)
 
@@ -67,4 +67,4 @@ distclean::     distclean-chirp
 
 ##### extra rules ######
 $(CHIRPO): %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) -I$(CHIRPINCDIR) -o $@ -c $<
+		$(CXX) $(OPT) $(CXXFLAGS) $(CHIRPINCDIR:%=-I%) -o $@ -c $<

@@ -51,7 +51,7 @@ $(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(KRB5AUTHH1) $(KRB5AUTHL)
 
 $(KRB5AUTHDO):  $(KRB5AUTHDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(KRB5INCDIR) -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. $(KRB5INCDIR:%=-I%) -o $@ -c $<
 
 all-krb5auth:   $(KRB5AUTHLIB)
 
@@ -73,4 +73,4 @@ distclean::     distclean-krb5auth
 
 ##### extra rules ######
 $(KRB5AUTHO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(KRB5INCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(KRB5INCDIR:%=-I%) -o $@ -c $<

@@ -62,7 +62,7 @@ distclean::     distclean-globusauth
 
 ##### extra rules ######
 $(GLBSAUTHO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(GLOBUSINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(GLOBUSINCDIR:%=-I%) -o $@ -c $<
 
 $(GLBPATCHO): %.o: %.c
-	$(CC) $(OPT) $(CFLAGS) $(GLBPATCHFLAGS) -I$(GLOBUSINCDIR) -o $@ -c $<
+	$(CC) $(OPT) $(CFLAGS) $(GLBPATCHFLAGS) $(GLOBUSINCDIR:%=-I%) -o $@ -c $<

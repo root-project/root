@@ -46,7 +46,7 @@ $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(MYSQLH) $(MYSQLL)
 
 $(MYSQLDO):     $(MYSQLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I$(MYSQLINCDIR) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(MYSQLINCDIR:%=-I%) -I. -o $@ -c $<
 
 all-mysql:      $(MYSQLLIB)
 
@@ -68,4 +68,4 @@ distclean::     distclean-mysql
 
 ##### extra rules ######
 $(MYSQLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(MYSQLINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) $(MYSQLINCDIR:%=-I%) -o $@ -c $<

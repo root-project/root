@@ -3,6 +3,13 @@
 #
 # Author: Fons Rademakers, 7/1/2003
 
+ifneq ($(BUILTINFREETYPE), yes)
+FREETYPELIBF    := $(shell freetype-config --libs)
+FREETYPEINC     := $(shell freetype-config --cflags)
+FREETYPELIB     := $(filter -l%,$(FREETYPELIBF))
+FREETYPELDFLAGS := $(filter-out -l%,$(FREETYPELIBF))
+else
+
 MODDIR       := freetype
 MODDIRS      := $(MODDIR)/src
 
@@ -24,6 +31,8 @@ else
 FREETYPELIB  := $(LPATH)/libfreetype.a
 endif
 endif
+FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
+FREETYPELDFLAGS :=
 
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
@@ -108,3 +117,5 @@ distclean-freetype: clean-freetype
 		@rm -rf $(FREETYPELIB) $(FREETYPEDIRS)/$(FREETYPEVERS)
 
 distclean::     distclean-freetype
+
+endif

@@ -40,14 +40,14 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPELIB) $(MAINLIBS) $(X11TTFLIBDEP
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGX11TTF.$(SOEXT) $@ \
 		   "$(X11TTFO) $(X11TTFDO)" \
-		   "$(FREETYPELIB) $(X11TTFLIBEXTRA) $(XLIBS)"
+		   "$(FREETYPELDLFAGS) $(FREETYPELIB) $(X11TTFLIBEXTRA) $(XLIBS)"
 
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(X11TTFH) $(X11TTFL)
 
 $(X11TTFDO):    $(X11TTFDS) $(FREETYPELIB)
-		$(CXX) $(NOOPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -I. -o $@ -c $<
+		$(CXX) $(NOOPT) $(FREETYPEINC) $(CXXFLAGS) -I. -o $@ -c $<
 
 all-x11ttf:     $(X11TTFLIB)
 
@@ -69,4 +69,4 @@ distclean::     distclean-x11ttf
 
 ##### extra rules ######
 $(X11TTFO): %.o: %.cxx $(FREETYPELIB)
-	$(CXX) $(OPT) -I$(FREETYPEDIRI) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(OPT) $(FREETYPEINC) $(CXXFLAGS) -o $@ -c $<

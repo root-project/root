@@ -1,5 +1,5 @@
 .\"
-.\" $Id: root-config.1,v 1.2 2002/01/20 14:23:52 rdm Exp $
+.\" $Id: root-config.1,v 1.3 2002/07/31 20:45:10 rdm Exp $
 .\"
 .TH ROOT-CONFIG 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -14,12 +14,12 @@ Put lines like
 .RS 
 .nf 
 
-CFLAGS = $(shell root-config --cflags)
-LIBS   = $(shell root-config --libs)
-GLIBS  = $(shell root-config --glibs)
+CFLAGS = $(shell root-config \-\-cflags)
+LIBS   = $(shell root-config \-\-libs)
+GLIBS  = $(shell root-config \-\-glibs)
 
 %Cint.cxx:Include.h LinkDef.h
-        rootcint -f $@ -c $^ 
+        rootcint \-f $@ \-c $^ 
 
 .fi
 .RE
@@ -38,17 +38,17 @@ lib_LTLIBRARIES         = libFoo.la
 pkginclude_HEADERS      = Foo.h
 noinst_HEADERS          = FooCint.h
 libFoo_la_SOURCES       = Foo.cxx FooCint.cxx   
-libFoo_la_LDFLAGS       = -version-info 1:0 -R @ROOTLIBDIR@
-libFoo_la_LDADD         = -lCore -lCint @ROOTAUXLIBS@
+libFoo_la_LDFLAGS       = \-version-info 1:0 \-R @ROOTLIBDIR@
+libFoo_la_LDADD         = \-lCore \-lCint @ROOTAUXLIBS@
 
 BUILT_SOURCES           = FooCint.cxx FooCint.h 
 
-AM_CPPFLAGS             = -I@ROOTINCDIR@
-AM_LDFLAGS              = -L@ROOTLIBDIR@
+AM_CPPFLAGS             = \-I@ROOTINCDIR@
+AM_LDFLAGS              = \-L@ROOTLIBDIR@
 CLEANFILES              = *Cint.cxx *Cint.h *~ core 
 
 %Cint.cxx %Cint.h:Include.h LinkDef.h
-        @ROOTCINT@ -f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
+        @ROOTCINT@ \-f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
 
 .fi
 .RE
@@ -145,64 +145,64 @@ Auxilary compiler flags
 Same as \fBROOTLIBDIR\fR
 .SH OPTIONS 
 .TP 
-.B --help
+.B \-\-help
 Gives a short list of options avaliable, and exit
 .TP
-.B --version 
+.B \-\-version 
 Report the version number of installed \fBROOT\fR, and exit. 
 .TP
-.BI --prefix =<prefix>
+.BI \-\-prefix =<prefix>
 If no arguments is given, reports where \fBROOT\fR is installed. With
 an argument of =\fI<prefix>\fR, set the base of the subsequent options
-to \fI<prefix>\fR. If \fB--exec-prefix\fR is passedwith an argument,
-that argument overrides the argument given to \fB--prefix\fR for the
+to \fI<prefix>\fR. If \fB\\-\-exec-prefix\fR is passedwith an argument,
+that argument overrides the argument given to \fB\\-\-prefix\fR for the
 library path. 
 .TP
-.BI --exec-prefix =<prefix>
+.BI \-\-exec-prefix =<prefix>
 If no argument is given, report where the libraries are installed. If
 an argument is given, use that as the installation base directory for
 the libraries. This option does not affect the include path. 
 .TP
-.B --libdir
+.B \-\-libdir
 Print the directory where the ROOT libraries are installed. 
 .TP
-.B --incdir
+.B \-\-incdir
 Print the directory where the ROOT headers are installed. 
 .TP
-.B --libs
+.B \-\-libs
 Output a line suitable for linking a program agains the \fBROOT\fR
 libraries. No graphics libraries are output. 
 .TP
-.B --glibs
+.B \-\-glibs
 As above, but also output for the graphics libraries. 
 .TP
-.B --cflags
+.B \-\-cflags
 Output a line suitable for compiling a source file againd the
 \fBROOT\fR header (class declararion) files. 
 .TP
-.B --new 
+.B \-\-new 
 Put the \fBlibNew.so\fR library in the library lists.  This option
-\fImust\fR be given before options \fB--libs\fR and \fB--glibs\fR. 
+\fImust\fR be given before options \fB\-\-libs\fR and \fB\-\-glibs\fR. 
 .TP
-.B --nonew 
+.B \-\-nonew 
 Compatiblity option. Does nothing. 
 .TP
-.B --auxlibs
+.B \-\-auxlibs
 Print auxiliary libraries and/or system linker flags.
 .TP
-.B --noauxlibs
+.B \-\-noauxlibs
 Do not print auxiliary libraries and/or system linker flags in the
-output of \fB--libs\fR and \fB--glibs\fR. 
-.B --auxcflags
+output of \fB\-\-libs\fR and \fB\-\-glibs\fR. 
+.B \-\-auxcflags
 Print auxiliary compiler flags.
 .TP
-.B --noauxcflags
+.B \-\-noauxcflags
 Do not print auxiliary compiler flags in the output of
-\fB--cflags\fR.
+\fB\-\-cflags\fR.
 .TP
-.B --noldflags
-Do not print library path link option in output of \fB--libs\fR and
-\fB--glibs\fR. 
+.B \-\-noldflags
+Do not print library path link option in output of \fB\-\-libs\fR and
+\fB\-\-glibs\fR. 
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIroot-cint\fR(1)
 .PP

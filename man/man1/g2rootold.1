@@ -1,41 +1,129 @@
 .\"
-.\" $Id: memprobe.1,v 1.1 2002/01/20 14:23:52 rdm Exp $
-.\"
-.TH MEMPROBE 1 "Version 3" "ROOT"
+.\" $Id: g2rootold.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\" 
+.TH G2ROOTOLD 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
-memprobe \- ROOT utility to examine memory usage
+g2rootold \- convert GEANT geomtry files to ROOT files
 .SH SYNOPSIS
-.B memprobe
-.I "[options]"
+.B g2rootoldd 
+.I [-f map_name] geant_name macro_name
 .SH "DESCRIPTION"
-To activate the memory checker you have to set in the \fB.rootrc\fR
-file the resource \fBRoot.MemCheck\fR to 1 (e.g.: \fBRoot.MemCheck:
-1\fR) and you  have to link with \fBlibNew.so\fR (e.g. use
-\fBroot-config \-\-new \-\-libs\fR) or use \fBrootn.exe\fR. 
+You can convert a 
+.B GEANT 
+(see 
+.I http://wwwinfo.cern.ch/asd/geant/index.html 
+fore more on 
+.BR GEANT )
+geometry to 
+.B ROOT 
+geometry with the following steps
+.TP 
+1 
+Run the interactive version of 
+.B GEANT 
+and produce a Zebra RZ file 
+.IR detector.geom , 
+by typing the command:
+.sp 1 
+.RS
+Geant > rz/file 21 \fIdetector.geom\fR on
+.RE
+.sp 1
+.TP
+2 
+Run the 
+.B g2rootold 
+program to convert the Zebra RZ file into a 
+.B ROOT 
+macro 
+.I detector.C:
+.sp 1 
+.RS
+g2rootold \fIdetector.geom\fR \fIdetector.C\fR
+.RE
+.sp 1
+.TP 
+3
+Run the following 
+.B ROOT 
+session;
+.sp 1 
+.RS
+.nf
+root [1] .x detector.C
+root [2] detector.Draw()
+root [3] c1.x3d()   // (this invokes the 3-d Root viewver)
+root [4] TFile f("detector.root","NEW") //open a new root file
+root [5] detector.Write() //Write the geometry structure
+root [6] f.Write() 
+.fi
+.RE
+.sp 1
+Note that the 
+.I TNode 
+structure currently in 
+.B ROOT 
+was not designed as a replacement for a true geometry package. The
+idea was mainly to draw simple geometries in event display
+programs. We are currently investigating several alternatives for a
+true & efficient geometry package supporting;
+.TP
+- 
+a disk data base with storage of multiple geometry versions
+.TP 
+- 
+an interactive editor and viewer
+.TP
+- 
+with 3-d views
+.TP
+- 
+but also 2-d cut views
+.TP 
+- 
+with interfaces to existing or future MC such as 
+.B GEANT3 
+or 
+.B GEANT4
 .PP
-When all this is the case you will find at the end of the program
-execution a file \fBmemcheck.out\fR in the directory where you started
-your ROOT program. Alternatively you can set the resource
-\fBRoot.MemCheckFile\fR to the name of a file to which the leak
-information will be written. The contents of this \fBmemcheck.out\fR
-file can be analyzed and transformed into printable  text via the
-\fBmemprobe\fR program (in \fB/usr/bin\fR). 
+A second program called 
+.B gh2root
+(see 
+.IR http://root.cern.ch/root/gh2root.html )
+generates automatically C++ code corresponding to the 
+.B GEANT3 Zebra 
+structures 
+.IR JSET , 
+.IR JVERTX , 
+.IR JKINE , 
+.I JHITS  
+and 
+.I JDIGI.
 .SH "SEE ALSO"
-\fIroot\fR(1)
-.PP
-See also the \fBROOT\fR webpages:
-.US http://root.cern.ch
-\fIhttp://root.cern.ch\fR
-.UE
+.RS
+.IR root (1),
+.IR g2root (1),
+.IR h2root(1), 
+.RE
+and
+.RS 
+.I The ROOT Users Guide
+.RE
+avaliable from the main 
+.B ROOT
+website:
+.RS
+.I http://root.cern.ch
+.RE
 .SH "ORIGINAL AUTHORS"
 The ROOT team (see web page above):
 .RS
-\fBRene Brun\fR and \fBFons Rademakers\fR
+\fBRene Brun\fR and \fBFons Rademakers\fR 
 .RE
 .SH "COPYRIGHT"
-\fBROOT\fR Software Terms and Conditions
+ROOT Software Terms and Conditions
 .PP
 The authors hereby grant permission to use, copy, and distribute this
 software and its documentation for any purpose, provided that existing
@@ -67,25 +155,12 @@ This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
 others). 
 .\"
-.\" $Log: memprobe.1,v $
-.\" Revision 1.1  2002/01/20 14:23:52  rdm
-.\" Mega patch by Christian Holm concerning the configure, build and
-.\" Debian and RedHat packaging scripts. The configure script has been
-.\" rationalized (introduction of two shell functions to find package
-.\" headers and libraries). Extensive update of the INSTALL writeup,
-.\" including description of all new packages (SapDB, PgSql, etc.).
-.\" More options to the root-config script. Man page for memprobe.
-.\" Big overhaul of the Debian and RedHat packaging scripts, supporting
-.\" the new libraries.
-.\"
+.\" $Log: g2rootold.1,v $
 .\" Revision 1.1  2001/08/15 13:30:48  rdm
 .\" move man files to new subdir man1. This makes it possible to add
 .\" $ROOTSYS/man to MANPATH and have "man root" work.
 .\"
-.\" Revision 1.2  2001/04/23 09:10:12  rdm
-.\" updates by Christian Holm for making debian and RedHat packages.
-.\"
-.\" Revision 1.1  2000/12/08 17:41:01  rdm
+.\" Revision 1.1  2000/12/08 17:41:00  rdm
 .\" man pages of all ROOT executables provided by Christian Holm.
 .\"
-.\"
+.\" 
