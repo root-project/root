@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.202 2004/08/03 05:25:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.203 2004/08/20 21:02:10 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1055,6 +1055,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    TIter next(fElements);
    TStreamerElement *element;
    Int_t ninc = 0;
+   Bool_t Riostream = kFALSE;
    while ((element = (TStreamerElement*)next())) {
       //if (element->IsA() == TStreamerBase::Class()) continue;
       sprintf(name,element->GetName());
@@ -1066,6 +1067,11 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       lt = strlen(element->GetTypeName());
       if (ltype < lt) ltype = lt;
       if (ldata < ld) ldata = ld;
+      //must include Riostream.h in case of an STL container
+      if (!Riostream && element->InheritsFrom(TStreamerSTL::Class())) {
+         Riostream = kTRUE;
+         fprintf(fp,"#include \"Riostream.h\"\n");
+      }
       //get include file name if any
       const char *include = element->GetInclude();
       if (strlen(include) == 0) continue;
