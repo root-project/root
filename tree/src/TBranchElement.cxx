@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.28 2001/04/25 14:05:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.29 2001/04/25 15:46:44 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -560,11 +560,12 @@ Int_t TBranchElement::GetNdata() const
 // Returns number of data elements in this branch.
 // In case of a branchcount, reads the info from the branchcount.
 
-   if (fBranchCount) {
-      Int_t entry = fTree->GetReadEntry();
-      fBranchCount->TBranch::GetEntry(entry);
-      return fBranchCount->GetNdata();
-   }
+  // if (fBranchCount) {
+  //    Int_t entry = fTree->GetReadEntry();
+  //    fBranchCount->TBranch::GetEntry(entry);
+  //    ((TBranchElement*)this)->fNdata = fBranchCount->GetNdata();
+  //     //return fBranchCount->GetNdata();
+  //}
    return fNdata;
 }
 
