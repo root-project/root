@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.21 2004/02/02 15:32:57 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.22 2004/02/02 17:14:35 brun Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -1494,8 +1494,12 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    {
       dir = "";
       dir.ReadToDelim(str, kDelim);
-      if (dir.IsNull())
-         continue;              // ignore blank entries
+      if (dir.IsNull()) {
+         if (!str.good())
+            break;                 // EOF or stream failure
+         else
+            continue;              // ignore blank entries
+      }
       newPath.Append(dir);
       if (!newPath.EndsWith("/"))
          newPath.Append("/");
