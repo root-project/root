@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooCutNorm.cc,v 1.1 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,8 @@ RooCutNorm::RooCutNorm(const char *name, const char *title, const RooAbsReal& no
   _cutDepSet("cutDepSet","Set of dependent with fractional range",this),
   _origDepSet("origDepSet","Set of dependent with full integration range",this),
   _lastFracSet(0),
-  _fracIntegral(0)
+  _fracIntegral(0),
+  _integralCompSet(0)
 {
   // Constructor
 
@@ -79,10 +80,23 @@ RooCutNorm::RooCutNorm(const RooCutNorm& other, const char* name) :
   _cutDepSet("cutDepSet",this,other._cutDepSet),
   _origDepSet("origDepSet",this,other._origDepSet),
   _lastFracSet(0),
-  _fracIntegral(0)
+  _fracIntegral(0),
+  _integralCompSet(0)
 {
   // Copy constructor
 }
+
+
+RooCutNorm::~RooCutNorm() 
+{
+  // Destructor
+
+  // Delete any owned components
+  if (_fracIntegral) {
+    delete _integralCompSet ;
+  }
+}
+
 
 
 Double_t RooCutNorm::expectedEvents() const 
@@ -124,10 +138,21 @@ void RooCutNorm::syncFracIntegral() const
   _lastFracSet = pdf._lastNormSet ;
 
   // Delete existing integral
-  if (_fracIntegral) delete _fracIntegral ;
+  if (_fracIntegral) {
+    delete _integralCompSet ;
+  }
 
-  // Clone integral from present PDF normalization
-  _fracIntegral = (RooRealIntegral*) pdf._norm->Clone() ;
+  // Clone integral (including PDF) from present PDF normalization object
+
+  // Make list of all nodes that need to be cloned:
+  // All PDF branch nodes, and the RooRealIntegral object itself
+  RooArgSet pdfNodeList ;
+  pdf.branchNodeServerList(&pdfNodeList) ;
+  pdfNodeList.add(*pdf._norm) ;
+
+  // Shallow-clone list of nodes 
+  _integralCompSet = (RooArgSet*) pdfNodeList.snapshot(kFALSE) ;
+  _fracIntegral = (RooRealIntegral*) _integralCompSet->find(pdf._norm->GetName()) ;
 
   // Replace dependents involved in cut with internal set
   _fracIntegral->recursiveRedirectServers(_cutDepSet,kFALSE,kTRUE) ;

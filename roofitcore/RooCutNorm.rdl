@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooCutNorm.rdl,v 1.1 2001/10/06 06:19:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,7 +24,7 @@ public:
 	     const RooAbsPdf& pdf, const RooArgList& depList, const RooArgList& cutDepList) ;
   RooCutNorm(const RooCutNorm& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooCutNorm(*this,newname) ; }
-  virtual ~RooCutNorm() {} ;
+  virtual ~RooCutNorm() ;
 
   Double_t evaluate() const { return 1.0 ; }
   virtual Bool_t selfNormalized() const { return kTRUE ; }
@@ -35,6 +35,7 @@ protected:
 
   mutable RooArgSet* _lastFracSet ;
   mutable RooRealIntegral* _fracIntegral ;
+  mutable RooArgSet* _integralCompSet ;
   RooRealProxy _pdf ;
   RooRealProxy _n ;
   RooSetProxy  _cutDepSet ;
