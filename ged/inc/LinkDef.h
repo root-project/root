@@ -28,7 +28,6 @@
 #pragma link C++ class TPaveStatsEditor;
 #pragma link C++ class TPadEditor;
 #pragma link C++ class TGedToolBox;
-#pragma link C++ class TGedDrawPanel;
 #pragma link C++ class TGedEditor;
 #pragma link C++ class TGedPopup;
 #pragma link C++ class TGedSelect;
