@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.26 2001/06/23 08:42:24 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.27 2001/06/25 10:40:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -447,7 +447,7 @@ void TCint::SetClassInfo(TClass *cl)
       // or is nested, looking for the full class name is outputing a lots of
       // (expected) error messages.  Currently the only way to avoid this is to
       // specifically check that each level of nesting is already loaded.
-      char *classname = strdup(cl->GetName());
+      char *classname = StrDup(cl->GetName());
       char *current = strstr(classname,"::");
       while(current) {
          *current = '\0';
