@@ -1551,7 +1551,7 @@ if test ! "x$enable_xml" = "xno" ; then
         /opt/libxml2/include /usr/local/include/libxml2 /usr/include/libxml2
     xmlincdir=$found_dir
 
-    check_library "libxml2 libxml2_a" "$enable_shared" "$xmllibdir" $XMLDIR \
+    check_library "libxml2_a libxml2" "$enable_shared" "$xmllibdir" $XMLDIR \
         $XMLDIR/lib $XMLDIR/.libs /opt/libxml2/lib /usr/local/lib /usr/lib
     xmllib=$found_lib
     xmllibdir=$found_dir
