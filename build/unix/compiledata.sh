@@ -37,7 +37,7 @@ fi
 
 if [ "$ARCH" = "macosx" ]; then
    SOEXT="so"
-   SOFLAGS="$OPT -bundle -flat_namespace -undefined suppress -install_name \$LibName.$SOEXT"
+   SOFLAGS="$OPT -L/sw/lib -flat_namespace -undefined suppress -install_name \$LibName.$SOEXT"
 fi
 
 if [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
