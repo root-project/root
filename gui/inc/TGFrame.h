@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.29 2003/11/07 01:43:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.30 2003/11/07 13:25:56 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -145,6 +145,7 @@ protected:
    static UInt_t      fgLastButton;
    static Int_t       fgDbx, fgDby;
    static Window_t    fgDbw;
+   static UInt_t      fgUserColor;
 
    static Time_t      GetLastClick();
 
@@ -459,7 +460,7 @@ public:
    const TGWindow *GetMain() const { return fMain; }
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    virtual void    SaveSource(const char *filename, Option_t *option); // *MENU*
-   
+
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.6 2003/08/11 12:51:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.7 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -86,7 +86,7 @@ public:
    Bool_t       GetShowPos() const { return fShowPos; }
    TString      GetFormat() const { return fFormat; }
    Bool_t       UsePercent() const { return fPercent; }
-   virtual void SavePrimitive(ofstream &out, Option_t *);
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.5 2003/01/12 11:06:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.6 2003/11/10 15:44:32 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -610,7 +610,7 @@ TGDimension TGTableLayout::GetDefaultSize() const
 void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
 {
 
-   // Save layout hints as a C++ statement(s) on output stream out
+   // Save table layout hints as a C++ statement(s) on output stream out.
 
    TString hints;
    UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
@@ -682,7 +682,7 @@ void TGTableLayoutHints::SavePrimitive(ofstream &out, Option_t *)
 void TGTableLayout::SavePrimitive(ofstream &out, Option_t *)
 {
 
-   // Save vertical layout manager as a C++ statement(s) on output stream
+   // Save table layout as a C++ statement(s) on output stream.
 
    out << " new TGTableLayout(" << fMain->GetName() << "," << fNrows << "," << fNcols;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.31 2003/11/07 01:43:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.33 2003/11/07 14:39:21 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -95,6 +95,7 @@ UInt_t      TGFrame::fgLastButton = 0;
 Int_t       TGFrame::fgDbx = 0;
 Int_t       TGFrame::fgDby = 0;
 Window_t    TGFrame::fgDbw = 0;
+UInt_t      TGFrame::fgUserColor = 0;
 
 const TGFont *TGGroupFrame::fgDefaultFont = 0;
 const TGGC   *TGGroupFrame::fgDefaultGC = 0;
@@ -1468,9 +1469,12 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   ULong_t ucolor;        // will reflect user color changes" << endl;
    }
    ULong_t ucolor = GetBackground();
-   const char *ucolorname = TColor::PixelAsHexString(ucolor);
-   out << "   gClient->GetColorByName(" << quote << ucolorname << quote
-       << ",ucolor);" << endl;
+   if (ucolor != fgUserColor) {
+      const char *ucolorname = TColor::PixelAsHexString(ucolor);
+      out << "   gClient->GetColorByName(" << quote << ucolorname << quote
+          << ",ucolor);" << endl;
+      fgUserColor = ucolor;
+   }
 }
 
 //______________________________________________________________________________

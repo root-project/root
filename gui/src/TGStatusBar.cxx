@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.6 2003/10/10 11:20:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -355,7 +355,7 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame) {
+      if (GetOptions() == (kSunkenFrame | kHorizontalFrame)) {
            out <<");" << endl;
       } else {
         out << "," << GetOptionString() <<");" << endl;
@@ -367,20 +367,36 @@ void TGStatusBar::SavePrimitive(ofstream &out, Option_t *option)
    int i; char quote = '"';
 
    if (fNpart > 1)  {
-      out << "   Int_t parts[] = {" << fParts[0];
+      out << "   Int_t parts" << GetName()+5 << "[] = {" << fParts[0];
 
       for (i=1; i<fNpart; i++) {
            out  << "," << fParts[i];
       }
       out << "};" << endl;
 
-      out << "   " << GetName() << "->SetParts(parts," << fNpart << ");" <<endl;
+      out << "   " << GetName() << "->SetParts(parts" << GetName()+5
+          << "," << fNpart << ");" <<endl;
    }
    for (i=0; i<fNpart; i++) {
-      if (fStatusPart[i]->GetText())
+      if (fStatusPart[i]->GetText()) {
           out << "   " << GetName() << "->SetText(" << quote
               << fStatusPart[i]->GetText()->GetString()
               << quote << "," << i << ");" << endl;
+      } else {
+         if (!fStatusPart[i]->GetList()) continue;
+         out << "   TGCompositeFrame *" << fStatusPart[i]->GetName()
+             << " = " << GetName() << "->GetBarPart(" << i << ");" << endl;
 
+         TGFrameElement *el;
+         TIter next(fStatusPart[i]->GetList());
+
+         while ((el = (TGFrameElement *) next())) {
+            el->fFrame->SavePrimitive(out, option);
+            out << "   " << fStatusPart[i]->GetName() << "->AddFrame("
+                << el->fFrame->GetName();
+            el->fLayout->SavePrimitive(out, option);
+            out << ");" << endl;
+         }
+      }
    }
 }
