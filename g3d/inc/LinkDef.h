@@ -1,4 +1,4 @@
-/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.5 2002/09/14 16:20:14 brun Exp $ */
+/* @(#)root/g3d:$Name:  $:$Id: LinkDef.h,v 1.6 2004/04/13 14:32:46 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -45,11 +45,9 @@
 #pragma link C++ class TTRD2+;
 #pragma link C++ class TTUBE-;
 #pragma link C++ class TTUBS+;
-#pragma link C++ class TPadOpenGLView;
 #pragma link C++ class TMarker3DBox-;
 #pragma link C++ class TPoints3DABC;
 #pragma link C++ class TXTRU+;
-#pragma link C++ class TGLViewerImp;
 #pragma link C++ class TUtil3D;
 
 #endif

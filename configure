@@ -572,7 +572,6 @@ enable/disable options, prefix with either --enable- or --disable-
    ldap            LDAP support, requires (Open)LDAP libs
    mysql           MySQL support, requires libmysqlclient
    opengl          OpenGL support, requires libGL and libGLU
-   openiv          OpenInventor support, requires libInventor and libInventorXt
    python          PyROOT python bindings, requires python >= 2.1
    ruby            Ruby ROOT bindings, requires ruby >= 1.8
    pgsql           PostgreSQL support, requires libpq
@@ -612,8 +611,6 @@ with options, prefix with --with-, enables corresponding support
    mysql-libdir    MySQL support, location of libmysqlclient
    opengl-incdir   OpenGL support, location of GL/gl.h
    opengl-libdir   OpenGL support, location of libGL
-   openiv-incdir   OpenInventor support, location of Inventor/SoType.h
-   openiv-libdir   OpenInventor support, location of libInventor
    pgsql-incdir    PostgreSQL support, location of libpq-fe.h
    pgsql-libdir    PostgreSQL support, location of libpq
    pythia-libdir   PYHTIA support, location of libPythia
@@ -1003,53 +1000,6 @@ if test ! "x$enable_opengl" = "xno" && test ! "$platform" = "win32" ; then
        test "x$opengllib" = "x" || \
        test "x$openglulib" = "x" ; then
         enable_opengl="no"
-    fi
-fi
-
-######################################################################
-#
-### echo %%% OpenInventor Support - Third party libraries
-#
-# (see http://oss.sgi.com/projects/inventor/)
-#
-if test "x$enable_opengl" = "xno" ; then
-    enable_openiv="no"
-fi
-if test ! "x$enable_openiv" = "xno" ; then
-    # Check for OpenInventor compatible include and library
-    check_header "Inventor/SoType.h" "$openivincdir" $IVROOT $IVROOT/include \
-	$IVROOT/usr/include /usr/include /usr/include/X11 /usr/X11/include \
-	/usr/X11R6/include /usr/local/include/X11 \
-	/usr/local/X11R6/include /usr/local/include \
-	/usr/include/inventor /usr/local/include/inventor \
-	/usr/inventor/include /usr/local/inventor/include \
-	/usr/inventor/usr/include /usr/local/inventor/usr/include \
-	/usr/local/inventor /opt/inventor /opt/inventor/include \
-	/opt/inventor/usr/include
-    openivinc=$found_hdr
-    openivincdir=$found_dir
-
-    openivlibdirs="$IVROOT $IVROOT/lib $IVROOT/usr/lib /usr/lib /usr/local/lib \
-	/usr/lib/X11 /usr/X11R6/lib /usr/local/lib/X11 /usr/local/X11R6/lib \
-        /usr/X11/lib /usr/lib/inventor /usr/local/lib/inventor \
-	/usr/inventor/lib /usr/inventor/usr/lib /usr/local/inventor/lib \
-	/usr/local/inventor/usr/lib /usr/inventor /usr/local/inventor \
-	/opt/inventor /opt/inventor/lib /opt/inventor/usr/lib"
-
-    keep=$openivlibdir
-    check_library "libInventor libCoin coin*" "$enable_shared" \
-	"$openivlibdir" $openivlibdirs
-    openivlib=$found_lib
-    openivlibdir=$found_dir
-
-    check_library "libInventorXt libSoXt libSoQt soqt*" "$enable_shared" \
-	"$keep" $openivlibdirs
-    openivlib="$openivlib $found_lib"
-    openivlibdir="$openivlibdir $found_dir"
-
-    if test "x$openivincdir" = "x" || \
-       test "x$openivlib" = "x" ; then
-        enable_openiv="no"
     fi
 fi
 

@@ -32,12 +32,6 @@ ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
 endif
-ifneq ($(OPENIVLIB),)
-GLS          += TRootOIViewer.cxx
-IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
-IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) \
-                $(X11LIBDIR) -lXm -lXt -lXext -lX11 -lm
-endif
 ifeq ($(ARCH),win32)
 GLLIBS       += opengl32.lib glu32.lib
 endif

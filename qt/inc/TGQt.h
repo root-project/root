@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TGQt.h,v 1.3 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -90,9 +90,6 @@ class TGQt  : public TVirtualX  {
    friend class TQtObject;
    friend class TQtWindowsObject;
    friend class TQtPixmapObject;
-//   friend class TWin32GLViewerImp;
-//   friend class TWin32InventorViewerImp;
-   friend class TPadOpenGLView;
    friend class TQtWidget;
    friend class TQtClientWidget;
 protected:

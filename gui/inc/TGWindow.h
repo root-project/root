@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.18 2004/10/06 14:38:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.19 2004/10/25 12:06:50 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
 // TGUnknownWindowHandler                                               //
 //                                                                      //
 // Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Motif (see TRootOIViewer).        //
+// Typically windows created by Xt or Motif.                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
