@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.8 2001/11/16 02:36:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.9 2002/02/22 09:37:29 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -152,6 +152,7 @@ void TStorage::RemoveStat(void *vp)
 void *TStorage::ReAlloc(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
+
    R__LOCKGUARD(gCINTMutex);
 
    if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
@@ -180,6 +181,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 {
    // Reallocate (i.e. resize) block of memory. Checks if current size is
    // equal to oldsize. If not memory was overwritten.
+
    R__LOCKGUARD(gCINTMutex);
 
    if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
@@ -214,6 +216,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
 {
    // Reallocate (i.e. resize) array of chars. Size and oldsize are
    // in number of chars.
+
    R__LOCKGUARD(gCINTMutex);
 
    static const char *where = "TStorage::ReAllocChar";
@@ -245,6 +248,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 {
    // Reallocate (i.e. resize) array of integers. Size and oldsize are
    // number of integers (not number of bytes).
+
    R__LOCKGUARD(gCINTMutex);
 
    static const char *where = "TStorage::ReAllocInt";
@@ -278,6 +282,7 @@ void *TStorage::ObjectAlloc(size_t sz)
    // Directly after this routine one can call (in the TObject ctor)
    // TStorage::IsOnHeap() to find out if the just created object is on
    // the heap.
+
    R__LOCKGUARD(gCINTMutex);
 
    ULong_t space;
@@ -315,6 +320,7 @@ void *TStorage::ObjectAlloc(size_t , void *vp)
 void TStorage::ObjectDealloc(void *vp)
 {
    // Used to deallocate a TObject on the heap (via TObject::operator delete()).
+
    R__LOCKGUARD(gCINTMutex);
 
 #ifndef NOCINT
@@ -362,6 +368,7 @@ void TStorage::SetReAllocHooks(ReAllocFun_t rh1, ReAllocCFun_t rh2)
 void TStorage::PrintStatistics()
 {
    // Print memory usage statistics.
+
    R__LOCKGUARD(gCINTMutex);
 
 #if defined(MEM_DEBUG) && defined(MEM_STAT)

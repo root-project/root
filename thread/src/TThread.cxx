@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.12 2001/12/12 13:56:13 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.13 2002/02/22 09:37:29 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -170,7 +170,7 @@ TThread::TThread(void (*fn)(void*), void *arg, EPriority pri)
    fNamed     = kFALSE;
 }
 
- 
+
 //______________________________________________________________________________
 TThread::TThread(Int_t id)
 {
@@ -261,7 +261,7 @@ void TThread::Constructor()
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev=0; fgMain = this;
 
-   // Creates the mutexes
+   // Create the global mutexes
    if(!gContainerMutex)
      gContainerMutex = new TMutex(kTRUE);
    if(!gCINTMutex)
@@ -550,9 +550,9 @@ void *TThread::Fun(void *ptr)
    TThreadCleaner dummy;
 
    th = (TThread *)ptr;
-   th->fId = SelfId(); 
+   th->fId = SelfId();
    th->SetUniqueID(th->fId);
-   
+
    // Default cancel state is OFF
    // Default cancel type  is DEFERRED
    // User can change it by call SetCancelON & SetCancelAsynchronous()
@@ -718,7 +718,7 @@ void TThread::XAction()
             case 2:
                ((TCanvas*)fgXArr[1])->Constructor();
                break;
- 
+
             case 5:
                ((TCanvas*)fgXArr[1])->Constructor(
                                 (Text_t*)fgXArr[2],
@@ -750,7 +750,7 @@ void TThread::XAction()
       case kCDEL:
          ((TCanvas*)fgXArr[1])->Destructor();
          break;
- 
+
       case kPDCD:
          ((TPad*) fgXArr[1])->Divide( *((Int_t*)(fgXArr[2])),
                                   *((Int_t*)(fgXArr[3])),
@@ -761,8 +761,8 @@ void TThread::XAction()
          break;
       case kMETH:
       ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
-         break;      
-         
+         break;
+
          default:
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }

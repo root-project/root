@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.14 2001/04/19 07:25:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.15 2002/02/22 09:37:29 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -125,7 +125,7 @@ void TCollection::Draw(Option_t *option)
    // Draw all objects in this collection.
    // wildcarding supported, eg option="xxx*" draws only objects
    // with names xxx*
-   
+
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
@@ -142,7 +142,7 @@ void TCollection::Draw(Option_t *option)
 void TCollection::Dump() const
 {
    // Dump all objects in this collection.
-   
+
    TIter next(this);
    TObject *object;
 
@@ -196,11 +196,11 @@ const char *TCollection::GetName() const
 {
   // Return name of this collection.
   // if no name, return the collection class name.
-   
+
    if (fName.Length() > 0) return fName.Data();
    return ClassName();
 }
-   
+
 //______________________________________________________________________________
 Int_t TCollection::GrowBy(Int_t delta) const
 {
@@ -227,7 +227,7 @@ void TCollection::ls(Option_t *option) const
    // List (ls) all objects in this collection.
    // wildcarding supported, eg option="xxx*" lists only objects
    // with names xxx*
-   
+
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
@@ -258,7 +258,7 @@ void TCollection::Print(Option_t *option) const
    // Print all objects in this collection.
    // wildcarding supported, eg option="xxx*" prints only objects
    // with names xxx*
-   
+
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
@@ -404,14 +404,14 @@ void TCollection::EmptyGarbageCollection()
 //______________________________________________________________________________
 void TCollection::GarbageCollect(TObject *obj)
 {
-  if(fgGarbageCollection) {
-    R__LOCKGUARD(gContainerMutex);
-    if(fgGarbageCollection && !fgEmptyingGarbage) {
-      fgGarbageCollection->Add(obj);
-    }
-    else delete obj;
-  } else
-    delete obj;
+   if (fgGarbageCollection) {
+      R__LOCKGUARD(gContainerMutex);
+      if (!fgEmptyingGarbage) {
+         fgGarbageCollection->Add(obj);
+      } else
+         delete obj;
+   } else
+      delete obj;
 }
 
 //______________________________________________________________________________
