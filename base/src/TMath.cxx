@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.45 2003/12/12 16:33:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.46 2004/01/27 16:28:53 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -977,6 +977,80 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
       }
    }
    return K / 2.506628 / sigma; // Normalize by dividing by sqrt(2*pi)*sigma.
+}
+
+//___________________________________________________________________________//
+void TMath::RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
+{
+   // Computes the roots of a cubic polynomial
+   // coef: Coefficients
+   // a,b,c: references to the roots
+   // Author: Jan Conrad
+
+  Double_t pi= TMath::Pi();
+  Int_t Threeroots = 0; 
+  
+  Double_t phi,q,r,s,t,p,D,R1,x,y,temp;
+
+  a = 0.0;
+  b = 0.0;
+  c = 0.0;
+
+  if (coef[3] == 0) return;
+  r = coef[2]/coef[3];
+  s = coef[1]/coef[3];
+  t = coef[0]/coef[3];
+  p = (3 * s - r*r)/3;
+  q = (2 * r*r*r)/27 - (r * s)/3 + t;
+  D = (p/3)*(p/3)*(p/3) + (q/2)*(q/2);
+  R1 = q/TMath::Abs(q) * TMath::Sqrt(TMath::Abs(p)/3);
+  if (p==0) {
+     q = 8.0;
+     a = TMath::Power(q,1./3.); 
+     goto done;
+  }  
+      
+  if( p < 0) {
+    if (D <= 0) {
+       Threeroots=1;
+       phi = TMath::ACos(q/2/(R1*R1*R1));
+       a   = TMath::Cos(phi/3); 
+       b   = TMath::Cos(phi/3 + (2 * pi)/3);
+       c   = TMath::Cos(phi/3 + (4 * pi)/3);
+    }  else { 
+       x   = q/2/(R1*R1*R1);           
+       phi = TMath::Log(x+TMath::Sqrt(x*x-1));
+       b   = TMath::CosH(phi/3); 
+    } 
+  } else { 
+      x   = q/2/(R1*R1*R1);           
+      phi = TMath::Log(x+TMath::Sqrt(x*x+1));
+      y   = TMath::SinH(phi/3);
+  }
+  
+    a = (-2*R1)*a-r/3;
+    b = (-2*R1)*b-r/3;
+    c = (-2*R1)*c-r/3;     
+  
+  done:
+
+  if (Threeroots == 1) {
+    if (a > b){
+       temp=a;
+       a=b;
+       b=temp;
+    }                               
+    if (b > c) {
+       temp=b;
+       b=c;
+       c=temp;      
+    }              
+    if (a > b) {
+       temp=a;
+       a=b;
+       b=temp;
+    }                                                                         
+  }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.29 2004/01/23 18:50:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.30 2004/01/27 16:28:53 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -249,12 +249,16 @@ public:
    static void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
    // Advanced
-   static Float_t *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);     // Calculate the Cross Product of two vectors
-   static Float_t  Normalize(Float_t v[3]);                               // Normalize a vector
-   static Float_t  NormCross(Float_t v1[3],Float_t v2[3],Float_t out[3]); // Calculate the Normalized Cross Product of two vectors
-   static Float_t *Normal2Plane(Float_t v1[3],Float_t v2[3],Float_t v3[3], Float_t normal[3]); // Calcualte a normal vector of a plane
+   static Float_t  *Cross(Float_t v1[3],Float_t v2[3],Float_t out[3]);    // Calculate the Cross Product of two vectors
+   static Double_t *Cross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Cross Product of two vectors
+   static Float_t   Normalize(Float_t v[3]);                              // Normalize a vector
+   static Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
+   static Float_t   NormCross(Float_t v1[3],Float_t v2[3],Float_t out[3]);    // Calculate the Normalized Cross Product of two vectors
+   static Double_t  NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
+   static Float_t  *Normal2Plane(Float_t v1[3],Float_t v2[3],Float_t v3[3], Float_t normal[3]);     // Calculate a normal vector of a plane
+   static Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
+   static void      RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
 
-   static Double_t *Cross(Double_t v1[3],Double_t v2[3],Double_t out[3]);// Calculate the Cross Product of two vectors
    static Double_t  Erf(Double_t x);
    static Double_t  Erfc(Double_t x);
    static Double_t  Freq(Double_t x);
@@ -264,9 +268,6 @@ public:
    static Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
    static Double_t  Landau(Double_t x, Double_t mean=0, Double_t sigma=1);
    static Double_t  LnGamma(Double_t z);
-   static Double_t  Normalize(Double_t v[3]);                             // Normalize a vector
-   static Double_t  NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
-   static Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calcualte a normal vector of a plane
    static Double_t  Poisson(Double_t x, Double_t par);
    static Double_t  PoissonI(Double_t x, Double_t par);
    static Double_t  Prob(Double_t chi2,Int_t ndf);
