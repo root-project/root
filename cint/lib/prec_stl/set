@@ -69,6 +69,7 @@ class set {
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #elif defined(G__INTEL_COMPILER)
+#elif defined(G__KCC)
 #else
   	: public bidirectional_iterator<Key,difference_type>
 #endif
@@ -110,6 +111,7 @@ class set {
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #elif defined(G__INTEL_COMPILER)
+#elif defined(G__KCC)
 #else
   	: public bidirectional_iterator<Key,difference_type>
 #endif
