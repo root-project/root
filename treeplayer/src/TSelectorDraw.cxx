@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.43 2004/12/16 13:48:16 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.44 2005/02/11 16:42:05 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1260,7 +1260,7 @@ void TSelectorDraw::TakeEstimate()
    Int_t i;
    Double_t rmin[3],rmax[3];
    Double_t vminOld[4], vmaxOld[4];
-   for (Int_t i = 0; i < 4; i++) {
+   for (i = 0; i < 4; i++) {
       vminOld[i] = fVmin[i];
       vmaxOld[i] = fVmax[i];
    }
