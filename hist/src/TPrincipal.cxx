@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.2 2000/08/15 08:25:36 brun Exp $
-// $Date: 2000/08/15 08:25:36 $
+// $Id: TPrincipal.cxx,v 1.3 2000/08/15 08:30:50 brun Exp $
+// $Date: 2000/08/15 08:30:50 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -883,6 +883,7 @@ With <IMG
     return; 
 
   // Increment the data point counter 
+  Int_t i,j;
   if (++fNumberOfDataPoints == 1) {
     for (Int_t i = 0; i < fNumberOfVariables; i++)
       fMeanValues(i+1) = p[i];
@@ -890,14 +891,14 @@ With <IMG
   else {
     
     Double_t cor = 1 - 1./Double_t(fNumberOfDataPoints - 1);
-    for (Int_t i = 0; i < fNumberOfVariables; i++) {
+    for (i = 0; i < fNumberOfVariables; i++) {
       
       fMeanValues(i + 1) *= cor;
       fMeanValues(i + 1) += p[i] / Double_t(fNumberOfDataPoints - 1); 
       Double_t t1 = (p[i] - fMeanValues(i+1)) / (fNumberOfDataPoints - 1);
       
       // Setting Matrix (lower triangle) elements
-      for (Int_t j = 0; j < i + 1; j++) {
+      for (j = 0; j < i + 1; j++) {
 	fCovarianceMatrix(i+1,j+1) *= cor;
 	fCovarianceMatrix(i+1,j+1) += t1 * (p[j] - fMeanValues(j+1));  
       }
@@ -911,8 +912,8 @@ With <IMG
   if (fNumberOfDataPoints * fNumberOfVariables > size)
     fUserData.ResizeTo(size + size/2);
  
-  for (Int_t i = 0; i < fNumberOfVariables; i++) {
-    Int_t j = (fNumberOfDataPoints-1) * fNumberOfVariables + i;
+  for (i = 0; i < fNumberOfVariables; i++) {
+     j = (fNumberOfDataPoints-1) * fNumberOfVariables + i;
     fUserData(j) = p[i];
   }
   
@@ -1342,7 +1343,8 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
   }
   
   // Initialize sub elements of the histogram arrays 
-  for (Int_t i = 0; i < fNumberOfVariables; i++) {
+  Int_t i,j,k;
+  for (i = 0; i < fNumberOfVariables; i++) {
     if (makeX) {
       // We allow 4 sigma spread in the original data in our
       // histogram. 
@@ -1392,7 +1394,7 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
       hE->Fill(i,fEigenValues(i+1));
 
   }
-  for (Int_t i = 0; i < fNumberOfDataPoints; i++) {
+  for (i = 0; i < fNumberOfDataPoints; i++) {
     Double_t* x = 0;
     Double_t* p = new Double_t[fNumberOfVariables];
     Double_t* d = new Double_t[fNumberOfVariables];
@@ -1409,10 +1411,10 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
       // Calculate the difference between the original data, and the
       // same project onto principal components, and then to a lower
       // dimensional sub-space
-      for (Int_t j = fNumberOfVariables; j > 0; j--) {
+      for (j = fNumberOfVariables; j > 0; j--) {
 	P2X(p,d,j);
       
-	for (Int_t k = 0; k < fNumberOfVariables; k++) {
+	for (k = 0; k < fNumberOfVariables; k++) {
 	  // We use the absolute value of the difference!
 	  d[k] = x[k] - d[k];
 
@@ -1430,7 +1432,7 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
     if (makeX||makeP) {
       // If we are asked to make any of these histograms, we have to
       // go here
-      for (Int_t j = 0; j < fNumberOfVariables; j++) {
+      for (j = 0; j < fNumberOfVariables; j++) {
 	if (makeX)
 	  (hX[j])->Fill(x[j]);      
 
@@ -1457,18 +1459,19 @@ TPrincipal::MakeNormalised(void)
 {
   // PRIVATE METHOD: Normalize the covariance matrix
   
-  for (Int_t i = 1; i <= fNumberOfVariables; i++) {
+  Int_t i,j;
+  for (i = 1; i <= fNumberOfVariables; i++) {
     fSigmas(i) = TMath::Sqrt(fCovarianceMatrix(i,i));
     if (fIsNormalised) 
-      for (Int_t j = 1; j <= i; j++) 
+      for (j = 1; j <= i; j++) 
 	fCovarianceMatrix(i,j) /= (fSigmas(i) * fSigmas(j));
     
     fTrace += fCovarianceMatrix(i,i);
   }
 
   // Fill remaining parts of matrix, and scale. 
-  for (Int_t i = 1; i <= fNumberOfVariables; i++)     
-    for (Int_t j = 1; j <= i; j++) {
+  for (i = 1; i <= fNumberOfVariables; i++)     
+    for (j = 1; j <= i; j++) {
       fCovarianceMatrix(i,j) /= fTrace;
       fCovarianceMatrix(j,i) = fCovarianceMatrix(i,j); 
     }
@@ -1565,11 +1568,13 @@ TPrincipal::MakeOrdered(void)
     <PRE>
   */
   // End_Html
-    for (Int_t i = 1; i <= fNumberOfVariables; i++) {
-    Int_t    k = i;
+    
+    Int_t i,j,k;
+    for (i = 1; i <= fNumberOfVariables; i++) {
+       k = i;
     Double_t p = fEigenValues(i);
 
-    for (Int_t j = i + 1; j <= fNumberOfVariables; j++)
+    for (j = i + 1; j <= fNumberOfVariables; j++)
       if (fEigenValues(j) >= p) {
 	k = j;
 	p = fEigenValues(j);
@@ -1579,7 +1584,7 @@ TPrincipal::MakeOrdered(void)
       fEigenValues(k) = fEigenValues(i);
       fEigenValues(i) = p;
       
-      for (Int_t j = 1; j <= fNumberOfVariables; j++) {
+      for (j = 1; j <= fNumberOfVariables; j++) {
 	p                  = fEigenVectors(j,i);
 	fEigenVectors(j,i) = fEigenVectors(j,k);
 	fEigenVectors(j,k) = p;
@@ -1676,8 +1681,9 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
 	  << "// where i and j are zero-based" << endl;
   outFile << cv_qual << "Double_t " << prefix 
 	  << "fgEigenVectors[] = {" << flush;
-  for (Int_t i = 0; i < fNumberOfVariables; i++) {
-    for (Int_t j = 0; j < fNumberOfVariables; j++) {
+  Int_t i,j;
+  for (i = 0; i < fNumberOfVariables; i++) {
+    for (j = 0; j < fNumberOfVariables; j++) {
       Int_t index = i * fNumberOfVariables + j;
       outFile << (index != 0 ? "," : "" ) << endl
 	      << "  "  << fEigenVectors(i+1,j+1) << flush; 
@@ -1689,7 +1695,7 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
   outFile << "// Assignment to eigen value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
 	  << "fgEigenValues[] = {" << flush;
-  for (Int_t i = 0; i < fNumberOfVariables; i++) 
+  for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fEigenValues(i+1) << flush;
   outFile << endl << "};" << endl << endl;
@@ -1698,7 +1704,7 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
   outFile << "// Assignment to mean value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
 	  << "fgMeanValues[] = {" << flush;
-  for (Int_t i = 0; i < fNumberOfVariables; i++) 
+  for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fMeanValues(i+1) << flush;
   outFile << endl << "};" << endl << endl;
@@ -1707,7 +1713,7 @@ TPrincipal::MakeRealCode(const Char_t* filename, const Char_t* classname,
   outFile << "// Assignment to sigma value vector. Zero-based." << endl;
   outFile << cv_qual << "Double_t " << prefix 
 	  << "fgSigmaValues[] = {" << flush;
-  for (Int_t i = 0; i < fNumberOfVariables; i++) 
+  for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
 	    << "  " << fSigmas(i+1) << flush;
   outFile << endl << "};" << endl << endl;
@@ -1801,14 +1807,15 @@ TPrincipal::MakeTridiagonal(void)
   Int_t&    n   = fNumberOfVariables;
 
   Double_t hh, g, f;
-
-  for (Int_t i = n; i >= 2; i--) {
+  Int_t i,j,k;
+  
+  for (i = n; i >= 2; i--) {
     Int_t    l     = i - 1;
     Double_t h     = 0;
     Double_t scale = 0;
     
     if (l > 1) {
-      for (Int_t k = 1; k <= l; k++) 
+      for (k = 1; k <= l; k++) 
 	scale += TMath::Abs(a(i,k));
 	
       if (scale == 0)
@@ -1816,7 +1823,7 @@ TPrincipal::MakeTridiagonal(void)
 	e(i) = a(i,l);
 
       else {
-	for (Int_t k = 1; k <= l; k++) {
+	for (k = 1; k <= l; k++) {
 	  // Use scaled elements of a for transformation
 	  a(i,k) /= scale;
 	  // Calculate sigma in h
@@ -1830,16 +1837,16 @@ TPrincipal::MakeTridiagonal(void)
 	a(i,l) =  f - g;
 	f      = 0;
 
-	for (Int_t j = 1; j <= l; j++) {
+	for (j = 1; j <= l; j++) {
 	  // Store the u/H in ith column of a;
 	  a(j,i) = a(i,j) / h;
 	  // Form element A dot u in g;
 	  g = 0;
 	  
-	  for (Int_t k = 1; k <= j; k++) 
+	  for (k = 1; k <= j; k++) 
 	    g += a(j,k) * a(i, k);
 	 
-	  for (Int_t k = j + 1; k <= l; k++) 
+	  for (k = j + 1; k <= l; k++) 
 	    g += a(k,j) * a(i, k);
 
 	  // Form element of vector p in temporarily unused element of
@@ -1852,11 +1859,11 @@ TPrincipal::MakeTridiagonal(void)
 	hh = f / (h + h);
 
 	// Form vector q and store in e overwriting p
-	for (Int_t j = 1; j <= l; j++) {
+	for (j = 1; j <= l; j++) {
 	  f    = a(i,j);
 	  e(j) = g = e(j) - hh * f;
 
-	  for (Int_t k = 1; k <= j; k++) 
+	  for (k = 1; k <= j; k++) 
 	    // Reduce a, eq (11.2.13)
 	    a(j,k) -= (f * e(k) + g * a(i,k));
 	}
@@ -1871,20 +1878,20 @@ TPrincipal::MakeTridiagonal(void)
   d(1) = 0;
   e(1) = 0;
 
-  for (Int_t i = 1; i <= n; i++) {
+  for (i = 1; i <= n; i++) {
     // Begin accumulation of transformation matrix
     Int_t l = i - 1;
 
     if (d(i)) {
       // This block is skipped if i = 1;
-      for (Int_t j = 1; j <= l; j++) {
+      for (j = 1; j <= l; j++) {
 	g = 0;
 	
-	for (Int_t k = 1; k <= l; k++) 
+	for (k = 1; k <= l; k++) 
 	  // Use vector u/H stored in a to form P dot Q
 	  g += a(i,k) * a(k,j);
 
-	for (Int_t k = 1; k <= l; k++)
+	for (k = 1; k <= l; k++)
 	  a(k,j) -= g * a(k,i);
       }
     }
@@ -1892,7 +1899,7 @@ TPrincipal::MakeTridiagonal(void)
     d(i)   = a(i,i);
     a(i,i) = 1;
     
-    for (Int_t j = 1; j <= l; j++) {
+    for (j = 1; j <= l; j++) {
       a(j,i) = a(i,j) = 0;
     }
   }
