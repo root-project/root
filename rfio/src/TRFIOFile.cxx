@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.9 2001/01/23 19:16:31 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.10 2001/01/24 15:05:21 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -51,7 +51,8 @@ extern int serrno;
 ClassImp(TRFIOFile)
 
 //______________________________________________________________________________
-TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, Int_t compress)
+TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle,
+                     Int_t compress)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
    // Create a RFIO file object. A RFIO file is the same as a TFile

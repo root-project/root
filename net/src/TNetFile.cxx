@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.14 2001/01/26 16:39:36 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.15 2001/02/06 19:14:29 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -115,6 +115,11 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // The netopt argument can be used to specify the size of the tcp window in
    // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
    // The default and minimum tcp window size is 65535 bytes.
+   // If netopt < 0 then |netopt| is the number of parallel sockets that will
+   // be used to connect to rootd. This option should be used on fat pipes
+   // (i.e. high bandwidth, high latency links). The ideal number of parallel
+   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
+   // number.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
