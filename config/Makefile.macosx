@@ -41,7 +41,7 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\(
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT) -Xlinker -bind_at_load -flat_namespace
+LDFLAGS       = $(OPT) -bind_at_load -flat_namespace
 ifeq ($(MACOSX_MINOR),3)
 SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
