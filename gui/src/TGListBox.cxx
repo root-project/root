@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.34 2004/12/10 17:35:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.35 2004/12/14 17:13:29 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -137,7 +137,6 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 
    int max_ascent, max_descent;
 
-   x += 3;
    y += (fHeight - fTHeight) >> 1;
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -146,12 +145,12 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       gVirtualX->SetWindowBackground(id, fgDefaultSelectedBackground);
       gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
-      fText->Draw(id, fNormGC, x, y + max_ascent);
+      fText->Draw(id, fNormGC, x+3, y + max_ascent);
    } else {
       gVirtualX->SetWindowBackground(id, fBkcolor);
       gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
-      fText->Draw(id, fNormGC, x, y + max_ascent);
+      fText->Draw(id, fNormGC, x+3, y + max_ascent);
    }
 }
 
