@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.3 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.4 2003/08/28 12:45:10 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -521,7 +521,7 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[3];
+   Double_t saf[2];
    Int_t i;
    Double_t rxy = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
    Double_t rad = TMath::Sqrt((rxy-fR)*(rxy-fR) + point[2]*point[2]);
@@ -533,18 +533,15 @@ Double_t TGeoTorus::Safety(Double_t *point, Bool_t in) const
       return TMath::Max(saf[0], saf[1]);
    }   
 
-   Double_t phi1 = fPhi1*kDegRad;
-   Double_t phi2 = (fPhi1+fDphi)*kDegRad;
-   Double_t c1 = TMath::Cos(phi1);
-   Double_t s1 = TMath::Sin(phi1);
-   Double_t c2 = TMath::Cos(phi2);
-   Double_t s2 = TMath::Sin(phi2);
-
-   saf[2] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
-   if (in) return saf[TMath::LocMin(3,saf)];
-
-   for (i=0; i<3; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(3,saf)];
+   Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1, fPhi1+fDphi);
+   Double_t safe = kBig;
+   if (in) {
+      safe = TMath::Min(saf[0], saf[1]);
+      return TMath::Min(safe, safphi);
+   }   
+   for (i=0; i<2; i++) saf[i]=-saf[i];
+   safe = TMath::Max(saf[0], saf[1]);
+   return TMath::Max(safe, safphi);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.22 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.23 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -321,14 +321,14 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz,
    Double_t rout=tg2*point[2]+ro2;
    Double_t xp, yp;
    
-   if ((point[2]<-dz) && (dir[2]>0)) {
+   if ((point[2]<=-dz) && (dir[2]>0)) {
       snxt = (-dz-point[2])/dir[2];
       xp = point[0]+snxt*dir[0];
       yp = point[1]+snxt*dir[1];
       r2 = xp*xp+yp*yp;
       if ((r2>=rmin1*rmin1) && (r2<=rmax1*rmax1)) return snxt;
    } else {
-      if ((point[2]>dz) && (dir[2]<0)) {
+      if ((point[2]>=dz) && (dir[2]<0)) {
          snxt = (dz-point[2])/dir[2];    
          xp = point[0]+snxt*dir[0];
          yp = point[1]+snxt*dir[1];
@@ -363,7 +363,7 @@ Double_t TGeoCone::DistToInS(Double_t *point, Double_t *dir, Double_t dz,
    }
 
    // compute distance to outer cone      
-   if (r>rout) {
+   if (r>=rout) {
       found = kFALSE;          
       TGeoCone::DistToCone(point, dir, rmax1, -dz, rmax2, dz, b, delta);
       if (delta>0) {
@@ -1205,7 +1205,7 @@ Double_t TGeoConeSeg::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doub
    Double_t s2 = TMath::Sin(phi2);
    
    if (iact<3 && safe) {
-      *safe = TGeoConeSeg::SafetyS(point, kTRUE, fDz,fRmin1,fRmax1,fRmin2,fRmax2,c1,s1,c2,s2);
+      *safe = TGeoConeSeg::SafetyS(point, kTRUE, fDz,fRmin1,fRmax1,fRmin2,fRmax2,fPhi1,fPhi2);
       if (iact==0) return kBig;
       if ((iact==1) && (*safe>step)) return kBig;
    }
@@ -1258,7 +1258,7 @@ Double_t TGeoConeSeg::DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, 
    
    // intersection with Z planes
    Double_t s, xi, yi, zi, riq, r1q, r2q;
-   if (TMath::Abs(point[2])>dz) {
+   if (TMath::Abs(point[2])>=dz) {
       if ((point[2]*dir[2])<0) {
          s=(TMath::Abs(point[2])-dz)/TMath::Abs(dir[2]);
          xi=point[0]+s*dir[0];
@@ -1528,13 +1528,7 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
 
-   Double_t saf[4];
-   Double_t phi1 = fPhi1*kDegRad;
-   Double_t phi2 = fPhi2*kDegRad;
-   Double_t c1 = TMath::Cos(phi1);
-   Double_t s1 = TMath::Sin(phi1);
-   Double_t c2 = TMath::Cos(phi2);
-   Double_t s2 = TMath::Sin(phi2);
+   Double_t saf[3];
    Double_t ro1 = 0.5*(fRmin1+fRmin2);
    Double_t tg1 = 0.5*(fRmin2-fRmin1)/fDz;
    Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
@@ -1545,23 +1539,30 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
    Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
    Double_t rin = tg1*point[2]+ro1;
    Double_t rout = tg2*point[2]+ro2;
+   Double_t safe = kBig;
+   if (in) {
+      saf[0] = fDz-TMath::Abs(point[2]);
+      saf[1] = (r-rin)*cr1;
+      saf[2] = (rout-r)*cr2;
+      safe = saf[TMath::LocMin(3,saf)];
+   } else {
+      saf[0] = TMath::Abs(point[2])-fDz; // positive if inside
+      saf[1] = (rin-r)*cr1;
+      saf[2] = (r-rout)*cr2;
+      safe = saf[TMath::LocMax(3,saf)];
+   }   
+   Double_t safphi = TGeoShape::SafetyPhi(point, in, fPhi1, fPhi2);
 
-   saf[0] = fDz-TMath::Abs(point[2]); // positive if inside
-   saf[1] = (r-rin)*cr1;
-   saf[2] = (rout-r)*cr2;
-   saf[3] = TGeoShape::SafetyPhi(point, in, c1,s1,c2,s2);
-
-   if (in) return saf[TMath::LocMin(4,saf)];
-   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(4,saf)];
+   if (in) return TMath::Min(safe, safphi);
+   return TMath::Max(safe, safphi);
 }
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
-                              Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz)
+                              Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
-   Double_t saf[4];
+   Double_t saf[3];
    Double_t ro1 = 0.5*(rmin1+rmin2);
    Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
    Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
@@ -1573,6 +1574,7 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
    Double_t rin = tg1*point[2]+ro1;
    Double_t rout = tg2*point[2]+ro2;
 
+   Double_t safe = kBig;
    switch (skipz) {
       case 1: // skip lower Z plane
          saf[0] = dz - point[2];
@@ -1587,11 +1589,14 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
    }
    saf[1] = (r-rin)*cr1;
    saf[2] = (rout-r)*cr2;
-   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
-
-   if (in) return saf[TMath::LocMin(4,saf)];
-   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(4,saf)];
+   Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1,phi2);
+   if (in) {
+      safe = saf[TMath::LocMin(3,saf)];
+      return TMath::Min(safe,safphi);
+   }   
+   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
+   safe = saf[TMath::LocMax(3,saf)];
+   return TMath::Max(safe,safphi);
 }
 
 //_____________________________________________________________________________

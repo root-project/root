@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.20 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.21 2003/08/28 12:45:10 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -249,7 +249,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t disty = 0.5*(fDy1+fDy2)-fy*point[2];
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
-   if (point[2]<-fDz) {
+   if (point[2]<=-fDz) {
       cn = -dir[2];
       if (cn>=0) return kBig;
       snxt = (fDz+point[2])/cn;
@@ -259,7 +259,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          ynew = point[1]+snxt*dir[1];
          if (TMath::Abs(ynew) < fDy1) return snxt;
       }
-   } else if (point[2]>fDz) {
+   } else if (point[2]>=fDz) {
       cn = dir[2];
       if (cn>=0) return kBig;
       snxt = (fDz-point[2])/cn;
@@ -271,7 +271,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
    }
    // check if X facettes are crossed
-   if (point[0]<-distx) {
+   if (point[0]<=-distx) {
       cn = -dir[0]+fx*dir[2];
       if (cn>=0) return kBig;
       snxt = (point[0]+distx)/cn;
@@ -283,7 +283,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          if (TMath::Abs(ynew) < dy) return snxt;
       }
    }            
-   if (point[0]>distx) {
+   if (point[0]>=distx) {
       cn = dir[0]+fx*dir[2];
       if (cn>=0) return kBig;
       snxt = (distx-point[0])/cn;
@@ -296,7 +296,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       }
    }
    // finally check Y facettes
-   if (point[1]<-disty) {
+   if (point[1]<=-disty) {
       cn = -dir[1]+fy*dir[2];
       if (cn>=0) return kBig;
       snxt = (point[1]+disty)/cn;
@@ -308,7 +308,7 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
          if (TMath::Abs(xnew) < dx) return snxt;
       }
    }            
-   if (point[1]>disty) {
+   if (point[1]>=disty) {
       cn = dir[1]+fy*dir[2];
       if (cn>=0) return kBig;
       snxt = (disty-point[1])/cn;

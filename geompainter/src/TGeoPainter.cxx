@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.31 2003/11/11 16:01:48 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.32 2003/11/14 08:35:55 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -20,6 +20,8 @@
 #include "TPolyMarker3D.h"
 #include "TVirtualGL.h"
 
+#include "TGeoTube.h"
+#include "TGeoCone.h"
 #include "TGeoSphere.h"
 #include "TGeoPcon.h"
 #include "TGeoTorus.h"
@@ -1035,15 +1037,27 @@ void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
 // Create a box 3D buffer for a given shape.
    X3DPoints *buff = new X3DPoints;
    Int_t n = fNsegments;
-   const Int_t numpoints = 4*n;
-
-   buff->numPoints = numpoints;
+   Int_t numpoints = 4*n;
 
    Double_t *points = new Double_t[3*numpoints];
    TGeoShape *shape = vol->GetShape();
+   Double_t rmin = 0.;
+   if (shape->TestShapeBit(TGeoShape::kGeoTube)) rmin=((TGeoTube*)shape)->GetRmin();
+   else rmin=((TGeoCone*)shape)->GetRmin1()+((TGeoCone*)shape)->GetRmin2();
 
    shape->SetPoints(points);
 
+   if (rmin==0.) {
+      Int_t inew = numpoints/2;
+      Double_t *ptn = new Double_t[3*inew];
+      memcpy(&ptn[0], &points[3*n], 3*n*sizeof(Double_t));
+      memcpy(&ptn[3*n], &points[9*n], 3*n*sizeof(Double_t));
+      delete [] points;
+      points = ptn;
+      numpoints = inew;
+   }
+
+   buff->numPoints = numpoints;
    buff->points = points;
    return buff;
 }   
@@ -1833,14 +1847,34 @@ void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
 // Create a box 3D buffer for a given shape.
    X3DPoints *buff = new X3DPoints;
 
-   TGeoShape *shape = vol->GetShape();
-   const Int_t n = ((TGeoPcon*)shape)->GetNsegments()+1;
-   Int_t nz = ((TGeoPcon*)shape)->GetNz();
+   TGeoPcon *shape = (TGeoPcon*)vol->GetShape();
+   const Int_t n = shape->GetNsegments()+1;
+   Int_t nz = shape->GetNz();
    if (nz < 2) return 0;
    Int_t numpoints =  nz*2*n;
    if (numpoints <= 0) return 0;
    Double_t *points = new Double_t[3*numpoints];
    shape->SetPoints(points);
+   if (shape->GetDphi()==360.) {
+      Double_t *ptn = new Double_t[3*numpoints];
+      Int_t inew = 0;
+      for (Int_t i=0; i<nz; i++) {
+         if (shape->GetRmin(i)>0.) {
+            memcpy(&ptn[3*inew], &points[6*i*n], 6*n*sizeof(Double_t));
+            inew += 2*n;
+         } else {
+            memcpy(&ptn[3*inew], &points[6*i*n+3*n], 3*n*sizeof(Double_t));
+            inew += n;
+         }
+      }
+      if (inew<numpoints) {
+         delete [] points;
+         numpoints = inew;
+         points = new Double_t[3*numpoints];
+         memcpy(points, ptn, 3*numpoints*sizeof(Double_t));
+      }
+      delete [] ptn;
+   }
    buff->numPoints = numpoints;
    buff->points = points;
    return buff;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.22 2003/08/21 10:17:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.23 2003/10/20 08:46:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -697,7 +697,7 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
    if (ipl<0 || ipl>fNz-2) return (safmin+1.); // error in input plane
 // Get info about segment.
    Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-   if (dz<1E-9) return 0; // radius-changing segment
+   if (dz<1E-9) return 1E9; // radius-changing segment
    Double_t ptnew[3];
    memcpy(ptnew, point, 3*sizeof(Double_t));
    ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
@@ -709,21 +709,9 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
    Double_t rmax2 = fRmax[ipl+1];
    Bool_t   is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
    Bool_t   is_seg  = (fDphi<360)?kTRUE:kFALSE;
-   Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
    if (is_seg) {
-      phi1 = fPhi1;
-      if (phi1<0) phi1+=360;
-      phi2 = phi1 + fDphi;
-      phi1 *= kDegRad;
-      phi2 *= kDegRad;
-      c1 = TMath::Cos(phi1);
-      s1 = TMath::Sin(phi1);
-      c2 = TMath::Cos(phi2);
-      s2 = TMath::Sin(phi2);
-   }
-   if (is_seg) {
-      if (is_tube) safe = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,0);
-      else         safe = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,0);
+      if (is_tube) safe = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,fPhi1,fPhi1+fDphi,0);
+      else         safe = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,fPhi1,fPhi1+fDphi,0);
    } else {
       if (is_tube) safe = TGeoTube::SafetyS(ptnew,in,rmin1,rmax1,dz,0);
       else         safe = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,0);

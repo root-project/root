@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.12 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoEltu.cxx,v 1.13 2003/08/21 10:17:16 brun Exp $
 // Author: Mihaela Gheata   05/06/02
 
 /*************************************************************************
@@ -326,11 +326,45 @@ void TGeoEltu::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoEltu::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t x0 = TMath::Abs(point[0]);
+   Double_t y0 = TMath::Abs(point[1]);
+   Double_t x1, y1, dx, dy;
+   Double_t safr, safz;
+   safr = safz = kBig;
+   if (in) {
+      x1 = fRmin*TMath::Sqrt(1.-(y0*y0)/(fRmax*fRmax));
+      y1 = fRmax*TMath::Sqrt(1.-(x0*x0)/(fRmin*fRmin));
+      dx = x1-x0;
+      dy = y1-y0;
+      if (dx==0) return 0;
+      safr = dx*dy/TMath::Sqrt(dx*dx+dy*dy);
+      safz = fDz - TMath::Abs(point[2]);
+      return TMath::Min(safr,safz);
+   }   
+
+   if (x0==0) {
+      safr = y0 - fRmax;
+   } else {
+      if (y0==0) {
+         safr = x0 - fRmin;
+      } else {
+         Double_t f = fRmin*fRmax/TMath::Sqrt(x0*x0*fRmax*fRmax+y0*y0*fRmin*fRmin);
+         x1 = f*x0;
+         y1 = f*y0;
+         dx = x0-x1;
+         dy = y0-y1;
+         Double_t ast = fRmin*y1/fRmax;
+         Double_t bct = fRmax*x1/fRmin;
+         Double_t d = TMath::Sqrt(bct*bct+ast*ast);
+         safr = (dx*bct+dy*ast)/d;
+      }
+   }
+   safz = TMath::Abs(point[2])-fDz;            
+   return TMath::Max(safr, safz);
 }
 
 //_____________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.9 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.10 2003/07/31 20:19:32 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -83,7 +83,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
                                        Double_t theta2, Double_t phi1, Double_t phi2);
-   void                  SetNumberOfDivisions(Int_t p);
+   virtual void          SetNumberOfDivisions(Int_t p);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

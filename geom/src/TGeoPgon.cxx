@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.27 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.29 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -1046,133 +1046,144 @@ Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cp
 }   
 
 //_____________________________________________________________________________
+Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin) const
+{
+// Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
+   Double_t saf[3];
+   Double_t safe;
+   Int_t i;
+   Double_t r,rpgon, ta, calf;
+   if (ipl<0 || ipl>fNz-2) return (safmin+1.); // error in input plane
+// Get info about segment.
+   Double_t dz = fZ[ipl+1]-fZ[ipl];
+   if (dz<1E-9) return 1E9; // skip radius-changing segment
+   Double_t znew = point[2] - 0.5*(fZ[ipl]+fZ[ipl+1]);
+   saf[0] = 0.5*dz - TMath::Abs(znew);
+   if (-saf[0]>safmin) return kBig; // means: stop checking further segments
+   Double_t rmin1 = fRmin[ipl];
+   Double_t rmax1 = fRmax[ipl];
+   Double_t rmin2 = fRmin[ipl+1];
+   Double_t rmax2 = fRmax[ipl+1];
+   Double_t divphi = fDphi/fNedges;
+   if (iphi<0) {
+      Double_t f = 1./TMath::Cos(0.5*divphi*kDegRad);
+      rmax1 *= f;
+      rmax2 *= f;
+      r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+      Double_t ro1 = 0.5*(rmin1+rmin2);
+      Double_t tg1 = (rmin2-rmin1)/dz;
+      Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
+      Double_t ro2 = 0.5*(rmax1+rmax2);
+      Double_t tg2 = (rmax2-rmax1)/dz;
+      Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
+      Double_t rin = tg1*znew+ro1;
+      Double_t rout = tg2*znew+ro2;
+      saf[1] = (ro1>0)?((r-rin)*cr1):kBig;
+      saf[2] = (rout-r)*cr2;
+      for (i=0; i<3; i++) saf[i]=-saf[i];
+      safe = saf[TMath::LocMax(3,saf)];
+      safe = TMath::Max(safe, safphi);
+      if (safe<0) safe = 0;
+      return safe;
+   }
+   Double_t ph0 = (fPhi1+divphi*(iphi+0.5))*kDegRad;
+   r = point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0);
+   if (rmin1+rmin2>1E-10) {
+      ta = (rmin2-rmin1)/dz;
+      calf = 1./TMath::Sqrt(1+ta*ta);
+      rpgon = rmin1 + (point[2]-fZ[ipl])*ta;
+      saf[1] = (r-rpgon)*calf;
+   } else {
+      saf[1] = kBig;
+   }   
+   ta = (rmax2-rmax1)/dz;
+   calf = 1./TMath::Sqrt(1+ta*ta);
+   rpgon = rmax1 + (point[2]-fZ[ipl])*ta;
+   saf[2] = (rpgon-r)*calf;
+   if (in) {
+      safe = saf[TMath::LocMin(3,saf)];
+      safe = TMath::Min(safe, safphi);
+   } else {          
+      for (i=0; i<3; i++) saf[i]=-saf[i];
+      safe = saf[TMath::LocMax(3,saf)];
+      safe = TMath::Max(safe, safphi);
+   }
+   if (safe<0) safe=0;
+   return safe;
+}      
+
+//_____________________________________________________________________________
 Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[5];
-   Double_t safe, dz;
-   Int_t i;
-   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if (ipl>1) {
-      if(fZ[ipl]==fZ[ipl-1] && point[2]==fZ[ipl]) ipl--;
-   }   
-   for (i=0; i<5; i++) saf[i]=kBig;
-   Double_t ssp[2];
-   ssp[0] = ssp[1] = TGeoShape::kBig;
+   Double_t safmin, saftmp, safphi;
+   Double_t dz;
+   Int_t ipl, iplane, iphi;
+   LocatePhi(point, iphi);
+   safphi = TGeoShape::SafetyPhi(point,in,fPhi1, fPhi1+fDphi);
    if (in) {
-      //---> first locate Z segment and compute Z safety
-      if (ipl==(fNz-1)) return 0;
-      if (ipl<0) return 0;
-      dz = fZ[ipl+1]-fZ[ipl];
-      if (dz<1E-6) {
-         if (fRmin[ipl]>0) return 0;
+   //---> point is inside pgon
+      ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+      if (ipl==(fNz-1)) return 0;   // point on last Z boundary
+      if (ipl<0) return 0;          // point on first Z boundary
+      dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+      if (dz<1E-8) return 0;
+      // Check safety for current segment
+      safmin = SafetyToSegment(point, ipl, iphi, in, safphi);
+      if (safmin>1E10) {
+         //  something went wrong - point is not inside current segment
+         return kBig;
       }
-      saf[0] = point[2] - fZ[ipl];
-      saf[1] = fZ[ipl+1] - point[2];
-      
-      if (ipl==0 && saf[0]<1E-4) return saf[0];
-      if (ipl==(fNz-2) &&  saf[1]<1E-4) return saf[1];
-      if (ipl>1) {
-         if (fZ[ipl]==fZ[ipl-1]) {
-            if (fRmin[ipl]<fRmin[ipl-1] || fRmax[ipl]>fRmax[ipl-1]) {
-               if (saf[0]<1E-4) return saf[0];
-            }
-         }
-      }
-      if (ipl<fNz-3) {
-         if (fZ[ipl+1]==fZ[ipl+2]) {
-            if (fRmin[ipl+1]<fRmin[ipl+2] || fRmax[ipl+1]>fRmax[ipl+2]) {
-               if (saf[1]<1E-4) return saf[1];         
-            }
-         }
-      }
-   } else {
-      if (ipl>=0 && ipl<fNz-1) {
-         if (ipl==0) {
-            saf[0] = -fZ[0]+point[2];
-            if (saf[0]==0) {
-               if (Contains(point)) return 0;
-            }
-         }
-         if (ipl==fNz-2) {
-            saf[1] = -point[2]+fZ[fNz-1];
-            if (saf[1]==0) {
-               if (Contains(point)) return 0;   
-            }
-         }
-         dz = fZ[ipl+1]-fZ[ipl];
-         if (dz==0) {
-            ipl++;
-            dz = fZ[ipl+1]-fZ[ipl];
-         }
-         if (ipl>1) {
-            if (fZ[ipl]==fZ[ipl-1]) {
-               if (fRmin[ipl]>fRmin[ipl-1] || fRmax[ipl]<fRmax[ipl-1]) {
-                  ssp[0] = point[2]-fZ[ipl];
-                  if (ssp[0]<1E-4) return ssp[0];
-//                  saf[0] = -saf[0];
-               }
-            }
-         }
-         if (ipl<fNz-3) {
-            if (fZ[ipl+1]==fZ[ipl+2]) {
-               if (fRmin[ipl+1]>fRmin[ipl+2] || fRmax[ipl+1]<fRmax[ipl+2]) {
-                  ssp[1] = fZ[ipl+1]-point[2];
-                  if (ssp[1]<1E-4) return ssp[1];
-//                  saf[1] = -saf[1];         
-               }
-            }
-         }
-      } else {
-         if (ipl<0) {
-            ipl=0;
-            saf[0] = -fZ[0]+point[2];
-         } else {
-            ipl=fNz-2;
-            saf[1] = -point[2]+fZ[fNz-1];
-         }
-         dz = fZ[ipl+1]-fZ[ipl];
-      }
-   }         
-   //---> compute phi safety
-   if (fDphi<360) {
-      Double_t phi1 = fPhi1*kDegRad;
-      Double_t phi2 = (fPhi1+fDphi)*kDegRad;
-      Double_t c1 = TMath::Cos(phi1);
-      Double_t s1 = TMath::Sin(phi1);
-      Double_t c2 = TMath::Cos(phi2);
-      Double_t s2 = TMath::Sin(phi2);
-      saf[2] =  TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
-   }
-
-   //---> locate phi and compute R safety
-   Double_t divphi = fDphi/fNedges;
-   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
-   if (phi<0) phi+=360.;
-   Double_t ddp = phi-fPhi1;
-   if (ddp<0) ddp+=360.;
-   Int_t ipsec = Int_t(ddp/divphi);
-   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
-   // compute projected distance
-   Double_t r, rsum, rpgon, ta, calf;
-   r = point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0);
-   rsum = fRmin[ipl]+fRmin[ipl+1];
-   if (rsum>1E-10) {
-      ta = (fRmin[ipl+1]-fRmin[ipl])/dz;
-      calf = 1./TMath::Sqrt(1+ta*ta);
-      rpgon = fRmin[ipl] + (point[2]-fZ[ipl])*ta;
-      saf[3] = (r-rpgon)*calf;
-   }
-   ta = (fRmax[ipl+1]-fRmax[ipl])/dz;
-   calf = 1./TMath::Sqrt(1+ta*ta);
-   rpgon = fRmax[ipl] + (point[2]-fZ[ipl])*ta;
-   saf[4] = (rpgon-r)*calf;
-   if (in) return saf[TMath::LocMin(5,saf)];
-   for (i=0; i<5; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(5,saf)];
-   safe = TMath::Min(safe, TMath::Min(ssp[0],ssp[1]));
-   return safe;
+      if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
+      // check increasing iplanes
+      iplane = ipl+1;
+      saftmp = 0.;
+      while ((iplane<fNz-1) && saftmp<1E10) {
+         saftmp = TMath::Abs(SafetyToSegment(point,iplane,iphi,kFALSE,safphi,safmin));
+         if (saftmp<safmin) safmin=saftmp;
+         iplane++;
+      }   
+      // now decreasing nplanes
+      iplane = ipl-1;
+      saftmp = 0.;
+      while ((iplane>=0) && saftmp<1E10) {
+         saftmp = TMath::Abs(SafetyToSegment(point,iplane,iphi,kFALSE,safphi,safmin));
+         if (saftmp<safmin) safmin=saftmp;
+         iplane--;
+      }   
+      return safmin;
+   }   
+   //---> point is outside pgon
+   ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (ipl<0) ipl=0;
+   else if (ipl==fNz-1) ipl=fNz-2;
+   dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   if (dz<1E-8) {
+      ipl++;
+      dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   }   
+   // Check safety for current segment
+   safmin = SafetyToSegment(point, ipl,iphi,kFALSE,safphi);
+   if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
+   saftmp = 0.;
+   // check increasing iplanes
+   iplane = ipl+1;
+   saftmp = 0.;
+   while ((iplane<fNz-1) && saftmp<1E10) {
+      saftmp = TMath::Abs(SafetyToSegment(point,iplane,iphi,kFALSE,safphi,safmin));
+      if (saftmp<safmin) safmin=saftmp;
+      iplane++;
+   }   
+   // now decreasing nplanes
+   iplane = ipl-1;
+   saftmp = 0.;
+   while ((iplane>=0) && saftmp<1E10) {
+      saftmp = TMath::Abs(SafetyToSegment(point,iplane,iphi, kFALSE,safphi,safmin));
+      if (saftmp<safmin) safmin=saftmp;
+      iplane--;
+   }   
+   return safmin;
 }
 
 //_____________________________________________________________________________

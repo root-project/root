@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.15 2003/08/22 07:03:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.16 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -104,6 +104,7 @@ public:
    virtual Bool_t        IsCylType() const = 0;
    static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    static  Bool_t        IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
+   static  Bool_t        IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2);
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
@@ -113,7 +114,7 @@ public:
    virtual void          Paint(Option_t *option)                 = 0;
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option) = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
-   static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.19 2003/08/21 08:27:34 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.20 2003/08/21 10:17:16 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -235,11 +235,9 @@ Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh,
    if (r2<1E-20) return kTRUE;
    if (checkPh && TestShapeBit(kGeoPhiSeg)) {
       Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
-      if (phi < 0 ) phi+=360.;
+      while (phi < fPhi1) phi+=360.;
       Double_t dphi = fPhi2 -fPhi1;
-      if (dphi < 0) dphi+=360.;
       Double_t ddp = phi - fPhi1;
-      if (ddp < 0) ddp += 360.;
       if (ddp > dphi) return kFALSE;    
    }
    if (checkTh && TestShapeBit(kGeoThetaSeg)) {
@@ -814,46 +812,34 @@ Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
-   Double_t rxy = TMath::Sqrt(rxy2);
-   Double_t r2 = rxy2+point[2]*point[2];
+   Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
    Double_t r=TMath::Sqrt(r2);
    Bool_t rzero=kFALSE;
    if (r<=1E-20) rzero=kTRUE;
    //localize theta
-   Double_t phi=0;;
    Double_t th=0.;
    if (TestShapeBit(kGeoThetaSeg) && (!rzero)) {
       th = TMath::ACos(point[2]/r)*kRadDeg;
    }
-   //localize phi
-   if (TestShapeBit(kGeoPhiSeg)) {
-      phi=TMath::ATan2(point[1], point[0])*kRadDeg;
-      if (phi<0) phi+=360.;
-   }   
-   Double_t saf[6];
+   Double_t saf[4];
    saf[0]=(fRmin==0 && !TestShapeBit(kGeoThetaSeg) && !TestShapeBit(kGeoPhiSeg))?kBig:r-fRmin;
    saf[1]=fRmax-r;
-   saf[2]=saf[3]=saf[4]=saf[5]= kBig;
+   saf[2]=saf[3]= kBig;
    if (TestShapeBit(kGeoThetaSeg)) {
-      if (fTheta1>0) {
-         saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
-      }
-	    if (fTheta2<180) {
-         saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
-	    }    
+      if (fTheta1>0)    saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
+	   if (fTheta2<180)  saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
    }
-   if (TestShapeBit(kGeoPhiSeg)) {
-      Double_t dph1=phi-fPhi1;
-	    if (dph1<0) dph1+=360.;
-      if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
-      Double_t dph2=fPhi2-phi;
-      if (dph2<0) dph2+=360.;
-      if (dph2<=90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
+   Double_t safphi = kBig;
+   Double_t safe = kBig;
+   if (TestShapeBit(kGeoPhiSeg)) safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
+   if (in) {
+      safe = saf[TMath::LocMin(4,saf)];
+      return TMath::Min(safe,safphi);
    }   
-   if (in) return saf[TMath::LocMin(6,saf)];
-   for (Int_t i=0; i<6; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(6, saf)];
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   safe = saf[TMath::LocMax(4, saf)];
+   if (TestShapeBit(kGeoPhiSeg)) return TMath::Max(safe, safphi);
+   return safe;
 }
 
 //_____________________________________________________________________________
@@ -877,7 +863,7 @@ void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,
    fPhi1 = phi1;
    if (phi1<0) fPhi1+=360.;
    fPhi2 = phi2;
-   if (phi2<0) fPhi2+=360.;
+   while (fPhi2<fPhi1) fPhi2+=360.;
    if (TMath::Abs(phi2-phi1)!=360.) SetShapeBit(kGeoPhiSeg);
 }   
 

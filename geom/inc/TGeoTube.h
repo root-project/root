@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.11 2003/07/31 20:19:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.12 2003/08/21 08:27:34 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -141,7 +141,7 @@ public:
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
-                                 Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz=0);
+                                 Double_t phi1, Double_t phi2, Int_t skipz=0);
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.9 2003/07/31 20:19:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.h,v 1.10 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -72,6 +72,7 @@ public:
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=kBig) const;
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;

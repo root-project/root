@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.13 2003/08/21 11:37:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.14 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -222,6 +222,17 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Dou
    return kFALSE;
 }   
 
+//_____________________________________________________________________________
+Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
+{
+// Static method to check if a point is in the phi range (phi1, phi2) [degrees]
+   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
+   while (phi<phi1) phi+=360.;
+   Double_t ddp = phi-phi1;
+   if (ddp>phi2-phi1) return kFALSE;
+   return kTRUE;
+}   
+
 //_____________________________________________________________________________  
 Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
 {
@@ -265,21 +276,33 @@ void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double
 }           
  
 //_____________________________________________________________________________
-Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
 {
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines
 // of the angles phi1, phi2.
-   Double_t saf1 = kBig;
-   Double_t saf2 = kBig;
-   if (point[0]*c1+point[1]*s1 >= 0) saf1 = -point[0]*s1 + point[1]*c1;
-   if (point[0]*c2+point[1]*s2 >= 0) saf2 =  point[0]*s2 - point[1]*c2;
-   if (in) {
-      if (saf1<0) saf1=kBig;
-      if (saf2<0) saf2=kBig;
-      return TMath::Min(saf1,saf2);
+   Bool_t inphi = TGeoShape::IsInPhiRange(point, phi1, phi2);
+   if (inphi && !in) return -kBig; 
+   phi1 *= kDegRad;
+   phi2 *= kDegRad;  
+   Double_t c1 = TMath::Cos(phi1);
+   Double_t s1 = TMath::Sin(phi1);
+   Double_t c2 = TMath::Cos(phi2);
+   Double_t s2 = TMath::Sin(phi2);
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
+   Double_t rproj = point[0]*c1+point[1]*s1;
+   Double_t safsq = rsq-rproj*rproj;
+   if (safsq<0) return 0.;
+   Double_t saf1 = (rproj<0)?kBig:TMath::Sqrt(safsq);
+   rproj = point[0]*c2+point[1]*s2;
+   safsq = rsq-rproj*rproj;
+   if (safsq<0) return 0.;   
+   Double_t saf2 = (rproj<0)?kBig:TMath::Sqrt(safsq);
+   Double_t safe = TMath::Min(saf1, saf2); // >0
+   if (safe>1E10) {
+      if (in) return kBig;
+      return -kBig;
    }
-   if (saf1<0 && saf2<0) return TMath::Max(saf1,saf2);
-   return TMath::Min(saf1,saf2);
+   return safe;   
 }        
 
 //_____________________________________________________________________________
