@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.6 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.7 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -47,8 +47,6 @@ protected:
   virtual void Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,
                         Int_t init = 0,Int_t nr_nonzeros = 0);
 
-          void SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSparse &b);
-
   // Elementary constructors
   void AMultB (const TMatrixDSparse &a,const TMatrixDSparse &b,Int_t constr=1) {
                const TMatrixDSparse bt(TMatrixDSparse::kTransposed,b); AMultBt(a,bt,constr); }
@@ -95,14 +93,15 @@ public:
   virtual TMatrixDBase   &SetRowIndexArray(Int_t *data) { memmove(fRowIndex,data,(fNrows+1)*sizeof(Int_t)); return *this; }
   virtual TMatrixDBase   &SetColIndexArray(Int_t *data) { memmove(fColIndex,data,fNelems*sizeof(Int_t)); return *this; }
 
-  virtual void            GetMatrix2Array(Double_t *data,Option_t *option="") const;
-  virtual TMatrixDBase   &SetMatrixArray (const Double_t *data,Option_t * /*option*/="")
-                                          { memcpy(fElements,data,fNelems*sizeof(Double_t)); return *this; }
-  virtual TMatrixDBase   &SetMatrixArray (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Double_t *data);
-          TMatrixDSparse &SetSparseIndex (const TMatrixDBase &another);
-          TMatrixDSparse &SetSparseIndex (Int_t nelem_new);
-  virtual TMatrixDBase   &InsertRow      (Int_t row,Int_t col,const Double_t *v,Int_t n=-1);
-  virtual void            ExtractRow     (Int_t row,Int_t col,      Double_t *v,Int_t n=-1) const;
+  virtual void            GetMatrix2Array (Double_t *data,Option_t *option="") const;
+  virtual TMatrixDBase   &SetMatrixArray  (const Double_t *data,Option_t * /*option*/="")
+                                           { memcpy(fElements,data,fNelems*sizeof(Double_t)); return *this; }
+  virtual TMatrixDBase   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Double_t *data);
+          TMatrixDSparse &SetSparseIndex  (Int_t nelem_new);
+          TMatrixDSparse &SetSparseIndex  (const TMatrixDBase &another);
+          TMatrixDSparse &SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSparse &b);
+  virtual TMatrixDBase   &InsertRow       (Int_t row,Int_t col,const Double_t *v,Int_t n=-1);
+  virtual void            ExtractRow      (Int_t row,Int_t col,      Double_t *v,Int_t n=-1) const;
 
   virtual TMatrixDBase   &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
   virtual TMatrixDBase   &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
@@ -221,21 +220,21 @@ inline Double_t TMatrixDSparse::operator()(Int_t rown,Int_t coln) const
   else                                             return fElements[index];
 }
 
-TMatrixDSparse  operator+(const TMatrixDSparse &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator+(const TMatrixDSparse &source1,const TMatrixD       &source2);
-TMatrixDSparse  operator+(const TMatrixD       &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator+(const TMatrixDSparse &source ,      Double_t        val    );
-TMatrixDSparse  operator+(      Double_t        val    ,const TMatrixDSparse &source );
-TMatrixDSparse  operator-(const TMatrixDSparse &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator-(const TMatrixDSparse &source1,const TMatrixD       &source2);
-TMatrixDSparse  operator-(const TMatrixD       &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator-(const TMatrixDSparse &source ,      Double_t        val    );
-TMatrixDSparse  operator-(      Double_t        val    ,const TMatrixDSparse &source );
-TMatrixDSparse  operator*(const TMatrixDSparse &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator*(const TMatrixDSparse &source1,const TMatrixD       &source2);
-TMatrixDSparse  operator*(const TMatrixD       &source1,const TMatrixDSparse &source2);
-TMatrixDSparse  operator*(      Double_t        val    ,const TMatrixDSparse &source );
-TMatrixDSparse  operator*(const TMatrixDSparse &source,       Double_t        val    );
+TMatrixDSparse  operator+ (const TMatrixDSparse &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator+ (const TMatrixDSparse &source1,const TMatrixD       &source2);
+TMatrixDSparse  operator+ (const TMatrixD       &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator+ (const TMatrixDSparse &source ,      Double_t        val    );
+TMatrixDSparse  operator+ (      Double_t        val    ,const TMatrixDSparse &source );
+TMatrixDSparse  operator- (const TMatrixDSparse &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator- (const TMatrixDSparse &source1,const TMatrixD       &source2);
+TMatrixDSparse  operator- (const TMatrixD       &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator- (const TMatrixDSparse &source ,      Double_t        val    );
+TMatrixDSparse  operator- (      Double_t        val    ,const TMatrixDSparse &source );
+TMatrixDSparse  operator* (const TMatrixDSparse &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator* (const TMatrixDSparse &source1,const TMatrixD       &source2);
+TMatrixDSparse  operator* (const TMatrixD       &source1,const TMatrixDSparse &source2);
+TMatrixDSparse  operator* (      Double_t        val    ,const TMatrixDSparse &source );
+TMatrixDSparse  operator* (const TMatrixDSparse &source,       Double_t        val    );
 
 TMatrixDSparse &Add        (TMatrixDSparse &target,      Double_t         scalar,const TMatrixDSparse &source);
 TMatrixDSparse &ElementMult(TMatrixDSparse &target,const TMatrixDSparse  &source);

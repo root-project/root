@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.15 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.16 2004/10/24 06:21:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -241,12 +241,33 @@ TMatrixF  operator-  (const TMatrixF    &source1,const TMatrixFSym &source2);
 TMatrixF  operator-  (const TMatrixFSym &source1,const TMatrixF    &source2);
 TMatrixF  operator-  (const TMatrixF    &source ,      Float_t      val    );
 TMatrixF  operator-  (      Float_t      val    ,const TMatrixF    &source );
-TMatrixF  operator*  (      Float_t      val,    const TMatrixF    &source );
-TMatrixF  operator*  (const TMatrixF    &source,       Float_t      val    );
+TMatrixF  operator*  (      Float_t      val    ,const TMatrixF    &source );
+TMatrixF  operator*  (const TMatrixF    &source ,       Float_t     val    );
 TMatrixF  operator*  (const TMatrixF    &source1,const TMatrixF    &source2);
 TMatrixF  operator*  (const TMatrixF    &source1,const TMatrixFSym &source2);
 TMatrixF  operator*  (const TMatrixFSym &source1,const TMatrixF    &source2);
 TMatrixF  operator*  (const TMatrixFSym &source1,const TMatrixFSym &source2);
+TMatrixF  operator&& (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator&& (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator&& (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator|| (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator|| (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator|| (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator>  (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator>  (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator>  (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator>= (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator>= (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator>= (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator<= (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator<= (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator<= (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator<  (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator<  (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator<  (const TMatrixFSym &source1,const TMatrixF    &source2);
+TMatrixF  operator!= (const TMatrixF    &source1,const TMatrixF    &source2);
+TMatrixF  operator!= (const TMatrixF    &source1,const TMatrixFSym &source2);
+TMatrixF  operator!= (const TMatrixFSym &source1,const TMatrixF    &source2);
 
 TMatrixF &Add        (TMatrixF &target,       Float_t     scalar,const TMatrixF    &source);
 TMatrixF &Add        (TMatrixF &target,       Float_t     scalar,const TMatrixFSym &source);

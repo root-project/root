@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.41 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.42 2004/10/24 06:21:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -225,6 +225,27 @@ TMatrixD  operator*  (const TMatrixD    &source1,const TMatrixD    &source2);
 TMatrixD  operator*  (const TMatrixD    &source1,const TMatrixDSym &source2);
 TMatrixD  operator*  (const TMatrixDSym &source1,const TMatrixD    &source2);
 TMatrixD  operator*  (const TMatrixDSym &source1,const TMatrixDSym &source2);
+TMatrixD  operator&& (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator&& (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator&& (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator|| (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator|| (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator|| (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator>  (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator>  (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator>  (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator>= (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator>= (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator>= (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator<= (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator<= (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator<= (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator<  (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator<  (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator<  (const TMatrixDSym &source1,const TMatrixD    &source2);
+TMatrixD  operator!= (const TMatrixD    &source1,const TMatrixD    &source2);
+TMatrixD  operator!= (const TMatrixD    &source1,const TMatrixDSym &source2);
+TMatrixD  operator!= (const TMatrixDSym &source1,const TMatrixD    &source2);
 
 TMatrixD &Add        (TMatrixD &target,       Double_t    scalar,const TMatrixD    &source);
 TMatrixD &Add        (TMatrixD &target,       Double_t    scalar,const TMatrixDSym &source);

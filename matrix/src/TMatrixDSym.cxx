@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.20 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.21 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -161,6 +161,36 @@ TMatrixDSym::TMatrixDSym(EMatrixCreatorsOp1 op,const TMatrixD &prototype)
     default:
       Error("TMatrixDSym(EMatrixCreatorOp1,const TMatrixD)",
              "operation %d not yet implemented", op);
+  }
+}
+
+//______________________________________________________________________________
+TMatrixDSym::TMatrixDSym(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b)
+{     
+  Invalidate();
+    
+  Assert(a.IsValid());
+  Assert(b.IsValid());
+    
+  switch(op) {
+    case kPlus:
+    {
+      Allocate(a.GetNrows(),a.GetRowLwb(),1);
+      *this = a;
+      *this += b;
+      break;
+    }
+
+    case kMinus:
+    {
+      Allocate(a.GetNrows(),a.GetRowLwb(),1);
+      *this = a;
+      *this -= b;
+      break;
+    }
+
+    default:
+      Error("TMatrixDSym(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
   }
 }
 
@@ -1452,6 +1482,20 @@ TMatrixDSym operator+(const TMatrixDSym &source1,const TMatrixDSym &source2)
 }
 
 //______________________________________________________________________________
+TMatrixDSym operator+(const TMatrixDSym &source1,Double_t val)
+{
+  TMatrixDSym target(source1);
+  target += val;
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator+(Double_t val,const TMatrixDSym &source1)
+{
+  return operator+(source1,val);
+}
+
+//______________________________________________________________________________
 TMatrixDSym operator-(const TMatrixDSym &source1,const TMatrixDSym &source2)
 {
   TMatrixDSym target(source1);
@@ -1460,20 +1504,449 @@ TMatrixDSym operator-(const TMatrixDSym &source1,const TMatrixDSym &source2)
 }
 
 //______________________________________________________________________________
-TMatrixDSym operator*(Double_t val,const TMatrixDSym &source)
+TMatrixDSym operator-(const TMatrixDSym &source1,Double_t val)
 {
-  TMatrixDSym target(source);
+  TMatrixDSym target(source1);
+  target -= val;
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator-(Double_t val,const TMatrixDSym &source1)
+{
+  return -1.0*operator-(source1,val);
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator*(const TMatrixDSym &source1,Double_t val)
+{
+  TMatrixDSym target(source1);
   target *= val;
   return target;
 }
 
 //______________________________________________________________________________
-TMatrixDSym operator*(const TMatrixDSym &source,Double_t val)
+TMatrixDSym operator*(Double_t val,const TMatrixDSym &source1)
 {
-  TMatrixDSym target(source);
-  target *= val;
+  return operator*(source1,val);
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator&&(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // Logical AND
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator&&(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1 != 0.0) & (*sp2 != 0.0);
+      *trp++ = (*srp1++ != 0.0 && *sp2++ != 0.0);
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
   return target;
 }
+
+//______________________________________________________________________________
+TMatrixDSym operator||(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // Logical Or
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator||(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1 != 0.0) & (*sp2 != 0.0);
+      *trp++ = (*srp1++ != 0.0 || *sp2++ != 0.0);
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator>(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // source1 > source2
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator>(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = *scp1 > *sp2;
+      *trp++ = *srp1++ > *sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+/*
+//______________________________________________________________________________
+TMatrixDSym operator>(const TMatrixDSym &source1,Double_t val)
+{ 
+  // source1 > val
+  
+  TMatrixDSym target; target.ResizeTo(source1);
+  
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) { 
+    *tp++ = (*sp > val); sp++;
+  }
+  
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator>(Double_t val,const TMatrixDSym &source1)
+{ 
+  // val > source1
+  return operator<=(source1,val);
+}
+*/
+
+//______________________________________________________________________________
+TMatrixDSym operator>=(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // source1 >= source2
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator>=(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = *scp1 >= *sp2;
+      *trp++ = *srp1++ >= *sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+/*
+//______________________________________________________________________________
+TMatrixDSym operator>=(const TMatrixDSym &source1,Double_t val)
+{ 
+  // source1 >= val
+  
+  TMatrixDSym target; target.ResizeTo(source1);
+  
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) { 
+    *tp++ = (*sp >= val); sp++;
+  }
+  
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator>=(Double_t val,const TMatrixDSym &source1)
+{ 
+  // val >= source1
+  return operator<(source1,val);
+}
+*/
+
+//______________________________________________________________________________
+TMatrixDSym operator<=(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // source1 <= source2
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<=(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = *scp1 <= *sp2;
+      *trp++ = *srp1++ <= *sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+/*
+//______________________________________________________________________________
+TMatrixDSym operator<=(const TMatrixDSym &source1,Double_t val)
+{ 
+  // source1 <= val
+  
+  TMatrixDSym target; target.ResizeTo(source1);
+  
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) { 
+    *tp++ = (*sp <= val); sp++;
+  }
+  
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator<=(Double_t val,const TMatrixDSym &source1)
+{ 
+  // val <= source1
+  return operator>(source1,val);
+}
+*/
+
+//______________________________________________________________________________
+TMatrixDSym operator<(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // source1 < source2
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = *scp1 < *sp2;
+      *trp++ = *srp1++ < *sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+/*
+//______________________________________________________________________________
+TMatrixDSym operator<(const TMatrixDSym &source1,Double_t val)
+{ 
+  // source1 < val
+  
+  TMatrixDSym target; target.ResizeTo(source1);
+  
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) { 
+    *tp++ = (*sp < val); sp++;
+  }
+  
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator<(Double_t val,const TMatrixDSym &source1)
+{ 
+  // val < source1
+  return operator>(source1,val);
+}
+*/
+
+/*
+//______________________________________________________________________________
+TMatrixDSym operator==(const TMatrixDSym &source1,const TMatrixDSym &source2)
+{
+  // source1 == source2
+
+  TMatrixDSym target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator==(const TMatrixDSym&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = *scp1 == *sp2;
+      *trp++ = *srp1++ == *sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator==(const TMatrixDSym &source1,Double_t val)
+{ 
+  // source1 == val
+  
+  TMatrixDSym target; target.ResizeTo(source1);
+  
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) { 
+    *tp++ = (*sp == val); sp++;
+  }
+  
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixDSym operator==(Double_t val,const TMatrixDSym &source1)
+{ 
+  // val == source1
+  return operator==(source1,val);
+}
+*/
 
 //______________________________________________________________________________
 TMatrixDSym &Add(TMatrixDSym &target,Double_t scalar,const TMatrixDSym &source)

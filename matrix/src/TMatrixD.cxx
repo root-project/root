@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.74 2004/10/22 07:12:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.75 2004/10/23 20:19:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -184,6 +184,24 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       break;
     }
 
+    case kPlus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this += b;
+      break;
+    }
+
+    case kMinus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this -= b;
+      break;
+    }
+
     default:
       Error("TMatrixD(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
   }
@@ -219,6 +237,24 @@ TMatrixD::TMatrixD(const TMatrixD &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b)
       this->Invert();
       this->SetTol(oldTol);
       *this *= b;
+      break;
+    }
+
+    case kPlus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this += b;
+      break; 
+    }
+
+    case kMinus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this -= b;
       break;
     }
 
@@ -260,6 +296,24 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
       break;
     }
 
+    case kPlus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this += b;
+      break; 
+    }
+
+    case kMinus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this -= b;
+      break;
+    }
+
     default:
       Error("TMatrixD(EMatrixCreatorOp2)", "operation %d not yet implemented", op);
   }
@@ -295,6 +349,24 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym 
       this->Invert();
       this->SetTol(oldTol);
       *this *= b;
+      break;
+    }
+
+    case kPlus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this += b;
+      break; 
+    }
+
+    case kMinus:
+    {
+      Allocate(a.GetNrows(),a.GetNcols(),
+               a.GetRowLwb(),a.GetColLwb(),1);
+      *this = a;
+      *this -= b;
       break;
     }
 
@@ -414,13 +486,13 @@ void TMatrixD::AMultB(const TMatrixD &a,const TMatrixD &b,Int_t constr)
   }
 
   if (this == &a) {
-    Error("AMultB","this = &a");
+    Error("AMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == &b) {
-    Error("AMultB","this = &b");
+    Error("AMultB","this == &b");
     Invalidate();
     return;
   }
@@ -478,13 +550,13 @@ void TMatrixD::AMultB(const TMatrixDSym &a,const TMatrixD &b,Int_t constr)
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&a)) {
-    Error("AMultB","this = &a");
+    Error("AMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == &b) {
-    Error("AMultB","this = &b");
+    Error("AMultB","this == &b");
     Invalidate();
     return;
   }
@@ -539,13 +611,13 @@ void TMatrixD::AMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
   }
 
   if (this == &a) {
-    Error("AMultB","this = &a");
+    Error("AMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&b)) {
-    Error("AMultB","this = &b");
+    Error("AMultB","this == &b");
     Invalidate();
     return;
   }
@@ -600,13 +672,13 @@ void TMatrixD::AMultB(const TMatrixDSym &a,const TMatrixDSym &b,Int_t constr)
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&a)) {
-    Error("AMultB","this = &a");
+    Error("AMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&b)) {
-    Error("AMultB","this = &b");
+    Error("AMultB","this == &b");
     Invalidate();
     return;
   }
@@ -660,13 +732,13 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixD &b,Int_t constr)
   }
 
   if (this == &a) {
-    Error("AtMultB","this = &a");
+    Error("AtMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == &b) {
-    Error("AtMultB","this = &b");
+    Error("AtMultB","this == &b");
     Invalidate();
     return;
   }
@@ -723,13 +795,13 @@ void TMatrixD::AtMultB(const TMatrixD &a,const TMatrixDSym &b,Int_t constr)
   }
 
   if (this == &a) {
-    Error("AtMultB","this = &a");
+    Error("AtMultB","this == &a");
     Invalidate();
     return;
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&b)) {
-    Error("AtMultB","this = &b");
+    Error("AtMultB","this == &b");
     Invalidate();
     return;
   }
@@ -786,13 +858,13 @@ void TMatrixD::AMultBt(const TMatrixD &a,const TMatrixD &b,Int_t constr)
   }
 
   if (this == &a) {
-    Error("AMultBt","this = &a");
+    Error("AMultBt","this == &a");
     Invalidate();
     return;
   }
 
   if (this == &b) {
-    Error("AMultBt","this = &b");
+    Error("AMultBt","this == &b");
     Invalidate();
     return;
   }
@@ -850,13 +922,13 @@ void TMatrixD::AMultBt(const TMatrixDSym &a,const TMatrixD &b,Int_t constr)
   }
 
   if (this == dynamic_cast<const TMatrixD *>(&a)) {
-    Error("AMultBt","this = &a");
+    Error("AMultBt","this == &a");
     Invalidate();
     return;
   }
 
   if (this == &b) {
-    Error("AMultBt","this = &b");
+    Error("AMultBt","this == &b");
     Invalidate();
     return;
   }
@@ -2106,9 +2178,7 @@ TMatrixD operator+(const TMatrixD &source1,const TMatrixDSym &source2)
 //______________________________________________________________________________
 TMatrixD operator+(const TMatrixDSym &source1,const TMatrixD &source2)
 {
-  TMatrixD target(source2);
-  target += source1;
-  return target;
+  return operator+(source2,source1);
 }
 
 //______________________________________________________________________________
@@ -2122,9 +2192,7 @@ TMatrixD operator+(const TMatrixD &source,Double_t val)
 //______________________________________________________________________________
 TMatrixD operator+(Double_t val,const TMatrixD &source)
 {
-  TMatrixD target(source);
-  target += val;
-  return target;
+  return operator+(source,val);
 }
 
 //______________________________________________________________________________
@@ -2146,9 +2214,7 @@ TMatrixD operator-(const TMatrixD &source1,const TMatrixDSym &source2)
 //______________________________________________________________________________
 TMatrixD operator-(const TMatrixDSym &source1,const TMatrixD &source2)
 {
-  TMatrixD target(source2);
-  target -= source1;
-  return target;
+  return -1.*(operator-(source2,source1));
 }
 
 //______________________________________________________________________________
@@ -2162,9 +2228,7 @@ TMatrixD operator-(const TMatrixD &source,Double_t val)
 //______________________________________________________________________________
 TMatrixD operator-(Double_t val,const TMatrixD &source)
 {
-  TMatrixD target(source);
-  target -= val;
-  return target;
+  return -1.0*operator-(source,val);
 }
 
 //______________________________________________________________________________
@@ -2178,9 +2242,7 @@ TMatrixD operator*(Double_t val,const TMatrixD &source)
 //______________________________________________________________________________
 TMatrixD operator*(const TMatrixD &source,Double_t val)
 {
-  TMatrixD target(source);
-  target *= val;
-  return target;
+  return operator*(val,source);
 }
 
 //______________________________________________________________________________
@@ -2210,6 +2272,542 @@ TMatrixD operator*(const TMatrixDSym &source1,const TMatrixDSym &source2)
   TMatrixD target(source1,TMatrixD::kMult,source2);
   return target;
 }
+
+//______________________________________________________________________________
+TMatrixD operator&&(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // Logical AND
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator&&(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last)
+    *tp++ = (*sp1++ != 0.0 && *sp2++ != 0.0);
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator&&(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // Logical AND
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator&&(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1 != 0.0) & (*sp2 != 0.0);
+      *trp++ = (*srp1++ != 0.0 && *sp2++ != 0.0);
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator&&(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // Logical AND
+  return operator&&(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator||(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // Logical OR
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator||(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last)
+    *tp++ = (*sp1++ != 0.0 || *sp2++ != 0.0);
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator||(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // Logical OR
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator||(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1 != 0.0) || (*sp2 != 0.0);
+      *trp++ = (*srp1++ != 0.0 || *sp2++ != 0.0);
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator||(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // Logical OR
+  return operator||(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator>(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // source1 > source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator|(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) {
+    *tp++ = (*sp1) > (*sp2); sp1++; sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator>(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // source1 > source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator>(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1) > (*sp2);
+      *trp++ = (*srp1) > (*sp2); srp1++; sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator>(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // source1 > source2
+  return operator<=(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator>=(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // source1 >= source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator>=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) {
+    *tp++ = (*sp1) >= (*sp2); sp1++; sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator>=(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // source1 >= source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator>=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j > i) *tcp = (*scp1) >= (*sp2);
+      *trp++ = (*srp1) >= (*sp2); srp1++; sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator>=(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // source1 >= source2
+  return operator<(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator<=(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // source1 <= source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) {
+    *tp++ = (*sp1) <= (*sp2); sp1++; sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator<=(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // source1 <= source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j < i) *tcp = (*scp1) <= (*sp2);
+      *trp++ = (*srp1) <= (*sp2); srp1++; sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator<=(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // source1 <= source2
+  return operator>(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator<(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // source1 < source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp < tp_last) {
+    *tp++ = (*sp1) < (*sp2); sp1++; sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator<(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // source1 < source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator<(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i < nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;                // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j < ncols; j++) {
+      if (j < i) *tcp = (*scp1) < (*sp2);
+      *trp++ = (*srp1) < (*sp2); srp1++; sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator<(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // source1 < source2
+  return operator>=(source2,source1);
+}
+
+//______________________________________________________________________________
+TMatrixD operator!=(const TMatrixD &source1,const TMatrixD &source2)
+{
+  // source1 != source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator!=(const TMatrixD&,const TMatrixD&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *sp1 = source1.GetMatrixArray();
+  const Double_t *sp2 = source2.GetMatrixArray();
+  Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp != tp_last) {
+    *tp++ = (*sp1) != (*sp2); sp1++; sp2++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator!=(const TMatrixD &source1,const TMatrixDSym &source2)
+{
+  // source1 != source2
+
+  TMatrixD target;
+
+  if (!AreCompatible(source1,source2)) {
+    Error("operator!=(const TMatrixD&,const TMatrixDSym&)","matrices not compatible");
+    target.Invalidate();
+    return target;
+  }
+
+  target.ResizeTo(source1);
+
+  const Int_t nelems = target.GetNoElements();
+  const Int_t nrows  = target.GetNrows();
+  const Int_t ncols  = target.GetNcols();
+
+  const Double_t *srp1 = source1.GetMatrixArray();
+  const Double_t *scp1 = srp1;
+  const Double_t *sp2  = source2.GetMatrixArray();
+        Double_t *trp  = target.GetMatrixArray(); // pointer to UR part and diagonal, traverse row-wise
+        Double_t *tcp  = trp;                     // pointer to LL part,              traverse col-wise
+  for (Int_t i = 0; i != nrows; i++) {
+    sp2 += i;
+    srp1 += i; trp += i;              // point to [i,i]
+    scp1 += i*ncols; tcp += i*ncols;  // point to [i,i]
+    for (Int_t j = i; j != ncols; j++) {
+      if (j != i) *tcp = (*scp1) != (*sp2);
+      *trp++ = (*srp1) != (*sp2); srp1++; sp2++;
+      scp1 += ncols;
+      tcp  += ncols;
+    }
+    scp1 -= nelems-1; // point to [0,i]
+    tcp  -= nelems-1; // point to [0,i]
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator!=(const TMatrixDSym &source1,const TMatrixD &source2)
+{
+  // source1 != source2
+  return operator!=(source2,source1);
+}
+
+/*
+//______________________________________________________________________________
+TMatrixD operator!=(const TMatrixD &source1,Double_t val)
+{
+  // source1 != val
+
+  TMatrixD target; target.ResizeTo(source1);
+
+  const Double_t *sp = source1.GetMatrixArray();
+        Double_t *tp = target.GetMatrixArray();
+  const Double_t * const tp_last = tp+target.GetNoElements();
+  while (tp != tp_last) {
+    *tp++ = (*sp != val); sp++;
+  }
+
+  return target;
+}
+
+//______________________________________________________________________________
+TMatrixD operator!=(Double_t val,const TMatrixD &source1)
+{
+  // val != source1
+  return operator!=(source1,val);
+}
+*/
 
 //______________________________________________________________________________
 TMatrixD &Add(TMatrixD &target,Double_t scalar,const TMatrixD &source)

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.15 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.16 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -255,57 +255,6 @@ void TMatrixDSparse::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t co
   } else {
     fElements = 0;
     fColIndex = 0;
-  }
-}
-
-//______________________________________________________________________________
-void TMatrixDSparse::SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSparse &b)
-{
-  // Set the row/column indices to the "sum" of matrices a and b
-  // It is assumed that enough space was reserved
-
-  Assert(a.IsValid());
-  Assert(b.IsValid());
-
-  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
-      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
-    Error("SetSparseIndexAB","matrices not compatible");
-    return;
-  }
-
-  const Int_t * const pRowIndexa = a.GetRowIndexArray();
-  const Int_t * const pRowIndexb = b.GetRowIndexArray();
-  const Int_t * const pColIndexa = a.GetColIndexArray();
-  const Int_t * const pColIndexb = b.GetColIndexArray();
-
-        Int_t * const pRowIndexc = this->GetRowIndexArray();
-        Int_t * const pColIndexc = this->GetColIndexArray();
-
-  Int_t nc = 0;
-  pRowIndexc[0] = 0;
-  for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
-    const Int_t sIndexa = pRowIndexa[irowc];
-    const Int_t eIndexa = pRowIndexa[irowc+1];
-    const Int_t sIndexb = pRowIndexb[irowc];
-    const Int_t eIndexb = pRowIndexb[irowc+1];
-    Int_t indexb = sIndexb;
-    for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
-      const Int_t icola = pColIndexa[indexa];
-      for (; indexb < eIndexb; indexb++) {
-        if (pColIndexb[indexb] >= icola) {
-          if (pColIndexb[indexb] == icola)
-            indexb++;
-          break;
-        }
-        pColIndexc[nc++] = pColIndexb[indexb];
-      }
-      pColIndexc[nc++] = pColIndexa[indexa];
-    }
-    while (indexb < eIndexb) {
-      if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
-        pColIndexc[nc++] = pColIndexb[indexb-1];
-    }
-    pRowIndexc[irowc+1] = nc;
   }
 }
 
@@ -780,32 +729,7 @@ void TMatrixDSparse::APlusB(const TMatrixDSparse &a,const TMatrixDSparse &b,Int_
   const Int_t * const pColIndexb = b.GetColIndexArray();
 
   if (constr) {
-    Int_t nc = 0;
-    for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
-      const Int_t sIndexa = pRowIndexa[irowc];
-      const Int_t eIndexa = pRowIndexa[irowc+1];
-      const Int_t sIndexb = pRowIndexb[irowc];
-      const Int_t eIndexb = pRowIndexb[irowc+1];
-      nc += eIndexa-sIndexa;
-      Int_t indexb = sIndexb;
-      for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
-        const Int_t icola = pColIndexa[indexa];
-        for (; indexb < eIndexb; indexb++) {
-          if (pColIndexb[indexb] >= icola) {
-            if (pColIndexb[indexb] == icola)
-              indexb++;
-            break;
-          }
-          nc++;
-        }
-      }
-      while (indexb < eIndexb) {
-        if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
-          nc++;
-      }
-    }
-
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1,nc);
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
     SetSparseIndexAB(a,b);
   }
 
@@ -970,32 +894,7 @@ void TMatrixDSparse::AMinusB(const TMatrixDSparse &a,const TMatrixDSparse &b,Int
   const Int_t * const pColIndexb = b.GetColIndexArray();
       
   if (constr) {
-    Int_t nc = 0;
-    for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
-      const Int_t sIndexa = pRowIndexa[irowc];
-      const Int_t eIndexa = pRowIndexa[irowc+1];
-      const Int_t sIndexb = pRowIndexb[irowc];
-      const Int_t eIndexb = pRowIndexb[irowc+1];
-      nc += eIndexa-sIndexa;
-      Int_t indexb = sIndexb;
-      for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
-        const Int_t icola = pColIndexa[indexa];
-        for (; indexb < eIndexb; indexb++) {
-          if (pColIndexb[indexb] >= icola) {
-            if (pColIndexb[indexb] == icola)
-              indexb++;
-            break;
-          }
-          nc++;
-        }
-      }
-      while (indexb < eIndexb) {
-        if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
-          nc++;
-      }
-    }
-
-    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb(),1,nc);
+    Allocate(a.GetNrows(),a.GetNcols(),a.GetRowLwb(),a.GetColLwb());
     SetSparseIndexAB(a,b);
   }
 
@@ -1283,6 +1182,35 @@ TMatrixDBase &TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Doub
 }
 
 //______________________________________________________________________________
+TMatrixDSparse &TMatrixDSparse::SetSparseIndex(Int_t nelems_new)
+{
+  // Increase/decrease the number of non-zero elements to nelems_new
+
+  if (nelems_new != fNelems) {
+    Int_t nr = TMath::Min(nelems_new,fNelems);
+    Int_t *oIp = fColIndex;
+    fColIndex = new Int_t[nelems_new];
+    memmove(fColIndex,oIp,nr*sizeof(Int_t));
+    if (oIp) delete [] oIp; 
+    Double_t *oDp = fElements;
+    fElements = new Double_t[nelems_new];
+    memmove(fElements,oDp,nr*sizeof(Double_t));
+    if (oDp) delete [] oDp; 
+    fNelems = nelems_new;
+    if (nelems_new > nr) { 
+      memset(fElements+nr,0,(nelems_new-nr)*sizeof(Double_t));
+      memset(fColIndex+nr,0,(nelems_new-nr)*sizeof(Int_t));
+    } else {
+      for (Int_t irow = 0; irow < fNrowIndex; irow++) 
+        if (fRowIndex[irow] > nelems_new)
+          fRowIndex[irow] = nelems_new;
+    }
+  }
+
+  return *this;
+}
+
+//______________________________________________________________________________
 TMatrixDSparse &TMatrixDSparse::SetSparseIndex(const TMatrixDBase &source)
 {
   // Use non-zero data of matrix source to set the sparse structure
@@ -1323,29 +1251,87 @@ TMatrixDSparse &TMatrixDSparse::SetSparseIndex(const TMatrixDBase &source)
 }
 
 //______________________________________________________________________________
-TMatrixDSparse &TMatrixDSparse::SetSparseIndex(Int_t nelems_new)
+TMatrixDSparse &TMatrixDSparse::SetSparseIndexAB(const TMatrixDSparse &a,const TMatrixDSparse &b)
 {
-  // Increase/decrease the number of non-zero elements to nelems_new
+  // Set the row/column indices to the "sum" of matrices a and b
+  // It is checked that enough space has been allocated
 
-  if (nelems_new != fNelems) {
-    Int_t nr = TMath::Min(nelems_new,fNelems);
-    Int_t *oIp = fColIndex;
-    fColIndex = new Int_t[nelems_new];
-    memmove(fColIndex,oIp,nr*sizeof(Int_t));
-    if (oIp) delete [] oIp;
-    Double_t *oDp = fElements;
-    fElements = new Double_t[nelems_new];
-    memmove(fElements,oDp,nr*sizeof(Double_t));
-    if (oDp) delete [] oDp;
-    fNelems = nelems_new;
-    if (nelems_new > nr) {
-      memset(fElements+nr,0,(nelems_new-nr)*sizeof(Double_t));
-      memset(fColIndex+nr,0,(nelems_new-nr)*sizeof(Int_t));
-    } else {
-      for (Int_t irow = 0; irow < fNrowIndex; irow++)
-        if (fRowIndex[irow] > nelems_new)
-          fRowIndex[irow] = nelems_new;
+  Assert(a.IsValid());
+  Assert(b.IsValid());
+
+  if (a.GetNrows()  != b.GetNrows()  || a.GetNcols()  != b.GetNcols() ||
+      a.GetRowLwb() != b.GetRowLwb() || a.GetColLwb() != b.GetColLwb()) {
+    Error("SetSparseIndexAB","source matrices not compatible");
+    return *this;
+  }
+
+  if (this->GetNrows()  != a.GetNrows()  || this->GetNcols()  != a.GetNcols() ||
+      this->GetRowLwb() != a.GetRowLwb() || this->GetColLwb() != a.GetColLwb()) {
+    Error("SetSparseIndexAB","matrix not compatible with source matrices");
+    return *this;
+  }
+
+  const Int_t * const pRowIndexa = a.GetRowIndexArray();
+  const Int_t * const pRowIndexb = b.GetRowIndexArray();
+  const Int_t * const pColIndexa = a.GetColIndexArray();
+  const Int_t * const pColIndexb = b.GetColIndexArray();
+
+  Int_t nc = 0; 
+  for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
+    const Int_t sIndexa = pRowIndexa[irowc];
+    const Int_t eIndexa = pRowIndexa[irowc+1];
+    const Int_t sIndexb = pRowIndexb[irowc];
+    const Int_t eIndexb = pRowIndexb[irowc+1];
+    nc += eIndexa-sIndexa;
+    Int_t indexb = sIndexb;
+    for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
+      const Int_t icola = pColIndexa[indexa];
+      for (; indexb < eIndexb; indexb++) {
+        if (pColIndexb[indexb] >= icola) {
+          if (pColIndexb[indexb] == icola)
+            indexb++;
+          break;  
+        }       
+        nc++;   
+      }       
     }
+    while (indexb < eIndexb) {
+      if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
+        nc++;   
+    }
+  }
+
+  if (this->NonZeros() != nc)
+    SetSparseIndex(nc);
+
+  Int_t * const pRowIndexc = this->GetRowIndexArray();
+  Int_t * const pColIndexc = this->GetColIndexArray();
+
+  nc = 0;
+  pRowIndexc[0] = 0;
+  for (Int_t irowc = 0; irowc < a.GetNrows(); irowc++) {
+    const Int_t sIndexa = pRowIndexa[irowc];
+    const Int_t eIndexa = pRowIndexa[irowc+1];
+    const Int_t sIndexb = pRowIndexb[irowc];
+    const Int_t eIndexb = pRowIndexb[irowc+1];
+    Int_t indexb = sIndexb;
+    for (Int_t indexa = sIndexa; indexa < eIndexa; indexa++) {
+      const Int_t icola = pColIndexa[indexa];
+      for (; indexb < eIndexb; indexb++) {
+        if (pColIndexb[indexb] >= icola) {
+          if (pColIndexb[indexb] == icola)
+            indexb++;
+          break;
+        }
+        pColIndexc[nc++] = pColIndexb[indexb];
+      }
+      pColIndexc[nc++] = pColIndexa[indexa];
+    }
+    while (indexb < eIndexb) {
+      if (pColIndexb[indexb++] > pColIndexa[eIndexa-1])
+        pColIndexc[nc++] = pColIndexb[indexb-1];
+    }
+    pRowIndexc[irowc+1] = nc;
   }
 
   return *this;

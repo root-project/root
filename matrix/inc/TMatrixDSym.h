@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.17 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.18 2004/10/24 06:21:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
 
   TMatrixDSym(EMatrixCreatorsOp1 op,const TMatrixDSym &prototype);
   TMatrixDSym(EMatrixCreatorsOp1 op,const TMatrixD    &prototype);
+  TMatrixDSym(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b);
   TMatrixDSym(const TMatrixDSymLazy &lazy_constructor);
 
   virtual ~TMatrixDSym() { Clear(); }
@@ -181,11 +182,21 @@ inline Double_t &TMatrixDSym::operator()(Int_t rown,Int_t coln)
   return (fElements[arown*fNcols+acoln]);
 }
 
-Bool_t       operator== (const TMatrixDSym &m1,     const TMatrixDSym  &m2);
+Bool_t       operator== (const TMatrixDSym &source1,const TMatrixDSym  &source2);
 TMatrixDSym  operator+  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator+  (const TMatrixDSym &source1,      Double_t      val);
+TMatrixDSym  operator+  (      Double_t     val    ,const TMatrixDSym  &source2);
 TMatrixDSym  operator-  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
-TMatrixDSym  operator*  (      Double_t     val,    const TMatrixDSym  &source );
+TMatrixDSym  operator-  (const TMatrixDSym &source1,      Double_t      val);
+TMatrixDSym  operator-  (      Double_t     val    ,const TMatrixDSym  &source2);
 TMatrixDSym  operator*  (const TMatrixDSym &source,       Double_t      val    );
+TMatrixDSym  operator*  (      Double_t     val,    const TMatrixDSym  &source );
+TMatrixDSym  operator&& (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator|| (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator>  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator>= (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator<= (const TMatrixDSym &source1,const TMatrixDSym  &source2);
+TMatrixDSym  operator<  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
 
 TMatrixDSym &Add        (TMatrixDSym &target,      Double_t     scalar,const TMatrixDSym &source);
 TMatrixDSym &ElementMult(TMatrixDSym &target,const TMatrixDSym &source);

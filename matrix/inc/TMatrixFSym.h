@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.16 2004/10/23 20:19:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.17 2004/10/24 06:21:19 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -68,6 +68,7 @@ public:
 
   TMatrixFSym(EMatrixCreatorsOp1 op,const TMatrixFSym &prototype);
   TMatrixFSym(EMatrixCreatorsOp1 op,const TMatrixF    &prototype);
+  TMatrixFSym(const TMatrixFSym &a,EMatrixCreatorsOp2 op,const TMatrixFSym &b);
   TMatrixFSym(const TMatrixFSymLazy &lazy_constructor);
 
   virtual ~TMatrixFSym() { Clear(); }
@@ -181,11 +182,20 @@ inline Float_t &TMatrixFSym::operator()(Int_t rown,Int_t coln)
   return (fElements[arown*fNcols+acoln]);
 }
 
-Bool_t       operator== (const TMatrixFSym &m1,     const TMatrixFSym  &m2);
 TMatrixFSym  operator+  (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator+  (const TMatrixFSym &source1,      Float_t       val);
+TMatrixFSym  operator+  (      Float_t      val    ,const TMatrixFSym  &source2);
 TMatrixFSym  operator-  (const TMatrixFSym &source1,const TMatrixFSym  &source2);
-TMatrixFSym  operator*  (      Float_t      val,    const TMatrixFSym  &source );
+TMatrixFSym  operator-  (const TMatrixFSym &source1,      Float_t       val);
+TMatrixFSym  operator-  (      Float_t      val    ,const TMatrixFSym  &source2);
 TMatrixFSym  operator*  (const TMatrixFSym &source,       Float_t       val    );
+TMatrixFSym  operator*  (      Float_t      val,    const TMatrixFSym  &source );
+TMatrixFSym  operator&& (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator|| (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator>  (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator>= (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator<= (const TMatrixFSym &source1,const TMatrixFSym  &source2);
+TMatrixFSym  operator<  (const TMatrixFSym &source1,const TMatrixFSym  &source2);
 
 TMatrixFSym &Add        (TMatrixFSym &target,      Float_t      scalar,const TMatrixFSym &source);
 TMatrixFSym &ElementMult(TMatrixFSym &target,const TMatrixFSym &source);

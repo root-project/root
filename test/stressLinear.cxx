@@ -1997,6 +1997,7 @@ void mstress_inversion()
     Int_t size;
     for (size = 2; size < 7; size++) {
       TMatrixD m1 = THilbertMatrixD(size,size);
+      m1(0,1) = TMath::Pi();
       TMatrixDDiag(m1) += 1;
       TMatrixD m2 = m1;
       Double_t det1 = 0.0;
