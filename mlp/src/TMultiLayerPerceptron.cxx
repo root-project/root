@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.19 2004/07/25 07:34:39 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.20 2004/07/26 06:34:59 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -684,19 +684,9 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    if (verbosity / 2) {
       residual_plot = new TMultiGraph;
       canvas = new TCanvas("NNtraining", "Neural Net training");
-      Double_t *epoch_axis = new Double_t[nEpoch];
-      Double_t *train_residual = new Double_t[nEpoch];
-      Double_t *test_residual = new Double_t[nEpoch];
-      for (i = 0; i < nEpoch; i++) {
-         epoch_axis[i] = i;
-         train_residual[i] = 0;
-         test_residual[i] = 0;
-      }
-      train_residual_plot = new TGraph(nEpoch, epoch_axis, train_residual);
-      test_residual_plot = new TGraph(nEpoch, epoch_axis, test_residual);
-      delete[]train_residual;
-      delete[]test_residual;
-      delete[]epoch_axis;
+      train_residual_plot = new TGraph(nEpoch);
+      test_residual_plot  = new TGraph(nEpoch);
+      canvas->SetLeftMargin(0.14);
       train_residual_plot->SetLineColor(4);
       test_residual_plot->SetLineColor(2);
       residual_plot->Add(train_residual_plot);
@@ -704,8 +694,6 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       residual_plot->Draw("LA");
       residual_plot->GetXaxis()->SetTitle("Epoch");
       residual_plot->GetYaxis()->SetTitle("Error");
-      residual_plot->Draw("LA");
-      canvas->Update();
    }
    // If the option "+" is not set, one has to randomize the weights first
    if (!opt.Contains("+"))
@@ -867,15 +855,19 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
             }
          }
          if ((!(iepoch % DisplayStepping)) || (iepoch == nEpoch - 1)) {
-            residual_plot->Draw("LA");
             residual_plot->GetYaxis()->UnZoom();
+            canvas->Modified();
+            canvas->Update();
+            residual_plot->GetYaxis()->SetTitleOffset(1.4);
+            residual_plot->GetYaxis()->SetDecimals();
+            canvas->Modified();
             canvas->Update();
          }
       }
    }
    // Cleaning
-   delete[]buffer;
-   delete[]dir;
+   delete [] buffer;
+   delete [] dir;
    // Final Text and Graph outputs
    if (verbosity % 2)
       cout << "Training done." << endl;
