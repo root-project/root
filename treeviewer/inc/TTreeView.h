@@ -50,7 +50,7 @@ enum EListItemType {
    kLTActionType        = BIT(4),
    kLTDragType          = BIT(5),
    kLTExpressionType    = BIT(6),
-   kLTCutType           = BIT(7),
+   kLTCutType           = BIT(7)
 };
 
 
