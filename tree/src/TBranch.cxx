@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.22 2001/04/20 21:21:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.23 2001/05/23 09:54:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -672,7 +672,7 @@ Int_t TBranch::GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int
 //*-*
 
    if (TestBit(kDoNotProcess)) return 0;
-   if (fReadEntry == entry) return 1;
+   //if (fReadEntry == entry) return 1;  //side effects in case user Clear his structures
    if (entry < 0 || entry >= fEntryNumber) return 0;
    Int_t nbytes;
    Int_t first  = fBasketEntry[fReadBasket];
