@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.h,v 1.17 2003/08/18 16:40:33 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFLazy.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -133,8 +133,6 @@ public:
   ClassDef(THaarMatrixF,1)  // Haar matrix with double precision
 };
 
-void MakeHaarMat(TMatrixF &m);
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THilbertMatrixF                                                      //
@@ -174,8 +172,5 @@ public:
   
   ClassDef(THilbertMatrixFSym,1)  // (no_rows x no_rows) Hilbert matrix with double precision
 };
-
-void MakeHilbertMat(TMatrixF &m);
-void MakeHilbertMat(TMatrixFSym  &m);
 
 #endif

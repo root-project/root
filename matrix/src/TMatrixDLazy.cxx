@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatLazy.cxx,v 1.15 2002/12/10 14:00:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDLazy.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -32,12 +32,6 @@ THaarMatrixD::THaarMatrixD(Int_t order,Int_t no_cols)
     : TMatrixDLazy(1<<order, no_cols == 0 ? 1<<order : no_cols)
 {
   Assert(order > 0 && no_cols >= 0);
-}
-
-//______________________________________________________________________________
-void THaarMatrixD::FillIn(TMatrixD &m) const
-{
-  MakeHaarMat(m);
 }
 
 //______________________________________________________________________________
@@ -96,6 +90,12 @@ void MakeHaarMat(TMatrixD &m)
 }
 
 //______________________________________________________________________________
+void THaarMatrixD::FillIn(TMatrixD &m) const
+{
+  MakeHaarMat(m);
+}
+
+//______________________________________________________________________________
 THilbertMatrixD::THilbertMatrixD(Int_t no_rows,Int_t no_cols)
     : TMatrixDLazy(no_rows,no_cols)
 {
@@ -107,12 +107,6 @@ THilbertMatrixD::THilbertMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t
     : TMatrixDLazy(row_lwb,row_upb,col_lwb,col_upb)
 {
   Assert(row_upb-row_lwb+1 > 0 && col_upb-col_lwb+1 > 0);
-}
-
-//______________________________________________________________________________
-void THilbertMatrixD::FillIn(TMatrixD &m) const
-{
-  MakeHilbertMat(m);
 }
 
 //______________________________________________________________________________
@@ -133,6 +127,12 @@ void MakeHilbertMat(TMatrixD &m)
 }
 
 //______________________________________________________________________________
+void THilbertMatrixD::FillIn(TMatrixD &m) const
+{
+  MakeHilbertMat(m);
+}
+
+//______________________________________________________________________________
 THilbertMatrixDSym::THilbertMatrixDSym(Int_t no_rows)
     : TMatrixDSymLazy(no_rows)
 {
@@ -144,12 +144,6 @@ THilbertMatrixDSym::THilbertMatrixDSym(Int_t row_lwb,Int_t row_upb)
     : TMatrixDSymLazy(row_lwb,row_upb)
 {
   Assert(row_upb-row_lwb+1 > 0);
-}
-
-//______________________________________________________________________________
-void THilbertMatrixDSym::FillIn(TMatrixDSym &m) const
-{
-  MakeHilbertMat(m);
 }
 
 //______________________________________________________________________________
@@ -166,4 +160,10 @@ void MakeHilbertMat(TMatrixDSym &m)
   for (Int_t i = 0; i < no_rows; i++)
     for (Int_t j = 0; j < no_rows; j++)
       *cp++ = 1.0/(i+j+1.0);
+}
+
+//______________________________________________________________________________
+void THilbertMatrixDSym::FillIn(TMatrixDSym &m) const
+{
+  MakeHilbertMat(m);
 }

@@ -2612,8 +2612,8 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
     TMatrixD E2(nCols,nCols); E2.UnitMatrix();
     TMatrixD ut(TMatrixDBase::kTransposed,svd.GetU());
-    ok &= VerifyMatrixIdentity(ut * svd.GetU(),E2,gVerbose,1.0e-13);
-    ok &= VerifyMatrixIdentity(svd.GetU() * ut,E1,gVerbose,1.0e-13);
+    ok &= VerifyMatrixIdentity(ut * svd.GetU(),E2,gVerbose,100*EPSILON);
+    ok &= VerifyMatrixIdentity(svd.GetU() * ut,E1,gVerbose,100*EPSILON);
   }
   
   {
@@ -2624,8 +2624,8 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     TMatrixD E1(nRows,nRows); E1.UnitMatrix();
     TMatrixD E2(nCols,nCols); E2.UnitMatrix();
     TMatrixD vt(TMatrixDBase::kTransposed,svd.GetV());
-    ok &= VerifyMatrixIdentity(vt * svd.GetV(),E2,gVerbose,1.0e-13);
-    ok &= VerifyMatrixIdentity(svd.GetV() * vt,E1,gVerbose,1.0e-13);
+    ok &= VerifyMatrixIdentity(vt * svd.GetV(),E2,gVerbose,100*EPSILON);
+    ok &= VerifyMatrixIdentity(svd.GetV() * vt,E1,gVerbose,100*EPSILON);
   }
   
   {
@@ -2637,7 +2637,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
     TMatrixDDiag(s,0) = svd.GetSig();
     TMatrixD vt(TMatrixDBase::kTransposed,svd.GetV());
     TMatrixD tmp = s * vt;
-    ok &= VerifyMatrixIdentity(A,svd.GetU() * tmp,gVerbose,1.0e-13);
+    ok &= VerifyMatrixIdentity(A,svd.GetU() * tmp,gVerbose,100*EPSILON);
     if (gVerbose) {
       cout << "U*Sig*V'" <<endl;
       (svd.GetU()*tmp).Print();
@@ -2757,14 +2757,14 @@ void astress_decomp()
   {
     const TMatrixD m = THilbertMatrixD(5,5);
     TDecompLU lu(m);
-    ok &= VerifyMatrixIdentity(lu.GetMatrix(),m,gVerbose,1.0e-13);
+    ok &= VerifyMatrixIdentity(lu.GetMatrix(),m,gVerbose,100*EPSILON);
   }
 
   {
     const TMatrixD m = THilbertMatrixD(5,5);
     const TMatrixD mtm(TMatrixDBase::kAtA,m);
     TDecompChol chol(mtm);
-    ok &= VerifyMatrixIdentity(chol.GetMatrix(),mtm,gVerbose,1.0e-13);
+    ok &= VerifyMatrixIdentity(chol.GetMatrix(),mtm,gVerbose,100*EPSILON);
   }
 
   if (gVerbose)
