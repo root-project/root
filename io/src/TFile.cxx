@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.91 2003/04/28 10:18:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.92 2003/06/10 19:29:42 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -330,6 +330,7 @@ TFile::~TFile()
    SafeDelete(fCache);
 
    gROOT->GetListOfFiles()->Remove(this);
+   gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
 
    if (gDebug)
       cerr <<"TFile dtor called for " << GetName() << endl;
