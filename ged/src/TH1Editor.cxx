@@ -434,7 +434,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 {
    // Pick up the used values of histogram attributes.
    
-   if (obj == 0 || !obj->InheritsFrom("TH1") || ((TH1*)obj)->GetDimension()!=1/*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
+   if (obj == 0 || !obj->InheritsFrom("TH1") || ((TH1*)obj)->GetDimension()!=1
+       || ((TH1*)obj)->GetEntries() == 0/*|| obj->InheritsFrom("TH2")  || obj->InheritsFrom("TProfile")*/) {
    SetActive(kFALSE);
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {

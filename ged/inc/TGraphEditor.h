@@ -62,7 +62,7 @@ public:
 
    // slots related to graph attributes 
    virtual void DoShape(Int_t s);
-   virtual void DoMarkerOnOff();
+   virtual void DoMarkerOnOff(Bool_t on);
    virtual void DoTitle(const char *text);
  
    ClassDef(TGraphEditor,0)        // graph editor

@@ -18,7 +18,7 @@
 //                                                                      //
 //  Title': set the title of the graph                                  //
 //  Change the Shape of the graph:                                      //
-//     'No Line'     = "": just draw unconnected points                 // 
+//     'No Line'     = " ": just draw unconnected points                // 
 //     'Simple Line' = "L":simple poly line between every point is drawn//
 //     'Smooth Line' = "C":smooth curve is drawn                        //
 //     'Bar Chart'   = "B": A bar chart is drawn at each point          //
@@ -48,10 +48,10 @@ ClassImp(TGraphEditor)
 
 enum 
 { 
-   kShape = 1,
+   kShape = 0,
    kSHAPE_NOLINE,
-   kSHAPE_SIMPLE,
    kSHAPE_SMOOTH,
+   kSHAPE_SIMPLE,
    kSHAPE_BAR,
    kSHAPE_FILL,
    kMARKER_ONOFF,
@@ -81,15 +81,16 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t id, Int_t width,
 // Radio Buttons to change the draw options of the graph   
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    fgr = new TGButtonGroup(f2,3,1,3,5,"Shape");
-   fShape = new TGRadioButton(fgr,"No Line",kSHAPE_NOLINE); // no draw option
+   fgr->SetRadioButtonExclusive(kTRUE);
+   fShape = new TGRadioButton(fgr,"No Line",kSHAPE_NOLINE);   // no draw option
    fShape->SetToolTipText("The points are not connected by a line");
-   fShape0 = new TGRadioButton(fgr,"Smooth Line  ",kSHAPE_SMOOTH);  // drawoption C
+   fShape0 = new TGRadioButton(fgr,"Smooth Line  ",kSHAPE_SMOOTH);  // option C
    fShape0->SetToolTipText("Draw a smooth graph curve");
-   fShape1 = new TGRadioButton(fgr,"Simple Line   ",kSHAPE_SIMPLE);  // drawoption L
+   fShape1 = new TGRadioButton(fgr,"Simple Line   ",kSHAPE_SIMPLE); // option L
    fShape1->SetToolTipText("Draw a simple poly-line between the graph points");
-   fShape2 = new TGRadioButton(fgr,"Bar Chart",kSHAPE_BAR);     // draw option B
+   fShape2 = new TGRadioButton(fgr,"Bar Chart",kSHAPE_BAR);         // option B
    fShape2->SetToolTipText("Draw a bar chart at each graph point");  
-   fShape3 = new TGRadioButton(fgr,"Fill area",kSHAPE_FILL);  // draw option F
+   fShape3 = new TGRadioButton(fgr,"Fill area",kSHAPE_FILL);        // option F
    fShape3->SetToolTipText("A fill area is drawn");  
 
    fgr->SetLayoutHints(new TGLayoutHints(kLHintsLeft, 0,3,0,0), fShape1);
@@ -136,15 +137,9 @@ void TGraphEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
  
-   fTitle->Connect("TextChanged(const char *)", "TGraphEditor", this, "DoTitle(const char *)"); // set title
-   // RadioButtons of the Button group -> Select draw option
-   fShape->Connect("Pressed()","TGraphEditor",this,"DoShape(Int_t s = 0)"); // no drawoption
-   fShape0->Connect("Pressed()","TGraphEditor",this,"DoShape(Int_t s = 1)"); // drawoption C
-   fShape1->Connect("Pressed()","TGraphEditor",this,"DoShape(Int_t s = 2)"); // drawoption L
-   fShape2->Connect("Pressed()","TGraphEditor",this,"DoShape(Int_t s = 3)"); // drawoption B
-   fShape3->Connect("Pressed()","TGraphEditor",this,"DoShape(Int_t s = 4)"); // drawoption F  
-   // Set Marker visible/invisible
-   fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff()");
+   fTitle->Connect("TextChanged(const char *)","TGraphEditor",this,"DoTitle(const char *)");
+   fgr->Connect("Clicked(Int_t)","TGraphEditor",this,"DoShape(Int_t)"); 
+   fMarkerOnOff->Connect("Toggled(Bool_t)","TGraphEditor",this,"DoMarkerOnOff(Bool_t)");
    fInit = kFALSE;  // connect the slots to the signals only once
 }
 
@@ -164,7 +159,7 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-   fGraph = (TGraph *)(obj);
+   fGraph = (TGraph *)fModel;
 
 // set the Title TextEntry
    const char *text = fGraph->GetTitle();
@@ -181,42 +176,39 @@ void TGraphEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       dum.Remove(dum.First(opt[i]),1);
       if (dum.Contains(opt[i])){ 
          opt.Remove(opt.First(opt[i]),1); 
-	 l--; 
-	 i--;
-	 make=kTRUE;
+         l--; 
+         i--;
+         make=kTRUE;
       }
       i++;
    }
-   if (make) SetDrawOption(opt);
 // initialise the RadioButton group which shows the drawoption
    if (opt.Contains("C")) {
       fgr->SetButton(kSHAPE_SMOOTH, kTRUE); 
       fDrawShape='C';
-   }
-   else if (opt.Contains("L")) {
+   } else if (opt.Contains("L")) {
       fgr->SetButton(kSHAPE_SIMPLE, kTRUE);  
       fDrawShape='L';
-   }
-   else if (opt.Contains("B")){
-       fgr->SetButton(kSHAPE_BAR, kTRUE);  
-       fDrawShape='B';
-   }
-   else if (opt.Contains("F")){
-       fgr->SetButton(kSHAPE_FILL, kTRUE);  
-       fDrawShape='F';
-   }
-   else {
+   } else if (opt.Contains("B")){
+      fgr->SetButton(kSHAPE_BAR, kTRUE);  
+      fDrawShape='B';
+   } else if (opt.Contains("F")){
+      fgr->SetButton(kSHAPE_FILL, kTRUE);  
+      fDrawShape='F';
+   } else {
       fgr->SetButton(kSHAPE_NOLINE, kTRUE); 
       fDrawShape=' ';
    }
-// if the draw option is A, P, AP the P option cannot be removed -> deactivate the CheckBox
+   if (make) SetDrawOption(opt);
+// if the draw option is A, P, AP the P option cannot be removed, 
+// we deactivate the CheckBox
 // also initialising the MarkerOnOff checkbutton (== P option)
    if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
-         if (!opt.Contains("P")) opt +="P"; 
-	 fMarkerOnOff->SetState(kButtonDisabled);
-      }
-   else if (opt.Contains("P")) fMarkerOnOff->SetState(kButtonDown);
-   else fMarkerOnOff->SetState(kButtonUp);
+      if (!opt.Contains("P")) opt +="P"; 
+	     fMarkerOnOff->SetState(kButtonDisabled);
+   } else if (opt.Contains("P")) {
+      fMarkerOnOff->SetState(kButtonDown);
+   } else fMarkerOnOff->SetState(kButtonUp);
 
    if (fInit) ConnectSignals2Slots();
    SetActive();  // activates this Editor
@@ -237,61 +229,84 @@ void TGraphEditor::DoTitle(const char *text)
 
 void TGraphEditor::DoShape(Int_t s)
 {
-   // Slot connected to the draw options (no line, simple/smooth line, bar chart, fill area).
-   
+   // Slot connected to the draw options.
+
    TString opt = GetDrawOption();
    opt.ToUpper();
-
+   
    switch (s) {
       
       // change draw option to No Line:
-      case 0: { if (opt.Contains(fDrawShape)) opt.Remove(opt.First(fDrawShape),1);
+      case kSHAPE_NOLINE: { 
+         if (opt.Contains(fDrawShape)) 
+            opt.Remove(opt.First(fDrawShape),1);
          fDrawShape = ' '; 
-	 fMarkerOnOff->SetState(kButtonDisabled);
+	        fMarkerOnOff->SetState(kButtonDisabled);
          break;
       }  
       
       // change draw option to Smooth Line (C)
-      case 1: { if (fDrawShape == ' ') opt +="C";
-         else if (opt.Contains(fDrawShape)) opt.Replace(opt.First(fDrawShape),1,'C'); 
-	 fDrawShape = 'C';
-	 break;
+      case kSHAPE_SMOOTH: { 
+         if (fDrawShape == ' ') 
+            opt +="C";
+         else if (opt.Contains(fDrawShape)) 
+            opt.Replace(opt.First(fDrawShape),1,'C'); 
+	        fDrawShape = 'C';
+	        break;
       }
 
-      // change draw option Simple Line: 
-      case 2: { if (fDrawShape == ' ') opt +="L";
-         else if (opt.Contains(fDrawShape)) opt.Replace(opt.First(fDrawShape),1,'L'); 
+      // change draw option to Simple Line (L) 
+      case kSHAPE_SIMPLE: { 
+         if (fDrawShape == ' ') 
+            opt +="L";
+         else if (opt.Contains(fDrawShape)) 
+            opt.Replace(opt.First(fDrawShape),1,'L'); 
          fDrawShape='L';
          break;
       }
 
-      // change draw option to Bar Chart: 
-      case 3: { if (fDrawShape == ' ') opt +="B";
-         else if (opt.Contains(fDrawShape)) opt.Replace(opt.First(fDrawShape),1,'B'); 
+      // change draw option to Bar Chart (B) 
+      case kSHAPE_BAR: { 
+         if (fDrawShape == ' ') 
+            opt +="B";
+         else if (opt.Contains(fDrawShape)) 
+            opt.Replace(opt.First(fDrawShape),1,'B'); 
          fDrawShape='B';
          break;
       }
 
-      // change draw option to Fill Area: 
-      case 4: { if (fDrawShape == ' ') opt +="F";
-         else if (opt.Contains(fDrawShape)) opt.Replace(opt.First(fDrawShape),1,'F'); 
+      // change draw option to Fill Area (F) 
+      case kSHAPE_FILL: { 
+         if (fDrawShape == ' ') 
+            opt +="F";
+         else if (opt.Contains(fDrawShape)) 
+            opt.Replace(opt.First(fDrawShape),1,'F'); 
          fDrawShape='F';
          break;
       }
    }
+
+   fgr->SetButton(s, kTRUE); 
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kWatch);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
 // set/reset the Marker CheckBox
-   if (opt.Contains("P")) fMarkerOnOff->SetState(kButtonDown);
-   else fMarkerOnOff->SetState(kButtonUp);
+   if (opt.Contains("P")) 
+      fMarkerOnOff->SetState(kButtonDown);
+   else 
+      fMarkerOnOff->SetState(kButtonUp);
    if (opt=="A" || opt=="AP" || opt=="PA" || opt == "P") {
-      if (!opt.Contains("P")) opt +="P"; 
+      if (!opt.Contains("P")) 
+         opt +="P"; 
       fMarkerOnOff->SetState(kButtonDisabled);
    }
    SetDrawOption(opt);
+   if (gPad) gPad->GetVirtCanvas()->SetCursor(kPointer);
+   gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
 //______________________________________________________________________________
 
-void TGraphEditor::DoMarkerOnOff()
+void TGraphEditor::DoMarkerOnOff(Bool_t on)
 {
    // Slot connected to MarkerOnOff CheckBox: 
    // Set marker visible/invisible.
@@ -299,10 +314,10 @@ void TGraphEditor::DoMarkerOnOff()
    TString t = GetDrawOption();
    t.ToUpper();
    // showing the marker:
-   if (fMarkerOnOff->GetState()==kButtonDown) {
+   if (on) {
       if  (!t.Contains("P")) t+="P";
       fShape->SetState(kButtonEngaged);
-   } else if (fMarkerOnOff->GetState()==kButtonUp) {
+   } else {
    // remove the marker option P
       while (t.Contains("P")) t.Remove(t.First("P"),1);
       fShape->SetState(kButtonDisabled);
