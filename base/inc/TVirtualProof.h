@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.12 2005/02/07 18:02:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualProof.h,v 1.13 2005/03/10 17:57:04 rdm Exp $
 // Author: Fons Rademakers   16/09/02
 
 /*************************************************************************
@@ -125,7 +125,6 @@ public:
 
    virtual TDrawFeedback *CreateDrawFeedback() = 0;
    virtual void           SetDrawFeedbackOption(TDrawFeedback *f, Option_t *opt) = 0;
-   virtual void           DeleteDrawFeedback(TDrawFeedback *f) = 0;
 
    ClassDef(TVirtualProof,0)  // Abstract PROOF interface
 };
