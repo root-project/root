@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.29 2000/12/02 11:11:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.30 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -202,7 +202,7 @@
 //*-*  ====================
 //*-*  One or more object (typically a TF1*) can be added to the list
 //*-*  of functions (fFunctions) associated to each histogram.
-//*-*  When TF1::Fit is invoked, the fitted function is added to this list.
+//*-*  When TH1::Fit is invoked, the fitted function is added to this list.
 //*-*  Given an histogram h, one can retrieve an associated function
 //*-*  with:  TF1 *myfunc = h->GetFunction("myfunc");
 //*-*
@@ -1514,6 +1514,24 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*    TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
 //*-*  where MyFittingFunction is of type:
 //*-*  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+//*-*
+//*-*  Associated functions
+//*-*  ====================
+//*-*  One or more object (typically a TF1*) can be added to the list
+//*-*  of functions (fFunctions) associated to each histogram.
+//*-*  When TH1::Fit is invoked, the fitted function is added to this list.
+//*-*  Given an histogram h, one can retrieve an associated function
+//*-*  with:  TF1 *myfunc = h->GetFunction("myfunc");
+//*-*
+//*-*   Access to the fit results
+//*-*   =========================
+//*-*  If the histogram is made persistent, the list of
+//*-*  associated functions is also persistent. Given a pointer (see above) 
+//*-*  to an associated function myfunc, one can retrieve the function/fit
+//*-*  parameters with calls such as:
+//*-*    Double_t chi2 = myfunc->GetChisquare();
+//*-*    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+//*-*    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i, npar,nvpar,nparx;

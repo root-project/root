@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.23 2000/12/08 16:00:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.24 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -578,6 +578,24 @@ void TGraph::Fit(TF1 *f1, Option_t *option, Option_t *)
 //    TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
 //  where MyFittingFunction is of type:
 //  extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+//
+//   Associated functions
+//   ====================
+//  One or more object (typically a TF1*) can be added to the list
+//  of functions (fFunctions) associated to each graph.
+//  When TGraph::Fit is invoked, the fitted function is added to this list.
+//  Given a graph gr, one can retrieve an associated function
+//  with:  TF1 *myfunc = gr->GetFunction("myfunc");
+//
+//   Access to the fit results
+//   =========================
+//  If the graph is made persistent, the list of
+//  associated functions is also persistent. Given a pointer (see above) 
+//  to an associated function myfunc, one can retrieve the function/fit
+//  parameters with calls such as:
+//    Double_t chi2 = myfunc->GetChisquare();
+//    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+//    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
 
    Int_t i, npar,nvpar,nparx;
    Double_t par, we, al, bl;
