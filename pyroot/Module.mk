@@ -37,7 +37,8 @@ include/%.h:    $(PYROOTDIRI)/%.h
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		"$(SOFLAGS)" PyROOT.$(SOEXT) $@ \
-		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIB)"
+		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
+                "$(PYTHONLIBFLAGS)"
 
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."

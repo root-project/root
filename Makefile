@@ -122,13 +122,13 @@ endif
 ifneq ($(FVENUSLIB),)
 MODULES      += venus
 endif
+ifneq ($(PYTHONINCDIR),)
+ifneq ($(PYTHONLIB),)
+MODULES      += pyroot
+endif
+endif
 ifneq ($(TABLE),)
 MODULES      += table
-endif
-ifneq ($(PYTHONINCDIR),)
-#ifneq ($(PYTHONLIB),)
-MODULES      += pyroot
-#endif
 endif
 ifneq ($(SRPUTILLIB),)
 MODULES      += srputils
@@ -695,7 +695,6 @@ showbuild:
 	@echo "CINTCFLAGS         = $(CINTCFLAGS)"
 	@echo "EXTRA_CFLAGS       = $(EXTRA_CFLAGS)"
 	@echo "F77FLAGS           = $(F77FLAGS)"
-	@echo "FPYTHONLIBDIR      = $(FPYTHONLIBDIR)"
 	@echo "LDFLAGS            = $(LDFLAGS)"
 	@echo "F77LDFLAGS         = $(F77LDFLAGS)"
 	@echo "EXTRA_LDFLAGS      = $(EXTRA_LDFLAGS)"
@@ -727,6 +726,9 @@ showbuild:
 	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
+	@echo "PYTHONLIBDIR       = $(PYTHONLIBDIR)"
+	@echo "PYTHONLIB          = $(PYTHONLIB)"
+	@echo "PYTHONINCDIR       = $(PYTHONINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"

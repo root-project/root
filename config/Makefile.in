@@ -105,12 +105,13 @@ FPYTHIALIB     := @pythialib@
 FPYTHIA6LIBDIR := @pythia6libdir@
 FPYTHIA6LIB    := @pythia6lib@
 
+FVENUSLIBDIR   := @venuslibdir@
+FVENUSLIB      := @venuslib@
+
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := @pythonincdir@
-
-FVENUSLIBDIR   := @venuslibdir@
-FVENUSLIB      := @venuslib@
+PYTHONLIBFLAGS := @pythonlibflags@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

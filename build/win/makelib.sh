@@ -29,6 +29,7 @@ R__SONAME=$5
 R__LIB=$6
 R__OBJS=$7
 R__EXTRA=$8
+R__LEXTRA=$9
 
 lastsyslib=comctl32.lib
 extralibs=$lastsyslib
@@ -48,9 +49,9 @@ if [ "$R__PLATFORM" = "win32" ]; then
       echo "$bindexp $name $R__OBJS > lib/${name}.def"
       $bindexp $name $R__OBJS > lib/${name}.def
       echo lib -nologo -MACHINE:IX86 -out:lib/${name}.lib $R__OBJS \
-           -def:lib/${name}.def
+           -def:lib/${name}.def $R__LEXTRA
       lib -nologo -MACHINE:IX86 -out:lib/${name}.lib $R__OBJS \
-           -def:lib/${name}.def
+           -def:lib/${name}.def $R__LEXTRA
       if [ "$R__LIB" = "lib/libCint.dll" ]; then
          echo $R__LD $R__SOFLAGS $R__LDFLAGS -o bin/${name}.dll $R__OBJS \
               lib/${name}.exp $syslibs
