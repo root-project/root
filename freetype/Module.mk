@@ -24,6 +24,9 @@ endif
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
 		cp $< $@
+		@(if [ $(ARCH) = "macosx" ]; then \
+			ranlib $@; \
+		fi)
 
 $(FREETYPELIBA):
 ifeq ($(PLATFORM),win32)
