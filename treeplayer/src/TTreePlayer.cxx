@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.61 2001/10/16 09:03:48 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.62 2001/10/19 16:10:43 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -672,6 +672,25 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //     TEventList *elist = (TEventList*)gDirectory->Get("yplus");
 //     tree->SetEventList(elist);
 //     tree->Draw("py");
+//  
+//  If arrays are used in the selection critera, the event entered in the 
+//  list are all the event that have at least one element of the array that
+//  satisfy the selection.
+//  Example:
+//      tree.Draw(">>pyplus","fTracks.fPy>0");
+//      tree->SetEventList(pyplus);
+//      tree->Draw("fTracks.fPy");
+//  will draw the fPy of ALL tracks in event with at least one track with
+//  a positive fPy.
+//  
+//  To select only the elements that did match the original selection 
+//  use TEventList::SetReapplyCut.
+//  Example:
+//      tree.Draw(">>pyplus","fTracks.fPy>0");
+//      pyplus->SetReapplyCut(kTRUE);
+//      tree->SetEventList(pyplus);
+//      tree->Draw("fTracks.fPy");
+//  will draw the fPy of only the tracks that have a positive fPy.
 //
 //  Note: Use tree->SetEventList(0) if you do not want use the list as input.
 //
@@ -733,6 +752,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    char htitle[2560]; htitle[0] = '\0';
    Bool_t profile = kFALSE;
 
+   TCut realSelection(selection);
+   TEventList *inElist = fTree->GetEventList();
+   Bool_t cleanElist = kFALSE;
+   if ( inElist && inElist->GetReapplyCut() ) {
+      realSelection = realSelection && inElist->GetTitle();
+   }
+
    fHistogram = 0;
    char *hname = 0;
    for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
@@ -769,9 +795,25 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       } else {
          elist = (TEventList*)gDirectory->Get(hname);
          if (!elist) {
-            elist = new TEventList(hname,selection,1000,0);
+            elist = new TEventList(hname,realSelection.GetTitle(),1000,0);
          }
-         if (elist && !hnameplus) elist->Reset();
+         if (elist) {
+            if (!hnameplus) {
+               if (elist==inElist) {
+                  // We have been asked to reset the input list!!
+                  // Let's set it aside for now ...
+                  inElist = new TEventList(*elist);
+                  cleanElist = kTRUE;
+                  fTree->SetEventList(inElist);
+               } 
+               elist->Reset();
+               elist->SetTitle(realSelection.GetTitle());
+            } else {
+               TCut old = elist->GetTitle();
+               TCut upd = old || realSelection.GetTitle();
+               elist->SetTitle(upd.GetTitle());
+            }
+         }
       }
    } else {
       hname  = hdefault;
@@ -787,7 +829,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 
 //*-*- Decode varexp and selection
 
-   CompileVariables(varexp, selection);
+   CompileVariables(varexp, realSelection.GetTitle());
    if (!fVar1 && !elist) return -1;
 
 //*-*- In case oldh1 exists, check dimensionality
@@ -1123,6 +1165,11 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       fTree->SetEstimate(oldEstimate);
    }
    if (hkeep) delete [] varexp;
+   if (cleanElist) {
+     // We are in the case where the input list was reset!
+     fTree->SetEventList(elist);
+     delete inElist;
+   }
    return fSelectedRows;
 }
 

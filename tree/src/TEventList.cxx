@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.4 2000/12/11 22:17:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.5 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -56,11 +56,12 @@ TEventList::TEventList(): TNamed()
    fDelta      = 100;
    fList       = 0;
    fDirectory  = 0;
+   fReapply    = kFALSE;
 }
 
 //______________________________________________________________________________
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-    :TNamed(name,title)
+  :TNamed(name,title), fReapply(kFALSE)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a EventList*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
@@ -89,6 +90,8 @@ TEventList::TEventList(const TEventList &list)
    fList  = new Int_t[fSize];
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
+   fReapply = list.fReapply;
+   fDirectory = 0;
 }
 
 //______________________________________________________________________________
@@ -142,6 +145,11 @@ void TEventList::Add(const TEventList *alist)
    fN    = newpos;
    fSize = newsize;
    fList = newlist;
+
+   TCut orig = GetTitle();
+   TCut added = alist->GetTitle();
+   TCut updated = orig || added;
+   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________
@@ -164,6 +172,7 @@ void TEventList::Enter(Int_t entry)
       fN = 1;
       return;
    }
+   if (GetIndex(entry)>=0) return;
    if (fN >= fSize) {
       Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
       Resize(newsize-fSize);
@@ -350,6 +359,11 @@ void TEventList::Subtract(const TEventList *alist)
    delete [] fList;
    fN    = newpos;
    fList = newlist;
+
+   TCut orig = GetTitle();
+   TCut removed = alist->GetTitle();
+   TCut updated = orig && !removed;
+   SetTitle(updated.GetTitle());
 }
 
 //______________________________________________________________________________
