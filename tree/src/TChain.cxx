@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.48 2002/05/11 09:15:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.49 2002/05/23 20:06:09 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TChain::TChain(): TTree()
    fTreeOffsetLen  = 100;
    fNtrees         = 0;
    fTreeNumber     = -1;
-   fTreeOffset     = 0;
+   fTreeOffset     = new Int_t[fTreeOffsetLen];
    fTree           = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
@@ -948,7 +948,7 @@ void TChain::Print(Option_t *option) const
       TFile *file = TFile::Open(element->GetTitle());
       if (!file->IsZombie()) {
          TTree *tree = (TTree*)file->Get(element->GetName());
-         tree->Print(option);
+         if (tree) tree->Print(option);
       }
       delete file;
    }
