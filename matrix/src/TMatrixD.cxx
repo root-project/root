@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.19 2002/05/10 08:46:51 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.20 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -224,7 +224,7 @@ void TMatrixD::Draw(Option_t *option)
    // Draw this matrix using an intermediate histogram
    // The histogram is named "TMatrixD" by default and no title
 
-   gROOT->ProcessLine(Form("TH2D *R__TV = new TH2D((TMatrixD&)((TMatrixD*)(0x%lx)));R__TV->SetBit(kCanDelete);R__TV->Draw(\"%s\");",
+   gROOT->ProcessLine(Form("TH2D *R__TMatrixD = new TH2D((TMatrixD&)((TMatrixD*)(0x%lx)));R__TMatrixD->SetBit(kCanDelete);R__TMatrixD->Draw(\"%s\");",
       (Long_t)this,option));
 }
 
