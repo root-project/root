@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.8 2002/07/17 14:53:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.9 2002/07/18 09:46:24 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -108,7 +108,11 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
    if (!uri)
       return kTRUE;
 
-   TRegexp re(fRegexp, kFALSE);
+   Bool_t wildcard = kFALSE;
+   if (!fRegexp.MaybeRegexp())
+      wildcard = kTRUE;
+
+   TRegexp re(fRegexp, wildcard);
    TString ruri = uri;
 
    if (ruri.Index(re) != kNPOS)
