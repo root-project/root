@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.13 2002/02/06 10:33:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.14 2002/02/13 15:37:45 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,8 +17,9 @@
 R__EXTERN  TBranch *gBranch;
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" void R__unzip(Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 
+const Int_t  kMAXBUF = 0xffffff;
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                              // the fEntryOffset are used to stored displacement.
 
@@ -171,11 +172,21 @@ Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
       fBuffer = new char[fObjlen+fKeylen];
       memcpy(fBuffer,buffer,fKeylen);
       char *objbuf = fBuffer + fKeylen;
-      Int_t nin = fNbytes-fKeylen;
-      Int_t nout;
-      R__unzip(&nin, &buffer[fKeylen], &fObjlen, objbuf, &nout);
-      if (nout != fObjlen) {
-         Error("ReadBasketBuffers", "fNbytes = %d, fKeylen = %d, fObjlen = %d, nout = %d", fNbytes,fKeylen,fObjlen, nout);
+      UChar_t *bufcur = (UChar_t *)&buffer[fKeylen];
+      Int_t nin, nout, nbuf;
+      Int_t noutot = 0;
+      while (1) {
+         nin  = 9 + ((Int_t)bufcur[3] | ((Int_t)bufcur[4] << 8) | ((Int_t)bufcur[5] << 16));
+         nbuf = (Int_t)bufcur[6] | ((Int_t)bufcur[7] << 8) | ((Int_t)bufcur[8] << 16);
+         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         if (!nout) break;
+         noutot += nout;
+         if (noutot >= fObjlen) break;
+         bufcur += nin;
+         objbuf += nout;
+      }
+      if (noutot != fObjlen) {
+         Error("ReadBasketBuffers", "fNbytes = %d, fKeylen = %d, fObjlen = %d, noutot = %d, nout=%d, nin=%d, nbuf=%d", fNbytes,fKeylen,fObjlen, noutot,nout,nin,nbuf);
          badread = 1;
       }
       fBufferRef->SetBuffer(fBuffer, fObjlen+fKeylen );
@@ -367,7 +378,7 @@ Int_t TBasket::WriteBuffer()
       }
    }
 
-   Int_t lbuf, nout;
+   Int_t lbuf, nout, noutot, bufmax, nzip;
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
@@ -376,25 +387,35 @@ Int_t TBasket::WriteBuffer()
    Int_t cxlevel = fBranch->GetCompressionLevel();
    if (cxlevel) {
       if (cxlevel == 2) cxlevel--;
+      Int_t nbuffers = fObjlen/kMAXBUF;
       Int_t buflen = fKeylen + fObjlen + 28; //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
-      Int_t bufmax = buflen-fKeylen;
-      R__zip(cxlevel, &fObjlen, objbuf, &bufmax, &fBuffer[fKeylen], &nout);
-      if (nout >= fObjlen) {
-         delete [] fBuffer;
-         fBuffer = fBufferRef->Buffer();
-         Create(fObjlen);
-         fBufferRef->SetBufferOffset(0);
-         Streamer(*fBufferRef);         //write key itself again
-         nout = fObjlen;
-      } else {
-         Create(nout);
-         fBufferRef->SetBufferOffset(0);
-         Streamer(*fBufferRef);         //write key itself again
-         memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
-         delete fBufferRef; fBufferRef = 0;
+      char *bufcur = &fBuffer[fKeylen];
+      noutot = 0;
+      nzip   = 0;
+      for (Int_t i=0;i<=nbuffers;i++) {
+         if (i == nbuffers) bufmax = fObjlen -nzip;
+         else               bufmax = kMAXBUF;
+         R__zip(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout);
+         if (nout == 0) { //this happens when the buffer cannot be compressed
+            fBuffer = fBufferRef->Buffer();
+            Create(fObjlen);
+            fBufferRef->SetBufferOffset(0);
+            Streamer(*fBufferRef);         //write key itself again
+            goto WriteFile;
+         }
+         bufcur += nout;
+         noutot += nout;
+         objbuf += kMAXBUF;
+         nzip   += kMAXBUF;
       }
+      nout = noutot;
+      Create(noutot);
+      fBufferRef->SetBufferOffset(0);
+      Streamer(*fBufferRef);         //write key itself again
+      memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
+      delete fBufferRef; fBufferRef = 0;
    } else {
       fBuffer = fBufferRef->Buffer();
       Create(fObjlen);
@@ -405,6 +426,7 @@ Int_t TBasket::WriteBuffer()
 
 //  TKey::WriteFile calls FillBuffer. TBasket inherits from TKey, hence
 //  TBasket::FillBuffer is called.
+WriteFile:
    TKey::WriteFile(0);
    fHeaderOnly = kFALSE;
 
