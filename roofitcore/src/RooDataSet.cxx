@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.73 2002/04/12 20:28:32 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.74 2002/05/09 00:55:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -192,7 +192,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *ntuple,
 }
 
 
-RooAbsData* RooDataSet::emptyClone(const char* newName=0, const char* newTitle=0) const 
+RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle) const 
 {
   RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),_vars) ; 
   if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;

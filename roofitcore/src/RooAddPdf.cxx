@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.37 2002/04/17 20:08:40 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.38 2002/05/03 21:49:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -664,7 +664,7 @@ Double_t RooAddPdf::expectedEvents() const
 }
 
 
-void RooAddPdf::selectNormalization(const RooArgSet* depSet=0) 
+void RooAddPdf::selectNormalization(const RooArgSet* depSet) 
 {
   // Ignore automatic adjustments if an explicit reference normalization has been selected
   if (_refCoefNorm.getSize()!=0) return ;
