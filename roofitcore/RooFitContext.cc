@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.34 2001/10/27 22:28:21 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.35 2001/10/30 07:29:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -570,12 +570,16 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
 	return 0 ;
       }
 
+      // Set the limits, if not infinite
+      if (par->hasFitMin() && par->hasFitMax()) {
+	pmin = par->getFitMin();
+	pmax = par->getFitMax();
+
       // Calculate step size
       pstep= par->getError();
       if(pstep <= 0) {
+	// Floating parameter without error estitimate
 	if (par->hasFitMin() && par->hasFitMax()) {
-	  pmin = par->getFitMin();
-	  pmax = par->getFitMax();
 	  pstep= 0.1*(pmax-pmin);
 	} else {
 	  pstep= 0.1*(par->getPlotMax()-par->getPlotMin()) ;
@@ -587,8 +591,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
 	  cout << "*** WARNING: no initial error estimate available for "
 	       << par->GetName() << ": using " << pstep << endl;
 	}
-      }
-
+      } 
       
     } else {
       pmin = par->getVal() ;
@@ -598,7 +601,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
     _theFitter->SetParameter(index, par->GetName(), par->getVal(),
 			     pstep, pmin, pmax);
 
-    if(par->isConstant() && (pmax > pmin) && (pstep > 0)) {
+    if(par->isConstant()) {
       // Declare fixed parameters (not necessary if range is zero)
       _theFitter->FixParameter(index);
       nFree--;
