@@ -50,7 +50,7 @@ class string {
 #elif defined(G__INTEL_COMPILER)
   typedef char* iterator;
   typedef const char* const_iterator;
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+#elif ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
   class iterator {
    public:
       iterator();

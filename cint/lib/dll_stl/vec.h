@@ -38,7 +38,7 @@ using namespace std;
 #pragma link C++ class vector<string>;
 #endif
 
-#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#if ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
 #ifdef G__OLDIMPLEMENTATION1703
 #pragma link C++ namespace __gnu_cxx;
 #endif
