@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.11 2002/11/28 19:19:44 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.12 2002/12/02 18:50:05 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -121,6 +121,9 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    PDB(kPacketizer,1) Info("TPacketizer2", "Enter");
 
    fValid = kTRUE;
+
+   fProcessed = 0;
+   fMaxPerfIdx = 1;
 
    fPackets = new TList;
    fPackets->SetOwner();
