@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.12 2001/03/21 09:49:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.13 2001/03/22 07:01:52 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -138,10 +138,10 @@ void frombufOld(char *&buf, Long_t *x)
 //______________________________________________________________________________
 TBuffer &TBuffer::operator>>(Long_t &l)
 {
-   if (gFile->GetVersion() >= 30006) {
-      frombuf(fBufCur, &l);
-   } else {
+   if (gFile && gFile->GetVersion() < 30006) {
       frombufOld(fBufCur, &l);
+   } else {
+      frombuf(fBufCur, &l);
    }   
    return *this;
 }
@@ -604,10 +604,10 @@ Int_t TBuffer::ReadArray(Long_t *&ll)
 
    if (!ll) ll = new Long_t[n];
 
-   if (gFile->GetVersion() >= 30006) {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   } else {
+   if (gFile && gFile->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
+   } else {
+      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
    }
    return n;
 }
@@ -772,10 +772,10 @@ Int_t TBuffer::ReadStaticArray(Long_t *ll)
 
    if (!ll) return 0;
 
-   if (gFile->GetVersion() >= 30006) {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   } else {
+   if (gFile && gFile->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
+   } else {
+      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
    }
    return n;
 }
@@ -910,10 +910,10 @@ void TBuffer::ReadFastArray(Long_t *ll, Int_t n)
 
    if (!n) return;
 
-   if (gFile->GetVersion() >= 30006) {
-      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
-   } else {
+   if (gFile && gFile->GetVersion() < 30006) {
       for (int i = 0; i < n; i++) frombufOld(fBufCur, &ll[i]);
+   } else {
+      for (int i = 0; i < n; i++) frombuf(fBufCur, &ll[i]);
    }
 }
 
