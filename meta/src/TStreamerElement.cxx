@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.15 2001/01/28 13:55:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.16 2001/02/02 11:24:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -81,6 +81,23 @@ TClass *TStreamerElement::GetClassPointer() const
 }
 
 //______________________________________________________________________________
+const char *TStreamerElement::GetFullName() const
+{
+   // return element name including dimensions, if any
+   // Note that this function stores the name into a static array.
+   // You should may be copy the result.
+   
+   static char name[128];
+   char cdim[8];
+   sprintf(name,GetName());
+   for (Int_t i=0;i<fArrayDim;i++) {
+      sprintf(cdim,"[%d]",fMaxIndex[i]);
+      strcat(name,cdim);
+   }
+   return name;
+}
+
+//______________________________________________________________________________
 void TStreamerElement::Init(TObject *)
 {
 }
@@ -101,16 +118,9 @@ Bool_t TStreamerElement::IsOldFormat(const char *newTypeName)
 //______________________________________________________________________________
 void TStreamerElement::ls(Option_t *) const
 {
-   char name[128];
-   char cdim[8];
-   sprintf(name,GetName());
-   for (Int_t i=0;i<fArrayDim;i++) {
-      sprintf(cdim,"[%d]",fMaxIndex[i]);
-      strcat(name,cdim);
-   }
    sprintf(includeName,GetTypeName());
    if (IsaPointer() && !fTypeName.Contains("*")) strcat(includeName,"*");
-   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",includeName,name,fOffset,fType,GetTitle());
+   printf("  %-14s%-15s offset=%3d type=%2d %-20s\n",includeName,GetFullName(),fOffset,fType,GetTitle());
 }
 
 //______________________________________________________________________________
