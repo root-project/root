@@ -380,4 +380,5 @@ int main(int argc, char** argv)
 
    theApp->Run();
 
+   return 0;
 }
