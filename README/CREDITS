@@ -249,6 +249,10 @@ E: perev@bnl.gov
 D: optimized hash function, filename expander
 D: testing and comments of the Automatic Schema Evolution system
 
+N: Andreas Peters
+E: Andreas.Joachim.Peters@cern.ch
+D: TGrid extension and TAlien plugin
+
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
 D: contributed to styles Bold, Video, Pub
@@ -308,4 +312,3 @@ D: contributed the GUI TGTableLayout manager and the Viewer example program
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
 D: contributed to TStyle::CreateGradientColorTable()
-
