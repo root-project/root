@@ -1,7 +1,7 @@
 all: tests
 test: tests
 
-SUBDIRS = morrison sync casting depth
+SUBDIRS = morrison sync casting depth parse function
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)
