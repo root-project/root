@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.2 2001/05/16 08:53:16 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>
@@ -213,8 +213,9 @@ UInt_t TWin32Timer::CreateTimer(TTimer *timer)
 void TWin32Timer::CreateTimerCB(TTimer *timer)
 {
   if (timer)
-    timer->SetTimerID((UInt_t)(::SetTimer(fhdTimerWindow,(UINT)timer,timer->GetTime()
-                                                         , (TIMERPROC) ::DispatchTimers)) );
+    timer->SetTimerID((UInt_t)(::SetTimer(fhdTimerWindow,(UINT)timer,
+                      (unsigned long)timer->GetTime(),
+                      (TIMERPROC) ::DispatchTimers)) );
 }
 //______________________________________________________________________________
 void TWin32Timer::ExecTimerThread(TGWin32Command *command)
