@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.15 2001/07/19 17:12:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.16 2001/10/16 09:18:38 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -68,6 +68,8 @@ protected:
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Double_t (*fFunction) (Double_t *, Double_t *);   //!Pointer to function
 
+   static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
+   
 public:
     // TF1 status bits
     enum {
@@ -117,6 +119,7 @@ public:
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001);
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsilon, Double_t &relerr);
+   virtual Bool_t   IsInside(const Double_t *x) const;
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     ReleaseParameter(Int_t ipar);
@@ -137,6 +140,9 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     Update();
 
+   static  void     RejectPoint(Bool_t reject=kTRUE);
+   static  Bool_t   RejectedPoint();
+   
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 

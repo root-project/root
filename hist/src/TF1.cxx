@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.23 2001/07/19 17:12:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.24 2001/10/25 17:00:16 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -19,6 +19,8 @@
 #include "TStyle.h"
 #include "TRandom.h"
 #include "Api.h"
+
+Bool_t TF1::fgRejectPoint = kFALSE;
 
 ClassImp(TF1)
 
@@ -721,6 +723,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 //   InitArgs should be called everytime these addresses change.
 //
 
+   if (!IsInside(x)) return 0;
    if (fType == 0) return TFormula::EvalPar(x,params);
    Double_t result = 0;
    if (fType == 1)  {
@@ -1414,6 +1417,15 @@ L160:
 }
 
 //______________________________________________________________________________
+Bool_t TF1::IsInside(const Double_t *x) const
+{
+// Return kTRUE is the point is inside the function range
+   
+   if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TF1::Paint(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Paint this function with its current attributes*-*-*-*-*
@@ -1744,4 +1756,23 @@ void TF1::Update()
       delete [] fBeta;     fBeta     = 0;
       delete [] fGamma;    fGamma    = 0;
    }
+}
+
+//_______________________________________________________________________
+void TF1::RejectPoint(Bool_t reject)
+{
+// static function to set the global flag to reject points
+// the fgRejectPoint global flag is tested by all fit functions
+// if TRUE the point is not included in the fit.
+// This flag can be set by a user in a fitting function.
+// The fgRejectPoint flag is reset by the TH1 and TGraph fitting functions.
+   
+   fgRejectPoint = reject;
+}
+
+//_______________________________________________________________________
+Bool_t TF1::RejectedPoint()
+{
+// see TF1::RejectPoint above
+   return fgRejectPoint;
 }
