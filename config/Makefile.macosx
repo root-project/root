@@ -23,28 +23,30 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -W -Wall -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CXXFLAGS)
+                -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fsigned-char -fno-common \
-                -I/usr/X11R6/include $(EXTRA_CFLAGS)
+                -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
 CINTCXXFLAGS  = -pipe -W -Wall -fsigned-char -fno-common \
-                -DG__REGEXP $(EXTRA_CXXFLAGS) -DG__UNIX -DG__SHAREDLIB \
+                -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
+		-DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
 CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL $(EXTRA_CFLAGS)
+                -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
+		$(EXTRA_CFLAGS) $(FINK_CFLAGS)
 COMPILER      = gnu
 
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) -Xlinker -bind_at_load -flat_namespace
 SOFLAGS       = $(OPT) -dynamiclib -flat_namespace -undefined suppress \
-                -install_name
+                -install_name $(LIBDIR)/
 SOEXT         = dylib
 
 # System libraries:
-SYSLIBS       = -lm $(EXTRA_LDFLAGS) -ldl
+SYSLIBS       = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) -L/usr/X11R6/lib -lX11
-CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
+CILIBS        = -lm $(EXTRA_LDFLAGS) $(FINK_LDFLAGS) -ldl
 
 # Fortran:
 F77           = g77
@@ -59,6 +61,6 @@ GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 -lXmu -lXext -lX11
 X3DLIBEXTRA   = -L/usr/X11R6/lib -lX11
 
-EXTRA_CXXFLAGS= -I./include $(shell [ -d /sw/include ] && echo -I/sw/include)
-EXTRA_CFLAGS  = -I./include $(shell [ -d /sw/include ] && echo -I/sw/include)
-EXTRA_LDFLAGS = $(shell [ -d /sw/lib ] && echo -L/sw/lib)
+FINK_CXXFLAGS = $(shell [ -d /sw/include ] && echo -I/sw/include)
+FINK_CFLAGS   = $(shell [ -d /sw/include ] && echo -I/sw/include)
+FINK_LDFLAGS  = $(shell [ -d /sw/lib ] && echo -L/sw/lib)

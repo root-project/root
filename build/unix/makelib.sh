@@ -61,9 +61,9 @@ elif [ $PLATFORM = "fbsd" ]; then
 elif [ $PLATFORM = "macosx" ]; then
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
-   echo $LD $SOFLAGS $SONAME -o $LIB $OBJS \
+   echo $LD $SOFLAGS$SONAME -o $LIB $OBJS \
 	`[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
-   $LD $SOFLAGS $SONAME -o $LIB $OBJS \
+   $LD $SOFLAGS$SONAME -o $LIB $OBJS \
 	`[ -d /sw/lib ] && echo -L/sw/lib` -ldl $EXTRA
    if [ "x`echo $SOFLAGS | grep -- '-g'`" != "x" ]; then
       opt=-g
