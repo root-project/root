@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.70 2004/02/18 15:36:38 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.71 2004/03/10 14:13:52 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -272,7 +272,7 @@
 #if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
 #   define R__MACOSX
 #   define R__UNIX
-#   if defined(_xlc_)
+#   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
 #      define R__ANSISTREAM
 #      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */

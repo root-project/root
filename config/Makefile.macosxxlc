@@ -17,18 +17,18 @@ endif
 # Compiler:
 CXX           = xlC
 CC            = xlc
-CXXFLAGS      = -qpic -qchar=signed -D_xlc_ \
+CXXFLAGS      = -qpic -qchar=signed \
 		-qflttrap=overflow:zerodivide:invalid:enable \
                 -I/usr/X11R6/include $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS)
-CFLAGS        = -qpic -qchar=signed -D_xlc_ \
+CFLAGS        = -qpic -qchar=signed \
 		-qflttrap=overflow:zerodivide:invalid:enable \
                 -I/usr/X11R6/include $(EXTRA_CFLAGS) $(FINK_CFLAGS)
-CINTCXXFLAGS  = -qpic -qchar=signed -D_xlc_ \
+CINTCXXFLAGS  = -qpic -qchar=signed \
 		-qflttrap=overflow:zerodivide:enable \
                 -DG__REGEXP $(EXTRA_CXXFLAGS) $(FINK_CXXFLAGS) \
 		-DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL
-CINTCFLAGS    = -qpic -qchar=signed -D_xlc_ \
+CINTCFLAGS    = -qpic -qchar=signed \
 		-qflttrap=overflow:zerodivide:enable \
                 -DG__ANSI -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
@@ -44,7 +44,7 @@ ifeq ($(MACOSX_MINOR),3)
 SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined dynamic_lookup \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 else
-SOFLAGS       = $(OPT) qmkshrobj -flat_namespace -undefined suppress \
+SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined suppress \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 endif
 SOEXT         = dylib

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.90 2004/02/06 12:57:04 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.91 2004/02/26 20:42:20 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -243,7 +243,7 @@ extern "C" {
 #include <fenv.h>
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX) && !defined(__xlC__)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -558,7 +558,7 @@ Int_t TUnixSystem::GetFPEMask()
 	 ULong_t oldmask = ~oldenv;
  #elif __ia64__
     Int_t oldmask = ~oldenv;
- #else 
+ #else
    Int_t oldmask = ~oldenv.__control_word;
  #endif
 
@@ -570,7 +570,7 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX) && !defined(__xlC__)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -612,7 +612,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 #endif
 
-#if defined(R__MACOSX) && !defined(_xlc_)
+#if defined(R__MACOSX) && !defined(__xlC__)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;

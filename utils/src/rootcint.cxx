@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.160 2004/03/12 21:45:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.161 2004/03/16 20:25:12 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2894,7 +2894,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                      string typeWithDefaultStlName( RStl::DropDefaultArg(m.Type()->Name()) );
                      //TClassEdit::ShortType(m.Type()->Name(),TClassEdit::kRemoveDefaultAlloc) );
                      string typeName( GetLong64_Name( m.Type()->Name() ) );
-                     
+
                      fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", (void*)&%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
                                  "      R__parent[R__ncp] = 0;\n",
                                  typeName.c_str(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");
@@ -3837,9 +3837,9 @@ int main(int argc, char **argv)
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
 #endif
-#ifdef _xlc_
+#ifdef __xlC__
          argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D_xlc_=%ld", (long)_xlc_); argcc++;
+         sprintf(argvv[argcc], "-D__xlC__=%ld", (long)__xlC__); argcc++;
 #endif
 #ifdef __GNUC__
          argvv[argcc] = (char *)calloc(64, 1);
