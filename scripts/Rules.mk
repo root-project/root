@@ -27,33 +27,7 @@ ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def *
 
 .PHONY: clean tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils
 
-ifeq ($(CURRENTDIR),)
-  export CURRENTDIR := $(shell basename `pwd`)
-else
-  export CURRENTDIR
-endif
-ifeq ($(CALLDIR),)
-	export CALLDIR:=.
-else
-	export CALLDIR:=$(CALLDIR)/$(CURRENTDIR)
-endif
-#debug2:=$(shell echo CALLDIR=$(CALLDIR) CURRENTDIR=$(CURRENTDIR) PWD=$(PWD) 1>&2 ) 
-
-DOTS="................................................................................"
-SUCCESS_FILE = .success.log
-
-# Force the removal of the sucess file ANY time the make is run
-REMOVE_SUCCESS := $(shell rm  -f $(SUCCESS_FILE) )
-
-$(SUCCESS_FILE): $(TEST_TARGETS)
-	@touch $(SUCCESS_FILE)
-
-tests: $(SUCCESS_FILE) 
-	@len=`echo Tests in $(CALLDIR) | wc -m `;end=`expr 68 - $$len`;printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS)
-	@if [ -f $(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
-
-#@echo "All test succeeded in $(CALLDIR)"
-#CURRENTDIR=$(CALLDIR)/$* 
+include $(ROOTTEST_HOME)/scripts/Common.mk
 
 $(TEST_TARGETS_DIR): %.test:
 	@(echo Running test in $(CALLDIR)/$*)
@@ -106,7 +80,7 @@ endif
 ObjSuf   = o
 
 ifeq ($(HAS_PYTHON),)
-   export HAS_PYTHON = $(shell root-config --cflags)
+   export HAS_PYTHON = $(shell root-config --has-python)
 endif
 
 ifeq ($(PLATFORM),win32)
@@ -255,10 +229,8 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
-ifeq ($(HAS_PYTHON),yes)
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) python $< > $@ 2>&1
-endif
 
 .PRECIOUS: %_C.$(DllSuf) 
 
