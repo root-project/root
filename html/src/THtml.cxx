@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.50 2004/01/14 07:48:56 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.51 2004/01/21 07:11:29 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -476,9 +476,9 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
              ".cxx.html\"";
          classFile << ">source file</a>";
 
-         // make a link to the inheritance tree
+         // make a link to the inheritance tree (postscript)
          classFile << " - <a href=\"" << cClassFileName << "_Tree.ps\"";
-         classFile << ">inheritance tree</a>";
+         classFile << ">inheritance tree (.ps)</a>";
 
          if (cClassFileName != 0)
             delete[]cClassFileName;
@@ -538,6 +538,10 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
 
          classFile << "</h2>" << endl;
 
+
+         // create an html inheritance tree
+         ClassHtmlTree(classFile, classPtr);
+    
 
          // make a loop on member functions
          TMethod *method;
@@ -871,9 +875,6 @@ void THtml::Class2Html(TClass * classPtr, Bool_t force)
          }
 
          classFile << "<!--END-->" << endl;
-
-         // create a 'See also' part
-         DerivedClasses(classFile, classPtr);
 
          // process a '.cxx' file
          ClassDescription(classFile, classPtr, classFlag);
@@ -1538,12 +1539,155 @@ ofstream tempFile;
       delete[]filename;
 }
 
+//______________________________________________________________________________
+void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr, 
+                          ETraverse dir, int depth)
+{
+// This function builds the class tree for one class in HTML 
+// (inherited and succeeding classes, called recursively)
+//
+//
+// Input: out      - output file stream
+//        classPtr - pointer to the class
+//        dir      - direction to traverse tree: up, down or both
+//
+
+    if (dir == kBoth) {      
+      out << "<!--INHERITANCE TREE-->" << endl;
+  
+      // draw class tree into nested tables recursively
+      out << "<table><tr><td width=\"10%\"></td><td width=\"70%\">";
+      
+      out << "<table width=\"100%\" border=\"1\" rules=\"none\" ";         
+      out << "cellpadding =\"0\" cellspacing=\"2\"><tr>";
+    } else {
+       out << "<table><tr>";
+    }
+    
+    ////////////////////////////////////////////////////////
+    // Loop up to mother classes 
+    if (dir == kUp || dir == kBoth) {    
+    
+       // make a loop on base classes
+      TBaseClass *inheritFrom;
+      TIter nextBase(classPtr->GetListOfBases());
+
+      UInt_t bgcolor=255-depth*8;
+      Bool_t first = kTRUE;  
+      while ((inheritFrom = (TBaseClass *) nextBase())) {
+
+        if (first) {
+	  out << "<td><table><tr>" << endl;    
+          first = kFALSE;
+        } else 
+           out << "</tr><tr>" << endl;
+	out << "<td bgcolor=\""
+            << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor) 
+            << "\" align=\"right\">" << endl;
+        // get a class
+        TClass *classInh =
+          GetClass((const char *) inheritFrom->GetName());
+         
+        ClassHtmlTree(out, classInh, kUp, depth+1);
+        out << "</td>"<< endl;
+      }
+      if (!first) {
+        out << "</tr></table></td>" << endl; // put it in additional row in table    
+           out << "<td>-&gt;</td>";
+      }
+    }  
+
+    out << "<td>" << endl; // put it in additional row in table    
+    ////////////////////////////////////////////////////////
+    // Output Class Name
+
+    const char *className = classPtr->GetName();
+    char *htmlFile = GetHtmlFileName(classPtr);
+
+    if (dir == kUp) {
+      if (htmlFile) {
+         out << "<center><tt><a name=\"" << className;
+         out << "\" href=\"" << htmlFile << "\">";
+         ReplaceSpecialChars(out, className);
+         out << "</a></tt></center>" << endl;
+         delete[]htmlFile;
+         htmlFile = 0;
+      } else
+         ReplaceSpecialChars(out, className);
+    } 
+    
+    if (dir == kBoth) {
+      if (htmlFile) {
+         out << "<center><big><b><tt><a name=\"" << className;
+         out << "\" href=\"" << htmlFile << "\">";
+         ReplaceSpecialChars(out, className);
+         out << "</a></tt></b></big></center>" << endl;
+         delete[]htmlFile;
+         htmlFile = 0;
+      } else
+         ReplaceSpecialChars(out, className);
+    } 
+
+    out << "</td>" << endl; // put it in additional row in table    
+
+    ////////////////////////////////////////////////////////
+    // Loop down to child classes        
+    
+    if (dir == kDown || dir == kBoth) {
+
+      // 1. make a list of class names 
+      // 2. use DescendHierarchy  
+        
+      // get total number of classes
+      Int_t numberOfClasses = gClassTable->Classes();
+
+      // allocate memory
+      const char **classNames = new const char *[numberOfClasses];
+
+      // start from begining
+      gClassTable->Init();
+
+      Int_t nOK = 0;
+
+      for (Int_t i = 0; i < numberOfClasses; i++) {
+
+        // get class name
+        const char *cname = gClassTable->Next();
+        classNames[nOK] = cname;
+
+        TClass *clsPtr = GetClass((const char *) classNames[nOK]);
+        if (!clsPtr) continue;
+
+        nOK++;
+      }
+
+      // quick sort
+      SortNames(classNames, nOK);
+
+      out << "<td><table><tr>" << endl;
+      fHierarchyLines = 0;      
+      DescendHierarchy(out,classPtr,classNames,numberOfClasses,10);  
+
+      out << "</tr></table>";
+      if (dir==kBoth && fHierarchyLines>=10)
+         out << "</td><td align=\"left\">&nbsp;<a href=\"ClassHierarchy.html\">[more...]</a>";
+      out<<"</td>" << endl;
+
+      // free allocated memory
+      delete[]classNames;
+    }   
+    
+    out << "</table>" << endl;
+    if (dir == kBoth) 
+       out << "</td></tr></table>"<<endl;
+}
+
 
 //______________________________________________________________________________
 void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
                       Bool_t force)
 {
-// It makes a class tree
+// It makes a graphical class tree
 //
 //
 // Input: psCanvas - pointer to the current canvas
@@ -2070,6 +2214,178 @@ ofstream outputFile;
          delete[]fileNames[i];
 }
 
+//______________________________________________________________________________
+void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
+{
+// Create a hierarchical class list
+// The algorithm descends from the base classes and branches into
+// all derived classes. Mixing classes are displayed several times.
+//
+// Input: classNames      - pointer to an array of class names
+//        numberOfClasses - number of elements
+//
+   Int_t i=0; 
+   Int_t len=0;
+   Int_t maxLen=0;
+
+   char *filename =
+       gSystem->ConcatFileName(gSystem->ExpandPathName(fOutputDir),
+                               "ClassHierarchy.html");
+
+   // open out file
+   ofstream out;
+   out.open(filename, ios::out);
+
+   for (i = 0; i < numberOfClasses; i++) {
+      len = strlen(classNames[i]);
+      maxLen = maxLen > len ? maxLen : len;
+   }
+
+   if (out.good()) {
+
+      Printf(formatStr, "", fCounter, filename);
+
+      // write out header
+      WriteHtmlHeader(out, "Class Hierarchy");
+      out << "<h1>Class Hierarchy</h1>" << endl;
+
+      // check for a search engine
+      const char *searchEngine =
+          gEnv->GetValue("Root.Html.SearchEngine", "");
+
+      // if exists ...
+      if (*searchEngine) {
+
+         // create link to search engine page
+         out << "<h2><a href=\"" << searchEngine
+             << "\">Search the Class Reference Guide</a></h2>" << endl;
+      }
+
+      // loop on all classes
+      for (i = 0; i < numberOfClasses; i++) {
+
+        // get class
+        TClass *basePtr = GetClass((const char *) classNames[i]);
+        
+        // Find basic base classes
+	if ((basePtr->GetListOfBases())->IsEmpty()){
+
+          out << "<hr>" << endl;
+                
+          out << "<table><tr><td><ul><li><tt>";
+          char *htmlFile = GetHtmlFileName(basePtr);
+          if (htmlFile) {
+             out << "<a name=\"";
+             out << classNames[i];
+             out << "\" href=\"";
+             out << htmlFile;
+             out << "\">";
+             ReplaceSpecialChars(out, classNames[i]);
+             out << "</a>";
+             delete[]htmlFile;
+             htmlFile = 0;
+          } else {
+             ReplaceSpecialChars(out, classNames[i]);
+          }   
+  
+          // find derived classes
+	  out << "</tt></li></ul></td>";
+          fHierarchyLines = 0; 
+          DescendHierarchy(out,basePtr,classNames,numberOfClasses);
+        
+          out << "</tr></table>" << endl;          
+        }                              
+      }
+
+      // write out footer
+      TDatime date;
+      WriteHtmlFooter(out, "", date.AsString());
+
+      // close file
+      out.close();
+
+   } else
+      Error("CreateHierarchy", "Can't open file '%s' !", filename);
+
+   if (filename)
+      delete[]filename;
+}
+
+//______________________________________________________________________________
+void THtml::DescendHierarchy(ofstream & out, TClass* basePtr, 
+  const char **classNames, Int_t numberOfClasses, Int_t maxLines, Int_t depth)
+{
+// Descend hierarchy recursively
+// loop over all classes and look for classes with base class basePtr
+
+   if (maxLines) 
+      if (fHierarchyLines >= maxLines) 
+         return;
+
+   Int_t numClasses=0;
+   for (Int_t j = 0; j < numberOfClasses && (!maxLines || fHierarchyLines<maxLines); j++) {
+
+      TClass *classPtr = GetClass((const char *) classNames[j]);
+      if (!classPtr) continue;
+
+      // find base classes with same name as basePtr
+      TList* bases=classPtr->GetListOfBases();
+      if (!bases) continue;
+
+      TBaseClass *inheritFrom=(TBaseClass*)bases->FindObject(basePtr->GetName());
+      if (!inheritFrom) continue;
+
+      if (!numClasses) 
+         out << "<td>-&gt;</td><td><table><tr>" << endl;
+      else 
+         out << "</tr><tr>"<<endl;
+      fHierarchyLines++;
+      numClasses++;
+      UInt_t bgcolor=255-depth*8;
+      out << "<td bgcolor=\"" 
+          << Form("#%02x%02x%02x", bgcolor, bgcolor, bgcolor)
+          << "\">";
+      out << "<table><tr><td>" << endl;
+
+      char *htmlFile = GetHtmlFileName(classPtr);
+      if (htmlFile) {
+         out << "<center><tt><a name=\"";
+         out << classNames[j];
+         out << "\" href=\"";
+         out << htmlFile;
+         out << "\">";
+         ReplaceSpecialChars(out, classNames[j]);
+         out << "</a></tt></center>";
+         delete[]htmlFile;
+         htmlFile = 0;
+      } else {
+         ReplaceSpecialChars(out, classNames[j]);
+      }   
+      // write title
+      // commented out for now because it reduces overview
+      /*
+        len = strlen(classNames[i]);
+        for (Int_t w = 0; w < (maxLen - len + 2); w++)
+        out << ".";
+        out << " ";
+
+        out << "<a name=\"Title:";
+        out << classPtr->GetName();
+        out << "\">";
+        ReplaceSpecialChars(out, classPtr->GetTitle());
+        out << "</a></tt>" << endl;
+      */           
+    
+      out << "</td>" << endl;
+      DescendHierarchy(out,classPtr,classNames,numberOfClasses,maxLines, depth+1);
+      out << "</tr></table></td>" << endl;
+         
+   }  // loop over all classes
+   if (numClasses) 
+      out << "</tr></table></td>" << endl;
+} 
+
+
 
 //______________________________________________________________________________
 void THtml::CreateListOfTypes()
@@ -2158,82 +2474,6 @@ ofstream typesList;
 
    if (outFile)
       delete[]outFile;
-}
-
-
-//______________________________________________________________________________
-void THtml::DerivedClasses(ofstream & out, TClass * classPtr)
-{
-// It creates a list of derived classes
-//
-//
-// Input: out      - output file stream
-//        classPtr - pointer to the class
-//
-
-   Bool_t first = kTRUE;
-   Bool_t found = kFALSE;
-
-
-   // get total number of classes
-   Int_t numberOfClasses = gClassTable->Classes();
-
-   // start from begining
-   gClassTable->Init();
-
-   // get class names
-   TClass *derivedClassPtr;
-   const char *derivedClassName;
-   for (Int_t i = 0; i < numberOfClasses; i++) {
-
-      // get class name
-      derivedClassName = gClassTable->Next();
-
-      // get class pointer
-      derivedClassPtr = GetClass(derivedClassName);
-
-      if (!derivedClassPtr) {
-         Warning("DerivedClasses",
-                 "Can not find a definition for class <%s>",
-                 derivedClassName);
-         continue;
-      }
-      // make a loop on base classes
-      TBaseClass *inheritFrom;
-      TIter nextBase(derivedClassPtr->GetListOfBases());
-
-      while ((inheritFrom = (TBaseClass *) nextBase())) {
-         if (!strcmp(inheritFrom->GetName(), classPtr->GetName())) {
-            if (first) {
-               out << "<br><hr>" << endl;
-               out << "<!--SEE ALSO-->";
-               out << "<h2>See also</h2><dl><dd>" << endl;
-            }
-            if (!first)
-               out << ", ";
-
-            char *htmlFile = GetHtmlFileName(derivedClassPtr);
-
-            if (htmlFile) {
-               out << "<a href=\"";
-               out << htmlFile;
-               out << "\">";
-               ReplaceSpecialChars(out, derivedClassPtr->GetName());
-               out << "</a>";
-               delete[]htmlFile;
-               htmlFile = 0;
-            } else
-               ReplaceSpecialChars(out, derivedClassPtr->GetName());
-
-            if (first) {
-               first = kFALSE;
-               found = kTRUE;
-            }
-         }
-      }
-   }
-   if (found)
-      out << "</dl>" << endl;
 }
 
 
@@ -3098,7 +3338,6 @@ void THtml::MakeIndex(const char *filter)
    // get total number of classes
    Int_t numberOfClasses = gClassTable->Classes();
 
-
    // allocate memory
    const char **classNames = new const char *[numberOfClasses];
    char **fileNames = new char *[numberOfClasses];
@@ -3182,6 +3421,9 @@ void THtml::MakeIndex(const char *filter)
    // create an index
    CreateIndex(classNames, nOK);
    CreateIndexByTopic(fileNames, nOK, maxLen);
+   
+   // create a class hierarchy
+   CreateHierarchy(classNames, nOK);
 
    // free allocated memory
    delete[]classNames;
@@ -3735,6 +3977,12 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
       if (*dir)
          out << dir;
       out << "ClassIndex.html\">Class index</a> - ";
+
+      // link to the hierarchy file
+      out << "<a href=\"";
+      if (*dir)
+         out << dir;
+      out << "ClassHierarchy.html\">Class Hierarchy</a> - ";
 
       // link to the top of the page
       out << "<a href=\"#TopOfPage\">Top of the page</a><br>" << endl;
