@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.2 2004/09/13 16:13:04 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.3 2004/09/13 16:22:20 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 #include "TGuiBldEditor.h"
 #include "TGuiBuilder.h"
 #include "TGuiBldQuickHandler.h"
-
 
 #include "TTimer.h"
 #include "TList.h"
@@ -2050,6 +2049,7 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
    frame->Move(x > x0 ? x0 : x, y > y0 ? y0 : y);
    frame->Resize(w, h);
    frame->MapRaised();
+   frame->SetCleanup(kTRUE);
 
    if (fClient->GetRoot()->InheritsFrom(TGCompositeFrame::Class())) {
       TGCompositeFrame *edit = (TGCompositeFrame*)fClient->GetRoot();
@@ -2107,12 +2107,11 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
    if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
        (event->fHandle != gROOT_MESSAGE)) {
 
-      if (event->fWindow == fClient->GetRoot()->GetMainFrame()->GetId()) {
-         delete fPimpl->fGrid;
-         fPimpl->fGrid = 0;
+      TGMainFrame *main = (TGMainFrame*)fClient->GetRoot()->GetMainFrame();
+
+      if (event->fWindow == main->GetId()) {
          fClient->SetRoot(0);
-         Init();
-         if (fPimpl) fPimpl->ResetParams();
+         main->Cleanup();
 
          delete fBuilder;
          fBuilder = 0;
@@ -2125,6 +2124,11 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
 
          delete fLassoMenu;
          fLassoMenu = 0;
+
+         //delete fPimpl->fGrid;
+         fPimpl->fGrid = 0;
+         Init();
+         if (fPimpl) fPimpl->ResetParams();
       }
 
       if (fBuilder && (event->fWindow == fBuilder->GetId())) {
@@ -2133,7 +2137,6 @@ Bool_t TGuiBldDragManager::HandleClientMessage(Event_t *event)
 
       if (fEditor && (event->fWindow == fEditor->GetMainFrame()->GetId())) {
          TQObject::Disconnect(fEditor);
-         delete fEditor;
          fEditor = 0;
       }
    }
