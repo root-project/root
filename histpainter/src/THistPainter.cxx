@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.90 2002/07/16 20:32:56 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.91 2002/07/28 07:31:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -122,7 +122,7 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t yxaxis, dyaxis,xyaxis, dxaxis;
    Bool_t dsame;
    TString doption = gPad->GetPadPointer()->GetDrawOption();
-   
+
 //     return if point is not in the histogram area
 
 //     If a 3-D view exists, check distance to axis
@@ -2523,7 +2523,7 @@ L30:
       gPad->SetLogy(0);
 
       // In some cases the number of points in the fill area is smaller than
-      // 2*npoints. In such cases the array xline and yline must be arranged 
+      // 2*npoints. In such cases the array xline and yline must be arranged
       // before being plotted. The next loop does that.
       if (if2 > npoints) {
          for(i=1; i<if1 ;i++) {
@@ -2531,7 +2531,7 @@ L30:
             yline[if1-2+i] = yline[if2-1+i];
          }
 	 npoints = if1-1;
-      }	
+      }
       if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
       else         graph.PaintGraph(2*npoints,xline,yline,"F");
       gPad->SetLogx(logx);
@@ -2800,7 +2800,7 @@ void THistPainter::PaintHist(Option_t *)
       }
    }
    if (Hoption.Fill == 2) strcat(chopth,"2");
-   
+
 //         Option LOGX
 
    if (Hoption.Logx) {
@@ -3225,7 +3225,7 @@ void THistPainter::PaintH3Iso()
    //
    // Thanks to the function IsoSurface of the TPainter3dAlgorithms class, this
    // function paints a Gouraud shaded 3d iso surface though a 3d histogram.
-   // 
+   //
    // This first implementation paint one surface at the value computed as follow:
    // SumOfWeights/(NbinsX*NbinsY*NbinsZ)
    //
@@ -3268,7 +3268,7 @@ void THistPainter::PaintH3Iso()
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
-   
+
    Int_t nx = fH->GetNbinsX();
    Int_t ny = fH->GetNbinsY();
    Int_t nz = fH->GetNbinsZ();
@@ -3293,7 +3293,7 @@ void THistPainter::PaintH3Iso()
    s[1] = 0.5*s[0];
    s[2] = 1.5*s[0];
 
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);                          
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -3332,7 +3332,7 @@ void THistPainter::PaintH3Iso()
    fmax = ydiff*qa + (yligh1+0.1)*(qd+qs);
    fLego->SetIsoSurfaceParameters(fmin, fmax, nbcol, ic1, ic2, ic3);
 
-   fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");  
+   fLego->IsoSurface(1, s, nx, ny, nz, x, y, z, "BF");
 
    if (Hoption.FrontBox) {
       fLego->InitMoveScreen(-1.1,1.1);
@@ -3834,7 +3834,7 @@ void THistPainter::PaintScatterPlot(Option_t *option)
 //       content is drawn.
 //       A maximum of kNMAX points per cell is drawn. If the maximum is above kNMAX
 //       contents are normalized to kNMAX. (kNMAX=2000)/
-//       if option is of the form "scat=ff", (eg scat=1.8, scat=1e-3), then 
+//       if option is of the form "scat=ff", (eg scat=1.8, scat=1e-3), then
 //       ff is used as a scale factor to compute the number of dots.
 //       "scat=1" is the default.
 //Begin_Html
@@ -4182,7 +4182,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
                gStyle->GetStatY()-stath,
                gStyle->GetStatX(),
                gStyle->GetStatY(),"brNDC");
-      
+
       stats->SetParent(fFunctions);
       stats->SetOptFit(dofit);
       stats->SetOptStat(dostat);
@@ -4538,8 +4538,8 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
    Int_t theColor;
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
-      funlevel[i]   = fH->GetContourLevel(i);
-      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
+      funlevel[i] = fH->GetContourLevel(i);
+      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
    colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
@@ -4648,10 +4648,10 @@ void THistPainter::PaintTF3()
    //
    // Thanks to the function ImplicitFunction of the TPainter3dAlgorithms class,
    // this function paints 3d representation of an implicit function.
-   // 
+   //
    // Example:
    //
-   //   TF3 *fun3 = new TF3("fun3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);      
+   //   TF3 *fun3 = new TF3("fun3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);
    //   fun3->Draw();
    //
    //Begin_Html
@@ -4665,7 +4665,7 @@ void THistPainter::PaintTF3()
    TAxis *xaxis = fH->GetXaxis();
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
-   
+
    fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
    fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
    fXbuf[1] = yaxis->GetBinLowEdge(yaxis->GetFirst());
@@ -4771,7 +4771,7 @@ void THistPainter::PaintTitle()
 void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
 //  Process message mess
-   
+
    if (!strcmp(mess,"SetF3")) {
       TPainter3dAlgorithms::SetF3((TF3*)obj);
    } else if (!strcmp(mess,"SetF3ClippingBoxOff")) {
