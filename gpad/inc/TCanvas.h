@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.28 2004/07/30 01:13:50 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.29 2005/01/27 20:34:01 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -71,13 +71,13 @@ protected:
    Int_t         fEventY;          //!Last Y mouse position in canvas
    Int_t         fCanvasID;        //!Canvas identifier
    TObject      *fSelected;        //!Currently selected object
-   Int_t         fSelectedX;       //!X of selected object 
+   Int_t         fSelectedX;       //!X of selected object
    Int_t         fSelectedY;       //!Y of selected object
    TString       fSelectedOpt;     //!Drawing option of selected object
    TPad         *fSelectedPad;     //!Pad containing currently selected object
    TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
    TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
-   TContextMenu   *fContextMenu;   //!Context menu pointer
+   TContextMenu *fContextMenu;     //!Context menu pointer
    Bool_t        fBatch;           //!True when in batchmode
    Bool_t        fUpdating;        //!True when Updating the canvas
    Bool_t        fRetained;        //Retain structure flag
