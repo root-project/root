@@ -11,11 +11,13 @@ AC_DEFUN(AC_ROOT,
       user_rootsys="none")
   if test ! x"$user_rootsys" = xnone; then
     rootbin="$user_rootsys/bin"
-  else
+  elif test ! x"$ROOTSYS" = x ; then 
     rootbin="$ROOTSYS/bin"
+  else 
+    rootbin=$PATH
   fi
   AC_PATH_PROG(ROOTCONF, root-config , no, $rootbin)
-  if test x"$ROOTCONF" = xno ; then
+  if test x"$ROOTCONF" = "xno" ; then
     AC_MSG_ERROR([ROOT config script not found!])
   fi
 ])
