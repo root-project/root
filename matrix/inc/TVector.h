@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.23 2003/08/18 16:40:33 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.24 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVector
+#ifndef ROOT_TVectorF
 #include "TVectorF.h"
 #endif
 
