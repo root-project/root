@@ -22,9 +22,6 @@
 
 #include "TObject.h"
 #include "TObjArray.h"
-#include "TGeometry.h"
-#include "TBRIK.h"
-#include "TNode.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 #include "TGeoMedium.h"
