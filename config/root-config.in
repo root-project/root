@@ -241,9 +241,10 @@ fi
 exec_prefix=${prefix}
 exec_prefix_set=no
 nonew_set=no
+cflags=""
 
 usage="\
-Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--nonew] [--libs] [--glibs] [--cflags]"
+Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version] [--cflags] [--nonew] [--libs] [--glibs]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -308,7 +309,11 @@ while test $# -gt 0; do
             includes=-I${incdir}
          fi
       fi
-      echo ${auxcflags} $includes
+      if test $# -gt 1; then
+         cflags="${auxcflags} $includes"
+      else
+         echo ${auxcflags} $includes
+      fi
       ;;
     --libs)
       if test $nonew_set = no; then
@@ -322,9 +327,9 @@ while test $# -gt 0; do
          for i in $nlibs; do
             libs="$libs '`cygpath -w $i`'"
          done
-         echo $libs ${auxlibs}
+         echo $cflags $libs ${auxlibs}
       else
-         echo -L${libdir} $libs ${auxlibs}
+         echo $cflags -L${libdir} $libs ${auxlibs}
       fi
       ;;
     --glibs)
@@ -339,9 +344,9 @@ while test $# -gt 0; do
          for i in $nlibs; do
             glibs="$glibs '`cygpath -w $i`'"
          done
-         echo $glibs ${auxglibs}
+         echo $cflags $glibs ${auxglibs}
       else
-         echo -L${libdir} $glibs ${auxglibs}
+         echo $cflags -L${libdir} $glibs ${auxglibs}
       fi
       ;;
     *)
