@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.50 2004/04/19 13:37:01 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.51 2004/04/19 13:41:51 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -19,38 +19,6 @@
 // by Olivier Couet and Pierre Juillot.                                 //
 // It has been converted to a C++ class by Rene Brun.                   //
 //                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifdef WIN32
-#pragma optimize("",off)
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "Riostream.h"
-#include "TROOT.h"
-#include "TColor.h"
-#include "TVirtualPad.h"
-#include "TPoints.h"
-#include "TPostScript.h"
-#include "TStyle.h"
-#include "TMath.h"
-#include "TSystem.h"
-
-// to scale fonts to the same size as the old TT version
-const Float_t kScale = 0.93376068;
-
-const char   kBackslash = '\\';
-const Int_t  kLatex = BIT(10);
-
-
-Int_t TPostScript::fgLineJoin = 0;
-
-ClassImp(TPostScript)
-
-//______________________________________________________________________________
 //Begin_Html
 /*
 
@@ -200,6 +168,38 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
 //
 //Begin_Html <img src="gif/pstable2.gif"> End_Html
 //
+//////////////////////////////////////////////////////////////////////////
+
+#ifdef WIN32
+#pragma optimize("",off)
+#endif
+
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "Riostream.h"
+#include "TROOT.h"
+#include "TColor.h"
+#include "TVirtualPad.h"
+#include "TPoints.h"
+#include "TPostScript.h"
+#include "TStyle.h"
+#include "TMath.h"
+#include "TSystem.h"
+
+// to scale fonts to the same size as the old TT version
+const Float_t kScale = 0.93376068;
+
+const char   kBackslash = '\\';
+const Int_t  kLatex = BIT(10);
+
+
+Int_t TPostScript::fgLineJoin = 0;
+
+ClassImp(TPostScript)
+
+//______________________________________________________________________________
 
 //______________________________________________________________________________
 TPostScript::TPostScript() : TVirtualPS()
