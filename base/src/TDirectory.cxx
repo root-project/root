@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.10 2000/11/27 12:04:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.11 2000/12/13 15:13:45 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -18,13 +18,13 @@
 #include "TInterpreter.h"
 #include "THashList.h"
 #include "TBrowser.h"
-#include "TFile.h"
 #include "TFree.h"
 #include "TKey.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "Bytes.h"
 #include "TRegexp.h"
+#include "TStreamerInfo.h"
 
 
 TDirectory    *gDirectory;      //Pointer to current directory in memory
@@ -260,6 +260,7 @@ void TDirectory::Build()
    fMother     = gDirectory;
    fFile       = gFile;
    SetBit(kCanDelete);
+   TStreamerInfo::SetCurrentFile(fFile);
 }
 
 //______________________________________________________________________________
@@ -288,6 +289,7 @@ Bool_t TDirectory::cd1(const char *path)
    if (!path || !(strlen(path))) {
       gDirectory = this;
       gFile      = fFile;
+      TStreamerInfo::SetCurrentFile(fFile);
       return kTRUE;
    }
 
@@ -537,6 +539,7 @@ void TDirectory::Close(Option_t *)
       cursav->cd();
    else {
       gFile = 0;
+      TStreamerInfo::SetCurrentFile(gFile);
       if (this == gROOT)
          gDirectory = 0;
       else
